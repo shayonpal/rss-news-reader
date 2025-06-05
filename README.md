@@ -54,8 +54,20 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
 
    Edit `.env.local` with your API credentials:
 
-   - Inoreader API credentials (Client ID, Client Secret, Redirect URI)
-   - Anthropic API key for Claude
+   ```bash
+   # Inoreader OAuth Configuration
+   NEXT_PUBLIC_INOREADER_CLIENT_ID=your_client_id_here
+   INOREADER_CLIENT_SECRET=your_client_secret_here
+   NEXT_PUBLIC_INOREADER_REDIRECT_URI=http://localhost:3000/api/auth/callback/inoreader
+
+   # Anthropic Claude API
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   ```
+
+   For Inoreader credentials:
+   - Go to [Inoreader Developer Portal](https://www.inoreader.com/developers/register-app)
+   - Create a new application
+   - Set redirect URI to match your development/production URL
 
 4. **Start development server**
    ```bash
@@ -116,7 +128,7 @@ src/
 
 ## Current Development Status
 
-**Phase**: PWA Foundation Complete - Ready for API Integration
+**Phase**: Authentication Complete - Ready for Data Storage
 
 ### Completed ✅
 
@@ -128,6 +140,14 @@ src/
   - ✅ **Issue #10**: PWA Icons and Assets  
   - ✅ **Issue #12**: App Layout and Navigation
   - ✅ **Issue #11**: Offline Caching Strategy
+- ✅ **Issue #6**: Inoreader OAuth Authentication - Complete auth system
+  - ✅ **Issue #13**: OAuth API routes with secure state handling
+  - ✅ **Issue #14**: Secure token storage with httpOnly cookies
+  - ✅ **Issue #15**: Authentication state management in Zustand
+  - ✅ **Issue #16**: Login/logout UI components with user profile
+  - ✅ **Issue #17**: Protected routes with AuthGuard
+  - ✅ **Issue #18**: API service layer with auto token refresh
+  - ✅ **Issue #19**: Rate limiting awareness (100 calls/day)
 
 ### Current Features
 
@@ -137,10 +157,13 @@ src/
 - **Offline Functionality**: Service worker with intelligent caching strategies
 - **Network Awareness**: Visual indicators for connection status
 - **Sync Management**: Queue system for offline actions with retry logic
+- **Authentication System**: OAuth 2.0 integration with Inoreader
+- **Protected Routes**: Main app requires authentication
+- **User Profile**: Display authenticated user info with logout option
+- **Rate Limiting**: Track and manage API usage limits
 
 ### Next Steps
 
-- **Issue #6**: Inoreader OAuth Authentication
 - **Issue #7**: Initial Data Storage and IndexedDB setup
 - **Epic 2**: Core Reading Features (Article fetching, reading interface)
 

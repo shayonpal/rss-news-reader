@@ -9,9 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Inoreader OAuth authentication (planned - Issue #6)
-- IndexedDB data storage implementation (planned - Issue #7)
-- Article fetching and display (planned - Epic 2)
+- N/A
 
 ### Changed
 
@@ -32,6 +30,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - N/A
+
+## [0.3.0] - 2025-01-06
+
+### Added
+
+- **Complete Inoreader OAuth 2.0 Authentication System** (Issue #6: US-002)
+  - **OAuth API Routes** (Issue #13)
+    - Authorization endpoint with secure state parameter generation
+    - Callback route for authorization code exchange
+    - Token refresh endpoint for automatic renewal
+    - Logout route to clear authentication
+    - Status endpoint for auth state checking
+  - **Secure Token Storage** (Issue #14)
+    - HttpOnly cookies for access and refresh tokens
+    - Proper security flags (Secure, SameSite, Path)
+    - Token expiration tracking
+    - CSRF protection implementation
+  - **Authentication State Management** (Issue #15)
+    - Zustand store for auth state with persistence
+    - Automatic token refresh before expiration
+    - User profile data management
+    - Loading and error state handling
+  - **Authentication UI Components** (Issue #16)
+    - Login button with loading states
+    - Logout functionality
+    - User profile dropdown with avatar
+    - Authentication status indicator in header
+  - **Protected Routes** (Issue #17)
+    - AuthGuard component for route protection
+    - Graceful loading states during auth check
+    - Fallback UI for unauthenticated users
+    - HOC wrapper for page-level protection
+  - **API Service Layer** (Issue #18)
+    - Axios client with request/response interceptors
+    - Automatic token refresh on 401 errors
+    - Type-safe Inoreader API methods
+    - Error handling and retry logic
+  - **Rate Limiting** (Issue #19)
+    - 100 calls/day tracking for Inoreader API
+    - Usage statistics and warnings
+    - Daily reset at midnight UTC
+    - Persistent usage tracking
+
+### Technical Implementation
+
+- **Security**: OAuth 2.0 flow with state validation, httpOnly cookies, CSRF protection
+- **UI Components**: Radix UI primitives for dropdown and avatar
+- **HTTP Client**: Axios with automatic retry and token refresh
+- **Dependencies**: Added axios, @radix-ui/react-dropdown-menu, @radix-ui/react-avatar
+
+### User Experience
+
+- **Seamless Authentication**: One-click Inoreader connection
+- **Persistent Sessions**: Auth state survives browser refresh
+- **Auto Token Refresh**: No manual re-authentication needed
+- **Clear Status**: User profile visible when authenticated
+- **Protected Content**: Main app requires authentication
+
+### Next Milestone
+
+- IndexedDB data storage implementation (Issue #7)
+- Article fetching and display (Epic 2)
 
 ## [0.2.0] - 2025-01-06
 
