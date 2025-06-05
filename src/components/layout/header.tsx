@@ -4,6 +4,7 @@ import { Menu, RefreshCw } from 'lucide-react';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
 import { Button } from '@/components/ui/button';
+import { AuthStatus } from '@/components/auth/auth-status';
 
 export function Header() {
   const { toggleSidebar } = useUIStore();
@@ -52,6 +53,7 @@ export function Header() {
             >
               <RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
             </Button>
+            <AuthStatus />
           </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Validate state parameter
-    const storedState = request.cookies.get('oauth_state')?.value;
+    const storedState = request.cookies.get('oauth_state')?.value || null;
     if (!validateOAuthState(state, storedState)) {
       console.error('Invalid OAuth state');
       return NextResponse.redirect(
