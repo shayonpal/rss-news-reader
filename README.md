@@ -49,10 +49,10 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
 3. **Set up environment variables**
 
    ```bash
-   cp .env.example .env.local
+   cp .env.example .env
    ```
 
-   Edit `.env.local` with your API credentials:
+   Edit `.env` with your API credentials:
 
    ```bash
    # Inoreader OAuth Configuration
