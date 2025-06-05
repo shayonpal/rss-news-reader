@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Local development
 CLAUDE.local.md
+update-project-fields.js

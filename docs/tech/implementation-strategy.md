@@ -7,60 +7,63 @@ This document outlines the strategic approach to implementing the RSS Reader PWA
 ## Offline-First Architecture
 
 ### Core Philosophy
+
 The app prioritizes offline functionality as a first-class citizen, not an afterthought. This ensures users always have access to content regardless of network conditions.
 
 ### Implementation Strategy
 
 #### 1. Service Worker Architecture
+
 ```typescript
 // Three-layer caching strategy
 const cachingStrategy = {
   // Static assets - Cache First
   static: {
-    strategy: 'CacheFirst',
-    files: ['/', '/manifest.json', 'fonts/', 'icons/'],
-    maxAge: '1 year'
+    strategy: "CacheFirst",
+    files: ["/", "/manifest.json", "fonts/", "icons/"],
+    maxAge: "1 year",
   },
-  
+
   // API responses - Network First with fallback
   api: {
-    strategy: 'NetworkFirst',
-    fallback: 'indexeddb',
-    timeout: 5000
+    strategy: "NetworkFirst",
+    fallback: "indexeddb",
+    timeout: 5000,
   },
-  
+
   // Article images - Stale While Revalidate
   media: {
-    strategy: 'StaleWhileRevalidate',
+    strategy: "StaleWhileRevalidate",
     maxEntries: 200,
-    maxAge: '30 days'
-  }
-}
+    maxAge: "30 days",
+  },
+};
 ```
 
 #### 2. Data Synchronization Patterns
+
 ```typescript
 // Queue-based sync for offline actions
 class OfflineActionQueue {
-  private queue: OfflineAction[] = []
-  
+  private queue: OfflineAction[] = [];
+
   async queueAction(action: OfflineAction) {
-    await this.storeAction(action)
+    await this.storeAction(action);
     if (navigator.onLine) {
-      this.processQueue()
+      this.processQueue();
     }
   }
-  
+
   async processQueue() {
     while (this.queue.length > 0 && navigator.onLine) {
-      const action = this.queue.shift()!
+      const action = this.queue.shift()!;
       try {
-        await this.executeAction(action)
-        await this.removeFromStorage(action.id)
+        await this.executeAction(action);
+        await this.removeFromStorage(action.id);
       } catch (error) {
         // Re-queue on failure
-        this.queue.unshift(action)
-        break
+        this.queue.unshift(action);
+        break;
       }
     }
   }
@@ -68,13 +71,14 @@ class OfflineActionQueue {
 ```
 
 #### 3. Conflict Resolution Strategy
+
 ```typescript
 // Last-write-wins with timestamp comparison
 interface SyncConflictResolver {
   resolveReadState(local: ReadState, remote: ReadState): ReadState {
     return local.timestamp > remote.timestamp ? local : remote
   }
-  
+
   mergeArticleData(local: Article, remote: Article): Article {
     return {
       ...remote, // Server is source of truth for content
@@ -88,182 +92,192 @@ interface SyncConflictResolver {
 ## State Management Architecture
 
 ### Zustand Store Structure
+
 ```typescript
 // Modular store approach with slices
 interface AppState {
-  articles: ArticleState
-  feeds: FeedState
-  sync: SyncState
-  settings: SettingsState
-  api: ApiState
+  articles: ArticleState;
+  feeds: FeedState;
+  sync: SyncState;
+  settings: SettingsState;
+  api: ApiState;
 }
 
 // Article slice
-const createArticleSlice: StateCreator<AppState, [], [], ArticleState> = (set, get) => ({
+const createArticleSlice: StateCreator<AppState, [], [], ArticleState> = (
+  set,
+  get
+) => ({
   articles: new Map(),
-  
-  addArticles: (newArticles: Article[]) => set(state => {
-    const updated = new Map(state.articles.articles)
-    newArticles.forEach(article => updated.set(article.id, article))
-    return { articles: { ...state.articles, articles: updated } }
-  }),
-  
+
+  addArticles: (newArticles: Article[]) =>
+    set((state) => {
+      const updated = new Map(state.articles.articles);
+      newArticles.forEach((article) => updated.set(article.id, article));
+      return { articles: { ...state.articles, articles: updated } };
+    }),
+
   markAsRead: async (articleId: string) => {
     // Optimistic update
-    set(state => {
-      const article = state.articles.articles.get(articleId)
+    set((state) => {
+      const article = state.articles.articles.get(articleId);
       if (article) {
-        article.readState = { isRead: true, timestamp: Date.now() }
+        article.readState = { isRead: true, timestamp: Date.now() };
       }
-      return state
-    })
-    
+      return state;
+    });
+
     // Queue for sync
     await get().sync.queueAction({
-      type: 'MARK_READ',
+      type: "MARK_READ",
       articleId,
-      timestamp: Date.now()
-    })
-  }
-})
+      timestamp: Date.now(),
+    });
+  },
+});
 ```
 
 ### State Persistence Strategy
+
 ```typescript
 // Selective persistence with compression
 const persistenceConfig = {
-  name: 'shayon-news-store',
-  
+  name: "shayon-news-store",
+
   // Only persist essential data
   partialize: (state: AppState) => ({
     settings: state.settings,
     sync: {
       lastSyncTime: state.sync.lastSyncTime,
-      queuedActions: state.sync.queuedActions
-    }
+      queuedActions: state.sync.queuedActions,
+    },
   }),
-  
+
   storage: createJSONStorage(() => localStorage, {
     serialize: (state) => LZString.compress(JSON.stringify(state)),
-    deserialize: (str) => JSON.parse(LZString.decompress(str) || '{}')
-  })
-}
+    deserialize: (str) => JSON.parse(LZString.decompress(str) || "{}"),
+  }),
+};
 ```
 
 ## API Conservation Strategies
 
 ### Intelligent Batching
+
 ```typescript
 class ApiRequestBatcher {
-  private pendingRequests = new Map<string, Promise<any>>()
-  
+  private pendingRequests = new Map<string, Promise<any>>();
+
   // Deduplicate identical requests
   async makeRequest<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
     if (this.pendingRequests.has(key)) {
-      return this.pendingRequests.get(key)!
+      return this.pendingRequests.get(key)!;
     }
-    
-    const request = requestFn()
-    this.pendingRequests.set(key, request)
-    
+
+    const request = requestFn();
+    this.pendingRequests.set(key, request);
+
     try {
-      const result = await request
-      this.pendingRequests.delete(key)
-      return result
+      const result = await request;
+      this.pendingRequests.delete(key);
+      return result;
     } catch (error) {
-      this.pendingRequests.delete(key)
-      throw error
+      this.pendingRequests.delete(key);
+      throw error;
     }
   }
 }
 ```
 
 ### Smart Sync Algorithms
+
 ```typescript
 // Adaptive sync frequency based on usage patterns
 class AdaptiveSyncManager {
-  private syncHistory: SyncEvent[] = []
-  
+  private syncHistory: SyncEvent[] = [];
+
   calculateNextSyncTime(): number {
-    const recentActivity = this.getRecentActivity()
-    const baseInterval = 6 * 60 * 60 * 1000 // 6 hours
-    
+    const recentActivity = this.getRecentActivity();
+    const baseInterval = 6 * 60 * 60 * 1000; // 6 hours
+
     if (recentActivity.high) {
-      return baseInterval * 0.5 // Sync more frequently during active use
+      return baseInterval * 0.5; // Sync more frequently during active use
     } else if (recentActivity.low) {
-      return baseInterval * 2 // Sync less frequently during inactive periods
+      return baseInterval * 2; // Sync less frequently during inactive periods
     }
-    
-    return baseInterval
+
+    return baseInterval;
   }
-  
+
   async smartSync(): Promise<SyncResult> {
     // Only sync if meaningful changes are expected
-    const shouldSync = await this.shouldPerformSync()
+    const shouldSync = await this.shouldPerformSync();
     if (!shouldSync) {
-      return { skipped: true, reason: 'No changes expected' }
+      return { skipped: true, reason: "No changes expected" };
     }
-    
-    return this.performSync()
+
+    return this.performSync();
   }
 }
 ```
 
 ### API Usage Monitoring
+
 ```typescript
 interface ApiUsageTracker {
   inoreader: {
-    daily: Map<string, number> // date -> call count
-    hourly: Map<string, number> // hour -> call count
-    byEndpoint: Map<string, number> // endpoint -> call count
-  }
-  
+    daily: Map<string, number>; // date -> call count
+    hourly: Map<string, number>; // hour -> call count
+    byEndpoint: Map<string, number>; // endpoint -> call count
+  };
+
   claude: {
-    daily: Map<string, { tokens: number, cost: number }>
-    monthly: Map<string, { tokens: number, cost: number }>
-  }
-  
-  trackCall(service: 'inoreader' | 'claude', details: CallDetails): void
-  getUsageStats(period: 'daily' | 'weekly' | 'monthly'): UsageStats
-  shouldThrottle(service: string): boolean
+    daily: Map<string, { tokens: number; cost: number }>;
+    monthly: Map<string, { tokens: number; cost: number }>;
+  };
+
+  trackCall(service: "inoreader" | "claude", details: CallDetails): void;
+  getUsageStats(period: "daily" | "weekly" | "monthly"): UsageStats;
+  shouldThrottle(service: string): boolean;
 }
 ```
 
 ## Error Handling & Recovery
 
 ### Graceful Degradation Strategy
+
 ```typescript
 class ErrorRecoveryManager {
-  private strategies = new Map<ErrorType, RecoveryStrategy>()
-  
+  private strategies = new Map<ErrorType, RecoveryStrategy>();
+
   async handleError(error: AppError): Promise<ErrorResult> {
-    const strategy = this.strategies.get(error.type)
-    
+    const strategy = this.strategies.get(error.type);
+
     if (!strategy) {
-      return this.defaultErrorHandling(error)
+      return this.defaultErrorHandling(error);
     }
-    
+
     try {
-      const result = await strategy.recover(error)
-      this.logRecoverySuccess(error, result)
-      return result
+      const result = await strategy.recover(error);
+      this.logRecoverySuccess(error, result);
+      return result;
     } catch (recoveryError) {
-      return this.escalateError(error, recoveryError)
+      return this.escalateError(error, recoveryError);
     }
   }
-  
+
   private async retryWithBackoff(
     operation: () => Promise<any>,
     maxRetries: number = 3
   ): Promise<any> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await operation()
+        return await operation();
       } catch (error) {
-        if (attempt === maxRetries) throw error
-        
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000)
-        await new Promise(resolve => setTimeout(resolve, delay))
+        if (attempt === maxRetries) throw error;
+
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -271,6 +285,7 @@ class ErrorRecoveryManager {
 ```
 
 ### User-Friendly Error States
+
 ```typescript
 interface ErrorStateManager {
   // Convert technical errors to user-friendly messages
@@ -281,7 +296,7 @@ interface ErrorStateManager {
       AUTH_EXPIRED: "Please reconnect your Inoreader account.",
       STORAGE_FULL: "Storage is full. Cleaning up old articles..."
     }
-    
+
     return {
       type: error.severity,
       message: messageMap[error.code] || "Something went wrong",
@@ -295,36 +310,38 @@ interface ErrorStateManager {
 ## Performance Optimization Strategies
 
 ### Code Splitting & Lazy Loading
+
 ```typescript
 // Route-based code splitting
-const ArticleDetail = lazy(() => import('./ArticleDetail'))
-const Settings = lazy(() => import('./Settings'))
-const ApiDashboard = lazy(() => import('./ApiDashboard'))
+const ArticleDetail = lazy(() => import("./ArticleDetail"));
+const Settings = lazy(() => import("./Settings"));
+const ApiDashboard = lazy(() => import("./ApiDashboard"));
 
 // Component-based lazy loading for heavy features
-const SummaryGenerator = lazy(() => import('./SummaryGenerator'))
+const SummaryGenerator = lazy(() => import("./SummaryGenerator"));
 
 // Preload critical routes on idle
 const preloadCriticalRoutes = () => {
-  if ('requestIdleCallback' in window) {
+  if ("requestIdleCallback" in window) {
     requestIdleCallback(() => {
-      import('./ArticleDetail')
-      import('./SummaryGenerator')
-    })
+      import("./ArticleDetail");
+      import("./SummaryGenerator");
+    });
   }
-}
+};
 ```
 
 ### Virtual Scrolling for Large Lists
+
 ```typescript
 // Implement virtual scrolling for article lists
 const VirtualizedArticleList = ({ articles }: { articles: Article[] }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 })
-  
+
   const itemHeight = 120 // Fixed height for each article card
   const visibleItems = articles.slice(visibleRange.start, visibleRange.end)
-  
+
   const handleScroll = useCallback(
     throttle((scrollTop: number) => {
       const start = Math.floor(scrollTop / itemHeight)
@@ -333,7 +350,7 @@ const VirtualizedArticleList = ({ articles }: { articles: Article[] }) => {
     }, 16), // 60fps
     [articles.length]
   )
-  
+
   return (
     <div className="virtual-list" ref={containerRef} onScroll={handleScroll}>
       {visibleItems.map((article, index) => (
@@ -345,15 +362,16 @@ const VirtualizedArticleList = ({ articles }: { articles: Article[] }) => {
 ```
 
 ### Image Optimization Strategy
+
 ```typescript
 // Progressive image loading with blur-up technique
 const OptimizedImage = ({ src, alt, className }: ImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
-  
+
   // Generate blur placeholder from dominant color
   const blurDataURL = generateBlurDataURL(src)
-  
+
   return (
     <div className={`relative ${className}`}>
       <Image
@@ -382,52 +400,54 @@ const OptimizedImage = ({ src, alt, className }: ImageProps) => {
 ## User Experience Patterns
 
 ### Optimistic UI Updates
+
 ```typescript
 // Immediate feedback with rollback on failure
 const useOptimisticUpdate = <T>(
   currentValue: T,
   updateFn: (value: T) => Promise<T>
 ) => {
-  const [optimisticValue, setOptimisticValue] = useState(currentValue)
-  const [isUpdating, setIsUpdating] = useState(false)
-  
+  const [optimisticValue, setOptimisticValue] = useState(currentValue);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const update = async (newValue: T) => {
-    setOptimisticValue(newValue) // Immediate UI update
-    setIsUpdating(true)
-    
+    setOptimisticValue(newValue); // Immediate UI update
+    setIsUpdating(true);
+
     try {
-      const result = await updateFn(newValue)
-      setOptimisticValue(result) // Confirm with server response
+      const result = await updateFn(newValue);
+      setOptimisticValue(result); // Confirm with server response
     } catch (error) {
-      setOptimisticValue(currentValue) // Rollback on failure
-      throw error
+      setOptimisticValue(currentValue); // Rollback on failure
+      throw error;
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }
-  
-  return { value: optimisticValue, update, isUpdating }
-}
+  };
+
+  return { value: optimisticValue, update, isUpdating };
+};
 ```
 
 ### Progressive Loading States
+
 ```typescript
 // Sophisticated loading states for better UX
 const ArticleListWithStates = () => {
   const { articles, isLoading, error, isEmpty } = useArticles()
-  
+
   if (isLoading && articles.length === 0) {
     return <SkeletonArticleList count={10} />
   }
-  
+
   if (error && articles.length === 0) {
     return <ErrorState error={error} onRetry={refetch} />
   }
-  
+
   if (isEmpty) {
     return <EmptyState message="No articles yet" />
   }
-  
+
   return (
     <>
       <ArticleList articles={articles} />
@@ -439,68 +459,77 @@ const ArticleListWithStates = () => {
 ```
 
 ### Gesture-Based Navigation
+
 ```typescript
 // Swipe gestures for article navigation
 const useSwipeNavigation = (
   onSwipeLeft: () => void,
   onSwipeRight: () => void
 ) => {
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const [touchEnd, setTouchEnd] = useState<number | null>(null)
-  
-  const minSwipeDistance = 50
-  
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
   const onTouchStart = (e: TouchEvent) => {
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientX)
-  }
-  
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
   const onTouchMove = (e: TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
-  }
-  
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
-    
-    const distance = touchStart - touchEnd
-    const isLeftSwipe = distance > minSwipeDistance
-    const isRightSwipe = distance < -minSwipeDistance
-    
-    if (isLeftSwipe) onSwipeLeft()
-    if (isRightSwipe) onSwipeRight()
-  }
-  
-  return { onTouchStart, onTouchMove, onTouchEnd }
-}
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) onSwipeLeft();
+    if (isRightSwipe) onSwipeRight();
+  };
+
+  return { onTouchStart, onTouchMove, onTouchEnd };
+};
 ```
 
 ## Security Implementation
 
 ### API Key Protection
+
 ```typescript
 // Server-side API proxy to protect keys
 // pages/api/inoreader/[...path].ts
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions)
-  
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const session = await getServerSession(req, res, authOptions);
+
   if (!session?.accessToken) {
-    return res.status(401).json({ error: 'Unauthorized' })
+    return res.status(401).json({ error: "Unauthorized" });
   }
-  
+
   // Proxy request to Inoreader with server-stored credentials
-  const response = await fetch(`https://www.inoreader.com/reader/api/0/${path}`, {
-    headers: {
-      'Authorization': `Bearer ${session.accessToken}`,
-      'Content-Type': 'application/json'
+  const response = await fetch(
+    `https://www.inoreader.com/reader/api/0/${path}`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        "Content-Type": "application/json",
+      },
     }
-  })
-  
-  const data = await response.json()
-  res.json(data)
+  );
+
+  const data = await response.json();
+  res.json(data);
 }
 ```
 
 ### Content Security Policy
+
 ```typescript
 // next.config.js
 const ContentSecurityPolicy = `
@@ -512,23 +541,24 @@ const ContentSecurityPolicy = `
   connect-src 'self' https://api.anthropic.com https://www.inoreader.com;
   media-src 'self' https:;
   worker-src 'self';
-`
+`;
 
 const securityHeaders = [
   {
-    key: 'Content-Security-Policy',
-    value: ContentSecurityPolicy.replace(/\s{2,}/g, ' ').trim()
+    key: "Content-Security-Policy",
+    value: ContentSecurityPolicy.replace(/\s{2,}/g, " ").trim(),
   },
   {
-    key: 'X-Frame-Options',
-    value: 'DENY'
-  }
-]
+    key: "X-Frame-Options",
+    value: "DENY",
+  },
+];
 ```
 
 ## Testing Strategy Integration
 
 ### Component Testing Patterns
+
 ```typescript
 // Test components in isolation with mock data
 const renderWithProviders = (component: ReactElement) => {
@@ -536,7 +566,7 @@ const renderWithProviders = (component: ReactElement) => {
     articles: mockArticles,
     settings: mockSettings
   })
-  
+
   return render(
     <StoreProvider store={mockStore}>
       <ThemeProvider>
@@ -550,10 +580,10 @@ const renderWithProviders = (component: ReactElement) => {
 test('article marking as read updates UI immediately', async () => {
   const user = userEvent.setup()
   renderWithProviders(<ArticleList />)
-  
+
   const article = screen.getByTestId('article-123')
   await user.click(article)
-  
+
   expect(article).toHaveClass('read')
   expect(mockStore.getState().sync.queuedActions).toHaveLength(1)
 })
@@ -562,47 +592,49 @@ test('article marking as read updates UI immediately', async () => {
 ## Deployment Strategy
 
 ### Environment-Specific Configurations
+
 ```typescript
 // config/environments.ts
 export const environments = {
   development: {
-    apiBaseUrl: 'http://localhost:3000/api',
+    apiBaseUrl: "http://localhost:3000/api",
     enableMockData: true,
-    logLevel: 'debug',
-    enableDevTools: true
+    logLevel: "debug",
+    enableDevTools: true,
   },
-  
+
   staging: {
-    apiBaseUrl: 'https://staging.shayon-news.com/api',
+    apiBaseUrl: "https://staging.shayon-news.com/api",
     enableMockData: false,
-    logLevel: 'info',
-    enableDevTools: false
-  },
-  
-  production: {
-    apiBaseUrl: 'https://shayon-news.com/api',
-    enableMockData: false,
-    logLevel: 'error',
+    logLevel: "info",
     enableDevTools: false,
-    enableAnalytics: true
-  }
-}
+  },
+
+  production: {
+    apiBaseUrl: "https://shayon-news.com/api",
+    enableMockData: false,
+    logLevel: "error",
+    enableDevTools: false,
+    enableAnalytics: true,
+  },
+};
 ```
 
 ### Progressive Deployment
+
 ```typescript
 // Feature flags for gradual rollout
 const useFeatureFlag = (flagName: string) => {
   const { settings } = useStore()
   const isEnabled = settings.featureFlags?.[flagName] ?? false
-  
+
   return isEnabled
 }
 
 // Usage in components
 const ArticleDetail = ({ article }: Props) => {
   const isAISummaryEnabled = useFeatureFlag('ai-summary')
-  
+
   return (
     <div>
       <ArticleContent article={article} />

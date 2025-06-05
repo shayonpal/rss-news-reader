@@ -41,6 +41,7 @@ When making significant architectural decisions:
 ## Reviewing ADRs
 
 ADRs should be reviewed as part of:
+
 - Major feature implementations
 - Significant refactoring efforts
 - Performance optimization work

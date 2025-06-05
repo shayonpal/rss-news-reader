@@ -5,6 +5,7 @@
 ### Primary Framework: **Next.js 14+ (App Router)**
 
 **Rationale:**
+
 - Excellent PWA support with native Service Worker integration
 - Server-side rendering capabilities for better SEO and performance
 - Built-in optimizations (image optimization, code splitting)
@@ -12,6 +13,7 @@
 - Active ecosystem and community
 
 **Key Features Utilized:**
+
 - App Router for modern routing patterns
 - Built-in PWA capabilities with `next-pwa` plugin
 - API routes for Inoreader and Claude API integration
@@ -19,6 +21,7 @@
 - Built-in image optimization for article media
 
 ### Alternative Considerations:
+
 - **SvelteKit**: Excellent performance, smaller bundle sizes
 - **Nuxt.js**: Vue-based, good PWA support
 - **Create React App**: Simpler but less feature-rich
@@ -28,6 +31,7 @@
 ### CSS Framework: **Tailwind CSS v3+**
 
 **Rationale:**
+
 - Utility-first approach enables rapid prototyping
 - Excellent responsive design support
 - Small production bundle size with purging
@@ -35,6 +39,7 @@
 - Strong typography plugin for readable article layouts
 
 **Key Plugins:**
+
 - `@tailwindcss/typography` for article content styling
 - `@tailwindcss/forms` for clean form components
 - Custom color palette for dark/light mode
@@ -42,12 +47,14 @@
 ### Component Library: **Radix UI Primitives + Custom Components**
 
 **Benefits:**
+
 - Accessible components by default
 - Headless components allow custom styling
 - WAI-ARIA compliant
 - Keyboard navigation support
 
 **Key Components:**
+
 - Dialog for modals
 - Dropdown Menu for actions
 - Toggle for theme switching
@@ -58,6 +65,7 @@
 ### Primary: **Zustand**
 
 **Rationale:**
+
 - Lightweight (2.5KB gzipped)
 - Simple boilerplate-free API
 - Great TypeScript support
@@ -65,6 +73,7 @@
 - Excellent React DevTools integration
 
 **Store Structure:**
+
 ```typescript
 // Store slices
 - articlesStore: Article CRUD operations
@@ -75,6 +84,7 @@
 ```
 
 ### Alternative: **Context API + useReducer**
+
 For simpler state requirements, could use React's built-in state management.
 
 ## Data Persistence & Offline Support
@@ -82,6 +92,7 @@ For simpler state requirements, could use React's built-in state management.
 ### Primary Storage: **IndexedDB with Dexie.js**
 
 **Rationale:**
+
 - Large storage capacity (hundreds of MB)
 - Structured data with indexes for fast queries
 - Automatic compression support
@@ -89,6 +100,7 @@ For simpler state requirements, could use React's built-in state management.
 - Better performance than localStorage for large datasets
 
 **Schema:**
+
 ```typescript
 // Database tables
 - articles: Full article content and metadata
@@ -99,11 +111,13 @@ For simpler state requirements, could use React's built-in state management.
 ```
 
 ### Secondary Storage: **localStorage**
+
 For simple settings and temporary data.
 
 ### Service Worker: **Workbox**
 
 **Features:**
+
 - Automatic caching strategies
 - Background sync for read/unread states
 - Offline fallbacks
@@ -114,6 +128,7 @@ For simple settings and temporary data.
 ### HTTP Client: **Axios**
 
 **Features:**
+
 - Request/response interceptors for auth tokens
 - Automatic request/response transformation
 - Built-in timeout handling
@@ -121,6 +136,7 @@ For simple settings and temporary data.
 - Better error handling than fetch
 
 **API Integration Architecture:**
+
 ```typescript
 // API service layers
 - inoreaderApi: All Inoreader endpoints
@@ -134,6 +150,7 @@ For simple settings and temporary data.
 ### Type Safety: **TypeScript 5+**
 
 **Configuration:**
+
 - Strict mode enabled
 - Path mapping for clean imports
 - API response type definitions
@@ -142,6 +159,7 @@ For simple settings and temporary data.
 ### Code Quality: **ESLint + Prettier**
 
 **Rules:**
+
 - React best practices
 - Accessibility rules
 - Import organization
@@ -150,6 +168,7 @@ For simple settings and temporary data.
 ### Testing Framework: **Vitest + React Testing Library**
 
 **Test Types:**
+
 - Unit tests for utilities and components
 - Integration tests for API services
 - E2E tests with Playwright
@@ -157,6 +176,7 @@ For simple settings and temporary data.
 ### Build Tools: **Vite (via Next.js)**
 
 **Optimizations:**
+
 - Tree shaking for smaller bundles
 - Code splitting by route
 - Dynamic imports for heavy components
@@ -165,6 +185,7 @@ For simple settings and temporary data.
 ## PWA Configuration
 
 ### Manifest Configuration:
+
 ```json
 {
   "name": "Shayon's News",
@@ -179,6 +200,7 @@ For simple settings and temporary data.
 ```
 
 ### Service Worker Strategy:
+
 - **Cache First**: Static assets, fonts, icons
 - **Network First**: API calls, dynamic content
 - **Stale While Revalidate**: Article images
@@ -187,18 +209,21 @@ For simple settings and temporary data.
 ## Performance Optimization
 
 ### Bundle Optimization:
+
 - Dynamic imports for heavy components
 - Code splitting by route
 - Tree shaking of unused dependencies
 - Compression with gzip/brotli
 
 ### Image Optimization:
+
 - Next.js Image component for automatic optimization
 - WebP format with fallbacks
 - Lazy loading for article images
 - Responsive image sizing
 
 ### Caching Strategy:
+
 - Service Worker caching for assets
 - IndexedDB for application data
 - Memory caching for API responses
@@ -207,14 +232,17 @@ For simple settings and temporary data.
 ## Development Environment
 
 ### Package Manager: **npm**
+
 Standard package manager, good lockfile support.
 
 ### Development Server:
+
 - Next.js dev server with hot reloading
 - HTTPS support for PWA testing
 - Environment variable management
 
 ### Environment Configuration:
+
 ```
 NEXT_PUBLIC_INOREADER_CLIENT_ID=
 NEXT_PUBLIC_INOREADER_REDIRECT_URI=
@@ -227,6 +255,7 @@ NODE_ENV=development|production
 ### Hosting Platform: **Vercel**
 
 **Benefits:**
+
 - Seamless Next.js integration
 - Automatic deployments from Git
 - Edge network for global performance
@@ -234,6 +263,7 @@ NODE_ENV=development|production
 - Automatic HTTPS certificates
 
 ### Alternative Platforms:
+
 - **Netlify**: Good PWA support, edge functions
 - **Railway**: Simple deployment with database options
 - **Self-hosted**: Docker containers for full control
@@ -241,11 +271,13 @@ NODE_ENV=development|production
 ## API Security & Rate Limiting
 
 ### Authentication:
+
 - OAuth 2.0 for Inoreader integration
 - Secure token storage in httpOnly cookies
 - Automatic token refresh handling
 
 ### Rate Limiting:
+
 - Client-side API call tracking
 - Exponential backoff for failed requests
 - Queue management for bulk operations
@@ -254,12 +286,14 @@ NODE_ENV=development|production
 ## Monitoring & Analytics
 
 ### Error Tracking: **Sentry** (Optional)
+
 - Real-time error monitoring
 - Performance tracking
 - User session replay
 - Release tracking
 
 ### Analytics: **Vercel Analytics**
+
 - Privacy-focused web analytics
 - Core Web Vitals tracking
 - No cookie tracking required
@@ -267,12 +301,14 @@ NODE_ENV=development|production
 ## Development Tools & Extensions
 
 ### VS Code Extensions:
+
 - ES7+ React/Redux/React-Native snippets
 - Tailwind CSS IntelliSense
 - TypeScript Hero
 - GitLens
 
 ### Browser Extensions:
+
 - React Developer Tools
 - Redux DevTools (for Zustand)
 - Lighthouse for PWA auditing
@@ -302,6 +338,7 @@ src/
 ## Key Dependencies
 
 ### Core Dependencies:
+
 ```json
 {
   "next": "^14.0.0",
@@ -320,6 +357,7 @@ src/
 ```
 
 ### Development Dependencies:
+
 ```json
 {
   "vitest": "^1.0.0",
@@ -333,22 +371,27 @@ src/
 ## Critical Decision Points
 
 ### 1. **PWA vs Native App**
+
 **Decision**: PWA for cross-platform compatibility and easier maintenance.
 **Impact**: Faster development, broader reach, easier updates.
 
 ### 2. **Client-side vs Server-side Rendering**
+
 **Decision**: Hybrid approach with SSR for initial load, client-side for interactions.
 **Impact**: Better performance and SEO while maintaining offline capabilities.
 
 ### 3. **State Management Complexity**
+
 **Decision**: Zustand for simplicity over Redux complexity.
 **Impact**: Faster development, easier maintenance, smaller bundle size.
 
 ### 4. **Database Choice**
+
 **Decision**: IndexedDB over localStorage for large data storage.
 **Impact**: Better performance, larger storage capacity, structured queries.
 
 ### 5. **API Rate Limiting Strategy**
+
 **Decision**: Client-side tracking with graceful degradation.
 **Impact**: Better user experience, reduced server costs, clear usage feedback.
 

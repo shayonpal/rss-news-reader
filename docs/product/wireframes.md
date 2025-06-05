@@ -1,6 +1,7 @@
 # Wireframes - Shayon's News
 
 ## Overview
+
 These wireframes illustrate the key screens and layouts for the RSS Reader PWA, inspired by Reeder 5's clean aesthetic. The design emphasizes typography, whitespace, and content-first approach.
 
 ## Mobile Wireframes (Primary Target)
@@ -13,7 +14,7 @@ These wireframes illustrate the key screens and layouts for the RSS Reader PWA, 
 ├─────────────────────────────────────┤
 │                                     │
 │ ┌─────────────────────────────────┐ │
-│ │ Apple's October Event Announced  │ │  
+│ │ Apple's October Event Announced  │ │
 │ │ The Verge • 2 hours ago     ⚡  │ │  <- ⚡ Tap to summarize
 │ │ ─────────────────────────────── │ │
 │ │ Apple has officially announced   │ │
@@ -48,7 +49,7 @@ Legend:
 ≡  = Menu/Feed List
 🔄 = Manual Sync
 •  = Unread article
-○  = Read article  
+○  = Read article
 ⚡ = Has AI summary / Tap to generate summary
 ```
 
@@ -328,24 +329,27 @@ Bottom swipe indicators:
 
 Three-column layout:
 - Fixed feed list (200px)
-- Article list (350px)  
+- Article list (350px)
 - Article content (remaining space)
 ```
 
 ## Responsive Breakpoints
 
 ### Phone (< 640px)
+
 - Single column
 - Bottom navigation
 - Slide-out feed drawer
 - Full-width article view
 
 ### Tablet Portrait (640px - 1024px)
+
 - Two column: Article list + Article view
 - Slide-out feed drawer
 - Wider article reading width
 
 ### Tablet Landscape / Desktop (> 1024px)
+
 - Three column layout
 - Persistent feed list
 - Optimal reading width (max 720px)
@@ -354,6 +358,7 @@ Three-column layout:
 ## Interaction Patterns
 
 ### Touch Targets
+
 ```
 ┌─────────────────────────────────────┐
 │ [TAP HERE TO OPEN ARTICLE-------]   │  <- Tappable area
@@ -365,6 +370,7 @@ Three-column layout:
 ```
 
 ### Touch Gestures
+
 - **Swipe right**: Open feed drawer (mobile)
 - **Swipe left**: Close feed drawer
 - **Pull down**: Refresh article list
@@ -373,6 +379,7 @@ Three-column layout:
 - **Long press**: Future - quick actions
 
 ### Summary Generation from List View
+
 1. **Articles without summary**: Show ⚡ icon on the right - tap to generate
 2. **Generating state**: ⚡ changes to spinning ⟳ icon
 3. **Articles with summary**: Show both ⚡ (indicates has summary) and 🔄 (regenerate)
@@ -380,6 +387,7 @@ Three-column layout:
 5. **Offline state**: ⚡ icon is disabled/grayed out
 
 ### Toast Notifications
+
 ```
 Success Toast:
 ┌─────────────────────────────────────┐
@@ -393,6 +401,7 @@ Error Toast:
 ```
 
 ### Loading States
+
 ```
 ┌─────────────────────────────────────┐
 │ ≡  All Articles          ⟳ Syncing  │  <- Rotating icon
@@ -410,6 +419,7 @@ Error Toast:
 ```
 
 ### Offline State
+
 ```
 ┌─────────────────────────────────────┐
 │ ≡  All Articles (152)    🔄 ⚙       │
@@ -424,6 +434,7 @@ Error Toast:
 ```
 
 ### Empty States
+
 ```
 ┌─────────────────────────────────────┐
 │ ≡  All Articles              🔄  ⚙  │
@@ -446,6 +457,7 @@ Error Toast:
 ## Visual Design Principles
 
 ### Typography Scale
+
 - Article Title: 20px bold
 - Source/Meta: 14px regular (muted)
 - Body Text: 16px regular
@@ -453,6 +465,7 @@ Error Toast:
 - UI Labels: 14px medium
 
 ### Spacing System
+
 - Base unit: 4px
 - Card padding: 16px
 - Between cards: 8px
@@ -460,6 +473,7 @@ Error Toast:
 - Line height: 1.5 for body text
 
 ### Color Palette (Dark Mode)
+
 - Background: #000000
 - Card Background: #1C1C1E
 - Text Primary: #FFFFFF
@@ -468,6 +482,7 @@ Error Toast:
 - Summary Background: #2C2C2E
 
 ### Color Palette (Light Mode)
+
 - Background: #F2F2F7
 - Card Background: #FFFFFF
 - Text Primary: #000000
@@ -478,6 +493,7 @@ Error Toast:
 ## Component Library
 
 ### Article Card States
+
 ```
 Default (Unread):
 ┌─────────────────────────────────┐
@@ -505,6 +521,7 @@ With Summary:
 ```
 
 ### Button Styles
+
 ```
 Primary Action:
 [━━━━━━━━━━━━━━━━━]  <- Filled, rounded
@@ -517,8 +534,9 @@ Text Button:
 ```
 
 ### Icons (Lucide React)
+
 - ≡ Menu
-- 🔄 RefreshCw  
+- 🔄 RefreshCw
 - ⚙️ Settings
 - ← ChevronLeft
 - → ChevronRight
@@ -541,18 +559,22 @@ Text Button:
 ## Performance Indicators
 
 ### Skeleton Screens
+
 Show content structure while loading:
+
 - Gray boxes for text
 - Maintain layout structure
 - Animate with subtle pulse
 
 ### Progressive Loading
+
 1. Show cached content immediately
 2. Load article list
 3. Fetch images lazily
 4. Generate summaries on demand
 
 ### Optimistic UI
+
 - Mark read immediately (sync later)
 - Show summary generation started
 - Update counts instantly
@@ -560,6 +582,7 @@ Show content structure while loading:
 ## PWA Specific Elements
 
 ### Install Prompt
+
 ```
 ┌─────────────────────────────────────┐
 │                                     │
@@ -576,6 +599,7 @@ Show content structure while loading:
 ```
 
 ### App Icon
+
 - Monochrome newspaper icon
 - Works on light/dark backgrounds
 - Follows iOS/Android guidelines
@@ -597,7 +621,7 @@ Toast: "🔌 No connection. Summary generation requires internet."
 
 2. API Rate Limit Exceeded
 ┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │  
+│ Article Title Here      ⚡ ⚠️      │
 │ Source • Time ago                   │
 │ ─────────────────────────────────── │
 │ Summary limit reached for today     │
@@ -606,7 +630,7 @@ Toast: "🚫 Daily AI limit reached. Try again tomorrow."
 
 3. API Timeout
 ┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │  
+│ Article Title Here      ⚡ ⚠️      │
 │ Source • Time ago                   │
 │ ─────────────────────────────────── │
 │ Request timed out. Tap ⚡ to retry │
@@ -615,7 +639,7 @@ Toast: "⏱️ Request timed out. Please try again."
 
 4. Content Too Long
 ┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │  
+│ Article Title Here      ⚡ ⚠️      │
 │ Source • Time ago                   │
 │ ─────────────────────────────────── │
 │ Article too long to summarize      │
@@ -624,7 +648,7 @@ Toast: "📝 Article exceeds AI token limit."
 
 5. Generic API Error
 ┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │  
+│ Article Title Here      ⚡ ⚠️      │
 │ Source • Time ago                   │
 │ ─────────────────────────────────── │
 │ Something went wrong. Try again.   │
@@ -702,20 +726,20 @@ Toast: "⚠️ Sync completed with errors. 82 of 100 articles fetched."
 
 ### Error Message Reference
 
-| Error Type | User Message | Technical Log |
-|------------|--------------|---------------|
-| **Summary Generation** | | |
-| Network Offline | "No connection. Summary generation requires internet." | `SUMMARY_ERROR: Network unavailable` |
-| API Rate Limit | "Daily AI limit reached. Try again tomorrow." | `SUMMARY_ERROR: Rate limit exceeded (429)` |
-| Timeout | "Request timed out. Please try again." | `SUMMARY_ERROR: Request timeout (30s)` |
-| Content Too Long | "Article exceeds AI token limit." | `SUMMARY_ERROR: Token limit exceeded (>100k)` |
-| Generic Error | "Summary generation failed. Please try again." | `SUMMARY_ERROR: ${error.message}` |
-| **Sync Errors** | | |
-| Auth Expired | "Inoreader authentication expired. Please reconnect." | `SYNC_ERROR: Auth token expired (401)` |
-| API Rate Limit | "Inoreader API limit reached. Try again tomorrow." | `SYNC_ERROR: Rate limit (100/100)` |
-| Network Error | "Connection lost. Sync failed." | `SYNC_ERROR: Network unavailable` |
-| Partial Success | "Sync completed with errors. X of Y articles fetched." | `SYNC_WARNING: Partial sync (X/Y)` |
-| **Content Errors** | | |
-| Fetch Failed | "Failed to fetch full content" | `CONTENT_ERROR: Fetch failed ${url}` |
-| Parse Failed | "Could not parse article" | `CONTENT_ERROR: Readability parse failed` |
-| URL Invalid | "Invalid article URL" | `CONTENT_ERROR: Invalid URL format` |
+| Error Type             | User Message                                           | Technical Log                                 |
+| ---------------------- | ------------------------------------------------------ | --------------------------------------------- |
+| **Summary Generation** |                                                        |                                               |
+| Network Offline        | "No connection. Summary generation requires internet." | `SUMMARY_ERROR: Network unavailable`          |
+| API Rate Limit         | "Daily AI limit reached. Try again tomorrow."          | `SUMMARY_ERROR: Rate limit exceeded (429)`    |
+| Timeout                | "Request timed out. Please try again."                 | `SUMMARY_ERROR: Request timeout (30s)`        |
+| Content Too Long       | "Article exceeds AI token limit."                      | `SUMMARY_ERROR: Token limit exceeded (>100k)` |
+| Generic Error          | "Summary generation failed. Please try again."         | `SUMMARY_ERROR: ${error.message}`             |
+| **Sync Errors**        |                                                        |                                               |
+| Auth Expired           | "Inoreader authentication expired. Please reconnect."  | `SYNC_ERROR: Auth token expired (401)`        |
+| API Rate Limit         | "Inoreader API limit reached. Try again tomorrow."     | `SYNC_ERROR: Rate limit (100/100)`            |
+| Network Error          | "Connection lost. Sync failed."                        | `SYNC_ERROR: Network unavailable`             |
+| Partial Success        | "Sync completed with errors. X of Y articles fetched." | `SYNC_WARNING: Partial sync (X/Y)`            |
+| **Content Errors**     |                                                        |                                               |
+| Fetch Failed           | "Failed to fetch full content"                         | `CONTENT_ERROR: Fetch failed ${url}`          |
+| Parse Failed           | "Could not parse article"                              | `CONTENT_ERROR: Readability parse failed`     |
+| URL Invalid            | "Invalid article URL"                                  | `CONTENT_ERROR: Invalid URL format`           |

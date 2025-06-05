@@ -65,28 +65,30 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
 /* Typography optimizations for reading */
 @layer utilities {
   .prose-reading {
-    @apply prose prose-gray dark:prose-invert max-w-none;
+    @apply prose prose-gray max-w-none dark:prose-invert;
     @apply prose-headings:font-semibold prose-headings:tracking-tight;
-    @apply prose-p:leading-relaxed prose-p:text-base;
+    @apply prose-p:text-base prose-p:leading-relaxed;
     @apply prose-a:text-primary prose-a:no-underline hover:prose-a:underline;
     @apply prose-img:rounded-lg prose-img:shadow-sm;
   }
-  
+
   .article-content {
     @apply prose-reading;
     line-height: 1.6;
     font-size: 16px;
   }
-  
+
   .article-list-item {
     @apply border-b border-border last:border-b-0;
-    @apply hover:bg-accent/50 transition-colors;
+    @apply transition-colors hover:bg-accent/50;
   }
 }

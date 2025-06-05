@@ -1,6 +1,7 @@
 # State Machine Diagrams - Shayon's News
 
 ## Overview
+
 This document defines the state machines for critical processes in the RSS Reader PWA, helping ensure consistent behavior across different scenarios.
 
 ## 1. Main Application State Machine
@@ -276,6 +277,7 @@ When OFFLINE → ONLINE:
 ## State Transition Rules
 
 ### Application State Rules
+
 1. **INITIALIZING → UNAUTHORIZED**: No valid auth token found
 2. **INITIALIZING → AUTHORIZED**: Valid auth token exists
 3. **UNAUTHORIZED → READY**: Successful Inoreader OAuth
@@ -285,6 +287,7 @@ When OFFLINE → ONLINE:
 7. **ANY STATE → READY**: Error recovery or network restoration
 
 ### Sync State Rules
+
 1. **IDLE → CHECKING_LIMITS**: Sync triggered (manual or auto)
 2. **CHECKING_LIMITS → SYNCING_FEEDS**: API calls < 95
 3. **CHECKING_LIMITS → RATE_LIMITED**: API calls ≥ 95
@@ -296,6 +299,7 @@ When OFFLINE → ONLINE:
 9. **ANY_FINAL_STATE → IDLE**: After user notification
 
 ### Summary Generation Rules
+
 1. **NO_SUMMARY → CHECKING_NETWORK**: User taps ⚡
 2. **CHECKING_NETWORK → GENERATING**: Online
 3. **CHECKING_NETWORK → DISABLED**: Offline
@@ -308,18 +312,21 @@ When OFFLINE → ONLINE:
 ## Error Handling State Patterns
 
 ### Retry Pattern
+
 ```
 ERROR → RETRY_WAIT → RETRYING → SUCCESS/ERROR
          (backoff)
 ```
 
 ### Graceful Degradation Pattern
+
 ```
 OPTIMAL → DEGRADED → MINIMAL → OFFLINE
   (API)    (Cache)    (Queue)   (Read)
 ```
 
 ### Recovery Pattern
+
 ```
 FAILED → RECOVERING → VALIDATING → READY
           (cleanup)    (integrity)
@@ -328,22 +335,26 @@ FAILED → RECOVERING → VALIDATING → READY
 ## Implementation Notes
 
 1. **State Persistence**
+
    - Current state should be persisted
    - State history for debugging
    - Crash recovery to last stable state
 
 2. **Timeouts**
+
    - Sync: 60 seconds total
    - Summary: 30 seconds
    - Content fetch: 20 seconds
    - Network check: 5 seconds
 
 3. **Retry Logic**
+
    - Network errors: 3 attempts, exponential backoff
    - API errors: 2 attempts, 5-second delay
    - Parse errors: No retry (log and skip)
 
 4. **Queue Management**
+
    - Read/unread changes: Batch every 30 min
    - Failed syncs: Retry next cycle
    - Summary requests: Cancel if offline

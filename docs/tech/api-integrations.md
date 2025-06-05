@@ -3,6 +3,7 @@
 ## Overview
 
 The RSS Reader integrates with two primary APIs:
+
 1. **Inoreader API** - Feed management and article synchronization
 2. **Anthropic Claude API** - AI-powered article summarization
 
@@ -11,26 +12,28 @@ The RSS Reader integrates with two primary APIs:
 ### Authentication
 
 **OAuth 2.0 Flow:**
+
 ```typescript
 // OAuth configuration
 const OAUTH_CONFIG = {
   clientId: process.env.NEXT_PUBLIC_INOREADER_CLIENT_ID,
   redirectUri: process.env.NEXT_PUBLIC_INOREADER_REDIRECT_URI,
-  scope: 'read write',
-  authUrl: 'https://www.inoreader.com/oauth2/auth',
-  tokenUrl: 'https://www.inoreader.com/oauth2/token'
-}
+  scope: "read write",
+  authUrl: "https://www.inoreader.com/oauth2/auth",
+  tokenUrl: "https://www.inoreader.com/oauth2/token",
+};
 
 // Token storage and refresh
 interface TokenStorage {
-  accessToken: string
-  refreshToken: string
-  expiresAt: number
-  userId: string
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  userId: string;
 }
 ```
 
 **Implementation Details:**
+
 - Tokens stored securely in httpOnly cookies
 - Automatic token refresh before expiration
 - Fallback to re-authentication if refresh fails
@@ -39,12 +42,15 @@ interface TokenStorage {
 ### Core Endpoints
 
 #### 1. User Information
+
 ```typescript
-GET /reader/api/0/user-info
+GET / reader / api / 0 / user - info;
 ```
+
 **Purpose**: Get user account details and verify authentication
 **Frequency**: Once per session
 **Response**:
+
 ```json
 {
   "userId": "1005921515",
@@ -55,13 +61,16 @@ GET /reader/api/0/user-info
 ```
 
 #### 2. Subscription List
+
 ```typescript
-GET /reader/api/0/subscription/list
+GET / reader / api / 0 / subscription / list;
 ```
+
 **Purpose**: Fetch all RSS feeds and folder structure
 **Frequency**: Every sync (6 hours) or manual refresh
 **Rate Limit Impact**: 1 call per sync
 **Response**:
+
 ```json
 {
   "subscriptions": [
@@ -82,37 +91,44 @@ GET /reader/api/0/subscription/list
 ```
 
 #### 3. Stream Contents (Bulk Article Fetch)
+
 ```typescript
 GET /reader/api/0/stream/contents/{stream_id}?n={count}&r=o
 ```
+
 **Purpose**: Fetch articles from feeds or folders
 **Frequency**: Every sync
 **Rate Limit Impact**: 1-3 calls per sync (depending on folder structure)
 **Parameters**:
+
 - `stream_id`: Feed ID or folder ID (e.g., `user/{userId}/state/com.google/reading-list`)
 - `n`: Number of articles (max 1000)
 - `r=o`: Sort by oldest first for better pagination
 
 **Implementation Strategy**:
+
 ```typescript
 // Fetch from "All Items" stream to get up to 100 articles across all feeds
-const ALL_ITEMS_STREAM = `user/${userId}/state/com.google/reading-list`
-const response = await fetch(`/stream/contents/${ALL_ITEMS_STREAM}?n=100&r=n`)
+const ALL_ITEMS_STREAM = `user/${userId}/state/com.google/reading-list`;
+const response = await fetch(`/stream/contents/${ALL_ITEMS_STREAM}?n=100&r=n`);
 
 // Use round-robin approach if we need feed-specific limits
-const feedPromises = subscriptions.slice(0, 5).map(feed => 
-  fetch(`/stream/contents/${feed.id}?n=20&r=n`)
-)
+const feedPromises = subscriptions
+  .slice(0, 5)
+  .map((feed) => fetch(`/stream/contents/${feed.id}?n=20&r=n`));
 ```
 
 #### 4. Unread Counts
+
 ```typescript
-GET /reader/api/0/unread-count
+GET / reader / api / 0 / unread - count;
 ```
+
 **Purpose**: Get unread count for each feed and folder
 **Frequency**: Every sync
 **Rate Limit Impact**: 1 call per sync
 **Response**:
+
 ```json
 {
   "unreadcounts": [
@@ -126,13 +142,16 @@ GET /reader/api/0/unread-count
 ```
 
 #### 5. Mark Items as Read/Unread
+
 ```typescript
-POST /reader/api/0/edit-tag
+POST / reader / api / 0 / edit - tag;
 ```
+
 **Purpose**: Sync read/unread states
 **Frequency**: Every 30 minutes or on app close
 **Rate Limit Impact**: 1 call per batch (up to 100 items)
 **Payload**:
+
 ```json
 {
   "i": ["item_id_1", "item_id_2"],
@@ -144,19 +163,21 @@ POST /reader/api/0/edit-tag
 ### Rate Limiting Strategy
 
 **Current Limits** (Inoreader Free Tier):
+
 - 100 API calls per day for Zone 1 (basic operations)
 - Resets at midnight UTC
 
 **Optimization Approach**:
+
 ```typescript
 // Target: 5-6 API calls per complete sync
 const syncStrategy = {
-  subscriptionList: 1,    // Get feeds structure
-  streamContents: 1,      // Bulk fetch from "All Items"
-  unreadCounts: 1,        // Get unread counts
-  editTags: 1,           // Batch read/unread updates
-  userInfo: 0.2          // Only when needed (once per day)
-}
+  subscriptionList: 1, // Get feeds structure
+  streamContents: 1, // Bulk fetch from "All Items"
+  unreadCounts: 1, // Get unread counts
+  editTags: 1, // Batch read/unread updates
+  userInfo: 0.2, // Only when needed (once per day)
+};
 
 // Total per sync: ~4-5 calls
 // Daily usage: ~20-24 calls (4 syncs + manual refreshes)
@@ -164,26 +185,27 @@ const syncStrategy = {
 ```
 
 **Rate Limit Management**:
+
 ```typescript
 class RateLimitManager {
-  private callsToday = 0
-  private lastReset = new Date().toDateString()
-  
+  private callsToday = 0;
+  private lastReset = new Date().toDateString();
+
   async makeCall<T>(apiCall: () => Promise<T>): Promise<T> {
     if (this.callsToday >= 95) {
-      throw new Error('API_LIMIT_REACHED')
+      throw new Error("API_LIMIT_REACHED");
     }
-    
-    this.callsToday++
-    return await apiCall()
+
+    this.callsToday++;
+    return await apiCall();
   }
-  
+
   getUsageStats() {
     return {
       used: this.callsToday,
       remaining: 100 - this.callsToday,
-      resetTime: 'Midnight UTC'
-    }
+      resetTime: "Midnight UTC",
+    };
   }
 }
 ```
@@ -191,6 +213,7 @@ class RateLimitManager {
 ### Error Handling
 
 **Common Error Scenarios**:
+
 ```typescript
 interface ApiErrorHandler {
   401: () => triggerReAuthentication()
@@ -215,34 +238,38 @@ const retryConfig = {
 ### Authentication
 
 **API Key Authentication**:
+
 ```typescript
 const headers = {
-  'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-  'Content-Type': 'application/json',
-  'x-api-key': process.env.ANTHROPIC_API_KEY
-}
+  Authorization: `Bearer ${process.env.ANTHROPIC_API_KEY}`,
+  "Content-Type": "application/json",
+  "x-api-key": process.env.ANTHROPIC_API_KEY,
+};
 ```
 
 ### Core Endpoint
 
 #### Messages API
+
 ```typescript
 POST https://api.anthropic.com/v1/messages
 ```
 
 **Configuration**:
+
 ```typescript
 const CLAUDE_CONFIG = {
-  model: 'claude-3-5-sonnet-20241022',
-  maxTokens: 200,        // 100-120 word summaries
-  temperature: 0.3,      // Consistent, factual summaries
-  topP: 0.9
-}
+  model: "claude-3-5-sonnet-20241022",
+  maxTokens: 200, // 100-120 word summaries
+  temperature: 0.3, // Consistent, factual summaries
+  topP: 0.9,
+};
 ```
 
 ### Prompt Engineering
 
 **Optimized Prompt Template**:
+
 ```typescript
 const SUMMARY_PROMPT = `You are a news summarization assistant. Create a concise summary of the following article in 100-120 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
 
@@ -255,52 +282,54 @@ Source: {source}
 Article Content:
 {content}
 
-Write a clear, informative summary that captures the essence of this article.`
+Write a clear, informative summary that captures the essence of this article.`;
 
 // Dynamic prompt based on content type
 const promptVariants = {
   news: "Focus on who, what, when, where, why...",
   opinion: "Summarize the main argument and supporting points...",
   tech: "Explain the technical concepts and implications...",
-  review: "Cover the main verdict and key pros/cons..."
-}
+  review: "Cover the main verdict and key pros/cons...",
+};
 ```
 
 ### Token Management & Cost Optimization
 
 **Token Estimation**:
+
 ```typescript
 class TokenManager {
   // Rough estimation: 1 token ≈ 4 characters for English
   estimateTokens(text: string): number {
-    return Math.ceil(text.length / 4)
+    return Math.ceil(text.length / 4);
   }
-  
+
   // Truncate if content exceeds limits
   truncateContent(content: string, maxTokens: number = 8000): string {
-    const estimatedTokens = this.estimateTokens(content)
-    if (estimatedTokens <= maxTokens) return content
-    
-    const maxChars = maxTokens * 4
-    return content.substring(0, maxChars) + "..."
+    const estimatedTokens = this.estimateTokens(content);
+    if (estimatedTokens <= maxTokens) return content;
+
+    const maxChars = maxTokens * 4;
+    return content.substring(0, maxChars) + "...";
   }
 }
 ```
 
 **Cost Tracking**:
+
 ```typescript
 interface CostTracker {
   inputTokens: number
   outputTokens: number
   totalCost: number
   summariesGenerated: number
-  
+
   calculateCost(): number {
     // Claude 3.5 Sonnet pricing (example)
     const inputCostPer1k = 0.003   // $3 per 1M tokens
     const outputCostPer1k = 0.015  // $15 per 1M tokens
-    
-    return (this.inputTokens / 1000 * inputCostPer1k) + 
+
+    return (this.inputTokens / 1000 * inputCostPer1k) +
            (this.outputTokens / 1000 * outputCostPer1k)
   }
 }
@@ -309,30 +338,33 @@ interface CostTracker {
 ### Caching Strategy
 
 **Summary Caching**:
+
 ```typescript
 interface SummaryCache {
-  articleId: string
-  contentHash: string    // MD5 of article content
-  summary: string
-  generatedAt: Date
-  model: string
-  cost: number
+  articleId: string;
+  contentHash: string; // MD5 of article content
+  summary: string;
+  generatedAt: Date;
+  model: string;
+  cost: number;
 }
 
 // Cache key based on content hash to detect updates
 const getCacheKey = (articleId: string, content: string) => {
-  const contentHash = md5(content)
-  return `summary:${articleId}:${contentHash}`
-}
+  const contentHash = md5(content);
+  return `summary:${articleId}:${contentHash}`;
+};
 ```
 
 ### Rate Limiting & Error Handling
 
 **Rate Limits** (Anthropic):
+
 - No specific documented limits, but implement conservative approach
 - Monitor response times and implement backoff
 
 **Error Handling**:
+
 ```typescript
 interface ClaudeErrorHandler {
   400: (error) => handleInvalidRequest(error)    // Bad prompt/content
@@ -353,36 +385,37 @@ const validateContent = (content: string) => {
 ### Request Optimization
 
 **Batch Processing**:
+
 ```typescript
 // Don't batch Claude API calls - each article needs individual attention
 // Instead, implement smart queuing
 
 class SummaryQueue {
-  private queue: SummaryRequest[] = []
-  private processing = false
-  
+  private queue: SummaryRequest[] = [];
+  private processing = false;
+
   async addToQueue(articleId: string, content: string) {
-    this.queue.push({ articleId, content, timestamp: Date.now() })
-    this.processQueue()
+    this.queue.push({ articleId, content, timestamp: Date.now() });
+    this.processQueue();
   }
-  
+
   private async processQueue() {
-    if (this.processing) return
-    this.processing = true
-    
+    if (this.processing) return;
+    this.processing = true;
+
     while (this.queue.length > 0) {
-      const request = this.queue.shift()!
+      const request = this.queue.shift()!;
       try {
-        await this.generateSummary(request)
-        await this.delay(1000) // 1 second between requests
+        await this.generateSummary(request);
+        await this.delay(1000); // 1 second between requests
       } catch (error) {
         if (error.status === 429) {
-          await this.delay(5000) // Longer delay for rate limits
+          await this.delay(5000); // Longer delay for rate limits
         }
       }
     }
-    
-    this.processing = false
+
+    this.processing = false;
   }
 }
 ```
@@ -392,20 +425,23 @@ class SummaryQueue {
 For articles with partial content in RSS feeds, we implement direct content extraction from the original URLs. See **[Content Extraction Strategy](./content-extraction-strategy.md)** for detailed implementation.
 
 ### Key Components:
+
 - **Primary**: `@mozilla/readability` + `jsdom` for Firefox-quality extraction
 - **Fallback**: `@extractus/article-extractor` for difficult sites
 - **Sanitization**: DOMPurify for security
 - **Caching**: Memory + IndexedDB for performance
 
 ### Integration Points:
+
 ```typescript
 // Detect partial content and trigger extraction
-const needsExtraction = article.content.length < 500 || 
-                       article.content.includes('...') ||
-                       article.content.endsWith('[Read more]')
+const needsExtraction =
+  article.content.length < 500 ||
+  article.content.includes("...") ||
+  article.content.endsWith("[Read more]");
 
 if (needsExtraction) {
-  const extractedContent = await contentExtractor.extractFromUrl(article.url)
+  const extractedContent = await contentExtractor.extractFromUrl(article.url);
   // Cache and display full content
 }
 ```
@@ -446,21 +482,21 @@ class SyncOrchestrator {
       this.syncSubscriptions,
       this.syncArticles,
       this.syncUnreadCounts,
-      this.syncReadStates
-    ]
-    
-    const results = []
+      this.syncReadStates,
+    ];
+
+    const results = [];
     for (const step of steps) {
       try {
-        const result = await step()
-        results.push(result)
+        const result = await step();
+        results.push(result);
       } catch (error) {
-        if (this.isCriticalError(error)) throw error
-        results.push({ error: error.message })
+        if (this.isCriticalError(error)) throw error;
+        results.push({ error: error.message });
       }
     }
-    
-    return this.consolidateResults(results)
+
+    return this.consolidateResults(results);
   }
 }
 ```
@@ -474,14 +510,14 @@ class SyncOrchestrator {
 const mockInoreaderData = {
   subscriptions: generateMockFeeds(10),
   articles: generateMockArticles(100),
-  unreadCounts: generateMockCounts()
-}
+  unreadCounts: generateMockCounts(),
+};
 
 // Mock Claude responses
 const mockSummaries = new Map([
-  ['article-1', 'This is a mock summary for development...'],
-  ['article-2', 'Another mock summary to avoid API costs...']
-])
+  ["article-1", "This is a mock summary for development..."],
+  ["article-2", "Another mock summary to avoid API costs..."],
+]);
 ```
 
 ### API Usage Monitoring
@@ -503,15 +539,15 @@ interface ApiUsageMonitor {
 // Dashboard component for monitoring
 const ApiUsageDashboard = () => {
   const usage = useApiUsage()
-  
+
   return (
     <div>
-      <ProgressBar 
-        value={usage.inoreader.callsToday} 
-        max={100} 
+      <ProgressBar
+        value={usage.inoreader.callsToday}
+        max={100}
         label="Inoreader API Calls"
       />
-      <CostTracker 
+      <CostTracker
         cost={usage.claude.estimatedCost}
         summaries={usage.claude.summariesToday}
       />
@@ -545,14 +581,14 @@ const getClaudeApiKey = () => {
 // Validate and sanitize all inputs
 const sanitizeContent = (content: string): string => {
   // Remove potential XSS content
-  return DOMPurify.sanitize(content)
-}
+  return DOMPurify.sanitize(content);
+};
 
 // Rate limiting on our API routes
 const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-})
+  max: 100, // limit each IP to 100 requests per windowMs
+});
 ```
 
 ### Error Information Security
@@ -561,13 +597,13 @@ const rateLimiter = rateLimit({
 // Don't expose internal API details to frontend
 const sanitizeError = (error: any): PublicError => {
   const publicErrors = {
-    'API_LIMIT_REACHED': 'Daily API limit reached',
-    'AUTH_EXPIRED': 'Please reconnect your account',
-    'NETWORK_ERROR': 'Connection failed'
-  }
-  
-  return publicErrors[error.code] || 'Something went wrong'
-}
+    API_LIMIT_REACHED: "Daily API limit reached",
+    AUTH_EXPIRED: "Please reconnect your account",
+    NETWORK_ERROR: "Connection failed",
+  };
+
+  return publicErrors[error.code] || "Something went wrong";
+};
 ```
 
 This comprehensive API integration plan ensures efficient use of both Inoreader and Claude APIs while maintaining good user experience and staying within rate limits.

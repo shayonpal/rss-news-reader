@@ -7,6 +7,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ## Milestone 1: Foundation
 
 ### Goals
+
 - Establish project structure and development environment
 - Implement basic UI framework and design system
 - Set up authentication flow with Inoreader
@@ -15,6 +16,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Deliverables
 
 #### Week 1: Project Setup
+
 - **Next.js 14 project initialization** with TypeScript
 - **Tailwind CSS configuration** with custom theme
 - **PWA manifest and service worker** basic setup
@@ -23,6 +25,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - **Environment variable** configuration for development/production
 
 #### Week 2: Authentication & Data Foundation
+
 - **Inoreader OAuth 2.0 integration**
   - OAuth flow implementation
   - Token storage and refresh logic
@@ -37,6 +40,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Theme provider for dark/light mode
 
 ### Success Criteria
+
 - [ ] User can authenticate with Inoreader account
 - [ ] OAuth tokens are securely stored and refreshed
 - [ ] IndexedDB stores basic user and configuration data
@@ -45,6 +49,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - [ ] Development environment is fully configured
 
 ### Technical Debt & Notes
+
 - Mock data should be used for API calls to conserve Inoreader API limits
 - Service worker will be basic - advanced caching comes later
 - Focus on structure over polish in UI components
@@ -54,6 +59,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ## Milestone 2: Core Reading Experience
 
 ### Goals
+
 - Implement feed hierarchy display
 - Build article list with basic reading interface
 - Add read/unread state management
@@ -62,6 +68,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Deliverables
 
 #### Week 3: Feed Management
+
 - **Feed List Component**
   - Hierarchical folder/feed display
   - Unread count indicators
@@ -78,6 +85,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Loading states and skeletons
 
 #### Week 4: Article Reading & State Management
+
 - **Article Detail View**
   - Full article content display
   - Clean typography and responsive layout
@@ -93,6 +101,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Graceful degradation when offline
 
 ### Success Criteria
+
 - [ ] User can browse their Inoreader feed hierarchy
 - [ ] Articles display in clean, readable format
 - [ ] Read/unread states are tracked locally
@@ -101,6 +110,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - [ ] Performance targets met (< 2s load time)
 
 ### Performance Targets
+
 - Article list renders in < 1 second
 - Article detail opens in < 0.5 seconds
 - Smooth 60fps scrolling on mobile devices
@@ -110,6 +120,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ## Milestone 3: Content Fetching & Processing
 
 ### Goals
+
 - Implement comprehensive article synchronization
 - Add full content fetching for partial feeds
 - Establish robust data caching and pruning
@@ -118,6 +129,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Deliverables
 
 #### Week 5: Article Synchronization
+
 - **Inoreader Stream API Integration**
   - Bulk article fetching (up to 100 articles per sync)
   - Round-robin distribution across feeds
@@ -130,6 +142,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Metadata extraction and normalization
 
 #### Week 6: Full Content & Data Management
+
 - **Partial Content Detection**
   - Identify articles with truncated content
   - "Fetch Full Content" functionality
@@ -147,6 +160,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Graceful degradation when limits reached
 
 ### Success Criteria
+
 - [ ] Articles sync automatically every 6 hours
 - [ ] Manual sync fetches up to 100 new articles
 - [ ] Full content fetching works for partial feeds
@@ -155,6 +169,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - [ ] Rich media displays correctly in articles
 
 ### Technical Challenges
+
 - Balancing sync frequency with API limits
 - Implementing efficient deduplication
 - Handling various article content formats
@@ -165,6 +180,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ## Milestone 4: AI Integration
 
 ### Goals
+
 - Integrate Anthropic Claude API for summarization
 - Implement on-demand summary generation
 - Add summary caching and management
@@ -173,6 +189,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Deliverables
 
 #### Week 7: Summary Generation
+
 - **Claude API Integration**
   - Anthropic API client implementation
   - Prompt engineering for optimal summaries
@@ -185,6 +202,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Re-summarize functionality
 
 #### Week 8: Advanced AI Features & Monitoring
+
 - **Summary Management**
   - Persistent summary caching
   - Content hash-based cache invalidation
@@ -201,6 +219,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Offline summary queuing
 
 ### Success Criteria
+
 - [ ] AI summaries generate in < 5 seconds
 - [ ] Summaries are cached permanently with articles
 - [ ] API usage dashboard shows accurate tracking
@@ -208,6 +227,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - [ ] Cost projections stay under $5/month for typical usage
 
 ### Performance & Cost Targets
+
 - Summary generation: < 5 seconds per article
 - Daily AI costs: < $0.20 for typical usage
 - 95% summary generation success rate
@@ -217,6 +237,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ## Milestone 5: Polish & Optimization
 
 ### Goals
+
 - Implement comprehensive offline functionality
 - Optimize performance and user experience
 - Add advanced UI polish and animations
@@ -225,6 +246,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Deliverables
 
 #### Week 9: Offline & Sync Optimization
+
 - **Advanced Offline Support**
   - Complete offline article reading
   - Offline summary access
@@ -242,6 +264,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Bundle size reduction
 
 #### Week 10: UI Polish & Advanced Features
+
 - **Enhanced User Interface**
   - Smooth transitions and micro-animations
   - Advanced gesture support (swipe navigation)
@@ -259,6 +282,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Debugging and logging tools
 
 ### Success Criteria
+
 - [ ] App works completely offline with cached content
 - [ ] Sync conflicts resolve automatically
 - [ ] Performance targets exceeded (< 2s load, 60fps)
@@ -266,6 +290,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - [ ] Error recovery is seamless and automatic
 
 ### Quality Metrics
+
 - Lighthouse PWA score: 95+
 - Core Web Vitals: All green
 - Accessibility score: 95+
@@ -276,6 +301,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ## Milestone 6: Production Ready
 
 ### Goals
+
 - Deploy to production environment
 - Complete documentation and testing
 - Prepare for open-source release
@@ -284,6 +310,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Deliverables
 
 #### Week 11: Testing & Documentation
+
 - **Comprehensive Testing Suite**
   - Unit tests for utilities and components (90%+ coverage)
   - Integration tests for API services
@@ -301,6 +328,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - Open source license preparation
 
 #### Week 12: Deployment & Launch
+
 - **Production Deployment**
   - Vercel deployment configuration
   - Environment variable setup
@@ -318,6 +346,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
   - GPL license implementation
 
 ### Success Criteria
+
 - [ ] App is deployed and accessible in production
 - [ ] All tests pass with 90%+ code coverage
 - [ ] Documentation is complete and accurate
@@ -326,6 +355,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 - [ ] Performance targets met in production
 
 ### Launch Checklist
+
 - [ ] Domain configured with HTTPS
 - [ ] PWA manifest working correctly
 - [ ] API keys and secrets properly configured
@@ -341,6 +371,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Risk Management
 
 **High-Risk Items:**
+
 1. **API Rate Limits**: Inoreader's 100 calls/day limit could impact development
    - **Mitigation**: Extensive use of mock data, careful API usage tracking
 2. **Claude API Costs**: Summarization costs could escalate quickly
@@ -349,6 +380,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
    - **Mitigation**: Simple conflict resolution strategy, thorough testing
 
 **Medium-Risk Items:**
+
 1. **Performance on Low-End Devices**: PWA performance on older phones
    - **Mitigation**: Performance testing, progressive enhancement
 2. **Content Parsing Variability**: Different feed formats may break parsing
@@ -357,12 +389,14 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Resource Requirements
 
 **Development Environment**:
+
 - Inoreader developer account with API access
 - Anthropic API key with sufficient credits
 - Vercel account for deployment
 - Testing devices (iOS, Android, various screen sizes)
 
 **External Dependencies**:
+
 - Inoreader API stability and availability
 - Anthropic Claude API access and pricing
 - Third-party libraries and frameworks
@@ -370,6 +404,7 @@ The development is structured into 6 major milestones over 12 weeks, with each m
 ### Quality Gates
 
 Each milestone must pass these gates before proceeding:
+
 1. **Functionality**: All success criteria met
 2. **Performance**: Targets achieved
 3. **Quality**: Code review and testing complete

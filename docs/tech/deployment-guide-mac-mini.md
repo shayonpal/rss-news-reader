@@ -7,12 +7,14 @@ This guide covers deploying the RSS Reader PWA on a Mac Mini for 24/7 self-hoste
 ## System Requirements
 
 ### Hardware
+
 - **Mac Mini**: M1/M2 or Intel-based
 - **RAM**: 24GB available
 - **Storage**: 10GB free space for app + data
 - **Network**: Stable internet connection
 
 ### Software Prerequisites
+
 - **macOS**: 12.0 (Monterey) or later
 - **Node.js**: 18.x or 20.x LTS
 - **npm**: 8.x or later
@@ -66,6 +68,7 @@ npm run build
 ### 2. Environment Configuration
 
 Create `.env.local` file:
+
 ```bash
 # Application Configuration
 NODE_ENV=production
@@ -132,11 +135,12 @@ pm2 startup
 ### 5. Configure macOS for 24/7 Operation
 
 #### Prevent Sleep
+
 ```bash
 # Create a launch agent to prevent sleep
 cat > ~/Library/LaunchAgents/com.shayon.news.nosleep.plist << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -161,12 +165,15 @@ launchctl load ~/Library/LaunchAgents/com.shayon.news.nosleep.plist
 ```
 
 #### System Preferences
+
 1. **Energy Saver**:
+
    - Prevent computer from sleeping automatically
    - Wake for network access: ON
    - Start up automatically after power failure: ON
 
 2. **Security & Privacy**:
+
    - Firewall: Allow incoming connections for Node.js
    - Full Disk Access: Grant to Terminal (for PM2)
 
@@ -200,7 +207,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp $(which node)
 server {
     listen 80;
     server_name shayon-news.local;
-    
+
     location / {
         proxy_pass http://localhost:7419;
         proxy_http_version 1.1;
@@ -208,7 +215,7 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
-        
+
         # Security headers
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-Content-Type-Options "nosniff" always;
@@ -332,6 +339,7 @@ curl http://localhost:7419/api/health
 ### Common Issues
 
 #### 1. Port Already in Use
+
 ```bash
 # Find process using port 7419
 lsof -i :7419
@@ -341,6 +349,7 @@ kill -9 <PID>
 ```
 
 #### 2. PM2 Not Starting on Boot
+
 ```bash
 # Re-run startup command
 pm2 startup
@@ -350,6 +359,7 @@ pm2 save
 ```
 
 #### 3. High Memory Usage
+
 ```bash
 # Check memory usage
 pm2 monit
@@ -361,6 +371,7 @@ pm2 restart shayon-news
 ```
 
 #### 4. Database Issues
+
 ```bash
 # Clear browser cache/IndexedDB
 # Navigate to: http://localhost:7419
@@ -368,6 +379,7 @@ pm2 restart shayon-news
 ```
 
 ### Debug Mode
+
 ```bash
 # Run in debug mode
 NODE_ENV=development npm run dev
@@ -379,6 +391,7 @@ pm2 logs shayon-news --raw
 ## Performance Optimization
 
 ### 1. macOS Specific Optimizations
+
 ```bash
 # Increase file descriptor limits
 ulimit -n 4096
@@ -388,32 +401,36 @@ echo "ulimit -n 4096" >> ~/.zshrc
 ```
 
 ### 2. Node.js Optimizations
+
 ```javascript
 // In ecosystem.config.js
 module.exports = {
-  apps: [{
-    // ... existing config
-    node_args: '--max-old-space-size=2048',
-    env: {
-      NODE_OPTIONS: '--max-http-header-size=16384'
-    }
-  }]
-}
+  apps: [
+    {
+      // ... existing config
+      node_args: "--max-old-space-size=2048",
+      env: {
+        NODE_OPTIONS: "--max-http-header-size=16384",
+      },
+    },
+  ],
+};
 ```
 
 ### 3. Next.js Production Optimizations
+
 ```javascript
 // next.config.js
 module.exports = {
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
-  
+
   experimental: {
     // Enable if using app directory
     appDir: true,
-  }
-}
+  },
+};
 ```
 
 ## Security Checklist
@@ -431,6 +448,7 @@ module.exports = {
 ## Monitoring Dashboard
 
 Access the application and monitoring:
+
 - **Application**: http://localhost:7419
 - **PM2 Web Monitor**: `pm2 web` (runs on port 9615)
 - **System Logs**: `~/Applications/shayon-news/logs/`
@@ -444,4 +462,4 @@ Access the application and monitoring:
 
 ---
 
-*This deployment is optimized for single-user access on a local network. For multi-user or internet-facing deployments, additional security measures would be required.*
+_This deployment is optimized for single-user access on a local network. For multi-user or internet-facing deployments, additional security measures would be required._

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:debug": "NODE_OPTIONS='--inspect' next dev",
+    "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,7 +15,11 @@
     "test:integration": "vitest --config vitest.config.integration.ts",
     "test:e2e": "playwright test",
     "test:watch": "vitest --watch",
-    "analyze": "cross-env ANALYZE=true next build"
+    "analyze": "cross-env ANALYZE=true next build",
+    "clean": "rm -rf .next out node_modules/.cache",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pre-commit": "npm run type-check && npm run lint && npm run format:check"
   },
   "dependencies": {
     "next": "^14.2.15",

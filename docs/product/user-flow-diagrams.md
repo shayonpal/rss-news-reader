@@ -1,11 +1,13 @@
 # User Flow Diagrams - Shayon's News
 
 ## Overview
+
 This document contains the technical user flow diagrams for the RSS Reader PWA, showing all possible paths users can take through the application.
 
 ## Primary User Flows
 
 ### 1. First Time Setup Flow
+
 ```
 App Launch
     ↓
@@ -27,6 +29,7 @@ Initial Sync
 ```
 
 ### 2. Regular App Launch Flow
+
 ```
 App Launch
     ↓
@@ -42,6 +45,7 @@ Check Network Status
 ```
 
 ### 3. Article Reading Flow
+
 ```
 Article List
     ↓
@@ -61,6 +65,7 @@ Check Content Status
 ```
 
 ### 4. Manual Sync Flow
+
 ```
 Article List View
     ↓
@@ -80,6 +85,7 @@ Check Network Status
 ```
 
 ### 5. AI Summarization Flow
+
 ```
 Article Detail View
     ↓
@@ -98,6 +104,7 @@ Check Summary Status
 ```
 
 ### 6. Folder/Feed Navigation Flow
+
 ```
 Feed List (Sidebar/Drawer)
     ↓
@@ -115,6 +122,7 @@ User Actions:
 ```
 
 ### 7. Settings Flow
+
 ```
 Settings Screen
     ↓
@@ -136,6 +144,7 @@ Display Options:
 ```
 
 ### 8. Offline to Online Transition Flow
+
 ```
 Offline State (Cached Content Displayed)
     ↓
@@ -154,6 +163,7 @@ Remove Offline Banner
 ### 9. Error Handling Flows
 
 #### API Rate Limit Error
+
 ```
 API Call
     ↓
@@ -167,6 +177,7 @@ Display Cached Content Only
 ```
 
 #### Network Error
+
 ```
 Network Request
     ↓
@@ -179,6 +190,7 @@ Retry with Backoff (3 attempts)
 ```
 
 #### Content Parsing Error
+
 ```
 Fetch Full Content
     ↓
@@ -191,6 +203,7 @@ Parse with Readability
 ## State Diagrams
 
 ### Article States
+
 ```
 NEW (Unread)
     ↓ Open Article
@@ -202,6 +215,7 @@ UNREAD
 ```
 
 ### Sync States
+
 ```
 IDLE
     ↓ Trigger Sync
@@ -213,6 +227,7 @@ SYNCING
 ```
 
 ### Summary States
+
 ```
 NO_SUMMARY
     ↓ Request Summary
@@ -242,18 +257,22 @@ Root
 ## Decision Points
 
 1. **Network Status Check**
+
    - Online → Proceed with network operations
    - Offline → Use cached data only
 
 2. **Auth Status Check**
+
    - Authenticated → Load user data
    - Not authenticated → Show setup flow
 
 3. **Content Type Check**
+
    - Full content → Display immediately
    - Partial content → Show fetch option
 
 4. **API Limit Check**
+
    - Under limit → Allow operation
    - Near limit (80%) → Show warning
    - Over limit (95%) → Block operation
@@ -265,16 +284,19 @@ Root
 ## Edge Cases
 
 1. **Mid-sync Connection Loss**
+
    - Save partial results
    - Queue remaining operations
    - Show partial success message
 
 2. **Expired Inoreader Token**
+
    - Detect 401 error
    - Prompt re-authentication
    - Preserve local data
 
 3. **Storage Limit Reached**
+
    - Trigger immediate pruning
    - Remove oldest articles first
    - Notify user if critical

@@ -6,7 +6,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Shayon's News",
-  description: "A clean, fast, and intelligent RSS reader with AI-powered summaries",
+  description:
+    "A clean, fast, and intelligent RSS reader with AI-powered summaries",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -39,9 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <div id="root">
-          {children}
-        </div>
+        <div id="root">{children}</div>
       </body>
     </html>
   );

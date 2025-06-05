@@ -7,6 +7,7 @@ This document outlines the development workflow for the RSS Reader PWA using Git
 ## Project Structure
 
 ### Hierarchy
+
 ```
 Epic (GitHub Milestone)
 ├── User Story (GitHub Issue)
@@ -16,6 +17,7 @@ Epic (GitHub Milestone)
 ```
 
 ### Key Principles
+
 - **No Sprints**: Continuous development with milestone-based planning
 - **No Time Estimates**: Focus on completion rather than time tracking
 - **GitHub Native**: Use GitHub's issue numbering system
@@ -34,31 +36,32 @@ Epic (GitHub Milestone)
 
 ### Project Columns
 
-| Column | Purpose | Color | Auto-Move Rules |
-|--------|---------|-------|-----------------|
-| **Backlog** | New issues, not yet ready | `#8A90A0` (Gray) | Default for new issues |
-| **Ready** | Issues ready to start | `#1F883D` (Green) | Manual move |
-| **In Progress** | Currently being worked on | `#FFA500` (Orange) | Manual move |
-| **On Hold** | Blocked or paused | `#CF222E` (Red) | Manual move |
-| **Done** | Completed successfully | `#8250DF` (Purple) | Auto-move when closed |
-| **Won't Do** | Cancelled or rejected | `#656D76` (Dark Gray) | Auto-move when closed with "won't fix" label |
+| Column          | Purpose                   | Color                 | Auto-Move Rules                              |
+| --------------- | ------------------------- | --------------------- | -------------------------------------------- |
+| **Backlog**     | New issues, not yet ready | `#8A90A0` (Gray)      | Default for new issues                       |
+| **Ready**       | Issues ready to start     | `#1F883D` (Green)     | Manual move                                  |
+| **In Progress** | Currently being worked on | `#FFA500` (Orange)    | Manual move                                  |
+| **On Hold**     | Blocked or paused         | `#CF222E` (Red)       | Manual move                                  |
+| **Done**        | Completed successfully    | `#8250DF` (Purple)    | Auto-move when closed                        |
+| **Won't Do**    | Cancelled or rejected     | `#656D76` (Dark Gray) | Auto-move when closed with "won't fix" label |
 
 ### Custom Fields
 
-| Field Name | Type | Options | Purpose |
-|------------|------|---------|---------|
-| **Epic** | Single Select | Epic 1-7 names | Link tasks to epics |
-| **Priority** | Single Select | P0, P1, P2, P3 | Prioritization |
-| **Component** | Single Select | Frontend, Backend, API, Documentation, Testing | Technical categorization |
-| **Status Detail** | Text | - | Additional context for status |
+| Field Name        | Type          | Options                                        | Purpose                       |
+| ----------------- | ------------- | ---------------------------------------------- | ----------------------------- |
+| **Epic**          | Single Select | Epic 1-7 names                                 | Link tasks to epics           |
+| **Priority**      | Single Select | P0, P1, P2, P3                                 | Prioritization                |
+| **Component**     | Single Select | Frontend, Backend, API, Documentation, Testing | Technical categorization      |
+| **Status Detail** | Text          | -                                              | Additional context for status |
 
 ---
 
 ## Labels Strategy
 
 ### Epic Labels
+
 - `epic-1-foundation` - Foundation & Authentication
-- `epic-2-reading` - Core Reading Experience  
+- `epic-2-reading` - Core Reading Experience
 - `epic-3-sync` - Content Synchronization & Processing
 - `epic-4-ai` - AI-Powered Summarization
 - `epic-5-offline` - Offline & Performance Optimization
@@ -66,6 +69,7 @@ Epic (GitHub Milestone)
 - `epic-7-ux` - User Experience Enhancements
 
 ### Issue Type Labels
+
 - `user-story` - User stories from product requirements
 - `task` - Development tasks (atomic, 1-3 hour chunks)
 - `admin-task` - Infrastructure and project setup tasks
@@ -76,12 +80,14 @@ Epic (GitHub Milestone)
 - `documentation` - Documentation updates
 
 ### Priority Labels
+
 - `priority-p0` - Critical (blocking issues)
 - `priority-p1` - High (important features/bugs)
 - `priority-p2` - Medium (desired improvements)
 - `priority-p3` - Low (nice-to-have enhancements)
 
 ### Component Labels
+
 - `component-frontend` - React/Next.js components
 - `component-backend` - API routes and server logic
 - `component-api` - External API integrations
@@ -91,6 +97,7 @@ Epic (GitHub Milestone)
 - `component-docs` - Documentation and guides
 
 ### Status Labels
+
 - `status-blocked` - Cannot proceed due to dependency
 - `status-needs-clarification` - Requires more information
 - `status-ready-for-review` - Ready for PM review
@@ -101,30 +108,37 @@ Epic (GitHub Milestone)
 ## Milestones Setup
 
 ### Milestone 1: Foundation (Weeks 1-2)
+
 **Due Date**: 2 weeks from start  
 **Description**: Basic app structure, authentication, and data storage
 
-### Milestone 2: Core Reading (Weeks 3-4)  
+### Milestone 2: Core Reading (Weeks 3-4)
+
 **Due Date**: 4 weeks from start  
 **Description**: Feed display, article browsing, and reading interface
 
-### Milestone 3: Content Processing (Weeks 5-6)  
+### Milestone 3: Content Processing (Weeks 5-6)
+
 **Due Date**: 6 weeks from start  
 **Description**: Article sync, content fetching, and storage management
 
-### Milestone 4: AI Integration (Weeks 7-8)  
+### Milestone 4: AI Integration (Weeks 7-8)
+
 **Due Date**: 8 weeks from start  
 **Description**: Claude API integration and summary generation
 
-### Milestone 5: Optimization (Weeks 9-10)  
+### Milestone 5: Optimization (Weeks 9-10)
+
 **Due Date**: 10 weeks from start  
 **Description**: Offline support, performance, and sync optimization
 
-### Milestone 6: Production (Weeks 11-12)  
+### Milestone 6: Production (Weeks 11-12)
+
 **Due Date**: 12 weeks from start  
 **Description**: Production deployment, error handling, and polish
 
-### Future Enhancements  
+### Future Enhancements
+
 **Due Date**: TBD  
 **Description**: Post-v1 improvements and new features
 
@@ -265,7 +279,7 @@ jobs:
         with:
           project-url: https://github.com/users/shayonpal/projects/NEW_PROJECT_NUMBER
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Add to Project 5
         uses: actions/add-to-project@main
         with:
@@ -282,19 +296,20 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const labels = issue.labels.map(label => label.name);
-            
+
             // Determine target column based on labels
             if (labels.includes('wontfix')) {
               console.log('Issue closed as wontfix - should move to Won\'t Do column');
             } else {
               console.log('Issue completed - should move to Done column');
             }
-            
+
             // Note: Actual project column updates require additional GraphQL mutations
             // This is a placeholder for the logic
 ```
 
 #### Also leverage existing workflow:
+
 The existing `.github/workflows/add-to-project5-workflow.yml` will handle adding to Project 5 automatically.
 
 ---
@@ -308,24 +323,27 @@ The existing `.github/workflows/add-to-project5-workflow.yml` will handle adding
 **Next Steps for Claude Code**:
 
 1. **Set up development environment**:
+
    ```bash
    npm install
    npm run dev
    ```
 
 2. **Review current project structure**:
+
    - Read `/docs/product/user-stories.md` for requirements
    - Check `/docs/tech/` for technical architecture
    - Review `CLAUDE.local.md` for project-specific guidelines
 
 3. **Create first milestone issues**:
+
    - Start with Epic 1: Foundation & Authentication
    - Break down user stories into development tasks
    - Begin with US-001: Initial App Setup
 
 4. **Development process**:
    - Pick next Ready issue from project board
-   - Move to "In Progress" 
+   - Move to "In Progress"
    - Create feature branch: `feature/issue-[NUMBER]-brief-description`
    - Implement according to acceptance criteria
    - Test thoroughly (run `npm run test`, `npm run type-check`, `npm run lint`)
@@ -335,6 +353,7 @@ The existing `.github/workflows/add-to-project5-workflow.yml` will handle adding
 ### 2. Issue Management
 
 **Creating User Stories**:
+
 ```bash
 # Create parent user story
 gh issue create \
@@ -357,6 +376,7 @@ Foundation & Authentication" \
 ```
 
 **Breaking Down into Atomic Tasks**:
+
 ```bash
 # Break down user story into atomic development tasks
 gh issue create \
@@ -405,6 +425,7 @@ Part of #[USER_STORY_NUMBER]" \
 ```
 
 **Creating Admin Tasks**:
+
 ```bash
 # Create infrastructure tasks
 gh issue create \
@@ -427,6 +448,7 @@ Configure GitHub Actions to automatically add issues to project boards and updat
 ```
 
 **Updating Issue Status**:
+
 ```bash
 # Move to different project columns (manual for now)
 # Use GitHub web interface or develop GraphQL mutations
@@ -441,6 +463,7 @@ gh issue close [NUMBER] --comment "Completed: PWA manifest configured and valida
 ### 3. Branch Strategy
 
 **Simple Feature Branches**:
+
 ```bash
 # Create branch for issue
 git checkout -b feature/issue-123-pwa-manifest
@@ -465,6 +488,7 @@ git push origin main
 ### 4. Progress Tracking
 
 **Daily Workflow**:
+
 1. Check project board for Ready issues
 2. Move issue to "In Progress"
 3. Complete development task
@@ -473,6 +497,7 @@ git push origin main
 6. Update milestone progress
 
 **Weekly Reviews**:
+
 1. Review milestone progress
 2. Adjust priorities if needed
 3. Plan next week's focus areas
@@ -483,6 +508,7 @@ git push origin main
 ## Quality Gates
 
 ### Task Completion Checklist
+
 - [ ] All acceptance criteria met
 - [ ] Code follows TypeScript standards
 - [ ] No console errors in development
@@ -492,6 +518,7 @@ git push origin main
 - [ ] Related documentation updated
 
 ### Milestone Completion Criteria
+
 - [ ] All user stories in milestone completed
 - [ ] Core functionality working end-to-end
 - [ ] No critical bugs remaining
@@ -503,12 +530,14 @@ git push origin main
 ## Integration with Existing Workflow
 
 ### Current Repository Setup
+
 - Next.js 14 project structure ✅
 - TypeScript configuration ✅
 - Tailwind CSS ✅
 - Basic development scripts ✅
 
 ### Additional Workflow Needed
+
 - Project automation for issue management
 - Auto-labeling based on file patterns
 - Milestone progress tracking
@@ -517,7 +546,7 @@ git push origin main
 ### Recommended GitHub Actions
 
 1. **Auto-label issues based on content**
-2. **Add new issues to project automatically**  
+2. **Add new issues to project automatically**
 3. **Update project status on issue close**
 4. **Milestone progress tracking**
 5. **Performance monitoring integration**
@@ -527,6 +556,7 @@ git push origin main
 ## Getting Started Checklist
 
 ### For PM (Setup Phase)
+
 - [ ] Create GitHub project with specified columns
 - [ ] Set up all milestones with due dates
 - [ ] Create all labels with proper colors
@@ -535,6 +565,7 @@ git push origin main
 - [ ] Verify Claude Code has repository access
 
 ### For Claude Code (Development Phase)
+
 - [ ] Review this development strategy document
 - [ ] Read user stories document thoroughly
 - [ ] Understand technical architecture from `/docs/tech/`
@@ -544,6 +575,7 @@ git push origin main
 - [ ] Follow commit message conventions for auto-closing issues
 
 ### Success Metrics
+
 - [ ] Issues are consistently updated and closed
 - [ ] Milestone progress is visible and accurate
 - [ ] Development velocity is sustainable

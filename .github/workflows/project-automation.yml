@@ -19,7 +19,7 @@ jobs:
         with:
           project-url: https://github.com/users/shayonpal/projects/7
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Add to Project 5
         uses: actions/add-to-project@main
         with:
@@ -39,7 +39,7 @@ jobs:
             const labels = issue.labels.map(label => label.name);
             const projectId = "PVT_kwHOAaarJ84A6wgt";
             const statusFieldId = "PVTSSF_lAHOAaarJ84A6wgtzgvQhjk";
-            
+
             // Determine target status based on labels
             const targetStatus = labels.includes('wontfix') ? {
               id: "0d38c2db",
@@ -48,9 +48,9 @@ jobs:
               id: "98236657", 
               name: "Done"
             };
-            
+
             console.log(`Moving issue #${issue.number} to ${targetStatus.name} column`);
-            
+
             try {
               // First, find the project item for this issue
               const findItemQuery = `
@@ -133,9 +133,9 @@ jobs:
             const projectId = "PVT_kwHOAaarJ84A6wgt";
             const statusFieldId = "PVTSSF_lAHOAaarJ84A6wgtzgvQhjk";
             const backlogStatusId = "a0762461";
-            
+
             console.log(`Moving reopened issue #${issue.number} back to Backlog`);
-            
+
             try {
               // Find the project item for this issue
               const findItemQuery = `
