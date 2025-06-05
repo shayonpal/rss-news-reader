@@ -88,6 +88,12 @@ export const useAuthStore = create<AuthState>()(
 
       // Check authentication status
       checkAuthStatus: async () => {
+        const currentState = get();
+        if (currentState.isLoading) {
+          // Already checking, don't start another check
+          return;
+        }
+        
         try {
           set({ isLoading: true, error: null });
           

@@ -18,7 +18,7 @@ export function AuthStatus() {
     }, 5000);
 
     return () => clearTimeout(errorTimer);
-  }, [checkAuthStatus, clearError]);
+  }, []); // Remove dependencies to prevent infinite loop
 
   if (isAuthenticated) {
     return <UserProfile />;

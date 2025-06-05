@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- N/A
+- **OAuth Testing Note**: Final authentication testing scheduled for June 6, 2025 due to API rate limits
 
 ### Changed
 

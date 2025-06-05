@@ -19,7 +19,7 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
     if (!isAuthenticated && !isLoading) {
       checkAuthStatus();
     }
-  }, [isAuthenticated, isLoading, checkAuthStatus]);
+  }, []); // Only run once on mount
 
   // Show loading state while checking authentication
   if (isLoading) {
