@@ -33,6 +33,7 @@ jobs:
       - name: Update project status on issue close
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
           script: |
             const issue = context.payload.issue;
             const labels = issue.labels.map(label => label.name);
@@ -126,6 +127,7 @@ jobs:
       - name: Move reopened issue back to Backlog
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
           script: |
             const issue = context.payload.issue;
             const projectId = "PVT_kwHOAaarJ84A6wgt";
