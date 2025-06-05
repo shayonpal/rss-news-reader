@@ -166,6 +166,7 @@ src/
 ### Next Steps
 
 - **June 6, 2025**: Complete final OAuth testing (Issue #6)
+- **Investigate API Rate Limiting**: Analyze why Inoreader's 100 calls/day limit was hit so quickly during development
 - **Issue #7**: Initial Data Storage and IndexedDB setup
 - **Epic 2**: Core Reading Features (Article fetching, reading interface)
 
