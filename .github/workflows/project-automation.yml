@@ -48,7 +48,7 @@ jobs:
             try {
               // First, find the project item for this issue
               const findItemQuery = `
-                query FindProjectItem($projectId: ID!, $issueId: ID!) {
+                query FindProjectItem($projectId: ID!) {
                   node(id: $projectId) {
                     ... on ProjectV2 {
                       items(first: 100) {
@@ -68,8 +68,7 @@ jobs:
               `;
               
               const findResult = await github.graphql(findItemQuery, {
-                projectId: projectId,
-                issueId: issue.node_id
+                projectId: projectId
               });
               
               const projectItem = findResult.node.items.nodes.find(item => 
@@ -133,7 +132,7 @@ jobs:
             try {
               // Find the project item for this issue
               const findItemQuery = `
-                query FindProjectItem($projectId: ID!, $issueId: ID!) {
+                query FindProjectItem($projectId: ID!) {
                   node(id: $projectId) {
                     ... on ProjectV2 {
                       items(first: 100) {
@@ -153,8 +152,7 @@ jobs:
               `;
               
               const findResult = await github.graphql(findItemQuery, {
-                projectId: projectId,
-                issueId: issue.node_id
+                projectId: projectId
               });
               
               const projectItem = findResult.node.items.nodes.find(item => 
