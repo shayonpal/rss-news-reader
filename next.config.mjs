@@ -1,9 +1,11 @@
+import { InjectManifest } from 'workbox-webpack-plugin';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Handle PWA service worker
     if (!isServer) {
       config.resolve.fallback = {
@@ -11,9 +13,21 @@ const nextConfig = {
         fs: false,
       };
     }
+
+    // Add Workbox service worker in production
+    if (!dev && !isServer) {
+      config.plugins.push(
+        new InjectManifest({
+          swSrc: './src/sw.js',
+          swDest: '../public/sw.js',
+          exclude: [/\.map$/, /manifest$/, /\.DS_Store$/],
+          maximumFileSizeToCacheInBytes: 5000000,
+        })
+      );
+    }
+
     return config;
   },
-  // PWA configuration will be added later
   async headers() {
     return [
       {

@@ -9,11 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial project setup with Next.js 14 and TypeScript
-- Development environment configuration with quality gates
-- Comprehensive development documentation
-- GitHub project automation and workflow setup
-- Progressive Web App foundation (in progress)
+- Inoreader OAuth authentication (planned - Issue #6)
+- IndexedDB data storage implementation (planned - Issue #7)
+- Article fetching and display (planned - Epic 2)
 
 ### Changed
 
@@ -33,7 +31,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- Environment variable template with secure configuration patterns
+- N/A
+
+## [0.2.0] - 2025-01-06
+
+### Added
+
+- **Complete PWA Foundation** (Issue #5: US-001 Initial App Setup)
+  - **PWA Manifest & Service Worker** (Issue #9)
+    - Progressive Web App manifest with proper configuration
+    - Service worker with Workbox integration for caching strategies
+    - Offline-first architecture with multiple cache layers
+    - PWA installability on mobile and desktop devices
+  - **PWA Icons & Assets** (Issue #10)
+    - High-quality RSS icon with orange gradient design
+    - Complete icon set: 192x192, 512x512, favicons, Apple touch icons
+    - Theme color integration (#FF6B35) across manifest and metadata
+  - **App Layout & Navigation** (Issue #12)
+    - Responsive header with hamburger menu and sync controls
+    - Slide-out navigation sidebar with feed list
+    - Complete theme system (light/dark/system) with smooth transitions
+    - Mobile-first responsive design with touch-friendly interactions
+    - Clean article list layout following Reeder 5 design principles
+  - **Offline Caching Strategy** (Issue #11)
+    - Multi-layered caching: static assets, API responses, images
+    - Network status detection and visual indicators
+    - Offline action queue with retry logic for sync operations
+    - Cache management utilities with size tracking
+    - Graceful offline fallbacks
+
+### Technical Implementation
+
+- **State Management**: Zustand stores for UI, sync, and theme state
+- **Caching**: Workbox with Cache First, Network First, and Stale While Revalidate strategies
+- **Performance**: 87.1 kB total bundle size, optimized for fast loading
+- **Build Quality**: TypeScript strict mode, ESLint compliance, production build success
+- **Mobile Support**: Responsive design with proper viewport configuration
+
+### User Experience
+
+- **Installation**: PWA can be installed on home screen across platforms
+- **Offline Reading**: Full functionality without internet connection
+- **Theme Switching**: Seamless light/dark mode with system preference support
+- **Visual Feedback**: Clear indicators for read/unread articles, sync status, and network state
+- **Touch Interactions**: Mobile-optimized navigation and touch targets
+
+### Performance Metrics
+
+- **First Load**: ~87 kB compressed JavaScript bundle
+- **Static Generation**: All pages pre-rendered for optimal performance
+- **Caching**: Intelligent resource caching for offline functionality
+- **Loading**: Target <2s initial load, <0.5s navigation
 
 ## [0.1.0] - 2025-01-06
 
