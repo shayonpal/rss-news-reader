@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { userPreferencesRepository } from '@/lib/db/repositories/user-preferences-repository';
+import { apiUsageRepository } from '@/lib/db/repositories/api-usage-repository';
 
 interface User {
   userId: string;
@@ -107,6 +109,9 @@ export const useAuthStore = create<AuthState>()(
           try {
             set({ isLoading: true, error: null });
             
+            // Record API usage for auth status check
+            await apiUsageRepository.recordInoreaderCall();
+            
             const response = await fetch('/api/auth/inoreader/status');
             const data = await response.json();
             
@@ -163,6 +168,9 @@ export const useAuthStore = create<AuthState>()(
       // Refresh token
       refreshToken: async () => {
         try {
+          // Record API usage for token refresh
+          await apiUsageRepository.recordInoreaderCall();
+          
           const response = await fetch('/api/auth/inoreader/refresh', {
             method: 'POST',
           });
@@ -197,6 +205,9 @@ export const useAuthStore = create<AuthState>()(
 // Helper function to fetch user info from Inoreader
 async function fetchUserInfo() {
   try {
+    // Record API usage for user info fetch
+    await apiUsageRepository.recordInoreaderCall();
+    
     const response = await fetch('/api/inoreader/user-info', {
       credentials: 'include',
     });
