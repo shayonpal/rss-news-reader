@@ -25,6 +25,9 @@ interface AuthState {
   clearError: () => void;
 }
 
+// Global promise to prevent duplicate auth checks
+let authCheckPromise: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -86,56 +89,75 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // Check authentication status
+      // Check authentication status with deduplication
       checkAuthStatus: async () => {
+        // If there's already an auth check in progress, return that promise
+        if (authCheckPromise) {
+          return authCheckPromise;
+        }
+        
         const currentState = get();
         if (currentState.isLoading) {
           // Already checking, don't start another check
           return;
         }
         
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await fetch('/api/auth/inoreader/status');
-          const data = await response.json();
-          
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to check auth status');
-          }
-          
-          if (data.authenticated) {
-            // If authenticated but needs refresh, trigger refresh
-            if (data.needsRefresh) {
-              const refreshSuccessful = await get().refreshToken();
-              if (!refreshSuccessful) {
-                set({ 
-                  user: null, 
-                  isAuthenticated: false, 
-                  isLoading: false 
-                });
-                return;
-              }
+        // Create new auth check promise
+        authCheckPromise = (async () => {
+          try {
+            set({ isLoading: true, error: null });
+            
+            const response = await fetch('/api/auth/inoreader/status');
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to check auth status');
             }
             
-            // Fetch user info if authenticated
-            await fetchUserInfo();
-          } else {
+            if (data.authenticated) {
+              // If authenticated but needs refresh, trigger refresh
+              if (data.needsRefresh) {
+                const refreshSuccessful = await get().refreshToken();
+                if (!refreshSuccessful) {
+                  set({ 
+                    user: null, 
+                    isAuthenticated: false, 
+                    isLoading: false 
+                  });
+                  return;
+                }
+              }
+              
+              // Only fetch user info if we don't have it already
+              const currentUser = get().user;
+              if (!currentUser) {
+                await fetchUserInfo();
+              } else {
+                // We already have user info, just update auth state
+                set({ isAuthenticated: true, isLoading: false });
+              }
+            } else {
+              set({ 
+                user: null, 
+                isAuthenticated: false, 
+                isLoading: false 
+              });
+            }
+          } catch (error) {
+            console.error('Auth status check error:', error);
             set({ 
               user: null, 
               isAuthenticated: false, 
+              error: error instanceof Error ? error.message : 'Auth check failed',
               isLoading: false 
             });
+          } finally {
+            // Clear the promise so future calls can create a new one
+            authCheckPromise = null;
           }
-        } catch (error) {
-          console.error('Auth status check error:', error);
-          set({ 
-            user: null, 
-            isAuthenticated: false, 
-            error: error instanceof Error ? error.message : 'Auth check failed',
-            isLoading: false 
-          });
-        }
+        })();
+        
+        return authCheckPromise;
       },
 
       // Refresh token

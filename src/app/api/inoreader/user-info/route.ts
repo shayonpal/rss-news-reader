@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimiter } from '@/lib/api/rate-limiter';
 
 export async function GET(request: NextRequest) {
+  // Check rate limit before making external API call
+  if (!rateLimiter.canMakeCall()) {
+    console.log('Rate limit exceeded for user-info request');
+    const stats = rateLimiter.getUsageStats();
+    return NextResponse.json(
+      { 
+        error: 'Rate limit exceeded', 
+        retryAfter: rateLimiter.getFormattedTimeUntilReset(),
+        usage: stats
+      },
+      { status: 429 }
+    );
+  }
   try {
     const accessToken = request.cookies.get('access_token')?.value;
     
@@ -43,6 +57,10 @@ export async function GET(request: NextRequest) {
 
     const userInfo = await inoreaderResponse.json();
     console.log('Successfully fetched user info:', userInfo.userName);
+    
+    // Record successful API call
+    rateLimiter.recordCall();
+    
     return NextResponse.json(userInfo);
   } catch (error) {
     console.error('User info API error:', error);

@@ -2,7 +2,7 @@
 
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { LoginButton } from './login-button';
-import { useEffect, ReactNode } from 'react';
+import { useEffect, ReactNode, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface AuthGuardProps {
@@ -15,8 +15,9 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, isLoading, checkAuthStatus } = useAuthStore();
 
   useEffect(() => {
-    // Check authentication status when guard mounts
-    if (!isAuthenticated && !isLoading) {
+    // Only check auth if we haven't checked yet (no user data and not loading)
+    const { user } = useAuthStore.getState();
+    if (!user && !isLoading) {
       checkAuthStatus();
     }
   }, []); // Only run once on mount

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **OAuth Testing Note**: Final authentication testing scheduled for June 6, 2025 due to API rate limits
+- N/A
 
 ### Changed
 
@@ -25,11 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- N/A
+- **Critical API Rate Limiting Issues** (Issue #6 Follow-up - June 9, 2025)
+  - **Infinite Authentication Polling**: Fixed React hooks dependency loop causing continuous `/api/auth/inoreader/status` calls
+  - **Request Deduplication**: Implemented singleton pattern to prevent multiple simultaneous auth checks
+  - **Smart Auth Caching**: Added user info caching to avoid redundant external API calls
+  - **Rate Limiting Protection**: Added proper rate limiting to `/api/inoreader/user-info` route
+  - **Component Optimization**: Reduced auth checks to only run when no cached user data exists
+  - **ESLint Compliance**: Fixed all React hooks exhaustive dependencies warnings
 
 ### Security
 
-- N/A
+- Enhanced API rate limiting protection prevents quota exhaustion
 
 ## [0.3.0] - 2025-01-06
 
