@@ -25,6 +25,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- N/A
+
+### Security
+
+- N/A
+
+## [0.4.0] - 2025-06-24 16:27:19 EDT
+
+### Added
+
+- **Complete IndexedDB Data Storage System** (Issue #7: US-003)
+  - **Database Implementation**
+    - Dexie.js integration for IndexedDB management
+    - 10 object stores: articles, feeds, folders, summaries, readStatus, syncState, userPreferences, syncQueue, apiUsage, errorLog
+    - TypeScript interfaces for all data models
+    - Automatic database versioning and migrations
+  - **Storage Management**
+    - Storage quota monitoring with real-time updates
+    - Automatic cleanup when approaching quota limits
+    - Configurable article retention policies
+    - Efficient indexing for fast queries
+  - **Data Models**
+    - Article storage with full content and metadata
+    - Feed hierarchy with folder organization
+    - AI summary caching system
+    - Read/unread status tracking
+    - Sync state management for conflict resolution
+  - **API Integration**
+    - API usage tracking across all services
+    - Rate limit monitoring with daily reset
+    - Error logging for debugging
+    - Request history for analytics
+  - **User Preferences**
+    - Persistent settings storage
+    - Theme preferences
+    - Sync configuration
+    - Display options
+
+### Technical Implementation
+
+- **Database**: IndexedDB with Dexie.js wrapper
+- **Type Safety**: Full TypeScript interfaces for all stores
+- **Performance**: Compound indexes for efficient queries
+- **Reliability**: Transaction support with rollback capability
+- **Monitoring**: Real-time storage quota tracking
+
+### Fixed
+
 - **Critical API Rate Limiting Issues** (Issue #6 Follow-up - June 9, 2025)
   - **Infinite Authentication Polling**: Fixed React hooks dependency loop causing continuous `/api/auth/inoreader/status` calls
   - **Request Deduplication**: Implemented singleton pattern to prevent multiple simultaneous auth checks

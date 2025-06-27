@@ -1,5 +1,9 @@
 # Shayon's News - RSS Reader PWA
 
+[![GitHub](https://img.shields.io/badge/GitHub-shayonpal%2Frss--news--reader-blue)](https://github.com/shayonpal/rss-news-reader)
+[![Status](https://img.shields.io/badge/Status-Active-green)]()
+[![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20iOS%20%7C%20Android-lightgrey)]()
+
 A Progressive Web Application (PWA) RSS reader with AI-powered article summarization, inspired by Reeder 5's clean design aesthetic.
 
 ## Features
@@ -128,7 +132,9 @@ src/
 
 ## Current Development Status
 
-**Phase**: Authentication Complete ✅ - Ready for Data Storage Implementation
+**Phase**: Data Storage Implementation Complete ✅ - Ready for Feed Management
+
+**Version**: 0.3.0
 
 ### Completed ✅
 
@@ -149,6 +155,12 @@ src/
   - ✅ **Issue #18**: API service layer with auto token refresh
   - ✅ **Issue #19**: Rate limiting awareness (100 calls/day)
   - ✅ **Critical Fix (June 9, 2025)**: Resolved infinite polling loop, implemented request deduplication, optimized API usage from 100+ calls to 1 call per session
+- ✅ **Issue #7**: IndexedDB Data Storage - **COMPLETE** ✅
+  - ✅ Dexie.js integration with TypeScript
+  - ✅ 10 object stores for comprehensive data management
+  - ✅ Storage quota monitoring system
+  - ✅ User preferences management
+  - ✅ API usage tracking integration
 
 ### Current Features
 
@@ -162,13 +174,22 @@ src/
 - **Protected Routes**: Main app requires authentication
 - **User Profile**: Display authenticated user info with logout option
 - **Rate Limiting**: Track and manage API usage limits
+- **Data Storage**: IndexedDB with Dexie.js for offline-first data management
+- **Storage Management**: Quota monitoring and automatic cleanup
+- **User Preferences**: Persistent settings across sessions
 
-### Next Steps
+### Open Issues & Next Steps
 
-- **Current Priority**: Issue #7 - Initial Data Storage and IndexedDB setup
+**Currently Open**: 2 admin tasks
+- [Issue #3](https://github.com/shayonpal/rss-news-reader/issues/3): Set up testing infrastructure and CI/CD (P2)
+- [Issue #4](https://github.com/shayonpal/rss-news-reader/issues/4): Configure deployment pipeline (P3)
+
+**Upcoming Development**:
 - **Epic 2**: Core Reading Features (Article fetching, reading interface)  
 - **Epic 3**: AI Integration (Claude API article summaries)
 - **Epic 4**: Production Deployment
+
+See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news-reader/issues) or [Project Board](https://github.com/users/shayonpal/projects/7).
 
 ## Documentation
 
