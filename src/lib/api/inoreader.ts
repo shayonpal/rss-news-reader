@@ -179,6 +179,45 @@ export const inoreaderApi = {
     }
   },
 
+  // Star/unstar articles
+  async addStar(itemIds: string[]): Promise<void> {
+    const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        ac: 'edit-tags',
+        a: 'user/-/state/com.google/starred',
+        ...Object.fromEntries(itemIds.map((id, index) => [`i${index}`, id])),
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to add star: ${response.statusText}`);
+    }
+  },
+
+  async removeStar(itemIds: string[]): Promise<void> {
+    const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        ac: 'edit-tags',
+        r: 'user/-/state/com.google/starred',
+        ...Object.fromEntries(itemIds.map((id, index) => [`i${index}`, id])),
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to remove star: ${response.statusText}`);
+    }
+  },
+
   // Helper methods for common streams
   getAllArticles(options?: { count?: number; continuation?: string }) {
     return this.getStreamContents('user/-/state/com.google/reading-list', options);
@@ -195,3 +234,6 @@ export const inoreaderApi = {
     return this.getStreamContents(feedId, options);
   },
 };
+
+// Export the service instance
+export { inoreaderApi as inoreaderService };

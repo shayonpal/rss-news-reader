@@ -14,6 +14,7 @@ export interface Article {
   isPartial: boolean;
   images?: string[];
   tags?: string[];
+  inoreaderItemId?: string; // Inoreader's item ID for sync
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,14 +22,16 @@ export interface Article {
 export interface Feed {
   id: string;
   title: string;
+  customTitle?: string; // User's custom title
   url: string;
   htmlUrl?: string;
   description?: string;
   iconUrl?: string;
-  folderId?: string;
+  folderId?: string | null;
   unreadCount: number;
   isActive: boolean;
   lastFetchedAt?: Date;
+  inoreaderId?: string; // Inoreader's feed ID
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,7 +39,7 @@ export interface Feed {
 export interface Folder {
   id: string;
   title: string;
-  parentId?: string;
+  parentId?: string | null;
   unreadCount: number;
   isExpanded: boolean;
   sortOrder: number;
@@ -65,7 +68,7 @@ export interface SyncState {
 
 export interface PendingAction {
   id: string;
-  type: "mark_read" | "mark_unread";
+  type: "mark_read" | "mark_unread" | "star" | "unstar";
   articleId: string;
   timestamp: Date;
 }
@@ -166,6 +169,11 @@ export interface FeedState {
   selectedFeed?: Feed;
   isLoading: boolean;
   error?: string;
+}
+
+// Extended feed type with unread count
+export interface FeedWithUnreadCount extends Feed {
+  unreadCount: number;
 }
 
 export interface SettingsState {

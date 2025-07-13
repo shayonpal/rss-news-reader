@@ -565,7 +565,7 @@ export class HealthCheckService {
         connectionType: (navigator as any).connection?.effectiveType,
         downlink: (navigator as any).connection?.downlink,
         rtt: (navigator as any).connection?.rtt,
-      } : {},
+      } : undefined,
     };
     checks.push(connectivityCheck);
 

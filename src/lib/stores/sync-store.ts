@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { db } from '@/lib/db/database';
+import { inoreaderService } from '@/lib/api/inoreader';
 
 export interface QueuedAction {
   id: string;
@@ -85,24 +87,50 @@ export const useSyncStore = create<SyncState>()(
       processQueue: async () => {
         const { actionQueue, removeFromQueue, incrementRetryCount } = get();
         
-        if (actionQueue.length === 0) return;
+        if (actionQueue.length === 0 || !navigator.onLine) return;
         
         console.log(`Processing ${actionQueue.length} queued actions`);
         
+        // Store to database first
+        await db.transaction('rw', db.pendingActions, async () => {
+          for (const action of actionQueue) {
+            const exists = await db.pendingActions.get(action.id);
+            if (!exists) {
+              await db.pendingActions.add({
+                id: action.id,
+                type: action.type,
+                articleId: action.articleId,
+                timestamp: new Date(action.timestamp),
+                syncAttempts: action.retryCount,
+                lastAttemptAt: new Date()
+              });
+            }
+          }
+        });
+        
         for (const action of actionQueue) {
           try {
-            // Simulate API call - replace with actual implementation
-            await simulateApiCall(action);
+            // Process action based on type
+            await processAction(action);
+            
+            // Remove from both queue and database
             removeFromQueue(action.id);
+            await db.pendingActions.delete(action.id);
+            
             console.log(`Successfully processed action: ${action.type} for article ${action.articleId}`);
           } catch (error) {
             console.error(`Failed to process action ${action.id}:`, error);
             
             if (action.retryCount < action.maxRetries) {
               incrementRetryCount(action.id);
+              await db.pendingActions.update(action.id, {
+                syncAttempts: action.retryCount + 1,
+                lastAttemptAt: new Date()
+              });
             } else {
               console.warn(`Max retries reached for action ${action.id}, removing from queue`);
               removeFromQueue(action.id);
+              await db.pendingActions.delete(action.id);
             }
           }
         }
@@ -144,16 +172,36 @@ export const useSyncStore = create<SyncState>()(
   )
 );
 
-// Simulate API call for queued actions
-async function simulateApiCall(action: QueuedAction): Promise<void> {
-  // Random delay to simulate network
-  const delay = Math.random() * 1000 + 500;
-  await new Promise(resolve => setTimeout(resolve, delay));
-  
-  // Random failure for testing
-  if (Math.random() < 0.1) {
-    throw new Error('Simulated network error');
+// Process individual action with Inoreader API
+async function processAction(action: QueuedAction): Promise<void> {
+  // Get article from database to get its Inoreader ID
+  const article = await db.articles.get(action.articleId);
+  if (!article || !article.inoreaderItemId) {
+    throw new Error('Article not found or missing Inoreader ID');
   }
   
-  console.log(`API call successful: ${action.type} for article ${action.articleId}`);
+  switch (action.type) {
+    case 'mark_read':
+      await inoreaderService.markAsRead([article.inoreaderItemId]);
+      break;
+    case 'mark_unread':
+      await inoreaderService.markAsUnread([article.inoreaderItemId]);
+      break;
+    case 'star':
+      await inoreaderService.addStar([article.inoreaderItemId]);
+      break;
+    case 'unstar':
+      await inoreaderService.removeStar([article.inoreaderItemId]);
+      break;
+    default:
+      throw new Error(`Unknown action type: ${action.type}`);
+  }
+}
+
+// Monitor online status and process queue when back online
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    console.log('Back online, processing queued actions...');
+    useSyncStore.getState().processQueue();
+  });
 }
