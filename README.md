@@ -15,6 +15,7 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
 - **Inoreader Integration**: Sync with existing Inoreader subscriptions
 - **Dark/Light Mode**: Automatic theme switching
 - **Mobile-First**: Optimized for touch interactions
+- **Health Monitoring**: Comprehensive system health checks and monitoring
 
 ## Technology Stack
 
@@ -177,6 +178,9 @@ src/
 - **Data Storage**: IndexedDB with Dexie.js for offline-first data management
 - **Storage Management**: Quota monitoring and automatic cleanup
 - **User Preferences**: Persistent settings across sessions
+- **Health Monitoring**: Real-time system health checks with alerts
+- **Service Monitoring**: Track database, API, cache, auth, and network status
+- **Performance Metrics**: Response time tracking and uptime monitoring
 
 ### Open Issues & Next Steps
 
@@ -198,6 +202,7 @@ See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news
 - **[Product Requirements](docs/product/PRD.md)**: Detailed product specifications
 - **[User Stories](docs/product/user-stories.md)**: All user stories with acceptance criteria
 - **[Technical Architecture](docs/tech/)**: Implementation decisions and architecture
+- **[Health Check System](docs/health-check-system.md)**: System monitoring and health checks
 
 ## API Integration
 
@@ -213,6 +218,28 @@ See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news
 - AI-powered article summarization
 - Model: claude-3-5-sonnet-latest
 - Summary length: 100-120 words
+
+## Health Monitoring
+
+The application includes a comprehensive health monitoring system:
+
+### Monitored Services
+
+- **Database**: IndexedDB connection, storage usage, data integrity
+- **APIs**: Inoreader and Claude API availability, rate limits
+- **Cache**: Service Worker cache status, LocalStorage health
+- **Authentication**: Token validity, refresh capability
+- **Network**: Online/offline status, external connectivity
+
+### Health Features
+
+- **Real-time Monitoring**: Automatic health checks every 5 minutes
+- **Visual Indicators**: Status icons in header with color coding
+- **Alert System**: Severity-based alerts for issues
+- **Metrics Dashboard**: Performance tracking and uptime statistics
+- **API Endpoint**: `/api/health` for external monitoring
+
+Access the full health dashboard at `/health` when logged in.
 
 ## Contributing
 

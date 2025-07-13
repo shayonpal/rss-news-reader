@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { registerServiceWorker } from '@/lib/sw-registration';
+import { initializeHealthScheduler } from '@/lib/health/health-scheduler';
 
 export function PWAProvider() {
   useEffect(() => {
@@ -9,6 +10,9 @@ export function PWAProvider() {
     if (process.env.NODE_ENV === 'production') {
       registerServiceWorker();
     }
+    
+    // Initialize health check scheduler
+    initializeHealthScheduler();
   }, []);
 
   return null;

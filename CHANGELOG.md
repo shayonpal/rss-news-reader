@@ -9,7 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- N/A
+- **Comprehensive Health Check System**
+  - **Core Health Service**: Monitors database, APIs, cache, authentication, and network
+  - **Real-time Monitoring**: Automatic health checks every 5 minutes with pause/resume
+  - **Health Dashboard**: Full system health visualization at `/health`
+  - **Status Widget**: Quick health indicator in application header
+  - **Alert System**: Severity-based alerts (info, warning, error, critical)
+  - **Performance Metrics**: Track uptime, response times, and success rates
+  - **API Endpoints**: `/api/health` for external monitoring
+  - **Service-specific Checks**:
+    - Database: Connection, storage usage, data integrity
+    - APIs: Inoreader/Claude availability, rate limit monitoring
+    - Cache: Service Worker and LocalStorage health
+    - Auth: Token validity and refresh capability
+    - Network: Online status and external connectivity
+  - **Comprehensive Test Suite**: Unit tests for health service and store
+  - **Documentation**: Complete health check system documentation
 
 ### Changed
 
