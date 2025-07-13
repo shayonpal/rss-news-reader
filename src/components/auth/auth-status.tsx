@@ -21,7 +21,7 @@ export function AuthStatus() {
     }, 5000);
 
     return () => clearTimeout(errorTimer);
-  }, []); // Only run once on mount
+  }, [checkAuthStatus, clearError]); // Dependencies added
 
   if (isAuthenticated) {
     return <UserProfile />;
