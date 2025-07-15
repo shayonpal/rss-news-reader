@@ -90,11 +90,26 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
    
    **Note**: Direct localhost access (http://localhost:3000) will NOT work for OAuth authentication. Always use the ngrok URL for testing.
 
+### Important: Authentication & Network Access
+
+This app requires HTTPS for OAuth authentication with Inoreader. 
+
+**Always use the ngrok URL for development:**
+- URL: https://d2c0493e4ec2.ngrok-free.app
+- The OAuth redirect is configured for this specific URL
+- Authentication cookies are domain-specific and won't work on localhost
+
+**If you see "Failed to sync feeds":**
+1. Make sure you're accessing via the ngrok URL
+2. Try signing out and signing in again
+3. Check that your Inoreader credentials are valid
+
 ### Development Commands
 
 ```bash
 # Development
 npm run dev              # Start development server
+npm run dev:network      # Start with ngrok for OAuth (REQUIRED)
 npm run dev:debug        # Start with Node.js debugger
 npm run dev:turbo        # Start with Turbo mode
 
