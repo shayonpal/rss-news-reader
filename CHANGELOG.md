@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 15, 2025 Session (Issue #26)
+- **Auto-sync on Authentication** - Feeds now sync automatically after login
+  - OAuth callback redirects to `/reader?sync=true` instead of home page
+  - Empty feed state triggers automatic sync on first load
+  - Loading message "Syncing your feeds..." displays during initial sync
+  - Error handling with retry button if sync fails
+  - Prevents duplicate syncs by checking URL parameters and sync state
+  - Respects existing sync timestamps to avoid unnecessary API calls
+
 ### Added - July 15, 2025 Session (Issue #21)
 - **Article List Component** - Comprehensive article browsing implementation
   - Created dedicated ArticleList component with all required features

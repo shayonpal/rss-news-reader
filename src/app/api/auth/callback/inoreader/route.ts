@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
     // Calculate token expiration time
     const expiresAt = Date.now() + tokenData.expires_in * 1000;
     
-    // Create response with redirect to home
-    const response = NextResponse.redirect(new URL('/', baseUrl));
+    // Create response with redirect to reader page with sync flag
+    const response = NextResponse.redirect(new URL('/reader?sync=true', baseUrl));
     
     // Store tokens in httpOnly cookies
     response.cookies.set('access_token', tokenData.access_token, {
