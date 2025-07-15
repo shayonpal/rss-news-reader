@@ -18,13 +18,13 @@ jobs:
         uses: actions/add-to-project@main
         with:
           project-url: https://github.com/users/shayonpal/projects/7
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
 
       - name: Add to Project 5
         uses: actions/add-to-project@main
         with:
           project-url: https://github.com/users/shayonpal/projects/5
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
 
   update_status:
     runs-on: ubuntu-latest
