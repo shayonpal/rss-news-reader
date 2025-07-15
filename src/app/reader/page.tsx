@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { ArticleList } from '@/components/articles/article-list';
@@ -8,6 +9,7 @@ import { useFeedStore } from '@/lib/stores/feed-store';
 import { ErrorBoundary } from '@/components/error-boundary';
 
 export default function ReaderPage() {
+  const router = useRouter();
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
   const { getFeed } = useFeedStore();
 
@@ -15,7 +17,7 @@ export default function ReaderPage() {
   const pageTitle = selectedFeed ? selectedFeed.title : 'All Articles';
 
   const handleArticleClick = (articleId: string) => {
-    // TODO: Navigate to article detail view
+    router.push(`/reader/article/${encodeURIComponent(articleId)}`);
   };
 
   return (
