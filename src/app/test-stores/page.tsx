@@ -203,6 +203,58 @@ export default function TestStoresPage() {
     addResult('Open browser DevTools and check the Application tab > IndexedDB > ShayonNewsDB', 'info');
   };
 
+  const checkDataCorruption = async () => {
+    try {
+      addResult('Checking for data corruption...', 'info');
+      const response = await fetch('/api/debug/data-cleanup');
+      const result = await response.json();
+      
+      if (response.ok) {
+        addResult(`Found ${result.totalArticles} total articles`, 'info');
+        if (result.corruptedArticles > 0) {
+          addResult(`⚠️ Found ${result.corruptedArticles} corrupted articles`, 'error');
+          result.corruptedIds.forEach((item: any) => {
+            addResult(`- ${item.title} (ID: ${item.id})`, 'error');
+            if (item.contentPreview) {
+              addResult(`  Content: ${item.contentPreview}...`, 'error');
+            }
+            if (item.summaryPreview) {
+              addResult(`  Summary: ${item.summaryPreview}...`, 'error');
+            }
+          });
+        } else {
+          addResult('✅ No corrupted articles found', 'success');
+        }
+      } else {
+        addResult(`Corruption check failed: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      addResult(`Corruption check error: ${error}`, 'error');
+    }
+  };
+
+  const cleanupData = async () => {
+    try {
+      addResult('Cleaning up corrupted data...', 'info');
+      const response = await fetch('/api/debug/data-cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const result = await response.json();
+      
+      if (response.ok) {
+        addResult(`✅ ${result.message}`, 'success');
+        if (result.cleaned > 0) {
+          addResult(`Cleaned article IDs: ${result.cleanedIds.join(', ')}`, 'info');
+        }
+      } else {
+        addResult(`Cleanup failed: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      addResult(`Cleanup error: ${error}`, 'error');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -247,6 +299,20 @@ export default function TestStoresPage() {
               className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
             >
               Inspect Database
+            </button>
+            
+            <button
+              onClick={checkDataCorruption}
+              className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700"
+            >
+              Check Data Corruption
+            </button>
+            
+            <button
+              onClick={cleanupData}
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+            >
+              Cleanup Corrupted Data
             </button>
           </div>
 

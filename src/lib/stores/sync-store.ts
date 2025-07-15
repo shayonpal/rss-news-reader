@@ -281,18 +281,30 @@ export const useSyncStore = create<SyncState>()(
               if (!feed) continue;
               
               for (const item of articles) {
+                // Safely extract text content from potentially nested objects
+                const extractContent = (contentObj: any): string => {
+                  if (typeof contentObj === 'string') return contentObj;
+                  if (typeof contentObj === 'object' && contentObj !== null && 'content' in contentObj) {
+                    return typeof contentObj.content === 'string' ? contentObj.content : '';
+                  }
+                  return '';
+                };
+
+                const contentText = item.content ? extractContent(item.content) : extractContent(item.summary);
+                const summaryText = item.summary ? extractContent(item.summary) : '';
+
                 const article: Article = {
                   id: item.id,
                   title: item.title,
-                  content: item.content || item.summary || '',
-                  summary: item.summary,
+                  content: contentText,
+                  summary: summaryText,
                   author: item.author,
                   publishedAt: new Date(item.published * 1000),
                   feedId: feed.id,
                   feedTitle: feed.title,
-                  url: item.canonical || item.origin.htmlUrl,
-                  isRead: item.categories.includes('user/-/state/com.google/read'),
-                  isPartial: !item.content || item.content.length < 200, // Mark as partial if content is short
+                  url: item.canonical?.[0]?.href || item.origin.htmlUrl || '',
+                  isRead: item.categories?.includes('user/-/state/com.google/read') || false,
+                  isPartial: !contentText || contentText.length < 200, // Mark as partial if content is short
                   inoreaderItemId: item.id,
                   createdAt: new Date(),
                   updatedAt: new Date()

@@ -1,4 +1,5 @@
 import { api } from './client';
+import type { InoreaderItem } from '@/types';
 
 // Base URL for Inoreader API
 const INOREADER_API_BASE = 'https://www.inoreader.com/reader/api/0';
@@ -31,27 +32,7 @@ export interface UnreadCount {
   newestItemTimestampUsec: string;
 }
 
-export interface Article {
-  id: string;
-  title: string;
-  author?: string;
-  content: string;
-  summary?: string;
-  published: number;
-  updated: number;
-  canonical: string;
-  categories: string[];
-  origin: {
-    streamId: string;
-    title: string;
-    htmlUrl: string;
-  };
-  enclosure?: {
-    href: string;
-    type: string;
-    length?: string;
-  }[];
-}
+// This should be using InoreaderItem from types/index.ts instead
 
 export interface StreamContentsResponse {
   id: string;
@@ -59,7 +40,7 @@ export interface StreamContentsResponse {
   description: string;
   self: string;
   updated: number;
-  items: Article[];
+  items: InoreaderItem[];
   continuation?: string;
 }
 

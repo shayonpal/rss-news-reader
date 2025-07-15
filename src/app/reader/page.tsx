@@ -6,10 +6,13 @@ import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { extractTextContent } from '@/lib/utils/data-cleanup';
 import { Loader2 } from 'lucide-react';
 
 export default function ReaderPage() {
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  
   const { 
     articles, 
     loadingArticles, 
@@ -19,9 +22,16 @@ export default function ReaderPage() {
   } = useArticleStore();
   const { getFeed } = useFeedStore();
 
+  // Handle hydration
   useEffect(() => {
-    loadArticles(selectedFeedId || undefined);
-  }, [selectedFeedId, loadArticles]);
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated) {
+      loadArticles(selectedFeedId || undefined);
+    }
+  }, [selectedFeedId, loadArticles, isHydrated]);
 
   const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : null;
   const pageTitle = selectedFeed ? selectedFeed.title : 'All Articles';
@@ -58,7 +68,7 @@ export default function ReaderPage() {
 
           {/* Article List */}
           <main className="flex-1 overflow-y-auto">
-            {loadingArticles ? (
+            {!isHydrated || loadingArticles ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
@@ -72,7 +82,20 @@ export default function ReaderPage() {
               </div>
             ) : (
               <div className="divide-y">
-                {Array.from(articles.values()).map((article) => (
+                {Array.from(articles.values()).map((article) => {
+                  // Debug logging for content issues
+                  if (typeof article.content === 'object' || typeof article.summary === 'object') {
+                    console.log('Article with object content/summary:', {
+                      id: article.id,
+                      title: article.title,
+                      contentType: typeof article.content,
+                      summaryType: typeof article.summary,
+                      content: article.content,
+                      summary: article.summary
+                    });
+                  }
+                  
+                  return (
                   <article
                     key={article.id}
                     className="p-6 hover:bg-muted/50 cursor-pointer transition-colors"
@@ -95,7 +118,7 @@ export default function ReaderPage() {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>{article.feedTitle}</span>
                         <span>•</span>
-                        <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                        <span suppressHydrationWarning>{new Date(article.publishedAt).toLocaleDateString()}</span>
                         {article.author && (
                           <>
                             <span>•</span>
@@ -106,17 +129,42 @@ export default function ReaderPage() {
 
                       {/* Content Preview */}
                       <div className="text-sm line-clamp-3">
-                        {article.summary ? (
-                          <p className="text-primary">{article.summary}</p>
-                        ) : article.content ? (
-                          <p className="text-muted-foreground">{article.content.substring(0, 200)}...</p>
-                        ) : (
-                          <p className="text-muted-foreground italic">No preview available</p>
-                        )}
+                        {(() => {
+                          // Use the robust extraction function and add debugging
+                          const summaryText = extractTextContent(article.summary);
+                          const contentText = extractTextContent(article.content);
+                          
+                          // Debug logging to see what we're getting
+                          if (typeof article.summary === 'object' && article.summary !== null) {
+                            console.log('Found object in article.summary:', article.summary);
+                          }
+                          if (typeof article.content === 'object' && article.content !== null) {
+                            console.log('Found object in article.content:', article.content);
+                          }
+
+                          if (summaryText) {
+                            return (
+                              <p className="text-primary">
+                                {summaryText}
+                              </p>
+                            );
+                          } else if (contentText) {
+                            return (
+                              <p className="text-muted-foreground">
+                                {contentText.substring(0, 200)}...
+                              </p>
+                            );
+                          } else {
+                            return (
+                              <p className="text-muted-foreground italic">No preview available</p>
+                            );
+                          }
+                        })()}
                       </div>
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
           </main>

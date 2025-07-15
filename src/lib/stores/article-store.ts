@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { db } from '@/lib/db/database';
 import { useSyncStore } from './sync-store';
+import { cleanupArticleData, isArticleDataCorrupted } from '@/lib/utils/data-cleanup';
 import type { Article, ArticleState, Summary } from '@/types';
 
 interface ArticleStoreState {
@@ -69,6 +70,20 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     try {
       // Get all articles and filter in memory
       let articles = await db.articles.orderBy('publishedAt').reverse().toArray();
+      
+      // Clean up any corrupted data using robust cleanup function
+      let corruptedCount = 0;
+      articles = articles.map(article => {
+        if (isArticleDataCorrupted(article)) {
+          corruptedCount++;
+          console.warn('Cleaning up corrupted article data for:', article.id, article.title);
+        }
+        return cleanupArticleData(article);
+      });
+      
+      if (corruptedCount > 0) {
+        console.log(`Cleaned up ${corruptedCount} corrupted articles`);
+      }
       
       // Apply feed/folder filter
       if (feedId) {

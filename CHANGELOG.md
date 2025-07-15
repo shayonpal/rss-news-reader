@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - July 15, 2025 Session
+- **React Rendering Error** - Fixed "Objects are not valid as a React child" error by properly extracting content from InoreaderContent objects
+- **Data Corruption** - Cleaned up corrupted article data where content/summary were stored as objects instead of strings
+- **Hydration Mismatches** - Fixed server/client rendering differences with dates and browser APIs
+- **Type Safety** - Corrected StreamContentsResponse to use InoreaderItem[] instead of Article[]
+- **Console Errors** - Resolved all major console errors and warnings
+
+### Added
+- **Data Cleanup Utilities** - Created comprehensive data cleanup functions for corrupted articles
+- **Debug Endpoint** - Added /api/debug/data-cleanup for corruption detection and cleanup
+- **Error Prevention** - Article store now auto-cleans corrupted data on load
+- **Test Page Tools** - Added corruption check and cleanup buttons to test page
+
+### Changed
+- **Documentation** - Updated README.md and CLAUDE.local.md to specify ngrok URL (https://d2c0493e4ec2.ngrok-free.app) for all testing
+- **Sync Store** - Enhanced to properly extract .content from Inoreader API responses
+- **Network Status Hook** - Made SSR-safe with proper window/navigator checks
+- **Headers** - Added Permissions-Policy header to suppress browsing-topics warning
+
+### Previous Session Work (July 15, 2025 - Early Morning)
+- **Authentication System** - Resolved Next.js 15+ cookie handling in API routes
+- **API Integration** - All Inoreader API endpoints now return 200 status codes
+- **Data Sync** - Successfully syncing 69 feeds + 100 articles in 1.6 seconds
+- **Performance** - Optimized sync with only 22 API calls (under rate limits)
+
+## [0.3.0] - 2025-07-15
+
+### Major Breakthrough
+- **Issue #25 Backend Complete** - Authentication and sync functionality working
+- **Real Data Integration** - Successfully connected to live Inoreader account
+- **Production Ready Sync** - Efficient batched API calls with error handling
+
 ### Added
 
 - **Feed Hierarchy Display Component** (2025-07-14) - Issue #20

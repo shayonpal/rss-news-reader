@@ -72,7 +72,7 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
         {/* Status */}
         <div className="p-3 text-xs text-muted-foreground">
           {lastSyncTime && (
-            <div>Last sync: {new Date(lastSyncTime).toLocaleTimeString()}</div>
+            <div>Last sync: <span suppressHydrationWarning>{new Date(lastSyncTime).toLocaleTimeString()}</span></div>
           )}
           <div>{feeds.size} feeds total</div>
         </div>

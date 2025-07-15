@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { FeedTreeItem } from './feed-tree-item';
 import { cn } from '@/lib/utils';
 import { Loader2, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
@@ -15,6 +16,7 @@ interface FeedListProps {
 }
 
 export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListProps) {
+  const { isOnline } = useNetworkStatus();
   const { 
     feeds, 
     folders, 
@@ -133,15 +135,15 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
                 <span className="text-destructive">Sync error</span>
               </>
             )}
-            {!navigator.onLine && (
+            {!isOnline && (
               <>
                 <WifiOff className="h-3 w-3" />
                 <span>Offline</span>
               </>
             )}
-            {!isSyncing && !syncError && navigator.onLine && lastSyncTime && (
+            {!isSyncing && !syncError && isOnline && lastSyncTime && (
               <span>
-                Last sync: {new Date(lastSyncTime).toLocaleTimeString()}
+                Last sync: <span suppressHydrationWarning>{new Date(lastSyncTime).toLocaleTimeString()}</span>
               </span>
             )}
           </div>
@@ -149,7 +151,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
             size="sm"
             variant="ghost"
             onClick={() => performFullSync()}
-            disabled={isSyncing || !navigator.onLine}
+            disabled={isSyncing || !isOnline}
             className="h-7 px-2"
           >
             <RefreshCw className={cn("h-3 w-3", isSyncing && "animate-spin")} />
