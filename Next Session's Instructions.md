@@ -1,41 +1,47 @@
 # Next Session Instructions
 
-**Last Updated:** Monday, July 14, 2025 at 8:39 PM
+**Last Updated:** Monday, July 14, 2025 at 10:22 PM
 
-## Latest Session - July 14, 2025 (Evening)
-- **Duration**: ~1 hour
-- **Main focus**: Fix authentication for network access via ngrok
-- **Issues worked**: Authentication loading loop and OAuth redirect issues
-- **Type**: Development environment configuration
+## Latest Session - July 14, 2025 (Late Evening)
+- **Duration**: ~2 hours
+- **Main focus**: Implement Feed Hierarchy Display component
+- **Issues worked**: Issue #20 (US-004: Feed Hierarchy Display)
+- **Type**: Feature implementation and testing
 
 ## Current State
 - **Branch**: main
-- **Uncommitted changes**: 4 files (authentication fixes and network setup)
-- **Work in progress**: Authentication now working via ngrok for cross-device access
+- **Uncommitted changes**: None (all work committed)
+- **Work in progress**: Feed hierarchy UI complete, waiting for sync implementation
 
 ## Completed This Session
-- ✅ Fixed authentication loading loop in auth-guard.tsx
-  - Changed from reactive useEffect to single mount check
-  - Eliminated infinite re-render cycle
-- ✅ Set up HTTPS access for local network development
-  - Created SSL certificates with mkcert
-  - Added `dev:network` and `dev:https` scripts
-  - Configured ngrok for public HTTPS access
-- ✅ Fixed OAuth callback redirect for proxied requests
-  - Updated callback route to use request headers for proper host detection
-  - Authentication now works via ngrok URL: https://d2c0493e4ec2.ngrok-free.app
-- ✅ Successfully authenticated and verified user data fetching
+- ✅ Implemented complete Feed Hierarchy Display (Issue #20)
+  - Created FeedList component with hierarchical structure
+  - Added FeedTreeItem with collapsible folders using Radix UI
+  - Implemented FeedSidebar with responsive behavior
+  - Mobile: Drawer with swipe gestures for open/close
+  - Desktop: Persistent sidebar
+  - Unread count badges throughout hierarchy
+  - Sync status indicators in header
+- ✅ Created new `/reader` page as main interface
+  - Integrated feed sidebar with article list
+  - Feed selection filters article display
+  - Home page now redirects to reader
+- ✅ Tested implementation with Playwright MCP
+  - Verified responsive behavior works correctly
+  - Confirmed mobile drawer and desktop sidebar switch properly
+  - Discovered feeds don't load due to unimplemented sync
 
 ## Next Priority
-1. **Commit authentication fixes** - Save the OAuth and auth guard improvements
-2. **Start Issue #20** - Feed Hierarchy Display component implementation
-3. **Update ngrok URL in .env if restarting** - Ngrok URLs change on restart
+1. **Implement sync functionality** - The `performFullSync` method needs implementation to fetch feeds from Inoreader
+2. **Start Issue #21** - Article List Browsing (US-005)
+3. **Consider implementing manual sync button** - Allow users to trigger feed sync
 
 ## Important Context
-- **Ngrok Setup**: App accessible at https://d2c0493e4ec2.ngrok-free.app (changes on restart)
-- **Inoreader Redirect**: Updated to use ngrok URL for OAuth callback
-- **Network Access**: Can now access from any device, not just localhost
-- **Auth Fix**: Resolved infinite loop issue that was preventing login screen display
+- **Feed UI Complete**: All UI components for feed hierarchy are working
+- **No Data Loading**: Feeds don't appear because sync isn't implemented
+- **Testing Note**: Always use ngrok URL for testing, not localhost
+- **Responsive Design**: Mobile drawer and desktop sidebar working perfectly
+- **Next Blocker**: Need sync implementation to see actual feed data
 
 ## Commands to Run Next Session
 ```bash
@@ -43,23 +49,33 @@
 cd /Users/shayon/DevProjects/rss-news-reader
 git status
 
-# If ngrok URL changed, update .env and Inoreader settings
-# Start ngrok first to get new URL
-ngrok http 3000
+# Pull latest changes
+git pull origin main
 
-# Update .env with new URL
-# NEXT_PUBLIC_INOREADER_REDIRECT_URI=https://[new-ngrok-url]/api/auth/callback/inoreader
+# Start development (ask user to run this)
+# npm run dev:network
 
-# Start development server
-npm run dev:network
+# View remaining Epic 2 issues
+gh issue list --label epic-2-reading --state open
 
-# View Epic 2 issues
-gh issue list --label epic-2-reading
+# Check sync implementation status
+grep -n "performFullSync" src/lib/stores/sync-store.ts
 ```
 
 ---
 
-## Previous Session - July 13, 2025 (Morning)
+## Previous Sessions
+
+### July 14, 2025 (Evening) - Authentication & Network Setup
+- **Duration**: ~1 hour
+- **Main focus**: Fix authentication for network access via ngrok
+- **Completed**:
+  - Fixed authentication loading loop in auth-guard.tsx
+  - Set up HTTPS access for local network development
+  - Configured ngrok for public HTTPS access
+  - Fixed OAuth callback redirect for proxied requests
+
+### July 13, 2025 (Morning)
 - **Duration**: ~5 minutes
 - **Main focus**: Epic 2 GitHub issue creation and Vitest type definitions fix
 - **Issues worked**: Created #20-24 for Epic 2 implementation

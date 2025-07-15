@@ -5,7 +5,8 @@ import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
 import { FeedTreeItem } from './feed-tree-item';
 import { cn } from '@/lib/utils';
-import { Loader2, WifiOff, AlertCircle } from 'lucide-react';
+import { Loader2, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface FeedListProps {
   selectedFeedId: string | null;
@@ -27,12 +28,17 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
     getSubfolders 
   } = useFeedStore();
   
-  const { isSyncing, lastSyncTime, syncError } = useSyncStore();
+  const { isSyncing, lastSyncTime, syncError, performFullSync } = useSyncStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadFeedHierarchy();
-  }, [loadFeedHierarchy]);
+    
+    // If no feeds loaded and no last sync time, trigger initial sync
+    if (feeds.size === 0 && !lastSyncTime && !isSyncing) {
+      performFullSync();
+    }
+  }, [loadFeedHierarchy, feeds.size, lastSyncTime, isSyncing, performFullSync]);
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
@@ -111,8 +117,8 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
     <div className={cn("flex flex-col h-full", className)}>
       {/* Sync Status */}
       <div className="px-4 py-3 border-b">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isSyncing && (
               <>
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -137,6 +143,16 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
               </span>
             )}
           </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => performFullSync()}
+            disabled={isSyncing || !navigator.onLine}
+            className="h-7 px-2"
+          >
+            <RefreshCw className={cn("h-3 w-3", isSyncing && "animate-spin")} />
+            <span className="ml-1 text-xs">Sync</span>
+          </Button>
         </div>
       </div>
 

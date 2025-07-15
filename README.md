@@ -13,8 +13,10 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
 - **Offline-First**: Read articles without internet connection
 - **Clean Design**: Minimalist interface inspired by Reeder 5
 - **Inoreader Integration**: Sync with existing Inoreader subscriptions
+- **Feed Hierarchy**: Collapsible folder structure with unread counts
+- **Responsive Design**: Adaptive layout for mobile and desktop
 - **Dark/Light Mode**: Automatic theme switching
-- **Mobile-First**: Optimized for touch interactions
+- **Mobile-First**: Optimized for touch interactions with swipe gestures
 - **Health Monitoring**: Comprehensive system health checks and monitoring
 
 ## Technology Stack

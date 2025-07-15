@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Feed Hierarchy Display Component** (2025-07-14) - Issue #20
+  - Created FeedList component with hierarchical folder structure display
+  - Implemented collapsible folders using Radix UI Collapsible with smooth animations
+  - Added unread count badges for feeds and folders with real-time updates
+  - Created responsive sidebar that switches between persistent (desktop) and drawer (mobile)
+  - Implemented swipe gestures for mobile drawer open/close functionality
+  - Added feed selection that filters the article list
+  - Included sync status indicators (syncing, last synced, errors, offline)
+  - Created dedicated `/reader` page integrating feeds and articles
+  - Updated home page to redirect to new reader interface
+  - All acceptance criteria from US-004 successfully implemented
+
 - **Network Access and Authentication Improvements** (2025-07-14)
   - Fixed authentication loading loop that prevented login screen display
   - Added ngrok integration for secure HTTPS access from any device

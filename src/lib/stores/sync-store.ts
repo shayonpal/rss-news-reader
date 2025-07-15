@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { db } from '@/lib/db/database';
 import { inoreaderService } from '@/lib/api/inoreader';
+import type { Feed, Article } from '@/types';
 
 export interface QueuedAction {
   id: string;
@@ -146,12 +147,195 @@ export const useSyncStore = create<SyncState>()(
           // Process any queued offline actions first
           await processQueue();
           
-          // Simulate full sync - replace with actual implementation
           console.log('Starting full sync...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          const startTime = Date.now();
+          let apiCalls = 0;
+          
+          // Step 1: Fetch subscription list and unread counts
+          console.log('Fetching subscriptions and unread counts...');
+          const [subscriptionsResponse, unreadCountsResponse] = await Promise.all([
+            inoreaderService.getSubscriptions(),
+            inoreaderService.getUnreadCounts()
+          ]);
+          apiCalls += 2;
+          
+          const { subscriptions } = subscriptionsResponse;
+          const { unreadcounts } = unreadCountsResponse;
+          
+          // Create a map of unread counts for quick lookup
+          const unreadCountMap = new Map<string, number>();
+          unreadcounts.forEach(item => {
+            unreadCountMap.set(item.id, item.count);
+          });
+          
+          // Step 2: Process folders (categories) and feeds
+          console.log(`Processing ${subscriptions.length} subscriptions...`);
+          
+          // First, create all folders
+          const folderMap = new Map<string, string>(); // Inoreader ID -> local ID
+          const processedFolders = new Set<string>();
+          
+          for (const subscription of subscriptions) {
+            for (const category of subscription.categories || []) {
+              if (!processedFolders.has(category.id)) {
+                processedFolders.add(category.id);
+                
+                // Create or update folder
+                const existingFolder = await db.folders.get(category.id);
+                if (!existingFolder) {
+                  await db.folders.add({
+                    id: category.id,
+                    title: category.label,
+                    parentId: null, // Inoreader doesn't support nested folders
+                    unreadCount: unreadCountMap.get(category.id) || 0,
+                    isExpanded: true,
+                    sortOrder: 0,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  });
+                } else {
+                  await db.folders.update(category.id, {
+                    unreadCount: unreadCountMap.get(category.id) || 0,
+                    updatedAt: new Date()
+                  });
+                }
+                folderMap.set(category.id, category.id);
+              }
+            }
+          }
+          
+          // Then, create/update all feeds
+          const feedsToUpdate: Feed[] = [];
+          for (const subscription of subscriptions) {
+            const folderId = subscription.categories.length > 0 
+              ? subscription.categories[0].id 
+              : null;
+            
+            const feed: Feed = {
+              id: subscription.id,
+              title: subscription.title,
+              url: subscription.url,
+              htmlUrl: subscription.htmlUrl,
+              iconUrl: subscription.iconUrl,
+              folderId,
+              unreadCount: unreadCountMap.get(subscription.id) || 0,
+              isActive: true,
+              lastFetchedAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            
+            feedsToUpdate.push(feed);
+          }
+          
+          // Bulk update feeds
+          await db.transaction('rw', db.feeds, async () => {
+            for (const feed of feedsToUpdate) {
+              const existing = await db.feeds.get(feed.id);
+              if (existing) {
+                await db.feeds.update(feed.id, {
+                  ...feed,
+                  createdAt: existing.createdAt // Preserve creation date
+                });
+              } else {
+                await db.feeds.add(feed);
+              }
+            }
+          });
+          
+          // Step 3: Fetch recent articles for feeds with unread content
+          console.log('Fetching recent articles...');
+          const feedsWithUnread = subscriptions.filter(sub => 
+            (unreadCountMap.get(sub.id) || 0) > 0
+          );
+          
+          // Limit to top 20 feeds by unread count to optimize API calls
+          const topFeeds = feedsWithUnread
+            .sort((a, b) => (unreadCountMap.get(b.id) || 0) - (unreadCountMap.get(a.id) || 0))
+            .slice(0, 20);
+          
+          // Fetch articles for each feed (max 5 per feed for initial sync)
+          const articlePromises = topFeeds.map(async (subscription) => {
+            try {
+              const response = await inoreaderService.getFeedArticles(subscription.id, { 
+                count: 5
+              });
+              apiCalls++;
+              return { feedId: subscription.id, articles: response.items };
+            } catch (error) {
+              console.error(`Failed to fetch articles for feed ${subscription.id}:`, error);
+              return { feedId: subscription.id, articles: [] };
+            }
+          });
+          
+          // Process in batches of 5 to avoid overwhelming the API
+          const batchSize = 5;
+          const allArticles: Article[] = [];
+          
+          for (let i = 0; i < articlePromises.length; i += batchSize) {
+            const batch = articlePromises.slice(i, i + batchSize);
+            const results = await Promise.all(batch);
+            
+            for (const { feedId, articles } of results) {
+              const feed = feedsToUpdate.find(f => f.id === feedId);
+              if (!feed) continue;
+              
+              for (const item of articles) {
+                const article: Article = {
+                  id: item.id,
+                  title: item.title,
+                  content: item.content || item.summary || '',
+                  summary: item.summary,
+                  author: item.author,
+                  publishedAt: new Date(item.published * 1000),
+                  feedId: feed.id,
+                  feedTitle: feed.title,
+                  url: item.canonical || item.origin.htmlUrl,
+                  isRead: item.categories.includes('user/-/state/com.google/read'),
+                  isPartial: !item.content || item.content.length < 200, // Mark as partial if content is short
+                  inoreaderItemId: item.id,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                };
+                
+                allArticles.push(article);
+              }
+            }
+          }
+          
+          // Bulk insert articles
+          if (allArticles.length > 0) {
+            console.log(`Inserting ${allArticles.length} articles...`);
+            await db.transaction('rw', db.articles, async () => {
+              for (const article of allArticles) {
+                const existing = await db.articles.get(article.id);
+                if (existing) {
+                  await db.articles.update(article.id, {
+                    ...article,
+                    createdAt: existing.createdAt
+                  });
+                } else {
+                  await db.articles.add(article);
+                }
+              }
+            });
+          }
+          
+          // Step 4: Update stores to trigger UI refresh
+          const feedStore = await import('./feed-store').then(m => m.useFeedStore.getState());
+          const articleStore = await import('./article-store').then(m => m.useArticleStore.getState());
+          
+          await Promise.all([
+            feedStore.loadFeedHierarchy(),
+            articleStore.refreshArticles()
+          ]);
+          
+          const endTime = Date.now();
+          const duration = (endTime - startTime) / 1000;
           
           setLastSyncTime(Date.now());
-          console.log('Full sync completed successfully');
+          console.log(`Full sync completed successfully in ${duration.toFixed(1)}s with ${apiCalls} API calls`);
+          console.log(`Synced: ${subscriptions.length} feeds, ${allArticles.length} articles`);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
           setSyncError(errorMessage);
