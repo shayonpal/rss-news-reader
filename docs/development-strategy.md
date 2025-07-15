@@ -553,6 +553,33 @@ git push origin main
 
 ---
 
+## Project Decision Log
+
+### Epic 2 Scope Clarification (July 15, 2025)
+
+During implementation of Epic 2, several enhancement issues (#26-33) were created to address UX gaps discovered during testing. These issues were initially labeled as part of Epic 2 but have been re-categorized to maintain alignment with the original user stories:
+
+**Original Epic 2 Scope (Per User Stories):**
+- US-004: Feed Hierarchy Display (Issue #20) ✅ COMPLETED
+- US-005: Article List Browsing (Issue #21)
+- US-006: Article Detail Reading (Issue #22)
+- US-007: Read/Unread State Management (Issue #23)
+- Issue #25: Implement basic feed fetching (implementation task) ✅ COMPLETED
+
+**Enhancement Issues Re-categorized:**
+- **Issue #26**: Auto-sync feeds on initial authentication → Epic 7 (UX Enhancement)
+- **Issue #27**: Add error handling for failed feed sync → Epic 6 (corresponds to US-019)
+- **Issue #28**: Add loading skeleton for empty feed sidebar → Epic 7 (UX Enhancement)
+- **Issue #29**: Add sync status indicators to feed items → Epic 7 (UX Enhancement)
+- **Issue #30**: Implement periodic auto-sync every 6 hours → Epic 3 (corresponds to US-008)
+- **Issue #31**: Persist feed expansion state across sessions → Epic 7 (UX Enhancement)
+- **Issue #32**: Implement feed search/filter functionality → Epic 7 (UX Enhancement)
+- **Issue #33**: Add keyboard navigation for feed list → Epic 7 (UX Enhancement)
+
+**Rationale:** These enhancements improve user experience but go beyond the original Epic 2 scope. They've been properly re-labeled to maintain project clarity and alignment with the user stories document.
+
+---
+
 ## Getting Started Checklist
 
 ### For PM (Setup Phase)

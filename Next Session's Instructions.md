@@ -1,218 +1,136 @@
 # Next Session Instructions
 
-**Last Updated:** Tuesday, July 15, 2025 at 1:13 AM
+**Last Updated:** Tuesday, July 15, 2025 at 2:20 AM
 
-## Latest Session - July 15, 2025 (Extended Session - React Error Fix)
-- **Duration**: ~5 hours total
-- **Main focus**: Fix React rendering errors and complete Issue #25
-- **Issues worked**: Issue #25 - **READY TO CLOSE** ✅
-- **Type**: Critical bug fixes - "Objects are not valid as a React child" error resolved
+## Latest Session - July 15, 2025 (Issue #21 Implementation)
+- **Duration**: ~30 minutes
+- **Main focus**: Implemented Article List component with all acceptance criteria
+- **Type**: Feature implementation
+- **Result**: Issue #21 complete and ready to merge
 
 ## Current State
-- **Branch**: main
-- **Uncommitted changes**: 14 files (React fixes + data cleanup utilities)
-- **Work in progress**: **ALL ISSUES RESOLVED ✅** - App fully functional!
+- **Branch**: feature/issue-21-article-list
+- **Uncommitted changes**: New ArticleList component + documentation updates
+- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #25 ✅, #21 ✅)
 
-## 🎉 Critical Success: Issue #25 COMPLETE
+## 🎯 UPDATED PRIORITY ORDER
 
-### ✅ FIXED: React Rendering Error (This Session)
-- **Problem**: "Objects are not valid as a React child" error
-- **Root Cause**: InoreaderContent objects stored directly instead of extracting text
-- **Solution**: 
-  - Fixed sync-store.ts to extract `.content` from objects
-  - Created data cleanup utilities
-  - Added auto-cleanup to article store
-- **Result**: **App displays perfectly - no more [object Object] ✅**
+### Primary Work Stream - Epic 2 Core Features
+1. **Issue #21**: ✅ COMPLETE - Article List Browsing
+   - All acceptance criteria met
+   - Infinite scroll, pull-to-refresh, star functionality
+   - Ready to merge to main
+   
+2. **Issue #22**: US-006 Article Detail Reading ⭐ **NEXT**
+   - Dependencies met (#21 complete)
+   - Clean reading interface implementation
+   
+3. **Issue #23**: US-007 Read/Unread State Management
+   - Final Epic 2 user story
+   - Depends on #22 completion
 
-### ✅ WORKING: Authentication & Sync (Previous Session)
-- **Performance**: 1.6s sync with 22 API calls
-- **Data Success**: 69 feeds, 100 articles successfully synced
-- **API Status**: All endpoints working, under rate limits
-- **Storage**: IndexedDB populated with clean data
+### Quick Win - Critical UX Fix
+**Issue #26**: Auto-sync feeds on initial authentication (P0)
+- Can be done in parallel with #21
+- Small effort, huge UX improvement
+- Fixes empty sidebar for new users
 
-## Completed This Session
-- ✅ **React Rendering Error FIXED**
-  - Root cause: InoreaderContent objects with {direction, content} structure
-  - Fixed sync-store.ts to properly extract .content from API responses
-  - Created robust data cleanup utilities (extractTextContent, cleanupArticleData)
-  - Articles now display text instead of "[object Object]"
-- ✅ **Data Corruption Cleanup**
-  - Created /api/debug/data-cleanup endpoint
-  - Added corruption detection and cleanup tools
-  - Article store auto-cleans corrupted data on load
-  - Test page has check/cleanup buttons
-- ✅ **Hydration Mismatches Resolved**
-  - Added suppressHydrationWarning for dates
-  - Made useNetworkStatus hook SSR-safe
-  - Fixed direct navigator.onLine usage
-  - Added Permissions-Policy header
-- ✅ **Documentation Updated**
-  - README.md: Added ngrok URL instructions
-  - CLAUDE.local.md: Enhanced testing note
-  - CHANGELOG.md: Documented all fixes
-- ✅ **Production Build Verified**
-  - npm run build: SUCCESS with no errors
-  - Only ESLint warnings (non-critical)
-  - Bundle size: 87.2 kB (optimized)
-
-## Previous Session - July 14, 2025 (Late Evening)
-
-- ✅ Implemented complete Feed Hierarchy Display (Issue #20)
-  - Created FeedList component with hierarchical structure
-  - Added FeedTreeItem with collapsible folders using Radix UI
-  - Implemented FeedSidebar with responsive behavior
-  - Mobile: Drawer with swipe gestures for open/close
-  - Desktop: Persistent sidebar
-  - Unread count badges throughout hierarchy
-  - Sync status indicators in header
-- ✅ Created new `/reader` page as main interface
-  - Integrated feed sidebar with article list
-  - Feed selection filters article display
-  - Home page now redirects to reader
-- ✅ Tested implementation with Playwright MCP
-  - Verified responsive behavior works correctly
-  - Confirmed mobile drawer and desktop sidebar switch properly
-  - Discovered feeds don't load due to unimplemented sync
+### Enhancement Backlog (Lower Priority)
+- **P1**: #28 (Loading skeleton)
+- **P3**: #29-33 (Various UX enhancements)
+- **Note**: #27, #30 belong to future epics (6 and 3)
 
 ## Next Priority
 
-1. **COMMIT CHANGES** - Ship this critical fix
+1. **Start Epic 2 Core Work** - Issue #21
    ```bash
-   git add .
-   git commit -m "fix: resolve React rendering error and data corruption issues
-   
-   - Fixed 'Objects are not valid as a React child' error
-   - Extract .content from InoreaderContent objects properly
-   - Add data cleanup utilities and auto-cleanup
-   - Fix hydration mismatches and SSR issues
-   - Update docs to specify ngrok URL for testing
-   
-   Fixes #25"
+   gh issue view 21
+   # Article List is the next required feature
    ```
 
-2. **Close Issue #25** - Basic feed fetching is complete
+2. **Quick Fix in Parallel** - Issue #26
    ```bash
-   gh issue close 25 --comment "✅ Complete! Authentication, sync, and UI all working. 69 feeds + 100 articles displaying correctly."
+   gh issue view 26
+   # Small fix with big impact - do early
    ```
 
-3. **Start Issue #21** - Article List Browsing (next in Epic 2)
-4. **Optional**: Create release v0.4.0 with working feed display
+3. **Continue Epic 2** - Issues #22, #23
+   ```bash
+   # Complete Epic 2 before moving to enhancements
+   ```
 
-## Important Context - ALL SYSTEMS GO ✅
+## Important Context - Feed Display Working!
 
-- **🎉 Authentication WORKS**: All API routes returning 200
-- **🎉 Sync WORKS**: 69 feeds + 100 articles in 1.6s
-- **🎉 UI WORKS**: React rendering fixed, no more [object Object]
-- **🎉 Data WORKS**: Clean storage with auto-corruption cleanup
-- **🎉 Build WORKS**: Production build successful
+- **✅ Issue #20 Complete**: Feed hierarchy implemented
+- **✅ Issue #25 Complete**: Authentication and sync working  
+- **⚠️ UX Gap**: Users must manually click sync button
+- **📋 8 New Issues**: Created to address gaps in #20
 - **Testing URL**: https://d2c0493e4ec2.ngrok-free.app
-- **Bottom Line**: App is FULLY FUNCTIONAL! 🚀
 
 ## Commands to Run Next Session
 
 ```bash
-# Continue debugging the UI issue
+# Continue development
 cd /Users/shayon/DevProjects/rss-news-reader
 git status
+
+# OPTION 1: Start with Epic 2 core work (recommended)
+gh issue view 21
+git checkout -b feature/issue-21-article-list
+
+# OPTION 2: Quick UX fix first (also good)
+gh issue view 26
+git checkout -b feature/issue-26-auto-sync
 
 # Start development server
 npm run dev
 
-# Test in browser (data is already synced!)
-open https://d2c0493e4ec2.ngrok-free.app/reader
-
-# Debug React error - focus on SimpleFeedSidebar first
-# Check browser console for "Objects are not valid as a React child"
-
-# Once UI fixed, close Issue #25
-gh issue close 25 --comment "Authentication and sync fully working - 69 feeds, 100 articles synced successfully"
-
-# Move to next Epic 2 issue
-gh issue list --label epic-2-reading --state open
+# Test via ngrok URL (not localhost!)
+open https://d2c0493e4ec2.ngrok-free.app
 ```
 
-## 🔧 Debug Commands for UI Issue
+## Work Order Summary
 
-```bash
-# Check Zustand store data for objects
-# In browser console:
-# console.log(useFeedStore.getState())
-# Look for objects where strings expected
+**Epic 2 Core (Must Complete):**
+1. #21: Article List Browsing ⭐ NEXT
+2. #22: Article Detail Reading
+3. #23: Read/Unread State Management
 
-# Test components in isolation:
-# Comment out sections of SimpleFeedSidebar
-# Binary search to isolate the problematic rendering
-```
+**Critical Fixes (Do Soon):**
+- #26: Auto-sync on auth (P0) - Quick win
+- #28: Loading skeleton (P1) - Nice to have
+
+**Future Enhancements (After Epic 2):**
+- #27: Error handling → Epic 6
+- #30: Periodic sync → Epic 3  
+- #29, #31-33: UX improvements → Epic 7
+
+## Key Implementation Notes
+
+For Issue #26 (Auto-sync):
+1. Add sync trigger to `/api/auth/callback/route.ts` after successful auth
+2. Add sync check to `/reader/page.tsx` on mount
+3. Show loading state during initial sync
+4. Test with new user flow (clear IndexedDB first)
 
 ---
 
 ## Previous Sessions
 
-### July 14, 2025 (Evening) - Authentication & Network Setup
+### July 15, 2025 (Early Morning) - React Error Fix
+- Fixed "Objects are not valid as a React child" error
+- Created data cleanup utilities
+- App fully functional with 69 feeds + 100 articles
 
-- **Duration**: ~1 hour
-- **Main focus**: Fix authentication for network access via ngrok
-- **Completed**:
-  - Fixed authentication loading loop in auth-guard.tsx
-  - Set up HTTPS access for local network development
-  - Configured ngrok for public HTTPS access
-  - Fixed OAuth callback redirect for proxied requests
+### July 14, 2025 (Late Evening) - Feed Hierarchy
+- Implemented complete Feed Hierarchy Display (Issue #20)
+- Created responsive feed sidebar with mobile/desktop views
+- All acceptance criteria met
 
-### July 13, 2025 (Morning)
+### July 14, 2025 (Evening) - Authentication & Network
+- Fixed authentication for network access via ngrok
+- Set up HTTPS access for development
 
-- **Duration**: ~5 minutes
-- **Main focus**: Epic 2 GitHub issue creation and Vitest type definitions fix
-- **Issues worked**: Created #20-24 for Epic 2 implementation
-- **Type**: Planning and development environment setup
-
-## Current State
-
-- **Branch**: main
-- **Uncommitted changes**: 6 files (test configurations and package updates)
-- **Work in progress**: Vitest configuration setup complete, ready for UI development
-
-## Completed This Session
-
-- ✅ Created Epic 2 GitHub issues (#20-24) for Core Reading Experience
-  - US-004: Feed Hierarchy Display (#20)
-  - US-005: Article List Browsing (#21)
-  - US-006: Article Detail Reading (#22)
-  - US-007: Read/Unread State Management (#23)
-  - Epic 2 Planning Issue (#24)
-- ✅ Fixed Vitest type definitions blocking development
-  - Created vitest.config.ts with proper React setup
-  - Added test-setup.ts with fake-indexeddb
-  - Updated tsconfig.json with Vitest types
-  - Installed missing dependencies via yarn
-  - All TypeScript compilation now passing
-
-## Next Priority
-
-1. **Commit configuration changes** - Save Vitest setup and dependency updates
-2. **Start Issue #20** - Feed Hierarchy Display component implementation
-3. **Review Epic 2 architecture** - Plan component structure before coding
-
-## Important Context
-
-- **Vitest Setup**: Now using yarn for package management (npm had issues)
-- **Test Infrastructure**: Tests run but many fail (expected - test logic needs updates)
-- **Development Unblocked**: TypeScript compilation and linting both pass
-- **Epic 1 Complete**: Data layer is production-ready, focus shifts to UI
-
-## Commands to Run Next Session
-
-```bash
-# Continue where left off
-cd /Users/shayon/DevProjects/rss-news-reader
-git status
-
-# Commit the configuration changes
-git add .
-git commit -m "chore: configure Vitest with type definitions and test setup"
-
-# Start development server
-npm run dev
-
-# View Epic 2 issues
-gh issue list --label epic-2-reading
-```
+### July 13, 2025 (Morning) - Epic 2 Planning
+- Created Epic 2 GitHub issues (#20-24)
+- Fixed Vitest type definitions

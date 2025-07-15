@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 15, 2025 Session (Issue #21)
+- **Article List Component** - Comprehensive article browsing implementation
+  - Created dedicated ArticleList component with all required features
+  - Implemented infinite scroll with IntersectionObserver for performance
+  - Added pull-to-refresh gesture support for mobile devices
+  - Created skeleton loading states for better perceived performance
+  - Added star/unstar functionality with visual feedback
+  - Implemented 4-line content preview with proper line clamping
+  - Added relative timestamp formatting using date-fns
+  - Ensured 44x44px minimum touch targets for mobile accessibility
+  - Visual distinction between read (opacity 70%) and unread (bold) articles
+  - AI summary indicator (⚡) for articles with generated summaries
+
 ### Fixed - July 15, 2025 Session
 - **React Rendering Error** - Fixed "Objects are not valid as a React child" error by properly extracting content from InoreaderContent objects
 - **Data Corruption** - Cleaned up corrupted article data where content/summary were stored as objects instead of strings
