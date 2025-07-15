@@ -1,52 +1,78 @@
 # Next Session Instructions
 
-**Last Updated:** Tuesday, July 15, 2025 at 3:05 AM
+**Last Updated:** Tuesday, July 15, 2025 at 4:15 AM
 
-## Latest Session - July 15, 2025 (Issue #26 Implementation)
-- **Duration**: ~20 minutes
-- **Main focus**: Implemented auto-sync on authentication (Issue #26)
-- **Type**: P0 bug fix - Critical UX improvement
-- **Result**: New users now see feeds automatically after login
+## Latest Session - July 15, 2025 (Extended Session)
+- **Duration**: ~1h 30m total (2:45 AM - 4:15 AM)
+- **Main focus**: Merged Issue #21 and shipped Issue #26
+- **Type**: Feature merge + P0 bug fix
+- **Result**: Article list complete + auto-sync working
 
 ## Current State
-- **Branch**: main (working directly on main as requested)
-- **Uncommitted changes**: 3 files (OAuth callback, SimpleFeedSidebar, CHANGELOG)
+- **Branch**: main
+- **Uncommitted changes**: None - all work shipped
 - **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #25 ✅, #21 ✅)
 
-## 🎯 UPDATED PRIORITY ORDER
+## Completed This Session
+- ✅ **Issue #21 Merged** - Article List Browsing component
+  - Merged feature branch to main
+  - Cleaned up remote and local branches
+  - All acceptance criteria verified
+- ✅ **Issue #26 Shipped** - Auto-sync on authentication
+  - OAuth callback now redirects to /reader?sync=true
+  - Empty feed state triggers auto-sync
+  - Loading states and error handling implemented
+  - Prevents duplicate syncs on refresh
 
-### Primary Work Stream - Epic 2 Core Features
-1. **Issue #21**: ✅ COMPLETE - Article List Browsing
-   - All acceptance criteria met
-   - Infinite scroll, pull-to-refresh, star functionality
-   - Ready to merge to main
-   
-2. **Issue #22**: US-006 Article Detail Reading ⭐ **NEXT**
-   - Dependencies met (#21 complete)
-   - Clean reading interface implementation
-   
-3. **Issue #23**: US-007 Read/Unread State Management
-   - Final Epic 2 user story
-   - Depends on #22 completion
+## 🎯 Next Priority
 
-### Quick Win - Critical UX Fix
-**Issue #26**: Auto-sync feeds on initial authentication (P0)
-- Can be done in parallel with #21
-- Small effort, huge UX improvement
-- Fixes empty sidebar for new users
+### Primary: Issue #22 - Article Detail Reading ⭐
+- **Ready to start**: All dependencies met
+- **Estimated effort**: 2-3 hours
+- **Key tasks**:
+  1. Create dynamic route `/reader/article/[id]`
+  2. Build ArticleDetail component with Typography
+  3. Implement swipe navigation
+  4. Add keyboard navigation
+  5. Optimize performance (<0.5s load)
+
+### Secondary Priorities
+1. **Issue #23**: Read/Unread State Management
+   - Final Epic 2 story
+   - Depends on #22
+   
+2. **Issue #28**: Loading skeleton (P1)
+   - Nice UX enhancement
+   - Can be done in parallel
 
 ### Enhancement Backlog (Lower Priority)
 - **P1**: #28 (Loading skeleton)
 - **P3**: #29-33 (Various UX enhancements)
 - **Note**: #27, #30 belong to future epics (6 and 3)
 
-## Next Priority
+## Important Context
+- **App Status**: Fully functional with feeds, sync, and article list
+- **UX Improved**: New users get automatic feed sync
+- **Performance**: Sync completes in ~1.6s with 69 feeds
+- **Testing URL**: https://d2c0493e4ec2.ngrok-free.app (not localhost)
 
-1. **Start Epic 2 Core Work** - Issue #21
-   ```bash
-   gh issue view 21
-   # Article List is the next required feature
-   ```
+## Commands to Run Next Session
+
+```bash
+# Continue development
+cd /Users/shayon/DevProjects/rss-news-reader
+git status
+
+# Start Article Detail implementation
+gh issue view 22
+git checkout -b feature/issue-22-article-detail
+
+# Start development server
+npm run dev
+
+# Open testing URL
+open https://d2c0493e4ec2.ngrok-free.app
+```
 
 2. **Quick Fix in Parallel** - Issue #26
    ```bash
@@ -115,7 +141,17 @@ For Issue #26 (Auto-sync):
 
 ---
 
+---
+
 ## Previous Sessions
+
+### July 15, 2025 (Early Morning Session) - Issue #21 Implementation
+- **Duration**: ~30 minutes  
+- **Main focus**: Implemented Article List component
+- Created comprehensive ArticleList with all features
+- Infinite scroll, pull-to-refresh, star functionality
+- 4-line content preview with proper formatting
+- Ready for merge (completed in later session)
 
 ### July 15, 2025 (Early Morning) - React Error Fix
 - Fixed "Objects are not valid as a React child" error
