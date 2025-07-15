@@ -33,12 +33,14 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
 
   useEffect(() => {
     loadFeedHierarchy();
-    
+  }, [loadFeedHierarchy]);
+
+  useEffect(() => {
     // If no feeds loaded and no last sync time, trigger initial sync
     if (feeds.size === 0 && !lastSyncTime && !isSyncing) {
       performFullSync();
     }
-  }, [loadFeedHierarchy, feeds.size, lastSyncTime, isSyncing, performFullSync]);
+  }, []); // Empty dependency array - only run once on mount
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
