@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:network": "next dev --hostname 0.0.0.0",
+    "dev:https": "node server.js",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "dev:turbo": "next dev --turbo",
     "build": "next build",

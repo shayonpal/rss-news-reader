@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Network Access and Authentication Improvements** (2025-07-14)
+  - Fixed authentication loading loop that prevented login screen display
+  - Added ngrok integration for secure HTTPS access from any device
+  - Updated OAuth callback handling to support proxied requests
+  - Added `dev:network` and `dev:https` npm scripts for easier development
+  - Created SSL certificates with mkcert for local HTTPS development
+  - Fixed redirect URL handling in authentication callback route
+
 - **Complete IndexedDB Data Storage System** 
   - **Article Store**: Full CRUD operations with pagination, filtering, and offline sync queue
   - **Feed Store**: Hierarchical feed management with real-time unread count tracking

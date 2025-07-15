@@ -9,12 +9,17 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
     
+    // Get proper redirect base URL for proxied requests
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const baseUrl = `${protocol}://${host}`;
+    
     // Handle OAuth errors
     if (error) {
       const errorDescription = searchParams.get('error_description');
       console.error('OAuth error:', error, errorDescription);
       return NextResponse.redirect(
-        new URL(`/?error=${encodeURIComponent(error)}`, request.url)
+        new URL(`/?error=${encodeURIComponent(error)}`, baseUrl)
       );
     }
     
@@ -23,13 +28,13 @@ export async function GET(request: NextRequest) {
     if (!validateOAuthState(state, storedState)) {
       console.error('Invalid OAuth state');
       return NextResponse.redirect(
-        new URL('/?error=invalid_state', request.url)
+        new URL('/?error=invalid_state', baseUrl)
       );
     }
     
     if (!code) {
       return NextResponse.redirect(
-        new URL('/?error=missing_code', request.url)
+        new URL('/?error=missing_code', baseUrl)
       );
     }
     
@@ -52,7 +57,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text();
       console.error('Token exchange failed:', errorData);
       return NextResponse.redirect(
-        new URL('/?error=token_exchange_failed', request.url)
+        new URL('/?error=token_exchange_failed', baseUrl)
       );
     }
     
@@ -62,7 +67,7 @@ export async function GET(request: NextRequest) {
     const expiresAt = Date.now() + tokenData.expires_in * 1000;
     
     // Create response with redirect to home
-    const response = NextResponse.redirect(new URL('/', request.url));
+    const response = NextResponse.redirect(new URL('/', baseUrl));
     
     // Store tokens in httpOnly cookies
     response.cookies.set('access_token', tokenData.access_token, {

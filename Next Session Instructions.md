@@ -1,8 +1,65 @@
 # Next Session Instructions
 
-**Last Updated:** Sunday, July 13, 2025 at 10:01 AM
+**Last Updated:** Monday, July 14, 2025 at 8:39 PM
 
-## Latest Session - July 13, 2025 (Morning)
+## Latest Session - July 14, 2025 (Evening)
+- **Duration**: ~1 hour
+- **Main focus**: Fix authentication for network access via ngrok
+- **Issues worked**: Authentication loading loop and OAuth redirect issues
+- **Type**: Development environment configuration
+
+## Current State
+- **Branch**: main
+- **Uncommitted changes**: 4 files (authentication fixes and network setup)
+- **Work in progress**: Authentication now working via ngrok for cross-device access
+
+## Completed This Session
+- ✅ Fixed authentication loading loop in auth-guard.tsx
+  - Changed from reactive useEffect to single mount check
+  - Eliminated infinite re-render cycle
+- ✅ Set up HTTPS access for local network development
+  - Created SSL certificates with mkcert
+  - Added `dev:network` and `dev:https` scripts
+  - Configured ngrok for public HTTPS access
+- ✅ Fixed OAuth callback redirect for proxied requests
+  - Updated callback route to use request headers for proper host detection
+  - Authentication now works via ngrok URL: https://d2c0493e4ec2.ngrok-free.app
+- ✅ Successfully authenticated and verified user data fetching
+
+## Next Priority
+1. **Commit authentication fixes** - Save the OAuth and auth guard improvements
+2. **Start Issue #20** - Feed Hierarchy Display component implementation
+3. **Update ngrok URL in .env if restarting** - Ngrok URLs change on restart
+
+## Important Context
+- **Ngrok Setup**: App accessible at https://d2c0493e4ec2.ngrok-free.app (changes on restart)
+- **Inoreader Redirect**: Updated to use ngrok URL for OAuth callback
+- **Network Access**: Can now access from any device, not just localhost
+- **Auth Fix**: Resolved infinite loop issue that was preventing login screen display
+
+## Commands to Run Next Session
+```bash
+# Continue where left off
+cd /Users/shayon/DevProjects/rss-news-reader
+git status
+
+# If ngrok URL changed, update .env and Inoreader settings
+# Start ngrok first to get new URL
+ngrok http 3000
+
+# Update .env with new URL
+# NEXT_PUBLIC_INOREADER_REDIRECT_URI=https://[new-ngrok-url]/api/auth/callback/inoreader
+
+# Start development server
+npm run dev:network
+
+# View Epic 2 issues
+gh issue list --label epic-2-reading
+```
+
+---
+
+## Previous Session - July 13, 2025 (Morning)
 - **Duration**: ~5 minutes
 - **Main focus**: Epic 2 GitHub issue creation and Vitest type definitions fix
 - **Issues worked**: Created #20-24 for Epic 2 implementation

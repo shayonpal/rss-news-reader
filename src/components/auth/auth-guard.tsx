@@ -15,12 +15,10 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, isLoading, checkAuthStatus } = useAuthStore();
 
   useEffect(() => {
-    // Only check auth if we haven't checked yet (no user data and not loading)
-    const { user } = useAuthStore.getState();
-    if (!user && !isLoading) {
-      checkAuthStatus();
-    }
-  }, [checkAuthStatus, isLoading]); // Dependencies added
+    // Check auth status only once on mount
+    console.log('AuthGuard mounted, checking auth status...');
+    checkAuthStatus();
+  }, []); // Empty dependency array - run only once on mount
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -31,6 +29,12 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
           <p className="text-sm text-muted-foreground">
             Checking authentication...
           </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 text-xs text-muted-foreground underline"
+          >
+            Stuck? Click here to reload
+          </button>
         </div>
       </div>
     );
