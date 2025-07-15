@@ -6,7 +6,7 @@ const INOREADER_API_BASE = 'https://www.inoreader.com/reader/api/0';
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const accessToken = cookieStore.get('inoreader_access_token');
+    const accessToken = cookieStore.get('access_token');
 
     if (!accessToken) {
       return NextResponse.json(
@@ -45,6 +45,9 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           'Authorization': `Bearer ${accessToken.value}`,
+          'AppId': process.env.NEXT_PUBLIC_INOREADER_CLIENT_ID!,
+          'AppKey': process.env.INOREADER_CLIENT_SECRET!,
+          'User-Agent': 'Shayons-News/1.0',
         },
       }
     );
