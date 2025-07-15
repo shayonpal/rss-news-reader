@@ -65,7 +65,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
           key={`folder-${folder.id}`}
           type="folder"
           id={folder.id}
-          title={folder.title}
+          title={String(folder.title || 'Untitled Folder')}
           unreadCount={folderUnreadCounts.get(folder.id) || 0}
           depth={depth}
           isExpanded={expandedFolders.has(folder.id)}
@@ -86,7 +86,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
           key={`feed-${feed.id}`}
           type="feed"
           id={feed.id}
-          title={feed.title}
+          title={String(feed.title || 'Untitled Feed')}
           unreadCount={feedWithCount?.unreadCount || 0}
           depth={depth}
           isSelected={selectedFeedId === feed.id}

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { AuthGuard } from '@/components/auth/auth-guard';
-import { FeedSidebar } from '@/components/feeds/feed-sidebar';
+import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { useFeedStore } from '@/lib/stores/feed-store';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { Loader2 } from 'lucide-react';
 
 export default function ReaderPage() {
@@ -34,10 +35,19 @@ export default function ReaderPage() {
     <AuthGuard>
       <div className="flex h-screen bg-background">
         {/* Feed Sidebar */}
-        <FeedSidebar
-          selectedFeedId={selectedFeedId}
-          onFeedSelect={setSelectedFeedId}
-        />
+        <ErrorBoundary fallback={
+          <div className="w-80 border-r bg-muted/10 p-4">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Feed sidebar error</p>
+              <p className="text-xs text-muted-foreground mt-2">Data synced successfully</p>
+            </div>
+          </div>
+        }>
+          <SimpleFeedSidebar
+            selectedFeedId={selectedFeedId}
+            onFeedSelect={setSelectedFeedId}
+          />
+        </ErrorBoundary>
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">

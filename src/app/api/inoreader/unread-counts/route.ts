@@ -5,7 +5,7 @@ const INOREADER_API_BASE = 'https://www.inoreader.com/reader/api/0';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const accessToken = cookieStore.get('access_token');
 
     if (!accessToken) {
