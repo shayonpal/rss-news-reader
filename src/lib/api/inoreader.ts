@@ -80,7 +80,7 @@ export const inoreaderApi = {
 
   // Get subscription list
   async getSubscriptions(): Promise<{ subscriptions: Subscription[] }> {
-    const response = await fetch(`${INOREADER_API_BASE}/subscription/list`, {
+    const response = await fetch('/api/inoreader/subscriptions', {
       credentials: 'include',
     });
     
@@ -93,7 +93,7 @@ export const inoreaderApi = {
 
   // Get unread counts
   async getUnreadCounts(): Promise<{ unreadcounts: UnreadCount[] }> {
-    const response = await fetch(`${INOREADER_API_BASE}/unread-count`, {
+    const response = await fetch('/api/inoreader/unread-counts', {
       credentials: 'include',
     });
     
@@ -115,6 +115,7 @@ export const inoreaderApi = {
     } = {}
   ): Promise<StreamContentsResponse> {
     const params = new URLSearchParams();
+    params.set('streamId', streamId);
     params.set('n', (options.count || 100).toString());
     params.set('r', options.sortOrder === 'oldest' ? 'o' : 'n');
     
@@ -127,7 +128,7 @@ export const inoreaderApi = {
     }
 
     const response = await fetch(
-      `${INOREADER_API_BASE}/stream/contents/${encodeURIComponent(streamId)}?${params}`,
+      `/api/inoreader/stream-contents?${params}`,
       {
         credentials: 'include',
       }
@@ -142,7 +143,7 @@ export const inoreaderApi = {
 
   // Mark articles as read/unread
   async markAsRead(itemIds: string[]): Promise<void> {
-    const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
+    const response = await fetch('/api/inoreader/edit-tag', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -161,7 +162,7 @@ export const inoreaderApi = {
   },
 
   async markAsUnread(itemIds: string[]): Promise<void> {
-    const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
+    const response = await fetch('/api/inoreader/edit-tag', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -181,7 +182,7 @@ export const inoreaderApi = {
 
   // Star/unstar articles
   async addStar(itemIds: string[]): Promise<void> {
-    const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
+    const response = await fetch('/api/inoreader/edit-tag', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -200,7 +201,7 @@ export const inoreaderApi = {
   },
 
   async removeStar(itemIds: string[]): Promise<void> {
-    const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
+    const response = await fetch('/api/inoreader/edit-tag', {
       method: 'POST',
       credentials: 'include',
       headers: {
