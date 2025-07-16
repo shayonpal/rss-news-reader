@@ -65,15 +65,16 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
    # Inoreader OAuth Configuration
    NEXT_PUBLIC_INOREADER_CLIENT_ID=your_client_id_here
    INOREADER_CLIENT_SECRET=your_client_secret_here
-   NEXT_PUBLIC_INOREADER_REDIRECT_URI=https://d2c0493e4ec2.ngrok-free.app/api/auth/callback/inoreader
+   NEXT_PUBLIC_INOREADER_REDIRECT_URI=https://strong-stunning-worm.ngrok-free.app/api/auth/callback/inoreader
 
    # Anthropic Claude API
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
    ```
 
    **Important**: For development with authentication, use the ngrok URL instead of localhost:
-   - Development URL: https://d2c0493e4ec2.ngrok-free.app
+   - Development URL: https://strong-stunning-worm.ngrok-free.app (reserved domain)
    - The OAuth redirect URI must match the ngrok URL for authentication to work properly
+   - This project uses a reserved ngrok domain that remains consistent
 
    For Inoreader credentials:
    - Go to [Inoreader Developer Portal](https://www.inoreader.com/developers/register-app)
@@ -86,7 +87,7 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
    ```
    
    **For authentication testing**, access the app via ngrok:
-   - https://d2c0493e4ec2.ngrok-free.app
+   - https://strong-stunning-worm.ngrok-free.app
    
    **Note**: Direct localhost access (http://localhost:3000) will NOT work for OAuth authentication. Always use the ngrok URL for testing.
 
@@ -95,7 +96,8 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
 This app requires HTTPS for OAuth authentication with Inoreader. 
 
 **Always use the ngrok URL for development:**
-- URL: https://d2c0493e4ec2.ngrok-free.app
+- URL: https://strong-stunning-worm.ngrok-free.app (reserved domain)
+- Start ngrok with: `ngrok http --domain=strong-stunning-worm.ngrok-free.app 3000`
 - The OAuth redirect is configured for this specific URL
 - Authentication cookies are domain-specific and won't work on localhost
 
