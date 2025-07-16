@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { PWAProvider } from "@/components/pwa-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { RecoveryProvider } from "@/components/migration/RecoveryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -53,7 +54,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <PWAProvider />
         <ThemeProvider />
-        <div id="root">{children}</div>
+        <RecoveryProvider>
+          <div id="root">{children}</div>
+        </RecoveryProvider>
       </body>
     </html>
   );
