@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
 import { useAuthStore } from '@/lib/stores/auth-store';
@@ -17,40 +17,18 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
   const { feeds, feedsWithCounts, totalUnreadCount } = useFeedStore();
   const { isSyncing, lastSyncTime, performFullSync, syncError } = useSyncStore();
   const { logout } = useAuthStore();
-  const hasTriggeredAutoSync = useRef(false);
-
-  // Auto-sync on mount if no feeds exist
+  // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {
-    const shouldAutoSync = () => {
-      // Check URL parameters for sync flag
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('sync') === 'true') {
-          // Remove sync param to prevent re-sync on refresh
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete('sync');
-          window.history.replaceState({}, '', newUrl.pathname);
-          
-          // Only sync if database is empty (new user)
-          if (feeds.size === 0) {
-            return true;
-          }
-        }
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sync') === 'true') {
+        // Remove sync param to prevent confusion
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('sync');
+        window.history.replaceState({}, '', newUrl.pathname);
       }
-
-      // Auto-sync if no feeds and haven't synced recently
-      if (feeds.size === 0 && !lastSyncTime && !hasTriggeredAutoSync.current) {
-        return true;
-      }
-
-      return false;
-    };
-
-    if (shouldAutoSync() && !isSyncing) {
-      hasTriggeredAutoSync.current = true;
-      performFullSync();
     }
-  }, [feeds.size, isSyncing, lastSyncTime, performFullSync]);
+  }, []);
 
   return (
     <div className="w-80 border-r bg-muted/10 flex flex-col">
