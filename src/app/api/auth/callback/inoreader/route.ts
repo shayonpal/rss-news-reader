@@ -66,16 +66,17 @@ export async function GET(request: NextRequest) {
     // Calculate token expiration time
     const expiresAt = Date.now() + tokenData.expires_in * 1000;
     
-    // Create response with redirect to reader page with sync flag
-    const response = NextResponse.redirect(new URL('/reader?sync=true', baseUrl));
+    // Create response with redirect to reader page (no sync flag)
+    const response = NextResponse.redirect(new URL('/reader', baseUrl));
     
-    // Store tokens in httpOnly cookies
+    // Store tokens in httpOnly cookies with 365-day expiration
+    const oneYearInSeconds = 365 * 24 * 60 * 60; // 365 days
     response.cookies.set('access_token', tokenData.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: tokenData.expires_in,
+      maxAge: oneYearInSeconds, // 365 days instead of 1 hour
     });
     
     response.cookies.set('refresh_token', tokenData.refresh_token, {
@@ -86,12 +87,14 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
     
-    response.cookies.set('token_expires_at', expiresAt.toString(), {
+    // Update expires_at to reflect our 365-day expiration
+    const extendedExpiresAt = Date.now() + oneYearInSeconds * 1000;
+    response.cookies.set('token_expires_at', extendedExpiresAt.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: tokenData.expires_in,
+      maxAge: oneYearInSeconds,
     });
     
     // Clear OAuth state cookie
