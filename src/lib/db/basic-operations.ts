@@ -121,7 +121,7 @@ export class SupabaseOperations {
         return false
       }
       
-      console.log('✅ Supabase connection successful')
+      // Connection successful
       return true
     } catch (error) {
       console.error('Connection test error:', error)
