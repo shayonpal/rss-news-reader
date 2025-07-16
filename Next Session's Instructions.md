@@ -1,22 +1,30 @@
 # Next Session Instructions
 
-**Last Updated:** Tuesday, July 15, 2025 at 3:28 AM
+**Last Updated:** Wednesday, July 16, 2025 at 12:15 PM
 
-## Latest Session - July 15, 2025 (Article Detail Implementation)
-- **Duration**: ~1h 15m (2:15 AM - 3:28 AM)
-- **Main focus**: Implemented Issue #22 (Article Detail Reading)
-- **Type**: Feature implementation + auth debugging
-- **Result**: Article detail complete but PENDING VERIFICATION due to Inoreader rate limit
+## Latest Session - July 16, 2025 (Issue #22 Verification & Ship)
+- **Duration**: ~1 hour
+- **Main focus**: Verified and shipped Issue #22 (Article Detail Reading)
+- **Type**: Testing, bug fixes, and feature deployment
+- **Result**: Issue #22 COMPLETE ✅ and merged to main
 
 ## Current State
-- **Branch**: feature/issue-22-article-detail (merged to main)
-- **Uncommitted changes**: None - all work committed
-- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #25 ✅, #21 ✅, #22 ⏳ PENDING VERIFICATION)
-- **Blocker**: Inoreader API rate limit exceeded (resets midnight UTC)
+- **Branch**: main (feature/issue-22-article-detail merged)
+- **Uncommitted changes**: None - all work pushed
+- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #25 ✅, #21 ✅, #22 ✅)
+- **Next Priority**: Issue #34 (Theme Toggle - P0) or Issue #23 (Read/Unread State)
 
 ## Completed This Session
-- ✅ **Issue #22 Implementation** - Article Detail Reading
-  - Created dynamic route `/reader/article/[id]`
+- ✅ **Issue #22 Verification & Deployment**
+  - Tested all acceptance criteria with Playwright MCP
+  - Fixed feed display inconsistency (switched back to FeedSidebar)
+  - Added API rate limiting (100 calls/day protection)
+  - Optimized auto-sync to only trigger for empty databases
+  - Documented sync logic comprehensively in README
+  - Merged to main and pushed to GitHub
+- ✅ **Created Issue #34** - Theme Toggle Control (P0)
+  - App has theme support but no UI control
+  - Users can't manually switch between light/dark/system
   - Built ArticleDetail component with clean Typography
   - Implemented swipe navigation for touch devices
   - Added keyboard navigation (arrow keys + escape)
@@ -33,29 +41,17 @@
 
 ## 🎯 Next Priority
 
-### IMMEDIATE: Verify Issue #22 (After Rate Limit Reset) ⏰
-- **When**: After midnight UTC (5:00 PM PDT / 8:00 PM EDT)
-- **Actions needed**:
-  1. Sign in again at https://d2c0493e4ec2.ngrok-free.app
-  2. Sync feeds
-  3. Click any article to test article detail page
-  4. Verify all acceptance criteria:
-     - Full article content with typography
-     - Swipe navigation working
-     - Keyboard navigation (← → Escape)
-     - Star/unstar functionality
-     - Share button
-     - Performance < 0.5s
-  5. Close Issue #22 if all working
+### PRIMARY: Issue #34 - Theme Toggle Control (P0) 🌓
+- **Priority**: P0 - Essential for user experience
+- **Effort**: Small (1-2 hours)
+- **Details**: Add UI control to switch between light/dark/system themes
+- **Why First**: Quick win that improves accessibility
 
-### Secondary Priorities
-1. **Issue #23**: Read/Unread State Management
-   - Final Epic 2 story
-   - Depends on #22
-   
-2. **Issue #28**: Loading skeleton (P1)
-   - Nice UX enhancement
-   - Can be done in parallel
+### THEN: Issue #23 - Read/Unread State Management 📖
+- **Priority**: High - Final Epic 2 story
+- **Effort**: Medium (4-6 hours)
+- **Details**: Sync read/unread state with Inoreader
+- **Dependencies**: None (Issue #22 complete)
 
 ### Enhancement Backlog (Lower Priority)
 - **P1**: #28 (Loading skeleton)
