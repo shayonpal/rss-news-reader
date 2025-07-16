@@ -87,7 +87,7 @@ export class LegacyRecoverySystem {
       return databases;
     } catch (error) {
       console.error('Failed to discover legacy databases:', error);
-      this.updateProgress('discovery', 'Failed to discover databases', 0, [error.message]);
+      this.updateProgress('discovery', 'Failed to discover databases', 0, [error instanceof Error ? error.message : 'Unknown error']);
       return [];
     }
   }
@@ -157,7 +157,7 @@ export class LegacyRecoverySystem {
    */
   private estimateDatabaseSize(recordCounts: Record<string, number>): number {
     // Rough estimation based on typical record sizes
-    const estimatedSizes = {
+    const estimatedSizes: Record<string, number> = {
       articles: 2000, // ~2KB per article
       feeds: 500,     // ~500B per feed
       folders: 200,   // ~200B per folder
@@ -221,7 +221,7 @@ export class LegacyRecoverySystem {
           this.updateProgress('extraction', `Extracted ${tableName}`, (completedTables / tables.length) * 100);
         } catch (error) {
           console.warn(`Failed to extract from table ${tableName}:`, error);
-          this.updateProgress('extraction', `Failed to extract ${tableName}`, 0, [error.message]);
+          this.updateProgress('extraction', `Failed to extract ${tableName}`, 0, [error instanceof Error ? error.message : 'Unknown error']);
         }
       }
       
@@ -243,7 +243,7 @@ export class LegacyRecoverySystem {
       return legacyData;
     } catch (error) {
       console.error(`Failed to extract from database ${dbName}:`, error);
-      this.updateProgress('extraction', 'Extraction failed', 0, [error.message]);
+      this.updateProgress('extraction', 'Extraction failed', 0, [error instanceof Error ? error.message : 'Unknown error']);
       throw error;
     }
   }
@@ -342,7 +342,7 @@ export class LegacyRecoverySystem {
       this.updateProgress('upload', 'Upload completed successfully', 100);
     } catch (error) {
       console.error('Failed to upload to Supabase:', error);
-      this.updateProgress('upload', 'Upload failed', 0, [error.message]);
+      this.updateProgress('upload', 'Upload failed', 0, [error instanceof Error ? error.message : 'Unknown error']);
       throw error;
     }
   }
@@ -362,7 +362,7 @@ export class LegacyRecoverySystem {
         
         if (error) {
           console.error(`Failed to upload batch to ${tableName}:`, error);
-          throw error;
+          throw new Error(`Failed to upload batch to ${tableName}: ${error.message}`);
         }
         
         // Small delay to avoid overwhelming the database
@@ -407,7 +407,7 @@ export class LegacyRecoverySystem {
       return success;
     } catch (error) {
       console.error('Failed to verify migration:', error);
-      this.updateProgress('verification', 'Verification failed', 0, [error.message]);
+      this.updateProgress('verification', 'Verification failed', 0, [error instanceof Error ? error.message : 'Unknown error']);
       return false;
     }
   }
@@ -436,7 +436,7 @@ export class LegacyRecoverySystem {
         this.updateProgress('cleanup', `Cleaned up ${dbName}`, (cleaned / databaseNames.length) * 100);
       } catch (error) {
         console.warn(`Failed to cleanup database ${dbName}:`, error);
-        this.updateProgress('cleanup', `Failed to cleanup ${dbName}`, 0, [error.message]);
+        this.updateProgress('cleanup', `Failed to cleanup ${dbName}`, 0, [error instanceof Error ? error.message : 'Unknown error']);
       }
     }
     
@@ -469,7 +469,7 @@ export class LegacyRecoverySystem {
           allData.articles.push(...legacyData.articles);
           allData.folders.push(...legacyData.folders);
         } catch (error) {
-          result.errors.push(`Failed to extract from ${dbInfo.name}: ${error.message}`);
+          result.errors.push(`Failed to extract from ${dbInfo.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
       
@@ -498,7 +498,7 @@ export class LegacyRecoverySystem {
       }
       
     } catch (error) {
-      result.errors.push(`Migration failed: ${error.message}`);
+      result.errors.push(`Migration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     result.duration = Date.now() - startTime;
