@@ -15,7 +15,43 @@ export async function GET(request: NextRequest) {
     
     const expiresAtTime = expiresAt ? parseInt(expiresAt, 10) : 0;
     const now = Date.now();
-    const needsRefresh = expiresAtTime - now < 5 * 60 * 1000; // Refresh if less than 5 minutes left
+    const daysUntilExpiry = (expiresAtTime - now) / (1000 * 60 * 60 * 24);
+    
+    // Check if token expires in less than 5 days (360 days into 365-day lifetime)
+    const needsRefresh = daysUntilExpiry < 5;
+    
+    // Proactively refresh if needed
+    if (needsRefresh && refreshToken) {
+      try {
+        // Call the refresh endpoint internally
+        const refreshResponse = await fetch(new URL('/api/auth/inoreader/refresh', request.url).toString(), {
+          method: 'POST',
+          headers: {
+            'Cookie': request.headers.get('cookie') || '',
+          },
+        });
+        
+        if (refreshResponse.ok) {
+          // Token refreshed successfully, update the response with new cookies
+          const response = NextResponse.json({
+            authenticated: true,
+            needsRefresh: false,
+            tokenRefreshed: true,
+            expiresIn: 365 * 24 * 60 * 60 * 1000, // Reset to 365 days
+          });
+          
+          // Copy the Set-Cookie headers from refresh response
+          const setCookieHeaders = refreshResponse.headers.getSetCookie();
+          setCookieHeaders.forEach(cookie => {
+            response.headers.append('Set-Cookie', cookie);
+          });
+          
+          return response;
+        }
+      } catch (error) {
+        console.error('Proactive token refresh failed:', error);
+      }
+    }
     
     return NextResponse.json({
       authenticated: true,

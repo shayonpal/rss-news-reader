@@ -44,19 +44,20 @@ export async function POST(request: NextRequest) {
     
     const tokenData: TokenData = await tokenResponse.json();
     
-    // Calculate new token expiration time
-    const expiresAt = Date.now() + tokenData.expires_in * 1000;
+    // Use 365-day expiration for our extended token lifetime
+    const oneYearInSeconds = 365 * 24 * 60 * 60;
+    const expiresAt = Date.now() + oneYearInSeconds * 1000;
     
     // Create response
     const response = NextResponse.json({ success: true });
     
-    // Update tokens in cookies
+    // Update tokens in cookies with 365-day expiration
     response.cookies.set('access_token', tokenData.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: tokenData.expires_in,
+      maxAge: oneYearInSeconds, // 365 days
     });
     
     // Update refresh token if a new one was provided
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: tokenData.expires_in,
+      maxAge: oneYearInSeconds, // 365 days
     });
     
     return response;

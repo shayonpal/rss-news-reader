@@ -15,10 +15,18 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, isLoading, checkAuthStatus } = useAuthStore();
 
   useEffect(() => {
-    // Check auth status only once on mount
+    // Check auth status on mount
     console.log('AuthGuard mounted, checking auth status...');
     checkAuthStatus();
-  }, []); // Empty dependency array - run only once on mount
+    
+    // Set up periodic check every 24 hours for long-running sessions
+    const interval = setInterval(() => {
+      console.log('Periodic auth status check...');
+      checkAuthStatus();
+    }, 24 * 60 * 60 * 1000); // 24 hours
+    
+    return () => clearInterval(interval);
+  }, [checkAuthStatus]);
 
   // Show loading state while checking authentication
   if (isLoading) {
