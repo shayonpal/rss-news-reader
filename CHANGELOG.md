@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 16, 2025 Session (Issue #36 Planning)
+- **GitHub Issue #36** - Authentication & Sync Optimization
+  - Created comprehensive issue for 365-day token persistence
+  - Planned manual sync-only approach to reduce API consumption
+  - Defined acceptance criteria for improved user experience
+  - Priority: P0 - Critical for API conservation and user experience
+
 ### Added - July 16, 2025 Session (Issue #34)
 - **Theme Toggle Control** - Added UI control for switching between light/dark/system themes
   - Theme toggle button added to feed sidebar header

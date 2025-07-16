@@ -1,8 +1,114 @@
 # Next Session Instructions
 
-**Last Updated:** Wednesday, July 16, 2025 at 12:15 PM
+**Last Updated:** Wednesday, July 16, 2025 at 1:12 PM
 
-## Latest Session - July 16, 2025 (Issue #22 Verification & Ship)
+## Latest Session - July 16, 2025 (Issue #36 Planning)
+- **Duration**: ~30 minutes
+- **Main focus**: Planned major authentication & sync optimization
+- **Type**: Research and issue creation
+- **Result**: Comprehensive GitHub issue created for next session priority
+
+## Previous Session - July 16, 2025 (Issue #34 Implementation)
+- **Duration**: ~20 minutes
+- **Main focus**: Implemented Theme Toggle Control (Issue #34)
+- **Type**: Feature implementation and bug fix
+- **Result**: Feature complete, merged to main ✅
+
+## Current State
+- **Branch**: main (Issue #34 merged and closed ✅)
+- **Uncommitted changes**: 1 file (documentation updates)
+- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #21 ✅, #22 ✅, #23 pending)
+- **New Priority**: Issue #36 (Authentication & Sync Optimization) - P0 Critical
+
+## Completed This Session
+- ✅ **Issue #34 Merged and Closed**
+  - Successfully merged theme toggle feature to main branch
+  - GitHub automatically closed Issue #34 with commit reference
+  - Feature now live in production
+- ✅ **Created Issue #36** - Authentication & Sync Optimization
+  - Comprehensive planning for 365-day token persistence
+  - Manual sync-only approach to eliminate API waste
+  - Detailed acceptance criteria and technical implementation plan
+  - Priority: P0 - Critical for user experience and API conservation
+- ✅ **Research and Analysis**
+  - Analyzed authentication flow and sync issues
+  - Identified root causes: 1-hour token expiration + auto-sync race condition
+  - Researched solutions with user-centered approach
+- ✅ **Documentation Updates**
+  - Updated CHANGELOG with Issue #36 planning
+  - Updated session instructions with new priorities
+
+## 🎯 Next Priority
+
+### PRIMARY: Issue #36 - Authentication & Sync Optimization 🔐
+- **Priority**: P0 - Critical for user experience and API conservation
+- **Effort**: Large (4-6 hours)
+- **Details**: Implement 365-day token persistence + manual sync only
+- **Impact**: Eliminates daily login requirement + reduces API consumption to zero on startup
+- **URL**: https://github.com/shayonpal/rss-news-reader/issues/36
+
+### SECONDARY: Issue #23 - Read/Unread State Management 📖
+- **Priority**: High - Final Epic 2 story
+- **Effort**: Medium (4-6 hours)
+- **Details**: Sync read/unread state with Inoreader
+- **Dependencies**: None (Issues #20-22 complete)
+
+### TERTIARY: Issue #35 - API Logging Service 📊
+- **Priority**: P1 - Will help debug rate limit issues
+- **Effort**: Medium (3-4 hours)
+- **Details**: Phase 1 quick implementation for immediate debugging
+
+## Important Context
+- **Major UX Issues Identified**: Daily login requirement + unnecessary API sync on startup
+- **Root Causes**: 1-hour token expiration + auto-sync race condition
+- **Solution Approach**: 365-day tokens + manual sync control
+- **API Conservation**: Current waste ~10+ calls per app open → Target 0 calls per app open
+- **Testing URL**: https://d2c0493e4ec2.ngrok-free.app
+- **OAuth Callback**: https://d2c0493e4ec2.ngrok-free.app/api/auth/callback/inoreader
+
+## Commands to Run Next Session
+
+```bash
+# Continue development
+cd /Users/shayon/DevProjects/rss-news-reader
+git status
+
+# Start Issue #36 (Authentication & Sync Optimization)
+gh issue view 36
+git checkout -b feature/issue-36-auth-sync-optimization
+
+# Key files to modify:
+# - src/app/api/auth/callback/inoreader/route.ts (365-day tokens)
+# - src/components/feeds/simple-feed-sidebar.tsx (remove auto-sync)
+# - src/components/feeds/feed-sidebar.tsx (add manual sync button)
+
+# Start development server
+npm run dev
+
+# Test authentication persistence
+# Test manual sync functionality  
+# Verify zero API calls on startup
+```
+
+## Key Implementation Notes
+
+### Issue #36 (Authentication & Sync Optimization) - READY TO IMPLEMENT:
+- **Authentication**: Change access token expiration from 1 hour to 365 days
+- **Sync Logic**: Remove ALL auto-sync triggers from app startup
+- **User Control**: Add prominent "Sync with Inoreader" button
+- **API Conservation**: Target zero API calls on app open
+- **Technical Files**: callback route, feed sidebar, auth status check
+
+### Issue #34 (Theme Toggle) - COMPLETE ✅:
+- Successfully merged to main branch
+- GitHub issue automatically closed
+- Feature now live in production
+
+---
+
+## Previous Sessions
+
+### July 16, 2025 (Issue #22 Verification & Ship)
 - **Duration**: ~1 hour
 - **Main focus**: Verified and shipped Issue #22 (Article Detail Reading)
 - **Type**: Testing, bug fixes, and feature deployment
