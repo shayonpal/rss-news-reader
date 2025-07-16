@@ -46,31 +46,17 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   }, [loadFeedHierarchy]);
 
   useEffect(() => {
-    // Don't check sync until feeds have been loaded from DB
-    if (loadingFeeds) return;
-    
-    // Check URL parameters for sync flag
+    // Remove sync parameter from URL if present (cleanup from old behavior)
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('sync') === 'true') {
-        // Remove sync param to prevent re-sync on refresh
+        // Remove sync param to prevent confusion
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('sync');
         window.history.replaceState({}, '', newUrl.pathname);
-        
-        // Only sync if database is empty (new user)
-        if (feeds.size === 0 && !isSyncing) {
-          performFullSync();
-          return;
-        }
       }
     }
-    
-    // If no feeds loaded and no last sync time, trigger initial sync
-    if (feeds.size === 0 && !lastSyncTime && !isSyncing) {
-      performFullSync();
-    }
-  }, [loadingFeeds, feeds.size, lastSyncTime, isSyncing, performFullSync]); // Proper dependencies
+  }, []);
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
@@ -208,7 +194,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
             </Button>
             <Button
               size="sm"
-              variant="ghost"
+              variant={feeds.size === 0 ? "default" : "ghost"}
               onClick={async () => {
                 await performFullSync();
                 setApiUsage(ApiRateLimiter.getUsagePercentage());
@@ -217,7 +203,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
               className="h-7 px-2"
             >
               <RefreshCw className={cn("h-3 w-3", isSyncing && "animate-spin")} />
-              <span className="ml-1 text-xs">Sync</span>
+              <span className="ml-1 text-xs">{isSyncing ? 'Syncing' : 'Sync'}</span>
             </Button>
             <Button
               size="sm"
@@ -238,21 +224,45 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
 
       {/* Feed List */}
       <div className="flex-1 overflow-y-auto">
-        <div className="py-2">
-          {/* All Articles */}
-          <FeedTreeItem
-            type="all"
-            id="all"
-            title="All Articles"
-            unreadCount={totalUnreadCount}
-            depth={0}
-            isSelected={selectedFeedId === null}
-            onSelect={() => onFeedSelect(null)}
-          />
-          
-          {/* Feed Tree */}
-          {renderFeedTree()}
-        </div>
+        {feeds.size === 0 ? (
+          // Empty state with prominent sync prompt
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <div className="mb-6">
+              <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No feeds yet</h3>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Click the sync button to fetch your feeds and articles from Inoreader
+              </p>
+            </div>
+            <Button
+              onClick={async () => {
+                await performFullSync();
+                setApiUsage(ApiRateLimiter.getUsagePercentage());
+              }}
+              disabled={isSyncing || !isOnline}
+              className="gap-2"
+            >
+              <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
+              {isSyncing ? 'Syncing...' : 'Sync with Inoreader'}
+            </Button>
+          </div>
+        ) : (
+          <div className="py-2">
+            {/* All Articles */}
+            <FeedTreeItem
+              type="all"
+              id="all"
+              title="All Articles"
+              unreadCount={totalUnreadCount}
+              depth={0}
+              isSelected={selectedFeedId === null}
+              onSelect={() => onFeedSelect(null)}
+            />
+            
+            {/* Feed Tree */}
+            {renderFeedTree()}
+          </div>
+        )}
       </div>
     </div>
   );
