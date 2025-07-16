@@ -3,12 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
+import { useUIStore } from '@/lib/stores/ui-store';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { FeedTreeItem } from './feed-tree-item';
 import { cn } from '@/lib/utils';
-import { Loader2, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, WifiOff, AlertCircle, RefreshCw, Sun, Moon, Monitor, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ApiRateLimiter } from '@/lib/utils/api-rate-limiter';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import { useRouter } from 'next/navigation';
 
 interface FeedListProps {
   selectedFeedId: string | null;
@@ -17,6 +20,7 @@ interface FeedListProps {
 }
 
 export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListProps) {
+  const router = useRouter();
   const { isOnline } = useNetworkStatus();
   const { 
     feeds, 
@@ -32,6 +36,8 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   } = useFeedStore();
   
   const { isSyncing, lastSyncTime, syncError, performFullSync } = useSyncStore();
+  const { theme, setTheme } = useUIStore();
+  const { logout } = useAuthStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [apiUsage, setApiUsage] = useState(ApiRateLimiter.getUsagePercentage());
 
@@ -40,6 +46,9 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   }, [loadFeedHierarchy]);
 
   useEffect(() => {
+    // Don't check sync until feeds have been loaded from DB
+    if (loadingFeeds) return;
+    
     // Check URL parameters for sync flag
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -61,7 +70,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
     if (feeds.size === 0 && !lastSyncTime && !isSyncing) {
       performFullSync();
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, [loadingFeeds, feeds.size, lastSyncTime, isSyncing, performFullSync]); // Proper dependencies
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
@@ -71,6 +80,21 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
       newExpanded.add(folderId);
     }
     setExpandedFolders(newExpanded);
+  };
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'light': return <Sun className="h-4 w-4" />;
+      case 'dark': return <Moon className="h-4 w-4" />;
+      default: return <Monitor className="h-4 w-4" />;
+    }
+  };
+
+  const cycleTheme = () => {
+    const themes = ['light', 'dark', 'system'] as const;
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex]);
   };
 
   const renderFeedTree = (parentId: string | null = null, depth: number = 0) => {
@@ -171,19 +195,44 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
               </span>
             )}
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={async () => {
-              await performFullSync();
-              setApiUsage(ApiRateLimiter.getUsagePercentage());
-            }}
-            disabled={isSyncing || !isOnline}
-            className="h-7 px-2"
-          >
-            <RefreshCw className={cn("h-3 w-3", isSyncing && "animate-spin")} />
-            <span className="ml-1 text-xs">Sync</span>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={cycleTheme}
+              className="h-7 w-7 px-0"
+              aria-label={`Switch theme (current: ${theme})`}
+              title={`Theme: ${theme}`}
+            >
+              {getThemeIcon()}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                await performFullSync();
+                setApiUsage(ApiRateLimiter.getUsagePercentage());
+              }}
+              disabled={isSyncing || !isOnline}
+              className="h-7 px-2"
+            >
+              <RefreshCw className={cn("h-3 w-3", isSyncing && "animate-spin")} />
+              <span className="ml-1 text-xs">Sync</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                await logout();
+                router.push('/');
+              }}
+              className="h-7 w-7 px-0"
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

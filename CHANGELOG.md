@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 16, 2025 Session (Issue #34)
+- **Theme Toggle Control** - Added UI control for switching between light/dark/system themes
+  - Theme toggle button added to feed sidebar header
+  - Cycles through light (sun icon), dark (moon icon), and system (monitor icon) modes
+  - Theme preference persists across sessions via zustand store
+  - Works on both mobile and desktop layouts
+  - Includes proper accessibility labels
+
+### Fixed - July 16, 2025 Session
+- **Sync Race Condition** - Fixed unnecessary API calls on login
+  - Added loading state check before sync evaluation
+  - Prevents sync when existing feeds are still loading from database
+  - Significantly reduces API call consumption for returning users
+  - Helps preserve the 100 calls/day rate limit
+
 ### Added - July 15, 2025 Session (Issue #26)
 - **Auto-sync on Authentication** - Feeds now sync automatically after login
   - OAuth callback redirects to `/reader?sync=true` instead of home page
