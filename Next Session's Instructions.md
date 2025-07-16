@@ -1,40 +1,52 @@
 # Next Session Instructions
 
-**Last Updated:** Tuesday, July 15, 2025 at 4:15 AM
+**Last Updated:** Tuesday, July 15, 2025 at 3:28 AM
 
-## Latest Session - July 15, 2025 (Extended Session)
-- **Duration**: ~1h 30m total (2:45 AM - 4:15 AM)
-- **Main focus**: Merged Issue #21 and shipped Issue #26
-- **Type**: Feature merge + P0 bug fix
-- **Result**: Article list complete + auto-sync working
+## Latest Session - July 15, 2025 (Article Detail Implementation)
+- **Duration**: ~1h 15m (2:15 AM - 3:28 AM)
+- **Main focus**: Implemented Issue #22 (Article Detail Reading)
+- **Type**: Feature implementation + auth debugging
+- **Result**: Article detail complete but PENDING VERIFICATION due to Inoreader rate limit
 
 ## Current State
-- **Branch**: main
-- **Uncommitted changes**: None - all work shipped
-- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #25 ✅, #21 ✅)
+- **Branch**: feature/issue-22-article-detail (merged to main)
+- **Uncommitted changes**: None - all work committed
+- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #25 ✅, #21 ✅, #22 ⏳ PENDING VERIFICATION)
+- **Blocker**: Inoreader API rate limit exceeded (resets midnight UTC)
 
 ## Completed This Session
-- ✅ **Issue #21 Merged** - Article List Browsing component
-  - Merged feature branch to main
-  - Cleaned up remote and local branches
-  - All acceptance criteria verified
-- ✅ **Issue #26 Shipped** - Auto-sync on authentication
-  - OAuth callback now redirects to /reader?sync=true
-  - Empty feed state triggers auto-sync
-  - Loading states and error handling implemented
-  - Prevents duplicate syncs on refresh
+- ✅ **Issue #22 Implementation** - Article Detail Reading
+  - Created dynamic route `/reader/article/[id]`
+  - Built ArticleDetail component with clean Typography
+  - Implemented swipe navigation for touch devices
+  - Added keyboard navigation (arrow keys + escape)
+  - Fixed URL encoding for special characters in article IDs
+  - Added proper error, loading, and not-found pages
+  - Integrated DOMPurify for HTML sanitization
+  - **STATUS**: Code complete but CANNOT VERIFY due to rate limit
+- ✅ **Sign-out Button Added**
+  - Added logout functionality to feed sidebar
+  - Users can now sign out to refresh auth session
+- ✅ **Documentation Updates**
+  - Clarified ngrok-only development workflow
+  - Updated README with authentication guidance
 
 ## 🎯 Next Priority
 
-### Primary: Issue #22 - Article Detail Reading ⭐
-- **Ready to start**: All dependencies met
-- **Estimated effort**: 2-3 hours
-- **Key tasks**:
-  1. Create dynamic route `/reader/article/[id]`
-  2. Build ArticleDetail component with Typography
-  3. Implement swipe navigation
-  4. Add keyboard navigation
-  5. Optimize performance (<0.5s load)
+### IMMEDIATE: Verify Issue #22 (After Rate Limit Reset) ⏰
+- **When**: After midnight UTC (5:00 PM PDT / 8:00 PM EDT)
+- **Actions needed**:
+  1. Sign in again at https://d2c0493e4ec2.ngrok-free.app
+  2. Sync feeds
+  3. Click any article to test article detail page
+  4. Verify all acceptance criteria:
+     - Full article content with typography
+     - Swipe navigation working
+     - Keyboard navigation (← → Escape)
+     - Star/unstar functionality
+     - Share button
+     - Performance < 0.5s
+  5. Close Issue #22 if all working
 
 ### Secondary Priorities
 1. **Issue #23**: Read/Unread State Management
@@ -51,10 +63,12 @@
 - **Note**: #27, #30 belong to future epics (6 and 3)
 
 ## Important Context
-- **App Status**: Fully functional with feeds, sync, and article list
-- **UX Improved**: New users get automatic feed sync
-- **Performance**: Sync completes in ~1.6s with 69 feeds
-- **Testing URL**: https://d2c0493e4ec2.ngrok-free.app (not localhost)
+- **CRITICAL**: Inoreader API rate limit hit (429 error - 100 calls/day exceeded)
+- **Rate Limit Reset**: Midnight UTC (check with `date -u`)
+- **App Status**: All features implemented but sync blocked by rate limit
+- **Issue #22**: Implementation complete, pending verification
+- **Testing URL**: https://d2c0493e4ec2.ngrok-free.app (NEVER use localhost)
+- **OAuth**: Cookies are domain-specific - must use ngrok URL consistently
 
 ## Commands to Run Next Session
 
@@ -63,27 +77,31 @@
 cd /Users/shayon/DevProjects/rss-news-reader
 git status
 
-# Start Article Detail implementation
-gh issue view 22
-git checkout -b feature/issue-22-article-detail
+# First, verify Issue #22 (after rate limit reset)
+open https://d2c0493e4ec2.ngrok-free.app
+# Sign in → Sync → Test article detail page
+
+# If #22 verified, continue with #23
+gh issue view 23
+git checkout -b feature/issue-23-read-unread-state
 
 # Start development server
 npm run dev
-
-# Open testing URL
-open https://d2c0493e4ec2.ngrok-free.app
 ```
 
-2. **Quick Fix in Parallel** - Issue #26
-   ```bash
-   gh issue view 26
-   # Small fix with big impact - do early
-   ```
+## Key Implementation Notes
 
-3. **Continue Epic 2** - Issues #22, #23
-   ```bash
-   # Complete Epic 2 before moving to enhancements
-   ```
+### Issue #22 (Article Detail) - PENDING VERIFICATION:
+- Implementation complete with all features
+- URL encoding fixed for Inoreader article IDs
+- Swipe and keyboard navigation implemented
+- Waiting for rate limit reset to test
+
+### Inoreader Rate Limit:
+- Free tier: 100 API calls/day
+- Resets at midnight UTC
+- Each sync uses multiple API calls
+- Sign out/in cycles consume calls
 
 ## Important Context - Feed Display Working!
 
@@ -144,6 +162,13 @@ For Issue #26 (Auto-sync):
 ---
 
 ## Previous Sessions
+
+### July 15, 2025 (Extended Session) - Issues #21 & #26
+- **Duration**: ~1h 30m total (2:45 AM - 4:15 AM)
+- **Main focus**: Merged Issue #21 and shipped Issue #26
+- Article List Browsing component merged to main
+- Auto-sync on authentication implemented
+- All acceptance criteria verified and working
 
 ### July 15, 2025 (Early Morning Session) - Issue #21 Implementation
 - **Duration**: ~30 minutes  

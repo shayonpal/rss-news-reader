@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/auth/auth-guard';
-import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
+import { FeedSidebar } from '@/components/feeds/feed-sidebar';
 import { ArticleList } from '@/components/articles/article-list';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -32,7 +32,7 @@ export default function ReaderPage() {
             </div>
           </div>
         }>
-          <SimpleFeedSidebar
+          <FeedSidebar
             selectedFeedId={selectedFeedId}
             onFeedSelect={setSelectedFeedId}
           />

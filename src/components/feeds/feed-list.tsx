@@ -8,6 +8,7 @@ import { FeedTreeItem } from './feed-tree-item';
 import { cn } from '@/lib/utils';
 import { Loader2, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ApiRateLimiter } from '@/lib/utils/api-rate-limiter';
 
 interface FeedListProps {
   selectedFeedId: string | null;
@@ -32,6 +33,7 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   
   const { isSyncing, lastSyncTime, syncError, performFullSync } = useSyncStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [apiUsage, setApiUsage] = useState(ApiRateLimiter.getUsagePercentage());
 
   useEffect(() => {
     loadFeedHierarchy();
@@ -146,11 +148,19 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
                 Last sync: <span suppressHydrationWarning>{new Date(lastSyncTime).toLocaleTimeString()}</span>
               </span>
             )}
+            {ApiRateLimiter.shouldWarnUser() && (
+              <span className="text-orange-500 text-xs ml-2">
+                API: {apiUsage}%
+              </span>
+            )}
           </div>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => performFullSync()}
+            onClick={async () => {
+              await performFullSync();
+              setApiUsage(ApiRateLimiter.getUsagePercentage());
+            }}
             disabled={isSyncing || !isOnline}
             className="h-7 px-2"
           >
