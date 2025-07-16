@@ -40,6 +40,23 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   }, [loadFeedHierarchy]);
 
   useEffect(() => {
+    // Check URL parameters for sync flag
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sync') === 'true') {
+        // Remove sync param to prevent re-sync on refresh
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('sync');
+        window.history.replaceState({}, '', newUrl.pathname);
+        
+        // Only sync if database is empty (new user)
+        if (feeds.size === 0 && !isSyncing) {
+          performFullSync();
+          return;
+        }
+      }
+    }
+    
     // If no feeds loaded and no last sync time, trigger initial sync
     if (feeds.size === 0 && !lastSyncTime && !isSyncing) {
       performFullSync();

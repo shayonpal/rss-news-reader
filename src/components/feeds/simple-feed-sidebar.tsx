@@ -30,7 +30,11 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
           const newUrl = new URL(window.location.href);
           newUrl.searchParams.delete('sync');
           window.history.replaceState({}, '', newUrl.pathname);
-          return true;
+          
+          // Only sync if database is empty (new user)
+          if (feeds.size === 0) {
+            return true;
+          }
         }
       }
 
