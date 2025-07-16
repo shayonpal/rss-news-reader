@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { db } from '@/lib/db/database';
 import { inoreaderService } from '@/lib/api/inoreader';
+import { ApiRateLimiter } from '@/lib/utils/api-rate-limiter';
 import type { Feed, Article } from '@/types';
 
 export interface QueuedAction {
@@ -140,6 +141,15 @@ export const useSyncStore = create<SyncState>()(
       performFullSync: async () => {
         const { setSyncing, setSyncError, setLastSyncTime, processQueue } = get();
         
+        // Check rate limit before syncing
+        const estimatedCalls = 12; // 2 for metadata + ~10 for feeds
+        if (!ApiRateLimiter.canMakeCall(estimatedCalls)) {
+          const remaining = ApiRateLimiter.getRemainingCalls();
+          setSyncError(`API rate limit: Only ${remaining} calls remaining today. Need ${estimatedCalls} for sync.`);
+          console.error(`Sync aborted: Rate limit would be exceeded. ${remaining}/${100} calls remaining.`);
+          return;
+        }
+        
         setSyncing(true);
         setSyncError(null);
         
@@ -249,10 +259,11 @@ export const useSyncStore = create<SyncState>()(
             (unreadCountMap.get(sub.id) || 0) > 0
           );
           
-          // Limit to top 20 feeds by unread count to optimize API calls
+          // Limit to top 10 feeds by unread count to optimize API calls
+          // This reduces API calls from 20 to 10 per sync
           const topFeeds = feedsWithUnread
             .sort((a, b) => (unreadCountMap.get(b.id) || 0) - (unreadCountMap.get(a.id) || 0))
-            .slice(0, 20);
+            .slice(0, 10);
           
           // Fetch articles for each feed (max 5 per feed for initial sync)
           const articlePromises = topFeeds.map(async (subscription) => {
@@ -345,9 +356,13 @@ export const useSyncStore = create<SyncState>()(
           const endTime = Date.now();
           const duration = (endTime - startTime) / 1000;
           
+          // Track API usage
+          ApiRateLimiter.incrementUsage(apiCalls);
+          
           setLastSyncTime(Date.now());
           console.log(`Full sync completed successfully in ${duration.toFixed(1)}s with ${apiCalls} API calls`);
           console.log(`Synced: ${subscriptions.length} feeds, ${allArticles.length} articles`);
+          console.log(`API usage today: ${ApiRateLimiter.getUsagePercentage()}% (${100 - ApiRateLimiter.getRemainingCalls()}/100 calls)`);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
           setSyncError(errorMessage);

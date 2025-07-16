@@ -3,7 +3,9 @@
 import { useEffect, useRef } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
-import { Loader2 } from 'lucide-react';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import { Loader2, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -11,8 +13,10 @@ interface SimpleFeedSidebarProps {
 }
 
 export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSidebarProps) {
+  const router = useRouter();
   const { feeds, feedsWithCounts, totalUnreadCount } = useFeedStore();
   const { isSyncing, lastSyncTime, performFullSync, syncError } = useSyncStore();
+  const { logout } = useAuthStore();
   const hasTriggeredAutoSync = useRef(false);
 
   // Auto-sync on mount if no feeds exist
@@ -26,7 +30,11 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
           const newUrl = new URL(window.location.href);
           newUrl.searchParams.delete('sync');
           window.history.replaceState({}, '', newUrl.pathname);
-          return true;
+          
+          // Only sync if database is empty (new user)
+          if (feeds.size === 0) {
+            return true;
+          }
         }
       }
 
@@ -48,17 +56,29 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
     <div className="w-80 border-r bg-muted/10 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Feeds</h2>
-          <button
-            onClick={performFullSync}
-            disabled={isSyncing}
-            className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isSyncing ? 'Syncing...' : 'Sync'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={performFullSync}
+              disabled={isSyncing}
+              className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isSyncing ? 'Syncing...' : 'Sync'}
+            </button>
+            <button
+              onClick={async () => {
+                await logout();
+                router.push('/');
+              }}
+              className="p-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground mt-1">
+        <div className="text-sm text-muted-foreground">
           {totalUnreadCount} unread articles
         </div>
       </div>

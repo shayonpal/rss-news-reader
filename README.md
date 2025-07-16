@@ -90,11 +90,26 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
    
    **Note**: Direct localhost access (http://localhost:3000) will NOT work for OAuth authentication. Always use the ngrok URL for testing.
 
+### Important: Authentication & Network Access
+
+This app requires HTTPS for OAuth authentication with Inoreader. 
+
+**Always use the ngrok URL for development:**
+- URL: https://d2c0493e4ec2.ngrok-free.app
+- The OAuth redirect is configured for this specific URL
+- Authentication cookies are domain-specific and won't work on localhost
+
+**If you see "Failed to sync feeds":**
+1. Make sure you're accessing via the ngrok URL
+2. Try signing out and signing in again
+3. Check that your Inoreader credentials are valid
+
 ### Development Commands
 
 ```bash
 # Development
 npm run dev              # Start development server
+npm run dev:network      # Start with ngrok for OAuth (REQUIRED)
 npm run dev:debug        # Start with Node.js debugger
 npm run dev:turbo        # Start with Turbo mode
 
@@ -228,6 +243,78 @@ See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news
 - AI-powered article summarization
 - Model: claude-3-5-sonnet-latest
 - Summary length: 100-120 words
+
+## Data Synchronization
+
+### Sync Architecture
+
+The app uses an **offline-first architecture** with IndexedDB as the primary data store:
+
+1. **Fetch from Inoreader API** → **Store in IndexedDB** → **Display from Local DB**
+2. All UI reads are from the local database for instant performance
+3. Changes are queued and synced back to Inoreader when online
+
+### When Sync Triggers
+
+1. **Initial Setup (Auto-sync)**
+   - Triggers automatically when a new user signs in and the database is empty
+   - Only happens once per user account
+
+2. **After Authentication (Conditional)**
+   - When OAuth callback includes `?sync=true` parameter
+   - **Only syncs if the database is empty** (prevents unnecessary API calls for returning users)
+
+3. **Manual Sync Button**
+   - User-initiated sync via the "Sync" button in the feed sidebar
+   - Available at any time when online
+
+4. **Pull-to-Refresh (Local Only)**
+   - In the article list, pull-to-refresh reloads from IndexedDB
+   - Does NOT trigger an API sync to conserve rate limit
+
+### What Does NOT Trigger Sync
+
+- Navigating between feeds (reads from local DB)
+- Marking articles as read/unread (queued for next sync)
+- Starring/unstarring articles (queued for next sync)
+- Page refresh (uses cached IndexedDB data)
+- Returning to the app (no auto-sync on focus)
+
+### API Rate Limiting
+
+The app implements smart rate limiting to work within Inoreader's free tier limits:
+
+- **Daily Limit**: 100 API calls per day (resets at midnight UTC)
+- **Per Sync Usage**: ~12 API calls (2 for metadata + 10 for top feeds)
+- **Rate Limiter**: Tracks usage in localStorage and prevents sync if limit would be exceeded
+- **Visual Indicators**: Shows API usage percentage when above 80%
+- **Smart Sync**: Only fetches articles from top 10 feeds with unread content
+
+### Sync Optimization Strategies
+
+1. **Reduced Feed Fetching**: Limited to top 10 feeds by unread count (down from 20)
+2. **Conditional Auto-sync**: Only for empty databases, not returning users
+3. **Offline Queue**: Batches read/unread operations for next sync
+4. **Usage Tracking**: Real-time API call monitoring with warnings
+5. **No Periodic Sync**: Manual control to preserve API calls
+
+### Database Storage
+
+All synced data is stored in IndexedDB tables:
+
+- **feeds**: RSS feed subscriptions with metadata
+- **folders**: Feed categories and folder hierarchy
+- **articles**: Individual news articles with content
+- **summaries**: AI-generated article summaries
+- **pendingActions**: Offline action queue
+- **apiUsage**: API call tracking
+- **userPreferences**: User settings
+
+Benefits:
+- **Offline Access**: Full functionality without internet
+- **Fast Performance**: Instant loading from local database
+- **Data Persistence**: Survives page refreshes and app restarts
+- **Large Storage**: Can store thousands of articles locally
 
 ## Health Monitoring
 

@@ -8,6 +8,7 @@ import { FeedTreeItem } from './feed-tree-item';
 import { cn } from '@/lib/utils';
 import { Loader2, WifiOff, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ApiRateLimiter } from '@/lib/utils/api-rate-limiter';
 
 interface FeedListProps {
   selectedFeedId: string | null;
@@ -32,12 +33,30 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   
   const { isSyncing, lastSyncTime, syncError, performFullSync } = useSyncStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [apiUsage, setApiUsage] = useState(ApiRateLimiter.getUsagePercentage());
 
   useEffect(() => {
     loadFeedHierarchy();
   }, [loadFeedHierarchy]);
 
   useEffect(() => {
+    // Check URL parameters for sync flag
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sync') === 'true') {
+        // Remove sync param to prevent re-sync on refresh
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('sync');
+        window.history.replaceState({}, '', newUrl.pathname);
+        
+        // Only sync if database is empty (new user)
+        if (feeds.size === 0 && !isSyncing) {
+          performFullSync();
+          return;
+        }
+      }
+    }
+    
     // If no feeds loaded and no last sync time, trigger initial sync
     if (feeds.size === 0 && !lastSyncTime && !isSyncing) {
       performFullSync();
@@ -146,11 +165,19 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
                 Last sync: <span suppressHydrationWarning>{new Date(lastSyncTime).toLocaleTimeString()}</span>
               </span>
             )}
+            {ApiRateLimiter.shouldWarnUser() && (
+              <span className="text-orange-500 text-xs ml-2">
+                API: {apiUsage}%
+              </span>
+            )}
           </div>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => performFullSync()}
+            onClick={async () => {
+              await performFullSync();
+              setApiUsage(ApiRateLimiter.getUsagePercentage());
+            }}
             disabled={isSyncing || !isOnline}
             className="h-7 px-2"
           >
