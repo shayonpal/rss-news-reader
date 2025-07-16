@@ -3,7 +3,9 @@ import { persist } from 'zustand/middleware';
 import { db } from '@/lib/db/database';
 import { inoreaderService } from '@/lib/api/inoreader';
 import { ApiRateLimiter } from '@/lib/utils/api-rate-limiter';
+import { supabase } from '@/lib/db/supabase';
 import type { Feed, Article } from '@/types';
+import type { Database } from '@/lib/db/types';
 
 export interface QueuedAction {
   id: string;
@@ -344,7 +346,93 @@ export const useSyncStore = create<SyncState>()(
             });
           }
           
-          // Step 4: Update stores to trigger UI refresh
+          // Step 4: Sync to Supabase
+          console.log('Syncing data to Supabase...');
+          const supabaseUserId = await getOrCreateSupabaseUser();
+          
+          if (supabaseUserId) {
+            try {
+              // Sync folders to Supabase
+              const foldersToSync = Array.from(processedFolders).map(folderId => ({
+                user_id: supabaseUserId,
+                inoreader_id: folderId,
+                name: subscriptions.find(s => s.categories?.some(c => c.id === folderId))?.categories?.find(c => c.id === folderId)?.label || 'Unknown Folder',
+                parent_id: null
+              }));
+              
+              if (foldersToSync.length > 0) {
+                const { error: folderError } = await supabase
+                  .from('folders')
+                  .upsert(foldersToSync, { onConflict: 'inoreader_id' });
+                
+                if (folderError) {
+                  console.error('Failed to sync folders to Supabase:', folderError);
+                } else {
+                  console.log(`Synced ${foldersToSync.length} folders to Supabase`);
+                }
+              }
+              
+              // Sync feeds to Supabase and get their Supabase IDs
+              const feedIdMap = new Map<string, string>(); // Inoreader ID -> Supabase ID
+              
+              if (feedsToUpdate.length > 0) {
+                // Convert feeds to Supabase format
+                const supabaseFeeds = feedsToUpdate.map(feed => toSupabaseFeed(feed, supabaseUserId));
+                
+                const { data: upsertedFeeds, error: feedError } = await supabase
+                  .from('feeds')
+                  .upsert(supabaseFeeds, { onConflict: 'inoreader_id' })
+                  .select('id, inoreader_id');
+                
+                if (feedError) {
+                  console.error('Failed to sync feeds to Supabase:', feedError);
+                } else {
+                  console.log(`Synced ${feedsToUpdate.length} feeds to Supabase`);
+                  // Build map of Inoreader ID to Supabase ID
+                  upsertedFeeds?.forEach(feed => {
+                    feedIdMap.set(feed.inoreader_id, feed.id);
+                  });
+                }
+              }
+              
+              // Sync articles to Supabase
+              if (allArticles.length > 0 && feedIdMap.size > 0) {
+                // Convert articles to Supabase format, only for feeds we have IDs for
+                const supabaseArticles = allArticles
+                  .filter(article => feedIdMap.has(article.feedId))
+                  .map(article => toSupabaseArticle(article, feedIdMap.get(article.feedId)!));
+                
+                if (supabaseArticles.length > 0) {
+                  // Batch insert articles in chunks to avoid overwhelming the database
+                  const chunkSize = 50;
+                  let syncedArticles = 0;
+                  
+                  for (let i = 0; i < supabaseArticles.length; i += chunkSize) {
+                    const chunk = supabaseArticles.slice(i, i + chunkSize);
+                    const { error: articleError } = await supabase
+                      .from('articles')
+                      .upsert(chunk, { onConflict: 'inoreader_id' });
+                    
+                    if (articleError) {
+                      console.error('Failed to sync article batch to Supabase:', articleError);
+                    } else {
+                      syncedArticles += chunk.length;
+                    }
+                  }
+                  
+                  console.log(`Synced ${syncedArticles} articles to Supabase`);
+                }
+              }
+            } catch (supabaseError) {
+              // Log Supabase sync errors but don't fail the entire sync
+              console.error('Supabase sync error:', supabaseError);
+              setSyncError(`Data synced locally but Supabase sync failed: ${supabaseError instanceof Error ? supabaseError.message : 'Unknown error'}`);
+            }
+          } else {
+            console.warn('Skipping Supabase sync - no user ID available');
+          }
+          
+          // Step 5: Update stores to trigger UI refresh
           const feedStore = await import('./feed-store').then(m => m.useFeedStore.getState());
           const articleStore = await import('./article-store').then(m => m.useArticleStore.getState());
           
@@ -382,6 +470,78 @@ export const useSyncStore = create<SyncState>()(
     }
   )
 );
+
+// Helper function to get or create Supabase user
+async function getOrCreateSupabaseUser(): Promise<string | null> {
+  try {
+    // Get current user from auth store
+    const authStore = await import('./auth-store').then(m => m.useAuthStore.getState());
+    const currentUser = authStore.user;
+    
+    if (!currentUser) {
+      console.warn('No authenticated user found for Supabase sync');
+      return null;
+    }
+    
+    // Check if user exists in Supabase
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('inoreader_id', currentUser.userId)
+      .single();
+    
+    if (existingUser) {
+      return existingUser.id;
+    }
+    
+    // Create new user in Supabase
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert({
+        email: currentUser.userEmail || `${currentUser.userId}@inoreader.local`,
+        inoreader_id: currentUser.userId,
+        preferences: {}
+      })
+      .select('id')
+      .single();
+    
+    if (error) {
+      console.error('Failed to create Supabase user:', error);
+      return null;
+    }
+    
+    return newUser?.id || null;
+  } catch (error) {
+    console.error('Error in getOrCreateSupabaseUser:', error);
+    return null;
+  }
+}
+
+// Helper to convert IndexedDB feed to Supabase format
+function toSupabaseFeed(feed: Feed, userId: string): Database['public']['Tables']['feeds']['Insert'] {
+  return {
+    user_id: userId,
+    inoreader_id: feed.id,
+    title: feed.title,
+    url: feed.url,
+    folder_id: feed.folderId,
+    unread_count: feed.unreadCount || 0
+  };
+}
+
+// Helper to convert IndexedDB article to Supabase format
+function toSupabaseArticle(article: Article, feedSupabaseId: string): Database['public']['Tables']['articles']['Insert'] {
+  return {
+    feed_id: feedSupabaseId,
+    inoreader_id: article.inoreaderItemId || article.id,
+    title: article.title,
+    content: article.content,
+    url: article.url,
+    published_at: article.publishedAt ? new Date(article.publishedAt).toISOString() : null,
+    is_read: article.isRead || false,
+    is_starred: false // We don't track starred in IndexedDB yet
+  };
+}
 
 // Process individual action with Inoreader API
 async function processAction(action: QueuedAction): Promise<void> {

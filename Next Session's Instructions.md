@@ -1,19 +1,20 @@
 # Next Session Instructions
 
-**Last Updated:** Wednesday, July 16, 2025 at 3:23 PM
+**Last Updated:** Thursday, July 16, 2025 at 8:00 PM EST
 
-## Latest Session - July 16, 2025 (Issue #38 COMPLETED ✅)
-- **Duration**: ~4 hours
-- **Main focus**: Supabase database schema and client setup - Foundation for hybrid architecture
-- **Type**: Major infrastructure implementation and deployment
-- **Result**: Issue #38 fully complete with 4 commits, all acceptance criteria met, comprehensive testing
+## Latest Session - July 16, 2025 (Issue #39 Testing)
+- **Duration**: ~1.5 hours
+- **Main focus**: Testing Issue #39 (Legacy Data Recovery) implementation with Playwright MCP
+- **Type**: Testing and issue discovery
+- **Result**: Found schema mismatch - 'preferences' column missing in Supabase users table
 
 ## Current State
-- **Branch**: main (Issue #38 complete ✅)
-- **Uncommitted changes**: None - all work shipped
-- **Supabase Integration**: ✅ Database schema, client setup, and testing complete
-- **Epic 2 Status**: 3/4 user stories complete (#20 ✅, #21 ✅, #22 ✅, #23 pending)
-- **Next Priority**: Issue #39 (Legacy Data Recovery) - P1 High
+- **Branch**: main
+- **Uncommitted changes**: Test page created at src/app/test-recovery/page.tsx (can be removed)
+- **Supabase Integration**: ✅ Working but missing 'preferences' column in users table
+- **Issue #39 Status**: Implementation complete but blocked by schema issue
+- **Sync Status**: Working but only saves to IndexedDB, not Supabase
+- **Next Priority**: Fix schema issue to unblock Issue #39
 
 ## Completed This Session
 - ✅ **Issue #38 FULLY IMPLEMENTED** - Supabase Database Schema & Client Setup
@@ -30,15 +31,46 @@
   - Phase 1 (Issue #38) complete ✅
   - Ready for Phase 2 (Issue #39) - Legacy Data Recovery
 
-## 🎯 Next Priority
+## 🎯 IMMEDIATE NEXT ACTION
 
-### PRIMARY: Issue #39 - Legacy IndexedDB Data Recovery 🔄
-- **Priority**: P1 - High for zero data loss during migration
-- **Effort**: Medium (2-3 days)
-- **Details**: Build system to recover existing articles from previous IndexedDB instances
-- **Impact**: Preserve user data across ngrok domain changes
-- **URL**: https://github.com/shayonpal/rss-news-reader/issues/39
-- **Dependencies**: Issue #38 (Supabase Setup) ✅ COMPLETE
+### Fix Supabase Schema for Issue #39
+**Problem**: Legacy recovery fails because 'preferences' column is missing from users table
+**Solution**: Add the column to Supabase schema
+**Time Required**: 5 minutes
+
+#### Steps to Fix:
+1. Go to Supabase Dashboard: https://supabase.com/dashboard/project/rgfxyraamghqnechkppg
+2. Navigate to Table Editor → users table
+3. Add new column:
+   - Name: `preferences`
+   - Type: `jsonb`
+   - Default: `{}`
+   - Nullable: Yes
+4. Save changes
+
+#### After Fix:
+1. Test recovery again using test page at https://strong-stunning-worm.ngrok-free.app/test-recovery
+2. Verify data migrates to Supabase successfully
+3. Close Issue #39
+
+## Key Findings from Testing
+
+### Issue #39 Implementation Status:
+- ✅ **UI Implementation**: Beautiful recovery dialog with progress tracking
+- ✅ **Database Discovery**: Successfully finds legacy databases
+- ✅ **Data Extraction**: Correctly counts articles, feeds, folders
+- ✅ **Error Handling**: Graceful error display with retry options
+- ❌ **Migration**: Blocked by missing 'preferences' column
+
+### Sync Discovery:
+- Current sync saves to **IndexedDB only**, not Supabase
+- This explains why cross-domain persistence isn't working yet
+- Need new issue to update sync to use Supabase
+
+### Test Infrastructure Created:
+- `/test-recovery` page for testing legacy recovery
+- Can create test legacy data and trigger recovery dialog
+- Useful for future testing
 
 ### SECONDARY: Issue #23 - Read/Unread State Management 📖
 - **Priority**: High - Final Epic 2 story
@@ -51,13 +83,29 @@
 - **Effort**: Medium (3-4 hours)
 - **Details**: Phase 1 quick implementation for immediate debugging
 
-## Important Context
-- **Major UX Issues Identified**: Daily login requirement + unnecessary API sync on startup
-- **Root Causes**: 1-hour token expiration + auto-sync race condition
-- **Solution Approach**: 365-day tokens + manual sync control
-- **API Conservation**: Current waste ~10+ calls per app open → Target 0 calls per app open
-- **Testing URL**: https://d2c0493e4ec2.ngrok-free.app
-- **OAuth Callback**: https://d2c0493e4ec2.ngrok-free.app/api/auth/callback/inoreader
+## Important Context for Next Session
+
+### Critical Information:
+- **ngrok Domain**: strong-stunning-worm.ngrok-free.app (permanent reserved domain)
+- **Supabase Project ID**: rgfxyraamghqnechkppg
+- **Schema Issue**: Missing 'preferences' column in users table (jsonb type needed)
+- **Current Architecture**: Hybrid (IndexedDB for local, Supabase for cloud - but sync not connected yet)
+
+### What's Working:
+- ✅ Authentication with 365-day tokens
+- ✅ Sync from Inoreader (69 feeds, 50 articles successfully synced)
+- ✅ Local storage in IndexedDB
+- ✅ Legacy recovery UI (except for schema issue)
+- ✅ Supabase connection and operations
+
+### What Needs Work:
+- ❌ Supabase schema missing 'preferences' column
+- ❌ Sync only saves to IndexedDB, not Supabase
+- ❌ Cross-domain data persistence not working yet
+
+### Test Credentials (from .env):
+- Inoreader: shayon@agilecode.studio / SakshiChopra!986
+- Use these with Playwright MCP for testing
 
 ## Commands to Run Next Session
 
@@ -66,21 +114,29 @@
 cd /Users/shayon/DevProjects/rss-news-reader
 git status
 
-# Start Issue #39 (Legacy IndexedDB Data Recovery)
-gh issue view 39
-flow-implement 39
+# First, remove the test page (optional)
+rm src/app/test-recovery/page.tsx
 
-# Key files to create:
-# - src/lib/db/legacy-recovery.ts (main recovery system)
-# - src/components/migration/RecoveryDialog.tsx (migration UI)
-# - src/lib/db/types.ts (add legacy data types)
-
-# Start development server
+# After fixing Supabase schema, test Issue #39:
 npm run dev
 
-# Test recovery system with existing data
-# Verify migration UI works correctly
-# Test data integrity after migration
+# Test via ngrok URL (update if needed)
+ngrok http --domain=strong-stunning-worm.ngrok-free.app 3000
+
+# Navigate to test page
+open https://strong-stunning-worm.ngrok-free.app/test-recovery
+
+# Test recovery:
+# 1. Create test legacy data
+# 2. Clear recovery flag
+# 3. Navigate to /reader
+# 4. Verify recovery dialog appears
+# 5. Test migration to Supabase
+
+# After Issue #39 is working, create new issue for Supabase sync:
+gh issue create --title "Update sync to save data to Supabase" \
+  --body "Currently sync only saves to IndexedDB. Need to also save to Supabase for cross-domain persistence." \
+  --label "enhancement,priority-p1,component-sync"
 ```
 
 ## Key Implementation Notes
