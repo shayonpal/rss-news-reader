@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 16, 2025 Session (Issue #43 - COMPLETED ✅)
+- **Supabase Sync Integration** - Cross-domain data persistence
+  - Modified sync-store.ts to sync data to both IndexedDB and Supabase
+  - Implemented automatic user creation/retrieval based on Inoreader ID
+  - Added batch processing for articles to handle large datasets efficiently
+  - Created ID mapping between Inoreader IDs and Supabase IDs
+  - Implemented error handling that preserves local sync if Supabase fails
+  - Added unique constraints to database for proper upsert operations
+  - Successfully tested with real data: 69 feeds, 50 articles, 12 folders synced
+  - Maintains backward compatibility with existing IndexedDB-only functionality
+
+### Added - July 16, 2025 Session (Issue #39 - COMPLETED ✅)
+- **Legacy IndexedDB Data Recovery** - Recover data from previous sessions
+  - Implemented comprehensive legacy database detection across domains
+  - Created recovery dialog with database selection UI
+  - Added migration process from legacy IndexedDB to current format
+  - Built test utilities for creating and managing legacy data
+  - Successfully tested recovery of 50 articles, 69 feeds, 12 folders
+  - Added error handling and user feedback for migration issues
+  - Integrated with existing sync and storage systems
+
+### Fixed - July 16, 2025 Session (Issue #39)
+- **Supabase Schema** - Added missing 'preferences' column to users table
+  - Fixed migration blocker by adding jsonb preferences column with default '{}'
+  - Enabled successful testing of legacy data recovery feature
+
 ### Added - July 16, 2025 Session (Issue #38 - COMPLETED ✅)
 - **Supabase Database Schema & Client Setup** - Foundation for hybrid architecture
   - Created 4-table PostgreSQL schema (users, feeds, articles, folders)
