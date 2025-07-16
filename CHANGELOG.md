@@ -7,12 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added - July 16, 2025 Session (Issue #36 Planning)
-- **GitHub Issue #36** - Authentication & Sync Optimization
-  - Created comprehensive issue for 365-day token persistence
-  - Planned manual sync-only approach to reduce API consumption
-  - Defined acceptance criteria for improved user experience
-  - Priority: P0 - Critical for API conservation and user experience
+### Added - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+- **365-Day Token Persistence** - Users stay logged in for a full year
+  - Changed access token expiration from 1 hour to 365 days
+  - Updated token refresh endpoint to maintain 365-day expiration
+  - Implemented proactive token refresh at 360-day mark (5-day buffer)
+  - Added periodic 24-hour auth checks for long-running sessions
+  - Eliminates daily login requirement for users
+
+### Fixed - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+- **Removed Auto-Sync Behaviors** - App now loads instantly from cache
+  - Removed ?sync=true parameter from OAuth callback redirect
+  - Eliminated auto-sync logic from SimpleFeedSidebar and FeedList components
+  - App no longer makes API calls on startup (previously ~10 calls per open)
+  - Preserves 100 calls/day rate limit for manual sync operations only
+  - Added URL parameter cleanup for backward compatibility
+
+### Added - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+- **Manual Sync Control** - Users have full control over when to sync
+  - Enhanced sync button in feed sidebar with progress indicators
+  - Added prominent empty state UI with "No feeds yet" message
+  - Sync button becomes primary variant when database is empty
+  - Clear call-to-action for first-time users to sync with Inoreader
+  - Improved user experience with manual sync workflow
+
+### Technical - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+- **API Optimization** - Reduced API consumption from ~10 calls per app open to 0 calls
+- **Development Environment** - Updated to use reserved ngrok domain (strong-stunning-worm.ngrok-free.app)
+- **Documentation** - Updated README.md and CLAUDE.local.md with ngrok configuration
 
 ### Added - July 16, 2025 Session (Issue #34)
 - **Theme Toggle Control** - Added UI control for switching between light/dark/system themes

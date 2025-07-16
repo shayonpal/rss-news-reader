@@ -34,10 +34,18 @@ interface TokenStorage {
 
 **Implementation Details:**
 
-- Tokens stored securely in httpOnly cookies
-- Automatic token refresh before expiration
+- Tokens stored securely in httpOnly cookies with 365-day expiration
+- Proactive token refresh at 360-day mark (5-day buffer before expiration)
+- Automatic refresh integrated into auth status checks
+- Periodic 24-hour authentication checks for long-running sessions
 - Fallback to re-authentication if refresh fails
 - Clear error handling for authentication failures
+
+**Key Changes (Issue #36 - July 16, 2025):**
+- Extended token lifetime from 1 hour to 365 days
+- Eliminated daily login requirement for users
+- Reduced API calls from ~10 per app startup to 0 calls
+- Manual sync-only approach preserves 100 calls/day rate limit
 
 ### Core Endpoints
 
