@@ -37,7 +37,7 @@ Initially built for personal use with plans to open-source under GPL for the wid
 
 ### Article Synchronization
 
-- Automatic sync every 6 hours
+- Automatic sync every 24 hours
 - Manual sync option available
 - Fetch up to 100 new articles per sync (max 20 per feed)
 - Round-robin fetching to ensure all feeds get representation
@@ -87,7 +87,7 @@ Initially built for personal use with plans to open-source under GPL for the wid
 
 #### Sync Frequency
 
-- Automatic sync every 6 hours
+- Automatic sync every 24 hours
 - Manual sync available anytime
 - Respect Inoreader API rate limits (100 calls/day for Zone 1)
 
@@ -293,7 +293,7 @@ Write a clear, informative summary that captures the essence of this article.
 
 #### Automatic Sync
 
-- Run every 6 hours
+- Run every 24 hours
 - Silent background operation
 - Update UI incrementally
 - Handle failures gracefully
