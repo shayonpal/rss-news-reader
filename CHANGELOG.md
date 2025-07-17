@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 16, 2025 Session (Issue #35 - COMPLETED ✅)
+- **API Logging Service** - Track and monitor Inoreader API calls
+  - Created `/api/logs/inoreader` endpoint for centralized logging
+  - Logs all API calls to `logs/inoreader-api-calls.jsonl` file
+  - Each log entry includes: timestamp, endpoint, trigger source, and HTTP method
+  - Modified all Inoreader API routes to include trigger parameter
+  - Updated client-side API service to pass trigger information
+  - Implemented direct file writing for server-side logging
+  - Non-blocking fire-and-forget pattern to avoid performance impact
+  - Enables debugging of rate limit issues and API usage patterns
+  - Simple analysis with standard Unix tools (jq, grep, sort)
+
 ### Added - July 16, 2025 Session (Issue #43 - COMPLETED ✅)
 - **Supabase Sync Integration** - Cross-domain data persistence
   - Modified sync-store.ts to sync data to both IndexedDB and Supabase
