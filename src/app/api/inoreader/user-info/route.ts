@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/lib/api/rate-limiter';
+import { logInoreaderApiCall } from '@/lib/api/log-api-call';
 
 export async function GET(request: NextRequest) {
+  // Get trigger from query params
+  const trigger = request.nextUrl.searchParams.get('trigger') || 'unknown';
   // Check rate limit before making external API call
   if (!rateLimiter.canMakeCall()) {
     console.log('Rate limit exceeded for user-info request');
@@ -29,6 +32,9 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Making request to Inoreader user-info API...');
+    
+    // Log the API call
+    logInoreaderApiCall('/reader/api/0/user-info', trigger, 'GET');
     
     // Proxy request to Inoreader API
     const inoreaderResponse = await fetch('https://www.inoreader.com/reader/api/0/user-info', {

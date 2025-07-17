@@ -166,8 +166,8 @@ export const useSyncStore = create<SyncState>()(
           // Step 1: Fetch subscription list and unread counts
           console.log('Fetching subscriptions and unread counts...');
           const [subscriptionsResponse, unreadCountsResponse] = await Promise.all([
-            inoreaderService.getSubscriptions(),
-            inoreaderService.getUnreadCounts()
+            inoreaderService.getSubscriptions('manual-sync'),
+            inoreaderService.getUnreadCounts('manual-sync')
           ]);
           apiCalls += 2;
           
@@ -271,7 +271,8 @@ export const useSyncStore = create<SyncState>()(
           const articlePromises = topFeeds.map(async (subscription) => {
             try {
               const response = await inoreaderService.getFeedArticles(subscription.id, { 
-                count: 5
+                count: 5,
+                trigger: 'manual-sync'
               });
               apiCalls++;
               return { feedId: subscription.id, articles: response.items };

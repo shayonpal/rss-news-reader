@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { logInoreaderApiCall } from '@/lib/api/log-api-call';
 
 const INOREADER_API_BASE = 'https://www.inoreader.com/reader/api/0';
 
 export async function POST(request: NextRequest) {
+  // Get trigger from query params
+  const trigger = request.nextUrl.searchParams.get('trigger') || 'unknown';
+  
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('access_token');
@@ -17,6 +21,9 @@ export async function POST(request: NextRequest) {
 
     // Get the body from the request
     const body = await request.text();
+
+    // Log the API call
+    logInoreaderApiCall('/reader/api/0/edit-tag', trigger, 'POST');
 
     const response = await fetch(`${INOREADER_API_BASE}/edit-tag`, {
       method: 'POST',

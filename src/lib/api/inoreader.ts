@@ -47,8 +47,8 @@ export interface StreamContentsResponse {
 // API methods
 export const inoreaderApi = {
   // Get user information
-  async getUserInfo(): Promise<UserInfo> {
-    const response = await fetch(`${INOREADER_API_BASE}/user-info`, {
+  async getUserInfo(trigger = 'unknown'): Promise<UserInfo> {
+    const response = await fetch(`/api/inoreader/user-info?trigger=${encodeURIComponent(trigger)}`, {
       credentials: 'include', // Include cookies
     });
     
@@ -60,8 +60,8 @@ export const inoreaderApi = {
   },
 
   // Get subscription list
-  async getSubscriptions(): Promise<{ subscriptions: Subscription[] }> {
-    const response = await fetch('/api/inoreader/subscriptions', {
+  async getSubscriptions(trigger = 'unknown'): Promise<{ subscriptions: Subscription[] }> {
+    const response = await fetch(`/api/inoreader/subscriptions?trigger=${encodeURIComponent(trigger)}`, {
       credentials: 'include',
     });
     
@@ -73,8 +73,8 @@ export const inoreaderApi = {
   },
 
   // Get unread counts
-  async getUnreadCounts(): Promise<{ unreadcounts: UnreadCount[] }> {
-    const response = await fetch('/api/inoreader/unread-counts', {
+  async getUnreadCounts(trigger = 'unknown'): Promise<{ unreadcounts: UnreadCount[] }> {
+    const response = await fetch(`/api/inoreader/unread-counts?trigger=${encodeURIComponent(trigger)}`, {
       credentials: 'include',
     });
     
@@ -93,12 +93,14 @@ export const inoreaderApi = {
       sortOrder?: 'newest' | 'oldest';
       continuation?: string;
       excludeTarget?: string;
+      trigger?: string;
     } = {}
   ): Promise<StreamContentsResponse> {
     const params = new URLSearchParams();
     params.set('streamId', streamId);
     params.set('n', (options.count || 100).toString());
     params.set('r', options.sortOrder === 'oldest' ? 'o' : 'n');
+    params.set('trigger', options.trigger || 'unknown');
     
     if (options.continuation) {
       params.set('c', options.continuation);
@@ -123,8 +125,8 @@ export const inoreaderApi = {
   },
 
   // Mark articles as read/unread
-  async markAsRead(itemIds: string[]): Promise<void> {
-    const response = await fetch('/api/inoreader/edit-tag', {
+  async markAsRead(itemIds: string[], trigger = 'unknown'): Promise<void> {
+    const response = await fetch(`/api/inoreader/edit-tag?trigger=${encodeURIComponent(trigger)}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -142,8 +144,8 @@ export const inoreaderApi = {
     }
   },
 
-  async markAsUnread(itemIds: string[]): Promise<void> {
-    const response = await fetch('/api/inoreader/edit-tag', {
+  async markAsUnread(itemIds: string[], trigger = 'unknown'): Promise<void> {
+    const response = await fetch(`/api/inoreader/edit-tag?trigger=${encodeURIComponent(trigger)}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -162,8 +164,8 @@ export const inoreaderApi = {
   },
 
   // Star/unstar articles
-  async addStar(itemIds: string[]): Promise<void> {
-    const response = await fetch('/api/inoreader/edit-tag', {
+  async addStar(itemIds: string[], trigger = 'unknown'): Promise<void> {
+    const response = await fetch(`/api/inoreader/edit-tag?trigger=${encodeURIComponent(trigger)}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -181,8 +183,8 @@ export const inoreaderApi = {
     }
   },
 
-  async removeStar(itemIds: string[]): Promise<void> {
-    const response = await fetch('/api/inoreader/edit-tag', {
+  async removeStar(itemIds: string[], trigger = 'unknown'): Promise<void> {
+    const response = await fetch(`/api/inoreader/edit-tag?trigger=${encodeURIComponent(trigger)}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -201,18 +203,18 @@ export const inoreaderApi = {
   },
 
   // Helper methods for common streams
-  getAllArticles(options?: { count?: number; continuation?: string }) {
+  getAllArticles(options?: { count?: number; continuation?: string; trigger?: string }) {
     return this.getStreamContents('user/-/state/com.google/reading-list', options);
   },
 
-  getUnreadArticles(options?: { count?: number; continuation?: string }) {
+  getUnreadArticles(options?: { count?: number; continuation?: string; trigger?: string }) {
     return this.getStreamContents('user/-/state/com.google/reading-list', {
       ...options,
       excludeTarget: 'user/-/state/com.google/read',
     });
   },
 
-  getFeedArticles(feedId: string, options?: { count?: number; continuation?: string }) {
+  getFeedArticles(feedId: string, options?: { count?: number; continuation?: string; trigger?: string }) {
     return this.getStreamContents(feedId, options);
   },
 };

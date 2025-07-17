@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { logInoreaderApiCall } from '@/lib/api/log-api-call';
 
 const INOREADER_API_BASE = 'https://www.inoreader.com/reader/api/0';
 
 export async function GET(request: NextRequest) {
+  // Get trigger from query params
+  const trigger = request.nextUrl.searchParams.get('trigger') || 'unknown';
+  
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('access_token');
@@ -15,6 +19,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Log the API call
+    logInoreaderApiCall('/reader/api/0/unread-count', trigger, 'GET');
+    
     const response = await fetch(`${INOREADER_API_BASE}/unread-count`, {
       headers: {
         'Authorization': `Bearer ${accessToken.value}`,
