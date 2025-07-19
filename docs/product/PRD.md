@@ -15,49 +15,72 @@ A clean, fast, and intelligent RSS reader that respects the user's time by provi
 - **Time-Efficient**: AI summaries let users quickly grasp article content
 - **Always Available**: Offline-first design ensures content is always accessible
 - **Distraction-Free**: Clean interface inspired by Reeder 5's minimalist design
-- **Single Source of Truth**: Inoreader integration eliminates feed management overhead
+- **Zero-Maintenance**: Server handles all sync and authentication automatically
+- **Private & Secure**: Accessible only via Tailscale network
 
 ### Target User
 
-Initially built for personal use with plans to open-source under GPL for the wider community.
+Initially built for personal use, with exactly one user,  with plans to open-source under GPL for the wider community.
 
 ### Related Documentation
 
 - [User Flow Diagrams](user-flow-diagrams.md) - Technical flows and system states
 - [User Journeys](user-journeys.md) - Emotional journeys and use cases
 
+### Implementation Note
+
+**Current State vs Target Architecture**: This PRD describes the target server-client architecture where all Inoreader API communication happens server-side. The current implementation (as of July 2025) includes client-side OAuth and API calls that will be migrated to the server. 
+
+**Migration Approach**: The migration will use a clean-slate approach:
+- Keep all existing Supabase table structures (no schema changes)
+- Clear all existing article data before first server sync
+- No data migration needed - start fresh with server-side sync
+- This eliminates complexity and ensures clean server-controlled data
+
 ## Core Features
 
 ### Feed Management
 
-- Synchronize feeds exclusively through Inoreader account
-- Preserve Inoreader's folder hierarchy
-- Display unread counts at both feed and folder levels
+- Server synchronizes feeds from Inoreader to Supabase
+- Preserve Inoreader's folder hierarchy and tag structure
+- Display unread counts at feed, folder, and tag levels
 - No manual feed management within the app
+- Client reads exclusively from Supabase
+- Filter articles by feed OR tag (mutually exclusive)
 
 ### Article Synchronization
 
-- Automatic sync every 24 hours
-- Manual sync option available
-- Fetch up to 100 new articles per sync (max 20 per feed)
+- Automatic server-side sync every 24 hours
+- Manual sync triggered by client (executes server-side)
+- Server fetches up to 100 new articles per sync (max 20 per feed)
 - Round-robin fetching to ensure all feeds get representation
-- URL-based deduplication
+- URL-based deduplication in Supabase
 
 ### Content Processing
 
-- Detect partial vs full content in feeds
-- Manual "Fetch Full Content" button for partial articles
-- Parse and clean content for optimal readability
+- Server stores RSS content as-is from Inoreader
+- User-triggered full content fetching via "Fetch Full Content" button
+- Server uses Mozilla Readability for content extraction
 - Preserve essential rich media (images, videos, embedded tweets)
-- Display 4 lines of parsed content for articles without summaries
+- Display 4 lines of RSS content for articles without summaries
 
 ### AI Summarization
 
-- On-demand summarization using Anthropic Claude 3.5 Sonnet
-- 100-120 word summaries
+- On-demand summarization using Anthropic Claude 4 Sonnet
+- 150-175 word summaries
 - Re-summarize option for unsatisfactory summaries
-- Cache all generated summaries
+- Summaries stored in Supabase
 - Display full summary in list view when available
+- Client triggers summarization via API endpoint
+
+### Full Content Fetching
+
+- User-triggered via "Fetch Full Content" button in article view
+- Server fetches article URL and extracts content using Mozilla Readability
+- Clean, readable content extracted (ads/navigation removed)
+- Stored in separate `full_content` field in Supabase
+- Button shows loading state during fetch
+- Once fetched, article displays full content instead of RSS snippet
 
 ### User Interface
 
@@ -69,19 +92,71 @@ Initially built for personal use with plans to open-source under GPL for the wid
 
 ### Offline Capabilities
 
-- Cache last 50 article titles and metadata
-- Store full content for viewed articles
-- Graceful degradation when offline
-- Clear offline status indicators
+- Basic service worker for PWA functionality
+- Handle network errors gracefully
+- Show error messages when offline
+- Queue actions for when back online (future)
 
 ## Detailed Requirements
 
-### Authentication & Setup
+### Architecture & Access
 
-- OAuth integration with Inoreader
-- No local authentication required
-- Store Inoreader tokens securely
-- Clear setup flow for first-time users
+- Server-side OAuth with Inoreader (one-time setup)
+- No client authentication - completely open access
+- Inoreader tokens stored on server only
+- Access via Tailscale network: http://100.96.166.53/reader
+- If server detects Tailscale service down, it should attempt restarting it automatically
+- Tailscale must remain accessible for client access - this is critical for the architecture
+- Client reads article data from Supabase and calls server API endpoints for operations
+
+### Server OAuth Setup (One-Time Process)
+
+The server requires a one-time OAuth setup to obtain Inoreader tokens:
+
+#### Setup Process
+
+1. **Automated Setup with Playwright**:
+   - Uses test credentials from `.env` file
+   - No manual login required
+   - Runs directly on Mac Mini server
+
+2. **OAuth Flow**:
+   ```bash
+   # Run on Mac Mini (already there, no SSH needed)
+   npm run setup:oauth
+   
+   # Script automatically:
+   # - Starts temporary Express server on localhost:8080
+   # - Launches Playwright browser
+   # - Logs into Inoreader with test credentials
+   # - Authorizes the app
+   # - Captures tokens from callback
+   # - Stores tokens securely
+   ```
+
+3. **Token Storage**:
+   - Tokens stored in encrypted JSON file
+   - Default location: `~/.rss-reader/tokens.json`
+   - Environment variable: `RSS_READER_TOKENS_PATH`
+   - File permissions: 600 (read/write for owner only)
+   - Encryption: Uses system keychain (node-keytar) or AES-256
+
+4. **Token Structure**:
+   ```json
+   {
+     "access_token": "encrypted_token_here",
+     "refresh_token": "encrypted_refresh_token",
+     "expires_at": 1234567890,
+     "token_type": "Bearer",
+     "created_at": 1234567890
+   }
+   ```
+
+5. **Security Considerations**:
+   - Never commit tokens to version control
+   - Tokens encrypted at rest
+   - Automatic token refresh before expiration
+   - Audit log for token access
 
 ### Feed Synchronization Rules
 
@@ -91,13 +166,28 @@ Initially built for personal use with plans to open-source under GPL for the wid
 - Manual sync available anytime
 - Respect Inoreader API rate limits (100 calls/day for Zone 1)
 
-#### Sync Process
+#### Sync Process (Server-Side)
 
-1. Fetch subscription list
-2. Fetch folder/tag structure
-3. Get all new articles via stream API (batched)
-4. Fetch unread counts
-5. Update read/unread states bidirectionally
+**Efficient API Strategy: 4-5 calls per sync**
+
+1. **Get Feed Structure** (2 calls):
+   - `/subscription/list` - All feed subscriptions and folders
+   - `/tag/list` - All user tags and labels
+
+2. **Get Articles** (1 call):
+   - `/stream/contents/user/-/state/com.google/reading-list`
+   - Parameters: `n=100` (max articles), `ot=[timestamp]` (since last sync)
+   - Returns ALL articles from ALL feeds in one request
+
+3. **Get Unread Counts** (1 call):
+   - `/unread-count` - Returns counts for all feeds/folders
+
+4. **Update Read States** (0-1 call, if needed):
+   - `/edit-tag` - Batch update read/unread changes from client
+
+5. **Write to Supabase**:
+   - Store all fetched data
+   - Update sync timestamp
 
 #### Sync Limits
 
@@ -108,10 +198,10 @@ Initially built for personal use with plans to open-source under GPL for the wid
 
 #### API Efficiency
 
-- Batch operations wherever possible
-- Use stream endpoints to minimize API calls
-- Target: ~5-6 API calls per complete sync
-- Cache aggressively to reduce API usage
+- Single stream endpoint for ALL articles (not per-feed)
+- Batch read/unread updates in one call
+- Actual usage: 4-5 API calls per sync
+- Daily estimate: ~24 calls (1 auto + 5 manual syncs)
 
 ### Article Management
 
@@ -132,29 +222,31 @@ Initially built for personal use with plans to open-source under GPL for the wid
   - Strip all HTML from snippets
   - Include source, author, date
 - Article View:
-  - Show parsed content by default if available
-  - "Fetch Full Content" button for partial feeds
-  - Display all rich media appropriately
+  - Show RSS content from Supabase by default
+  - "Fetch Full Content" button for all articles
+  - Display full content if already fetched
+  - Show all rich media appropriately
 
 #### Read/Unread Management
 
-- Bidirectional sync with Inoreader
-- Visual distinction between read/unread
-- Batch updates every 30 minutes or on-demand
+- Client updates read/unread status in Supabase
+- Server syncs status changes to Inoreader periodically
+- Visual distinction between read/unread in UI
+- Batch updates during sync operations
 - Conflict resolution: most recent change wins
 
 ### Summary Generation
 
 #### AI Configuration
 
-- Model: Anthropic Claude 3.5 Sonnet (claude-3-5-sonnet-latest)
-- Summary length: 100-120 words
+- Model: Anthropic Claude 4 Sonnet
+- Summary length: 150-175 words
 - Include article metadata in prompt
 
 #### Prompt Template
 
 ```
-You are a news summarization assistant. Create a concise summary of the following article in 100-120 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
+You are a news summarization assistant. Create a concise summary of the following article in 150-175 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
 
 Article Details:
 Title: [TITLE]
@@ -169,10 +261,11 @@ Write a clear, informative summary that captures the essence of this article.
 
 #### Summary Management
 
-- Store summaries permanently with articles
+- Summaries generated server-side via API endpoint
+- Store summaries in Supabase with articles
 - Update list view immediately after generation
 - Allow re-summarization with same prompt
-- Track API usage for monitoring
+- Track API usage server-side for monitoring
 
 ### Navigation & Information Architecture
 
@@ -180,55 +273,79 @@ Write a clear, informative summary that captures the essence of this article.
 
 1. **Feed List** (Sidebar/Drawer)
 
-   - Hierarchical folder structure
-   - Collapsible folders
-   - Unread counts per feed and folder
+   - Two tabs: "Feeds" and "Tags"
+   - **Feeds Tab**:
+     - Hierarchical folder structure
+     - Collapsible folders
+     - Individual feed items within folders
+     - Unread counts per feed and folder
+   - **Tags Tab**:
+     - Flat list of all tags
+     - Unread counts per tag
+   - Only one filter active at a time (feed OR tag)
    - Visual indicators for sync status
 
 2. **Article List** (Main View)
 
+   - Shows articles based on selected filter:
+     - All articles (default)
+     - Articles from selected feed
+     - Articles with selected tag
    - Newest first, no sorting options
    - Clear visual hierarchy
    - Read/unread distinction
    - Summary/snippet display
+   - Current filter shown at top
 
 3. **Article Detail**
 
-   - Full parsed content
+   - RSS content displayed by default
    - Article metadata header
-   - Summarize/Re-summarize button
-   - Fetch Full Content button (for partial feeds)
+   - "Fetch Full Content" button (calls server API)
+   - Summarize/Re-summarize button (calls server API)
    - Swipe navigation (previous/next article)
 
-4. **Settings**
+4. **Settings** (Simplified)
 
-   - Inoreader connection status
    - Theme preference
-   - Sync configuration
-   - API usage statistics
+   - Last sync timestamp
+   - Manual sync button
 
-5. **API Usage Monitor**
-   - Daily API call count
+5. **Server Admin Dashboard** (Optional, server-side only)
+   - Inoreader API usage
    - AI summarization count
-   - Historical usage graphs
-   - Cost tracking
+   - Sync history and errors
+   - Token status
 
 ### Data Persistence
 
-#### Local Storage Strategy
+#### Storage Strategy
 
-- Article metadata: Always keep last 500
-- Article content: Keep for all viewed articles
-- Summaries: Persist with articles
-- Last 50 articles: Always cache title + metadata
-- Sync state: Track last sync time and status
+**Server Storage:**
+- Inoreader tokens in local file/environment
+- Sync logs and state
+
+**Supabase Storage:**
+- All article metadata and RSS content (in 'content' column)
+- Full content (when fetched by user, in 'full_content' column)
+- Feed and folder structure (existing tables)
+- Tag assignments per article (new article_tags table)
+- Read/unread states (is_read column)
+- AI summaries (new ai_summary column)
+- Last sync timestamp (in sync_metadata table)
+- Content fetch status flags (new has_full_content column)
+- Unread counts by feed/folder/tag (stored in respective tables)
+
+**Client Storage (PWA):**
+- Service worker for basic PWA features
+- No article caching (always fetch from Supabase)
 
 #### Offline Behavior
 
-- Display all cached content
-- Disable network-dependent features
-- Show subtle offline indicator
-- Queue read/unread changes for next sync
+- Show error message when Supabase unreachable
+- Disable all interactive features
+- Display "No connection" state
+- Retry connection periodically
 
 ### Sync Conflict Resolution
 
@@ -275,6 +392,9 @@ Write a clear, informative summary that captures the essence of this article.
 ### Interaction Patterns
 
 - Tap to read article
+- Tap feed/folder to filter articles
+- Tap tag to filter articles
+- Clear filter to show all articles
 - Long-press for quick actions (future)
 - Swipe between articles in detail view
 - Pull-to-refresh in list view
@@ -291,25 +411,26 @@ Write a clear, informative summary that captures the essence of this article.
 
 ### Sync Process & Limits
 
-#### Automatic Sync
+#### Automatic Sync (Server-Side)
 
-- Run every 24 hours
-- Silent background operation
-- Update UI incrementally
-- Handle failures gracefully
+- Cron job runs every 24 hours
+- Server fetches from Inoreader → writes to Supabase
+- Handle token refresh automatically
+- Log all operations for debugging
 
 #### Manual Sync
 
-- User-triggered via pull-to-refresh or button
-- Show progress indicator
-- Display result summary (X new articles)
-- Respect same limits as auto-sync
+- User triggers via button in client
+- Client calls server API endpoint
+- Server executes sync process
+- Client polls Supabase for updates
+- Show progress indicator during sync
 
 #### Rate Limit Management
 
-- Track API calls per day
-- Warn user at 80% usage
-- Disable sync at 95% usage
+- Server tracks API calls per day
+- Server handles rate limiting internally
+- Log warnings when approaching limits
 - Reset counter at midnight UTC
 
 ### Error Handling
@@ -351,19 +472,19 @@ Write a clear, informative summary that captures the essence of this article.
 - Summary generation: < 5 seconds
 - Smooth 60fps scrolling
 
-### API Usage Monitoring
+### API Usage Monitoring (Server-Side)
 
 #### Tracking
 
-- Inoreader API calls by endpoint
-- Anthropic API calls and tokens
-- Daily, weekly, monthly views
-- Cost calculation display
+- Server logs all Inoreader API calls
+- Server logs Anthropic API usage
+- Stored in server logs/database
+- Optional admin dashboard for viewing
 
 #### Logging
 
-- Store last 30 days of logs
-- Accessible via settings
+- Server maintains 30 days of logs
+- Accessible via SSH to Mac Mini
 - Export functionality (future)
 - Debug mode for development
 
@@ -410,54 +531,341 @@ Write a clear, informative summary that captures the essence of this article.
 - Consistent UI responsiveness
 - Clear error recovery paths
 
+## Technical Architecture
+
+### System Overview
+
+The RSS Reader uses a hybrid architecture where:
+- **Client (PWA)** reads article data directly from Supabase for performance
+- **Client** calls server API endpoints for operations requiring server-side logic
+- **Server (Mac Mini)** handles all Inoreader communication and processing
+
+### Data Flow Diagram
+
+```
+[Inoreader API] ← → [Mac Mini Server]
+                           |
+                           ├─→ [Sync Service] → [Supabase]
+                           |                         ↑
+                           └─→ [API Routes]          |
+                                    ↑                |
+                                    |                ↓
+                              [Client PWA via Tailscale]
+```
+
+### Server Architecture
+
+Single Next.js application with:
+- **API Routes**: Handle client requests (/api/*)
+- **Sync Service**: Background service using node-cron
+- **Process Manager**: PM2 manages the Node.js process
+- **Reverse Proxy**: Caddy routes /reader to Next.js port
+
+## Data Schema
+
+### Existing Supabase Tables (No Changes Needed)
+
+```sql
+-- Users table (existing - will use single record)
+-- Already has: id, email, inoreader_id, preferences (JSONB)
+
+-- Folders table (existing - already perfect)
+-- Already has: id, user_id, inoreader_id, name, parent_id (self-ref)
+
+-- Feeds table (existing - minor update needed)
+-- Already has: id, user_id, inoreader_id, title, url, folder_id (TEXT), unread_count
+-- Note: folder_id is TEXT storing Inoreader folder ID directly
+```
+
+### Tables Requiring Minor Updates
+
+```sql
+-- Articles table (add new columns)
+ALTER TABLE articles 
+ADD COLUMN author TEXT,
+ADD COLUMN full_content TEXT,
+ADD COLUMN ai_summary TEXT,
+ADD COLUMN has_full_content BOOLEAN DEFAULT FALSE;
+
+-- Note: 'content' column already exists for RSS content
+```
+
+### New Tables to Create
+
+```sql
+-- Tags table (new)
+CREATE TABLE tags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  inoreader_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  unread_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Article-Tag junction table (new)
+CREATE TABLE article_tags (
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (article_id, tag_id)
+);
+
+-- Sync metadata table (new)
+CREATE TABLE sync_metadata (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- New indexes needed
+CREATE INDEX idx_article_tags_tag_id ON article_tags(tag_id);
+CREATE INDEX idx_article_tags_article_id ON article_tags(article_id);
+CREATE INDEX idx_tags_user_id ON tags(user_id);
+CREATE INDEX idx_tags_inoreader_id ON tags(inoreader_id);
+
+-- Sync errors table (new)
+CREATE TABLE sync_errors (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sync_id TEXT,
+  error_type TEXT,
+  error_message TEXT,
+  item_reference TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_sync_errors_sync_id ON sync_errors(sync_id);
+CREATE INDEX idx_sync_errors_created_at ON sync_errors(created_at DESC);
+```
+
+### Schema Notes
+
+1. **Minimal Changes**: We're reusing the existing schema structure
+2. **folder_id**: Kept as TEXT in feeds table (stores Inoreader folder ID)
+3. **user_id**: Present in all tables for future multi-user support, but we'll use a single user
+4. **content vs rss_content**: Using existing 'content' column for RSS content
+5. **is_starred**: Already exists in articles table for future use
+6. **Indexes**: Most required indexes already exist
+
+## API Contract
+
+### Server API Endpoints
+
+#### 1. Trigger Manual Sync
+```typescript
+POST /api/sync
+Request: {}
+Response: {
+  success: boolean,
+  syncId: string,     // UUID for tracking
+  message: string
+}
+Errors: {
+  429: "Rate limit exceeded",
+  500: "Sync service error"
+}
+```
+
+#### 2. Check Sync Status
+```typescript
+GET /api/sync/status/:syncId
+Response: {
+  status: 'pending' | 'running' | 'completed' | 'failed',
+  progress: number,          // 0-100
+  itemsProcessed?: number,
+  totalItems?: number,
+  message?: string,
+  error?: string
+}
+```
+
+#### 3. Fetch Full Article Content
+```typescript
+POST /api/articles/:id/fetch-content
+Request: {}
+Response: {
+  success: boolean,
+  content?: string,    // HTML content from Readability
+  error?: string       // Falls back to RSS content on failure
+}
+Errors: {
+  404: "Article not found",
+  500: "Content extraction failed"
+}
+```
+
+#### 4. Generate AI Summary
+```typescript
+POST /api/articles/:id/summarize
+Request: {
+  regenerate?: boolean  // Force new summary
+}
+Response: {
+  success: boolean,
+  summary?: string,     // 150-175 words
+  error?: string
+}
+Errors: {
+  404: "Article not found",
+  429: "AI rate limit exceeded",
+  500: "Summary generation failed"
+}
+```
+
+### Error Response Format
+```typescript
+interface ErrorResponse {
+  error: string,
+  message: string,
+  details?: any
+}
+```
+
+## Sync State Management
+
+### Sync Process Flow
+
+1. **Client initiates sync**: POST /api/sync → receives syncId
+2. **Server updates status**: Writes to sync_metadata table
+3. **Client monitors progress**: 
+   - Simple polling: GET /api/sync/status/:syncId every 2 seconds
+   - (Future enhancement: Supabase realtime subscription)
+4. **Completion**: Client refreshes data when status = 'completed'
+
+### Conflict Resolution
+
+- **Strategy**: Last write wins based on timestamps
+- **Implementation**: All updates include updated_at timestamp
+- **Sync order**: 
+  1. Fetch from Inoreader
+  2. Apply client changes to Inoreader (read/unread)
+  3. Write merged state to Supabase
+
+### Failure Handling
+
+- **Partial sync failures**: Continue with remaining items
+- **Failed items**: Logged in sync_errors table with:
+  - sync_id: Links to specific sync operation
+  - error_type: 'api_error', 'parse_error', 'db_error'
+  - error_message: Detailed error description
+  - item_reference: Feed/article ID that failed
+- **Retry logic**: Automatic retry for transient failures (3 attempts)
+- **User notification**: Clear error messages in UI
+- **Cleanup**: Old sync errors deleted after 30 days
+
+## Article Limit Algorithm
+
+### Round-Robin Distribution
+
+When fetching 100 articles across multiple feeds:
+
+```typescript
+// Pseudocode for article distribution
+const MAX_TOTAL = 100;
+const MAX_PER_FEED = 20;
+
+1. Get all feeds with unread articles
+2. Sort by last_fetched timestamp (oldest first)
+3. While totalFetched < MAX_TOTAL:
+   - For each feed in rotation:
+     - Fetch min(remainingTotal, MAX_PER_FEED, feed.unreadCount)
+     - Update last_fetched timestamp
+     - Add to totalFetched
+4. Store fetched articles in Supabase
+```
+
+## Additional Technical Details
+
+### Unread Counts
+- **Storage**: Cached in feeds.unread_count and tags.unread_count
+- **Update**: Recalculated during each sync
+- **Real-time**: Updated immediately when user marks read/unread
+
+### Content Extraction Fallback
+- **Primary**: Mozilla Readability extracts clean content
+- **Fallback**: If Readability fails, show original RSS content
+- **User feedback**: "Content extraction failed" message with option to view RSS
+
+### Tailscale Monitoring
+- **Health check**: Server monitors Tailscale service every 5 minutes
+- **Auto-restart**: `sudo tailscale up` if service is down
+- **Sudo configuration**: Add to `/etc/sudoers.d/tailscale`:
+  ```
+  nodeuser ALL=(ALL) NOPASSWD: /usr/bin/tailscale up
+  ```
+- **Logging**: All restart attempts logged for debugging
+- **Critical**: Without Tailscale, clients cannot access the service
+
+### PM2 Configuration
+- **Auto-restart**: Yes, enable on crashes
+- **Memory limit**: 1GB (adjust based on usage)
+- **Config file** (`ecosystem.config.js`):
+  ```javascript
+  module.exports = {
+    apps: [{
+      name: 'rss-reader',
+      script: 'npm',
+      args: 'start',
+      max_memory_restart: '1G',
+      error_file: 'logs/pm2-error.log',
+      out_file: 'logs/pm2-out.log',
+      merge_logs: true,
+      time: true
+    }]
+  }
+  ```
+
 ## Development Milestones
 
-### Milestone 1: Foundation (Week 1-2)
+### Milestone 1: Server Foundation
 
-- Project setup and configuration
-- Inoreader OAuth integration
-- Basic data models and storage
-- Simple article list view
-- Manual sync functionality
+- Server-side Inoreader OAuth setup (localhost callback)
+- Token storage mechanism
+- Basic sync service (Inoreader → Supabase)
+- Cron job configuration
+- API endpoints: manual sync, full content fetch
+- Mozilla Readability integration
 
-### Milestone 2: Core Reading Experience (Week 3-4)
+### Milestone 2: Client Simplification
 
-- Article detail view
-- Folder/feed hierarchy display
+- Remove all Inoreader API calls
+- Convert to Supabase-only data source
+- Simplify authentication (remove it)
+- Update sync button to call server API
+- Configure Caddy reverse proxy
+
+### Milestone 3: Core Reading Experience
+
+- Article list and detail views
+- Folder/feed hierarchy from Supabase
+- Tag display and filtering
 - Read/unread status management
-- Offline content caching
-- Basic responsive design
+- "Fetch Full Content" button implementation
+- Responsive design
 
-### Milestone 3: Content Enhancement (Week 5-6)
+### Milestone 4: AI Integration
 
-- Partial content detection
-- Full content fetching
-- Content parsing and cleaning
-- Rich media preservation
-- Improved typography
-
-### Milestone 4: AI Integration (Week 7-8)
-
-- Anthropic API integration
-- Summary generation flow
-- Summary caching
+- Server-side Anthropic API integration
+- API endpoint for summary requests
+- Summary storage in Supabase
 - Re-summarize functionality
-- API usage tracking
+- Server-side API usage tracking
 
-### Milestone 5: Polish & Optimization (Week 9-10)
+### Milestone 5: Polish & Optimization
 
 - Dark/light mode
 - Performance optimization
 - Error handling improvements
-- API usage dashboard
 - PWA manifest and icons
+- Service worker optimization for Tailscale
 
-### Milestone 6: Production Ready (Week 11-12)
+### Milestone 6: Production Ready
 
-- Deployment configuration
-- Documentation
-- Testing and bug fixes
-- Performance monitoring
+- Tailscale network configuration
+- Caddy setup for /reader path
+- Update Next.js basePath configuration
+- Service worker adjustments for HTTP
+- Documentation updates
 - Open source preparation
 
 ## Development Notes
@@ -470,19 +878,149 @@ Write a clear, informative summary that captures the essence of this article.
 - Share test accounts to minimize API usage
 - Log all API calls for optimization
 
-### Technology Recommendations
+### Technology Stack
 
-- **Framework**: Consider Next.js, Nuxt, or SvelteKit for SSR/PWA support
-- **Styling**: Tailwind CSS + Typography plugin for Reeder-like aesthetics
-- **Components**: Radix UI or Headless UI for accessibility
-- **State**: Keep it simple - Context API or Zustand
-- **Storage**: IndexedDB for offline support
-- **PWA**: Workbox for service worker management
+**Server (Mac Mini):**
+- **Runtime**: Node.js for sync service
+- **Scheduler**: node-cron for automated sync
+- **OAuth**: Automated Playwright setup using test credentials
+- **Token Storage**: Encrypted JSON file with system keychain integration
+- **Content Extraction**: Mozilla Readability + jsdom
+- **API Endpoints**: Express for manual sync, full content, summarization
+
+**Client (PWA):**
+- **Framework**: Next.js (already in use)
+- **Styling**: Tailwind CSS + Typography plugin
+- **Components**: Radix UI for accessibility
+- **State**: Zustand for simplicity
+- **Data**: Supabase JS client
+- **PWA**: Workbox for service worker
+
+**Infrastructure:**
+- **Reverse Proxy**: Caddy for path routing
+- **Network**: Tailscale for secure access
+- **Database**: Supabase (existing)
+
+### Deployment Architecture
+
+**Access URL:** `http://100.96.166.53/reader`
+
+**Server Components:**
+1. **Sync Service** - Runs on Mac Mini, handles all Inoreader communication
+2. **API Service** - Handles full content fetching, summarization
+3. **Next.js App** - Serves the PWA client
+4. **Caddy** - Routes `/reader` to Next.js port
+5. **Cron** - Triggers daily sync
+
+**Data Flow:**
+```
+[Inoreader API] ← → [Mac Mini Sync Service] → [Supabase]
+                                                    ↑
+                                                    ↓
+                          [Client PWA via Tailscale]
+```
+
+### Development Environment
+
+- **Supabase**: Use SAME project for both dev and production
+  - Single user project - no risk of affecting others
+  - Saves costs and complexity
+  - Test data can be easily cleaned up via SQL
+- **Test Credentials**: Already configured in .env file
+  - Inoreader test account credentials available
+  - Dev API calls count against same daily limit anyway
+- **Mock Data**: 
+  - Mock Inoreader responses in `mocks/` directory
+  - Environment variable `USE_MOCK_DATA=true` for development
+  - Preserves API calls during testing
+- **Local Development**:
+  ```bash
+  # .env.development
+  NEXT_PUBLIC_SUPABASE_URL=https://[same-project].supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=[same-anon-key]
+  USE_MOCK_DATA=true  # For Inoreader API calls only
+  TEST_USER_EMAIL=test@example.com  # Different from production user
+  ```
+
+### Testing Strategy
+
+#### Playwright MCP vs Integrated Tests Analysis
+
+**Current Setup**: Playwright MCP server already configured with test credentials
+
+**Option A: Playwright MCP (Recommended for Initial Development)**
+- ✅ **Pros**:
+  - Already configured and ready to use
+  - Visual testing through browser automation
+  - Can test full OAuth flow and user interactions
+  - Good for acceptance testing during development
+  - No additional setup required
+- ❌ **Cons**:
+  - Slower than unit tests
+  - More brittle (UI changes break tests)
+  - Manual intervention required
+
+**Option B: Integrated Playwright Tests**
+- ✅ **Pros**:
+  - Automated regression testing
+  - CI/CD integration possible
+  - Consistent test environment
+  - Better for long-term maintenance
+- ❌ **Cons**:
+  - More setup work initially
+  - Another system to maintain
+  - Over-engineering for single-user project
+
+**Recommendation**: Use Playwright MCP for development testing. Tech lead must make the final decision on testing strategy using an established decision framework (see below).
+
+#### Decision Frameworks for Testing Strategy
+
+The tech lead should choose one of these frameworks to guide their testing strategy decision:
+
+**1. Risk-Impact Matrix**
+- **Evaluate**: Risk of bugs vs Impact on user
+- **Criteria**:
+  - Bug probability (Low/Medium/High)
+  - User impact severity (Low/Medium/High)
+  - Cost of fixing in production
+- **Decision**: High risk + High impact = Integrated tests
+
+**2. ROI (Return on Investment) Analysis**
+- **Calculate**: Test value vs Implementation cost
+- **Formula**: ROI = (Bug prevention value - Test maintenance cost) / Test setup time
+- **Factors**:
+  - Setup time (hours)
+  - Maintenance time per month
+  - Potential debugging time saved
+- **Decision**: Positive ROI = Implement tests
+
+**3. Technical Debt Quadrant**
+- **Categorize**: Testing approach by debt type
+- **Options**:
+  - Prudent-Deliberate: "We choose MCP now, migrate later"
+  - Prudent-Inadvertent: "Now we know integrated tests would help"
+  - Reckless-Deliberate: "No time for any tests"
+  - Reckless-Inadvertent: "What's Playwright?"
+- **Decision**: Stay in prudent quadrants only
+
+**Tech Lead Action Required**: Document which framework was used and the rationale for the final testing decision.
+
+#### Testing Approach
+
+1. **Development Phase**: Use Playwright MCP for manual testing
+2. **Key Test Scenarios**:
+   - OAuth flow with test credentials
+   - Article sync and display
+   - Full content fetching
+   - AI summarization
+   - Read/unread state management
+3. **API Testing**: Use mock data to preserve daily limits
+4. **Production Testing**: Limited manual verification
 
 ### Open Source Considerations
 
-- Choose GPL license as specified
-- Prepare documentation early
-- Design for self-hosting
-- Make API keys configurable
-- Consider Docker deployment
+- GPL license for community use
+- Document server setup process
+- Make sync service configurable
+- Provide Docker compose for easy deployment
+- Consider multi-user support in future versions

@@ -1,5 +1,14 @@
 # Technology Stack - Shayon's News
 
+## Architecture Overview
+
+### Server-Client Architecture
+
+The RSS Reader uses a clean separation of concerns:
+- **Server (Mac Mini)**: Handles ALL Inoreader API communication, OAuth, and processing
+- **Client (PWA)**: Reads from Supabase and calls server API endpoints
+- **Access**: Via Tailscale network only (http://100.96.166.53/reader)
+
 ## Framework Selection
 
 ### Primary Framework: **Next.js 14+ (App Router)**
@@ -10,15 +19,17 @@
 - Server-side rendering capabilities for better SEO and performance
 - Built-in optimizations (image optimization, code splitting)
 - Strong TypeScript support
-- Active ecosystem and community
+- Unified server and client architecture
+- API routes for server endpoints
 
 **Key Features Utilized:**
 
 - App Router for modern routing patterns
 - Built-in PWA capabilities with `next-pwa` plugin
-- API routes for Inoreader and Claude API integration
+- API routes for server endpoints (/api/sync, /api/articles/*, etc.)
 - Static generation for improved performance
 - Built-in image optimization for article media
+- basePath configuration for /reader path
 
 ### Alternative Considerations:
 
@@ -76,11 +87,11 @@
 
 ```typescript
 // Store slices
-- articlesStore: Article CRUD operations
-- feedsStore: Feed hierarchy and management
-- syncStore: Sync state and configuration
+- articlesStore: Article read operations from Supabase
+- feedsStore: Feed hierarchy from Supabase
+- tagsStore: Tag management from Supabase
+- syncStore: Sync status polling
 - settingsStore: User preferences and theme
-- apiStore: API usage tracking
 ```
 
 ### Alternative: **Context API + useReducer**
@@ -89,60 +100,80 @@ For simpler state requirements, could use React's built-in state management.
 
 ## Data Persistence & Offline Support
 
-### Primary Storage: **IndexedDB with Dexie.js**
+### Primary Storage: **Supabase (PostgreSQL)**
 
 **Rationale:**
 
-- Large storage capacity (hundreds of MB)
-- Structured data with indexes for fast queries
-- Automatic compression support
-- Works offline by default
-- Better performance than localStorage for large datasets
+- Server-controlled data consistency
+- Real-time capabilities for future features
+- Structured queries with proper relationships
+- Server handles all data management
+- Client reads only, no local persistence needed
 
-**Schema:**
+**Tables Used:**
 
-```typescript
-// Database tables
-- articles: Full article content and metadata
-- feeds: Feed configuration and hierarchy
-- summaries: AI-generated summaries with caching
-- syncState: Last sync times and conflict resolution
-- apiUsage: API call tracking and rate limiting
+```sql
+-- Existing tables (no schema changes needed)
+- users: Single user record
+- folders: Feed folder hierarchy
+- feeds: Feed metadata and unread counts
+- articles: Article content and metadata
+
+-- New tables
+- tags: User tags from Inoreader
+- article_tags: Tag assignments
+- sync_metadata: Sync timestamps and status
+- sync_errors: Error logging
 ```
 
 ### Secondary Storage: **localStorage**
 
-For simple settings and temporary data.
+For theme preference only.
 
 ### Service Worker: **Workbox**
 
 **Features:**
 
-- Automatic caching strategies
-- Background sync for read/unread states
-- Offline fallbacks
-- Cache versioning and updates
+- Basic PWA functionality
+- Static asset caching
+- Offline error page
+- Handle Tailscale network requirements
 
 ## API Layer & HTTP Client
 
-### HTTP Client: **Axios**
+### Client HTTP: **Native Fetch API**
 
-**Features:**
+**Rationale:**
+- Minimal client-side API calls (server endpoints only)
+- No need for complex auth handling
+- Built into modern browsers
+- Smaller bundle size
 
-- Request/response interceptors for auth tokens
-- Automatic request/response transformation
-- Built-in timeout handling
-- Request cancellation support
-- Better error handling than fetch
-
-**API Integration Architecture:**
+**Client API Endpoints:**
 
 ```typescript
-// API service layers
-- inoreaderApi: All Inoreader endpoints
-- claudeApi: AI summarization service
-- contentFetcher: Full article content retrieval
-- syncManager: Orchestrates all API calls
+// Server API endpoints called by client
+- POST /api/sync - Trigger manual sync
+- GET /api/sync/status/:syncId - Check sync progress
+- POST /api/articles/:id/fetch-content - Fetch full content
+- POST /api/articles/:id/summarize - Generate AI summary
+```
+
+### Server HTTP: **Axios**
+
+**Features:**
+- Token management for Inoreader OAuth
+- Automatic token refresh
+- Request retries with exponential backoff
+- Better error handling for external APIs
+
+**Server API Integrations:**
+
+```typescript
+// Server-side only
+- inoreaderService: All Inoreader API calls
+- anthropicService: Claude AI summarization
+- readabilityService: Article content extraction
 ```
 
 ## Development & Build Tools
@@ -243,60 +274,94 @@ Standard package manager, good lockfile support.
 
 ### Environment Configuration:
 
-```
-NEXT_PUBLIC_INOREADER_CLIENT_ID=
-NEXT_PUBLIC_INOREADER_REDIRECT_URI=
+```bash
+# Client-side (public)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_BASE_PATH=/reader
+
+# Server-side only
+INOREADER_CLIENT_ID=
+INOREADER_CLIENT_SECRET=
 ANTHROPIC_API_KEY=
+RSS_READER_TOKENS_PATH=~/.rss-reader/tokens.json
+SUPABASE_SERVICE_KEY=
 NODE_ENV=development|production
+
+# Development
+USE_MOCK_DATA=true
+TEST_INOREADER_EMAIL=
+TEST_INOREADER_PASSWORD=
 ```
 
 ## Production Deployment
 
-### Hosting Platform: **Vercel**
+### Hosting Platform: **Self-Hosted on Mac Mini**
+
+**Architecture:**
+
+```
+[Caddy Reverse Proxy]
+    ↓
+[PM2 Process Manager]
+    ↓
+[Next.js Application]
+    ├─ Client PWA
+    ├─ API Routes
+    └─ Sync Service
+```
+
+**Components:**
+
+1. **Caddy**: Reverse proxy routing /reader to Next.js
+2. **PM2**: Process management with auto-restart
+3. **Node-cron**: Scheduled sync every 24 hours
+4. **Tailscale**: Network access control
 
 **Benefits:**
 
-- Seamless Next.js integration
-- Automatic deployments from Git
-- Edge network for global performance
-- Built-in analytics and monitoring
-- Automatic HTTPS certificates
-
-### Alternative Platforms:
-
-- **Netlify**: Good PWA support, edge functions
-- **Railway**: Simple deployment with database options
-- **Self-hosted**: Docker containers for full control
+- Complete control over server environment
+- No external hosting costs
+- Direct access to local token storage
+- Simplified OAuth setup with localhost callback
 
 ## API Security & Rate Limiting
 
-### Authentication:
+### Server Authentication:
 
-- OAuth 2.0 for Inoreader integration
-- Secure token storage in httpOnly cookies
-- Automatic token refresh handling
+- OAuth 2.0 tokens stored in encrypted local file
+- Automatic token refresh before expiration
+- Playwright-based automated OAuth setup
+- No client authentication required
 
 ### Rate Limiting:
 
-- Client-side API call tracking
-- Exponential backoff for failed requests
-- Queue management for bulk operations
-- Usage analytics and warnings
+- Server-side Inoreader API tracking (100 calls/day)
+- Efficient sync using single stream endpoint
+- 4-5 API calls per sync operation
+- Daily counter reset at midnight UTC
+
+### Access Control:
+
+- Tailscale network requirement
+- No public internet access
+- Single user architecture
+- Server monitors Tailscale health
 
 ## Monitoring & Analytics
 
-### Error Tracking: **Sentry** (Optional)
+### Server Monitoring:
 
-- Real-time error monitoring
-- Performance tracking
-- User session replay
-- Release tracking
+- PM2 logs for process health
+- Server-side API call logging
+- Sync error tracking in database
+- Tailscale service monitoring
 
-### Analytics: **Vercel Analytics**
+### Client Analytics: **None**
 
-- Privacy-focused web analytics
-- Core Web Vitals tracking
-- No cookie tracking required
+- Single-user app, no analytics needed
+- All monitoring server-side
+- Privacy by design
 
 ## Development Tools & Extensions
 
@@ -316,23 +381,28 @@ NODE_ENV=development|production
 ## Recommended Folder Structure
 
 ```
-src/
-├── app/                    # Next.js app router
-│   ├── (auth)/            # Auth layout group
-│   ├── api/               # API routes
-│   └── globals.css        # Global styles
-├── components/            # Reusable UI components
-│   ├── ui/               # Base UI components
-│   ├── articles/         # Article-related components
-│   └── feeds/            # Feed-related components
-├── lib/                  # Utility libraries
-│   ├── api/              # API service layer
-│   ├── db/               # Database utilities
-│   ├── stores/           # Zustand stores
-│   └── utils/            # Helper functions
-├── types/                # TypeScript type definitions
-├── hooks/                # Custom React hooks
-└── constants/            # App constants
+├── src/
+│   ├── app/                    # Next.js app router
+│   │   ├── api/               # Server API routes
+│   │   │   ├── sync/          # Sync endpoints
+│   │   │   └── articles/      # Article operations
+│   │   └── reader/            # Main PWA (basePath)
+│   ├── components/            # Reusable UI components
+│   │   ├── ui/               # Base UI components
+│   │   ├── articles/         # Article components
+│   │   └── feeds/            # Feed components
+│   ├── lib/                  # Utility libraries
+│   │   ├── supabase/         # Supabase client
+│   │   ├── stores/           # Zustand stores
+│   │   └── utils/            # Helper functions
+│   └── services/             # Server-side services
+│       ├── inoreader/        # Inoreader integration
+│       ├── sync/             # Sync orchestration
+│       └── content/          # Content extraction
+├── scripts/                   # Server scripts
+│   ├── setup-oauth.ts        # OAuth setup with Playwright
+│   └── start-sync.ts         # Cron job initialization
+└── ecosystem.config.js       # PM2 configuration
 ```
 
 ## Key Dependencies
@@ -346,13 +416,26 @@ src/
   "typescript": "^5.0.0",
   "tailwindcss": "^3.0.0",
   "zustand": "^4.0.0",
-  "dexie": "^3.0.0",
+  "@supabase/supabase-js": "^2.0.0",
+  "next-pwa": "^5.0.0",
+  "@radix-ui/react-*": "^1.0.0",
+  "@tailwindcss/typography": "^0.5.0"
+}
+```
+
+### Server Dependencies:
+
+```json
+{
   "axios": "^1.0.0",
-  "workbox-webpack-plugin": "^7.0.0",
+  "node-cron": "^3.0.0",
   "@mozilla/readability": "^0.4.4",
   "jsdom": "^23.0.0",
-  "dompurify": "^3.0.0",
-  "@extractus/article-extractor": "^8.0.0"
+  "playwright": "^1.0.0",
+  "express": "^4.0.0",
+  "pm2": "^5.0.0",
+  "@anthropic-ai/sdk": "^0.20.0",
+  "node-keytar": "^7.0.0"
 }
 ```
 
@@ -360,39 +443,98 @@ src/
 
 ```json
 {
-  "vitest": "^1.0.0",
-  "@testing-library/react": "^14.0.0",
-  "playwright": "^1.0.0",
+  "@types/node": "^20.0.0",
+  "@types/react": "^18.0.0",
   "eslint": "^8.0.0",
-  "prettier": "^3.0.0"
+  "prettier": "^3.0.0",
+  "tsx": "^4.0.0"
 }
 ```
 
 ## Critical Decision Points
 
-### 1. **PWA vs Native App**
+### 1. **Server-Client Architecture**
 
-**Decision**: PWA for cross-platform compatibility and easier maintenance.
-**Impact**: Faster development, broader reach, easier updates.
+**Decision**: All Inoreader API calls server-side, client reads from Supabase.
+**Impact**: Clean separation, better security, centralized token management.
 
-### 2. **Client-side vs Server-side Rendering**
+### 2. **No Client Authentication**
 
-**Decision**: Hybrid approach with SSR for initial load, client-side for interactions.
-**Impact**: Better performance and SEO while maintaining offline capabilities.
+**Decision**: Open access behind Tailscale network.
+**Impact**: Simplified architecture, no auth complexity, security via network.
 
-### 3. **State Management Complexity**
+### 3. **Clean-Slate Migration**
 
-**Decision**: Zustand for simplicity over Redux complexity.
-**Impact**: Faster development, easier maintenance, smaller bundle size.
+**Decision**: No data migration, start fresh with server sync.
+**Impact**: Eliminates complexity, ensures data consistency.
 
-### 4. **Database Choice**
+### 4. **Automated OAuth Setup**
 
-**Decision**: IndexedDB over localStorage for large data storage.
-**Impact**: Better performance, larger storage capacity, structured queries.
+**Decision**: Playwright automation with test credentials.
+**Impact**: One-command setup, no manual OAuth dance.
 
-### 5. **API Rate Limiting Strategy**
+### 5. **Self-Hosted Deployment**
 
-**Decision**: Client-side tracking with graceful degradation.
-**Impact**: Better user experience, reduced server costs, clear usage feedback.
+**Decision**: Mac Mini server instead of cloud hosting.
+**Impact**: Complete control, no hosting costs, simplified OAuth.
 
-This technology stack balances modern development practices with practical constraints, ensuring the app can be built efficiently while providing excellent user experience and maintainability.
+### 6. **Single-User Design**
+
+**Decision**: Optimize for one user, not multi-tenant.
+**Impact**: Dramatic simplification, faster development.
+
+## Server Components
+
+### Sync Service Architecture
+
+```typescript
+// Server-side sync orchestration
+class SyncService {
+  // Efficient API usage: 4-5 calls per sync
+  async performSync() {
+    // 1. Get feed structure
+    const feeds = await this.inoreader.getSubscriptions();
+    const tags = await this.inoreader.getTags();
+    
+    // 2. Fetch articles (single stream endpoint)
+    const articles = await this.inoreader.getStream({
+      n: 100,
+      ot: lastSyncTimestamp
+    });
+    
+    // 3. Get unread counts
+    const counts = await this.inoreader.getUnreadCounts();
+    
+    // 4. Write to Supabase
+    await this.supabase.upsertAll(feeds, tags, articles, counts);
+  }
+}
+```
+
+### OAuth Setup Script
+
+```typescript
+// Automated OAuth with Playwright
+const setupOAuth = async () => {
+  // Start local Express server for callback
+  const server = express();
+  server.get('/auth/callback', captureTokens);
+  
+  // Launch Playwright browser
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  
+  // Navigate to Inoreader OAuth
+  await page.goto(oauthUrl);
+  
+  // Auto-fill credentials from .env
+  await page.fill('#email', process.env.TEST_INOREADER_EMAIL);
+  await page.fill('#password', process.env.TEST_INOREADER_PASSWORD);
+  await page.click('#authorize');
+  
+  // Store encrypted tokens
+  await storeTokens(tokens);
+};
+```
+
+This technology stack is specifically designed for the server-client architecture, ensuring clean separation of concerns and optimal performance for a single-user RSS reader.

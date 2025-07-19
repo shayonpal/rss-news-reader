@@ -2,362 +2,518 @@
 
 ## Overview
 
-This document outlines the strategic approach to implementing the RSS Reader PWA, focusing on critical technical decisions, architectural patterns, and implementation strategies that ensure scalability, maintainability, and optimal user experience.
+This document outlines the strategic approach to implementing the RSS Reader PWA with the server-client architecture, where the server handles all Inoreader communication and the client reads from Supabase.
 
-## Offline-First Architecture
+## Server-Client Architecture
 
 ### Core Philosophy
 
-The app prioritizes offline functionality as a first-class citizen, not an afterthought. This ensures users always have access to content regardless of network conditions.
+Clean separation of concerns with the server as the single source of truth for all external API communication. The client is a pure presentation layer that reads from Supabase and triggers server operations.
 
 ### Implementation Strategy
 
-#### 1. Service Worker Architecture
+#### 1. Server Architecture
 
 ```typescript
-// Three-layer caching strategy
-const cachingStrategy = {
-  // Static assets - Cache First
-  static: {
-    strategy: "CacheFirst",
-    files: ["/", "/manifest.json", "fonts/", "icons/"],
-    maxAge: "1 year",
+// Server components architecture
+const serverArchitecture = {
+  // API Routes - Handle client requests
+  apiRoutes: {
+    "/api/sync": "Trigger manual sync",
+    "/api/sync/status/:id": "Check sync progress",
+    "/api/articles/:id/fetch-content": "Fetch full content",
+    "/api/articles/:id/summarize": "Generate AI summary"
   },
 
-  // API responses - Network First with fallback
-  api: {
-    strategy: "NetworkFirst",
-    fallback: "indexeddb",
-    timeout: 5000,
+  // Background Services
+  services: {
+    syncService: "Handles all Inoreader API calls",
+    cronScheduler: "Runs daily sync at midnight",
+    tokenManager: "Manages OAuth tokens and refresh",
+    contentExtractor: "Mozilla Readability integration"
   },
 
-  // Article images - Stale While Revalidate
-  media: {
-    strategy: "StaleWhileRevalidate",
-    maxEntries: 200,
-    maxAge: "30 days",
-  },
+  // Process Management
+  pm2: {
+    script: "npm start",
+    instances: 1,
+    maxMemory: "1G",
+    autoRestart: true
+  }
 };
 ```
 
-#### 2. Data Synchronization Patterns
+#### 2. Server Sync Implementation
 
 ```typescript
-// Queue-based sync for offline actions
-class OfflineActionQueue {
-  private queue: OfflineAction[] = [];
+// Server-side sync orchestration
+class ServerSyncService {
+  private apiCallCount = 0;
+  private dailyLimit = 100;
 
-  async queueAction(action: OfflineAction) {
-    await this.storeAction(action);
-    if (navigator.onLine) {
-      this.processQueue();
-    }
-  }
+  async performSync(syncId: string) {
+    // Update sync status in Supabase
+    await this.updateSyncStatus(syncId, 'running');
 
-  async processQueue() {
-    while (this.queue.length > 0 && navigator.onLine) {
-      const action = this.queue.shift()!;
-      try {
-        await this.executeAction(action);
-        await this.removeFromStorage(action.id);
-      } catch (error) {
-        // Re-queue on failure
-        this.queue.unshift(action);
-        break;
-      }
+    try {
+      // Efficient API usage: 4-5 calls total
+      const subscriptions = await this.inoreader.getSubscriptions(); // 1 call
+      const tags = await this.inoreader.getTags(); // 1 call
+      
+      // Single stream endpoint for ALL articles
+      const articles = await this.inoreader.getStreamContents({
+        n: 100,
+        ot: await this.getLastSyncTimestamp()
+      }); // 1 call
+      
+      const unreadCounts = await this.inoreader.getUnreadCounts(); // 1 call
+
+      // Write everything to Supabase
+      await this.supabase.transaction(async (tx) => {
+        await tx.upsertFeeds(subscriptions);
+        await tx.upsertTags(tags);
+        await tx.upsertArticles(articles);
+        await tx.updateUnreadCounts(unreadCounts);
+      });
+
+      await this.updateSyncStatus(syncId, 'completed');
+    } catch (error) {
+      await this.logSyncError(syncId, error);
+      await this.updateSyncStatus(syncId, 'failed');
     }
   }
 }
 ```
 
-#### 3. Conflict Resolution Strategy
+#### 3. OAuth Setup Automation
 
 ```typescript
-// Last-write-wins with timestamp comparison
-interface SyncConflictResolver {
-  resolveReadState(local: ReadState, remote: ReadState): ReadState {
-    return local.timestamp > remote.timestamp ? local : remote
-  }
-
-  mergeArticleData(local: Article, remote: Article): Article {
-    return {
-      ...remote, // Server is source of truth for content
-      readState: this.resolveReadState(local.readState, remote.readState),
-      summary: local.summary || remote.summary // Preserve local summaries
-    }
+// Automated OAuth setup with Playwright
+class OAuthSetupService {
+  async setupOAuth() {
+    // Start temporary Express server
+    const server = express();
+    let capturedTokens: TokenData | null = null;
+    
+    server.get('/auth/callback', (req, res) => {
+      capturedTokens = {
+        access_token: req.query.access_token,
+        refresh_token: req.query.refresh_token,
+        expires_in: parseInt(req.query.expires_in)
+      };
+      res.send('OAuth setup complete! You can close this window.');
+    });
+    
+    const httpServer = server.listen(8080);
+    
+    // Launch Playwright
+    const browser = await chromium.launch({ headless: false });
+    const page = await browser.newPage();
+    
+    // Navigate to Inoreader OAuth
+    await page.goto(this.buildOAuthUrl());
+    
+    // Auto-fill credentials
+    await page.fill('#email', process.env.TEST_INOREADER_EMAIL!);
+    await page.fill('#password', process.env.TEST_INOREADER_PASSWORD!);
+    await page.click('button[type="submit"]');
+    
+    // Wait for redirect
+    await page.waitForURL('http://localhost:8080/auth/callback*');
+    
+    // Store tokens securely
+    await this.storeTokens(capturedTokens!);
+    
+    // Cleanup
+    await browser.close();
+    httpServer.close();
   }
 }
 ```
 
 ## State Management Architecture
 
-### Zustand Store Structure
+### Client State (Zustand)
 
 ```typescript
-// Modular store approach with slices
-interface AppState {
-  articles: ArticleState;
-  feeds: FeedState;
-  sync: SyncState;
+// Simplified client state - read from Supabase
+interface ClientState {
+  articles: Article[];
+  feeds: Feed[];
+  tags: Tag[];
+  filters: FilterState;
   settings: SettingsState;
-  api: ApiState;
+  syncStatus: SyncStatusState;
 }
 
-// Article slice
-const createArticleSlice: StateCreator<AppState, [], [], ArticleState> = (
-  set,
-  get
+// Article slice - read only from Supabase
+const createArticleSlice: StateCreator<ClientState, [], [], ArticleSlice> = (
+  set
 ) => ({
-  articles: new Map(),
+  articles: [],
 
-  addArticles: (newArticles: Article[]) =>
-    set((state) => {
-      const updated = new Map(state.articles.articles);
-      newArticles.forEach((article) => updated.set(article.id, article));
-      return { articles: { ...state.articles, articles: updated } };
-    }),
+  loadArticles: async () => {
+    const { data } = await supabase
+      .from('articles')
+      .select('*')
+      .order('published_at', { ascending: false })
+      .limit(500);
+    
+    set({ articles: data || [] });
+  },
 
   markAsRead: async (articleId: string) => {
-    // Optimistic update
-    set((state) => {
-      const article = state.articles.articles.get(articleId);
-      if (article) {
-        article.readState = { isRead: true, timestamp: Date.now() };
-      }
-      return state;
-    });
-
-    // Queue for sync
-    await get().sync.queueAction({
-      type: "MARK_READ",
-      articleId,
-      timestamp: Date.now(),
-    });
+    // Update Supabase immediately
+    await supabase
+      .from('articles')
+      .update({ is_read: true })
+      .eq('id', articleId);
+    
+    // Update local state
+    set((state) => ({
+      articles: state.articles.map(a => 
+        a.id === articleId ? { ...a, is_read: true } : a
+      )
+    }));
   },
 });
 ```
 
-### State Persistence Strategy
+### Server State Management
 
 ```typescript
-// Selective persistence with compression
-const persistenceConfig = {
-  name: "shayon-news-store",
-
-  // Only persist essential data
-  partialize: (state: AppState) => ({
-    settings: state.settings,
-    sync: {
-      lastSyncTime: state.sync.lastSyncTime,
-      queuedActions: state.sync.queuedActions,
-    },
-  }),
-
-  storage: createJSONStorage(() => localStorage, {
-    serialize: (state) => LZString.compress(JSON.stringify(state)),
-    deserialize: (str) => JSON.parse(LZString.decompress(str) || "{}"),
-  }),
-};
+// Server maintains all external API state
+class ServerStateManager {
+  private tokenManager: TokenManager;
+  private apiUsageTracker: ApiUsageTracker;
+  
+  constructor() {
+    this.tokenManager = new TokenManager({
+      storagePath: process.env.RSS_READER_TOKENS_PATH,
+      encryption: 'keychain' // or 'aes256'
+    });
+    
+    this.apiUsageTracker = new ApiUsageTracker({
+      limits: {
+        inoreader: { daily: 100 },
+        anthropic: { monthly: 10000 }
+      }
+    });
+  }
+  
+  async canPerformSync(): Promise<boolean> {
+    const usage = await this.apiUsageTracker.getDailyUsage('inoreader');
+    return usage < 100;
+  }
+  
+  async refreshTokenIfNeeded() {
+    const token = await this.tokenManager.getToken();
+    if (this.isTokenExpiring(token)) {
+      const newToken = await this.inoreaderApi.refreshToken(token.refresh_token);
+      await this.tokenManager.storeToken(newToken);
+    }
+  }
+}
 ```
 
 ## API Conservation Strategies
 
-### Intelligent Batching
+### Efficient Inoreader API Usage
 
 ```typescript
-class ApiRequestBatcher {
-  private pendingRequests = new Map<string, Promise<any>>();
-
-  // Deduplicate identical requests
-  async makeRequest<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
-    if (this.pendingRequests.has(key)) {
-      return this.pendingRequests.get(key)!;
-    }
-
-    const request = requestFn();
-    this.pendingRequests.set(key, request);
-
-    try {
-      const result = await request;
-      this.pendingRequests.delete(key);
-      return result;
-    } catch (error) {
-      this.pendingRequests.delete(key);
-      throw error;
-    }
+class InoreaderApiOptimizer {
+  // Use single stream endpoint instead of per-feed calls
+  async fetchAllArticles(since: number): Promise<Article[]> {
+    // This single call replaces potentially 20+ feed-specific calls
+    const response = await this.api.get('/stream/contents/user/-/state/com.google/reading-list', {
+      params: {
+        n: 100, // max articles
+        ot: since, // only articles since timestamp
+        r: 'n', // newest first
+        c: 'user/-/state/com.google/read' // exclude read items
+      }
+    });
+    
+    return response.items;
+  }
+  
+  // Batch read/unread state updates
+  async syncReadStates(changes: ReadStateChange[]) {
+    if (changes.length === 0) return;
+    
+    // Single API call for all changes
+    await this.api.post('/edit-tag', {
+      i: changes.map(c => c.articleId),
+      a: changes.filter(c => c.isRead).map(() => 'user/-/state/com.google/read'),
+      r: changes.filter(c => !c.isRead).map(() => 'user/-/state/com.google/read')
+    });
   }
 }
 ```
 
-### Smart Sync Algorithms
+### Article Distribution Algorithm
 
 ```typescript
-// Adaptive sync frequency based on usage patterns
-class AdaptiveSyncManager {
-  private syncHistory: SyncEvent[] = [];
-
-  calculateNextSyncTime(): number {
-    const recentActivity = this.getRecentActivity();
-    const baseInterval = 6 * 60 * 60 * 1000; // 6 hours
-
-    if (recentActivity.high) {
-      return baseInterval * 0.5; // Sync more frequently during active use
-    } else if (recentActivity.low) {
-      return baseInterval * 2; // Sync less frequently during inactive periods
+// Round-robin distribution for fair feed representation
+class ArticleDistributor {
+  private readonly MAX_TOTAL = 100;
+  private readonly MAX_PER_FEED = 20;
+  
+  async distributeArticles(feeds: Feed[]): Promise<DistributionPlan> {
+    const activeFeedsWithUnread = feeds
+      .filter(f => f.unread_count > 0)
+      .sort((a, b) => a.last_fetched - b.last_fetched); // oldest first
+    
+    const distribution = new Map<string, number>();
+    let totalAllocated = 0;
+    let feedIndex = 0;
+    
+    // Round-robin allocation
+    while (totalAllocated < this.MAX_TOTAL && activeFeedsWithUnread.length > 0) {
+      const feed = activeFeedsWithUnread[feedIndex % activeFeedsWithUnread.length];
+      const currentAllocation = distribution.get(feed.id) || 0;
+      
+      if (currentAllocation < this.MAX_PER_FEED && currentAllocation < feed.unread_count) {
+        distribution.set(feed.id, currentAllocation + 1);
+        totalAllocated++;
+      } else {
+        // Remove feed if it's maxed out
+        activeFeedsWithUnread.splice(feedIndex % activeFeedsWithUnread.length, 1);
+        if (activeFeedsWithUnread.length === 0) break;
+      }
+      
+      feedIndex++;
     }
-
-    return baseInterval;
-  }
-
-  async smartSync(): Promise<SyncResult> {
-    // Only sync if meaningful changes are expected
-    const shouldSync = await this.shouldPerformSync();
-    if (!shouldSync) {
-      return { skipped: true, reason: "No changes expected" };
-    }
-
-    return this.performSync();
+    
+    return { distribution, totalAllocated };
   }
 }
 ```
 
-### API Usage Monitoring
+### Server API Monitoring
 
 ```typescript
-interface ApiUsageTracker {
-  inoreader: {
-    daily: Map<string, number>; // date -> call count
-    hourly: Map<string, number>; // hour -> call count
-    byEndpoint: Map<string, number>; // endpoint -> call count
-  };
-
-  claude: {
-    daily: Map<string, { tokens: number; cost: number }>;
-    monthly: Map<string, { tokens: number; cost: number }>;
-  };
-
-  trackCall(service: "inoreader" | "claude", details: CallDetails): void;
-  getUsageStats(period: "daily" | "weekly" | "monthly"): UsageStats;
-  shouldThrottle(service: string): boolean;
+// Server-side API usage tracking
+class ServerApiMonitor {
+  private readonly LOG_PATH = 'logs/inoreader-api-calls.jsonl';
+  
+  async logApiCall(details: ApiCallDetails) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      endpoint: details.endpoint,
+      method: details.method,
+      trigger: details.trigger, // 'manual-sync', 'auto-sync', etc.
+      responseTime: details.responseTime,
+      success: details.success,
+      apiCallsToday: await this.getDailyCallCount()
+    };
+    
+    // Append to JSONL file
+    await fs.appendFile(this.LOG_PATH, JSON.stringify(logEntry) + '\n');
+    
+    // Check if approaching limit
+    if (logEntry.apiCallsToday > 90) {
+      await this.sendLimitWarning(logEntry.apiCallsToday);
+    }
+  }
+  
+  async getDailyStats() {
+    const today = new Date().toISOString().split('T')[0];
+    const logs = await this.readLogs();
+    
+    return logs
+      .filter(log => log.timestamp.startsWith(today))
+      .reduce((stats, log) => {
+        stats.totalCalls++;
+        stats.byEndpoint[log.endpoint] = (stats.byEndpoint[log.endpoint] || 0) + 1;
+        stats.byTrigger[log.trigger] = (stats.byTrigger[log.trigger] || 0) + 1;
+        return stats;
+      }, { totalCalls: 0, byEndpoint: {}, byTrigger: {} });
+  }
 }
 ```
 
 ## Error Handling & Recovery
 
-### Graceful Degradation Strategy
+### Server Error Handling
 
 ```typescript
-class ErrorRecoveryManager {
-  private strategies = new Map<ErrorType, RecoveryStrategy>();
-
-  async handleError(error: AppError): Promise<ErrorResult> {
-    const strategy = this.strategies.get(error.type);
-
-    if (!strategy) {
-      return this.defaultErrorHandling(error);
-    }
-
-    try {
-      const result = await strategy.recover(error);
-      this.logRecoverySuccess(error, result);
-      return result;
-    } catch (recoveryError) {
-      return this.escalateError(error, recoveryError);
-    }
-  }
-
-  private async retryWithBackoff(
-    operation: () => Promise<any>,
-    maxRetries: number = 3
-  ): Promise<any> {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await operation();
-      } catch (error) {
-        if (attempt === maxRetries) throw error;
-
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
+class ServerErrorHandler {
+  async handleSyncError(syncId: string, error: any) {
+    const errorType = this.classifyError(error);
+    
+    switch (errorType) {
+      case 'RATE_LIMIT':
+        await this.supabase.from('sync_errors').insert({
+          sync_id: syncId,
+          error_type: 'rate_limit',
+          error_message: 'Daily API limit reached (100 calls)',
+          item_reference: null
+        });
+        return { retry: false, message: 'Sync will resume tomorrow' };
+        
+      case 'TOKEN_EXPIRED':
+        // Attempt token refresh
+        try {
+          await this.tokenManager.refreshToken();
+          return { retry: true, message: 'Token refreshed, retrying...' };
+        } catch {
+          return { retry: false, message: 'OAuth re-authentication required' };
+        }
+        
+      case 'NETWORK_ERROR':
+        // Retry with exponential backoff
+        return { retry: true, delay: this.calculateBackoff(error.attempt) };
+        
+      case 'PARTIAL_SYNC':
+        // Log failed items but continue
+        await this.logPartialSyncErrors(syncId, error.failedItems);
+        return { retry: false, message: `Synced ${error.successCount} items, ${error.failedCount} failed` };
+        
+      default:
+        await this.logUnknownError(syncId, error);
+        return { retry: false, message: 'Sync failed, please try again later' };
     }
   }
 }
 ```
 
-### User-Friendly Error States
+### Client Error Display
 
 ```typescript
-interface ErrorStateManager {
-  // Convert technical errors to user-friendly messages
-  getErrorMessage(error: AppError): UserMessage {
-    const messageMap = {
-      NETWORK_UNAVAILABLE: "You're offline. Showing cached content.",
-      API_RATE_LIMIT: "Daily limit reached. Sync will resume tomorrow.",
-      AUTH_EXPIRED: "Please reconnect your Inoreader account.",
-      STORAGE_FULL: "Storage is full. Cleaning up old articles..."
-    }
-
-    return {
-      type: error.severity,
-      message: messageMap[error.code] || "Something went wrong",
-      action: this.getRecoveryAction(error),
-      dismissible: error.severity !== 'critical'
-    }
+interface ClientErrorDisplay {
+  // User-friendly error messages
+  getErrorMessage(error: ApiError): ErrorDisplay {
+    const errorMap = {
+      // Tailscale errors
+      TAILSCALE_NOT_CONNECTED: {
+        title: "Tailscale Required",
+        message: "Connect to Tailscale VPN to access the reader",
+        action: "Open Tailscale",
+        icon: "network-off"
+      },
+      
+      // Server API errors
+      RATE_LIMIT_EXCEEDED: {
+        title: "Daily Limit Reached",
+        message: "You've used 100/100 API calls today. Limit resets at midnight.",
+        action: null,
+        icon: "alert-circle"
+      },
+      
+      // Supabase errors
+      SUPABASE_CONNECTION_ERROR: {
+        title: "Database Unavailable",
+        message: "Cannot connect to database. Please check your connection.",
+        action: "Retry",
+        icon: "database-off"
+      },
+      
+      // Sync errors
+      SYNC_IN_PROGRESS: {
+        title: "Sync Already Running",
+        message: "Please wait for the current sync to complete",
+        action: null,
+        icon: "refresh"
+      }
+    };
+    
+    return errorMap[error.code] || {
+      title: "Something went wrong",
+      message: "Please try again later",
+      action: "Retry",
+      icon: "alert-triangle"
+    };
   }
 }
 ```
 
 ## Performance Optimization Strategies
 
-### Code Splitting & Lazy Loading
+### Client Performance
 
 ```typescript
-// Route-based code splitting
-const ArticleDetail = lazy(() => import("./ArticleDetail"));
-const Settings = lazy(() => import("./Settings"));
-const ApiDashboard = lazy(() => import("./ApiDashboard"));
-
-// Component-based lazy loading for heavy features
-const SummaryGenerator = lazy(() => import("./SummaryGenerator"));
-
-// Preload critical routes on idle
-const preloadCriticalRoutes = () => {
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(() => {
-      import("./ArticleDetail");
-      import("./SummaryGenerator");
-    });
+// Minimal client bundle - server handles complexity
+const ClientOptimizations = {
+  // Lazy load non-critical views
+  ArticleDetail: lazy(() => import("./ArticleDetail")),
+  Settings: lazy(() => import("./Settings")),
+  
+  // Use Supabase realtime for live updates (future)
+  useRealtimeSync: () => {
+    const { articles } = useStore();
+    
+    useEffect(() => {
+      const subscription = supabase
+        .channel('articles')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'articles' },
+          (payload) => {
+            // Update local state from Supabase changes
+            articles.handleRealtimeUpdate(payload);
+          }
+        )
+        .subscribe();
+        
+      return () => subscription.unsubscribe();
+    }, []);
   }
 };
 ```
 
-### Virtual Scrolling for Large Lists
+### Server Performance
 
 ```typescript
-// Implement virtual scrolling for article lists
-const VirtualizedArticleList = ({ articles }: { articles: Article[] }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 })
-
-  const itemHeight = 120 // Fixed height for each article card
-  const visibleItems = articles.slice(visibleRange.start, visibleRange.end)
-
-  const handleScroll = useCallback(
-    throttle((scrollTop: number) => {
-      const start = Math.floor(scrollTop / itemHeight)
-      const end = Math.min(start + 20, articles.length)
-      setVisibleRange({ start, end })
-    }, 16), // 60fps
-    [articles.length]
-  )
-
-  return (
-    <div className="virtual-list" ref={containerRef} onScroll={handleScroll}>
-      {visibleItems.map((article, index) => (
-        <ArticleCard key={article.id} article={article} />
-      ))}
-    </div>
-  )
+// Server-side optimizations
+class ServerPerformanceOptimizer {
+  // Parallel API calls where possible
+  async performOptimizedSync() {
+    // Run independent calls in parallel
+    const [subscriptions, tags, unreadCounts] = await Promise.all([
+      this.inoreader.getSubscriptions(),
+      this.inoreader.getTags(),
+      this.inoreader.getUnreadCounts()
+    ]);
+    
+    // Then fetch articles (depends on nothing)
+    const articles = await this.inoreader.getStreamContents({ n: 100 });
+    
+    // Batch database writes
+    await this.supabase.transaction(async (tx) => {
+      await Promise.all([
+        tx.batchUpsert('feeds', subscriptions),
+        tx.batchUpsert('tags', tags),
+        tx.batchUpsert('articles', articles),
+        tx.updateCounts(unreadCounts)
+      ]);
+    });
+  }
+  
+  // Content extraction caching
+  async fetchFullContent(articleId: string, url: string) {
+    // Check if already fetched
+    const existing = await this.supabase
+      .from('articles')
+      .select('full_content')
+      .eq('id', articleId)
+      .single();
+      
+    if (existing.data?.full_content) {
+      return existing.data.full_content;
+    }
+    
+    // Extract and store
+    const content = await this.readability.parse(url);
+    await this.supabase
+      .from('articles')
+      .update({ 
+        full_content: content,
+        has_full_content: true 
+      })
+      .eq('id', articleId);
+      
+    return content;
+  }
 }
 ```
 
@@ -399,63 +555,82 @@ const OptimizedImage = ({ src, alt, className }: ImageProps) => {
 
 ## User Experience Patterns
 
-### Optimistic UI Updates
+### Sync Status Communication
 
 ```typescript
-// Immediate feedback with rollback on failure
-const useOptimisticUpdate = <T>(
-  currentValue: T,
-  updateFn: (value: T) => Promise<T>
-) => {
-  const [optimisticValue, setOptimisticValue] = useState(currentValue);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const update = async (newValue: T) => {
-    setOptimisticValue(newValue); // Immediate UI update
-    setIsUpdating(true);
-
+// Real-time sync status updates
+const useSyncStatus = () => {
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ status: 'idle' });
+  
+  const triggerSync = async () => {
     try {
-      const result = await updateFn(newValue);
-      setOptimisticValue(result); // Confirm with server response
+      // Call server API
+      const { syncId } = await fetch('/api/sync', { method: 'POST' }).then(r => r.json());
+      setSyncStatus({ status: 'pending', syncId });
+      
+      // Poll for status
+      const pollInterval = setInterval(async () => {
+        const status = await fetch(`/api/sync/status/${syncId}`).then(r => r.json());
+        setSyncStatus(status);
+        
+        if (status.status === 'completed' || status.status === 'failed') {
+          clearInterval(pollInterval);
+          
+          // Refresh data from Supabase
+          if (status.status === 'completed') {
+            await refreshArticles();
+          }
+        }
+      }, 2000);
     } catch (error) {
-      setOptimisticValue(currentValue); // Rollback on failure
-      throw error;
-    } finally {
-      setIsUpdating(false);
+      setSyncStatus({ status: 'failed', error: error.message });
     }
   };
-
-  return { value: optimisticValue, update, isUpdating };
+  
+  return { syncStatus, triggerSync };
 };
 ```
 
-### Progressive Loading States
+### Filter State Management
 
 ```typescript
-// Sophisticated loading states for better UX
-const ArticleListWithStates = () => {
-  const { articles, isLoading, error, isEmpty } = useArticles()
-
-  if (isLoading && articles.length === 0) {
-    return <SkeletonArticleList count={10} />
-  }
-
-  if (error && articles.length === 0) {
-    return <ErrorState error={error} onRetry={refetch} />
-  }
-
-  if (isEmpty) {
-    return <EmptyState message="No articles yet" />
-  }
-
-  return (
-    <>
-      <ArticleList articles={articles} />
-      {isLoading && <LoadingSpinner />}
-      {error && <InlineError error={error} />}
-    </>
-  )
-}
+// Mutually exclusive feed/tag filtering
+const useArticleFilters = () => {
+  const [activeFilter, setActiveFilter] = useState<Filter>({ type: 'all' });
+  
+  const setFeedFilter = (feedId: string) => {
+    setActiveFilter({ type: 'feed', feedId });
+  };
+  
+  const setTagFilter = (tagId: string) => {
+    setActiveFilter({ type: 'tag', tagId });
+  };
+  
+  const clearFilter = () => {
+    setActiveFilter({ type: 'all' });
+  };
+  
+  const getFilteredArticles = (articles: Article[]) => {
+    switch (activeFilter.type) {
+      case 'feed':
+        return articles.filter(a => a.feed_id === activeFilter.feedId);
+      case 'tag':
+        return articles.filter(a => 
+          a.tags?.some(t => t.tag_id === activeFilter.tagId)
+        );
+      default:
+        return articles;
+    }
+  };
+  
+  return {
+    activeFilter,
+    setFeedFilter,
+    setTagFilter,
+    clearFilter,
+    getFilteredArticles
+  };
+};
 ```
 
 ### Gesture-Based Navigation
@@ -497,151 +672,270 @@ const useSwipeNavigation = (
 
 ## Security Implementation
 
-### API Key Protection
+### Token Storage Security
 
 ```typescript
-// Server-side API proxy to protect keys
-// pages/api/inoreader/[...path].ts
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session?.accessToken) {
-    return res.status(401).json({ error: "Unauthorized" });
+// Secure server-side token management
+class SecureTokenManager {
+  private readonly TOKENS_PATH = process.env.RSS_READER_TOKENS_PATH || '~/.rss-reader/tokens.json';
+  
+  async storeTokens(tokens: TokenData) {
+    // Encrypt tokens
+    const encrypted = await this.encrypt(tokens);
+    
+    // Write with secure permissions
+    await fs.writeFile(this.TOKENS_PATH, encrypted, { mode: 0o600 });
+    
+    // Log access (no sensitive data)
+    await this.auditLog('tokens_stored', { timestamp: new Date() });
   }
-
-  // Proxy request to Inoreader with server-stored credentials
-  const response = await fetch(
-    `https://www.inoreader.com/reader/api/0/${path}`,
-    {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        "Content-Type": "application/json",
-      },
+  
+  async getTokens(): Promise<TokenData> {
+    try {
+      const encrypted = await fs.readFile(this.TOKENS_PATH, 'utf-8');
+      const tokens = await this.decrypt(encrypted);
+      
+      // Validate token structure
+      if (!this.validateTokenStructure(tokens)) {
+        throw new Error('Invalid token structure');
+      }
+      
+      return tokens;
+    } catch (error) {
+      throw new Error('Token retrieval failed - run setup:oauth');
     }
-  );
-
-  const data = await response.json();
-  res.json(data);
+  }
+  
+  private async encrypt(data: any): Promise<string> {
+    // Use system keychain if available, otherwise AES-256
+    if (await this.hasKeychain()) {
+      return this.keychainEncrypt(data);
+    }
+    return this.aes256Encrypt(data);
+  }
 }
 ```
 
-### Content Security Policy
+### Tailscale Access Control
 
 ```typescript
-// next.config.js
-const ContentSecurityPolicy = `
-  default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline';
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data: https:;
-  font-src 'self' data:;
-  connect-src 'self' https://api.anthropic.com https://www.inoreader.com;
-  media-src 'self' https:;
-  worker-src 'self';
-`;
-
-const securityHeaders = [
-  {
-    key: "Content-Security-Policy",
-    value: ContentSecurityPolicy.replace(/\s{2,}/g, " ").trim(),
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
-  },
-];
+// Server monitors Tailscale health
+class TailscaleMonitor {
+  private readonly CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  
+  startMonitoring() {
+    setInterval(async () => {
+      try {
+        const status = await this.checkTailscaleStatus();
+        
+        if (!status.connected) {
+          console.error('Tailscale disconnected, attempting restart...');
+          await this.restartTailscale();
+        }
+      } catch (error) {
+        console.error('Tailscale health check failed:', error);
+      }
+    }, this.CHECK_INTERVAL);
+  }
+  
+  private async checkTailscaleStatus() {
+    const result = await exec('tailscale status --json');
+    const status = JSON.parse(result.stdout);
+    
+    return {
+      connected: status.BackendState === 'Running',
+      ip: status.Self?.TailscaleIPs?.[0]
+    };
+  }
+  
+  private async restartTailscale() {
+    // Requires sudo configuration in /etc/sudoers.d/tailscale
+    await exec('sudo tailscale up');
+    
+    // Log restart attempt
+    await this.logRestart();
+  }
+}
 ```
 
-## Testing Strategy Integration
+## Testing Strategy
 
-### Component Testing Patterns
+### Playwright MCP for Development Testing
 
 ```typescript
-// Test components in isolation with mock data
-const renderWithProviders = (component: ReactElement) => {
-  const mockStore = createMockStore({
-    articles: mockArticles,
-    settings: mockSettings
-  })
+// Use existing Playwright MCP setup for testing
+const testScenarios = {
+  // OAuth flow testing
+  oauthSetup: async () => {
+    // MCP server already configured with test credentials
+    // Run OAuth setup and verify token storage
+  },
+  
+  // Sync flow testing
+  manualSync: async () => {
+    // Trigger sync via UI
+    // Monitor API calls in server logs
+    // Verify article appearance in UI
+  },
+  
+  // Content operations
+  contentOperations: async () => {
+    // Test full content fetching
+    // Test AI summarization
+    // Verify Supabase updates
+  },
+  
+  // Read state management
+  readStates: async () => {
+    // Mark articles as read
+    // Verify Supabase updates
+    // Check sync to Inoreader
+  }
+};
 
-  return render(
-    <StoreProvider store={mockStore}>
-      <ThemeProvider>
-        {component}
-      </ThemeProvider>
-    </StoreProvider>
-  )
+// Mock data for development
+const useMockData = process.env.USE_MOCK_DATA === 'true';
+
+if (useMockData) {
+  // Override Inoreader API calls with mock responses
+  // Preserves daily API limit for production
 }
-
-// Test user interactions
-test('article marking as read updates UI immediately', async () => {
-  const user = userEvent.setup()
-  renderWithProviders(<ArticleList />)
-
-  const article = screen.getByTestId('article-123')
-  await user.click(article)
-
-  expect(article).toHaveClass('read')
-  expect(mockStore.getState().sync.queuedActions).toHaveLength(1)
-})
 ```
 
 ## Deployment Strategy
 
-### Environment-Specific Configurations
+### Production Deployment on Mac Mini
 
 ```typescript
-// config/environments.ts
-export const environments = {
-  development: {
-    apiBaseUrl: "http://localhost:3000/api",
-    enableMockData: true,
-    logLevel: "debug",
-    enableDevTools: true,
-  },
-
-  staging: {
-    apiBaseUrl: "https://staging.shayon-news.com/api",
-    enableMockData: false,
-    logLevel: "info",
-    enableDevTools: false,
-  },
-
-  production: {
-    apiBaseUrl: "https://shayon-news.com/api",
-    enableMockData: false,
-    logLevel: "error",
-    enableDevTools: false,
-    enableAnalytics: true,
-  },
+// PM2 ecosystem configuration
+module.exports = {
+  apps: [{
+    name: 'rss-reader',
+    script: 'npm',
+    args: 'start',
+    cwd: '/path/to/rss-reader',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000,
+      NEXT_PUBLIC_BASE_PATH: '/reader'
+    },
+    max_memory_restart: '1G',
+    error_file: 'logs/pm2-error.log',
+    out_file: 'logs/pm2-out.log',
+    merge_logs: true,
+    time: true,
+    autorestart: true,
+    watch: false
+  }]
 };
+
+// Caddy configuration
+const caddyConfig = `
+100.96.166.53 {
+  handle_path /reader* {
+    reverse_proxy localhost:3000
+  }
+}
+`;
+
+// Deployment steps
+class ProductionDeployment {
+  async deploy() {
+    // 1. Pull latest code
+    await exec('git pull origin main');
+    
+    // 2. Install dependencies
+    await exec('npm ci --production');
+    
+    // 3. Build Next.js app
+    await exec('npm run build');
+    
+    // 4. Run database migrations
+    await this.runMigrations();
+    
+    // 5. Restart PM2 process
+    await exec('pm2 restart rss-reader');
+    
+    // 6. Verify deployment
+    await this.verifyDeployment();
+  }
+}
 ```
 
-### Progressive Deployment
+### Development Milestones
 
 ```typescript
-// Feature flags for gradual rollout
-const useFeatureFlag = (flagName: string) => {
-  const { settings } = useStore()
-  const isEnabled = settings.featureFlags?.[flagName] ?? false
-
-  return isEnabled
-}
-
-// Usage in components
-const ArticleDetail = ({ article }: Props) => {
-  const isAISummaryEnabled = useFeatureFlag('ai-summary')
-
-  return (
-    <div>
-      <ArticleContent article={article} />
-      {isAISummaryEnabled && <SummarySection article={article} />}
-    </div>
-  )
-}
+// Implementation milestones from PRD
+const milestones = [
+  {
+    id: 1,
+    name: "Server Foundation",
+    tasks: [
+      "Implement OAuth setup script with Playwright",
+      "Create token storage with encryption",
+      "Build sync service (Inoreader → Supabase)",
+      "Configure node-cron for daily sync",
+      "Implement API endpoints for client",
+      "Integrate Mozilla Readability"
+    ]
+  },
+  {
+    id: 2,
+    name: "Client Simplification",
+    tasks: [
+      "Remove all Inoreader API calls from client",
+      "Convert to Supabase-only data source",
+      "Remove client authentication entirely",
+      "Update sync button to call server API",
+      "Configure Caddy reverse proxy for /reader"
+    ]
+  },
+  {
+    id: 3,
+    name: "Core Reading Experience",
+    tasks: [
+      "Build article list and detail views",
+      "Implement folder/feed hierarchy display",
+      "Add tag display and filtering",
+      "Implement read/unread management",
+      "Add 'Fetch Full Content' button",
+      "Ensure responsive design"
+    ]
+  },
+  {
+    id: 4,
+    name: "AI Integration",
+    tasks: [
+      "Integrate Anthropic API server-side",
+      "Create summarization endpoint",
+      "Store summaries in Supabase",
+      "Add re-summarize functionality",
+      "Track API usage server-side"
+    ]
+  },
+  {
+    id: 5,
+    name: "Polish & Production",
+    tasks: [
+      "Implement dark/light theme toggle",
+      "Optimize performance",
+      "Improve error handling",
+      "Update PWA manifest for /reader path",
+      "Configure service worker for Tailscale",
+      "Prepare for open source release"
+    ]
+  }
+];
 ```
 
-This implementation strategy provides a robust foundation for building a high-quality PWA while maintaining flexibility for future enhancements and ensuring optimal user experience across all scenarios.
+## Summary
+
+This implementation strategy focuses on the server-client architecture where:
+
+1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization
+2. **Client is purely presentational**: Reads from Supabase, calls server endpoints
+3. **Clean-slate migration**: No data migration complexity
+4. **Single-user optimization**: Dramatic simplification throughout
+5. **Tailscale security**: Network-level access control
+
+The strategy ensures efficient API usage (4-5 calls per sync), automated setup (Playwright OAuth), and a maintainable architecture suitable for open-sourcing.
