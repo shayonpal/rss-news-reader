@@ -7,6 +7,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### In Progress - January 21, 2025 Session (Server API Integration)
+- **Server API Integration** (US-203) - Sync functionality working, UI integration pending
+  - ✅ Sync button successfully calls `POST /api/sync` endpoint
+  - ✅ Progress polling with `GET /api/sync/status/:id` works perfectly
+  - ✅ Progress bar displays real-time sync percentage in button
+  - ✅ Sync messages show current operation status
+  - ✅ Rate limit information display in sidebar
+    - Shows current usage (X/100 calls)
+    - Yellow warning at 80% usage
+    - Red warning at 95% usage
+  - ✅ Enhanced error handling for server failures
+    - Special handling for 429 rate limit errors
+    - Clear error messages with retry button
+  - ✅ API endpoint paths fixed to include `/reader` prefix from Next.js basePath
+  - ✅ Rate limit data persisted across sessions
+  - ✅ Successfully syncs 168 articles across multiple feeds
+  - ✅ OAuth setup completed with encrypted tokens
+  - ❌ "Fetch Full Content" UI integration pending (server endpoint ready)
+  - ❌ "Generate Summary" UI integration pending (server endpoint ready)
+
+### Added - January 21, 2025 Session (Server API Endpoints)
+- **Server API Endpoints** (US-103) - Complete server-side API implementation
+  - Created `POST /api/articles/:id/fetch-content` for content extraction
+    - Integrates Mozilla Readability for clean article extraction
+    - Removes scripts, styles, and clutter from HTML
+    - Falls back to RSS content if extraction fails
+    - Caches extracted content in `full_content` field
+    - 10-second timeout for slow sites
+  - Created `POST /api/articles/:id/summarize` for AI summarization
+    - Uses Claude 3.5 Sonnet for 150-175 word summaries
+    - Supports regeneration with `regenerate: true` parameter
+    - Tracks token usage for cost monitoring
+    - Caches summaries in `ai_summary` field
+    - Handles rate limiting and API errors gracefully
+  - Enhanced `/api/sync` with proper rate limiting
+    - Checks daily API usage before syncing
+    - Returns rate limit info in response
+    - Warns at 80% and 95% usage thresholds
+  - All endpoints follow consistent response format
+  - Proper HTTP status codes (200, 400, 404, 429, 500, etc.)
+  - Created test page at `/test-server-api` for verification
+  - Added comprehensive API documentation
+
+### Database - January 21, 2025 Session (Server API Endpoints)
+- **New Tables** for API functionality
+  - Created `api_usage` table for tracking API rate limits
+  - Created `sync_metadata` table for storing sync state
+  - Added columns to `articles` table:
+    - `full_content` - Stores extracted article content
+    - `has_full_content` - Boolean flag for content availability
+    - `ai_summary` - Stores Claude-generated summaries
+    - `author` - Article author information
+  - Updated TypeScript types for all database changes
+  - Created migration script at `scripts/create-api-usage-tables.sql`
+  - Successfully ran migration in Supabase
+
+### Technical Notes - January 21, 2025 Session
+- **Dependencies Added**:
+  - `@mozilla/readability` - For content extraction
+  - `@anthropic-ai/sdk` - For Claude API integration
+  - `@types/jsdom` - TypeScript types
+- **Important**: US-103 creates the server endpoints only. Client integration (US-203) is still needed for users to access these features through the UI.
+
+### Added - January 21, 2025 Session (Server-Client Architecture)
+- **Server OAuth Setup** (US-101) - Server handles all Inoreader authentication
+  - Created one-time OAuth setup script using Playwright automation
+  - Uses test credentials from `.env` file
+  - Runs on Mac Mini with localhost:8080 callback
+  - Tokens encrypted and stored in `~/.rss-reader/tokens.json`
+  - File permissions set to 600 (owner read/write only)
+  - Automatic token refresh before expiration
+  - Clear success/error messages during setup
+
+- **Server Sync Service** (US-102 - Partially Complete) - Server-side data sync
+  - Created `/api/sync` endpoint for manual sync
+  - Created `/api/sync/status/:id` for polling sync progress
+  - Efficient API usage: 4-5 calls per sync (subscriptions, counts, articles)
+  - Single stream endpoint fetches all articles (max 100)
+  - Sync status tracked in memory (should use Redis in production)
+  - Token refresh handled automatically
+  - Successfully syncs 69 feeds and 100 articles to Supabase
+  - Manual sync working - automatic cron job deferred to later
+
+- **Remove Client Authentication** (US-201) - Client has no auth
+  - Removed all OAuth code from client
+  - Removed authentication guards
+  - Removed token management
+  - Removed login/logout UI
+  - Client assumes single user
+  - App now accessible at http://100.96.166.53:3000/reader without login
+
+- **Supabase-Only Data Layer** (US-202) - Client reads from Supabase only
+  - Removed all Inoreader API calls from client
+  - Converted feed-store.ts to use Supabase queries
+  - Converted article-store.ts to use Supabase for all operations
+  - Removed IndexedDB dependencies
+  - All data flows: Inoreader → Server → Supabase → Client
+  - Offline queue maintained for future sync back to Inoreader
+  - Synced data now visible in UI without authentication
+
+### Changed - January 21, 2025 Session
+- **Architecture**: Migrated from client-side OAuth to server-client model
+- **Data Flow**: Server handles all external APIs, client is presentation only
+- **Authentication**: Removed from client, controlled by Tailscale network
+- **Storage**: Moved from IndexedDB to Supabase for all client data
+
+### Technical - January 21, 2025 Session
+- **Server**: Node.js with encrypted token storage
+- **Client**: Next.js reading from Supabase only
+- **Security**: Server-side OAuth, encrypted tokens, Tailscale network control
+- **Performance**: ~5 second sync for 69 feeds and 100 articles
+
 ### Added - July 16, 2025 Session (Issue #35 - COMPLETED ✅)
 - **API Logging Service** - Track and monitor Inoreader API calls
   - Created `/api/logs/inoreader` endpoint for centralized logging

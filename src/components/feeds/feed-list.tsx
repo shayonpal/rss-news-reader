@@ -7,10 +7,9 @@ import { useUIStore } from '@/lib/stores/ui-store';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { FeedTreeItem } from './feed-tree-item';
 import { cn } from '@/lib/utils';
-import { Loader2, WifiOff, AlertCircle, RefreshCw, Sun, Moon, Monitor, LogOut } from 'lucide-react';
+import { Loader2, WifiOff, AlertCircle, RefreshCw, Sun, Moon, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ApiRateLimiter } from '@/lib/utils/api-rate-limiter';
-import { useAuthStore } from '@/lib/stores/auth-store';
 import { useRouter } from 'next/navigation';
 
 interface FeedListProps {
@@ -37,7 +36,6 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
   
   const { isSyncing, lastSyncTime, syncError, performFullSync } = useSyncStore();
   const { theme, setTheme } = useUIStore();
-  const { logout } = useAuthStore();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [apiUsage, setApiUsage] = useState(ApiRateLimiter.getUsagePercentage());
 
@@ -204,19 +202,6 @@ export function FeedList({ selectedFeedId, onFeedSelect, className }: FeedListPr
             >
               <RefreshCw className={cn("h-3 w-3", isSyncing && "animate-spin")} />
               <span className="ml-1 text-xs">{isSyncing ? 'Syncing' : 'Sync'}</span>
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={async () => {
-                await logout();
-                router.push('/');
-              }}
-              className="h-7 w-7 px-0"
-              aria-label="Sign out"
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>

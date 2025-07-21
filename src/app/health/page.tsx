@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { HealthDashboard } from '@/components/health/health-dashboard';
-import { AuthGuard } from '@/components/auth/auth-guard';
 
 export const metadata: Metadata = {
   title: 'System Health | Shayon\'s News',
@@ -9,10 +8,8 @@ export const metadata: Metadata = {
 
 export default function HealthPage() {
   return (
-    <AuthGuard>
-      <div className="container mx-auto py-6 px-4">
-        <HealthDashboard />
-      </div>
-    </AuthGuard>
+    <div className="container mx-auto py-6 px-4">
+      <HealthDashboard />
+    </div>
   );
 }

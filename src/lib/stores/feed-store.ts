@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { db } from '@/lib/db/database';
+import { supabase } from '@/lib/db/supabase';
 import type { Feed, Folder, FeedWithUnreadCount } from '@/types';
+import type { Database } from '@/lib/db/types';
 
 interface FeedStoreState {
   // Feed data
@@ -60,18 +61,70 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
     set({ loadingFeeds: true, feedsError: null });
     
     try {
+      // Get the single user
+      const SINGLE_USER_ID = 'shayon';
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('inoreader_id', SINGLE_USER_ID)
+        .single();
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
       // Load all feeds and folders
-      const [feedsArray, foldersArray] = await Promise.all([
-        db.feeds.toArray(),
-        db.folders.orderBy('sortOrder').toArray()
+      const [feedsResult, foldersResult] = await Promise.all([
+        supabase
+          .from('feeds')
+          .select('*')
+          .eq('user_id', user.id),
+        supabase
+          .from('folders')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('name')
       ]);
       
+      if (feedsResult.error) throw feedsResult.error;
+      if (foldersResult.error) throw foldersResult.error;
+
       // Create maps for quick access
       const feedsMap = new Map<string, Feed>();
       const foldersMap = new Map<string, Folder>();
       
-      feedsArray.forEach(feed => feedsMap.set(feed.id, feed));
-      foldersArray.forEach(folder => foldersMap.set(folder.id, folder));
+      // Transform database feeds to Feed type
+      feedsResult.data?.forEach(feed => {
+        feedsMap.set(feed.id, {
+          id: feed.id,
+          title: feed.title || '',
+          customTitle: feed.title,
+          url: feed.url || '',
+          websiteUrl: feed.url || '',
+          iconUrl: undefined,
+          folderId: feed.folder_id,
+          unreadCount: feed.unread_count || 0,
+          sortOrder: 0,
+          isActive: true,
+          createdAt: new Date(feed.created_at || Date.now()),
+          updatedAt: new Date(feed.updated_at || Date.now()),
+          inoreaderFeedId: feed.inoreader_id || undefined
+        });
+      });
+
+      // Transform database folders to Folder type
+      foldersResult.data?.forEach(folder => {
+        foldersMap.set(folder.id, {
+          id: folder.id,
+          title: folder.name || '',
+          parentId: folder.parent_id,
+          sortOrder: 0,
+          unreadCount: 0,
+          isExpanded: true,
+          createdAt: new Date(folder.created_at || Date.now()),
+          updatedAt: new Date(folder.updated_at || Date.now())
+        });
+      });
       
       set({
         feeds: feedsMap,
@@ -103,11 +156,15 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Update feed title
   updateFeedTitle: async (feedId: string, title: string) => {
     try {
-      await db.feeds.update(feedId, {
-        title,
-        customTitle: title,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('feeds')
+        .update({ 
+          title,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', feedId);
+
+      if (error) throw error;
       
       // Update in store
       const { feeds } = get();
@@ -126,17 +183,14 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Toggle feed active status
   toggleFeedActive: async (feedId: string) => {
     try {
-      const feed = await db.feeds.get(feedId);
+      const { feeds } = get();
+      const feed = feeds.get(feedId);
       if (!feed) return;
       
       const newStatus = !feed.isActive;
-      await db.feeds.update(feedId, {
-        isActive: newStatus,
-        updatedAt: new Date()
-      });
       
-      // Update in store
-      const { feeds } = get();
+      // Note: Supabase schema doesn't have isActive field, so we'll skip DB update
+      // Just update in store for UI purposes
       const updatedFeeds = new Map(feeds);
       updatedFeeds.set(feedId, { ...feed, isActive: newStatus });
       set({ feeds: updatedFeeds });
@@ -148,10 +202,15 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Move feed to folder
   moveFeedToFolder: async (feedId: string, folderId: string | null) => {
     try {
-      await db.feeds.update(feedId, {
-        folderId,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('feeds')
+        .update({ 
+          folder_id: folderId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', feedId);
+
+      if (error) throw error;
       
       // Update in store
       const { feeds } = get();
@@ -172,27 +231,44 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Create folder
   createFolder: async (name: string, parentId?: string | null) => {
     try {
-      // Get highest sort order
-      const folders = await db.folders.toArray();
-      const maxSortOrder = Math.max(...folders.map(f => f.sortOrder), 0);
+      // Get the single user
+      const SINGLE_USER_ID = 'shayon';
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('inoreader_id', SINGLE_USER_ID)
+        .single();
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const { data: newFolder, error } = await supabase
+        .from('folders')
+        .insert({
+          user_id: user.id,
+          name,
+          parent_id: parentId || null,
+          inoreader_id: `folder_${Date.now()}` // Generate unique ID
+        })
+        .select()
+        .single();
       
-      const newFolder: Folder = {
-        id: `folder_${Date.now()}`,
-        title: name,
-        parentId: parentId || null,
-        sortOrder: maxSortOrder + 1,
-        unreadCount: 0,
-        isExpanded: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      await db.folders.add(newFolder);
+      if (error) throw error;
       
       // Update in store
       const { folders: foldersMap } = get();
       const updatedFolders = new Map(foldersMap);
-      updatedFolders.set(newFolder.id, newFolder);
+      updatedFolders.set(newFolder.id, {
+        id: newFolder.id,
+        title: newFolder.name || '',
+        parentId: newFolder.parent_id,
+        sortOrder: 0,
+        unreadCount: 0,
+        isExpanded: true,
+        createdAt: new Date(newFolder.created_at || Date.now()),
+        updatedAt: new Date(newFolder.updated_at || Date.now())
+      });
       set({ folders: updatedFolders });
       
       return newFolder.id;
@@ -206,10 +282,15 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Update folder title
   updateFolderTitle: async (folderId: string, title: string) => {
     try {
-      await db.folders.update(folderId, {
-        title,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('folders')
+        .update({ 
+          name: title,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', folderId);
+
+      if (error) throw error;
       
       // Update in store
       const { folders } = get();
@@ -228,19 +309,30 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   deleteFolder: async (folderId: string) => {
     try {
       // Move all feeds in this folder to root
-      await db.feeds.where('folderId').equals(folderId).modify({
-        folderId: null,
-        updatedAt: new Date()
-      });
+      await supabase
+        .from('feeds')
+        .update({ 
+          folder_id: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('folder_id', folderId);
       
       // Move all subfolders to root
-      await db.folders.where('parentId').equals(folderId).modify({
-        parentId: null,
-        updatedAt: new Date()
-      });
+      await supabase
+        .from('folders')
+        .update({ 
+          parent_id: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('parent_id', folderId);
       
       // Delete the folder
-      await db.folders.delete(folderId);
+      const { error } = await supabase
+        .from('folders')
+        .delete()
+        .eq('id', folderId);
+
+      if (error) throw error;
       
       // Reload hierarchy
       await get().loadFeedHierarchy();
@@ -260,11 +352,13 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       
       // Calculate unread counts for each feed
       for (const [feedId, feed] of Array.from(feeds.entries())) {
-        const unreadCount = await db.articles
-          .where('feedId')
-          .equals(feedId)
-          .and(article => !article.isRead)
-          .count();
+        const { count, error } = await supabase
+          .from('articles')
+          .select('*', { count: 'exact', head: true })
+          .eq('feed_id', feedId)
+          .eq('is_read', false);
+        
+        const unreadCount = count || 0;
         
         feedsWithCounts.set(feedId, { ...feed, unreadCount });
         totalUnread += unreadCount;

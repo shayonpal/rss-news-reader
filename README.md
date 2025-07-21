@@ -4,31 +4,38 @@
 [![Status](https://img.shields.io/badge/Status-Active-green)]()
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20iOS%20%7C%20Android-lightgrey)]()
 
-A Progressive Web Application (PWA) RSS reader with AI-powered article summarization, inspired by Reeder 5's clean design aesthetic.
+A self-hosted RSS reader with server-client architecture, AI-powered summaries, and Tailscale network security. The server handles all Inoreader API communication while the client provides a clean, authentication-free reading experience.
 
 ## Features
 
+- **Server-Client Architecture**: Server handles all external APIs, client is presentation only
+- **No Client Authentication**: Access controlled by Tailscale network
 - **Progressive Web App**: Install on mobile and desktop devices
-- **AI-Powered Summaries**: Generate article summaries using Claude API
-- **Offline-First**: Read articles without internet connection
+- **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
+- **Server-Side Sync**: Efficient sync with only 4-5 API calls
 - **Clean Design**: Minimalist interface inspired by Reeder 5
-- **Inoreader Integration**: Sync with existing Inoreader subscriptions
+- **Inoreader Integration**: Server syncs with existing subscriptions
 - **Feed Hierarchy**: Collapsible folder structure with unread counts
 - **Responsive Design**: Adaptive layout for mobile and desktop
-- **Dark/Light Mode**: Automatic theme switching
-- **Mobile-First**: Optimized for touch interactions with swipe gestures
-- **Health Monitoring**: Comprehensive system health checks and monitoring
+- **Dark/Light Mode**: Manual theme control
+- **Supabase Backend**: All client data served from PostgreSQL
 
 ## Technology Stack
 
+### Server
+- **Runtime**: Node.js with Express
+- **Authentication**: OAuth 2.0 with encrypted token storage
+- **Automation**: Playwright for OAuth setup
+- **Data Sync**: Inoreader API → Supabase
+
+### Client
 - **Framework**: Next.js 14+ with App Router
 - **Language**: TypeScript 5+
 - **Styling**: Tailwind CSS v3+ with Typography plugin
 - **State Management**: Zustand
-- **Data Storage**: IndexedDB with Dexie.js
+- **Data Storage**: Supabase (PostgreSQL)
 - **UI Components**: Radix UI primitives + custom components
 - **PWA**: Service Worker with Workbox
-- **Testing**: Vitest, React Testing Library, Playwright
 
 ## Development Setup
 
@@ -59,59 +66,56 @@ A Progressive Web Application (PWA) RSS reader with AI-powered article summariza
    cp .env.example .env
    ```
 
-   Edit `.env` with your API credentials:
+   Edit `.env` with your API credentials (see .env.example for all required values)
+
+4. **Set up server OAuth (one-time)**
 
    ```bash
-   # Inoreader OAuth Configuration
-   NEXT_PUBLIC_INOREADER_CLIENT_ID=your_client_id_here
-   INOREADER_CLIENT_SECRET=your_client_secret_here
-   NEXT_PUBLIC_INOREADER_REDIRECT_URI=https://strong-stunning-worm.ngrok-free.app/api/auth/callback/inoreader
-
-   # Anthropic Claude API
-   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   npm run setup:oauth
    ```
 
-   **Important**: For development with authentication, use the ngrok URL instead of localhost:
-   - Development URL: https://strong-stunning-worm.ngrok-free.app (reserved domain)
-   - The OAuth redirect URI must match the ngrok URL for authentication to work properly
-   - This project uses a reserved ngrok domain that remains consistent
+   This runs a Playwright script that:
+   - Starts a local OAuth server on port 8080
+   - Opens Inoreader login page
+   - Uses test credentials from .env
+   - Captures and encrypts tokens
+   - Stores them in `~/.rss-reader/tokens.json`
 
-   For Inoreader credentials:
-   - Go to [Inoreader Developer Portal](https://www.inoreader.com/developers/register-app)
-   - Create a new application
-   - Set redirect URI to match your development/production URL
-
-4. **Start development server**
+5. **Start development server**
    ```bash
-   npm run dev
+   npm run dev:network
    ```
    
-   **For authentication testing**, access the app via ngrok:
-   - https://strong-stunning-worm.ngrok-free.app
+   **Access the app**: http://100.96.166.53:3000/reader (via Tailscale)
    
-   **Note**: Direct localhost access (http://localhost:3000) will NOT work for OAuth authentication. Always use the ngrok URL for testing.
+   **Note**: No authentication required in the client. Access is controlled by Tailscale network.
 
-### Important: Authentication & Network Access
+### Important: Server-Client Architecture
 
-This app requires HTTPS for OAuth authentication with Inoreader. 
+**New Architecture (January 2025):**
+- **Server**: Handles all Inoreader API communication
+- **Client**: No authentication - reads from Supabase only
+- **Access**: Controlled by Tailscale network
 
-**Always use the ngrok URL for development:**
-- URL: https://strong-stunning-worm.ngrok-free.app (reserved domain)
-- Start ngrok with: `ngrok http --domain=strong-stunning-worm.ngrok-free.app 3000`
-- The OAuth redirect is configured for this specific URL
-- Authentication cookies are domain-specific and won't work on localhost
+**Data Flow:**
+1. Server syncs from Inoreader API (4-5 calls)
+2. Server stores data in Supabase
+3. Client reads from Supabase
+4. No direct Inoreader API calls from client
 
-**If you see "Failed to sync feeds":**
-1. Make sure you're accessing via the ngrok URL
-2. Try signing out and signing in again
-3. Check that your Inoreader credentials are valid
+**URLs:**
+- Development: http://100.96.166.53:3000/reader
+- Production: http://100.96.166.53/reader (requires Caddy setup)
 
 ### Development Commands
 
 ```bash
+# Server Setup
+npm run setup:oauth      # One-time OAuth setup (server-side)
+
 # Development
 npm run dev              # Start development server
-npm run dev:network      # Start with ngrok for OAuth (REQUIRED)
+npm run dev:network      # Start with network access (0.0.0.0)
 npm run dev:debug        # Start with Node.js debugger
 npm run dev:turbo        # Start with Turbo mode
 
@@ -160,65 +164,83 @@ src/
 
 ## Current Development Status
 
-**Phase**: Data Storage Implementation Complete ✅ - Ready for Feed Management
+**Phase**: Server-Client Architecture Implementation
 
-**Version**: 0.3.0
+**Version**: 0.4.0
 
 ### Completed ✅
 
+**January 21, 2025 - Server-Client Architecture**
+- ✅ **US-101**: Server OAuth Setup - Server handles all Inoreader authentication
+  - One-time OAuth setup script using Playwright
+  - Encrypted token storage in `~/.rss-reader/tokens.json`
+  - Automatic token refresh
+- ✅ **US-102**: Server Sync Service (Partial) - Manual sync working
+  - `/api/sync` endpoint for server-side sync
+  - Efficient 4-5 API calls per sync
+  - Syncs 69 feeds and 100 articles to Supabase
+  - Automatic cron job pending
+- ✅ **US-103**: Server API Endpoints - Complete server-side implementation
+  - `POST /api/sync` - Trigger manual sync with rate limiting
+  - `GET /api/sync/status/:id` - Check sync progress
+  - `POST /api/articles/:id/fetch-content` - Extract full content with Readability
+  - `POST /api/articles/:id/summarize` - Generate AI summary with Claude
+  - All endpoints tested and working
+- ✅ **US-201**: Remove Client Authentication
+  - No OAuth in client
+  - No login/logout UI
+  - Access via Tailscale network only
+- ✅ **US-202**: Supabase-Only Data Layer
+  - Client reads exclusively from Supabase
+  - No Inoreader API calls in client
+  - All data flows: Server → Supabase → Client
+- 🟡 **US-203**: Server API Integration (Partial) - Sync working, UI pending
+  - ✅ Sync button calls server API endpoints
+  - ✅ Progress polling with real-time updates
+  - ✅ Rate limit display with warnings
+  - ❌ Content extraction UI integration pending
+  - ❌ AI summary UI integration pending
+
+**Previous Milestones**
 - ✅ **Development Environment**: Fully configured with quality gates
-- ✅ **Project Infrastructure**: GitHub Projects, automation workflows  
-- ✅ **Foundation**: Next.js 14 + TypeScript setup
-- ✅ **Issue #5**: Initial App Setup - Full PWA functionality implemented
-  - ✅ **Issue #9**: PWA Manifest and Service Worker
-  - ✅ **Issue #10**: PWA Icons and Assets  
-  - ✅ **Issue #12**: App Layout and Navigation
-  - ✅ **Issue #11**: Offline Caching Strategy
-- ✅ **Issue #6**: Inoreader OAuth Authentication - **COMPLETE & TESTED** ✅
-  - ✅ **Issue #13**: OAuth API routes with secure state handling
-  - ✅ **Issue #14**: Secure token storage with httpOnly cookies
-  - ✅ **Issue #15**: Authentication state management in Zustand
-  - ✅ **Issue #16**: Login/logout UI components with user profile
-  - ✅ **Issue #17**: Protected routes with AuthGuard
-  - ✅ **Issue #18**: API service layer with auto token refresh
-  - ✅ **Issue #19**: Rate limiting awareness (100 calls/day)
-  - ✅ **Critical Fix (June 9, 2025)**: Resolved infinite polling loop, implemented request deduplication, optimized API usage from 100+ calls to 1 call per session
-- ✅ **Issue #7**: IndexedDB Data Storage - **COMPLETE** ✅
-  - ✅ Dexie.js integration with TypeScript
-  - ✅ 10 object stores for comprehensive data management
-  - ✅ Storage quota monitoring system
-  - ✅ User preferences management
-  - ✅ API usage tracking integration
+- ✅ **Foundation**: Next.js 14 + TypeScript + PWA
+- ✅ **Supabase Integration**: 4-table schema with TypeScript types
+- ✅ **Feed Display**: Hierarchical feed list with unread counts
+- ✅ **Article List**: Infinite scroll with read/unread states
 
 ### Current Features
 
-- **Installable PWA**: Users can install on mobile and desktop
-- **Responsive Design**: Mobile-first layout with sidebar navigation
-- **Theme System**: Light/dark/system theme support with smooth transitions
-- **Offline Functionality**: Service worker with intelligent caching strategies
-- **Network Awareness**: Visual indicators for connection status
-- **Sync Management**: Queue system for offline actions with retry logic
-- **Authentication System**: OAuth 2.0 integration with Inoreader
-- **Protected Routes**: Main app requires authentication
-- **User Profile**: Display authenticated user info with logout option
-- **Rate Limiting**: Track and manage API usage limits
-- **Data Storage**: IndexedDB with Dexie.js for offline-first data management
-- **Storage Management**: Quota monitoring and automatic cleanup
-- **User Preferences**: Persistent settings across sessions
-- **Health Monitoring**: Real-time system health checks with alerts
-- **Service Monitoring**: Track database, API, cache, auth, and network status
-- **Performance Metrics**: Response time tracking and uptime monitoring
+- **Server-Client Architecture**: Complete separation of concerns
+- **No Client Authentication**: Access controlled by Tailscale network
+- **Server-Side Sync**: Efficient sync with 4-5 API calls
+- **Supabase Data Layer**: All client data from PostgreSQL
+- **Installable PWA**: Install on mobile and desktop
+- **Responsive Design**: Mobile-first layout with sidebar
+- **Theme System**: Manual light/dark mode control
+- **Feed Hierarchy**: Collapsible folders with unread counts
+- **Article List**: Infinite scroll with read/unread states
+- **Offline Queue**: Actions synced when back online
 
-### Open Issues & Next Steps
+### Next Steps
 
-**Currently Open**: 2 admin tasks
-- [Issue #3](https://github.com/shayonpal/rss-news-reader/issues/3): Set up testing infrastructure and CI/CD (P2)
-- [Issue #4](https://github.com/shayonpal/rss-news-reader/issues/4): Configure deployment pipeline (P3)
+**To Complete US-102 (Server Sync Service)**:
+- [ ] Implement automatic daily cron job
+- [ ] Add round-robin distribution (max 20 per feed)
+- [ ] Create sync_errors table and error logging
+- [ ] Implement read state sync back to Inoreader
 
-**Upcoming Development**:
-- **Epic 2**: Core Reading Features (Article fetching, reading interface)  
-- **Epic 3**: AI Integration (Claude API article summaries)
-- **Epic 4**: Production Deployment
+**To Complete US-203 (Server API Integration)**:
+- [ ] Add "Fetch Full Content" button UI for articles
+- [ ] Add "Generate Summary" button UI for articles
+- [ ] Display extracted content in article view
+- [ ] Display AI summaries in article list/view
+
+**Upcoming User Stories**:
+- **US-104**: Content Extraction Service (UI integration for existing endpoint)
+- **US-105**: Tailscale Monitoring (auto-restart if down)
+- **US-301**: Claude API Integration (UI integration for existing endpoint)
+- **US-401**: Feed and Tag Filtering
+- **US-501**: Caddy Configuration for production
 
 See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news-reader/issues) or [Project Board](https://github.com/users/shayonpal/projects/7).
 
@@ -246,99 +268,55 @@ See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news
 - Model: claude-3-5-sonnet-latest
 - Summary length: 100-120 words
 
-## Data Synchronization
+## Data Architecture
 
-### Sync Architecture
+### Server-Client Model
 
-The app uses an **offline-first architecture** with IndexedDB as the primary data store:
+The app uses a **server-client architecture** with complete separation of concerns:
 
-1. **Fetch from Inoreader API** → **Store in IndexedDB** → **Display from Local DB**
-2. All UI reads are from the local database for instant performance
-3. Changes are queued and synced back to Inoreader when online
+1. **Server** → Handles all Inoreader API communication
+2. **Server** → Syncs data to Supabase
+3. **Client** → Reads exclusively from Supabase
+4. **Client** → No authentication required
 
-### When Sync Triggers
+### Data Flow
 
-1. **Initial Setup (Auto-sync)**
-   - Triggers automatically when a new user signs in and the database is empty
-   - Only happens once per user account
+```
+Inoreader API → Server (Node.js) → Supabase → Client (Next.js)
+```
 
-2. **After Authentication (Conditional)**
-   - When OAuth callback includes `?sync=true` parameter
-   - **Only syncs if the database is empty** (prevents unnecessary API calls for returning users)
+### Server Responsibilities
 
-3. **Manual Sync Button**
-   - User-initiated sync via the "Sync" button in the feed sidebar
-   - Available at any time when online
+- **OAuth Authentication**: Encrypted token storage in `~/.rss-reader/tokens.json`
+- **API Communication**: All Inoreader API calls (4-5 per sync)
+- **Data Sync**: Efficient sync to Supabase
+- **Token Refresh**: Automatic before expiration
+- **Future**: Content extraction, AI summaries, cron jobs
 
-4. **Pull-to-Refresh (Local Only)**
-   - In the article list, pull-to-refresh reloads from IndexedDB
-   - Does NOT trigger an API sync to conserve rate limit
+### Client Responsibilities
 
-### What Does NOT Trigger Sync
+- **Presentation Only**: Display feeds and articles
+- **User Actions**: Mark read/unread, star/unstar
+- **Offline Queue**: Store actions for later sync
+- **No Authentication**: Access via Tailscale network
+- **Supabase Only**: All data from PostgreSQL
 
-- Navigating between feeds (reads from local DB)
-- Marking articles as read/unread (queued for next sync)
-- Starring/unstarring articles (queued for next sync)
-- Page refresh (uses cached IndexedDB data)
-- Returning to the app (no auto-sync on focus)
+### API Efficiency
 
-### API Rate Limiting
+Server sync uses only 4-5 API calls:
+1. `/subscription/list` - Get all feeds
+2. `/tag/list` - Get tags (if needed)
+3. `/stream/contents` - Get ALL articles (max 100)
+4. `/unread-count` - Get unread counts
+5. `/edit-tag` - Update read states (future)
 
-The app implements smart rate limiting to work within Inoreader's free tier limits:
+### Security Model
 
-- **Daily Limit**: 100 API calls per day (resets at midnight UTC)
-- **Per Sync Usage**: ~12 API calls (2 for metadata + 10 for top feeds)
-- **Rate Limiter**: Tracks usage in localStorage and prevents sync if limit would be exceeded
-- **Visual Indicators**: Shows API usage percentage when above 80%
-- **Smart Sync**: Only fetches articles from top 10 feeds with unread content
+- **Server**: OAuth tokens encrypted with AES-256-GCM
+- **Network**: Tailscale VPN for access control
+- **Client**: No authentication, no secrets
+- **Database**: Supabase with row-level security
 
-### Sync Optimization Strategies
-
-1. **Reduced Feed Fetching**: Limited to top 10 feeds by unread count (down from 20)
-2. **Conditional Auto-sync**: Only for empty databases, not returning users
-3. **Offline Queue**: Batches read/unread operations for next sync
-4. **Usage Tracking**: Real-time API call monitoring with warnings
-5. **No Periodic Sync**: Manual control to preserve API calls
-
-### Database Storage
-
-All synced data is stored in IndexedDB tables:
-
-- **feeds**: RSS feed subscriptions with metadata
-- **folders**: Feed categories and folder hierarchy
-- **articles**: Individual news articles with content
-- **summaries**: AI-generated article summaries
-- **pendingActions**: Offline action queue
-- **apiUsage**: API call tracking
-- **userPreferences**: User settings
-
-Benefits:
-- **Offline Access**: Full functionality without internet
-- **Fast Performance**: Instant loading from local database
-- **Data Persistence**: Survives page refreshes and app restarts
-- **Large Storage**: Can store thousands of articles locally
-
-## Health Monitoring
-
-The application includes a comprehensive health monitoring system:
-
-### Monitored Services
-
-- **Database**: IndexedDB connection, storage usage, data integrity
-- **APIs**: Inoreader and Claude API availability, rate limits
-- **Cache**: Service Worker cache status, LocalStorage health
-- **Authentication**: Token validity, refresh capability
-- **Network**: Online/offline status, external connectivity
-
-### Health Features
-
-- **Real-time Monitoring**: Automatic health checks every 5 minutes
-- **Visual Indicators**: Status icons in header with color coding
-- **Alert System**: Severity-based alerts for issues
-- **Metrics Dashboard**: Performance tracking and uptime statistics
-- **API Endpoint**: `/api/health` for external monitoring
-
-Access the full health dashboard at `/health` when logged in.
 
 ## Contributing
 

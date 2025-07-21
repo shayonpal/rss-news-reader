@@ -67,6 +67,10 @@ export interface Database {
           inoreader_id: string
           title: string
           content: string | null
+          full_content: string | null
+          has_full_content: boolean
+          ai_summary: string | null
+          author: string | null
           url: string | null
           published_at: string | null
           is_read: boolean
@@ -80,6 +84,10 @@ export interface Database {
           inoreader_id: string
           title: string
           content?: string | null
+          full_content?: string | null
+          has_full_content?: boolean
+          ai_summary?: string | null
+          author?: string | null
           url?: string | null
           published_at?: string | null
           is_read?: boolean
@@ -93,6 +101,10 @@ export interface Database {
           inoreader_id?: string
           title?: string
           content?: string | null
+          full_content?: string | null
+          has_full_content?: boolean
+          ai_summary?: string | null
+          author?: string | null
           url?: string | null
           published_at?: string | null
           is_read?: boolean
@@ -125,6 +137,46 @@ export interface Database {
           name?: string
           parent_id?: string | null
           created_at?: string
+        }
+      }
+      api_usage: {
+        Row: {
+          id: string
+          service: string
+          date: string
+          count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          service: string
+          date: string
+          count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          service?: string
+          date?: string
+          count?: number
+          created_at?: string
+        }
+      }
+      sync_metadata: {
+        Row: {
+          key: string
+          value: string
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: string
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: string
+          updated_at?: string
         }
       }
     }

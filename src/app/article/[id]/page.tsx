@@ -35,7 +35,7 @@ export default function ArticlePage() {
         }
       } catch (error) {
         console.error('Error loading article:', error);
-        router.push('/reader');
+        router.push('/');
       } finally {
         setLoading(false);
       }
@@ -73,7 +73,7 @@ export default function ArticlePage() {
     
     const targetArticle = allArticles[targetIndex];
     if (targetArticle) {
-      router.push(`/reader/article/${encodeURIComponent(targetArticle.id)}`);
+      router.push(`/article/${encodeURIComponent(targetArticle.id)}`);
     }
   };
 
@@ -97,7 +97,7 @@ export default function ArticlePage() {
       feedTitle={feed?.title || 'Unknown Feed'}
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}
-      onBack={() => router.push('/reader')}
+      onBack={() => router.push('/')}
     />
   );
 }

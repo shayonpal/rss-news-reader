@@ -3,9 +3,7 @@
 import { useEffect } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
-import { useAuthStore } from '@/lib/stores/auth-store';
-import { Loader2, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -13,10 +11,8 @@ interface SimpleFeedSidebarProps {
 }
 
 export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSidebarProps) {
-  const router = useRouter();
   const { feeds, feedsWithCounts, totalUnreadCount } = useFeedStore();
-  const { isSyncing, lastSyncTime, performFullSync, syncError } = useSyncStore();
-  const { logout } = useAuthStore();
+  const { isSyncing, lastSyncTime, performFullSync, syncError, syncProgress, syncMessage, rateLimit } = useSyncStore();
   // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,25 +32,21 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Feeds</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={performFullSync}
-              disabled={isSyncing}
-              className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
-            >
-              {isSyncing ? 'Syncing...' : 'Sync'}
-            </button>
-            <button
-              onClick={async () => {
-                await logout();
-                router.push('/');
-              }}
-              className="p-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded"
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            onClick={performFullSync}
+            disabled={isSyncing}
+            className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 relative overflow-hidden min-w-[64px]"
+          >
+            {isSyncing && syncProgress > 0 && (
+              <div 
+                className="absolute inset-0 bg-white/20"
+                style={{ width: `${syncProgress}%` }}
+              />
+            )}
+            <span className="relative z-10">
+              {isSyncing ? (syncProgress > 0 ? `${syncProgress}%` : 'Syncing...') : 'Sync'}
+            </span>
+          </button>
         </div>
         <div className="text-sm text-muted-foreground">
           {totalUnreadCount} unread articles
@@ -67,8 +59,18 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
         {isSyncing && feeds.size === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-sm font-medium">Syncing your feeds...</p>
-            <p className="text-xs text-muted-foreground mt-1">This may take a moment</p>
+            <p className="text-sm font-medium">{syncMessage || 'Syncing your feeds...'}</p>
+            {syncProgress > 0 && (
+              <div className="w-full max-w-xs mt-3">
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${syncProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-center">{syncProgress}%</p>
+              </div>
+            )}
           </div>
         ) : syncError && feeds.size === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4">
@@ -120,11 +122,19 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
         })}
 
             {/* Status */}
-            <div className="p-3 text-xs text-muted-foreground">
+            <div className="p-3 text-xs text-muted-foreground space-y-1">
               {lastSyncTime && (
                 <div>Last sync: <span suppressHydrationWarning>{new Date(lastSyncTime).toLocaleTimeString()}</span></div>
               )}
               <div>{feeds.size} feeds total</div>
+              {rateLimit && (
+                <div className={rateLimit.used >= rateLimit.limit * 0.8 ? 'text-amber-600' : ''}>
+                  API usage: {rateLimit.used}/{rateLimit.limit} calls today
+                  {rateLimit.used >= rateLimit.limit * 0.95 && (
+                    <span className="text-destructive"> (Warning: Near limit!)</span>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}

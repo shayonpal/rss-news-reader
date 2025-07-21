@@ -21,9 +21,12 @@
     "clean": "rm -rf .next out node_modules/.cache",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pre-commit": "npm run type-check && npm run lint && npm run format:check"
+    "pre-commit": "npm run type-check && npm run lint && npm run format:check",
+    "setup:oauth": "node server/scripts/setup-oauth.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.56.0",
+    "@mozilla/readability": "^0.6.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.1",
@@ -33,17 +36,21 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@supabase/supabase-js": "^2.51.0",
     "@types/dompurify": "^3.0.5",
+    "@types/uuid": "^10.0.0",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.8",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
     "isomorphic-dompurify": "^2.26.0",
     "lucide-react": "^0.427.0",
     "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.0",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -52,6 +59,7 @@
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^20.16.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

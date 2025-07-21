@@ -2,6 +2,7 @@ import { InjectManifest } from 'workbox-webpack-plugin';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: '/reader',
   experimental: {
     typedRoutes: true,
   },

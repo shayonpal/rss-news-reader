@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import { db } from '@/lib/db/database';
+import { supabase } from '@/lib/db/supabase';
 import { useSyncStore } from './sync-store';
-import { cleanupArticleData, isArticleDataCorrupted } from '@/lib/utils/data-cleanup';
 import type { Article, ArticleState, Summary } from '@/types';
+import type { Database } from '@/lib/db/types';
 
 interface ArticleStoreState {
   // Article data
@@ -68,53 +68,70 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     set({ loadingArticles: true, articlesError: null });
     
     try {
-      // Get all articles and filter in memory
-      let articles = await db.articles.orderBy('publishedAt').reverse().toArray();
-      
-      // Clean up any corrupted data using robust cleanup function
-      let corruptedCount = 0;
-      articles = articles.map(article => {
-        if (isArticleDataCorrupted(article)) {
-          corruptedCount++;
-          console.warn('Cleaning up corrupted article data for:', article.id, article.title);
-        }
-        return cleanupArticleData(article);
-      });
-      
-      if (corruptedCount > 0) {
-        console.log(`Cleaned up ${corruptedCount} corrupted articles`);
-      }
-      
+      let query = supabase
+        .from('articles')
+        .select(`
+          *,
+          feed:feeds(*)
+        `)
+        .order('published_at', { ascending: false });
+
       // Apply feed/folder filter
       if (feedId) {
-        articles = articles.filter(article => article.feedId === feedId);
+        query = query.eq('feed_id', feedId);
       } else if (folderId) {
         // Get all feeds in folder first
-        const feeds = await db.feeds.where('folderId').equals(folderId).toArray();
-        const feedIds = feeds.map(f => f.id);
-        articles = articles.filter(article => feedIds.includes(article.feedId));
+        const { data: feeds } = await supabase
+          .from('feeds')
+          .select('id')
+          .eq('folder_id', folderId);
+        
+        const feedIds = feeds?.map(f => f.id) || [];
+        if (feedIds.length > 0) {
+          query = query.in('feed_id', feedIds);
+        }
       }
       
       // Apply read/starred filter
       const filter = get().filter;
       if (filter === 'unread') {
-        articles = articles.filter(article => !article.isRead);
+        query = query.eq('is_read', false);
       } else if (filter === 'starred') {
-        articles = articles.filter(article => (article.tags?.includes('starred') ?? false));
+        query = query.eq('is_starred', true);
       }
       
-      // Take first page
-      const pageArticles = articles.slice(0, ARTICLES_PER_PAGE);
+      // Limit results
+      query = query.limit(ARTICLES_PER_PAGE);
+      
+      const { data: articles, error } = await query;
+      
+      if (error) throw error;
       
       const articlesMap = new Map<string, Article>();
-      pageArticles.forEach(article => {
-        articlesMap.set(article.id, article);
+      articles?.forEach(article => {
+        articlesMap.set(article.id, {
+          id: article.id,
+          feedId: article.feed_id || '',
+          title: article.title || 'Untitled',
+          content: article.content || '',
+          url: article.url || '',
+          tags: article.is_starred ? ['starred'] : [],
+          publishedAt: new Date(article.published_at || Date.now()),
+          authorName: '',
+          isRead: article.is_read || false,
+          state: 'active' as ArticleState,
+          createdAt: new Date(article.created_at || Date.now()),
+          updatedAt: new Date(article.updated_at || Date.now()),
+          inoreaderItemId: article.inoreader_id,
+          fullContentUrl: article.url,
+          hasFullContent: article.has_full_content || false
+        });
       });
       
       set({
         articles: articlesMap,
         loadingArticles: false,
-        hasMore: articles.length > ARTICLES_PER_PAGE,
+        hasMore: (articles?.length || 0) === ARTICLES_PER_PAGE,
         selectedFeedId: feedId || null,
         selectedFolderId: folderId || null
       });
@@ -145,42 +162,68 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         return;
       }
       
-      // Get articles older than the oldest date
-      let moreArticles = await db.articles
-        .where('publishedAt')
-        .below(oldestDate)
-        .toArray();
-      
-      // Apply filters in memory
+      let query = supabase
+        .from('articles')
+        .select(`
+          *,
+          feed:feeds(*)
+        `)
+        .order('published_at', { ascending: false })
+        .lt('published_at', oldestDate.toISOString());
+
+      // Apply filters
       if (selectedFeedId) {
-        moreArticles = moreArticles.filter(article => article.feedId === selectedFeedId);
+        query = query.eq('feed_id', selectedFeedId);
       } else if (selectedFolderId) {
-        const feeds = await db.feeds.where('folderId').equals(selectedFolderId).toArray();
-        const feedIds = feeds.map(f => f.id);
-        moreArticles = moreArticles.filter(article => feedIds.includes(article.feedId));
+        const { data: feeds } = await supabase
+          .from('feeds')
+          .select('id')
+          .eq('folder_id', selectedFolderId);
+        
+        const feedIds = feeds?.map(f => f.id) || [];
+        if (feedIds.length > 0) {
+          query = query.in('feed_id', feedIds);
+        }
       }
       
       if (filter === 'unread') {
-        moreArticles = moreArticles.filter(article => !article.isRead);
+        query = query.eq('is_read', false);
       } else if (filter === 'starred') {
-        moreArticles = moreArticles.filter(article => (article.tags?.includes('starred') ?? false));
+        query = query.eq('is_starred', true);
       }
       
-      // Sort and limit
-      moreArticles = moreArticles
-        .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-        .slice(0, ARTICLES_PER_PAGE);
+      query = query.limit(ARTICLES_PER_PAGE);
+      
+      const { data: moreArticles, error } = await query;
+      
+      if (error) throw error;
       
       // Merge with existing articles
       const updatedArticles = new Map(articles);
-      moreArticles.forEach(article => {
-        updatedArticles.set(article.id, article);
+      moreArticles?.forEach(article => {
+        updatedArticles.set(article.id, {
+          id: article.id,
+          feedId: article.feed_id || '',
+          title: article.title || 'Untitled',
+          content: article.content || '',
+          url: article.url || '',
+          tags: article.is_starred ? ['starred'] : [],
+          publishedAt: new Date(article.published_at || Date.now()),
+          authorName: '',
+          isRead: article.is_read || false,
+          state: 'active' as ArticleState,
+          createdAt: new Date(article.created_at || Date.now()),
+          updatedAt: new Date(article.updated_at || Date.now()),
+          inoreaderItemId: article.inoreader_id,
+          fullContentUrl: article.url,
+          hasFullContent: article.has_full_content || false
+        });
       });
       
       set({
         articles: updatedArticles,
         loadingMore: false,
-        hasMore: moreArticles.length === ARTICLES_PER_PAGE
+        hasMore: (moreArticles?.length || 0) === ARTICLES_PER_PAGE
       });
     } catch (error) {
       console.error('Failed to load more articles:', error);
@@ -191,15 +234,42 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Get single article
   getArticle: async (id: string) => {
     try {
-      const article = await db.articles.get(id);
+      const { data: article, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
       if (article) {
+        const articleObj: Article = {
+          id: article.id,
+          feedId: article.feed_id || '',
+          title: article.title || 'Untitled',
+          content: article.content || '',
+          url: article.url || '',
+          tags: article.is_starred ? ['starred'] : [],
+          publishedAt: new Date(article.published_at || Date.now()),
+          authorName: '',
+          isRead: article.is_read || false,
+          state: 'active' as ArticleState,
+          createdAt: new Date(article.created_at || Date.now()),
+          updatedAt: new Date(article.updated_at || Date.now()),
+          inoreaderItemId: article.inoreader_id,
+          fullContentUrl: article.url,
+          hasFullContent: article.has_full_content || false
+        };
+        
         // Update in store if loaded
         const { articles } = get();
         const updatedArticles = new Map(articles);
-        updatedArticles.set(id, article);
+        updatedArticles.set(id, articleObj);
         set({ articles: updatedArticles });
+        
+        return articleObj;
       }
-      return article || null;
+      return null;
     } catch (error) {
       console.error('Failed to get article:', error);
       return null;
@@ -209,23 +279,25 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark as read
   markAsRead: async (articleId: string) => {
     try {
-      const article = await db.articles.get(articleId);
+      const { articles } = get();
+      const article = articles.get(articleId);
       if (!article || article.isRead) return;
       
       // Update in database
-      await db.articles.update(articleId, {
-        isRead: true,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('articles')
+        .update({ 
+          is_read: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', articleId);
+
+      if (error) throw error;
       
       // Update in store
-      const { articles } = get();
       const updatedArticles = new Map(articles);
-      const storeArticle = updatedArticles.get(articleId);
-      if (storeArticle) {
-        updatedArticles.set(articleId, { ...storeArticle, isRead: true });
-        set({ articles: updatedArticles });
-      }
+      updatedArticles.set(articleId, { ...article, isRead: true });
+      set({ articles: updatedArticles });
       
       // Queue for sync if offline
       const syncStore = useSyncStore.getState();
@@ -244,23 +316,25 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark as unread
   markAsUnread: async (articleId: string) => {
     try {
-      const article = await db.articles.get(articleId);
+      const { articles } = get();
+      const article = articles.get(articleId);
       if (!article || !article.isRead) return;
       
       // Update in database
-      await db.articles.update(articleId, {
-        isRead: false,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('articles')
+        .update({ 
+          is_read: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', articleId);
+
+      if (error) throw error;
       
       // Update in store
-      const { articles } = get();
       const updatedArticles = new Map(articles);
-      const storeArticle = updatedArticles.get(articleId);
-      if (storeArticle) {
-        updatedArticles.set(articleId, { ...storeArticle, isRead: false });
-        set({ articles: updatedArticles });
-      }
+      updatedArticles.set(articleId, { ...article, isRead: false });
+      set({ articles: updatedArticles });
       
       // Queue for sync if offline
       const syncStore = useSyncStore.getState();
@@ -279,7 +353,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Toggle star
   toggleStar: async (articleId: string) => {
     try {
-      const article = await db.articles.get(articleId);
+      const { articles } = get();
+      const article = articles.get(articleId);
       if (!article) return;
       
       const tags = article.tags || [];
@@ -289,19 +364,20 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         : [...tags, 'starred'];
       
       // Update in database
-      await db.articles.update(articleId, {
-        tags: updatedTags,
-        updatedAt: new Date()
-      });
+      const { error } = await supabase
+        .from('articles')
+        .update({ 
+          is_starred: !isStarred,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', articleId);
+
+      if (error) throw error;
       
       // Update in store
-      const { articles } = get();
       const updatedArticles = new Map(articles);
-      const storeArticle = updatedArticles.get(articleId);
-      if (storeArticle) {
-        updatedArticles.set(articleId, { ...storeArticle, tags: updatedTags });
-        set({ articles: updatedArticles });
-      }
+      updatedArticles.set(articleId, { ...article, tags: updatedTags });
+      set({ articles: updatedArticles });
       
       // Queue for sync if offline
       const syncStore = useSyncStore.getState();
@@ -327,7 +403,23 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Get summary
   getSummary: async (articleId: string) => {
     try {
-      return await db.summaries.get(articleId) || null;
+      const { data: article, error } = await supabase
+        .from('articles')
+        .select('ai_summary')
+        .eq('id', articleId)
+        .single();
+
+      if (error) throw error;
+
+      if (article?.ai_summary) {
+        return {
+          articleId,
+          summary: article.ai_summary,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as Summary;
+      }
+      return null;
     } catch (error) {
       console.error('Failed to get summary:', error);
       return null;
@@ -337,50 +429,43 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark all as read
   markAllAsRead: async (feedId?: string) => {
     try {
-      // Get unread articles
-      let articles = await db.articles.toArray();
-      articles = articles.filter(article => !article.isRead);
-      
+      let query = supabase
+        .from('articles')
+        .update({ 
+          is_read: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('is_read', false);
+
       if (feedId) {
-        articles = articles.filter(article => article.feedId === feedId);
+        query = query.eq('feed_id', feedId);
       }
       
-      const articleIds = articles.map(a => a.id);
+      const { error } = await query;
       
-      // Batch update in database
-      await db.transaction('rw', db.articles, async () => {
-        await Promise.all(
-          articleIds.map(id => 
-            db.articles.update(id, {
-              isRead: true,
-              updatedAt: new Date()
-            })
-          )
-        );
-      });
+      if (error) throw error;
       
       // Update in store
       const { articles: storeArticles } = get();
       const updatedArticles = new Map(storeArticles);
-      articleIds.forEach(id => {
-        const article = updatedArticles.get(id);
-        if (article) {
+      
+      Array.from(storeArticles.entries()).forEach(([id, article]) => {
+        if (!article.isRead && (!feedId || article.feedId === feedId)) {
           updatedArticles.set(id, { ...article, isRead: true });
+          
+          // Queue for sync if offline
+          const syncStore = useSyncStore.getState();
+          if (!navigator.onLine) {
+            syncStore.addToQueue({
+              type: 'mark_read',
+              articleId: id,
+              maxRetries: 3
+            });
+          }
         }
       });
-      set({ articles: updatedArticles });
       
-      // Queue for sync if offline
-      const syncStore = useSyncStore.getState();
-      if (!navigator.onLine) {
-        articleIds.forEach(articleId => {
-          syncStore.addToQueue({
-            type: 'mark_read',
-            articleId,
-            maxRetries: 3
-          });
-        });
-      }
+      set({ articles: updatedArticles });
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
