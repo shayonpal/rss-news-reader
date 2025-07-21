@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2, Sparkles, RotateCcw } from 'lucide-react';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface SummaryButtonProps {
   articleId: string;
@@ -42,36 +43,36 @@ export function SummaryButton({
 
   if (variant === 'icon') {
     return (
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={handleGenerateSummary}
         disabled={isLoading}
         className={cn(
-          "p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
+          "hover:bg-gray-100 dark:hover:bg-gray-800",
           className
         )}
         title={hasSummary ? "Regenerate summary" : "Generate AI summary"}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin" />
         ) : hasSummary ? (
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-5 w-5" />
         ) : (
-          <Sparkles className="h-4 w-4" />
+          <Sparkles className="h-5 w-5" />
         )}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
       onClick={handleGenerateSummary}
       disabled={isLoading}
+      variant="default"
+      size="sm"
       className={cn(
-        "inline-flex items-center gap-2 px-3 py-1.5 text-sm",
-        "bg-blue-600 text-white rounded-md hover:bg-blue-700",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        "transition-colors",
+        "bg-blue-600 hover:bg-blue-700",
         className
       )}
     >
@@ -91,6 +92,6 @@ export function SummaryButton({
           Summarize
         </>
       )}
-    </button>
+    </Button>
   );
 }
