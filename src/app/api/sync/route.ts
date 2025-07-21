@@ -272,6 +272,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 90;
     status.message = 'Refreshing feed statistics...';
+    console.log('[Sync] Refreshing feed statistics...');
 
     // Refresh the materialized view for accurate unread counts
     try {
@@ -279,6 +280,8 @@ async function performServerSync(syncId: string) {
       if (refreshError) {
         console.error('Failed to refresh feed stats:', refreshError);
         // Don't fail the sync if refresh fails - just log it
+      } else {
+        console.log('[Sync] Feed stats refreshed successfully');
       }
     } catch (error) {
       console.error('Error refreshing feed stats:', error);
@@ -287,6 +290,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 95;
     status.message = 'Updating sync metadata...';
+    console.log('[Sync] Updating sync metadata...');
 
     // Update sync metadata
     await supabase

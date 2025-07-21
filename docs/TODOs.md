@@ -338,6 +338,35 @@
   - [ ] Consider implementation only if API limits become constraining
   - [ ] Maintain current simplicity unless scaling issues arise
 
+#### TODO-026: Replace Deprecated Punycode Module (P2 - Technical Debt)
+- **Status**: 🔴 TODO
+- **Issue**: Node.js built-in `punycode` module is deprecated since v21.0.0
+- **Context**: The punycode module is used indirectly through these dependencies:
+  - `eslint` → `ajv` → `uri-js` → `punycode`
+  - `jsdom` → `whatwg-url` → `tr46` → `punycode`
+  - `workbox-webpack-plugin` → `workbox-build` → `whatwg-url` → `tr46` → `punycode`
+- **Impact**: Deprecation warnings in Node.js 21+ and eventual removal in future versions
+- **npm Recommendation**: Use a userland alternative from npm instead
+- **Solutions**:
+  1. **Recommended**: Install userland `punycode` package explicitly
+     ```bash
+     npm install punycode --save
+     ```
+     - This will override the built-in module with the npm package
+     - The npm package `punycode` v2.x is actively maintained
+     - Ensures compatibility when Node.js removes the built-in module
+  2. **Long-term**: Update dependencies when they migrate away from punycode
+     - Monitor `tr46`, `uri-js` for updates
+     - Update `eslint` to v9+ when stable
+     - Check `jsdom` and `workbox` for punycode-free versions
+  3. **Alternative**: For direct usage, consider `url.domainToASCII()` and `url.domainToUnicode()`
+- **Acceptance Criteria**:
+  - [ ] Install userland `punycode` package as explicit dependency
+  - [ ] Ensure no deprecation warnings in Node.js 21+
+  - [ ] Verify all functionality works (URL parsing, internationalized domains)
+  - [ ] Document the userland package requirement in README if needed
+  - [ ] Consider adding Node.js engine requirement to package.json
+
 ---
 
 ## 📊 SUCCESS METRICS

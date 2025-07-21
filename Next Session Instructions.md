@@ -1,8 +1,14 @@
 # Next Session Instructions
 
-**Last Updated:** Monday, July 21, 2025 at 5:44 PM
+**Last Updated:** Tuesday, January 21, 2025 at 3:42 PM
 
-## Latest Session - January 22, 2025 (Part 3)
+## Latest Session - January 21, 2025 (3:00 PM - 3:42 PM)
+- **Duration:** ~42 minutes
+- **Main focus:** Feed Stats Materialized View Refresh (TODO-005) and Fix
+- **Issues resolved:** TODO-005 (Materialized View Refresh After Sync)
+- **Achievement:** Successfully integrated and fixed refresh_feed_stats() with unique index for concurrent refresh
+
+## Previous Session - January 22, 2025 (Part 3)
 - **Main focus:** Feed Stats Materialized View Refresh (TODO-005)
 - **Issues resolved:** TODO-005 (Materialized View Refresh After Sync)
 - **Achievement:** Integrated refresh_feed_stats() into sync process with error handling
@@ -25,21 +31,23 @@
 
 ## Current State
 - **Branch:** main
-- **Status:** 2 uncommitted files (src/app/api/sync/route.ts, src/app/api/test-refresh-stats/route.ts)
-- **Latest commit:** 174ac8f
+- **Status:** 5 uncommitted files (modified code, docs, and new migration)
+- **Latest commit:** b1094d4
 - **Security Status:** ✅ ALL CRITICAL VULNERABILITIES RESOLVED
 - **Performance Status:** ✅ MAJOR OPTIMIZATIONS COMPLETED
   - 92.4% data reduction (unread counts function)
   - Performance migration applied via Supabase MCP
-  - Feed stats refresh integrated into sync process
+  - Feed stats refresh integrated and FIXED with unique index
+  - Console logging added for refresh visibility
 
-## Completed This Session - PERFORMANCE ANALYSIS & OPTIMIZATION ✅
-- ✅ **TODO-005: Materialized View Refresh After Sync COMPLETED**
+## Completed This Session - FEED STATS REFRESH FIX ✅
+- ✅ **TODO-005: Materialized View Refresh After Sync COMPLETED WITH FIX**
   - Added refresh_feed_stats() call to sync endpoint after article upserts
-  - Refresh happens before sync metadata update for data consistency
-  - Errors are logged but don't fail the sync process
-  - Created test endpoint `/api/test-refresh-stats` for verification
-  - Feed stats now automatically update after each sync operation
+  - **Fixed concurrent refresh error** by creating unique index on feed_stats(feed_id)
+  - Applied migration: `fix_feed_stats_unique_index` via Supabase MCP
+  - Added console logging for visibility ([Sync] messages)
+  - Verified working: sync completes without errors, unread counts update correctly
+  - Feed stats now refresh automatically after each sync
 - ✅ **TODO-004: Database Performance Analysis COMPLETED**
   - Root cause analysis of timezone queries (45.4% execution time)
   - Created comprehensive performance migration with:
@@ -89,16 +97,18 @@
 
 ## Next Priority - Feature Completion & Production Deployment
 
-### 1. **Test Feed Stats Refresh** (Quick Verification) ✅
-- Run manual sync: `POST /api/sync`
-- Verify refresh with: `GET /api/test-refresh-stats`
-- Check unread counts update in UI
-
-### 2. **Complete Existing Features**
+### 1. **Complete Existing Features**
 
 - **TODO-006: Complete US-102** - Automatic daily sync cron job (2am and 2pm)
+  - Implement node-cron for scheduling
+  - Add sync error logging to database
+  - Batch update read states to Inoreader
 - **TODO-007: Complete US-203** - "Fetch Full Content" UI integration  
+  - Add button to article view
+  - Display extracted content when available
 - **TODO-008: Complete US-104** - Content extraction UI buttons
+  - UI to trigger extraction
+  - Loading states during extraction
 
 ### 3. **Production Deployment Preparation**
 
