@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All documentation updated to reference Claude 4 Sonnet
   - Tested and verified with real article data
 
+- **Configurable Claude Model** - Enhancement
+  - Added `CLAUDE_SUMMARIZATION_MODEL` environment variable
+  - Allows easy switching between Claude models without code changes
+  - Defaults to `claude-sonnet-4-20250514` if not specified
+  - Updated all environment example files
+  - Tested with different model configurations
+
 ### In Progress - January 21, 2025 Session (Server API Integration)
 - **Server API Integration** (US-203) - Sync functionality working, UI integration pending
   - ✅ Sync button successfully calls `POST /api/sync` endpoint

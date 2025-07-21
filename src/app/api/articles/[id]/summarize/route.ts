@@ -95,8 +95,11 @@ ${textContent.substring(0, 10000)} ${textContent.length > 10000 ? '...[truncated
 
 Write a clear, informative summary that captures the essence of this article.`;
 
+    // Get model from environment variable with fallback
+    const claudeModel = process.env.CLAUDE_SUMMARIZATION_MODEL || 'claude-sonnet-4-20250514';
+    
     const completion = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: claudeModel,
       max_tokens: 300,
       temperature: 0.3,
       messages: [
@@ -131,7 +134,7 @@ Write a clear, informative summary that captures the essence of this article.`;
     return NextResponse.json({
       success: true,
       summary,
-      model: 'claude-sonnet-4-20250514',
+      model: claudeModel,
       regenerated: forceRegenerate,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens
