@@ -294,6 +294,8 @@ of the following article in 150-175 words. Focus on the key facts,
 main arguments, and important conclusions. Maintain objectivity
 and preserve the author's core message.
 
+IMPORTANT: Do NOT include the article title in your summary. Start directly with the content summary.
+
 Article Details:
 Title: [TITLE]
 Author: [AUTHOR]
@@ -302,7 +304,7 @@ Published: [DATE]
 Article Content:
 [BODY]
 
-Write a clear, informative summary that captures the essence of this article.
+Write a clear, informative summary that captures the essence of this article without repeating the title.
 ```
 
 **Priority:** P1 - Key Feature  

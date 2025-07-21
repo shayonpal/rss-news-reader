@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated all environment example files
   - Tested with different model configurations
 
+- **Improved Summary Prompt** - Enhancement
+  - Updated prompt to explicitly exclude article title from summaries
+  - Prevents duplicate titles in UI when displaying summaries
+  - Summaries now start directly with content
+
 ### In Progress - January 21, 2025 Session (Server API Integration)
 - **Server API Integration** (US-203) - Sync functionality working, UI integration pending
   - ✅ Sync button successfully calls `POST /api/sync` endpoint

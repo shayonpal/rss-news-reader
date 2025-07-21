@@ -85,6 +85,8 @@ export async function POST(
     // Generate summary using Claude
     const prompt = `You are a news summarization assistant. Create a concise summary of the following article in 150-175 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
 
+IMPORTANT: Do NOT include the article title in your summary. Start directly with the content summary.
+
 Article Details:
 Title: ${article.title || 'Untitled'}
 Author: ${article.author || 'Unknown'}
@@ -93,7 +95,7 @@ Published: ${article.published_at ? new Date(article.published_at).toLocaleDateS
 Article Content:
 ${textContent.substring(0, 10000)} ${textContent.length > 10000 ? '...[truncated]' : ''}
 
-Write a clear, informative summary that captures the essence of this article.`;
+Write a clear, informative summary that captures the essence of this article without repeating the title.`;
 
     // Get model from environment variable with fallback
     const claudeModel = process.env.CLAUDE_SUMMARIZATION_MODEL || 'claude-sonnet-4-20250514';
