@@ -271,126 +271,35 @@ export class HealthCheckService {
   }
 
   private async checkInoreaderApi(): Promise<ApiHealth> {
-    const start = Date.now();
-    try {
-      // Build full URL for server-side fetch
-      const baseUrl = typeof window !== 'undefined' 
-        ? '' 
-        : `http://localhost:${process.env.PORT || 3000}`;
-      
-      const response = await fetch(`${baseUrl}/api/auth/inoreader/status`, {
-        signal: AbortSignal.timeout(this.config.timeout),
-      });
-      
-      const duration = Date.now() - start;
-      const data = await response.json();
-
-      // Track response time
-      this.trackResponseTime('inoreader', duration);
-
-      if (!response.ok) {
-        return {
-          name: 'inoreader',
-          status: 'unhealthy',
-          message: 'Inoreader API is not responding correctly',
-          duration,
-          details: {
-            endpoint: '/api/auth/inoreader/status',
-            responseTime: duration,
-            statusCode: response.status,
-          },
-        };
-      }
-
-      // Check rate limit status
-      const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '100');
-      const rateLimitReset = response.headers.get('X-RateLimit-Reset');
-
-      let status: HealthStatus = 'healthy';
-      let message = 'Inoreader API is operational';
-
-      if (rateLimitRemaining < 10) {
-        status = 'degraded';
-        message = `Low API quota remaining: ${rateLimitRemaining} calls`;
-      }
-
-      return {
-        name: 'inoreader',
-        status,
-        message,
-        duration,
-        details: {
-          endpoint: '/api/auth/inoreader/status',
-          responseTime: duration,
-          statusCode: response.status,
-          rateLimitRemaining,
-          rateLimitReset: rateLimitReset ? new Date(parseInt(rateLimitReset) * 1000) : undefined,
-        },
-      };
-    } catch (error) {
-      return {
-        name: 'inoreader',
-        status: 'unhealthy',
-        message: 'Failed to connect to Inoreader API',
-        duration: Date.now() - start,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
+    // DISABLED: Authentication is now handled server-side only
+    // No client-side auth endpoints exist in the new architecture
+    return {
+      name: 'inoreader',
+      status: 'unknown',
+      message: 'Inoreader API check disabled (server-side auth only)',
+      duration: 0,
+      details: {
+        endpoint: 'N/A - Server-side only',
+        responseTime: 0,
+        statusCode: 0,
+      },
+    };
   }
 
   private async checkClaudeApi(): Promise<ApiHealth> {
-    // Note: This check will be performed server-side in the API endpoint
-    // Client-side cannot access ANTHROPIC_API_KEY
-
-    const start = Date.now();
-    try {
-      // Build full URL for server-side fetch
-      const baseUrl = typeof window !== 'undefined' 
-        ? '' 
-        : `http://localhost:${process.env.PORT || 3000}`;
-        
-      // Simple health check
-      const response = await fetch(`${baseUrl}/api/health/claude`, {
-        signal: AbortSignal.timeout(this.config.timeout),
-      });
-
-      const duration = Date.now() - start;
-      this.trackResponseTime('claude', duration);
-
-      if (!response.ok) {
-        return {
-          name: 'claude',
-          status: 'degraded',
-          message: 'Claude API health check failed',
-          duration,
-          details: {
-            endpoint: '/api/health/claude',
-            responseTime: duration,
-            statusCode: response.status,
-          },
-        };
-      }
-
-      return {
-        name: 'claude',
-        status: 'healthy',
-        message: 'Claude API is operational',
-        duration,
-        details: {
-          endpoint: '/api/health/claude',
-          responseTime: duration,
-          statusCode: response.status,
-        },
-      };
-    } catch (error) {
-      return {
-        name: 'claude',
-        status: 'degraded',
-        message: 'Claude API is unreachable',
-        duration: Date.now() - start,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
+    // DISABLED: Claude API is now accessed server-side only
+    // No client-side Claude endpoints exist in the new architecture
+    return {
+      name: 'claude',
+      status: 'unknown',
+      message: 'Claude API check disabled (server-side only)',
+      duration: 0,
+      details: {
+        endpoint: 'N/A - Server-side only',
+        responseTime: 0,
+        statusCode: 0,
+      },
+    };
   }
 
   private async checkCache(): Promise<ServiceHealth> {
@@ -500,43 +409,20 @@ export class HealthCheckService {
   private async checkAuth(): Promise<ServiceHealth> {
     const checks: ComponentHealthCheck[] = [];
 
-    try {
-      // Build full URL for server-side fetch
-      const baseUrl = typeof window !== 'undefined' 
-        ? '' 
-        : `http://localhost:${process.env.PORT || 3000}`;
-        
-      const response = await fetch(`${baseUrl}/api/auth/inoreader/status`);
-      const data = await response.json();
+    // DISABLED: Authentication is now handled server-side only
+    // No client authentication in the new architecture
+    const authCheck: AuthHealth = {
+      name: 'authentication',
+      status: 'unknown',
+      message: 'Auth check disabled (server-side only)',
+      details: {
+        authenticated: false,
+        tokenValid: false,
+        refreshAvailable: false,
+      },
+    };
 
-      const authCheck: AuthHealth = {
-        name: 'authentication',
-        status: data.authenticated ? 'healthy' : 'degraded',
-        message: data.authenticated ? 'User authenticated' : 'User not authenticated',
-        details: {
-          authenticated: data.authenticated,
-          tokenValid: data.authenticated && !data.needsRefresh,
-          refreshAvailable: data.authenticated,
-        },
-      };
-
-      checks.push(authCheck);
-
-      if (data.authenticated && data.needsRefresh) {
-        checks.push({
-          name: 'token-refresh',
-          status: 'degraded',
-          message: 'Token needs refresh',
-        });
-      }
-    } catch (error) {
-      checks.push({
-        name: 'authentication',
-        status: 'unknown',
-        message: 'Failed to check authentication status',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
+    checks.push(authCheck);
 
     const overallStatus = this.calculateComponentStatus(checks);
 

@@ -569,6 +569,54 @@ Write a clear, informative summary that captures the essence of this article wit
 
 ---
 
+### US-703: Incremental Sync with Date Parameters (Future Consideration)
+
+**As** Shayon  
+**I want** to evaluate whether incremental sync using date parameters would improve efficiency  
+**So that** I can optimize API usage and performance if needed
+
+**Context:**
+The current sync implementation fetches the latest N articles (configured via `SYNC_MAX_ARTICLES`, default 200) and uses database-level deduplication via upsert operations with `onConflict: 'inoreader_id'`. This approach:
+- Ensures no duplicates (database unique constraint)
+- Updates existing articles with latest read/starred status
+- Handles overlapping time ranges elegantly
+- Maintains data integrity without complex state management
+
+**Potential Benefits of Date Parameters (`ot`/`nt`):**
+- Reduced API payload size (fetch only new articles)
+- Lower Supabase write operations
+- Faster sync completion times
+- More frequent sync capability within rate limits
+
+**Current Approach Advantages:**
+- Simplicity (no timestamp tracking needed)
+- Always updates read/starred status for recent articles
+- No risk of missing articles due to time gaps
+- Robust error recovery (no partial state)
+
+**Acceptance Criteria:**
+- [ ] Monitor current sync performance and API usage patterns
+- [ ] Track scenarios where >200 new articles accumulate between syncs
+- [ ] Evaluate if users experience delays with current approach
+- [ ] Consider implementation only if:
+  - API rate limits become constraining
+  - Sync performance degrades with data growth
+  - Need for more frequent syncs (hourly vs daily)
+  - Supabase costs become significant
+
+**Implementation Considerations:**
+- Would require tracking last successful sync timestamp
+- Need to handle edge cases (long gaps, time zone issues)
+- Continuation tokens for fetching >1000 new articles
+- More complex error recovery logic
+
+**Recommendation:** Keep current implementation unless scaling issues arise. The simplicity and reliability of the current approach outweighs the optimization benefits for a single-user application.
+
+**Priority:** P4 - Future Optimization  
+**Story Points:** 8 (if implemented)
+
+---
+
 ## Success Metrics
 
 ### Core Functionality
