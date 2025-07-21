@@ -7,6 +7,9 @@ import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight } from
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
+import { SummaryButton } from './summary-button';
+import { SummaryDisplay } from './summary-display';
+import { useArticleStore } from '@/lib/stores/article-store';
 
 interface ArticleDetailProps {
   article: Article;
@@ -26,12 +29,28 @@ export function ArticleDetail({
   const contentRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [currentArticle, setCurrentArticle] = useState(article);
+  const { getArticle } = useArticleStore();
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
 
+  // Update current article when it changes or summary is updated
+  useEffect(() => {
+    setCurrentArticle(article);
+  }, [article]);
+
+  // Handle summary success
+  const handleSummarySuccess = async () => {
+    // Refresh the article to get the updated summary
+    const updatedArticle = await getArticle(article.id);
+    if (updatedArticle) {
+      setCurrentArticle(updatedArticle);
+    }
+  };
+
   // Clean and sanitize HTML content
-  const cleanContent = DOMPurify.sanitize(article.content, {
+  const cleanContent = DOMPurify.sanitize(currentArticle.content, {
     ALLOWED_TAGS: ['p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'em', 
                    'strong', 'br', 'figure', 'figcaption', 'iframe', 'video'],
@@ -82,12 +101,12 @@ export function ArticleDetail({
   };
 
   const handleShare = async () => {
-    if (navigator.share && article.url) {
+    if (navigator.share && currentArticle.url) {
       try {
         await navigator.share({
-          title: article.title,
-          text: article.summary || '',
-          url: article.url,
+          title: currentArticle.title,
+          text: currentArticle.summary || '',
+          url: currentArticle.url,
         });
       } catch (error) {
         // User cancelled or share failed
@@ -125,10 +144,10 @@ export function ArticleDetail({
               onClick={onToggleStar}
               className={cn(
                 "hover:bg-gray-100 dark:hover:bg-gray-800",
-                article.tags?.includes('starred') && "text-yellow-500"
+                currentArticle.tags?.includes('starred') && "text-yellow-500"
               )}
             >
-              <Star className={cn("h-5 w-5", article.tags?.includes('starred') && "fill-current")} />
+              <Star className={cn("h-5 w-5", currentArticle.tags?.includes('starred') && "fill-current")} />
             </Button>
             
             <Button
@@ -140,16 +159,23 @@ export function ArticleDetail({
               <Share2 className="h-5 w-5" />
             </Button>
             
-            {article.url && (
+            {currentArticle.url && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => window.open(article.url, '_blank')}
+                onClick={() => window.open(currentArticle.url, '_blank')}
                 className="hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <ExternalLink className="h-5 w-5" />
               </Button>
             )}
+            
+            <SummaryButton
+              articleId={currentArticle.id}
+              hasSummary={!!currentArticle.summary}
+              variant="icon"
+              onSuccess={handleSummarySuccess}
+            />
           </div>
         </div>
       </header>
@@ -159,23 +185,32 @@ export function ArticleDetail({
         {/* Metadata */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
-            {article.title}
+            {currentArticle.title}
           </h1>
           
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <span className="font-medium">{feedTitle}</span>
             <span>•</span>
-            {article.author && (
+            {currentArticle.author && (
               <>
-                <span>{article.author}</span>
+                <span>{currentArticle.author}</span>
                 <span>•</span>
               </>
             )}
-            <time dateTime={article.publishedAt.toISOString()}>
-              {formatDistanceToNow(article.publishedAt, { addSuffix: true })}
+            <time dateTime={currentArticle.publishedAt.toISOString()}>
+              {formatDistanceToNow(currentArticle.publishedAt, { addSuffix: true })}
             </time>
           </div>
         </div>
+
+        {/* AI Summary */}
+        {currentArticle.summary && (
+          <SummaryDisplay
+            summary={currentArticle.summary}
+            collapsible={true}
+            defaultExpanded={true}
+          />
+        )}
 
         {/* Article Body */}
         <div 

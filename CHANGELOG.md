@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 21, 2025 Session (Summary UI Integration)
+- **Summary UI Integration** (US-302) - COMPLETED ✅
+  - Created SummaryButton component with icon and full button variants
+  - Implemented loading states with shimmer animation in article list
+  - Summaries display as full text (not truncated) in article list view
+  - Created collapsible SummaryDisplay component for article detail view
+  - Article detail shows BOTH summary and original content side-by-side
+  - Proper paragraph formatting preserved from Claude API responses
+  - No navigation occurs when clicking summary button in list view
+  - Summary generation tracked per-article to show loading state
+  - Event propagation properly handled to prevent unwanted navigation
+
 ### Added - July 21, 2025 Session (Claude API Integration)
 - **Claude API Integration** (US-301) - COMPLETED ✅
   - Updated to Claude 4 Sonnet model (`claude-sonnet-4-20250514`)

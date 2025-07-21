@@ -315,22 +315,33 @@ Write a clear, informative summary that captures the essence of this article wit
 
 ---
 
-### US-302: Summary UI Integration
+### US-302: Summary UI Integration ✅
 
 **As** Shayon  
 **I want** to see and manage AI summaries in the UI  
 **So that** I can benefit from the summarization feature
 
 **Acceptance Criteria:**
-- [ ] "Summarize" button on articles without summaries
-- [ ] "Re-summarize" button for existing summaries
-- [ ] Loading state during generation (< 5 seconds)
-- [ ] Summaries display in article list view
-- [ ] Clear distinction between summary and content
-- [ ] Error messages for failed generations
+- [x] "Summarize" button on articles without summaries
+- [x] "Re-summarize" button for existing summaries
+- [x] Loading state during generation (shimmer animation)
+- [x] Summaries display in article list view (full summary, not truncated)
+- [x] Clear distinction between summary and content (collapsible gray box in article view)
+- [x] Error messages for failed generations
+- [x] Paragraph formatting preserved in summaries
+
+**Implementation Notes:**
+- Created SummaryButton component with icon and full variants
+- Created SummaryDisplay component with collapsible UI
+- Article list shows full summary replacing content snippet
+- Article detail shows both summary and original content
+- Summaries display with proper paragraph breaks
+- Loading state shows shimmer animation in article list
+- No navigation occurs when summarizing from list view
 
 **Priority:** P1 - Key Feature  
-**Story Points:** 5
+**Story Points:** 5  
+**Status:** ✅ DONE (2025-07-21)
 
 ---
 

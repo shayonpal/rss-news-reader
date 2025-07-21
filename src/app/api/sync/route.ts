@@ -10,6 +10,7 @@ const supabase = createClient(
 
 // In-memory sync status tracking (for MVP - should use Redis or DB in production)
 declare global {
+  // eslint-disable-next-line no-var
   var syncStatus: Map<string, {
     status: 'pending' | 'running' | 'completed' | 'failed';
     progress: number;

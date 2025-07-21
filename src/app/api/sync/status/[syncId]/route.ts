@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 // Import the shared sync status map
 // In production, this should be stored in Redis or a database
 declare global {
+  // eslint-disable-next-line no-var
   var syncStatus: Map<string, {
     status: 'pending' | 'running' | 'completed' | 'failed';
     progress: number;

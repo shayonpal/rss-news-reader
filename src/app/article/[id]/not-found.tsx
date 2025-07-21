@@ -15,7 +15,7 @@ export default function NotFound() {
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           The article you're looking for doesn't exist or has been removed.
         </p>
-        <Button onClick={() => router.push('/reader')}>
+        <Button onClick={() => router.push('/reader' as any)}>
           Back to Reader
         </Button>
       </div>

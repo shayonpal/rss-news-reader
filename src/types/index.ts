@@ -6,17 +6,21 @@ export interface Article {
   content: string;
   summary?: string;
   author?: string;
+  authorName?: string; // Alternative to author for compatibility
   publishedAt: Date;
   feedId: string;
-  feedTitle: string;
+  feedTitle?: string;
   url: string;
   isRead: boolean;
-  isPartial: boolean;
+  isPartial?: boolean;
   images?: string[];
   tags?: string[];
   inoreaderItemId?: string; // Inoreader's item ID for sync
   createdAt: Date;
   updatedAt: Date;
+  state?: ArticleState;
+  fullContentUrl?: string;
+  hasFullContent?: boolean;
 }
 
 export interface Feed {

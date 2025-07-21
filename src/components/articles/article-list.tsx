@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, Star } from 'lucide-react';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { extractTextContent } from '@/lib/utils/data-cleanup';
 import { formatDistanceToNow } from 'date-fns';
+import { SummaryButton } from './summary-button';
 import type { Article } from '@/types';
 
 interface ArticleListProps {
@@ -26,6 +27,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
     loadingMore,
     articlesError,
     hasMore,
+    summarizingArticles,
     loadArticles,
     loadMoreArticles,
     markAsRead,
@@ -95,27 +97,44 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
     onArticleClick?.(article.id);
   }, [markAsRead, onArticleClick]);
 
-  // Render article preview with proper line clamping
+  // Render article preview
   const renderPreview = (article: Article) => {
-    const summaryText = extractTextContent(article.summary);
-    const contentText = extractTextContent(article.content);
-    
-    if (summaryText) {
+    // If article is being summarized, show loading shimmer
+    if (summarizingArticles.has(article.id)) {
       return (
-        <p className="text-sm text-primary line-clamp-4">
-          {summaryText}
-        </p>
+        <div className="mt-2 space-y-2 animate-pulse">
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+        </div>
       );
-    } else if (contentText) {
+    }
+    
+    // If we have an AI summary, show it in full
+    if (article.summary) {
       return (
-        <p className="text-sm text-muted-foreground line-clamp-4">
+        <div className="mt-2 space-y-2">
+          {article.summary.split(/\n+/).filter(para => para.trim()).map((paragraph, index) => (
+            <p key={index} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {paragraph.trim()}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    
+    // Otherwise show a snippet of the content
+    const contentText = extractTextContent(article.content);
+    if (contentText) {
+      return (
+        <p className="text-sm text-muted-foreground line-clamp-4 mt-2">
           {contentText}
         </p>
       );
     }
     
     return (
-      <p className="text-sm text-muted-foreground italic">
+      <p className="text-sm text-muted-foreground italic mt-2">
         No preview available
       </p>
     );
@@ -206,6 +225,13 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
                     <span className="text-yellow-500 text-sm" title="AI Summary Available">
                       ⚡
                     </span>
+                  )}
+                  {!article.summary && !summarizingArticles.has(article.id) && (
+                    <SummaryButton
+                      articleId={article.id}
+                      hasSummary={false}
+                      variant="icon"
+                    />
                   )}
                   <button
                     onClick={(e) => {

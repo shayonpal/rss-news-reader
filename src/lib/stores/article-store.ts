@@ -9,6 +9,7 @@ interface ArticleStoreState {
   articles: Map<string, Article>;
   loadingArticles: boolean;
   articlesError: string | null;
+  summarizingArticles: Set<string>; // Track which articles are being summarized
   
   // Selection and filters
   selectedFeedId: string | null;
@@ -31,7 +32,7 @@ interface ArticleStoreState {
   toggleStar: (articleId: string) => Promise<void>;
   
   // Summary operations
-  generateSummary: (articleId: string) => Promise<Summary | null>;
+  generateSummary: (articleId: string, regenerate?: boolean) => Promise<Summary | null>;
   getSummary: (articleId: string) => Promise<Summary | null>;
   
   // Batch operations
@@ -56,6 +57,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   articles: new Map(),
   loadingArticles: false,
   articlesError: null,
+  summarizingArticles: new Set(),
   selectedFeedId: null,
   selectedFolderId: null,
   selectedArticleId: null,
@@ -117,14 +119,16 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           url: article.url || '',
           tags: article.is_starred ? ['starred'] : [],
           publishedAt: new Date(article.published_at || Date.now()),
-          authorName: '',
+          authorName: article.author || '',
           isRead: article.is_read || false,
-          state: 'active' as ArticleState,
           createdAt: new Date(article.created_at || Date.now()),
           updatedAt: new Date(article.updated_at || Date.now()),
           inoreaderItemId: article.inoreader_id,
           fullContentUrl: article.url,
-          hasFullContent: article.has_full_content || false
+          hasFullContent: article.has_full_content || false,
+          summary: article.ai_summary || undefined,
+          isPartial: false,
+          feedTitle: article.feed?.title || ''
         });
       });
       
@@ -209,14 +213,16 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           url: article.url || '',
           tags: article.is_starred ? ['starred'] : [],
           publishedAt: new Date(article.published_at || Date.now()),
-          authorName: '',
+          authorName: article.author || '',
           isRead: article.is_read || false,
-          state: 'active' as ArticleState,
           createdAt: new Date(article.created_at || Date.now()),
           updatedAt: new Date(article.updated_at || Date.now()),
           inoreaderItemId: article.inoreader_id,
           fullContentUrl: article.url,
-          hasFullContent: article.has_full_content || false
+          hasFullContent: article.has_full_content || false,
+          summary: article.ai_summary || undefined,
+          isPartial: false,
+          feedTitle: article.feed?.title || ''
         });
       });
       
@@ -251,14 +257,16 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           url: article.url || '',
           tags: article.is_starred ? ['starred'] : [],
           publishedAt: new Date(article.published_at || Date.now()),
-          authorName: '',
+          authorName: article.author || '',
           isRead: article.is_read || false,
-          state: 'active' as ArticleState,
           createdAt: new Date(article.created_at || Date.now()),
           updatedAt: new Date(article.updated_at || Date.now()),
           inoreaderItemId: article.inoreader_id,
           fullContentUrl: article.url,
-          hasFullContent: article.has_full_content || false
+          hasFullContent: article.has_full_content || false,
+          summary: article.ai_summary || undefined,
+          isPartial: false,
+          feedTitle: article.feed?.title || ''
         };
         
         // Update in store if loaded
@@ -393,11 +401,57 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     }
   },
 
-  // Generate summary (placeholder - will integrate with Claude API)
-  generateSummary: async (articleId: string) => {
-    // TODO: Implement Claude API integration
-    console.log('Summary generation not yet implemented');
-    return null;
+  // Generate summary
+  generateSummary: async (articleId: string, regenerate: boolean = false) => {
+    const { summarizingArticles } = get();
+    const updatedSummarizingArticles = new Set(summarizingArticles);
+    updatedSummarizingArticles.add(articleId);
+    set({ summarizingArticles: updatedSummarizingArticles });
+
+    try {
+      const response = await fetch(`/reader/api/articles/${articleId}/summarize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ regenerate }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to generate summary');
+      }
+
+      const result = await response.json();
+      
+      // Update the article in store with the new summary
+      const { articles } = get();
+      const article = articles.get(articleId);
+      if (article) {
+        const updatedArticles = new Map(articles);
+        updatedArticles.set(articleId, { ...article, summary: result.summary });
+        set({ articles: updatedArticles });
+      }
+
+      return {
+        id: articleId,
+        articleId,
+        content: result.summary,
+        wordCount: result.summary.split(' ').length,
+        generatedAt: new Date(),
+        model: result.model || 'claude-sonnet-4-20250514',
+        isRegenerated: regenerate
+      } as Summary;
+    } catch (error) {
+      console.error('Failed to generate summary:', error);
+      throw error;
+    } finally {
+      // Remove from summarizing set
+      const { summarizingArticles } = get();
+      const updatedSummarizingArticles = new Set(summarizingArticles);
+      updatedSummarizingArticles.delete(articleId);
+      set({ summarizingArticles: updatedSummarizingArticles });
+    }
   },
 
   // Get summary
@@ -413,10 +467,13 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       if (article?.ai_summary) {
         return {
+          id: articleId,
           articleId,
-          summary: article.ai_summary,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          content: article.ai_summary,
+          wordCount: article.ai_summary.split(' ').length,
+          generatedAt: new Date(),
+          model: 'claude-sonnet-4-20250514',
+          isRegenerated: false
         } as Summary;
       }
       return null;
