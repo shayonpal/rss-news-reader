@@ -617,6 +617,45 @@ The current sync implementation fetches the latest N articles (configured via `S
 
 ---
 
+### US-704: Configurable AI Summarization Prompt
+
+**As** Shayon  
+**I want** to customize the AI summarization prompt via environment variables  
+**So that** I can adjust summary style, length, and focus without code changes
+
+**Acceptance Criteria:**
+- [ ] Default prompt template remains in code as fallback
+- [ ] Environment variables override default settings:
+  - [ ] `CLAUDE_SUMMARY_WORD_COUNT` - Target word count (default: "150-175")
+  - [ ] `CLAUDE_SUMMARY_PROMPT` - Full custom prompt template
+  - [ ] `CLAUDE_SUMMARY_FOCUS` - Focus areas (e.g., "facts, conclusions, implications")
+- [ ] Prompt template supports variable substitution:
+  - `{WORD_COUNT}` - From env var or default
+  - `{TITLE}`, `{AUTHOR}`, `{DATE}` - Article metadata
+  - `{CONTENT}` - Article body
+  - `{FOCUS}` - Custom focus areas
+- [ ] Changes take effect without code deployment
+- [ ] Invalid prompts fall back to default gracefully
+- [ ] Document prompt engineering best practices
+
+**Implementation Notes:**
+- Store in `.env` file on server
+- Hot-reload not required (restart acceptable)
+- Consider prompt versioning for A/B testing
+- Log which prompt version was used per summary
+
+**Example Configuration:**
+```env
+CLAUDE_SUMMARY_WORD_COUNT=200-250
+CLAUDE_SUMMARY_FOCUS=key facts, main arguments, implications, and author's perspective
+CLAUDE_SUMMARY_PROMPT=Summarize this article in {WORD_COUNT} words focusing on {FOCUS}. Article: {TITLE} by {AUTHOR}\n\n{CONTENT}
+```
+
+**Priority:** P2 - Configuration Enhancement  
+**Story Points:** 3
+
+---
+
 ## Success Metrics
 
 ### Core Functionality

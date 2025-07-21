@@ -47,11 +47,11 @@ export default function ArticlePage() {
   const handleToggleStar = async () => {
     if (article) {
       await toggleStar(article.id);
-      const isStarred = article.tags?.includes('starred');
-      const updatedTags = isStarred 
-        ? article.tags?.filter(t => t !== 'starred') || []
-        : [...(article.tags || []), 'starred'];
-      setArticle({ ...article, tags: updatedTags });
+      // Refresh the article to get the updated state from the store
+      const updatedArticle = await getArticle(article.id);
+      if (updatedArticle) {
+        setArticle(updatedArticle);
+      }
     }
   };
 

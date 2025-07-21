@@ -131,7 +131,10 @@ export function ArticleDetail({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onBack}
+            onClick={(e) => {
+              e.preventDefault();
+              onBack();
+            }}
             className="hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <ArrowLeft className="h-5 w-5" />
