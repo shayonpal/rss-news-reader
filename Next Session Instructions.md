@@ -22,6 +22,31 @@
 - ✅ Created Epic 8 for security and performance fixes
 - ✅ Updated documentation with Supabase advisory warnings
 
+## 🔴 IMMEDIATE PRIORITY - Codebase Analysis & TODO Creation
+
+### Before Any New Work - Document Current State
+1. **Analyze Current Codebase**
+   - Read through all documentation in `CHANGELOG.md` and `/docs/` directory
+   - Understand the complete development history and architecture
+   - Identify all completed features and their implementation details
+   
+2. **Refactor User Stories**
+   - Review `/docs/product/user-stories.md` comprehensively
+   - Mark all completed stories as DONE with completion dates
+   - Identify what's truly left to implement
+   - Reprioritize based on current state
+   
+3. **Get User Approval**
+   - Present the analysis and proposed priorities to the user
+   - Get explicit approval on the priority order
+   - Clarify any ambiguous requirements
+   
+4. **Create Master TODO Document**
+   - Create new `/docs/TODOs.md` file
+   - Structure as ordered, actionable tasks
+   - Include acceptance criteria from user stories
+   - Add implementation notes for each task
+
 ## 🚨 CRITICAL SECURITY ISSUES - IMMEDIATE ACTION REQUIRED
 
 ### Security Vulnerabilities (from Supabase Advisory 2025-07-21)
@@ -39,7 +64,7 @@
 3. **Feed loading:** Was 6.4s, optimized to <1s (pending migration)
 4. **Upsert operations:** 28-52ms per article
 
-## Next Priority - Phase 0: CRITICAL SECURITY (Before anything else!)
+## Next Priority - Phase 0: CRITICAL SECURITY (After TODO Creation)
 
 ### 1. **Apply Security Migrations**
 ```bash

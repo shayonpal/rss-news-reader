@@ -957,6 +957,74 @@ Performance analysis shows timezone queries consuming 45.4% of execution time, s
 
 ---
 
+## Epic 9: Bug Fixes 🐛
+
+**Goal**: Fix critical UI functionality issues
+
+### US-901: Fix Article View Interface Controls
+
+**As** Shayon  
+**I want** all article view interface controls to work properly  
+**So that** I can navigate and interact with articles effectively
+
+**Context:**
+The article view interface buttons are currently non-functional, preventing users from using key features like starring articles, navigating between articles, and accessing the summarize functionality.
+
+**Acceptance Criteria:**
+- [ ] "Back to list view" button returns to article list
+- [ ] Star/unstar button toggles article starred state
+- [ ] "Open original article" link opens in new tab
+- [ ] Summarize button triggers AI summary generation
+- [ ] Previous article button navigates to previous article
+- [ ] Next article button navigates to next article
+- [ ] All buttons show appropriate hover states
+- [ ] Loading states display during async operations
+
+**Implementation Notes:**
+- Check ArticleView component event handlers
+- Verify router navigation setup
+- Ensure Supabase updates are triggered correctly
+- Test keyboard navigation (J/K keys)
+
+**Priority:** P0 - Critical UX Bug  
+**Story Points:** 5  
+**Status:** 🔴 TODO
+
+---
+
+### US-902: Fix 404 Errors for Missing Assets
+
+**As** Shayon  
+**I want** all missing assets to be properly handled or created  
+**So that** the server logs are clean and the app loads without errors
+
+**Context:**
+Server logs show multiple 404 errors for missing favicon and app icon files during development, indicating missing PWA assets that should be present.
+
+**Acceptance Criteria:**
+- [ ] Create or fix missing favicon files:
+  - [ ] `/icons/favicon-16x16.png`
+  - [ ] `/icons/favicon-32x32.png`
+- [ ] Create or fix missing Apple touch icons:
+  - [ ] `/apple-touch-icon.png`
+  - [ ] `/apple-touch-icon-precomposed.png`
+- [ ] Verify PWA manifest references correct icon paths
+- [ ] Ensure all referenced assets exist in public directory
+- [ ] Test that icons display correctly in browser tabs and PWA installs
+- [ ] Clean server logs with no 404 errors for assets
+
+**Implementation Notes:**
+- Check `public/` directory for missing files
+- Verify `manifest.json` icon references
+- Generate missing icon sizes if needed
+- Consider using favicon generator tool for consistency
+
+**Priority:** P1 - Quality Bug  
+**Story Points:** 3  
+**Status:** 🔴 TODO
+
+---
+
 ## Updated Success Metrics
 
 ### Security
@@ -970,3 +1038,8 @@ Performance analysis shows timezone queries consuming 45.4% of execution time, s
 - [ ] No query consuming > 20% of total execution time
 - [ ] Average query response < 20ms
 - [ ] Timezone queries reduced by > 80%
+
+### User Experience
+- [ ] All UI controls function properly
+- [ ] No broken navigation flows
+- [ ] Consistent interaction feedback
