@@ -8,6 +8,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
+console.log('[Supabase] Initializing client...');
+const initStartTime = performance.now();
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -18,6 +21,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     schema: 'public'
   }
 })
+
+console.log(`[Supabase] Client initialized in ${(performance.now() - initStartTime).toFixed(2)}ms`);
 
 // Helper function to check if Supabase is connected
 export async function checkSupabaseConnection(): Promise<boolean> {

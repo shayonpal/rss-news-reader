@@ -58,22 +58,28 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
 
   // Load feed hierarchy
   loadFeedHierarchy: async () => {
+    const startTime = performance.now();
+    console.log('[FeedStore] Starting loadFeedHierarchy...');
+    
     set({ loadingFeeds: true, feedsError: null });
     
     try {
       // Get the single user
+      const userStartTime = performance.now();
       const SINGLE_USER_ID = 'shayon';
       const { data: user } = await supabase
         .from('users')
         .select('id')
         .eq('inoreader_id', SINGLE_USER_ID)
         .single();
+      console.log(`[FeedStore] User query took ${(performance.now() - userStartTime).toFixed(2)}ms`);
 
       if (!user) {
         throw new Error('User not found');
       }
 
       // Load all feeds and folders
+      const feedsStartTime = performance.now();
       const [feedsResult, foldersResult] = await Promise.all([
         supabase
           .from('feeds')
@@ -85,6 +91,8 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           .eq('user_id', user.id)
           .order('name')
       ]);
+      console.log(`[FeedStore] Feeds/folders query took ${(performance.now() - feedsStartTime).toFixed(2)}ms`);
+      console.log(`[FeedStore] Loaded ${feedsResult.data?.length || 0} feeds and ${foldersResult.data?.length || 0} folders`);
       
       if (feedsResult.error) throw feedsResult.error;
       if (foldersResult.error) throw foldersResult.error;
@@ -125,6 +133,9 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         });
       });
       
+      const transformStartTime = performance.now();
+      console.log(`[FeedStore] Data transformation took ${(performance.now() - transformStartTime).toFixed(2)}ms`);
+      
       set({
         feeds: feedsMap,
         folders: foldersMap,
@@ -132,9 +143,13 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       });
       
       // Load unread counts
+      const unreadStartTime = performance.now();
       await get().updateUnreadCounts();
+      console.log(`[FeedStore] Unread counts update took ${(performance.now() - unreadStartTime).toFixed(2)}ms`);
+      console.log(`[FeedStore] Total loadFeedHierarchy took ${(performance.now() - startTime).toFixed(2)}ms`);
     } catch (error) {
       console.error('Failed to load feeds:', error);
+      console.log(`[FeedStore] Failed after ${(performance.now() - startTime).toFixed(2)}ms`);
       set({
         loadingFeeds: false,
         feedsError: `Failed to load feeds: ${error}`
@@ -343,19 +358,30 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
 
   // Update unread counts
   updateUnreadCounts: async () => {
+    const startTime = performance.now();
+    console.log('[FeedStore] Starting updateUnreadCounts...');
+    
     try {
       const { feeds, folders } = get();
       const feedsWithCounts = new Map<string, FeedWithUnreadCount>();
       const folderCounts = new Map<string, number>();
       let totalUnread = 0;
       
+      console.log(`[FeedStore] Calculating unread counts for ${feeds.size} feeds...`);
+      
       // Calculate unread counts for each feed
+      const countStartTime = performance.now();
       for (const [feedId, feed] of Array.from(feeds.entries())) {
+        const queryStartTime = performance.now();
         const { count, error } = await supabase
           .from('articles')
           .select('*', { count: 'exact', head: true })
           .eq('feed_id', feedId)
           .eq('is_read', false);
+        
+        if (performance.now() - queryStartTime > 100) {
+          console.log(`[FeedStore] Slow unread count query for feed ${feedId}: ${(performance.now() - queryStartTime).toFixed(2)}ms`);
+        }
         
         const unreadCount = count || 0;
         
@@ -368,6 +394,8 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           folderCounts.set(feed.folderId, currentCount + unreadCount);
         }
       }
+      console.log(`[FeedStore] Unread count queries took ${(performance.now() - countStartTime).toFixed(2)}ms`);
+      console.log(`[FeedStore] Total unread articles: ${totalUnread}`);
       
       // Propagate folder counts up the hierarchy
       const propagateCount = (folderId: string, count: number) => {
@@ -391,8 +419,11 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         folderUnreadCounts: folderCounts,
         totalUnreadCount: totalUnread
       });
+      
+      console.log(`[FeedStore] updateUnreadCounts completed in ${(performance.now() - startTime).toFixed(2)}ms`);
     } catch (error) {
       console.error('Failed to update unread counts:', error);
+      console.log(`[FeedStore] updateUnreadCounts failed after ${(performance.now() - startTime).toFixed(2)}ms`);
     }
   },
 

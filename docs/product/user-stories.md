@@ -656,6 +656,79 @@ CLAUDE_SUMMARY_PROMPT=Summarize this article in {WORD_COUNT} words focusing on {
 
 ---
 
+### US-705: Multi-Provider LLM Support
+
+**As** Shayon  
+**I want** to switch between different LLM providers and models via configuration  
+**So that** I can optimize for cost, quality, or availability without code changes
+
+**Acceptance Criteria:**
+- [ ] Support for multiple LLM providers:
+  - [ ] Anthropic (Claude models)
+  - [ ] OpenAI (GPT models)
+  - [ ] Perplexity (Sonar models)
+- [ ] Environment variables for configuration:
+  - [ ] `LLM_PROVIDER` - Primary provider (anthropic|openai|perplexity)
+  - [ ] `LLM_MODEL` - Specific model for the selected provider
+  - [ ] `LLM_FALLBACK_PROVIDER` - Secondary provider if primary fails
+  - [ ] `LLM_FALLBACK_MODEL` - Model for fallback provider
+- [ ] Provider-specific API keys:
+  - [ ] `ANTHROPIC_API_KEY` - For Claude models
+  - [ ] `OPENAI_API_KEY` - For GPT models
+  - [ ] `PERPLEXITY_API_KEY` - For Perplexity models
+- [ ] Automatic fallback on provider errors (rate limits, outages)
+- [ ] Model validation - reject invalid model names
+- [ ] Response normalization across providers
+- [ ] Usage tracking per provider/model
+
+**Supported Models:**
+```env
+# Anthropic
+- claude-3-opus-20240229
+- claude-3-sonnet-20240229
+- claude-3-haiku-20240307
+- claude-sonnet-4-20250514 (current default)
+
+# OpenAI
+- gpt-4-turbo-preview
+- gpt-4
+- gpt-3.5-turbo
+
+# Perplexity
+- sonar-small-chat
+- sonar-small-online
+- sonar-medium-chat
+- sonar-medium-online
+```
+
+**Implementation Notes:**
+- Create provider abstraction layer
+- Standardize prompt format across providers
+- Handle provider-specific token limits
+- Log provider/model used per summary
+- Consider cost tracking per provider
+
+**Example Configuration:**
+```env
+# Primary provider
+LLM_PROVIDER=anthropic
+LLM_MODEL=claude-3-haiku-20240307
+
+# Fallback provider
+LLM_FALLBACK_PROVIDER=openai
+LLM_FALLBACK_MODEL=gpt-3.5-turbo
+
+# API Keys
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+PERPLEXITY_API_KEY=pplx-...
+```
+
+**Priority:** P2 - Flexibility Enhancement  
+**Story Points:** 8
+
+---
+
 ## Success Metrics
 
 ### Core Functionality

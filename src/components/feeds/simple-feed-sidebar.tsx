@@ -17,7 +17,11 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
   
   // Load feeds when component mounts
   useEffect(() => {
-    loadFeedHierarchy();
+    console.log('[SimpleFeedSidebar] Component mounted, calling loadFeedHierarchy...');
+    const startTime = performance.now();
+    loadFeedHierarchy().then(() => {
+      console.log(`[SimpleFeedSidebar] loadFeedHierarchy completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+    });
   }, [loadFeedHierarchy]);
   
   // Remove sync parameter from URL if present (cleanup from old behavior)
