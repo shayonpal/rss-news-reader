@@ -221,7 +221,35 @@ src/
 - **Article List**: Infinite scroll with read/unread states
 - **Offline Queue**: Actions synced when back online
 
+### Critical Security & Performance Issues (2025-07-21)
+
+**⚠️ IMPORTANT**: Supabase advisors have identified critical issues that need immediate attention:
+
+1. **🔴 Critical Security**: Row Level Security (RLS) is disabled on ALL public tables
+   - Anyone with the Supabase anon key can read/modify all data
+   - See **US-801** in user stories for implementation details
+
+2. **🟡 Security Warning**: Function `update_updated_at_column` has mutable search_path
+   - Potential SQL injection vulnerability
+   - See **US-802** for fix
+
+3. **🟠 Performance Issues**:
+   - Timezone queries consuming 45.4% of execution time
+   - Feed loading taking 6.4 seconds due to N+1 query problem
+   - See **US-803** for optimization plan
+
+**Action Required**: Implement Epic 8 (Security & Performance Fixes) before production deployment.
+
 ### Next Steps
+
+**Immediate Priority - Security Fixes**:
+- [ ] **US-801**: Enable Row Level Security on all tables (P0 - Critical)
+- [ ] **US-802**: Fix function security vulnerability (P0 - Security)
+
+**Performance Optimizations**:
+- [ ] **US-803**: Optimize database queries and indexes (P1)
+- [ ] Run migration for `get_unread_counts_by_feed` function
+- [ ] **US-804**: Set up database monitoring (P2)
 
 **To Complete US-102 (Server Sync Service)**:
 - [ ] Implement automatic daily cron job

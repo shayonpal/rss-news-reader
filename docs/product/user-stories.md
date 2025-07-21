@@ -751,16 +751,21 @@ PERPLEXITY_API_KEY=pplx-...
 
 ## Implementation Priority
 
+### Phase 0: CRITICAL SECURITY (Immediate)
+1. **US-801**: Enable Row Level Security (P0 - Critical)
+2. **US-802**: Fix Function Security (P0 - Security)
+3. **US-803**: Database Performance Optimization (P1)
+
 ### Phase 1: Server Foundation (Week 1)
-1. US-101: OAuth Setup
-2. US-102: Sync Service
-3. US-103: API Endpoints
+1. US-101: OAuth Setup ✅
+2. US-102: Sync Service (Partial)
+3. US-103: API Endpoints ✅
 4. US-105: Tailscale Monitoring
 
 ### Phase 2: Client Simplification (Week 2)
-1. US-201: Remove Authentication
-2. US-202: Supabase-Only Data
-3. US-203: Server API Integration
+1. US-201: Remove Authentication ✅
+2. US-202: Supabase-Only Data ✅
+3. US-203: Server API Integration (Partial)
 
 ### Phase 3: Core Features (Week 3)
 1. US-104: Content Extraction
@@ -773,6 +778,7 @@ PERPLEXITY_API_KEY=pplx-...
 2. US-502: Clean Migration
 3. US-503: Error Handling
 4. US-403: Sync Status Display
+5. US-804: Database Monitoring
 
 ### Phase 5: Polish (Week 5)
 1. US-402: Theme Toggle
@@ -782,6 +788,9 @@ PERPLEXITY_API_KEY=pplx-...
 ### Phase 6: Future Enhancements
 1. US-701: Feed Search
 2. US-702: Folder State Persistence
+3. US-703: Incremental Sync Evaluation
+4. US-704: Configurable AI Prompt
+5. US-705: Multi-Provider LLM Support
 
 ## Technical Notes
 
@@ -808,3 +817,156 @@ PERPLEXITY_API_KEY=pplx-...
 - Deployment: PM2 + Caddy
 
 This simplified architecture dramatically reduces complexity while maintaining all core functionality. The single-user, self-hosted approach allows for these optimizations that wouldn't be possible in a multi-user SaaS product.
+
+---
+
+## Epic 8: Security & Performance Fixes 🔒
+
+**Goal**: Address critical security vulnerabilities and performance issues identified by Supabase advisors
+
+### US-801: Enable Row Level Security (Critical Security Fix)
+
+**As** Shayon  
+**I want** Row Level Security (RLS) enabled on all public tables  
+**So that** my data is protected from unauthorized access even if someone obtains the Supabase anon key
+
+**Context:**
+Supabase advisory (2025-07-21) identified that RLS is disabled on all public tables, creating a major security vulnerability where anyone with the anon key could read/modify data.
+
+**Acceptance Criteria:**
+- [ ] Enable RLS on all public tables:
+  - [ ] `public.users` table
+  - [ ] `public.feeds` table
+  - [ ] `public.folders` table
+  - [ ] `public.articles` table
+  - [ ] `public.api_usage` table
+  - [ ] `public.sync_metadata` table
+- [ ] Create appropriate RLS policies for single-user access:
+  - [ ] All operations restricted to the single user (shayon)
+  - [ ] Read-only access for anon key (client operations)
+  - [ ] Write access through service role only (server operations)
+- [ ] Test that client can still read data with RLS enabled
+- [ ] Test that unauthorized access is blocked
+- [ ] Document the RLS policies in migration file
+
+**Implementation Notes:**
+```sql
+-- Example RLS policy for single-user setup
+ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
+
+-- Allow read access for the single user
+CREATE POLICY "Single user can read articles" ON public.articles
+  FOR SELECT
+  USING (user_id = (SELECT id FROM users WHERE inoreader_id = 'shayon'));
+
+-- Similar policies needed for all tables
+```
+
+**Priority:** P0 - Critical Security Fix  
+**Story Points:** 5  
+**Status:** 🔴 TODO
+
+---
+
+### US-802: Fix Function Security Vulnerability
+
+**As** Shayon  
+**I want** the database function to have explicit search_path  
+**So that** it cannot be exploited for SQL injection attacks
+
+**Acceptance Criteria:**
+- [ ] Update `public.update_updated_at_column` function with explicit search_path
+- [ ] Set search_path to 'public' only
+- [ ] Test that the function still works correctly
+- [ ] Create migration to update existing function
+
+**Implementation Notes:**
+```sql
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+```
+
+**Priority:** P0 - Security Fix  
+**Story Points:** 2
+
+---
+
+### US-803: Optimize Database Performance
+
+**As** Shayon  
+**I want** optimized database queries and reduced overhead  
+**So that** the app performs faster and uses fewer resources
+
+**Context:**
+Performance analysis shows timezone queries consuming 45.4% of execution time, schema introspection taking 10.2%, and slow upsert operations.
+
+**Acceptance Criteria:**
+- [ ] **Timezone Optimization**:
+  - [ ] Investigate why timezone queries are so frequent
+  - [ ] Implement caching or alternative approach
+  - [ ] Reduce timezone query overhead by >80%
+- [ ] **Schema Introspection**:
+  - [ ] Identify source of frequent schema queries
+  - [ ] Cache schema information if possible
+  - [ ] Reduce introspection query frequency
+- [ ] **Upsert Optimization**:
+  - [ ] Add indexes for upsert conflict columns if missing
+  - [ ] Consider batch upsert operations
+  - [ ] Optimize article upserts (currently 28-52ms)
+  - [ ] Optimize feed upserts (currently 13.7ms)
+- [ ] **Additional Optimizations**:
+  - [ ] Review and optimize the unread counts function
+  - [ ] Add composite indexes for common query patterns
+  - [ ] Consider materialized views for complex aggregations
+
+**Performance Targets:**
+- [ ] Average query response time < 20ms
+- [ ] No single query type consuming > 20% of total time
+- [ ] Feed load time < 500ms (down from 6.4s)
+
+**Priority:** P1 - Performance  
+**Story Points:** 8
+
+---
+
+### US-804: Implement Database Monitoring
+
+**As** Shayon  
+**I want** ongoing monitoring of database performance and security  
+**So that** I can proactively identify and fix issues
+
+**Acceptance Criteria:**
+- [ ] Set up automated Supabase advisor reports
+- [ ] Create alerts for:
+  - [ ] Slow queries (> 100ms)
+  - [ ] Failed RLS policy checks
+  - [ ] High resource usage
+- [ ] Document monitoring setup
+- [ ] Create runbook for common issues
+
+**Priority:** P2 - Monitoring  
+**Story Points:** 3
+
+---
+
+## Updated Success Metrics
+
+### Security
+- [ ] All tables have RLS enabled
+- [ ] No security warnings in Supabase advisor
+- [ ] All functions have explicit search_path
+- [ ] Zero unauthorized data access attempts
+
+### Performance  
+- [ ] Feed sidebar loads in < 500ms
+- [ ] No query consuming > 20% of total execution time
+- [ ] Average query response < 20ms
+- [ ] Timezone queries reduced by > 80%
