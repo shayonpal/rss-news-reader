@@ -369,21 +369,68 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       
       console.log(`[FeedStore] Calculating unread counts for ${feeds.size} feeds...`);
       
-      // Calculate unread counts for each feed
+      // Get all unread counts in a single query
       const countStartTime = performance.now();
-      for (const [feedId, feed] of Array.from(feeds.entries())) {
-        const queryStartTime = performance.now();
-        const { count, error } = await supabase
+      
+      // First, get the user ID
+      const SINGLE_USER_ID = 'shayon';
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('inoreader_id', SINGLE_USER_ID)
+        .single();
+      
+      if (!user) {
+        console.error('[FeedStore] User not found for unread counts');
+        return;
+      }
+      
+      // Get unread counts for all feeds in one efficient query
+      let unreadCounts: any[] | null = null;
+      let error: any = null;
+      
+      try {
+        // Try to use the optimized database function first
+        const result = await supabase.rpc('get_unread_counts_by_feed', { p_user_id: user.id });
+        unreadCounts = result.data;
+        error = result.error;
+      } catch (e) {
+        // Fallback if function doesn't exist
+        console.log('[FeedStore] Database function not found, using fallback method');
+        const result = await supabase
           .from('articles')
-          .select('*', { count: 'exact', head: true })
-          .eq('feed_id', feedId)
+          .select('feed_id')
+          .eq('user_id', user.id)
           .eq('is_read', false);
-        
-        if (performance.now() - queryStartTime > 100) {
-          console.log(`[FeedStore] Slow unread count query for feed ${feedId}: ${(performance.now() - queryStartTime).toFixed(2)}ms`);
+        unreadCounts = result.data;
+        error = result.error;
+      }
+      
+      // Create a map of feed_id to unread count
+      const unreadCountMap = new Map<string, number>();
+      
+      if (!error && unreadCounts) {
+        if ('unread_count' in (unreadCounts[0] || {})) {
+          // Using the database function
+          unreadCounts.forEach((row: any) => {
+            unreadCountMap.set(row.feed_id, row.unread_count);
+          });
+        } else {
+          // Using the fallback method
+          unreadCounts.forEach((article: any) => {
+            if (article.feed_id) {
+              const currentCount = unreadCountMap.get(article.feed_id) || 0;
+              unreadCountMap.set(article.feed_id, currentCount + 1);
+            }
+          });
         }
-        
-        const unreadCount = count || 0;
+      }
+      
+      console.log(`[FeedStore] Unread count query took ${(performance.now() - countStartTime).toFixed(2)}ms`);
+      
+      // Apply counts to feeds
+      for (const [feedId, feed] of Array.from(feeds.entries())) {
+        const unreadCount = unreadCountMap.get(feedId) || 0;
         
         feedsWithCounts.set(feedId, { ...feed, unreadCount });
         totalUnread += unreadCount;
@@ -394,7 +441,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           folderCounts.set(feed.folderId, currentCount + unreadCount);
         }
       }
-      console.log(`[FeedStore] Unread count queries took ${(performance.now() - countStartTime).toFixed(2)}ms`);
+      
       console.log(`[FeedStore] Total unread articles: ${totalUnread}`);
       
       // Propagate folder counts up the hierarchy
