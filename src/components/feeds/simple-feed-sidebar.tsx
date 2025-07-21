@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
   onFeedSelect: (feedId: string | null) => void;
+  onClose?: () => void;
 }
 
 export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSidebarProps) {
@@ -33,7 +34,7 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
   }, []);
 
   return (
-    <div className="w-80 border-r bg-muted/10 flex flex-col">
+    <div className="h-full border-r bg-background flex flex-col">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">

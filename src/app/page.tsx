@@ -6,10 +6,12 @@ import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { ArticleList } from '@/components/articles/article-list';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { getFeed } = useFeedStore();
 
   const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : null;
@@ -19,28 +21,65 @@ export default function HomePage() {
     router.push(`/article/${encodeURIComponent(articleId)}`);
   };
 
+  const handleFeedSelect = (feedId: string | null) => {
+    setSelectedFeedId(feedId);
+    // Close sidebar on mobile after selection
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-background">
-      {/* Feed Sidebar */}
-      <ErrorBoundary fallback={
-        <div className="w-80 border-r bg-muted/10 p-4">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">Feed sidebar error</p>
-            <p className="text-xs text-muted-foreground mt-2">Data synced successfully</p>
-          </div>
-        </div>
-      }>
-        <SimpleFeedSidebar
-          selectedFeedId={selectedFeedId}
-          onFeedSelect={setSelectedFeedId}
+    <div className="flex h-screen bg-background relative">
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
         />
-      </ErrorBoundary>
+      )}
+
+      {/* Feed Sidebar */}
+      <div className={`
+        fixed md:static inset-y-0 left-0 z-50
+        transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 transition-transform duration-200 ease-in-out
+        w-[280px] md:w-80
+      `}>
+        <ErrorBoundary fallback={
+          <div className="h-full border-r bg-muted/10 p-4">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Feed sidebar error</p>
+              <p className="text-xs text-muted-foreground mt-2">Data synced successfully</p>
+            </div>
+          </div>
+        }>
+          <SimpleFeedSidebar
+            selectedFeedId={selectedFeedId}
+            onFeedSelect={handleFeedSelect}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        </ErrorBoundary>
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="border-b px-6 py-4">
-          <h1 className="text-2xl font-semibold">{pageTitle}</h1>
+        <header className="border-b px-4 md:px-6 py-3 md:py-4 flex items-center gap-3">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 hover:bg-muted rounded-lg md:hidden"
+            aria-label="Toggle sidebar"
+          >
+            {isSidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
+          
+          <h1 className="text-xl md:text-2xl font-semibold truncate">{pageTitle}</h1>
         </header>
 
         {/* Article List */}
