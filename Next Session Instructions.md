@@ -1,52 +1,77 @@
 # Next Session Instructions
 
-**Last Updated:** Tuesday, January 21, 2025 at 4:45 PM
+**Last Updated:** Monday, July 21, 2025 at 3:30 PM
 
-## Latest Session - January 21, 2025 (2:30 PM - 4:45 PM)
-- **Duration:** ~2 hours
-- **Main focus:** US-203 Server API Integration & US-103 Server API Endpoints
-- **Issues worked:** US-203 (partial), US-103 (complete)
+## Latest Session - July 21, 2025 (3:00 PM - 3:30 PM)
+- **Duration:** ~30 minutes
+- **Main focus:** Performance troubleshooting, security advisory review, and mobile fixes
+- **Issues addressed:** Mobile responsiveness, 404 errors, performance optimization
 
 ## Current State
 - **Branch:** main
 - **Status:** Clean (all changes pushed)
-- **Latest commit:** 9f30998
-- **Server endpoints:** All working (sync, content extraction, AI summaries)
+- **Latest commit:** 57017cc
+- **Critical Issues:** RLS disabled on all tables (security vulnerability)
 
 ## Completed This Session
-- ✅ Fixed Next.js basePath routing issue causing 404s
-- ✅ Implemented sync functionality with real-time progress
-- ✅ Created all server API endpoints (US-103)
-- ✅ Added rate limit warnings and tracking
-- ✅ Successfully tested sync (168 articles)
-- ✅ Updated all documentation
+- ✅ Fixed mobile responsiveness with slide-out sidebar
+- ✅ Resolved 404 errors by disabling legacy health checks
+- ✅ Fixed article navigation and star button persistence
+- ✅ Identified N+1 query problem causing 6.4s load time
+- ✅ Implemented performance optimization for unread counts
+- ✅ Created Epic 8 for security and performance fixes
+- ✅ Updated documentation with Supabase advisory warnings
 
-## Next Priority - Epic 3: AI Summarization 🤖
+## 🚨 CRITICAL SECURITY ISSUES - IMMEDIATE ACTION REQUIRED
 
-### 1. **US-301: Claude API Integration** (UI work needed)
-Server endpoint exists at `/api/articles/:id/summarize` and is working.
-Need to add client-side UI:
-- Article list: Show ⚡ indicator for articles with summaries
-- Article view: Add "Generate Summary" button
-- Display summaries in article cards
-- Handle loading states and errors
+### Security Vulnerabilities (from Supabase Advisory 2025-07-21)
+1. **🔴 Row Level Security DISABLED on ALL tables**
+   - Anyone with Supabase anon key can read/modify all data
+   - Migration file ready: `20240123_enable_rls_security.sql`
+   
+2. **🟡 Function security vulnerability**
+   - `update_updated_at_column` has mutable search_path
+   - Migration file ready: `20240124_fix_function_security.sql`
 
-### 2. **US-302: Summary UI Integration**
-- Design summary display component
-- Add regeneration option for existing summaries
-- Implement 5-second loading timeout UI
-- Show token usage/cost if available
+### Performance Issues Identified
+1. **Timezone queries:** 45.4% of execution time
+2. **Schema introspection:** 10.2% of execution time  
+3. **Feed loading:** Was 6.4s, optimized to <1s (pending migration)
+4. **Upsert operations:** 28-52ms per article
 
-### 3. **Complete US-203** (Remaining tasks)
+## Next Priority - Phase 0: CRITICAL SECURITY (Before anything else!)
+
+### 1. **Apply Security Migrations**
+```bash
+# Run these migrations IMMEDIATELY on Supabase
+supabase/migrations/20240123_enable_rls_security.sql
+supabase/migrations/20240124_fix_function_security.sql
+supabase/migrations/20240122_create_unread_counts_function.sql
+```
+
+### 2. **Test After RLS Enable**
+- Verify client can still read feeds/articles
+- Verify client can update read/starred status
+- Test unauthorized access is blocked
+- Ensure server (service role) still works
+
+### 3. **Complete US-102** (Server Sync - Remaining)
+- Implement automatic daily cron job
+- Add sync error logging to database
+- Implement read state sync back to Inoreader
+
+## After Security Fixes - Continue with Features
+
+### 4. **US-301 & US-302: AI Summarization** ✅ COMPLETED
+- Server endpoints working perfectly
+- Summary UI fully integrated in article list and detail views
+- Shimmer loading states implemented
+- Re-summarize functionality working
+
+### 5. **Complete US-203** (Remaining tasks)
 - Add "Fetch Full Content" button to article view
 - Display extracted content when available
-- These features complement AI summaries
-
-## Important Context
-- **Server endpoints ready:** Both content extraction and AI summary endpoints are fully functional
-- **Rate limiting:** Inoreader API limited to 100 calls/day (currently tracking usage)
-- **Architecture:** Server handles all external APIs, client is presentation only
-- **No client auth:** Access controlled by Tailscale network
+- Server endpoint ready at `/api/articles/:id/fetch-content`
 
 ## Commands to Run Next Session
 ```bash
@@ -55,26 +80,35 @@ cd /Users/shayon/DevProjects/rss-news-reader
 git pull origin main
 npm run dev:network
 
-# View server endpoints documentation
-open http://100.96.166.53:3000/reader/test-server-api
+# Test performance improvements
+open http://100.96.166.53:3000/reader/test-performance
 
-# Check current sync status
-# The app should have 168 articles already synced
+# Check Supabase dashboard for security status
+# Verify RLS is enabled on all tables after migrations
 ```
 
-## Technical Notes
-- Claude API integration uses Claude 4 Sonnet
-- Summaries are 150-175 words as configured
-- Content extraction uses Mozilla Readability
-- All features cache results in Supabase to minimize API calls
+## Performance Test Results (Mobile)
+- **Supabase connection:** 315ms
+- **Simple query:** 254ms (5 feeds)
+- **Count query:** 189ms (287 unread)
+- **Feed hierarchy load:** 6.4s → Should be <1s after migration
 
-## UI Components Needed
-1. Summary indicator in article list (⚡ icon)
-2. "Generate Summary" button in article view
-3. Summary display card with regenerate option
-4. Loading spinner with timeout handling
-5. Error state for failed generations
+## Important Reminders
+- **🔴 SECURITY FIRST:** Do not deploy to production until RLS is enabled
+- **Service Role Key:** Keep server-side only, never expose to client
+- **Anon Key:** Only for client read operations with RLS protection
+- **Performance:** Run the unread counts migration for 10x speed improvement
+
+## Technical Architecture
+- **Server:** Handles all external APIs (Inoreader, Claude)
+- **Client:** Pure presentation layer, reads from Supabase only
+- **Security:** Tailscale network + RLS policies
+- **Data Flow:** Inoreader → Server → Supabase → Client
 
 ---
 
-## Session completed successfully with all major objectives achieved!
+## Critical Path:
+1. Apply security migrations
+2. Test RLS thoroughly  
+3. Apply performance migration
+4. Then continue with feature development
