@@ -151,6 +151,44 @@
   - [ ] Previous/next article navigation works
 - **Files**: `src/components/articles/ArticleView.tsx`
 
+#### TODO-009a: US-903 - Fix Scroll Position Loss on Navigation Back (P1 - UX Bug)
+- **Status**: 🔴 TODO
+- **Issue**: When navigating back from article detail view (using back button or browser back), the article list scroll position is lost and resets to top
+- **Root Cause**: The app uses client-side navigation with `router.push('/')` which creates a new page instance instead of preserving the previous state
+- **Acceptance Criteria**:
+  - [ ] Implement scroll position preservation when navigating to article detail
+  - [ ] Restore scroll position when returning from article detail
+  - [ ] Works with both UI back button and browser back button
+  - [ ] Smooth user experience without jarring jumps
+- **Proposed Solutions**:
+  1. **Option 1 - History State**: Use `router.back()` instead of `router.push('/')` for back navigation
+  2. **Option 2 - Scroll Position Store**: Save scroll position in a store/context before navigation
+  3. **Option 3 - Next.js Scroll Restoration**: Configure Next.js experimental scroll restoration
+- **Implementation Details**:
+  ```typescript
+  // In article detail page (src/app/article/[id]/page.tsx):
+  // Change: onBack={() => router.push('/')}
+  // To: onBack={() => router.back()}
+  
+  // In article list component, add scroll position tracking:
+  useEffect(() => {
+    const scrollPos = sessionStorage.getItem('articleListScroll');
+    if (scrollPos && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = parseInt(scrollPos);
+    }
+    
+    return () => {
+      if (scrollContainerRef.current) {
+        sessionStorage.setItem('articleListScroll', scrollContainerRef.current.scrollTop.toString());
+      }
+    };
+  }, []);
+  ```
+- **Files to modify**:
+  - `src/app/article/[id]/page.tsx` - Change navigation method
+  - `src/components/articles/article-list.tsx` - Add scroll position tracking
+  - `src/app/layout.tsx` - Optional: Configure Next.js scroll restoration
+
 #### TODO-010: US-902 - Fix 404 Errors for Missing Assets (P1 - Quality Bug)
 - **Status**: 🔴 TODO
 - **Issue**: Missing favicon and PWA icons causing 404s

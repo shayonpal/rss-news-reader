@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - January 21, 2025 Session (iOS Safari Button Controls)
+- **Article View Interface Controls** (TODO-009, US-901) - COMPLETED ✅
+  - Fixed iOS Safari button click issues requiring double-tap
+  - Created IOSButton component with proper touch event handling
+  - Disabled hover states on touch devices to prevent click delays
+  - Updated all article view buttons (back, star, share, external link, navigation)
+  - Updated SummaryButton component to use IOSButton
+  - Added iOS-specific CSS fixes for button interaction
+  - Buttons now respond immediately on first tap on iPhone/iPad Safari
+  - Maintained full compatibility with desktop browsers
+
 ### Fixed - July 21, 2025 Session (Critical Security Vulnerabilities) ✅ COMPLETED
 - **Row Level Security Implementation** (TODO-001, US-801) - COMPLETED ✅
   - Enabled RLS on all 6 public tables (users, feeds, folders, articles, api_usage, sync_metadata)

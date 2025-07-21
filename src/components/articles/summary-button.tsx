@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Loader2, Sparkles, RotateCcw } from 'lucide-react';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { IOSButton } from '@/components/ui/ios-button';
 
 interface SummaryButtonProps {
   articleId: string;
@@ -25,8 +25,7 @@ export function SummaryButton({
   const [error, setError] = useState<string | null>(null);
   const { generateSummary } = useArticleStore();
 
-  const handleGenerateSummary = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling to parent elements
+  const handleGenerateSummary = async () => {
     setIsLoading(true);
     setError(null);
 
@@ -43,16 +42,17 @@ export function SummaryButton({
 
   if (variant === 'icon') {
     return (
-      <Button
+      <IOSButton
         variant="ghost"
         size="icon"
-        onClick={handleGenerateSummary}
+        onPress={handleGenerateSummary}
         disabled={isLoading}
         className={cn(
-          "hover:bg-gray-100 dark:hover:bg-gray-800",
+          "hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700",
           className
         )}
         title={hasSummary ? "Regenerate summary" : "Generate AI summary"}
+        aria-label={hasSummary ? "Regenerate summary" : "Generate AI summary"}
       >
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
@@ -61,18 +61,18 @@ export function SummaryButton({
         ) : (
           <Sparkles className="h-5 w-5" />
         )}
-      </Button>
+      </IOSButton>
     );
   }
 
   return (
-    <Button
-      onClick={handleGenerateSummary}
+    <IOSButton
+      onPress={handleGenerateSummary}
       disabled={isLoading}
       variant="default"
       size="sm"
       className={cn(
-        "bg-blue-600 hover:bg-blue-700",
+        "bg-blue-600 hover:bg-blue-700 active:bg-blue-800",
         className
       )}
     >
@@ -92,6 +92,6 @@ export function SummaryButton({
           Summarize
         </>
       )}
-    </Button>
+    </IOSButton>
   );
 }

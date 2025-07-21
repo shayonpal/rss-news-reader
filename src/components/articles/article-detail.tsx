@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Article } from '@/types';
+import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -112,9 +113,15 @@ export function ArticleDetail({
         // User cancelled or share failed
         console.log('Share failed:', error);
       }
-    } else if (article.url) {
+    } else if (currentArticle.url) {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(article.url);
+      try {
+        await navigator.clipboard.writeText(currentArticle.url);
+        // Could add a toast notification here
+        console.log('Link copied to clipboard');
+      } catch (error) {
+        console.error('Failed to copy link:', error);
+      }
     }
   };
 
@@ -128,49 +135,50 @@ export function ArticleDetail({
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Button
+          <IOSButton
             variant="ghost"
             size="icon"
-            onClick={(e) => {
-              e.preventDefault();
-              onBack();
-            }}
-            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            onPress={onBack}
+            aria-label="Back to list"
+            className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
           >
             <ArrowLeft className="h-5 w-5" />
-          </Button>
+          </IOSButton>
           
           <div className="flex items-center gap-2">
-            <Button
+            <IOSButton
               variant="ghost"
               size="icon"
-              onClick={onToggleStar}
+              onPress={onToggleStar}
+              aria-label="Toggle star"
               className={cn(
-                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                "hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700",
                 currentArticle.tags?.includes('starred') && "text-yellow-500"
               )}
             >
               <Star className={cn("h-5 w-5", currentArticle.tags?.includes('starred') && "fill-current")} />
-            </Button>
+            </IOSButton>
             
-            <Button
+            <IOSButton
               variant="ghost"
               size="icon"
-              onClick={handleShare}
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+              onPress={handleShare}
+              aria-label="Share article"
+              className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
             >
               <Share2 className="h-5 w-5" />
-            </Button>
+            </IOSButton>
             
             {currentArticle.url && (
-              <Button
+              <IOSButton
                 variant="ghost"
                 size="icon"
-                onClick={() => window.open(currentArticle.url, '_blank')}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                onPress={() => window.open(currentArticle.url, '_blank', 'noopener,noreferrer')}
+                aria-label="Open original article"
+                className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
               >
                 <ExternalLink className="h-5 w-5" />
-              </Button>
+              </IOSButton>
             )}
             
             <SummaryButton
@@ -232,25 +240,27 @@ export function ArticleDetail({
       {/* Navigation Footer */}
       <footer className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Button
+          <IOSButton
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate('prev')}
-            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            onPress={() => onNavigate('prev')}
+            aria-label="Previous article"
+            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
-          </Button>
+          </IOSButton>
           
-          <Button
+          <IOSButton
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate('next')}
-            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            onPress={() => onNavigate('next')}
+            aria-label="Next article"
+            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
           >
             Next
             <ChevronRight className="h-4 w-4" />
-          </Button>
+          </IOSButton>
         </div>
       </footer>
     </div>

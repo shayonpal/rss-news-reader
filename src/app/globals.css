@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS Safari button click fix */
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Ensure buttons are clickable on iOS */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Disable hover states on touch devices to prevent iOS click delay */
+@media (hover: none) and (pointer: coarse) {
+  button:hover {
+    background-color: transparent !important;
+  }
+  
+  .hover\:bg-gray-100:hover {
+    background-color: transparent !important;
+  }
+  
+  .dark .hover\:bg-gray-800:hover {
+    background-color: transparent !important;
+  }
+}
+
+/* Fix for iOS Safari where buttons might not register clicks */
+@supports (-webkit-touch-callout: none) {
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Force iOS to treat buttons as clickable */
+  button:active {
+    opacity: 0.8;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
