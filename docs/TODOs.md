@@ -141,15 +141,16 @@
 
 ### Phase 2: Bug Fixes
 
-#### TODO-009: US-901 - Fix Article View Interface Controls (P0 - Critical Bug)
-- **Status**: 🔴 TODO
-- **Issue**: Article view buttons not working
-- **Acceptance Criteria**:
-  - [ ] "Back to list view" button returns to article list
-  - [ ] Star/unstar button toggles article starred state
-  - [ ] "Open original article" link opens in new tab
-  - [ ] Previous/next article navigation works
-- **Files**: `src/components/articles/ArticleView.tsx`
+#### TODO-009: US-901 - Fix Article View Interface Controls (P0 - Critical Bug) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - iOS Safari button controls fixed
+- **Issue**: Article view buttons not working (required double-tap on iOS)
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] "Back to list view" button returns to article list
+  - [x] Star/unstar button toggles article starred state
+  - [x] "Open original article" link opens in new tab
+  - [x] Previous/next article navigation works
+- **Solution**: Created IOSButton component with proper touch event handling
+- **Completed**: January 21, 2025 - All buttons work on first tap on iOS devices
 
 #### TODO-009a: US-903 - Fix Scroll Position Loss on Navigation Back (P1 - UX Bug)
 - **Status**: 🔴 TODO
