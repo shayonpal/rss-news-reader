@@ -66,7 +66,7 @@ Shayon's News is a PWA RSS reader that:
 ### Core Functionality
 
 1. **Inoreader Integration** - Single source of truth for feed management
-2. **AI Summarization** - On-demand summaries using Claude 3.5 Sonnet
+2. **AI Summarization** - On-demand summaries using Claude 4 Sonnet
 3. **Offline Support** - Cache last 50 articles + all viewed content
 4. **Full Content Fetching** - Manual fetch for partial feeds
 5. **Bidirectional Sync** - Read/unread status syncs with Inoreader

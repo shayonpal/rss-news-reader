@@ -122,7 +122,7 @@ npm run setup:oauth
 **Implementation Notes:**
 - Enhanced `/api/sync` with rate limiting and usage tracking
 - Created content extraction using Mozilla Readability
-- Integrated Claude 3.5 Sonnet for AI summaries
+- Integrated Claude 4 Sonnet for AI summaries
 - Added `api_usage` and `sync_metadata` tables
 - Created test page at `/test-server-api`
 - All endpoints cache results to minimize API calls
@@ -266,21 +266,26 @@ npm run setup:oauth
 
 **Goal**: Implement server-side AI summarization with Claude
 
-### US-301: Claude API Integration
+### US-301: Claude API Integration ✅
 
 **As** Shayon with ADHD  
 **I want** AI-generated summaries for articles  
 **So that** I can quickly grasp key points without reading full articles
 
 **Acceptance Criteria:**
-- [ ] Server-side Anthropic Claude 4 Sonnet integration
-- [ ] 150-175 word summaries
-- [ ] Summaries stored in `ai_summary` field
-- [ ] API key stored securely on server
-- [ ] Token usage tracked server-side
-- [ ] Error handling for API failures
+- [x] Server-side Anthropic Claude 4 Sonnet integration
+- [x] 150-175 word summaries
+- [x] Summaries stored in `ai_summary` field
+- [x] API key stored securely on server
+- [x] Token usage tracked server-side
+- [x] Error handling for API failures
 
-**Note:** The server endpoint exists at `/api/articles/:id/summarize` but needs client integration.
+**Implementation Notes:**
+- Server endpoint at `/api/articles/:id/summarize` is fully functional
+- Uses Claude 4 Sonnet model: `claude-sonnet-4-20250514`
+- Summaries are being successfully stored in database
+- Caching implemented to avoid regenerating existing summaries
+- Ready for client UI integration
 
 **Prompt Template:**
 ```
@@ -302,6 +307,7 @@ Write a clear, informative summary that captures the essence of this article.
 
 **Priority:** P1 - Key Feature  
 **Story Points:** 8
+**Status:** ✅ DONE (2025-07-21)
 
 ---
 

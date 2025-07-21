@@ -267,7 +267,7 @@ POST https://api.anthropic.com/v1/messages
 
 ```typescript
 const CLAUDE_CONFIG = {
-  model: "claude-3-5-sonnet-20241022",
+  model: "claude-sonnet-4-20250514",
   maxTokens: 200, // 100-120 word summaries
   temperature: 0.3, // Consistent, factual summaries
   topP: 0.9,
@@ -333,7 +333,7 @@ interface CostTracker {
   summariesGenerated: number
 
   calculateCost(): number {
-    // Claude 3.5 Sonnet pricing (example)
+    // Claude 4 Sonnet pricing (example)
     const inputCostPer1k = 0.003   // $3 per 1M tokens
     const outputCostPer1k = 0.015  // $15 per 1M tokens
 

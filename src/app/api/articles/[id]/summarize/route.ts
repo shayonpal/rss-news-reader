@@ -96,7 +96,7 @@ ${textContent.substring(0, 10000)} ${textContent.length > 10000 ? '...[truncated
 Write a clear, informative summary that captures the essence of this article.`;
 
     const completion = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-latest',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
       temperature: 0.3,
       messages: [
@@ -131,7 +131,7 @@ Write a clear, informative summary that captures the essence of this article.`;
     return NextResponse.json({
       success: true,
       summary,
-      model: 'claude-3-5-sonnet-latest',
+      model: 'claude-sonnet-4-20250514',
       regenerated: forceRegenerate,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens

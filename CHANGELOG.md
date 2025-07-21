@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 21, 2025 Session (Claude API Integration)
+- **Claude API Integration** (US-301) - COMPLETED ✅
+  - Updated to Claude 4 Sonnet model (`claude-sonnet-4-20250514`)
+  - 150-175 word AI-powered article summaries
+  - Summaries successfully stored in `ai_summary` database field
+  - Token usage tracking for cost monitoring
+  - Caching mechanism to avoid regenerating existing summaries
+  - Comprehensive error handling for rate limits and API failures
+  - All documentation updated to reference Claude 4 Sonnet
+  - Tested and verified with real article data
+
 ### In Progress - January 21, 2025 Session (Server API Integration)
 - **Server API Integration** (US-203) - Sync functionality working, UI integration pending
   - ✅ Sync button successfully calls `POST /api/sync` endpoint
@@ -36,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Caches extracted content in `full_content` field
     - 10-second timeout for slow sites
   - Created `POST /api/articles/:id/summarize` for AI summarization
-    - Uses Claude 3.5 Sonnet for 150-175 word summaries
+    - Uses Claude 4 Sonnet for 150-175 word summaries
     - Supports regeneration with `regenerate: true` parameter
     - Tracks token usage for cost monitoring
     - Caches summaries in `ai_summary` field

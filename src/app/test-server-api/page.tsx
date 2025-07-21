@@ -235,7 +235,7 @@ export default function TestServerAPIPage() {
               <li>POST /api/sync - Trigger manual sync (with rate limiting)</li>
               <li>GET /api/sync/status/:id - Check sync progress</li>
               <li>POST /api/articles/:id/fetch-content - Extract full content using Mozilla Readability</li>
-              <li>POST /api/articles/:id/summarize - Generate AI summary using Claude 3.5 Sonnet</li>
+              <li>POST /api/articles/:id/summarize - Generate AI summary using Claude 4 Sonnet</li>
             </ul>
           </div>
           

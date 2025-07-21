@@ -143,7 +143,7 @@ Content-Type: application/json
 
 **Endpoint:** `POST /api/articles/:id/summarize`
 
-**Description:** Generates a 150-175 word summary using Claude 3.5 Sonnet
+**Description:** Generates a 150-175 word summary using Claude 4 Sonnet
 
 **Request:**
 ```json
@@ -160,7 +160,7 @@ Content-Type: application/json
 {
   "success": true,
   "summary": "This article discusses the latest developments in...",
-  "model": "claude-3-5-sonnet-latest",
+  "model": "claude-sonnet-4-20250514",
   "regenerated": false,
   "input_tokens": 1234,
   "output_tokens": 175

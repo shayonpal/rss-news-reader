@@ -265,8 +265,8 @@ See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news
 ### Claude API (Anthropic)
 
 - AI-powered article summarization
-- Model: claude-3-5-sonnet-latest
-- Summary length: 100-120 words
+- Model: claude-sonnet-4-20250514
+- Summary length: 150-175 words
 
 ## Data Architecture
 
