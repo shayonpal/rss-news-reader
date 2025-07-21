@@ -11,8 +11,9 @@ export function PWAProvider() {
       registerServiceWorker();
     }
     
-    // Initialize health check scheduler
-    initializeHealthScheduler();
+    // DISABLED: Health check scheduler disabled in server-client architecture
+    // Health checks were trying to access removed auth endpoints
+    // initializeHealthScheduler();
   }, []);
 
   return null;

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Shayon's News",
   description:
     "A clean, fast, and intelligent RSS reader with AI-powered summaries",
-  manifest: "/manifest.json",
+  manifest: "/reader/manifest.json",
   icons: {
     icon: [
       { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
