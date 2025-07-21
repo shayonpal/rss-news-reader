@@ -271,6 +271,21 @@ async function performServerSync(syncId: string) {
     }
 
     status.progress = 90;
+    status.message = 'Refreshing feed statistics...';
+
+    // Refresh the materialized view for accurate unread counts
+    try {
+      const { error: refreshError } = await supabase.rpc('refresh_feed_stats');
+      if (refreshError) {
+        console.error('Failed to refresh feed stats:', refreshError);
+        // Don't fail the sync if refresh fails - just log it
+      }
+    } catch (error) {
+      console.error('Error refreshing feed stats:', error);
+      // Continue with sync completion even if refresh fails
+    }
+
+    status.progress = 95;
     status.message = 'Updating sync metadata...';
 
     // Update sync metadata

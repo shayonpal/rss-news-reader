@@ -67,23 +67,21 @@
 - **Documentation**: `/docs/tech/performance-analysis-2025-01-22.md`
 - **Completed**: January 22, 2025 - Comprehensive performance optimization
 
-#### TODO-005: Refresh Materialized View After Sync (P1 - Performance)
-- **Status**: 🔴 TODO
+#### TODO-005: Refresh Materialized View After Sync (P1 - Performance) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Materialized view refresh integrated into sync process
 - **Issue**: The `feed_stats` materialized view needs to be refreshed after each sync to show accurate unread counts
 - **User Story**: US-805
-- **Acceptance Criteria**:
-  - [ ] Add `refresh_feed_stats()` call after successful sync in server code
-  - [ ] Ensure refresh happens after all articles are synced to Supabase
-  - [ ] Handle refresh errors gracefully (log but don't fail sync)
-  - [ ] Test that unread counts update correctly after sync
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Add `refresh_feed_stats()` call after successful sync in server code
+  - [x] Ensure refresh happens after all articles are synced to Supabase
+  - [x] Handle refresh errors gracefully (log but don't fail sync)
+  - [x] Test that unread counts update correctly after sync
 - **Implementation**:
-  ```sql
-  -- Call this after sync completes:
-  SELECT refresh_feed_stats();
-  ```
-- **Files to modify**:
-  - Server sync endpoint that saves articles to Supabase
-  - Add after `syncToSupabase()` completes successfully
+  - Added refresh_feed_stats() call in `/src/app/api/sync/route.ts` at line 278
+  - Refresh happens after all articles are upserted but before sync metadata update
+  - Errors are logged but don't fail the sync process
+  - Created test endpoint `/api/test-refresh-stats` for verification
+- **Completed**: January 22, 2025 - Refresh integrated with error handling
 
 ---
 
@@ -113,7 +111,7 @@
 - **Status**: 🟡 PARTIALLY COMPLETE - Manual sync working perfectly
 - **Completed**: ✅ Manual sync, API endpoints, progress polling, rate limiting
 - **Missing**:
-  - [ ] Implement daily cron job (node-cron)
+  - [ ] Implement daily cron job (node-cron) for 2am and 2pm server time
   - [ ] Add sync error logging to database
   - [ ] Implement read state sync back to Inoreader (batch updates)
 - **Implementation**:
@@ -212,7 +210,7 @@
 
 ### Phase 4: UX Enhancements
 
-#### TODO-013: US-401 - Feed and Tag Filtering (P1 - UX)
+#### TODO-014: US-401 - Feed and Tag Filtering (P1 - UX)
 - **Status**: 🔴 TODO
 - **Current**: Basic feed filtering exists
 - **Missing**:
@@ -221,7 +219,7 @@
   - [ ] Mutually exclusive filtering (feed OR tag)
   - [ ] "All Articles" option to clear filters
 
-#### TODO-014: US-402 - Theme Toggle (P2 - UX)
+#### TODO-015: US-402 - Theme Toggle (P2 - UX)
 - **Status**: 🔴 TODO (Theme system partially exists)
 - **Acceptance Criteria**:
   - [ ] Theme toggle in settings
@@ -229,7 +227,7 @@
   - [ ] Smooth theme transitions
   - [ ] Theme preference persistence
 
-#### TODO-015: US-403 - Sync Status Display (P1 - UX)
+#### TODO-016: US-403 - Sync Status Display (P1 - UX)
 - **Status**: 🔴 TODO
 - **Current**: Basic progress display exists
 - **Missing**:
@@ -240,7 +238,7 @@
 
 ### Phase 5: Monitoring & Polish
 
-#### TODO-016: US-503 - Error Handling & Monitoring (P1 - Production Quality)
+#### TODO-017: US-503 - Error Handling & Monitoring (P1 - Production Quality)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Server API errors display clearly in UI
@@ -248,7 +246,7 @@
   - [ ] Supabase connection errors handled
   - [ ] Rate limit warnings at 80% and 95%
 
-#### TODO-017: US-804 - Database Monitoring (P2 - Monitoring)
+#### TODO-018: US-804 - Database Monitoring (P2 - Monitoring)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Set up automated Supabase advisor reports
@@ -260,7 +258,7 @@
 
 ## 📋 FUTURE ENHANCEMENTS (P3)
 
-#### TODO-018: US-701 - Feed Search Functionality
+#### TODO-019: US-701 - Feed Search Functionality
 - **GitHub Issue**: #32
 - **Status**: 🔵 Future
 - **Acceptance Criteria**:
@@ -268,7 +266,7 @@
   - [ ] Real-time filtering as user types
   - [ ] Keyboard shortcut (Cmd/Ctrl + K)
 
-#### TODO-019: US-702 - Persist Folder Expansion State
+#### TODO-020: US-702 - Persist Folder Expansion State
 - **GitHub Issue**: #31
 - **Status**: 🔵 Future
 - **Acceptance Criteria**:
@@ -276,7 +274,7 @@
   - [ ] States persist across sessions
   - [ ] Use localStorage for persistence
 
-#### TODO-020: US-601 - Performance Optimization (P2 - Quality)
+#### TODO-021: US-601 - Performance Optimization (P2 - Quality)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Initial load < 2 seconds
@@ -286,7 +284,7 @@
   - [ ] Images lazy loaded
   - [ ] Bundle size minimized
 
-#### TODO-021: US-602 - PWA Polish (P2 - Quality)
+#### TODO-022: US-602 - PWA Polish (P2 - Quality)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Install prompt at right time
@@ -296,7 +294,7 @@
   - [ ] Update mechanism works
   - [ ] Works over HTTP (Tailscale)
 
-#### TODO-022: US-704 - Configurable AI Summarization Prompt (P2 - Configuration)
+#### TODO-023: US-704 - Configurable AI Summarization Prompt (P2 - Configuration)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Add environment variables: `CLAUDE_SUMMARY_WORD_COUNT`, `CLAUDE_SUMMARY_PROMPT`, `CLAUDE_SUMMARY_FOCUS`
@@ -310,7 +308,7 @@
   CLAUDE_SUMMARY_PROMPT=Custom template with {WORD_COUNT} variables
   ```
 
-#### TODO-023: US-705 - Multi-Provider LLM Support (P2 - Flexibility)
+#### TODO-024: US-705 - Multi-Provider LLM Support (P2 - Flexibility)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Support Anthropic (Claude models)
@@ -331,7 +329,7 @@
   PERPLEXITY_API_KEY=pplx-...
   ```
 
-#### TODO-024: US-703 - Incremental Sync Evaluation (P4 - Future Optimization)
+#### TODO-025: US-703 - Incremental Sync Evaluation (P4 - Future Optimization)
 - **Status**: 🔵 Future Consideration
 - **Context**: Evaluate if date parameters would improve sync efficiency
 - **Acceptance Criteria**:
@@ -369,11 +367,12 @@
 cd /Users/shayon/DevProjects/rss-news-reader
 npm run dev:network
 
-# Apply critical security migrations
+# Apply critical migrations
 # (Run in Supabase dashboard SQL editor)
-# 1. Apply 20240123_enable_rls_security.sql
-# 2. Apply 20240124_fix_function_security.sql
-# 3. Apply 20240122_create_unread_counts_function.sql
+# 1. Apply 20240123_enable_rls_security.sql ✅
+# 2. Apply 20240124_fix_function_security.sql ✅
+# 3. Apply 20240122_create_unread_counts_function.sql ✅
+# 4. Apply 20240125_performance_optimizations_v2.sql ✅
 
 # Test performance after migrations
 open http://100.96.166.53:3000/reader/test-performance
