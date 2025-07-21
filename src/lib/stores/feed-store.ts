@@ -100,15 +100,14 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           title: feed.title || '',
           customTitle: feed.title,
           url: feed.url || '',
-          websiteUrl: feed.url || '',
+          htmlUrl: feed.url || '',
           iconUrl: undefined,
           folderId: feed.folder_id,
           unreadCount: feed.unread_count || 0,
-          sortOrder: 0,
           isActive: true,
           createdAt: new Date(feed.created_at || Date.now()),
           updatedAt: new Date(feed.updated_at || Date.now()),
-          inoreaderFeedId: feed.inoreader_id || undefined
+          inoreaderId: feed.inoreader_id || undefined
         });
       });
 

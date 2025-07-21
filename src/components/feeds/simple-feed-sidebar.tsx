@@ -11,8 +11,14 @@ interface SimpleFeedSidebarProps {
 }
 
 export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSidebarProps) {
-  const { feeds, feedsWithCounts, totalUnreadCount } = useFeedStore();
+  const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy } = useFeedStore();
   const { isSyncing, lastSyncTime, performFullSync, syncError, syncProgress, syncMessage, rateLimit } = useSyncStore();
+  
+  // Load feeds when component mounts
+  useEffect(() => {
+    loadFeedHierarchy();
+  }, [loadFeedHierarchy]);
+  
   // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -97,6 +103,16 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
                 </span>
               </div>
             </div>
+
+            {/* Empty State */}
+            {feeds.size === 0 && !isSyncing && (
+              <div className="p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-2">No feeds yet</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Click the Sync button to load your feeds from Inoreader
+                </p>
+              </div>
+            )}
 
             {/* Individual Feeds */}
             {Array.from(feeds.values()).map((feed) => {
