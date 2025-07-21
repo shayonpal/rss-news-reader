@@ -64,6 +64,9 @@ export async function POST(
     }
 
     // Get content to summarize (prefer full content over RSS content)
+    // TODO: Once US-104 (Content Extraction) is fully implemented with UI,
+    // consider requiring full_content for all summarizations to ensure
+    // complete and accurate summaries. RSS content may be truncated.
     const contentToSummarize = article.full_content || article.content;
     
     if (!contentToSummarize) {

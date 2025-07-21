@@ -286,6 +286,8 @@ npm run setup:oauth
 - Summaries are being successfully stored in database
 - Caching implemented to avoid regenerating existing summaries
 - Ready for client UI integration
+- **Important**: Currently uses RSS content OR full_content (prefers full_content when available)
+- **Future Consideration**: Once US-104 (Content Extraction) is complete, consider requiring full_content for all summaries to ensure accuracy, as RSS content may be truncated
 
 **Prompt Template:**
 ```

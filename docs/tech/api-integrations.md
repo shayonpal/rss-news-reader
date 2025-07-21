@@ -274,23 +274,53 @@ const CLAUDE_CONFIG = {
 };
 ```
 
+### Content Selection for Summarization
+
+**IMPORTANT: Full Content Requirement**
+
+Once the "Fetch Full Content" feature is implemented (US-104), the summarization endpoint will need to be updated to handle the distinction between partial RSS content and full article content:
+
+```typescript
+// Current implementation (already prefers full_content when available)
+const contentToSummarize = article.full_content || article.content;
+
+// Future consideration: Once full_content fetching is implemented,
+// we should ALWAYS require full_content for summarization because:
+// 1. RSS content may be truncated and miss key information
+// 2. The system cannot reliably detect if RSS content is partial or complete
+// 3. Summaries from partial content may be misleading or incomplete
+// 4. Full content is user-triggered, ensuring intentional resource usage
+
+// Recommended future implementation:
+if (!article.full_content && !article.has_full_content) {
+  return NextResponse.json({
+    error: 'full_content_required',
+    message: 'Please fetch full article content before generating summary',
+    requiresAction: 'fetch_content'
+  }, { status: 400 });
+}
+```
+
+**Implementation Note**: The `has_full_content` flag should be set to `true` when content extraction is attempted, even if it fails (falling back to RSS content). This prevents repeated extraction attempts and allows summarization to proceed with available content.
+
 ### Prompt Engineering
 
 **Optimized Prompt Template**:
 
 ```typescript
-const SUMMARY_PROMPT = `You are a news summarization assistant. Create a concise summary of the following article in 100-120 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
+const SUMMARY_PROMPT = `You are a news summarization assistant. Create a concise summary of the following article in 150-175 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
+
+IMPORTANT: Do NOT include the article title in your summary. Start directly with the content summary.
 
 Article Details:
 Title: {title}
 Author: {author}
 Published: {publishedDate}
-Source: {source}
 
 Article Content:
 {content}
 
-Write a clear, informative summary that captures the essence of this article.`;
+Write a clear, informative summary that captures the essence of this article without repeating the title.`;
 
 // Dynamic prompt based on content type
 const promptVariants = {
