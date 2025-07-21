@@ -206,8 +206,9 @@ async function performServerSync(syncId: string) {
     status.message = 'Fetching recent articles...';
 
     // Step 3: Fetch recent articles (single stream call)
+    const maxArticles = process.env.SYNC_MAX_ARTICLES ? parseInt(process.env.SYNC_MAX_ARTICLES) : 100;
     const streamResponse = await tokenManager.makeAuthenticatedRequest(
-      'https://www.inoreader.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list?n=100'
+      `https://www.inoreader.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list?n=${maxArticles}`
     );
 
     if (!streamResponse.ok) {

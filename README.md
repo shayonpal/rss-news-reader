@@ -269,6 +269,24 @@ See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news
 - Default: claude-sonnet-4-20250514
 - Summary length: 150-175 words
 
+### Environment Variables
+
+Key configuration options:
+
+- **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per sync (default: 100)
+  - Controls how many articles are retrieved from Inoreader in each sync operation
+  - Lower values reduce API usage and sync time
+  - Higher values ensure more complete article history
+
+- **`ARTICLES_RETENTION_LIMIT`**: Number of articles to keep during auto-cleanup (default: 1000)
+  - Sets the maximum number of articles to retain in the database
+  - Auto-cleanup feature to be implemented in future updates
+  - Helps manage storage space and database performance
+
+- **`CLAUDE_SUMMARIZATION_MODEL`**: Claude model for AI summaries (default: claude-sonnet-4-20250514)
+  - Allows switching between different Claude models
+  - Useful for testing or when new models are released
+
 ## Data Architecture
 
 ### Server-Client Model
