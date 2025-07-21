@@ -10,12 +10,6 @@ This document contains user stories for completing the RSS Reader PWA based on t
 
 The document includes 21 user stories organized into 7 epics, with the existing 2 open GitHub issues (#31, #32) incorporated as future enhancements.
 
-**Key Architecture Principles:**
-- Server handles ALL Inoreader API communication (4-5 calls per sync)
-- Client has NO authentication - access controlled by Tailscale network
-- Data flows: Inoreader → Server → Supabase → Client
-- Clean-slate migration: No data migration, start fresh with server sync
-
 ## Primary Persona
 
 ### Shayon
@@ -52,10 +46,9 @@ npm run setup:oauth
 # Automated flow:
 # 1. Starts Express server on localhost:8080
 # 2. Launches Playwright browser
-# 3. Auto-fills Inoreader credentials from .env
+# 3. Auto-fills Inoreader credentials
 # 4. Captures tokens from callback
 # 5. Stores encrypted tokens
-# 6. Note: OAuth callback URL must be http://localhost:8080/auth/callback
 ```
 
 **Priority:** P0 - Blocker  
@@ -70,14 +63,13 @@ npm run setup:oauth
 **So that** fresh content is always available without manual intervention
 
 **Acceptance Criteria:**
-- [ ] Cron job runs daily sync at midnight
+- [ ] Cron job runs daily sync at 3.00 AM server time
 - [ ] Efficient API usage: 4-5 calls per sync
 - [ ] Single stream endpoint fetches ALL articles (max 100)
 - [ ] Round-robin distribution (max 20 per feed)
 - [ ] Sync status tracked in `sync_metadata` table
 - [ ] Errors logged to `sync_errors` table
 - [ ] Token refresh handled automatically
-- [ ] Read state changes synced to Inoreader using batch updates
 
 **API Efficiency:**
 ```typescript
@@ -143,14 +135,10 @@ npm run setup:oauth
 **Acceptance Criteria:**
 - [ ] Health check every 5 minutes
 - [ ] Auto-restart with `sudo tailscale up` if down
-- [ ] Sudo configured in `/etc/sudoers.d/tailscale`:
-  ```
-  nodeuser ALL=(ALL) NOPASSWD: /usr/bin/tailscale up
-  ```
+- [ ] Sudo configured in `/etc/sudoers.d/tailscale`
 - [ ] All restart attempts logged
 - [ ] PM2 process management configured
 - [ ] Memory limit set to 1GB
-- [ ] Critical: Without Tailscale, clients cannot access the service
 
 **Priority:** P0 - Critical Infrastructure  
 **Story Points:** 5
@@ -238,20 +226,9 @@ npm run setup:oauth
 
 **Prompt Template:**
 ```
-You are a news summarization assistant. Create a concise summary
-of the following article in 150-175 words. Focus on the key facts,
-main arguments, and important conclusions. Maintain objectivity
-and preserve the author's core message.
-
-Article Details:
-Title: [TITLE]
-Author: [AUTHOR]
-Published: [DATE]
-
-Article Content:
-[BODY]
-
-Write a clear, informative summary that captures the essence of this article.
+You are a news summarization assistant. Create a concise summary 
+of the following article in 150-175 words. Focus on key facts, 
+main arguments, and important conclusions...
 ```
 
 **Priority:** P1 - Key Feature  
@@ -357,10 +334,6 @@ Write a clear, informative summary that captures the essence of this article.
 - [ ] PWA manifest updated for path
 - [ ] Service worker handles path correctly
 - [ ] All assets load from correct path
-- [ ] PM2 ecosystem.config.js configured with:
-  - Max memory: 1GB
-  - Auto-restart: true
-  - Error/output logs configured
 
 **Priority:** P0 - Deployment Blocker  
 **Story Points:** 5
