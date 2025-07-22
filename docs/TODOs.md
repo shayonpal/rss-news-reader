@@ -1,7 +1,19 @@
 # Master TODO List - RSS News Reader
 
-**Last Updated:** July 21, 2025  
-**Status:** Ready for Implementation
+**Last Updated:** July 22, 2025  
+**Status:** Pre-Production Deployment Phase
+
+## 🚀 IMMEDIATE FOCUS: First Production Deployment
+
+Based on the Blue-Green deployment strategy documented in `/docs/deployment/ci-cd-strategy.md`, the following tasks must be completed before the first production deployment:
+
+1. **TODO-033**: Create dev branch and environment setup (P0)
+2. **TODO-034**: Update PM2 ecosystem configuration (P0)
+3. **TODO-035**: Create deployment scripts (P0)
+4. **TODO-036**: Prepare production database (P0)
+5. **TODO-013**: Clean data migration (P1)
+
+Once these are complete, follow the "First Production Deployment" section in the CI/CD strategy document.
 
 ## 🚨 CRITICAL SECURITY ISSUES - IMMEDIATE ACTION REQUIRED
 
@@ -248,6 +260,67 @@
   - [ ] Keep Supabase schema unchanged
   - [ ] Document clean-slate approach
   - [ ] First server sync populates fresh data
+
+### Phase 3.5: Pre-Deployment Setup (Based on CI/CD Strategy)
+
+#### TODO-033: Create Development Branch and Environment Setup (P0 - Pre-Deployment)
+- **Status**: 🔴 TODO
+- **Context**: Required setup before first production deployment
+- **Acceptance Criteria**:
+  - [ ] Create `dev` branch from current `main`
+  - [ ] Push `dev` branch to GitHub
+  - [ ] Switch to `dev` branch for continued development
+  - [ ] Update .env file with PROD_ and DEV_ prefixed variables
+  - [ ] Create separate Supabase project for development database
+  - [ ] Document dev database connection strings in .env
+- **Implementation Steps**:
+  ```bash
+  git checkout -b dev
+  git push -u origin dev
+  ```
+
+#### TODO-034: Update PM2 Ecosystem Configuration (P0 - Pre-Deployment)
+- **Status**: 🔴 TODO
+- **Context**: Update ecosystem.config.js to support multi-app deployment
+- **Acceptance Criteria**:
+  - [ ] Update ecosystem.config.js with three app configurations:
+    - rss-reader-prod (port 3147)
+    - rss-reader-dev (port 3000)
+    - rss-sync-cron (existing)
+  - [ ] Configure environment variables to use PROD_/DEV_ prefixes
+  - [ ] Set proper log file paths for each app
+  - [ ] Update cron app to use production database
+  - [ ] Test configuration syntax with `pm2 start ecosystem.config.js --dry-run`
+- **Reference**: See complete configuration in `/docs/deployment/ci-cd-strategy.md`
+
+#### TODO-035: Create Deployment Scripts (P0 - Pre-Deployment)
+- **Status**: 🔴 TODO
+- **Context**: Automate deployment process for consistency
+- **Acceptance Criteria**:
+  - [ ] Create `/scripts/deploy-production.sh` for production deployments
+  - [ ] Update existing `/scripts/deploy.sh` to support Blue-Green deployment
+  - [ ] Add pre-deployment checks (git status, branch verification)
+  - [ ] Include build step before PM2 reload
+  - [ ] Add post-deployment verification
+  - [ ] Make scripts executable: `chmod +x scripts/*.sh`
+- **Script Features**:
+  - Verify on main branch
+  - Run quality checks (lint, type-check, test)
+  - Build production bundle
+  - Zero-downtime reload with PM2
+  - Health check after deployment
+
+#### TODO-036: Prepare Production Database (P0 - Pre-Deployment)
+- **Status**: 🔴 TODO
+- **Context**: Ensure production database is ready for deployment
+- **Acceptance Criteria**:
+  - [ ] Verify all migrations are applied to production Supabase
+  - [ ] Confirm RLS policies are enabled (from TODO-001)
+  - [ ] Verify materialized views are created
+  - [ ] Test database connection with production credentials
+  - [ ] Document production database URL in deployment notes
+  - [ ] Backup current data if any exists
+- **Note**: This is for the existing production database, not creating a new one
 
 ### Phase 4: UX Enhancements
 
@@ -599,39 +672,25 @@
   - Response: { syncId, status, message }
   ```
 
-#### TODO-032: Document Database Schema in README (P2 - Documentation)
-- **Status**: 🔴 TODO
-- **Issue**: Supabase database schema is not documented in README.md
-- **Current State**: Database exists with 6 tables but lacks documentation
-- **Expected Result**: Complete database schema section in README.md
-- **Acceptance Criteria**:
-  - [ ] Document all 6 tables with their purposes
-  - [ ] List all columns with data types and constraints
-  - [ ] Explain relationships between tables
-  - [ ] Document indexes and their purposes
-  - [ ] Document RLS policies (after TODO-001 completion)
-  - [ ] Include example queries for common operations
-- **Tables to Document**:
-  - `users` - User accounts (currently single-user)
-  - `feeds` - RSS feed subscriptions
-  - `articles` - Individual articles from feeds
-  - `folders` - Feed organization hierarchy
-  - `sync_metadata` - Sync operation tracking
-  - `system_config` - System configuration cache
-- **Additional Database Features**:
-  - `feed_stats` materialized view for performance
-  - `update_updated_at_column` trigger function
-  - `refresh_feed_stats()` function
-- **Documentation Format**:
-  ```markdown
-  ## Database Schema
-  ### Users Table
-  - Purpose: Store user accounts
-  - Columns:
-    - id (uuid, primary key)
-    - inoreader_id (text, unique)
-    - created_at (timestamp)
-  ```
+#### TODO-032: Document Database Schema in README (P2 - Documentation) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Database schema fully documented
+- **Issue**: Supabase database schema was not documented in README.md
+- **Completed**: January 22, 2025
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Document all 7 tables with their purposes
+  - [x] List all columns with data types and constraints
+  - [x] Explain relationships between tables
+  - [x] Document indexes and their purposes
+  - [x] Document RLS policies
+  - [x] Include example queries for common operations
+- **Implementation**:
+  - Added comprehensive Database Schema section to README.md
+  - Documented all 7 tables in detail with markdown tables
+  - Included column descriptions, constraints, and indexes
+  - Added materialized view and database functions documentation
+  - Documented RLS policies for all tables
+  - Provided visual table relationship diagram
+  - Included common SQL query examples
 
 ---
 
@@ -678,21 +737,64 @@ open http://100.96.166.53:3000/reader
 
 ---
 
-**Priority Order**: Security → Performance → Features → Polish → Enhancements
+**Priority Order**: Pre-Deployment Setup (TODO-033 to TODO-036) → Clean Migration (TODO-013) → Production Deployment → Post-Deployment Features
+
+**Deployment Checklist**:
+1. ✅ Security (TODO-001, TODO-002) - COMPLETED
+2. ✅ Performance (TODO-003, TODO-004, TODO-005) - COMPLETED  
+3. ✅ Infrastructure (TODO-006, TODO-011, TODO-012) - COMPLETED
+4. 🔴 Pre-Deployment Setup (TODO-033 to TODO-036) - IN PROGRESS
+5. 🔴 Clean Data Migration (TODO-013) - NEXT
+6. 🔴 First Production Deployment - Follow CI/CD Strategy
 
 ## 🔄 ENVIRONMENT VARIABLES NEEDING CONFIGURATION
 
-### Current Production Variables:
+### Required for Blue-Green Deployment (TODO-033):
 ```env
+# ========================================
+# SHARED CONFIGURATION
+# ========================================
+# OAuth Tokens (shared initially)
+INOREADER_CLIENT_ID=your_client_id
+INOREADER_CLIENT_SECRET=your_client_secret
+INOREADER_REDIRECT_URI=http://localhost:8080/callback
+
+# Claude API (shared)
+ANTHROPIC_API_KEY=your_anthropic_key
+CLAUDE_SUMMARIZATION_MODEL=claude-sonnet-4-20250514
+
+# ========================================
+# PRODUCTION CONFIGURATION
+# ========================================
+# Production Database (Supabase)
+PROD_NEXT_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
+PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-prod-anon-key
+PROD_SUPABASE_SERVICE_ROLE_KEY=your-prod-service-key
+
+# Production Settings
+PROD_PORT=3147
+PROD_NODE_ENV=production
+PROD_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
+
+# ========================================
+# DEVELOPMENT CONFIGURATION
+# ========================================
+# Development Database (Separate Supabase Project)
+DEV_NEXT_PUBLIC_SUPABASE_URL=https://your-dev-project.supabase.co
+DEV_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-dev-anon-key
+DEV_SUPABASE_SERVICE_ROLE_KEY=your-dev-service-key
+
+# Development Settings
+DEV_PORT=3000
+DEV_NODE_ENV=development
+DEV_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
+
 # Sync Configuration
 SYNC_MAX_ARTICLES=100
 ARTICLES_RETENTION_LIMIT=1000
-
-# AI Configuration  
-CLAUDE_SUMMARIZATION_MODEL=claude-sonnet-4-20250514
 ```
 
-### Additional Variables to Configure:
+### Additional Variables to Configure (Post-Deployment):
 ```env
 # AI Customization (TODO-022)
 CLAUDE_SUMMARY_WORD_COUNT=150-175

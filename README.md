@@ -410,6 +410,248 @@ Server sync uses only 4-5 API calls:
 - **Client**: No authentication, no secrets
 - **Database**: Supabase with row-level security
 
+## Database Schema
+
+The RSS reader uses PostgreSQL (via Supabase) with 7 main tables and additional database objects for performance optimization.
+
+### Core Tables
+
+#### 1. Users Table
+**Purpose**: Store user accounts (currently single-user application)
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique user identifier |
+| inoreader_id | text | UNIQUE, NOT NULL | Inoreader account ID |
+| username | text | | Inoreader username |
+| email | text | | User email address |
+| preferences | jsonb | DEFAULT '{}' | User preferences storage |
+| created_at | timestamptz | DEFAULT now() | Account creation timestamp |
+| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+
+**Indexes**: 
+- Primary key on `id`
+- Unique index on `inoreader_id`
+
+#### 2. Feeds Table
+**Purpose**: Store RSS feed subscriptions
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique feed identifier |
+| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
+| inoreader_id | text | UNIQUE, NOT NULL | Inoreader feed ID |
+| title | text | NOT NULL | Feed display name |
+| url | text | | Feed URL |
+| site_url | text | | Website URL |
+| icon_url | text | | Feed icon/favicon URL |
+| folder_id | uuid | REFERENCES folders(id) ON DELETE SET NULL | Parent folder |
+| created_at | timestamptz | DEFAULT now() | Subscription timestamp |
+| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+
+**Indexes**:
+- Primary key on `id`
+- Foreign key index on `user_id`
+- Unique index on `inoreader_id`
+- Index on `folder_id`
+
+#### 3. Articles Table
+**Purpose**: Store individual articles from feeds
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique article identifier |
+| feed_id | uuid | REFERENCES feeds(id) ON DELETE CASCADE | Parent feed |
+| inoreader_id | text | UNIQUE, NOT NULL | Inoreader article ID |
+| title | text | NOT NULL | Article title |
+| url | text | | Article URL |
+| content | text | | RSS content/summary |
+| full_content | text | | Extracted full content |
+| has_full_content | boolean | DEFAULT false | Full content availability |
+| ai_summary | text | | Claude-generated summary |
+| author | text | | Article author |
+| published | timestamptz | | Publication date |
+| is_read | boolean | DEFAULT false | Read status |
+| is_starred | boolean | DEFAULT false | Starred status |
+| created_at | timestamptz | DEFAULT now() | Import timestamp |
+| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+
+**Indexes**:
+- Primary key on `id`
+- Foreign key index on `feed_id`
+- Unique index on `inoreader_id`
+- Compound index on `(feed_id, is_read)` for unread counts
+- Index on `published` for sorting
+- Index on `is_read` for filtering
+- Index on `is_starred` for filtering
+
+#### 4. Folders Table
+**Purpose**: Feed organization hierarchy
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique folder identifier |
+| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
+| inoreader_id | text | UNIQUE | Inoreader folder ID |
+| title | text | NOT NULL | Folder name |
+| parent_id | uuid | REFERENCES folders(id) ON DELETE CASCADE | Parent folder (nested) |
+| created_at | timestamptz | DEFAULT now() | Creation timestamp |
+| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+
+**Indexes**:
+- Primary key on `id`
+- Foreign key index on `user_id`
+- Unique index on `inoreader_id`
+- Index on `parent_id`
+
+#### 5. Sync Metadata Table
+**Purpose**: Track sync operation statistics
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique sync identifier |
+| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
+| last_sync | timestamptz | | Last successful sync time |
+| last_sync_status | text | | Status (success/error) |
+| sync_count | integer | DEFAULT 0 | Total sync operations |
+| success_count | integer | DEFAULT 0 | Successful syncs |
+| error_count | integer | DEFAULT 0 | Failed syncs |
+| last_error | text | | Last error message |
+| created_at | timestamptz | DEFAULT now() | First sync timestamp |
+| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+
+**Indexes**:
+- Primary key on `id`
+- Foreign key index on `user_id`
+
+#### 6. API Usage Table
+**Purpose**: Track API rate limits and usage
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique usage record |
+| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
+| date | date | NOT NULL | Usage date |
+| inoreader_calls | integer | DEFAULT 0 | Inoreader API calls |
+| claude_calls | integer | DEFAULT 0 | Claude API calls |
+| created_at | timestamptz | DEFAULT now() | Record creation |
+| updated_at | timestamptz | DEFAULT now() | Last update |
+
+**Indexes**:
+- Primary key on `id`
+- Compound unique index on `(user_id, date)`
+- Index on `date` for cleanup
+
+#### 7. System Config Table
+**Purpose**: Cache system configuration to reduce repeated queries
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| key | text | PRIMARY KEY | Configuration key |
+| value | jsonb | NOT NULL | Configuration value |
+| created_at | timestamptz | DEFAULT now() | Creation timestamp |
+| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+
+**Usage**: Caches timezone settings and other system configurations to reduce database overhead
+
+### Performance Optimizations
+
+#### Materialized View: feed_stats
+**Purpose**: Pre-calculate unread counts for performance
+
+```sql
+CREATE MATERIALIZED VIEW feed_stats AS
+SELECT 
+  f.id as feed_id,
+  f.user_id,
+  COUNT(a.id) FILTER (WHERE NOT a.is_read) as unread_count,
+  COUNT(a.id) as total_count,
+  MAX(a.published) as latest_article_date
+FROM feeds f
+LEFT JOIN articles a ON f.id = a.feed_id
+GROUP BY f.id, f.user_id;
+```
+
+**Indexes**:
+- Unique index on `feed_id` for concurrent refresh
+- Index on `user_id`
+
+#### Database Functions
+
+1. **get_unread_counts_by_feed(p_user_id uuid)**
+   - Returns aggregated unread counts per feed
+   - Reduces data transfer by 92.4% (290 rows → 22 rows)
+
+2. **refresh_feed_stats()**
+   - Refreshes the materialized view
+   - Called automatically after each sync
+
+3. **update_updated_at_column()**
+   - Trigger function to maintain `updated_at` timestamps
+   - Applied to all tables with `updated_at` column
+
+### Row Level Security (RLS) Policies
+
+All tables have RLS enabled with the following policies:
+
+1. **Users Table**:
+   - SELECT: Only user 'shayon' can read
+   - INSERT: Only user 'shayon' can insert
+   - UPDATE: Only user 'shayon' can update own record
+   - DELETE: No deletes allowed
+
+2. **Feeds, Articles, Folders Tables**:
+   - SELECT: Only user 'shayon' can read own data
+   - INSERT: Only service role (server) can insert
+   - UPDATE: Client can update specific fields (is_read, is_starred)
+   - DELETE: Only service role can delete
+
+3. **Sync Metadata, API Usage Tables**:
+   - All operations restricted to service role (server only)
+
+### Table Relationships
+
+```
+users (1) ─┬─── (n) feeds
+           ├─── (n) folders
+           ├─── (1) sync_metadata
+           └─── (n) api_usage
+
+folders (1) ─┬─── (n) feeds
+             └─── (n) folders (nested)
+
+feeds (1) ────── (n) articles
+```
+
+### Common Queries
+
+```sql
+-- Get all feeds with unread counts
+SELECT 
+  f.*,
+  fs.unread_count,
+  fs.total_count
+FROM feeds f
+JOIN feed_stats fs ON f.id = fs.feed_id
+WHERE f.user_id = $1
+ORDER BY f.title;
+
+-- Get unread articles for a feed
+SELECT * FROM articles
+WHERE feed_id = $1 
+  AND is_read = false
+ORDER BY published DESC
+LIMIT 50;
+
+-- Mark article as read
+UPDATE articles 
+SET is_read = true, updated_at = now()
+WHERE id = $1;
+
+-- Get sync statistics
+SELECT * FROM sync_metadata
+WHERE user_id = $1;
+```
 
 ## Contributing
 

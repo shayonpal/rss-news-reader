@@ -1,24 +1,33 @@
 # Next Session Instructions
 
-**Last Updated:** Wednesday, January 22, 2025
+**Last Updated:** Monday, July 22, 2025
 
-## Latest Session - January 22, 2025
-- **Duration:** ~30 minutes
-- **Main focus:** Automatic Daily Sync Implementation (TODO-006)
-- **Issues resolved:** TODO-006 (US-102 - Automatic Daily Sync)
-- **Achievement:** Complete automatic sync service running with PM2, syncing at 2am/2pm daily
+## Latest Session - July 22, 2025
+- **Duration:** ~45 minutes
+- **Main focus:** Blue-Green Deployment Strategy Documentation & Pre-Deployment Planning
+- **Issues resolved:** TODO-032 (Document Database Schema)
+- **Achievement:** Created comprehensive CI/CD strategy and updated TODOs for deployment
 
-## Completed This Session - AUTOMATIC DAILY SYNC ✅
-- ✅ **TODO-006: Automatic Daily Sync COMPLETED**
-  - Implemented node-cron based automatic sync service
-  - Syncs run at 2:00 AM and 2:00 PM (America/Toronto timezone)
-  - Created `/src/server/cron.js` with comprehensive JSONL logging
-  - Added `/api/sync/metadata` endpoint for sync statistics tracking
-  - Integrated with PM2 ecosystem configuration as separate process
-  - PM2 startup configured for persistence across reboots
-  - Service confirmed running with `pm2 status` (PID: 47583)
-  - Efficient API usage: only 4-5 calls per sync
-  - Complete documentation at `/docs/deployment/automatic-sync.md`
+## Completed This Session - DEPLOYMENT PREPARATION ✅
+- ✅ **TODO-032: Document Database Schema in README COMPLETED**
+  - Added comprehensive Database Schema section to README.md
+  - Documented all 7 tables with columns, types, constraints
+  - Included indexes, RLS policies, and table relationships
+  - Added materialized views and database functions
+  - Provided common SQL query examples
+
+- ✅ **Blue-Green Deployment Strategy Documentation**
+  - Created `/docs/deployment/ci-cd-strategy.md` with complete deployment workflow
+  - Defined port allocation: Production (3147), Development (3000)
+  - Documented PM2 multi-app configuration approach
+  - Established git strategy: main (production) + dev (development) branches
+  - Specified separate development database approach
+  - Created environment variable structure with PROD_/DEV_ prefixes
+
+- ✅ **Updated TODOs for Pre-Deployment Phase**
+  - Added Phase 3.5 with 4 new pre-deployment tasks (TODO-033 to TODO-036)
+  - Prioritized deployment checklist over feature development
+  - Updated environment variables section with deployment requirements
 
 ## Previous Session - January 22, 2025 (3:00 PM - 3:30 PM)
 - **Duration:** ~30 minutes  
@@ -59,16 +68,72 @@
 - **Issues resolved:** TODO-001 (RLS), TODO-002 (Function Security)
 - **Achievement:** Database now production-ready from security perspective
 
+## 🚀 NEXT SESSION: First Production Deployment
+
+### Pre-Deployment Checklist (Must Complete in Order):
+
+#### 1. TODO-033: Create Development Branch and Environment Setup
+```bash
+# Create and switch to dev branch
+git checkout -b dev
+git push -u origin dev
+
+# Update .env file with new structure:
+# - Add PROD_ prefixed variables for production database
+# - Add DEV_ prefixed variables for development database
+# - Keep shared variables without prefix
+
+# Create new Supabase project for development
+# Document the connection strings in .env
+```
+
+#### 2. TODO-034: Update PM2 Ecosystem Configuration
+- Update `/ecosystem.config.js` with 3 app configurations:
+  - `rss-reader-prod` (port 3147)
+  - `rss-reader-dev` (port 3000)
+  - `rss-sync-cron` (existing, use prod database)
+- Reference the complete configuration in `/docs/deployment/ci-cd-strategy.md`
+- Test with: `pm2 start ecosystem.config.js --dry-run`
+
+#### 3. TODO-035: Create Deployment Scripts
+```bash
+# Create deployment automation scripts
+touch scripts/deploy-production.sh
+chmod +x scripts/deploy-production.sh
+
+# Update existing deploy.sh for Blue-Green support
+# Add build step, PM2 reload, health checks
+```
+
+#### 4. TODO-036: Prepare Production Database
+- Verify all migrations are applied to production Supabase
+- Confirm RLS policies are enabled (from TODO-001)
+- Test connection with production credentials
+- Document any manual steps needed
+
+#### 5. TODO-013: Clean Data Migration
+- Clear existing test data from production database
+- Document the clean-slate approach
+- Prepare for first production sync
+
+### After Pre-Deployment Tasks Complete:
+Follow the "First Production Deployment" section in `/docs/deployment/ci-cd-strategy.md`:
+1. Switch to main branch
+2. Build production bundle
+3. Start PM2 processes
+4. Configure Caddy (already done)
+5. Verify at http://100.96.166.53/reader
+
 ## Current State
-- **Branch:** main
-- **Status:** Ready to continue with next TODO items
-- **Latest commit:** (pending) - TODO-014a enhanced implementation
+- **Branch:** main (will create dev branch in next session)
+- **Status:** Pre-Production Deployment Phase
+- **Latest commit:** Database schema documentation and CI/CD strategy
 - **Security Status:** ✅ ALL CRITICAL VULNERABILITIES RESOLVED
 - **Performance Status:** ✅ MAJOR OPTIMIZATIONS COMPLETED
-  - 92.4% data reduction (unread counts function)
-  - Performance migration applied via Supabase MCP
-  - Feed stats refresh integrated and FIXED with unique index
-  - Console logging added for refresh visibility
+- **Infrastructure Status:** ✅ PM2 CRON SERVICE RUNNING
+  - Automatic sync at 2am/2pm daily
+  - Tailscale monitoring active
+  - Caddy configuration ready
 
 ## Completed This Session - PRODUCTION DEPLOYMENT INFRASTRUCTURE ✅
 - ✅ **TODO-011: Caddy Configuration COMPLETED**
@@ -199,19 +264,43 @@
 
 ## Commands to Run Next Session
 ```bash
-# Start development
+# Start in the project directory
 cd /Users/shayon/DevProjects/rss-news-reader
-npm run dev:network
 
-# Test current performance (should show improvement)
-open http://100.96.166.53:3000/reader/test-performance
+# 1. Create dev branch (TODO-033)
+git checkout -b dev
+git push -u origin dev
 
-# Validate security is still working
-node test-rls-security.js
+# 2. Check current PM2 status before changes
+pm2 status
+pm2 save  # Backup current state
 
-# Check Supabase performance reports
-ls -la docs/tech/supabase-advisory/2025-07-21/
+# 3. Test ecosystem config after updating (TODO-034)
+pm2 start ecosystem.config.js --dry-run
+
+# 4. Create deployment scripts (TODO-035)
+mkdir -p scripts
+touch scripts/deploy-production.sh
+chmod +x scripts/deploy-production.sh
+
+# 5. Test production database connection (TODO-036)
+# Use Supabase dashboard or create test script
+
+# 6. After all pre-deployment tasks, build for production
+npm run build
+
+# 7. Start production deployment
+pm2 start ecosystem.config.js --only rss-reader-prod
 ```
+
+## Important Reminders
+- **DO NOT** deploy to production until ALL pre-deployment tasks (TODO-033 to TODO-036) are complete
+- **CREATE** the dev branch FIRST before making any changes
+- **TEST** the PM2 configuration with --dry-run before actual deployment
+- **BACKUP** current PM2 state with `pm2 save` before changes
+- **VERIFY** production database has all migrations applied
+- **REFERENCE** `/docs/deployment/ci-cd-strategy.md` for detailed steps
+- **PORT 3147** is reserved for production to avoid conflicts
 
 ## Performance Test Results 
 ### Before Migration (Mobile)
