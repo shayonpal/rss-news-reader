@@ -2,7 +2,13 @@
 
 **Last Updated:** Tuesday, January 22, 2025 at 12:30 AM
 
-## Latest Session - January 22, 2025 (12:00 AM - 12:30 AM)
+## Latest Session - January 22, 2025 (1:00 AM - 1:30 AM)
+- **Duration:** ~30 minutes
+- **Main focus:** Read Status Filtering Implementation (TODO-014a)
+- **Issues resolved:** TODO-014a (US-401a - Read Status Filtering)
+- **Achievement:** Successfully implemented read status filtering with dropdown UI and localStorage persistence
+
+## Previous Session - January 22, 2025 (12:00 AM - 12:30 AM)
 - **Duration:** ~30 minutes
 - **Main focus:** Scroll Position Preservation Bug Fix (TODO-009a)
 - **Issues resolved:** TODO-009a (US-903 - Scroll Position Loss on Navigation Back)
@@ -37,8 +43,8 @@
 
 ## Current State
 - **Branch:** main
-- **Status:** Ready to commit TODO-009a fix
-- **Latest commit:** ab823d7 (docs: mark TODO-009 as completed in TODOs.md)
+- **Status:** Ready to commit TODO-014a implementation
+- **Latest commit:** 4b9d346 (fix: resolve scroll position and feed filter preservation on navigation back (TODO-009a))
 - **Security Status:** ✅ ALL CRITICAL VULNERABILITIES RESOLVED
 - **Performance Status:** ✅ MAJOR OPTIMIZATIONS COMPLETED
   - 92.4% data reduction (unread counts function)
@@ -46,7 +52,17 @@
   - Feed stats refresh integrated and FIXED with unique index
   - Console logging added for refresh visibility
 
-## Completed This Session - SCROLL POSITION FIX ✅
+## Completed This Session - READ STATUS FILTERING ✅
+- ✅ **TODO-014a: Read Status Filtering COMPLETED**
+  - Added dropdown filter for Unread only/Read only/All articles
+  - Default view shows only unread articles for better focus
+  - Filter preference persists across sessions using localStorage
+  - Article counts in header update based on active filter
+  - Created ReadStatusFilter component with Radix UI dropdown
+  - Updated article store to support readStatusFilter state
+  - Filter works seamlessly with existing feed/folder selection
+
+## Previously Completed This Session - SCROLL POSITION FIX ✅
 - ✅ **TODO-009a: Scroll Position Loss on Navigation Back COMPLETED**
   - Fixed scroll position resetting to top when returning from article detail
   - Fixed feed filter not being preserved across navigation
@@ -122,12 +138,12 @@
    - Verify PWA manifest references correct paths
    - Test icons display in browser/PWA
 
-2. **TODO-014a: US-401a - Read Status Filtering** (P1 - Pre-Production)
-   - Read status filter dropdown (Unread only/Read only/All)
-   - Default to "Unread only" view
-   - Persist filter preference in localStorage
-   - Update article counts to reflect current filter
-   - Works with existing feed selection
+2. ✅ **TODO-014a: US-401a - Read Status Filtering** (P1 - Pre-Production) - COMPLETED
+   - Read status filter dropdown (Unread only/Read only/All) ✅
+   - Default to "Unread only" view ✅
+   - Persist filter preference in localStorage ✅
+   - Update article counts to reflect current filter ✅
+   - Works with existing feed selection ✅
 
 3. **TODO-006: Complete US-102 - Automatic Daily Sync** (P1 - Core)
    - Implement node-cron for scheduling (2am and 2pm)

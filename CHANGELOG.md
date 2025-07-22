@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - January 22, 2025 Session (Read Status Filtering)
+- **Read Status Filtering** (TODO-014a, US-401a) - COMPLETED ✅
+  - Added dropdown filter to toggle between Unread only/Read only/All articles
+  - Default view shows only unread articles for better focus
+  - Filter preference persists across sessions using localStorage
+  - Article counts in header update based on active filter
+  - Shows "X unread" for unread filter, "X read" for read filter, "X total, Y unread" for all
+  - Filter works seamlessly with existing feed/folder selection
+  - Clean UI with Radix UI dropdown menu component
+  - Improves reading workflow by hiding already-read articles by default
+
 ### Fixed - January 22, 2025 Session (PWA Asset 404 Errors)
 - **PWA Asset 404 Errors** (TODO-010, US-902) - COMPLETED ✅
   - Fixed 404 errors for favicon and apple-touch-icon files

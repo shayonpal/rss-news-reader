@@ -238,28 +238,28 @@
 
 ### Phase 4: UX Enhancements
 
-#### TODO-014a: US-401a - Read Status Filtering (P1 - Pre-Production)
-- **Status**: 🔴 TODO
-- **Current**: All articles shown regardless of read status
-- **Missing**:
-  - [ ] Read status filter dropdown/toggle with options:
+#### TODO-014a: US-401a - Read Status Filtering (P1 - Pre-Production) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Read status filtering implemented
+- **Completed**: January 22, 2025 - All acceptance criteria met
+- **Implementation**:
+  - [x] Read status filter dropdown with options:
     - "Unread only" (default)
     - "Read only"
     - "All articles"
-  - [ ] Persist read status filter preference in localStorage
-  - [ ] Update article counts to reflect current filter
-  - [ ] Clear visual indicator of active read status filter
+  - [x] Filter preference persists in localStorage
+  - [x] Article counts update to reflect current filter
+  - [x] Clear visual indicator in header showing filter status
 - **Implementation Details**:
-  - Add read status filter state to article store
+  - Added `readStatusFilter` state to article store
   - Default to "unread only" on first load
-  - Filter should work in combination with existing feed filters
-  - Update `loadArticles` query to include read status filter
-  - Show filter status in header (e.g., "Showing: Unread Articles")
-- **Acceptance Criteria**:
-  - [ ] Default view shows only unread articles
-  - [ ] Easy toggle between unread/read/all views
-  - [ ] Filter persists across sessions
-  - [ ] Works correctly with existing feed selection
+  - Filter works in combination with existing feed filters
+  - Updated `loadArticles` and `loadMoreArticles` queries
+  - Shows filter status in header with article counts
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Default view shows only unread articles
+  - [x] Easy toggle between unread/read/all views via dropdown
+  - [x] Filter persists across sessions using localStorage
+  - [x] Works correctly with existing feed selection
 
 #### TODO-014b: US-401b - Feed Filtering Enhancement (P2 - Post-Production)
 - **Status**: 🔴 TODO

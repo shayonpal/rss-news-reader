@@ -15,7 +15,8 @@ interface ArticleStoreState {
   selectedFeedId: string | null;
   selectedFolderId: string | null;
   selectedArticleId: string | null;
-  filter: 'all' | 'unread' | 'starred';
+  readStatusFilter: 'all' | 'unread' | 'read';
+  filter: 'all' | 'unread' | 'starred'; // Legacy filter - keeping for starred
   
   // Pagination
   hasMore: boolean;
@@ -44,6 +45,7 @@ interface ArticleStoreState {
   setSelectedFolder: (folderId: string | null) => void;
   setSelectedArticle: (articleId: string | null) => void;
   setFilter: (filter: 'all' | 'unread' | 'starred') => void;
+  setReadStatusFilter: (filter: 'all' | 'unread' | 'read') => void;
   
   // Utility
   clearError: () => void;
@@ -51,6 +53,17 @@ interface ArticleStoreState {
 }
 
 const ARTICLES_PER_PAGE = 50;
+
+// Get initial read status filter from localStorage
+const getInitialReadStatusFilter = (): 'all' | 'unread' | 'read' => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('readStatusFilter');
+    if (saved === 'all' || saved === 'unread' || saved === 'read') {
+      return saved;
+    }
+  }
+  return 'unread'; // Default to unread only
+};
 
 export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Initial state
@@ -61,6 +74,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   selectedFeedId: null,
   selectedFolderId: null,
   selectedArticleId: null,
+  readStatusFilter: getInitialReadStatusFilter(),
   filter: 'all',
   hasMore: true,
   loadingMore: false,
@@ -94,11 +108,17 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         }
       }
       
-      // Apply read/starred filter
-      const filter = get().filter;
-      if (filter === 'unread') {
+      // Apply read status filter
+      const readStatusFilter = get().readStatusFilter;
+      if (readStatusFilter === 'unread') {
         query = query.eq('is_read', false);
-      } else if (filter === 'starred') {
+      } else if (readStatusFilter === 'read') {
+        query = query.eq('is_read', true);
+      }
+      
+      // Apply starred filter (legacy filter - only for starred)
+      const filter = get().filter;
+      if (filter === 'starred') {
         query = query.eq('is_starred', true);
       }
       
@@ -150,7 +170,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
   // Load more articles (pagination)
   loadMoreArticles: async () => {
-    const { loadingMore, hasMore, articles, selectedFeedId, selectedFolderId, filter } = get();
+    const { loadingMore, hasMore, articles, selectedFeedId, selectedFolderId, readStatusFilter, filter } = get();
     
     if (loadingMore || !hasMore) return;
     
@@ -190,9 +210,15 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         }
       }
       
-      if (filter === 'unread') {
+      // Apply read status filter
+      if (readStatusFilter === 'unread') {
         query = query.eq('is_read', false);
-      } else if (filter === 'starred') {
+      } else if (readStatusFilter === 'read') {
+        query = query.eq('is_read', true);
+      }
+      
+      // Apply starred filter
+      if (filter === 'starred') {
         query = query.eq('is_starred', true);
       }
       
@@ -542,15 +568,34 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     set({ filter });
     get().refreshArticles();
   },
+  setReadStatusFilter: (filter) => {
+    set({ readStatusFilter: filter });
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('readStatusFilter', filter);
+    }
+    get().refreshArticles();
+  },
 
   // Utility
   clearError: () => set({ articlesError: null }),
   
   getArticleCount: () => {
+    const { readStatusFilter } = get();
     const articles = Array.from(get().articles.values());
-    return {
-      total: articles.length,
-      unread: articles.filter(a => !a.isRead).length
-    };
+    
+    // Get base counts
+    const total = articles.length;
+    const unread = articles.filter(a => !a.isRead).length;
+    const read = total - unread;
+    
+    // Return counts based on current filter
+    if (readStatusFilter === 'unread') {
+      return { total: unread, unread };
+    } else if (readStatusFilter === 'read') {
+      return { total: read, unread: 0 };
+    }
+    
+    return { total, unread };
   }
 }));
