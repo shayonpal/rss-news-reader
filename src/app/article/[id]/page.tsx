@@ -98,12 +98,8 @@ export default function ArticlePage() {
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}
       onBack={() => {
-        // Use browser back if available, otherwise navigate with state
-        if (window.history.length > 1) {
-          router.back();
-        } else {
-          router.push('/');
-        }
+        // Always navigate to listing page to ensure consistent behavior
+        router.push('/');
       }}
     />
   );

@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-07-22 - Production Deployment
 
-### Added - January 22, 2025 Session (Bi-directional Sync Implementation)
+### Fixed - July 22, 2025 Session (Back Button Navigation)
+- **Enhanced Back Button Navigation Logic** (TODO-028) - COMPLETED ✅
+  - Back button in article view now always returns to the article listing page
+  - Previous behavior would sometimes navigate to previous article when using Previous/Next buttons
+  - Preserves feed filter and read status filter when returning to listing
+  - Scroll position restoration already handled by existing sessionStorage implementation
+  - Simple one-line change: `router.push('/')` instead of `router.back()`
+  - Browser back button continues to work normally for overall navigation
+  - Improves navigation consistency when browsing through multiple articles
+
+### Added - July 21, 2025 Session (Bi-directional Sync Implementation)
 - **Bi-directional Sync to Inoreader** (TODO-037) - COMPLETED ✅
   - Implemented sync queue pattern for tracking local changes
   - Created database migration with sync_queue table and helper functions
@@ -19,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added sync queue statistics view for monitoring
   - Successfully tested with real user actions
 
-### Fixed - January 22, 2025 Session (Bi-directional Sync Bug Fix)
+### Fixed - July 21, 2025 Session (Bi-directional Sync Bug Fix)
 - **Client-Side Sync Queue RPC Calls** (TODO-038) - COMPLETED ✅
   - Fixed SQL syntax error in add_to_sync_queue function
   - Changed from invalid CASE statement with arrays to IF/ELSIF logic
@@ -36,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Successfully deployed to production at http://100.96.166.53:3147/reader
   - Note: Port conflict with Obsidian Docker container on port 80, using port 3147 directly
 
-### Added - January 22, 2025 Session (Automatic Daily Sync)
+### Added - July 21, 2025 Session (Automatic Daily Sync)
 - **Automatic Daily Sync** (TODO-006, US-102) - COMPLETED ✅
   - Implemented node-cron based automatic sync service
   - Syncs run at 2:00 AM and 2:00 PM (America/Toronto timezone)
@@ -68,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Service successfully installed and running continuously
   - Critical infrastructure to ensure clients can always access the service
 
-### Enhanced - January 22, 2025 Session (Database-Driven Read Status Filtering)
+### Enhanced - July 21, 2025 Session (Database-Driven Read Status Filtering)
 - **Enhanced Read Status Filtering** (TODO-014a Re-implementation) - COMPLETED ✅
   - Re-implemented following PRD specifications for database-driven counts
   - **Database-Driven Counts**: Replaced in-memory counts with actual database queries
@@ -88,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Filter preference still persists across sessions using localStorage
   - Works seamlessly with existing feed/folder selection
 
-### Added - January 22, 2025 Session (Read Status Filtering)
+### Added - July 21, 2025 Session (Read Status Filtering)
 - **Read Status Filtering** (TODO-014a, US-401a) - COMPLETED ✅
   - Added dropdown filter to toggle between Unread only/Read only/All articles
   - Default view shows only unread articles for better focus
@@ -99,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clean UI with Radix UI dropdown menu component
   - Improves reading workflow by hiding already-read articles by default
 
-### Fixed - January 22, 2025 Session (PWA Asset 404 Errors)
+### Fixed - July 21, 2025 Session (PWA Asset 404 Errors)
 - **PWA Asset 404 Errors** (TODO-010, US-902) - COMPLETED ✅
   - Fixed 404 errors for favicon and apple-touch-icon files
   - All assets already existed in correct locations
@@ -110,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Note: Dev server still shows 404s for browser automatic icon requests - safely ignored
   - Icons work correctly in production with proper basePath handling
 
-### Fixed - January 22, 2025 Session (Scroll Position Preservation)
+### Fixed - July 21, 2025 Session (Scroll Position Preservation)
 - **Scroll Position Loss on Navigation Back** (TODO-009a, US-903) - COMPLETED ✅
   - Fixed scroll position resetting to top when returning from article detail view
   - Fixed feed filter not being preserved when navigating back
@@ -124,7 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restore scroll position after articles are loaded and rendered
   - Tested successfully on iPhone and iPad Safari browsers
 
-### Fixed - January 21, 2025 Session (iOS Safari Button Controls)
+### Fixed - July 20, 2025 Session (iOS Safari Button Controls)
 - **Article View Interface Controls** (TODO-009, US-901) - COMPLETED ✅
   - Fixed iOS Safari button click issues requiring double-tap
   - Created IOSButton component with proper touch event handling
@@ -194,7 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents duplicate titles in UI when displaying summaries
   - Summaries now start directly with content
 
-### In Progress - January 21, 2025 Session (Server API Integration)
+### In Progress - July 20, 2025 Session (Server API Integration)
 - **Server API Integration** (US-203) - Sync functionality working, UI integration pending
   - ✅ Sync button successfully calls `POST /api/sync` endpoint
   - ✅ Progress polling with `GET /api/sync/status/:id` works perfectly
@@ -214,7 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ❌ "Fetch Full Content" UI integration pending (server endpoint ready)
   - ❌ "Generate Summary" UI integration pending (server endpoint ready)
 
-### Added - January 21, 2025 Session (Server API Endpoints)
+### Added - July 20, 2025 Session (Server API Endpoints)
 - **Server API Endpoints** (US-103) - Complete server-side API implementation
   - Created `POST /api/articles/:id/fetch-content` for content extraction
     - Integrates Mozilla Readability for clean article extraction
@@ -237,7 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created test page at `/test-server-api` for verification
   - Added comprehensive API documentation
 
-### Database - January 21, 2025 Session (Server API Endpoints)
+### Database - July 20, 2025 Session (Server API Endpoints)
 - **New Tables** for API functionality
   - Created `api_usage` table for tracking API rate limits
   - Created `sync_metadata` table for storing sync state
@@ -250,14 +260,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created migration script at `scripts/create-api-usage-tables.sql`
   - Successfully ran migration in Supabase
 
-### Technical Notes - January 21, 2025 Session
+### Technical Notes - July 20, 2025 Session
 - **Dependencies Added**:
   - `@mozilla/readability` - For content extraction
   - `@anthropic-ai/sdk` - For Claude API integration
   - `@types/jsdom` - TypeScript types
 - **Important**: US-103 creates the server endpoints only. Client integration (US-203) is still needed for users to access these features through the UI.
 
-### Added - January 21, 2025 Session (Server-Client Architecture)
+### Added - July 20, 2025 Session (Server-Client Architecture)
 - **Server OAuth Setup** (US-101) - Server handles all Inoreader authentication
   - Created one-time OAuth setup script using Playwright automation
   - Uses test credentials from `.env` file
@@ -294,13 +304,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Offline queue maintained for future sync back to Inoreader
   - Synced data now visible in UI without authentication
 
-### Changed - January 21, 2025 Session
+### Changed - July 20, 2025 Session
 - **Architecture**: Migrated from client-side OAuth to server-client model
 - **Data Flow**: Server handles all external APIs, client is presentation only
 - **Authentication**: Removed from client, controlled by Tailscale network
 - **Storage**: Moved from IndexedDB to Supabase for all client data
 
-### Technical - January 21, 2025 Session
+### Technical - July 20, 2025 Session
 - **Server**: Node.js with encrypted token storage
 - **Client**: Next.js reading from Supabase only
 - **Security**: Server-side OAuth, encrypted tokens, Tailscale network control

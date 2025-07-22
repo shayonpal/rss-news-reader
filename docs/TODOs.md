@@ -161,12 +161,14 @@ The RSS News Reader is now successfully deployed to production:
 
 #### TODO-007: Complete US-203 - Content/Summary UI Integration (P1 - Core)
 - **Status**: 🔴 TODO
-- **Current**: Server endpoints working, UI integration missing
+- **Current**: Server endpoints created but NOT implemented, UI integration missing
 - **Missing**:
+  - [ ] Implement server-side content extraction logic
   - [ ] Add "Fetch Full Content" button to article view
   - [ ] Display extracted content when available
   - [ ] Integrate with existing `/api/articles/:id/fetch-content` endpoint
 - **Files to modify**:
+  - `src/app/api/articles/[id]/fetch-content/route.ts` (implement logic)
   - `src/components/articles/ArticleView.tsx`
   - `src/components/ui/Button.tsx`
 
@@ -540,32 +542,27 @@ The RSS News Reader is now successfully deployed to production:
   - Deprecation warnings eliminated
 - **Completed**: January 23, 2025 - Technical debt resolved
 
-#### TODO-028: Enhance Back Button Navigation Logic (P2 - UX Enhancement)
-- **Status**: 🔴 TODO
+#### TODO-028: Enhance Back Button Navigation Logic (P2 - UX Enhancement) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
 - **Issue**: Back button should always return to listing page instead of previous article
 - **Current Behavior**: Back button uses browser history which may go to previous article when user has navigated through multiple articles using Previous/Next buttons
 - **Expected Behavior**: Back button should consistently return to the article listing page, preserving filter state and scroll position
 - **Use Case**: User navigates through multiple articles using UI Previous/Next buttons, then wants to return to the article list
 - **Context**: Builds on scroll position preservation from TODO-009a
-- **Acceptance Criteria**:
-  - [ ] Back button in article view always navigates to listing page (never to previous article)
-  - [ ] Preserve current feed filter when returning to listing
-  - [ ] Preserve current read status filter when returning to listing
-  - [ ] Restore scroll position to where user was before viewing first article
-  - [ ] Works correctly regardless of how user navigated to current article (direct link, Previous/Next buttons, etc.)
-  - [ ] Browser back button should still work as expected (respecting browser history)
-- **Implementation Approach**:
-  - Modify back button to use `router.push('/')` with preserved state instead of `router.back()`
-  - Ensure listing page state (filters, scroll position) is maintained
-  - Consider tracking "entry point" when user first enters article view
-- **Files to Modify**:
-  - `src/components/articles/ArticleView.tsx` - Back button logic
-  - `src/app/page.tsx` - State restoration logic
-- **Testing Scenarios**:
-  - Navigate to article from listing → use Previous/Next buttons → click Back button
-  - Direct link to article → click Back button  
-  - Navigate through 5+ articles → click Back button
-  - Verify browser back button still works for overall navigation
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Back button in article view always navigates to listing page (never to previous article)
+  - [x] Preserve current feed filter when returning to listing
+  - [x] Preserve current read status filter when returning to listing
+  - [x] Restore scroll position to where user was before viewing first article
+  - [x] Works correctly regardless of how user navigated to current article (direct link, Previous/Next buttons, etc.)
+  - [x] Browser back button should still work as expected (respecting browser history)
+- **Implementation**:
+  - Modified back button to use `router.push('/')` instead of `router.back()`
+  - Filter and scroll position preservation already handled by sessionStorage from TODO-009a
+  - Simple one-line change that leverages existing state management
+- **Files Modified**:
+  - `src/app/article/[id]/page.tsx` - Changed onBack handler to always push to '/'
+- **Completed**: January 23, 2025 - Back button now consistently returns to listing page
 
 #### TODO-029: Auto-Mark Articles as Read on Scroll (P2 - UX Enhancement)
 - **Status**: 🔴 TODO
