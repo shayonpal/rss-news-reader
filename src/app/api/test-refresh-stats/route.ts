@@ -46,7 +46,7 @@ export async function GET() {
     }
 
     // Compare before and after
-    const changes = [];
+    const changes: Array<{feed_id: string, before: number, after: number}> = [];
     const beforeMap = new Map(beforeStats?.map(s => [s.feed_id, s]) || []);
     
     afterStats?.forEach(stat => {
