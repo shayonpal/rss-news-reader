@@ -567,12 +567,13 @@ The RSS News Reader is now successfully deployed to production:
   - [x] Consider adding Node.js engine requirement to package.json
 - **Implementation**:
   ```bash
-  npm install punycode --save
+  npm install punycode --save --legacy-peer-deps
   ```
-  - The npm package `punycode` v2.x is actively maintained
+  - The npm package `punycode` v2.3.1 is actively maintained
   - This ensures compatibility when Node.js removes the built-in module
   - Deprecation warnings eliminated
-- **Completed**: January 23, 2025 - Technical debt resolved
+  - Note: Required `--legacy-peer-deps` flag due to peer dependency conflicts with @vitest/ui
+- **Completed**: July 22, 2025 - Technical debt resolved (re-applied with legacy-peer-deps)
 
 #### TODO-028: Enhance Back Button Navigation Logic (P2 - UX Enhancement) ✅ COMPLETED
 - **Status**: ✅ COMPLETED
@@ -797,15 +798,15 @@ open http://100.96.166.53:3000/reader
 
 ---
 
-**Priority Order**: Pre-Deployment Setup (TODO-033 to TODO-036) → Clean Migration (TODO-013) → Production Deployment → Post-Deployment Features
+**Priority Order**: ✅ All deployment tasks completed! Focus on remaining features and enhancements.
 
 **Deployment Checklist**:
 1. ✅ Security (TODO-001, TODO-002) - COMPLETED
 2. ✅ Performance (TODO-003, TODO-004, TODO-005) - COMPLETED  
 3. ✅ Infrastructure (TODO-006, TODO-011, TODO-012) - COMPLETED
-4. 🔴 Pre-Deployment Setup (TODO-033 to TODO-036) - IN PROGRESS
-5. 🔴 Clean Data Migration (TODO-013) - NEXT
-6. 🔴 First Production Deployment - Follow CI/CD Strategy
+4. ✅ Pre-Deployment Setup (TODO-033 to TODO-036) - COMPLETED
+5. ✅ Clean Data Migration (TODO-013) - COMPLETED
+6. ✅ First Production Deployment - COMPLETED (July 22, 2025)
 
 ## 🔄 ENVIRONMENT VARIABLES NEEDING CONFIGURATION
 
