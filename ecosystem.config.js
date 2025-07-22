@@ -24,7 +24,11 @@ module.exports = {
         TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
         CLAUDE_SUMMARIZATION_MODEL: process.env.CLAUDE_SUMMARIZATION_MODEL,
         SYNC_MAX_ARTICLES: process.env.SYNC_MAX_ARTICLES,
-        ARTICLES_RETENTION_LIMIT: process.env.ARTICLES_RETENTION_LIMIT
+        ARTICLES_RETENTION_LIMIT: process.env.ARTICLES_RETENTION_LIMIT,
+        // AI Summarization Configuration
+        SUMMARY_WORD_COUNT: process.env.SUMMARY_WORD_COUNT || '150-175',
+        SUMMARY_FOCUS: process.env.SUMMARY_FOCUS || 'key facts, main arguments, and important conclusions',
+        SUMMARY_STYLE: process.env.SUMMARY_STYLE || 'objective'
       },
       error_file: './logs/prod-error.log',
       out_file: './logs/prod-out.log',
@@ -55,7 +59,11 @@ module.exports = {
         TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
         CLAUDE_SUMMARIZATION_MODEL: process.env.CLAUDE_SUMMARIZATION_MODEL,
         SYNC_MAX_ARTICLES: process.env.SYNC_MAX_ARTICLES,
-        ARTICLES_RETENTION_LIMIT: process.env.ARTICLES_RETENTION_LIMIT
+        ARTICLES_RETENTION_LIMIT: process.env.ARTICLES_RETENTION_LIMIT,
+        // AI Summarization Configuration
+        SUMMARY_WORD_COUNT: process.env.SUMMARY_WORD_COUNT || '150-175',
+        SUMMARY_FOCUS: process.env.SUMMARY_FOCUS || 'key facts, main arguments, and important conclusions',
+        SUMMARY_STYLE: process.env.SUMMARY_STYLE || 'objective'
       },
       error_file: './logs/dev-error.log',
       out_file: './logs/dev-out.log',

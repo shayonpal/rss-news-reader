@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-07-22 - Production Deployment
 
+### Added - July 22, 2025 Session (AI Summarization)
+- **Configurable AI Summarization Prompt** (TODO-023, US-704) - COMPLETED ✅
+  - Implemented modular prompt configuration through environment variables
+  - Created SummaryPromptBuilder service for dynamic prompt generation
+  - Added three configurable parameters:
+    - `SUMMARY_WORD_COUNT`: Target summary length (e.g., "150-175", "100-125")
+    - `SUMMARY_FOCUS`: What to emphasize in summaries (e.g., "key facts, main arguments")
+    - `SUMMARY_STYLE`: Writing style (e.g., "objective", "technical", "conversational")
+  - Fallback to sensible defaults when variables not set
+  - Updated PM2 ecosystem configuration to include new variables
+  - Created comprehensive documentation with use case examples:
+    - Technical blog summarization (200-250 words, technical focus)
+    - Executive briefings (100-125 words, business impact focus)
+    - News digests (75-100 words, journalistic style)
+  - Added test endpoint `/api/test-prompt-config` for configuration verification
+  - Configuration changes require server restart to take effect
+  - Prepared system for future multi-provider LLM support (TODO-024)
+
 ### Fixed - July 22, 2025 Session (iOS Safari Improvements)
 - **iOS Scroll-to-Top Gesture Support** (TODO-030) - COMPLETED ✅
   - Fixed Safari URL bar not collapsing when scrolling in article list

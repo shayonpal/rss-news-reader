@@ -7,7 +7,7 @@ export function extractTextContent(data: any): string {
   // If it's already a string, clean it up
   if (typeof data === 'string') {
     // Strip HTML tags using regex and decode common HTML entities
-    let text = data
+    const text = data
       .replace(/<[^>]*>/g, '') // Remove HTML tags
       .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')

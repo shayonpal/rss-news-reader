@@ -1,29 +1,15 @@
 import { NextResponse } from 'next/server';
-import { BiDirectionalSyncService } from '@/server/services/bidirectional-sync-nextjs';
 
-// Initialize service
-const syncService = new BiDirectionalSyncService();
+// TODO: This endpoint is a placeholder for bidirectional sync functionality
+// The actual implementation runs as a separate Node.js server on port 3001
+// See TODO-037 in docs/TODOs.md for implementation details
 
-// Start periodic sync when module loads
-syncService.startPeriodicSync();
-
-export async function POST(request: Request) {
-  const { action } = await request.json();
-
-  switch (action) {
-    case 'trigger':
-      await syncService.triggerManualSync();
-      return NextResponse.json({ success: true, message: 'Bi-directional sync triggered' });
-    
-    case 'stats':
-      const stats = await syncService.getSyncQueueStats();
-      return NextResponse.json(stats);
-    
-    case 'clear-failed':
-      const cleared = await syncService.clearFailedItems();
-      return NextResponse.json({ success: true, cleared });
-    
-    default:
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    { 
+      error: 'Bidirectional sync not yet implemented',
+      message: 'This feature is planned for future development. See TODO-037.'
+    },
+    { status: 501 } // Not Implemented
+  );
 }

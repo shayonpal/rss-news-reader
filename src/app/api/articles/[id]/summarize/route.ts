@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
+import { SummaryPromptBuilder } from '@/lib/ai/summary-prompt';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -85,20 +86,13 @@ export async function POST(
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Generate summary using Claude
-    const prompt = `You are a news summarization assistant. Create a concise summary of the following article in 150-175 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
-
-IMPORTANT: Do NOT include the article title in your summary. Start directly with the content summary.
-
-Article Details:
-Title: ${article.title || 'Untitled'}
-Author: ${article.author || 'Unknown'}
-Published: ${article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Unknown'}
-
-Article Content:
-${textContent.substring(0, 10000)} ${textContent.length > 10000 ? '...[truncated]' : ''}
-
-Write a clear, informative summary that captures the essence of this article without repeating the title.`;
+    // Generate summary using Claude with configurable prompt
+    const prompt = SummaryPromptBuilder.buildPrompt({
+      title: article.title,
+      author: article.author,
+      publishedDate: article.published_at ? new Date(article.published_at).toLocaleDateString() : undefined,
+      content: textContent.substring(0, 10000) + (textContent.length > 10000 ? '...[truncated]' : '')
+    });
 
     // Get model from environment variable with fallback
     const claudeModel = process.env.CLAUDE_SUMMARIZATION_MODEL || 'claude-sonnet-4-20250514';
@@ -142,7 +136,8 @@ Write a clear, informative summary that captures the essence of this article wit
       model: claudeModel,
       regenerated: forceRegenerate,
       input_tokens: completion.usage.input_tokens,
-      output_tokens: completion.usage.output_tokens
+      output_tokens: completion.usage.output_tokens,
+      config: SummaryPromptBuilder.getConfig()
     });
 
   } catch (error) {

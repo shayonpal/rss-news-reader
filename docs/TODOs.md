@@ -492,19 +492,34 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Update mechanism works
   - [ ] Works over HTTP (Tailscale)
 
-#### TODO-023: US-704 - Configurable AI Summarization Prompt (P2 - Configuration)
-- **Status**: 🔴 TODO
-- **Acceptance Criteria**:
-  - [ ] Add environment variables: `SUMMARY_WORD_COUNT`, `SUMMARY_FOCUS`, `SUMMARY_STYLE`
-  - [ ] Support modular configuration (word count, focus, style)
-  - [ ] Fallback to default prompt gracefully
-  - [ ] Document prompt engineering best practices
+#### TODO-023: US-704 - Configurable AI Summarization Prompt (P2 - Configuration) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Configurable AI summarization prompts implemented
+- **Completed**: January 23, 2025
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Add environment variables: `SUMMARY_WORD_COUNT`, `SUMMARY_FOCUS`, `SUMMARY_STYLE`
+  - [x] Support modular configuration (word count, focus, style)
+  - [x] Fallback to default prompt gracefully
+  - [x] Document prompt engineering best practices
+- **Implementation**:
+  - Created `SummaryPromptBuilder` service in `/src/lib/ai/summary-prompt.ts`
+  - Updated summarization route to use configurable prompts
+  - Added environment variables to `.env` and `.env.example`
+  - Updated PM2 ecosystem configuration with defaults
+  - Created comprehensive documentation in `/src/lib/ai/README.md`
+  - Added test endpoint `/api/test-prompt-config` for verification
 - **Environment Variables**:
   ```env
-  SUMMARY_WORD_COUNT=150-175
-  SUMMARY_FOCUS=key facts, main arguments, implications
-  SUMMARY_STYLE=objective
+  SUMMARY_WORD_COUNT=150-175              # Target summary length (configurable)
+  SUMMARY_FOCUS=key facts, main arguments, and important conclusions  # What to emphasize
+  SUMMARY_STYLE=objective                 # Writing style (objective, technical, conversational, etc.)
   ```
+- **Files Created/Modified**:
+  - `/src/lib/ai/summary-prompt.ts` - Prompt builder service
+  - `/src/lib/ai/README.md` - Configuration documentation with examples
+  - `/src/app/api/articles/[id]/summarize/route.ts` - Updated to use builder
+  - `/ecosystem.config.js` - Added new environment variables
+  - `/.env.example` - Added configuration template
+  - `/.env` - Added default configuration
 - **Documentation**:
   - **Product Requirements**: See [[PRD#Prompt-Configuration-Customizable]]
   - **Technical Implementation**: See [[Implementation Strategy#AI-Summarization-Configuration]]
