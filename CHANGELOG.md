@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed hydration error with read status filter using client-only hook
   - Both article list and article detail views now support native iOS gestures
   - Safari URL bar now properly collapses when scrolling down
+  - **Mobile Responsive Regression Fix**:
+    - Fixed content overflow on iPhone where articles expanded beyond viewport
+    - Added global CSS constraints to prevent horizontal scrolling
+    - Updated `extractTextContent` to properly strip HTML tags and decode entities
+    - Added responsive padding (sm:px-6 lg:px-8) to article detail view
+    - Improved container constraints with overflow-hidden and min-w-0
+    - Preserved original article preview logic (line-clamp-4 for content, full for summaries)
 
 ### Added - July 22, 2025 Session (Theme Toggle)
 - **Theme Toggle** (TODO-015, US-402) - COMPLETED ✅

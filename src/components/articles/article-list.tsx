@@ -156,7 +156,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
     const contentText = extractTextContent(article.content);
     if (contentText) {
       return (
-        <p className="text-sm text-muted-foreground line-clamp-4 mt-2">
+        <p className="text-sm text-muted-foreground line-clamp-4 mt-2 break-words">
           {contentText}
         </p>
       );
@@ -214,16 +214,16 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   return (
     <div
       ref={scrollContainerRef}
-      className="flex-1"
+      className="flex-1 overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border overflow-x-hidden">
         {Array.from(articles.values()).map((article) => (
           <article
             key={article.id}
-            className={`relative p-4 sm:p-6 cursor-pointer transition-colors hover:bg-muted/50 ${
+            className={`relative p-4 sm:p-6 cursor-pointer transition-colors hover:bg-muted/50 overflow-hidden ${
               article.isRead ? 'opacity-70' : ''
             }`}
             onClick={() => handleArticleClick(article)}
@@ -297,7 +297,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
               </div>
 
               {/* Content Preview */}
-              <div className="text-sm">
+              <div className="text-sm overflow-hidden">
                 {renderPreview(article)}
               </div>
             </div>

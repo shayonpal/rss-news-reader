@@ -127,14 +127,14 @@ export function ArticleDetail({
 
   return (
     <div 
-      className="min-h-screen bg-white dark:bg-gray-900"
+      className="min-h-screen bg-white dark:bg-gray-900 w-full overflow-x-hidden"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <IOSButton
             variant="ghost"
             size="icon"
@@ -192,10 +192,10 @@ export function ArticleDetail({
       </header>
 
       {/* Article Content */}
-      <article className="max-w-4xl mx-auto px-4 py-8">
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Metadata */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 leading-tight">
             {currentArticle.title}
           </h1>
           
@@ -226,20 +226,21 @@ export function ArticleDetail({
         {/* Article Body */}
         <div 
           ref={contentRef}
-          className="prose prose-lg dark:prose-invert max-w-none
+          className="prose prose-base sm:prose-lg dark:prose-invert max-w-none
                      prose-headings:font-bold
                      prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:underline
-                     prose-img:rounded-lg prose-img:shadow-md
+                     prose-img:rounded-lg prose-img:shadow-md prose-img:max-w-full prose-img:h-auto
                      prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-700
                      prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:rounded prose-code:px-1
-                     prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800"
+                     prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:overflow-x-auto
+                     [&>*]:break-words"
           dangerouslySetInnerHTML={{ __html: cleanContent }}
         />
       </article>
 
       {/* Navigation Footer */}
       <footer className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <IOSButton
             variant="ghost"
             size="sm"

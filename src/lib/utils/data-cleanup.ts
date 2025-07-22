@@ -4,9 +4,28 @@
  * Safely extracts text content from potentially corrupted data
  */
 export function extractTextContent(data: any): string {
-  // If it's already a string, return it
+  // If it's already a string, clean it up
   if (typeof data === 'string') {
-    return data;
+    // Strip HTML tags using regex and decode common HTML entities
+    let text = data
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&ldquo;/g, '"')
+      .replace(/&rdquo;/g, '"')
+      .replace(/&lsquo;/g, "'")
+      .replace(/&rsquo;/g, "'")
+      .replace(/&hellip;/g, '...')
+      .replace(/&mdash;/g, '—')
+      .replace(/&ndash;/g, '–')
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    
+    return text;
   }
   
   // If it's null or undefined, return empty string

@@ -41,7 +41,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background relative">
+    <div className="flex min-h-screen bg-background relative w-full overflow-x-hidden">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -74,7 +74,7 @@ export default function HomePage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Enhanced Header with Database Counts */}
         <ArticleHeader
           selectedFeedId={selectedFeedId}
