@@ -5,7 +5,16 @@ All notable changes to Shayon's News RSS Reader PWA will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2025-07-22 - Production Deployment
+
+### Added - July 22, 2025 Session (First Production Deployment)
+- **Blue-Green Deployment Infrastructure** (TODO-033 to TODO-036) - COMPLETED ✅
+  - Created development branch and multi-environment configuration
+  - Updated PM2 ecosystem.config.js for production (port 3147) and development (port 3000)
+  - Created comprehensive deployment scripts with health checks
+  - Configured automatic startup with macOS LaunchAgent
+  - Successfully deployed to production at http://100.96.166.53:3147/reader
+  - Note: Port conflict with Obsidian Docker container on port 80, using port 3147 directly
 
 ### Added - January 22, 2025 Session (Automatic Daily Sync)
 - **Automatic Daily Sync** (TODO-006, US-102) - COMPLETED ✅

@@ -1,6 +1,6 @@
-:80 {
+:8080 {
 	# RSS Reader App
-	handle_path /reader* {
+	handle /reader* {
 		reverse_proxy localhost:3147 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}

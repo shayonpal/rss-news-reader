@@ -192,62 +192,33 @@ src/
 
 ## Current Development Status
 
-**Phase**: Production Deployment Infrastructure
+**Phase**: Production Deployed
 
-**Version**: 0.4.0
+**Version**: 0.5.0
 
-### Completed ✅
+### Production Access
 
-**July 21, 2025 - Production Deployment Infrastructure**
-- ✅ **TODO-011**: Caddy Configuration (US-501) - Ready for production deployment
-  - Caddyfile for reverse proxy at `/reader` path
-  - PM2 ecosystem configuration with 1GB memory limit
-  - Deployment and testing scripts
-  - Complete documentation at `/docs/deployment/caddy-pm2-setup.md`
-- ✅ **TODO-012**: Tailscale Monitoring (US-105) - Service running continuously
-  - Automatic health checks every 5 minutes
-  - Auto-restart if Tailscale disconnects
-  - Passwordless sudo configured and tested
-  - macOS launchd service installed and running
-  - Comprehensive activity logging to `logs/tailscale-monitor.log`
+- **Production URL**: http://100.96.166.53:3147/reader
+- **Development URL**: http://100.96.166.53:3000/reader (when dev server running)
+- **Note**: Using port 3147 due to Obsidian Docker container on port 80
 
-**January 21, 2025 - Server-Client Architecture**
-- ✅ **US-101**: Server OAuth Setup - Server handles all Inoreader authentication
-  - One-time OAuth setup script using Playwright
-  - Encrypted token storage in `~/.rss-reader/tokens.json`
-  - Automatic token refresh
-- ✅ **US-102**: Server Sync Service (Partial) - Manual sync working
-  - `/api/sync` endpoint for server-side sync
-  - Efficient 4-5 API calls per sync
-  - Syncs 69 feeds and 100 articles to Supabase
-  - Automatic cron job pending
-- ✅ **US-103**: Server API Endpoints - Complete server-side implementation
-  - `POST /api/sync` - Trigger manual sync with rate limiting
-  - `GET /api/sync/status/:id` - Check sync progress
-  - `POST /api/articles/:id/fetch-content` - Extract full content with Readability
-  - `POST /api/articles/:id/summarize` - Generate AI summary with Claude
-  - All endpoints tested and working
-- ✅ **US-201**: Remove Client Authentication
-  - No OAuth in client
-  - No login/logout UI
-  - Access via Tailscale network only
-- ✅ **US-202**: Supabase-Only Data Layer
-  - Client reads exclusively from Supabase
-  - No Inoreader API calls in client
-  - All data flows: Server → Supabase → Client
-- 🟡 **US-203**: Server API Integration (Partial) - Sync working, UI pending
-  - ✅ Sync button calls server API endpoints
-  - ✅ Progress polling with real-time updates
-  - ✅ Rate limit display with warnings
-  - ❌ Content extraction UI integration pending
-  - ❌ AI summary UI integration pending
+### Deployment Status (July 22, 2025)
 
-**Previous Milestones**
-- ✅ **Development Environment**: Fully configured with quality gates
-- ✅ **Foundation**: Next.js 14 + TypeScript + PWA
-- ✅ **Supabase Integration**: 4-table schema with TypeScript types
-- ✅ **Feed Display**: Hierarchical feed list with unread counts
-- ✅ **Article List**: Infinite scroll with read/unread states
+- ✅ **Production Deployed** - RSS reader running on PM2 with automatic startup
+- ✅ **Automatic Daily Sync** - Cron service syncing at 2:00 AM and 2:00 PM Toronto time
+- ✅ **69 feeds** and **250 articles** synced and available
+- ✅ **Tailscale Monitoring** - Auto-restart service ensures constant availability
+- ✅ **Database Security** - Row Level Security enabled on all tables
+- ✅ **Performance Optimized** - Feed loading reduced from 6.4s to <500ms
+
+### Key Milestones Achieved
+
+- **Server-Client Architecture** - Complete separation of concerns
+- **No Client Authentication** - Access controlled by Tailscale network  
+- **Automatic Daily Sync** - Cron service runs at 2 AM and 2 PM Toronto time
+- **Database-Driven Filtering** - Real-time counts with 5-minute cache
+- **PWA Installable** - Works on mobile and desktop devices
+- **Production Ready** - Deployed with PM2 and automatic startup
 
 ### Current Features
 
@@ -267,54 +238,21 @@ src/
 - **Article List**: Infinite scroll with read/unread states
 - **Offline Queue**: Actions synced when back online
 
-### Critical Security & Performance Issues (2025-07-21)
-
-**⚠️ IMPORTANT**: Supabase advisors have identified critical issues that need immediate attention:
-
-1. **🔴 Critical Security**: Row Level Security (RLS) is disabled on ALL public tables
-   - Anyone with the Supabase anon key can read/modify all data
-   - See **US-801** in user stories for implementation details
-
-2. **🟡 Security Warning**: Function `update_updated_at_column` has mutable search_path
-   - Potential SQL injection vulnerability
-   - See **US-802** for fix
-
-3. **🟠 Performance Issues**:
-   - Timezone queries consuming 45.4% of execution time
-   - Feed loading taking 6.4 seconds due to N+1 query problem
-   - See **US-803** for optimization plan
-
-**Action Required**: Implement Epic 8 (Security & Performance Fixes) before production deployment.
 
 ### Next Steps
 
-**Immediate Priority - Security Fixes**:
-- [ ] **US-801**: Enable Row Level Security on all tables (P0 - Critical)
-- [ ] **US-802**: Fix function security vulnerability (P0 - Security)
-
-**Performance Optimizations**:
-- [ ] **US-803**: Optimize database queries and indexes (P1)
-- [ ] Run migration for `get_unread_counts_by_feed` function
-- [ ] **US-804**: Set up database monitoring (P2)
-
-**To Complete US-102 (Server Sync Service)**:
-- [ ] Implement automatic daily cron job
-- [ ] Add round-robin distribution (max 20 per feed)
-- [ ] Create sync_errors table and error logging
-- [ ] Implement read state sync back to Inoreader
-
-**To Complete US-203 (Server API Integration)**:
+**UI Enhancements**:
 - [ ] Add "Fetch Full Content" button UI for articles
-- [ ] Add "Generate Summary" button UI for articles
-- [ ] Display extracted content in article view
-- [ ] Display AI summaries in article list/view
+- [ ] Add "Generate Summary" button UI for articles  
+- [ ] Implement feed search functionality
+- [ ] Add theme toggle in settings
+- [ ] Fix Previous/Next button regression on iOS
 
-**Upcoming User Stories**:
-- **US-104**: Content Extraction Service (UI integration for existing endpoint)
-- **US-105**: Tailscale Monitoring (auto-restart if down)
-- **US-301**: Claude API Integration (UI integration for existing endpoint)
-- **US-401**: Feed and Tag Filtering
-- **US-501**: Caddy Configuration for production
+**Performance & Polish**:
+- [ ] Document internal API endpoints
+- [ ] Add error handling for offline scenarios
+- [ ] Implement incremental sync if needed
+- [ ] iOS scroll-to-top gesture support
 
 See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news-reader/issues) or [Project Board](https://github.com/users/shayonpal/projects/7).
 
