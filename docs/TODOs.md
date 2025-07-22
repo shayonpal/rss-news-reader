@@ -238,31 +238,65 @@
 
 ### Phase 4: UX Enhancements
 
-#### TODO-014: US-401 - Feed, Tag, and Read Status Filtering (P1 - UX)
+#### TODO-014a: US-401a - Read Status Filtering (P1 - Pre-Production)
 - **Status**: 🔴 TODO
-- **Current**: Basic feed filtering exists
+- **Current**: All articles shown regardless of read status
 - **Missing**:
-  - [ ] Two-tab interface: "Feeds" and "Tags"
-  - [ ] Tags tab with flat list
-  - [ ] Mutually exclusive filtering (feed OR tag)
-  - [ ] "All Articles" option to clear filters
   - [ ] Read status filter dropdown/toggle with options:
     - "Unread only" (default)
     - "Read only"
     - "All articles"
   - [ ] Persist read status filter preference in localStorage
   - [ ] Update article counts to reflect current filter
-  - [ ] Clear visual indicator of active filters
+  - [ ] Clear visual indicator of active read status filter
 - **Implementation Details**:
   - Add read status filter state to article store
   - Default to "unread only" on first load
-  - Filter should work in combination with feed/tag filters
+  - Filter should work in combination with existing feed filters
   - Update `loadArticles` query to include read status filter
-  - Show filter status in header (e.g., "Unread Articles in [Feed Name]")
+  - Show filter status in header (e.g., "Showing: Unread Articles")
 - **Acceptance Criteria**:
   - [ ] Default view shows only unread articles
   - [ ] Easy toggle between unread/read/all views
   - [ ] Filter persists across sessions
+  - [ ] Works correctly with existing feed selection
+
+#### TODO-014b: US-401b - Feed Filtering Enhancement (P2 - Post-Production)
+- **Status**: 🔴 TODO
+- **Current**: Basic feed filtering exists
+- **Missing**:
+  - [ ] "All Articles" option to clear feed filter
+  - [ ] Better visual indication of selected feed
+  - [ ] Improved feed selection UX
+  - [ ] Feed search/filter in sidebar
+- **Implementation Details**:
+  - Enhance existing feed filtering UI
+  - Add "All Articles" option at top of feed list
+  - Highlight selected feed more prominently
+  - Add feed count badges
+- **Acceptance Criteria**:
+  - [ ] Clear way to view all articles across feeds
+  - [ ] Visual feedback for active feed filter
+  - [ ] Improved navigation between feeds
+
+#### TODO-014c: US-401c - Tag Filtering (P3 - Post-Production)
+- **Status**: 🔴 TODO
+- **Current**: No tag filtering capability
+- **Missing**:
+  - [ ] Tags tab in sidebar
+  - [ ] Tag list with article counts
+  - [ ] Tag selection filtering
+  - [ ] Mutually exclusive filtering (feed OR tag)
+- **Implementation Details**:
+  - Add tags extraction from articles
+  - Create tags tab interface
+  - Implement tag-based article filtering
+  - Ensure mutual exclusivity with feed filters
+- **Acceptance Criteria**:
+  - [ ] Tags tab shows all unique tags
+  - [ ] Selecting tag filters articles
+  - [ ] Clear indication when tag filter is active
+  - [ ] Cannot have both feed and tag filter active
   - [ ] Works seamlessly with feed/tag filtering
   - [ ] Article counts update based on active filters
 

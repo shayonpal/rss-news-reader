@@ -122,11 +122,12 @@
    - Verify PWA manifest references correct paths
    - Test icons display in browser/PWA
 
-2. **TODO-014: US-401 - Feed, Tag, and Read Status Filtering** (P1 - UX)
-   - Two-tab interface: "Feeds" and "Tags"
+2. **TODO-014a: US-401a - Read Status Filtering** (P1 - Pre-Production)
    - Read status filter dropdown (Unread only/Read only/All)
-   - Persist filter preferences in localStorage
+   - Default to "Unread only" view
+   - Persist filter preference in localStorage
    - Update article counts to reflect current filter
+   - Works with existing feed selection
 
 3. **TODO-006: Complete US-102 - Automatic Daily Sync** (P1 - Core)
    - Implement node-cron for scheduling (2am and 2pm)
