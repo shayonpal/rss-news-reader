@@ -1079,3 +1079,129 @@ The tech lead should choose one of these frameworks to guide their testing strat
 - Make sync service configurable
 - Provide Docker compose for easy deployment
 - Consider multi-user support in future versions
+
+## Bi-directional Sync Feature (TODO-037)
+
+### Overview
+
+Enable two-way synchronization of read/unread and starred status between the RSS Reader app and Inoreader, ensuring consistency across all reading platforms.
+
+### Feature Requirements
+
+#### Sync Scope
+- **Read/Unread Status**: Sync both directions for all articles
+- **Starred Status**: Sync both directions for all articles
+- **Excluded**: Tags, folders, and other metadata (not supported in current UI)
+
+#### Sync Timing
+- **Automatic Sync**: Every 5 minutes while app is open
+- **Manual Sync**: Include bi-directional sync in manual sync operations
+- **Daily Sync**: Include bi-directional sync in 2am/2pm automated syncs
+- **Configurable**: All timing parameters via environment variables
+
+#### Sync Architecture
+
+**Sync Queue Design**:
+- Track all local changes with timestamps
+- Persist queue across browser sessions
+- Batch changes for efficient API usage
+- Clear queue after successful sync
+
+**Conflict Resolution**:
+- Use timestamp-based resolution (most recent change wins)
+- Track change timestamps in milliseconds
+- Prevent sync loops by tracking sync source
+
+**Error Handling**:
+- Retry with exponential backoff (max 3 attempts)
+- Backoff intervals: 10 minutes, 20 minutes, 40 minutes
+- After 3 failures, defer to next scheduled sync
+- Silent failures (no user notification unless critical)
+
+#### API Strategy
+
+**Individual Article Sync** (`/edit-tag` endpoint):
+- Batch size: 100 articles per API call (configurable)
+- Supports both read/unread and starred/unstarred
+- Multiple article IDs in single request
+
+**Bulk Operations** (`/mark-all-as-read` endpoint):
+- Use for "Mark all as read" operations
+- Single API call per feed/folder
+- Much more efficient than individual marking
+
+**Auto-mark on Scroll** (TODO-029 integration):
+- Queue articles marked as read during scrolling
+- Sync with same 5-minute interval
+- Handle potentially 300+ articles per session
+
+#### Configuration
+
+```env
+# Bi-directional Sync Configuration
+SYNC_INTERVAL_MINUTES=5              # How often to sync while app is open
+SYNC_MIN_CHANGES=5                   # Minimum changes before triggering sync
+SYNC_BATCH_SIZE=100                  # Articles per edit-tag API call
+SYNC_RETRY_BACKOFF_MINUTES=10        # Initial retry delay
+SYNC_MAX_RETRIES=3                   # Maximum retry attempts
+
+# Article Retention Configuration  
+ARTICLES_RETENTION_LIMIT=2000        # Total articles to keep (was 500)
+ARTICLES_RETENTION_STARRED_EXEMPT=true  # Never delete starred articles
+```
+
+#### Database Schema
+
+**New Sync Queue Table**:
+```sql
+CREATE TABLE sync_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  inoreader_id TEXT NOT NULL,
+  action_type TEXT NOT NULL, -- 'read', 'unread', 'star', 'unstar'
+  action_timestamp TIMESTAMPTZ NOT NULL,
+  sync_attempts INTEGER DEFAULT 0,
+  last_attempt_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_sync_queue_created ON sync_queue(created_at);
+CREATE INDEX idx_sync_queue_attempts ON sync_queue(sync_attempts);
+```
+
+**Article Table Updates**:
+```sql
+ALTER TABLE articles
+ADD COLUMN last_local_update TIMESTAMPTZ,
+ADD COLUMN last_sync_update TIMESTAMPTZ;
+```
+
+#### Implementation Notes
+
+1. **Sync Loop Prevention**:
+   - Only sync changes made after last Inoreader sync
+   - Track sync source to avoid re-syncing Inoreader changes
+   - Use `last_local_update` vs `last_sync_update` comparison
+
+2. **Performance Optimization**:
+   - Batch database operations
+   - Use single Supabase transaction per sync
+   - Implement request coalescing for rapid changes
+
+3. **API Usage Efficiency**:
+   - 5-minute sync: ~12 calls/hour while active
+   - Daily syncs: 2 calls
+   - Manual syncs: Variable
+   - Estimated total: 30-40 calls/day for bi-directional sync
+
+4. **User Experience**:
+   - Completely invisible to user
+   - No sync status indicators
+   - Changes appear seamless
+
+### Success Metrics
+
+- Zero sync conflicts reported
+- <1% sync failure rate
+- API usage stays under 100 calls/day
+- Read status consistency across devices

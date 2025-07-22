@@ -22,7 +22,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "pre-commit": "npm run type-check && npm run lint && npm run format:check",
-    "setup:oauth": "node server/scripts/setup-oauth.js"
+    "setup:oauth": "node server/scripts/setup-oauth.js",
+    "server": "node server/server.js",
+    "server:dev": "nodemon server/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
@@ -40,6 +42,7 @@
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.8",
     "dotenv": "^17.2.0",

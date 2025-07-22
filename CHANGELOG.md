@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-07-22 - Production Deployment
 
+### Added - January 22, 2025 Session (Bi-directional Sync Implementation)
+- **Bi-directional Sync to Inoreader** (TODO-037) - COMPLETED ✅
+  - Implemented sync queue pattern for tracking local changes
+  - Created database migration with sync_queue table and helper functions
+  - Added server-side BiDirectionalSyncService with periodic sync (5-minute intervals)
+  - Batch processing of sync operations to minimize API calls
+  - Automatic retry with exponential backoff for failed syncs
+  - Client-side integration to queue read/unread/star/unstar actions
+  - Conflict resolution using timestamp-based last-write-wins approach
+  - Added sync queue statistics view for monitoring
+  - Successfully tested with real user actions
+
+### Fixed - January 22, 2025 Session (Bi-directional Sync Bug Fix)
+- **Client-Side Sync Queue RPC Calls** (TODO-038) - COMPLETED ✅
+  - Fixed SQL syntax error in add_to_sync_queue function
+  - Changed from invalid CASE statement with arrays to IF/ELSIF logic
+  - Added error handling to RPC calls in article store
+  - Verified sync queue properly records all user actions
+  - Tested with Playwright browser automation
+
 ### Added - July 22, 2025 Session (First Production Deployment)
 - **Blue-Green Deployment Infrastructure** (TODO-033 to TODO-036) - COMPLETED ✅
   - Created development branch and multi-environment configuration

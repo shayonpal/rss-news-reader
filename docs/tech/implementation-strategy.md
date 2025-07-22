@@ -1414,14 +1414,497 @@ const milestones = [
 ];
 ```
 
+## Bi-directional Sync Implementation (TODO-037)
+
+### Overview
+
+Implement two-way synchronization between the RSS Reader app and Inoreader for read/unread and starred status, ensuring changes made in either platform are reflected in both.
+
+### Technical Architecture
+
+#### 1. Sync Queue Service
+
+```typescript
+// Server-side sync queue management
+class BiDirectionalSyncService {
+  private readonly SYNC_INTERVAL_MS = (process.env.SYNC_INTERVAL_MINUTES || 5) * 60 * 1000;
+  private readonly MIN_CHANGES = parseInt(process.env.SYNC_MIN_CHANGES || '5');
+  private readonly BATCH_SIZE = parseInt(process.env.SYNC_BATCH_SIZE || '100');
+  private readonly MAX_RETRIES = parseInt(process.env.SYNC_MAX_RETRIES || '3');
+  private readonly RETRY_BACKOFF_MS = (process.env.SYNC_RETRY_BACKOFF_MINUTES || 10) * 60 * 1000;
+  
+  private syncTimer: NodeJS.Timer | null = null;
+  private retryAttempts = new Map<string, number>();
+
+  async startPeriodicSync() {
+    // Clear any existing timer
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+    }
+
+    // Start periodic sync
+    this.syncTimer = setInterval(async () => {
+      await this.processSyncQueue();
+    }, this.SYNC_INTERVAL_MS);
+
+    console.log(`[BiDirectionalSync] Started periodic sync every ${this.SYNC_INTERVAL_MS / 60000} minutes`);
+  }
+
+  async processSyncQueue() {
+    try {
+      // Get pending changes from sync_queue
+      const { data: pendingChanges } = await supabase
+        .from('sync_queue')
+        .select('*')
+        .lt('sync_attempts', this.MAX_RETRIES)
+        .order('created_at', { ascending: true });
+
+      if (!pendingChanges || pendingChanges.length < this.MIN_CHANGES) {
+        console.log(`[BiDirectionalSync] Only ${pendingChanges?.length || 0} changes pending, skipping sync`);
+        return;
+      }
+
+      // Group changes by action type for efficient batching
+      const groupedChanges = this.groupChangesByAction(pendingChanges);
+
+      // Process each action type
+      for (const [actionType, changes] of Object.entries(groupedChanges)) {
+        await this.syncActionBatch(actionType, changes);
+      }
+
+    } catch (error) {
+      console.error('[BiDirectionalSync] Error processing sync queue:', error);
+    }
+  }
+
+  private groupChangesByAction(changes: SyncQueueItem[]): Record<string, SyncQueueItem[]> {
+    return changes.reduce((acc, change) => {
+      if (!acc[change.action_type]) {
+        acc[change.action_type] = [];
+      }
+      acc[change.action_type].push(change);
+      return acc;
+    }, {} as Record<string, SyncQueueItem[]>);
+  }
+
+  async syncActionBatch(actionType: string, changes: SyncQueueItem[]) {
+    // Process in batches of BATCH_SIZE
+    for (let i = 0; i < changes.length; i += this.BATCH_SIZE) {
+      const batch = changes.slice(i, i + this.BATCH_SIZE);
+      
+      try {
+        await this.sendBatchToInoreader(actionType, batch);
+        
+        // Mark batch as synced
+        const ids = batch.map(c => c.id);
+        await supabase
+          .from('sync_queue')
+          .delete()
+          .in('id', ids);
+          
+        console.log(`[BiDirectionalSync] Synced ${batch.length} ${actionType} changes`);
+        
+      } catch (error) {
+        // Handle retry logic
+        await this.handleSyncError(batch, error);
+      }
+    }
+  }
+
+  private async sendBatchToInoreader(actionType: string, batch: SyncQueueItem[]) {
+    const tokenManager = require('../lib/token-manager.js');
+    const tm = new tokenManager();
+
+    // Prepare parameters based on action type
+    const params = new URLSearchParams();
+    
+    for (const item of batch) {
+      params.append('i', item.inoreader_id);
+    }
+
+    // Set appropriate tags based on action
+    switch (actionType) {
+      case 'read':
+        params.append('a', 'user/-/state/com.google/read');
+        break;
+      case 'unread':
+        params.append('r', 'user/-/state/com.google/read');
+        break;
+      case 'star':
+        params.append('a', 'user/-/state/com.google/starred');
+        break;
+      case 'unstar':
+        params.append('r', 'user/-/state/com.google/starred');
+        break;
+    }
+
+    // Make API call
+    const response = await tm.makeAuthenticatedRequest(
+      'https://www.inoreader.com/reader/api/0/edit-tag',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Inoreader sync failed: ${response.statusText}`);
+    }
+  }
+
+  private async handleSyncError(batch: SyncQueueItem[], error: any) {
+    console.error('[BiDirectionalSync] Batch sync failed:', error);
+
+    // Update retry attempts
+    for (const item of batch) {
+      const attempts = (this.retryAttempts.get(item.id) || 0) + 1;
+      this.retryAttempts.set(item.id, attempts);
+
+      await supabase
+        .from('sync_queue')
+        .update({
+          sync_attempts: attempts,
+          last_attempt_at: new Date().toISOString()
+        })
+        .eq('id', item.id);
+
+      // Exponential backoff for next retry
+      if (attempts < this.MAX_RETRIES) {
+        const backoffMs = this.RETRY_BACKOFF_MS * Math.pow(2, attempts - 1);
+        console.log(`[BiDirectionalSync] Will retry ${item.id} in ${backoffMs / 60000} minutes`);
+      }
+    }
+  }
+}
+```
+
+#### 2. Client-Side Change Tracking
+
+```typescript
+// Enhanced article store with sync queue integration
+const useArticleStoreWithSync = create<ArticleStoreState>((set, get) => ({
+  // ... existing store implementation ...
+
+  markAsRead: async (articleId: string) => {
+    const article = get().articles.get(articleId);
+    if (!article) return;
+
+    // Update local state immediately
+    await supabase
+      .from('articles')
+      .update({ 
+        is_read: true,
+        last_local_update: new Date().toISOString()
+      })
+      .eq('id', articleId);
+
+    // Queue for sync
+    await supabase
+      .from('sync_queue')
+      .insert({
+        article_id: articleId,
+        inoreader_id: article.inoreaderItemId,
+        action_type: 'read',
+        action_timestamp: new Date().toISOString()
+      });
+
+    // Update UI
+    set((state) => ({
+      articles: new Map(state.articles).set(articleId, { ...article, isRead: true })
+    }));
+  },
+
+  markAsUnread: async (articleId: string) => {
+    const article = get().articles.get(articleId);
+    if (!article) return;
+
+    // Update local state
+    await supabase
+      .from('articles')
+      .update({ 
+        is_read: false,
+        last_local_update: new Date().toISOString()
+      })
+      .eq('id', articleId);
+
+    // Queue for sync
+    await supabase
+      .from('sync_queue')
+      .insert({
+        article_id: articleId,
+        inoreader_id: article.inoreaderItemId,
+        action_type: 'unread',
+        action_timestamp: new Date().toISOString()
+      });
+
+    // Update UI
+    set((state) => ({
+      articles: new Map(state.articles).set(articleId, { ...article, isRead: false })
+    }));
+  },
+
+  toggleStar: async (articleId: string) => {
+    const article = get().articles.get(articleId);
+    if (!article) return;
+
+    const newStarred = !article.tags.includes('starred');
+
+    // Update local state
+    await supabase
+      .from('articles')
+      .update({ 
+        is_starred: newStarred,
+        last_local_update: new Date().toISOString()
+      })
+      .eq('id', articleId);
+
+    // Queue for sync
+    await supabase
+      .from('sync_queue')
+      .insert({
+        article_id: articleId,
+        inoreader_id: article.inoreaderItemId,
+        action_type: newStarred ? 'star' : 'unstar',
+        action_timestamp: new Date().toISOString()
+      });
+
+    // Update UI
+    const newTags = newStarred 
+      ? [...article.tags, 'starred']
+      : article.tags.filter(t => t !== 'starred');
+
+    set((state) => ({
+      articles: new Map(state.articles).set(articleId, { ...article, tags: newTags })
+    }));
+  },
+
+  // Special handling for "Mark All as Read"
+  markAllAsRead: async (feedId?: string, folderId?: string) => {
+    if (feedId) {
+      // Use efficient mark-all-as-read API
+      const response = await fetch('/api/mark-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedId })
+      });
+
+      if (response.ok) {
+        // Update all articles in this feed locally
+        await supabase
+          .from('articles')
+          .update({ 
+            is_read: true,
+            last_local_update: new Date().toISOString()
+          })
+          .eq('feed_id', feedId);
+
+        // Update UI
+        set((state) => {
+          const newArticles = new Map(state.articles);
+          for (const [id, article] of newArticles) {
+            if (article.feedId === feedId) {
+              newArticles.set(id, { ...article, isRead: true });
+            }
+          }
+          return { articles: newArticles };
+        });
+      }
+    }
+  }
+}));
+```
+
+#### 3. Server API Endpoint for Mark All as Read
+
+```typescript
+// New API endpoint: /api/mark-all-read
+export async function POST(request: Request) {
+  try {
+    const { feedId, folderId } = await request.json();
+    
+    // Get the appropriate stream ID
+    let streamId: string;
+    if (feedId) {
+      // Get feed's Inoreader ID
+      const { data: feed } = await supabase
+        .from('feeds')
+        .select('inoreader_id')
+        .eq('id', feedId)
+        .single();
+      
+      streamId = feed?.inoreader_id;
+    } else if (folderId) {
+      // Get folder's Inoreader ID
+      const { data: folder } = await supabase
+        .from('folders')
+        .select('inoreader_id')
+        .eq('id', folderId)
+        .single();
+      
+      streamId = folder?.inoreader_id;
+    } else {
+      streamId = 'user/-/state/com.google/reading-list'; // All articles
+    }
+
+    // Call Inoreader mark-all-as-read API
+    const tokenManager = require('../../../../server/lib/token-manager.js');
+    const tm = new tokenManager();
+
+    const response = await tm.makeAuthenticatedRequest(
+      'https://www.inoreader.com/reader/api/0/mark-all-as-read',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          s: streamId,
+          ts: Math.floor(Date.now() / 1000).toString() // Current timestamp
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Mark all as read failed: ${response.statusText}`);
+    }
+
+    // Track API usage
+    await trackApiUsage('inoreader', 1);
+
+    return NextResponse.json({ success: true });
+    
+  } catch (error) {
+    console.error('Mark all as read error:', error);
+    return NextResponse.json(
+      { error: 'Failed to mark all as read' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### 4. Sync Loop Prevention
+
+```typescript
+// Enhanced sync service with loop prevention
+class SyncLoopPrevention {
+  async performServerSync(syncId: string) {
+    // ... existing sync code ...
+
+    // When processing articles from Inoreader
+    const articles = streamData.items || [];
+    
+    // Mark sync timestamp
+    const syncTimestamp = new Date().toISOString();
+    
+    // Process articles with sync tracking
+    const articlesToUpsert = articles.map((article: any) => ({
+      // ... existing mapping ...
+      is_read: article.categories?.includes('user/-/state/com.google/read') || false,
+      is_starred: article.categories?.includes('user/-/state/com.google/starred') || false,
+      last_sync_update: syncTimestamp // Mark as from sync
+    }));
+
+    // Clear any pending sync queue items for these articles
+    const inoreaderIds = articles.map(a => a.id);
+    if (inoreaderIds.length > 0) {
+      await supabase
+        .from('sync_queue')
+        .delete()
+        .in('inoreader_id', inoreaderIds);
+    }
+  }
+}
+```
+
+#### 5. Database Migration
+
+```sql
+-- Migration: Add bi-directional sync support
+CREATE TABLE IF NOT EXISTS sync_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  inoreader_id TEXT NOT NULL,
+  action_type TEXT NOT NULL CHECK (action_type IN ('read', 'unread', 'star', 'unstar')),
+  action_timestamp TIMESTAMPTZ NOT NULL,
+  sync_attempts INTEGER DEFAULT 0,
+  last_attempt_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_sync_queue_created ON sync_queue(created_at);
+CREATE INDEX idx_sync_queue_attempts ON sync_queue(sync_attempts);
+CREATE INDEX idx_sync_queue_inoreader_id ON sync_queue(inoreader_id);
+
+-- Add tracking columns to articles
+ALTER TABLE articles
+ADD COLUMN IF NOT EXISTS last_local_update TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS last_sync_update TIMESTAMPTZ;
+
+-- Add RLS policies for sync_queue
+ALTER TABLE sync_queue ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all operations for anon users" ON sync_queue
+  FOR ALL USING (true) WITH CHECK (true);
+```
+
+#### 6. Integration with Existing Features
+
+**Auto-mark on Scroll (TODO-029)**:
+```typescript
+// Enhanced scroll observer for auto-marking
+const useAutoMarkAsRead = () => {
+  const markAsRead = useArticleStore(state => state.markAsRead);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+            // Article scrolled out of view at top
+            const articleId = entry.target.getAttribute('data-article-id');
+            if (articleId && !entry.target.hasAttribute('data-marked-read')) {
+              markAsRead(articleId); // This now queues for sync
+              entry.target.setAttribute('data-marked-read', 'true');
+            }
+          }
+        });
+      },
+      { threshold: 0, rootMargin: '-10% 0px 0px 0px' }
+    );
+
+    // Observe all article elements
+    document.querySelectorAll('[data-article-id]').forEach(el => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [markAsRead]);
+};
+```
+
+### Deployment Considerations
+
+1. **Environment Variables**: Add to `.env` and deployment configs
+2. **PM2 Configuration**: Include bi-directional sync in cron service
+3. **API Usage Monitoring**: Update tracking to include bi-directional calls
+4. **Database Migration**: Run before deploying feature
+
+### Testing Strategy
+
+1. **Unit Tests**: Test sync queue operations
+2. **Integration Tests**: Test API batching and error handling
+3. **E2E Tests**: Test full sync flow with Playwright
+4. **Manual Testing**: Verify cross-platform consistency
+
 ## Summary
 
-This implementation strategy focuses on the server-client architecture where:
+This implementation strategy now includes comprehensive bi-directional sync, ensuring:
 
-1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization
-2. **Client is purely presentational**: Reads from Supabase, calls server endpoints
+1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization, and bi-directional sync
+2. **Client is purely presentational**: Reads from Supabase, calls server endpoints, queues local changes
 3. **Clean-slate migration**: No data migration complexity
 4. **Single-user optimization**: Dramatic simplification throughout
 5. **Tailscale security**: Network-level access control
+6. **Efficient sync**: Batched operations, smart timing, and conflict resolution
 
-The strategy ensures efficient API usage (4-5 calls per sync), automated setup (Playwright OAuth), and a maintainable architecture suitable for open-sourcing.
+The strategy ensures efficient API usage (4-5 calls per sync + bi-directional sync calls), automated setup (Playwright OAuth), and a maintainable architecture suitable for open-sourcing.

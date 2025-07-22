@@ -13,6 +13,7 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **Progressive Web App**: Install on mobile and desktop devices
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
 - **Server-Side Sync**: Efficient sync with only 4-5 API calls
+- **Bi-directional Sync**: Changes sync back to Inoreader (read/unread, star/unstar)
 - **Clean Design**: Minimalist interface inspired by Reeder 5
 - **Inoreader Integration**: Server syncs with existing subscriptions
 - **Feed Hierarchy**: Collapsible folder structure with unread counts
@@ -64,6 +65,27 @@ tail -f logs/sync-cron.jsonl | jq .
 ```
 
 For detailed automatic sync documentation, see [docs/deployment/automatic-sync.md](docs/deployment/automatic-sync.md).
+
+## Bi-directional Sync
+
+The RSS reader includes bi-directional sync that pushes your reading activity back to Inoreader:
+
+- **Supported Actions**: Read/unread status, star/unstar articles
+- **Sync Interval**: Changes sync every 5 minutes automatically
+- **Batch Processing**: Multiple changes are batched to minimize API calls
+- **Conflict Resolution**: Last-write-wins based on timestamps
+- **Retry Logic**: Failed syncs retry with exponential backoff
+- **Sync Queue**: Local changes queued until successfully synced
+
+### How It Works
+1. User actions (marking read, starring) are tracked locally
+2. Changes are added to a sync queue with timestamps
+3. Every 5 minutes, the sync service processes the queue
+4. Changes are batched and sent to Inoreader's `/edit-tag` endpoint
+5. Successfully synced items are removed from the queue
+6. Failed items retry up to 3 times with increasing delays
+
+This ensures your reading progress stays synchronized across all Inoreader clients.
 
 ## Development Setup
 
@@ -225,6 +247,11 @@ src/
 - **Server-Client Architecture**: Complete separation of concerns
 - **No Client Authentication**: Access controlled by Tailscale network
 - **Server-Side Sync**: Efficient sync with 4-5 API calls
+- **Bi-directional Sync**: Read/unread and star/unstar changes sync back to Inoreader
+  - Sync queue pattern for reliable synchronization
+  - 5-minute periodic sync with batch processing
+  - Automatic retry with exponential backoff
+  - Timestamp-based conflict resolution
 - **Supabase Data Layer**: All client data from PostgreSQL
 - **Database-Driven Read Status Filtering**: Accurate article counts with smart caching
   - Three filter options: Unread only (default), Read only, All articles
@@ -350,7 +377,7 @@ Server sync uses only 4-5 API calls:
 
 ## Database Schema
 
-The RSS reader uses PostgreSQL (via Supabase) with 7 main tables and additional database objects for performance optimization.
+The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional database objects for performance optimization.
 
 ### Core Tables
 
@@ -411,6 +438,8 @@ The RSS reader uses PostgreSQL (via Supabase) with 7 main tables and additional 
 | published | timestamptz | | Publication date |
 | is_read | boolean | DEFAULT false | Read status |
 | is_starred | boolean | DEFAULT false | Starred status |
+| last_local_update | timestamptz | | Last local change timestamp |
+| last_sync_update | timestamptz | | Last sync from Inoreader |
 | created_at | timestamptz | DEFAULT now() | Import timestamp |
 | updated_at | timestamptz | DEFAULT now() | Last update timestamp |
 
@@ -491,6 +520,26 @@ The RSS reader uses PostgreSQL (via Supabase) with 7 main tables and additional 
 | updated_at | timestamptz | DEFAULT now() | Last update timestamp |
 
 **Usage**: Caches timezone settings and other system configurations to reduce database overhead
+
+#### 8. Sync Queue Table
+**Purpose**: Track local changes for bi-directional sync to Inoreader
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique queue entry |
+| article_id | uuid | REFERENCES articles(id) ON DELETE CASCADE | Article being synced |
+| inoreader_id | text | NOT NULL | Inoreader article ID |
+| action_type | text | NOT NULL, CHECK IN ('read','unread','star','unstar') | Action to sync |
+| action_timestamp | timestamptz | NOT NULL | When action occurred |
+| sync_attempts | integer | DEFAULT 0 | Number of sync attempts |
+| last_attempt_at | timestamptz | | Last sync attempt time |
+| created_at | timestamptz | DEFAULT now() | Queue entry creation |
+
+**Indexes**:
+- Primary key on `id`
+- Foreign key index on `article_id`
+- Index on `sync_attempts` for retry queries
+- Index on `created_at` for batch processing
 
 ### Performance Optimizations
 

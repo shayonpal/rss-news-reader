@@ -14,8 +14,8 @@ The RSS News Reader is now successfully deployed to production:
 ## 📋 REMAINING WORK SUMMARY
 
 ### High Priority
+- **TODO-037**: Implement Bi-directional Sync to Inoreader (P1 - Core Feature)
 - **TODO-007**: Complete US-203 - Content/Summary UI Integration (buttons for fetch/summarize)
-- **TODO-027**: Fix Previous/Next Button Regression in Article View (iOS Safari)
 - **TODO-030**: iOS Scroll-to-Top Gesture Support
 
 ### Medium Priority  
@@ -31,7 +31,6 @@ The RSS News Reader is now successfully deployed to production:
 - **TODO-014c**: US-401c - Tag Filtering
 - **TODO-017**: US-503 - Error Handling & Monitoring
 - **TODO-019**: US-701 - Feed Search Functionality
-- **TODO-026**: Replace Deprecated Punycode Module
 
 ## 🚨 CRITICAL SECURITY ISSUES - IMMEDIATE ACTION REQUIRED
 
@@ -522,57 +521,24 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Consider implementation only if API limits become constraining
   - [ ] Maintain current simplicity unless scaling issues arise
 
-#### TODO-026: Replace Deprecated Punycode Module (P2 - Technical Debt)
-- **Status**: 🔴 TODO
-- **Issue**: Node.js built-in `punycode` module is deprecated since v21.0.0
-- **Context**: The punycode module is used indirectly through these dependencies:
-  - `eslint` → `ajv` → `uri-js` → `punycode`
-  - `jsdom` → `whatwg-url` → `tr46` → `punycode`
-  - `workbox-webpack-plugin` → `workbox-build` → `whatwg-url` → `tr46` → `punycode`
-- **Impact**: Deprecation warnings in Node.js 21+ and eventual removal in future versions
-- **npm Recommendation**: Use a userland alternative from npm instead
-- **Solutions**:
-  1. **Recommended**: Install userland `punycode` package explicitly
-     ```bash
-     npm install punycode --save
-     ```
-     - This will override the built-in module with the npm package
-     - The npm package `punycode` v2.x is actively maintained
-     - Ensures compatibility when Node.js removes the built-in module
-  2. **Long-term**: Update dependencies when they migrate away from punycode
-     - Monitor `tr46`, `uri-js` for updates
-     - Update `eslint` to v9+ when stable
-     - Check `jsdom` and `workbox` for punycode-free versions
-  3. **Alternative**: For direct usage, consider `url.domainToASCII()` and `url.domainToUnicode()`
-- **Acceptance Criteria**:
-  - [ ] Install userland `punycode` package as explicit dependency
-  - [ ] Ensure no deprecation warnings in Node.js 21+
-  - [ ] Verify all functionality works (URL parsing, internationalized domains)
-  - [ ] Document the userland package requirement in README if needed
-  - [ ] Consider adding Node.js engine requirement to package.json
-
-#### TODO-027: Fix Previous/Next Button Regression in Article View (P0 - Critical Bug Regression)
-- **Status**: 🔴 TODO - REGRESSION
-- **Issue**: Previous and Next buttons in article view have stopped working
-- **Platforms Affected**: iOS Safari (iPhone and iPad) - confirmed not working
-- **Suspected Cause**: IOSButton component may have been accidentally removed or modified
-- **Context**: This is a regression of TODO-009 which was previously completed
-- **Original Fix**: IOSButton component was created to handle proper touch events for iOS Safari
-- **Acceptance Criteria**:
-  - [ ] Investigate current button implementation in ArticleView.tsx
-  - [ ] Verify if IOSButton component is still being used for navigation buttons
-  - [ ] Restore IOSButton functionality if missing
-  - [ ] Test Previous/Next navigation on iOS Safari (iPhone and iPad)
-  - [ ] Ensure buttons work on first tap (no double-tap required)
-  - [ ] Verify navigation preserves article list scroll position
-- **Files to Check**:
-  - `src/components/articles/ArticleView.tsx`
-  - `src/components/ui/IOSButton.tsx` (if still exists)
-  - Previous git history from TODO-009 completion
-- **Testing Required**:
-  - iPhone Safari
-  - iPad Safari
-  - Verify no regressions on other platforms
+#### TODO-026: Replace Deprecated Punycode Module (P2 - Technical Debt) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Userland punycode package installed
+- **Issue**: Node.js built-in `punycode` module was deprecated since v21.0.0
+- **Solution**: Installed userland `punycode` package to override built-in module
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Install userland `punycode` package as explicit dependency
+  - [x] Ensure no deprecation warnings in Node.js 21+
+  - [x] Verify all functionality works (URL parsing, internationalized domains)
+  - [x] Document the userland package requirement in README if needed
+  - [x] Consider adding Node.js engine requirement to package.json
+- **Implementation**:
+  ```bash
+  npm install punycode --save
+  ```
+  - The npm package `punycode` v2.x is actively maintained
+  - This ensures compatibility when Node.js removes the built-in module
+  - Deprecation warnings eliminated
+- **Completed**: January 23, 2025 - Technical debt resolved
 
 #### TODO-028: Enhance Back Button Navigation Logic (P2 - UX Enhancement)
 - **Status**: 🔴 TODO
@@ -708,6 +674,58 @@ The RSS News Reader is now successfully deployed to production:
   - Documented RLS policies for all tables
   - Provided visual table relationship diagram
   - Included common SQL query examples
+
+#### TODO-037: Implement Bi-directional Sync to Inoreader (P1 - Core Feature)
+- **Status**: ✅ DONE (Jan 22, 2025)
+- **Issue**: Read/unread status changes made in the app are not synced back to Inoreader
+- **Current Behavior**: Sync is one-way only (Inoreader → Server → Supabase → Client)
+- **Expected Behavior**: Changes made in the app should sync back to Inoreader
+- **Context**: Architecture supports bi-directional sync but implementation was deferred
+- **User Story**: US-102 mentions this as a future feature
+- **Acceptance Criteria**:
+  - [ ] Track all read/unread status changes in the app
+  - [ ] Implement offline queue for status changes
+  - [ ] Batch changes to minimize API calls
+  - [ ] Use `/edit-tag` endpoint to update Inoreader
+  - [ ] Handle conflicts (most recent change wins)
+  - [ ] Sync back changes during regular sync operations
+  - [ ] Add retry mechanism for failed sync attempts
+  - [ ] Display sync status for bi-directional operations
+- **Implementation Approach**:
+  - Create sync_queue table for tracking pending changes
+  - Add timestamp to all read/unread actions
+  - Batch updates during sync process (max 50 items per call)
+  - Use Inoreader's `/edit-tag` API endpoint
+  - Clear queue items after successful sync
+- **Technical Considerations**:
+  - Need to track article Inoreader IDs for sync back
+  - Consider rate limiting impact (100 calls/day limit)
+  - Handle offline scenarios gracefully
+  - Prevent sync loops (changes from Inoreader shouldn't trigger sync back)
+- **API Endpoint**:
+  ```
+  POST https://www.inoreader.com/reader/api/0/edit-tag
+  Parameters:
+  - a: Article ID (Inoreader format)
+  - r: user/-/state/com.google/read (to mark as read)
+  - r: user/-/state/com.google/read (with param r=user/-/state/com.google/read to mark as unread)
+  ```
+- **Benefits**:
+  - Complete synchronization across all devices
+  - Changes persist in Inoreader ecosystem
+  - Better integration with other Inoreader clients
+  - Reduced confusion about read state
+
+#### TODO-038: Fix Client-Side Sync Queue RPC Calls (P2 - Bug) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - SQL function syntax error fixed
+- **Issue**: Client-side article store failed to add entries to sync_queue via RPC
+- **Root Cause**: SQL syntax error in add_to_sync_queue function - CASE statement with arrays
+- **Solution**: Fixed function to use IF/ELSIF instead of CASE with arrays
+- **Completed**: January 22, 2025
+- **Files Modified**:
+  - `/src/lib/stores/article-store.ts` - Added error handling to RPC calls
+  - `/src/lib/db/migrations/008_fix_sync_queue_function.sql` - Fixed function syntax
+- **Verification**: Tested with Playwright - sync queue now properly records read/star actions
 
 ---
 

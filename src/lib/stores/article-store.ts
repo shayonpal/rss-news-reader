@@ -317,16 +317,32 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const article = articles.get(articleId);
       if (!article || article.isRead) return;
       
-      // Update in database
+      const timestamp = new Date().toISOString();
+      
+      // Update in database with local update timestamp
       const { error } = await supabase
         .from('articles')
         .update({ 
           is_read: true,
-          updated_at: new Date().toISOString()
+          last_local_update: timestamp,
+          updated_at: timestamp
         })
         .eq('id', articleId);
 
       if (error) throw error;
+      
+      // Add to sync queue for bi-directional sync
+      if (article.inoreaderItemId) {
+        const { error: rpcError } = await supabase.rpc('add_to_sync_queue', {
+          p_article_id: articleId,
+          p_inoreader_id: article.inoreaderItemId,
+          p_action_type: 'read'
+        });
+        
+        if (rpcError) {
+          console.error('Failed to add to sync queue:', rpcError);
+        }
+      }
       
       // Update in store
       const updatedArticles = new Map(articles);
@@ -338,7 +354,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         (window as any).__articleCountManager.invalidateCache(article.feedId);
       }
       
-      // Queue for sync if offline
+      // Queue for sync if offline (legacy offline queue)
       const syncStore = useSyncStore.getState();
       if (!navigator.onLine) {
         syncStore.addToQueue({
@@ -359,16 +375,32 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const article = articles.get(articleId);
       if (!article || !article.isRead) return;
       
-      // Update in database
+      const timestamp = new Date().toISOString();
+      
+      // Update in database with local update timestamp
       const { error } = await supabase
         .from('articles')
         .update({ 
           is_read: false,
-          updated_at: new Date().toISOString()
+          last_local_update: timestamp,
+          updated_at: timestamp
         })
         .eq('id', articleId);
 
       if (error) throw error;
+      
+      // Add to sync queue for bi-directional sync
+      if (article.inoreaderItemId) {
+        const { error: rpcError } = await supabase.rpc('add_to_sync_queue', {
+          p_article_id: articleId,
+          p_inoreader_id: article.inoreaderItemId,
+          p_action_type: 'unread'
+        });
+        
+        if (rpcError) {
+          console.error('Failed to add to sync queue:', rpcError);
+        }
+      }
       
       // Update in store
       const updatedArticles = new Map(articles);
@@ -380,7 +412,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         (window as any).__articleCountManager.invalidateCache(article.feedId);
       }
       
-      // Queue for sync if offline
+      // Queue for sync if offline (legacy offline queue)
       const syncStore = useSyncStore.getState();
       if (!navigator.onLine) {
         syncStore.addToQueue({
@@ -407,23 +439,39 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         ? tags.filter(tag => tag !== 'starred')
         : [...tags, 'starred'];
       
-      // Update in database
+      const timestamp = new Date().toISOString();
+      
+      // Update in database with local update timestamp
       const { error } = await supabase
         .from('articles')
         .update({ 
           is_starred: !isStarred,
-          updated_at: new Date().toISOString()
+          last_local_update: timestamp,
+          updated_at: timestamp
         })
         .eq('id', articleId);
 
       if (error) throw error;
+      
+      // Add to sync queue for bi-directional sync
+      if (article.inoreaderItemId) {
+        const { error: rpcError } = await supabase.rpc('add_to_sync_queue', {
+          p_article_id: articleId,
+          p_inoreader_id: article.inoreaderItemId,
+          p_action_type: isStarred ? 'unstar' : 'star'
+        });
+        
+        if (rpcError) {
+          console.error('Failed to add to sync queue:', rpcError);
+        }
+      }
       
       // Update in store
       const updatedArticles = new Map(articles);
       updatedArticles.set(articleId, { ...article, tags: updatedTags });
       set({ articles: updatedArticles });
       
-      // Queue for sync if offline
+      // Queue for sync if offline (legacy offline queue)
       const syncStore = useSyncStore.getState();
       if (!navigator.onLine) {
         syncStore.addToQueue({
@@ -522,39 +570,27 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark all as read
   markAllAsRead: async (feedId?: string) => {
     try {
-      let query = supabase
-        .from('articles')
-        .update({ 
-          is_read: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('is_read', false);
+      // Call the mark-all-read API endpoint to sync with Inoreader
+      const response = await fetch('/reader/api/mark-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedId })
+      });
 
-      if (feedId) {
-        query = query.eq('feed_id', feedId);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to mark all as read');
       }
+
+      const result = await response.json();
       
-      const { error } = await query;
-      
-      if (error) throw error;
-      
-      // Update in store
+      // Update in store - the API has already updated the database
       const { articles: storeArticles } = get();
       const updatedArticles = new Map(storeArticles);
       
       Array.from(storeArticles.entries()).forEach(([id, article]) => {
         if (!article.isRead && (!feedId || article.feedId === feedId)) {
           updatedArticles.set(id, { ...article, isRead: true });
-          
-          // Queue for sync if offline
-          const syncStore = useSyncStore.getState();
-          if (!navigator.onLine) {
-            syncStore.addToQueue({
-              type: 'mark_read',
-              articleId: id,
-              maxRetries: 3
-            });
-          }
         }
       });
       
@@ -564,8 +600,41 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
         (window as any).__articleCountManager.invalidateCache(feedId);
       }
+      
+      console.log(`Marked ${result.articlesUpdated} articles as read`);
     } catch (error) {
       console.error('Failed to mark all as read:', error);
+      
+      // Fallback to local-only update if API fails
+      const timestamp = new Date().toISOString();
+      let query = supabase
+        .from('articles')
+        .update({ 
+          is_read: true,
+          last_local_update: timestamp,
+          updated_at: timestamp
+        })
+        .eq('is_read', false);
+
+      if (feedId) {
+        query = query.eq('feed_id', feedId);
+      }
+      
+      const { error: dbError } = await query;
+      
+      if (!dbError) {
+        // Update in store
+        const { articles: storeArticles } = get();
+        const updatedArticles = new Map(storeArticles);
+        
+        Array.from(storeArticles.entries()).forEach(([id, article]) => {
+          if (!article.isRead && (!feedId || article.feedId === feedId)) {
+            updatedArticles.set(id, { ...article, isRead: true });
+          }
+        });
+        
+        set({ articles: updatedArticles });
+      }
     }
   },
 

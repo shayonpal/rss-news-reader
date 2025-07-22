@@ -15,7 +15,7 @@ module.exports = {
         // Use existing database vars (same for both environments)
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         // Shared vars
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
         INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
@@ -46,7 +46,7 @@ module.exports = {
         // Use existing database vars (same for both environments)
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         // Shared vars
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
         INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
@@ -78,12 +78,40 @@ module.exports = {
         // Use production database
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         // Server URL for API calls
         NEXT_PUBLIC_BASE_URL: 'http://localhost:3147'
       },
       error_file: './logs/cron-error.log',
       out_file: './logs/cron-out.log',
+      time: true
+    },
+    
+    // Bi-directional Sync Server
+    {
+      name: 'rss-sync-server',
+      script: './server/server.js',
+      instances: 1,
+      exec_mode: 'fork',
+      max_memory_restart: '256M',
+      env: {
+        NODE_ENV: 'production',
+        SERVER_PORT: 3001,
+        // Sync configuration
+        SYNC_INTERVAL_MINUTES: 5,
+        SYNC_MIN_CHANGES: 5,
+        SYNC_BATCH_SIZE: 100,
+        SYNC_MAX_RETRIES: 3,
+        SYNC_RETRY_BACKOFF_MINUTES: 10,
+        // Database (same as main app)
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        // Token encryption
+        TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY
+      },
+      error_file: './logs/sync-server-error.log',
+      out_file: './logs/sync-server-out.log',
       time: true
     }
   ]

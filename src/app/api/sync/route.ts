@@ -232,6 +232,9 @@ async function performServerSync(syncId: string) {
       feeds?.map(f => [f.inoreader_id, f.id]) || []
     );
 
+    // Mark sync timestamp for loop prevention
+    const syncTimestamp = new Date().toISOString();
+
     // Process articles
     if (articles.length > 0 && feedIdMap.size > 0) {
       const articlesToUpsert = articles
@@ -252,11 +255,19 @@ async function performServerSync(syncId: string) {
             url: article.canonical?.[0]?.href || article.alternate?.[0]?.href || '',
             published_at: article.published ? new Date(article.published * 1000).toISOString() : null,
             is_read: article.categories?.includes('user/-/state/com.google/read') || false,
-            is_starred: article.categories?.includes('user/-/state/com.google/starred') || false
+            is_starred: article.categories?.includes('user/-/state/com.google/starred') || false,
+            last_sync_update: syncTimestamp // Mark as from sync
           };
         });
 
       if (articlesToUpsert.length > 0) {
+        // Clear any pending sync queue items for these articles
+        const inoreaderIds = articlesToUpsert.map((a: any) => a.inoreader_id);
+        await supabase
+          .from('sync_queue')
+          .delete()
+          .in('inoreader_id', inoreaderIds);
+
         // Batch insert in chunks
         const chunkSize = 50;
         for (let i = 0; i < articlesToUpsert.length; i += chunkSize) {
