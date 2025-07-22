@@ -48,16 +48,14 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
     if (!loadingArticles && articles.size > 0 && !hasRestoredScroll.current) {
       const savedScrollPos = sessionStorage.getItem('articleListScroll');
       
-      if (savedScrollPos && scrollContainerRef.current) {
+      if (savedScrollPos) {
         hasRestoredScroll.current = true;
         // Small delay to ensure DOM is updated
         requestAnimationFrame(() => {
-          if (scrollContainerRef.current) {
-            const scrollPos = parseInt(savedScrollPos, 10);
-            scrollContainerRef.current.scrollTop = scrollPos;
-            // Clear the saved position after restoring
-            sessionStorage.removeItem('articleListScroll');
-          }
+          const scrollPos = parseInt(savedScrollPos, 10);
+          window.scrollTo(0, scrollPos);
+          // Clear the saved position after restoring
+          sessionStorage.removeItem('articleListScroll');
         });
       }
     }
@@ -103,14 +101,14 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
     const currentY = e.touches[0].clientY;
     const pullDistance = currentY - lastPullY.current;
     
-    if (scrollContainerRef.current?.scrollTop === 0 && pullDistance > 0) {
+    if (window.scrollY === 0 && pullDistance > 0) {
       isPulling.current = true;
       // Visual feedback for pull-to-refresh could be added here
     }
   }, []);
 
   const handleTouchEnd = useCallback(async () => {
-    if (isPulling.current && scrollContainerRef.current?.scrollTop === 0) {
+    if (isPulling.current && window.scrollY === 0) {
       await refreshArticles();
     }
     isPulling.current = false;
@@ -119,10 +117,8 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   // Handle article click
   const handleArticleClick = useCallback(async (article: Article) => {
     // Save scroll position before navigating
-    if (scrollContainerRef.current) {
-      const currentScroll = scrollContainerRef.current.scrollTop;
-      sessionStorage.setItem('articleListScroll', currentScroll.toString());
-    }
+    const currentScroll = window.scrollY;
+    sessionStorage.setItem('articleListScroll', currentScroll.toString());
     
     if (!article.isRead) {
       await markAsRead(article.id);
@@ -218,7 +214,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   return (
     <div
       ref={scrollContainerRef}
-      className="flex-1 overflow-y-auto"
+      className="flex-1"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

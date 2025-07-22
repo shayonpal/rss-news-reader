@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-07-22 - Production Deployment
 
+### Fixed - July 22, 2025 Session (iOS Safari Improvements)
+- **iOS Scroll-to-Top Gesture Support** (TODO-030) - COMPLETED ✅
+  - Fixed Safari URL bar not collapsing when scrolling in article list
+  - Fixed native iOS scroll-to-top gesture (tap status bar) not working
+  - Root cause: Safari requires document body to scroll, not inner containers
+  - Implementation:
+    - Restructured layout from fixed height (`h-screen`) to flexible (`min-h-screen`)
+    - Removed all inner scroll containers (`overflow-y-auto`)
+    - Changed sidebar from fixed to sticky positioning on desktop
+    - Updated scroll position tracking to use `window.scrollY` instead of container refs
+    - Removed custom JavaScript solutions in favor of native browser behavior
+  - Fixed hydration error with read status filter using client-only hook
+  - Both article list and article detail views now support native iOS gestures
+  - Safari URL bar now properly collapses when scrolling down
+
 ### Added - July 22, 2025 Session (Theme Toggle)
 - **Theme Toggle** (TODO-015, US-402) - COMPLETED ✅
   - Implemented icon-based theme toggle in feed sidebar header

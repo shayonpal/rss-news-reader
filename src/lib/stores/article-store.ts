@@ -54,14 +54,9 @@ interface ArticleStoreState {
 
 const ARTICLES_PER_PAGE = 50;
 
-// Get initial read status filter from localStorage
+// Get initial read status filter from localStorage (client-side only)
 const getInitialReadStatusFilter = (): 'all' | 'unread' | 'read' => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('readStatusFilter');
-    if (saved === 'all' || saved === 'unread' || saved === 'read') {
-      return saved;
-    }
-  }
+  // Always return default during SSR
   return 'unread'; // Default to unread only
 };
 

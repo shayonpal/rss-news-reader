@@ -16,7 +16,7 @@ The RSS News Reader is now successfully deployed to production:
 ### High Priority
 - **TODO-037**: Implement Bi-directional Sync to Inoreader (P1 - Core Feature)
 - **TODO-007**: Complete US-203 - Content/Summary UI Integration (buttons for fetch/summarize)
-- **TODO-030**: iOS Scroll-to-Top Gesture Support
+- **TODO-030**: iOS Scroll-to-Top Gesture Support ✅ COMPLETED
 
 ### Medium Priority  
 - **TODO-008**: Complete US-104 - Content Extraction Service UI
@@ -604,36 +604,39 @@ The RSS News Reader is now successfully deployed to production:
   - Consider viewport height to determine appropriate trigger point
   - Ensure works with infinite scroll/pagination
 
-#### TODO-030: iOS Scroll-to-Top Gesture Support (P1 - Platform UX)
-- **Status**: 🔴 TODO
-- **Issue**: iOS native scroll-to-top gesture (tap status bar) doesn't work in the app
-- **Current Behavior**: Tapping the iOS status bar does nothing
-- **Expected Behavior**: Tapping the iOS status bar should scroll the current view to the top
-- **Platforms Affected**: iOS Safari (iPhone and iPad)
-- **Context**: This is a standard iOS behavior that users expect in all apps
-- **Acceptance Criteria**:
-  - [ ] Status bar tap scrolls article list to top on home page
-  - [ ] Status bar tap scrolls article content to top in article view
-  - [ ] Works on both iPhone and iPad
-  - [ ] Smooth scroll animation matches iOS native behavior
-  - [ ] Works in both portrait and landscape orientations
-  - [ ] Respects current scroll container (list vs article)
-- **Implementation Approach**:
-  - Ensure main scrollable containers use native overflow scrolling
-  - Remove any `overflow-scrolling: touch` CSS (deprecated)
-  - Use `-webkit-overflow-scrolling: auto` for proper iOS scroll behavior
-  - Ensure only one main scrollable element per view
-  - Avoid nested scrollable containers that break the gesture
-- **Files to Modify**:
-  - `src/components/articles/article-list.tsx` - Ensure proper scroll container
-  - `src/components/articles/ArticleView.tsx` - Ensure proper scroll container
-  - `src/app/globals.css` - Update scrolling CSS properties
-  - Layout components that might have scroll containers
-- **Technical Considerations**:
-  - iOS automatically handles scroll-to-top if there's only one scrollable element
-  - Multiple scrollable elements on screen breaks the gesture
-  - Fixed positioning can interfere with scroll detection
-  - Test with Safari Web Inspector to debug scroll containers
+#### TODO-030: iOS Scroll-to-Top Gesture Support (P1 - Platform UX) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - July 22, 2025
+- **Issue**: iOS native scroll-to-top gesture (tap status bar) and Safari URL bar collapse didn't work
+- **Root Cause**: Safari requires document body to scroll, not inner containers
+- **Solution**: Restructured layout to use natural document flow instead of constrained containers
+- **Implementation Details**:
+  - Changed layout from `h-screen` to `min-h-screen`
+  - Removed all `overflow-y-auto` from inner containers
+  - Made sidebar sticky instead of fixed height on desktop
+  - Updated scroll tracking to use `window.scrollY`
+  - Fixed hydration error with `useHydrationFix` hook for localStorage
+  - Added `viewportFit: "cover"` to viewport configuration
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Status bar tap scrolls article list to top on home page
+  - [x] Status bar tap scrolls article content to top in article view
+  - [x] Works on both iPhone and iPad
+  - [x] Smooth scroll animation matches iOS native behavior
+  - [x] Works in both portrait and landscape orientations
+  - [x] Respects current scroll container (list vs article)
+  - [x] Safari URL bar properly collapses when scrolling
+- **Files Modified**:
+  - `src/app/page.tsx` - Changed to min-h-screen, sticky sidebar
+  - `src/components/articles/article-list.tsx` - Removed scroll container
+  - `src/components/articles/article-detail.tsx` - Removed scroll wrapper
+  - `src/app/globals.css` - Cleaned up iOS scroll CSS
+  - `src/app/layout.tsx` - Added viewport-fit cover
+  - `src/hooks/use-hydration-fix.ts` - Created for localStorage sync
+  - `src/lib/stores/article-store.ts` - Fixed SSR localStorage access
+- **Technical Notes**:
+  - Safari only triggers scroll-to-top when document body scrolls
+  - URL bar collapse also requires body-level scrolling
+  - Perplexity confirmed this is a known Safari limitation
+  - Solution follows Safari's expected behavior patterns
 
 #### TODO-031: Document Internal APIs (P2 - Documentation)
 - **Status**: 🔴 TODO

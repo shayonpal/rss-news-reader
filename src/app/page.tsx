@@ -8,10 +8,14 @@ import { ArticleHeader } from '@/components/articles/article-header';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { useHydrationFix } from '@/hooks/use-hydration-fix';
 import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
+  // Fix hydration issues with localStorage
+  useHydrationFix();
+  
   // Initialize with saved filter to avoid race condition
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
@@ -37,7 +41,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-screen bg-background relative">
+    <div className="flex min-h-screen bg-background relative">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -48,10 +52,10 @@ export default function HomePage() {
 
       {/* Feed Sidebar */}
       <div className={`
-        fixed md:static inset-y-0 left-0 z-50
+        fixed md:sticky md:top-0 inset-y-0 md:inset-y-auto left-0 z-50
         transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0 transition-transform duration-200 ease-in-out
-        w-[280px] md:w-80
+        w-[280px] md:w-80 md:h-screen md:overflow-y-auto
       `}>
         <ErrorBoundary fallback={
           <div className="h-full border-r bg-muted/10 p-4">
@@ -70,7 +74,7 @@ export default function HomePage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Enhanced Header with Database Counts */}
         <ArticleHeader
           selectedFeedId={selectedFeedId}

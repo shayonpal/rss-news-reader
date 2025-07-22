@@ -109,6 +109,9 @@ button:not(:disabled) {
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+    /* Allow body to scroll for Safari URL bar */
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
@@ -131,5 +134,18 @@ button:not(:disabled) {
   .article-list-item {
     @apply border-b border-border last:border-b-0;
     @apply transition-colors hover:bg-accent/50;
+  }
+}
+
+/* iOS Scroll-to-Top Support */
+@layer base {
+  /* Main scrollable containers need native iOS scrolling */
+  .ios-scroll-container {
+    /* Use native momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Ensure proper scroll behavior */
+    overflow-y: auto;
+    /* Prevent scroll chaining to parent */
+    overscroll-behavior: contain;
   }
 }
