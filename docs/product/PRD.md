@@ -266,10 +266,29 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 - Summary length: 150-175 words
 - Include article metadata in prompt
 
-#### Prompt Template
+#### Prompt Configuration (Customizable)
 
+**Default Configuration**:
+The system uses a modular approach to construct summarization prompts with these default values:
+- **Word Count**: 150-175 words
+- **Focus**: key facts, main arguments, and important conclusions
+- **Style**: objective and informative
+
+**Environment Variable Customization**:
+System administrators can customize the summarization behavior through environment variables:
+
+```env
+# Core Summarization Variables
+SUMMARY_WORD_COUNT=150-175              # Target summary length
+SUMMARY_FOCUS=key facts, main arguments, implications  # What to emphasize
+SUMMARY_STYLE=objective                 # Writing style
 ```
-You are a news summarization assistant. Create a concise summary of the following article in 150-175 words. Focus on the key facts, main arguments, and important conclusions. Maintain objectivity and preserve the author's core message.
+
+**Generated Prompt Template** (constructed from variables):
+```
+You are a news summarization assistant. Create a {STYLE} summary of the following article in {WORD_COUNT} words. Focus on {FOCUS}. Maintain objectivity and preserve the author's core message.
+
+IMPORTANT: Do NOT include the article title in your summary. Start directly with the content summary.
 
 Article Details:
 Title: [TITLE]
@@ -279,8 +298,37 @@ Published: [DATE]
 Article Content:
 [BODY]
 
-Write a clear, informative summary that captures the essence of this article.
+Write a clear, informative summary that captures the essence of this article without repeating the title.
 ```
+
+**Customization Examples**:
+
+1. **Technical Blog Summarization**:
+   ```env
+   SUMMARY_WORD_COUNT=200-250
+   SUMMARY_FOCUS=technical details, implementation steps, and code examples
+   SUMMARY_STYLE=technical and detailed
+   ```
+
+2. **Executive Briefing Style**:
+   ```env
+   SUMMARY_WORD_COUNT=100-125
+   SUMMARY_FOCUS=business impact, key decisions, and action items
+   SUMMARY_STYLE=concise and actionable
+   ```
+
+3. **News Digest Format**:
+   ```env
+   SUMMARY_WORD_COUNT=75-100
+   SUMMARY_FOCUS=who, what, when, where, why
+   SUMMARY_STYLE=journalistic
+   ```
+
+**Implementation Details**:
+- Invalid configuration values silently fall back to defaults
+- Changes require server restart to take effect
+- Configuration is provider-agnostic (works with future LLM providers)
+- See [[TODO-023]] and [[Implementation Strategy#AI-Summarization-Configuration]] for technical details
 
 #### Summary Management
 

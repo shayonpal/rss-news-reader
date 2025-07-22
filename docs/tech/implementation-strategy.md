@@ -1896,15 +1896,383 @@ const useAutoMarkAsRead = () => {
 3. **E2E Tests**: Test full sync flow with Playwright
 4. **Manual Testing**: Verify cross-platform consistency
 
+## AI Summarization Configuration
+
+### Overview ([[TODO-023]])
+
+Implement configurable AI summarization prompts through environment variables, allowing customization of summary length, focus areas, and writing style without code changes. This feature prepares the system for future multi-provider support ([[TODO-024]]).
+
+### Technical Architecture
+
+#### 1. Prompt Builder Service
+
+```typescript
+// src/lib/ai/summary-prompt.ts
+interface SummaryPromptConfig {
+  wordCount: string;
+  focus: string;
+  style: string;
+}
+
+export class SummaryPromptBuilder {
+  private static readonly DEFAULTS: SummaryPromptConfig = {
+    wordCount: '150-175',
+    focus: 'key facts, main arguments, and important conclusions',
+    style: 'objective'
+  };
+
+  /**
+   * Get configuration from environment variables with fallback to defaults
+   */
+  static getConfig(): SummaryPromptConfig {
+    return {
+      wordCount: this.validateWordCount(process.env.SUMMARY_WORD_COUNT) || this.DEFAULTS.wordCount,
+      focus: this.validateFocus(process.env.SUMMARY_FOCUS) || this.DEFAULTS.focus,
+      style: this.validateStyle(process.env.SUMMARY_STYLE) || this.DEFAULTS.style
+    };
+  }
+
+  /**
+   * Validate word count format (e.g., "150-175" or "200")
+   */
+  private static validateWordCount(value?: string): string | null {
+    if (!value) return null;
+    
+    // Match patterns like "150-175" or "200"
+    const pattern = /^\d+(-\d+)?$/;
+    if (!pattern.test(value)) {
+      console.warn(`Invalid SUMMARY_WORD_COUNT format: "${value}". Using default.`);
+      return null;
+    }
+    
+    return value;
+  }
+
+  /**
+   * Validate focus content (basic length check)
+   */
+  private static validateFocus(value?: string): string | null {
+    if (!value || value.trim().length < 10) {
+      if (value !== undefined) {
+        console.warn(`Invalid SUMMARY_FOCUS: too short. Using default.`);
+      }
+      return null;
+    }
+    
+    return value.trim();
+  }
+
+  /**
+   * Validate style (basic length check)
+   */
+  private static validateStyle(value?: string): string | null {
+    if (!value || value.trim().length < 3) {
+      if (value !== undefined) {
+        console.warn(`Invalid SUMMARY_STYLE: too short. Using default.`);
+      }
+      return null;
+    }
+    
+    return value.trim();
+  }
+
+  /**
+   * Build the complete prompt with article details
+   */
+  static buildPrompt(article: {
+    title: string;
+    author?: string;
+    published_at?: string;
+    content: string;
+  }): string {
+    const config = this.getConfig();
+    
+    // Construct the prompt with proper formatting
+    const prompt = `You are a news summarization assistant. Create a ${config.style} summary of the following article in ${config.wordCount} words. Focus on ${config.focus}. Maintain objectivity and preserve the author's core message.
+
+IMPORTANT: Do NOT include the article title in your summary. Start directly with the content summary.
+
+Article Details:
+Title: ${article.title || 'Untitled'}
+Author: ${article.author || 'Unknown'}
+Published: ${article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Unknown'}
+
+Article Content:
+${article.content}
+
+Write a clear, informative summary that captures the essence of this article without repeating the title.`;
+
+    return prompt;
+  }
+
+  /**
+   * Get current configuration for logging/debugging
+   */
+  static getCurrentConfig(): SummaryPromptConfig & { source: 'env' | 'default' } {
+    const config = this.getConfig();
+    const hasEnvConfig = 
+      process.env.SUMMARY_WORD_COUNT || 
+      process.env.SUMMARY_FOCUS || 
+      process.env.SUMMARY_STYLE;
+    
+    return {
+      ...config,
+      source: hasEnvConfig ? 'env' : 'default'
+    };
+  }
+}
+```
+
+#### 2. Updated Summarization Route
+
+```typescript
+// src/app/api/articles/[id]/summarize/route.ts
+import { SummaryPromptBuilder } from '@/lib/ai/summary-prompt';
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // ... existing validation code ...
+
+    // Strip HTML tags for cleaner summarization
+    const textContent = contentToSummarize
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Build prompt using configurable builder
+    const prompt = SummaryPromptBuilder.buildPrompt({
+      title: article.title,
+      author: article.author,
+      published_at: article.published_at,
+      content: textContent.substring(0, 10000) + (textContent.length > 10000 ? '...[truncated]' : '')
+    });
+
+    // Log configuration in development
+    if (process.env.NODE_ENV === 'development') {
+      const config = SummaryPromptBuilder.getCurrentConfig();
+      console.log('[Summarization] Using config:', config);
+    }
+
+    // Get model from environment variable with fallback
+    const claudeModel = process.env.CLAUDE_SUMMARIZATION_MODEL || 'claude-sonnet-4-20250514';
+    
+    const completion = await anthropic.messages.create({
+      model: claudeModel,
+      max_tokens: 300,
+      temperature: 0.3,
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    });
+
+    // ... rest of existing code ...
+  } catch (error) {
+    // ... existing error handling ...
+  }
+}
+```
+
+#### 3. Configuration Documentation
+
+```typescript
+// src/lib/ai/README.md
+/**
+ * AI Summarization Configuration
+ * 
+ * The summarization prompt can be customized through environment variables:
+ * 
+ * SUMMARY_WORD_COUNT - Target word count (e.g., "150-175", "200")
+ * SUMMARY_FOCUS - What to focus on in the summary
+ * SUMMARY_STYLE - Writing style (e.g., "objective", "conversational")
+ * 
+ * Examples:
+ * 
+ * # Default news summarization
+ * SUMMARY_WORD_COUNT=150-175
+ * SUMMARY_FOCUS=key facts, main arguments, and important conclusions
+ * SUMMARY_STYLE=objective
+ * 
+ * # Technical blog posts
+ * SUMMARY_WORD_COUNT=200-250
+ * SUMMARY_FOCUS=technical details, implementation steps, and code concepts
+ * SUMMARY_STYLE=technical and detailed
+ * 
+ * # Executive summaries
+ * SUMMARY_WORD_COUNT=100-125
+ * SUMMARY_FOCUS=business impact, decisions, and action items
+ * SUMMARY_STYLE=concise and actionable
+ */
+```
+
+### Integration with Future Multi-Provider Support
+
+The modular design ensures compatibility with [[TODO-024]]:
+
+```typescript
+// Future enhancement (TODO-024)
+interface AIProvider {
+  name: string;
+  summarize(prompt: string, options: ProviderOptions): Promise<string>;
+}
+
+class AnthropicProvider implements AIProvider {
+  async summarize(prompt: string, options: ProviderOptions) {
+    // Use same prompt from SummaryPromptBuilder
+    const completion = await this.client.messages.create({
+      model: options.model,
+      messages: [{ role: 'user', content: prompt }],
+      // Provider-specific options
+    });
+    return completion.content[0].text;
+  }
+}
+
+class OpenAIProvider implements AIProvider {
+  async summarize(prompt: string, options: ProviderOptions) {
+    // Same prompt works across providers
+    const completion = await this.client.chat.completions.create({
+      model: options.model,
+      messages: [{ role: 'user', content: prompt }],
+      // Provider-specific options
+    });
+    return completion.choices[0].message.content;
+  }
+}
+```
+
+### Deployment Configuration
+
+#### Environment Variables (.env)
+
+```env
+# AI Summarization Configuration
+SUMMARY_WORD_COUNT=150-175
+SUMMARY_FOCUS=key facts, main arguments, and important conclusions
+SUMMARY_STYLE=objective
+
+# Model Configuration (existing)
+CLAUDE_SUMMARIZATION_MODEL=claude-sonnet-4-20250514
+```
+
+#### PM2 Configuration Update
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: 'rss-reader-prod',
+    // ... existing config ...
+    env: {
+      // ... existing env vars ...
+      SUMMARY_WORD_COUNT: process.env.SUMMARY_WORD_COUNT || '150-175',
+      SUMMARY_FOCUS: process.env.SUMMARY_FOCUS || 'key facts, main arguments, and important conclusions',
+      SUMMARY_STYLE: process.env.SUMMARY_STYLE || 'objective'
+    }
+  }]
+};
+```
+
+### Testing Strategy
+
+#### Unit Tests
+
+```typescript
+// src/lib/ai/__tests__/summary-prompt.test.ts
+describe('SummaryPromptBuilder', () => {
+  beforeEach(() => {
+    // Clear environment variables
+    delete process.env.SUMMARY_WORD_COUNT;
+    delete process.env.SUMMARY_FOCUS;
+    delete process.env.SUMMARY_STYLE;
+  });
+
+  it('should use defaults when no env vars are set', () => {
+    const config = SummaryPromptBuilder.getConfig();
+    expect(config.wordCount).toBe('150-175');
+    expect(config.focus).toBe('key facts, main arguments, and important conclusions');
+    expect(config.style).toBe('objective');
+  });
+
+  it('should validate word count format', () => {
+    process.env.SUMMARY_WORD_COUNT = 'invalid';
+    const config = SummaryPromptBuilder.getConfig();
+    expect(config.wordCount).toBe('150-175'); // Falls back to default
+  });
+
+  it('should accept valid word count formats', () => {
+    process.env.SUMMARY_WORD_COUNT = '200-250';
+    const config = SummaryPromptBuilder.getConfig();
+    expect(config.wordCount).toBe('200-250');
+  });
+
+  it('should build complete prompt with article data', () => {
+    const prompt = SummaryPromptBuilder.buildPrompt({
+      title: 'Test Article',
+      author: 'Test Author',
+      published_at: '2025-01-22',
+      content: 'Article content here...'
+    });
+    
+    expect(prompt).toContain('Test Article');
+    expect(prompt).toContain('Test Author');
+    expect(prompt).toContain('150-175 words');
+  });
+});
+```
+
+#### Manual Testing
+
+1. **Default Configuration**: Verify summaries use 150-175 words with default focus
+2. **Custom Configuration**: Set environment variables and verify changes
+3. **Invalid Configuration**: Test fallback behavior with invalid values
+4. **Server Restart**: Confirm configuration changes require restart
+
+### Monitoring and Logging
+
+```typescript
+// Enhanced logging for production monitoring
+class SummaryMetrics {
+  static async logSummaryGeneration(
+    articleId: string,
+    config: SummaryPromptConfig,
+    result: { success: boolean; wordCount?: number; duration: number }
+  ) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      articleId,
+      config,
+      success: result.success,
+      actualWordCount: result.wordCount,
+      requestedWordCount: config.wordCount,
+      duration: result.duration,
+      configSource: SummaryPromptBuilder.getCurrentConfig().source
+    };
+    
+    // Append to JSONL log
+    await fs.appendFile(
+      'logs/summarization.jsonl',
+      JSON.stringify(logEntry) + '\n'
+    );
+  }
+}
+```
+
 ## Summary
 
-This implementation strategy now includes comprehensive bi-directional sync, ensuring:
+This implementation strategy now includes comprehensive bi-directional sync and configurable AI summarization, ensuring:
 
-1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization, and bi-directional sync
+1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization (with customizable prompts), and bi-directional sync
 2. **Client is purely presentational**: Reads from Supabase, calls server endpoints, queues local changes
 3. **Clean-slate migration**: No data migration complexity
 4. **Single-user optimization**: Dramatic simplification throughout
 5. **Tailscale security**: Network-level access control
 6. **Efficient sync**: Batched operations, smart timing, and conflict resolution
+7. **Flexible AI summarization**: Environment variable configuration for different content types
 
-The strategy ensures efficient API usage (4-5 calls per sync + bi-directional sync calls), automated setup (Playwright OAuth), and a maintainable architecture suitable for open-sourcing.
+The strategy ensures efficient API usage (4-5 calls per sync + bi-directional sync calls), automated setup (Playwright OAuth), configurable AI summaries, and a maintainable architecture suitable for open-sourcing.

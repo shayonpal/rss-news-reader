@@ -482,7 +482,7 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Images lazy loaded
   - [ ] Bundle size minimized
 
-#### TODO-022: US-602 - PWA Polish (P2 - Quality)
+#### TODO-022: US-602 - PWA Polish (P3 - Quality)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
   - [ ] Install prompt at right time
@@ -495,16 +495,20 @@ The RSS News Reader is now successfully deployed to production:
 #### TODO-023: US-704 - Configurable AI Summarization Prompt (P2 - Configuration)
 - **Status**: 🔴 TODO
 - **Acceptance Criteria**:
-  - [ ] Add environment variables: `CLAUDE_SUMMARY_WORD_COUNT`, `CLAUDE_SUMMARY_PROMPT`, `CLAUDE_SUMMARY_FOCUS`
-  - [ ] Support template variable substitution ({WORD_COUNT}, {TITLE}, {AUTHOR}, etc.)
+  - [ ] Add environment variables: `SUMMARY_WORD_COUNT`, `SUMMARY_FOCUS`, `SUMMARY_STYLE`
+  - [ ] Support modular configuration (word count, focus, style)
   - [ ] Fallback to default prompt gracefully
   - [ ] Document prompt engineering best practices
 - **Environment Variables**:
   ```env
-  CLAUDE_SUMMARY_WORD_COUNT=150-175
-  CLAUDE_SUMMARY_FOCUS=key facts, main arguments, implications
-  CLAUDE_SUMMARY_PROMPT=Custom template with {WORD_COUNT} variables
+  SUMMARY_WORD_COUNT=150-175
+  SUMMARY_FOCUS=key facts, main arguments, implications
+  SUMMARY_STYLE=objective
   ```
+- **Documentation**:
+  - **Product Requirements**: See [[PRD#Prompt-Configuration-Customizable]]
+  - **Technical Implementation**: See [[Implementation Strategy#AI-Summarization-Configuration]]
+  - **Related Feature**: [[TODO-024]] - Multi-Provider LLM Support
 
 #### TODO-024: US-705 - Multi-Provider LLM Support (P2 - Flexibility)
 - **Status**: 🔴 TODO
