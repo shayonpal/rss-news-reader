@@ -349,7 +349,38 @@ Write a clear, informative summary that captures the essence of this article wit
 
 **Goal**: Complete the core reading experience
 
-### US-401: Feed and Tag Filtering
+### US-401a: Read Status Filtering ✅
+
+**As** Shayon  
+**I want** to filter articles by read status with accurate database counts  
+**So that** I can focus on unread content or review previously read articles
+
+**Acceptance Criteria:**
+- [x] Dropdown filter with three options:
+  - "Unread only" (default) - Focus on new content
+  - "Read only" - Review previously read articles
+  - "All articles" - Complete view of all content
+- [x] Filter preference persists across sessions using localStorage
+- [x] Database-driven counts with 5-minute caching for performance
+- [x] Automatic cache invalidation on article read/unread actions
+- [x] Dynamic page titles based on filter and feed selection
+- [x] Accurate count display from database, not just loaded articles
+- [x] Works seamlessly with existing feed/folder filters
+- [x] Enhanced UI with filter descriptions in dropdown
+
+**Implementation Details:**
+- Created ArticleCountManager for database count caching
+- Enhanced ArticleHeader component with real-time count updates
+- Fixed Next.js hydration error on iOS Safari
+- Cache invalidation integrated with article store actions
+
+**Priority:** P1 - Core UX  
+**Story Points:** 5  
+**Status:** ✅ DONE (2025-01-22) - Re-implemented with database-driven counts
+
+---
+
+### US-401b: Feed and Tag Filtering
 
 **As** Shayon  
 **I want** to filter articles by feed OR tag  

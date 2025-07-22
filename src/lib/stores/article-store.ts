@@ -333,6 +333,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       updatedArticles.set(articleId, { ...article, isRead: true });
       set({ articles: updatedArticles });
       
+      // Invalidate article count cache
+      if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
+        (window as any).__articleCountManager.invalidateCache(article.feedId);
+      }
+      
       // Queue for sync if offline
       const syncStore = useSyncStore.getState();
       if (!navigator.onLine) {
@@ -369,6 +374,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const updatedArticles = new Map(articles);
       updatedArticles.set(articleId, { ...article, isRead: false });
       set({ articles: updatedArticles });
+      
+      // Invalidate article count cache
+      if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
+        (window as any).__articleCountManager.invalidateCache(article.feedId);
+      }
       
       // Queue for sync if offline
       const syncStore = useSyncStore.getState();
@@ -549,6 +559,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       });
       
       set({ articles: updatedArticles });
+      
+      // Invalidate article count cache for all affected feeds
+      if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
+        (window as any).__articleCountManager.invalidateCache(feedId);
+      }
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }

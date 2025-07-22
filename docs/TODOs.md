@@ -448,6 +448,56 @@
   - [ ] Document the userland package requirement in README if needed
   - [ ] Consider adding Node.js engine requirement to package.json
 
+#### TODO-027: Fix Previous/Next Button Regression in Article View (P0 - Critical Bug Regression)
+- **Status**: 🔴 TODO - REGRESSION
+- **Issue**: Previous and Next buttons in article view have stopped working
+- **Platforms Affected**: iOS Safari (iPhone and iPad) - confirmed not working
+- **Suspected Cause**: IOSButton component may have been accidentally removed or modified
+- **Context**: This is a regression of TODO-009 which was previously completed
+- **Original Fix**: IOSButton component was created to handle proper touch events for iOS Safari
+- **Acceptance Criteria**:
+  - [ ] Investigate current button implementation in ArticleView.tsx
+  - [ ] Verify if IOSButton component is still being used for navigation buttons
+  - [ ] Restore IOSButton functionality if missing
+  - [ ] Test Previous/Next navigation on iOS Safari (iPhone and iPad)
+  - [ ] Ensure buttons work on first tap (no double-tap required)
+  - [ ] Verify navigation preserves article list scroll position
+- **Files to Check**:
+  - `src/components/articles/ArticleView.tsx`
+  - `src/components/ui/IOSButton.tsx` (if still exists)
+  - Previous git history from TODO-009 completion
+- **Testing Required**:
+  - iPhone Safari
+  - iPad Safari
+  - Verify no regressions on other platforms
+
+#### TODO-028: Enhance Back Button Navigation Logic (P2 - UX Enhancement)
+- **Status**: 🔴 TODO
+- **Issue**: Back button should always return to listing page instead of previous article
+- **Current Behavior**: Back button uses browser history which may go to previous article when user has navigated through multiple articles using Previous/Next buttons
+- **Expected Behavior**: Back button should consistently return to the article listing page, preserving filter state and scroll position
+- **Use Case**: User navigates through multiple articles using UI Previous/Next buttons, then wants to return to the article list
+- **Context**: Builds on scroll position preservation from TODO-009a
+- **Acceptance Criteria**:
+  - [ ] Back button in article view always navigates to listing page (never to previous article)
+  - [ ] Preserve current feed filter when returning to listing
+  - [ ] Preserve current read status filter when returning to listing
+  - [ ] Restore scroll position to where user was before viewing first article
+  - [ ] Works correctly regardless of how user navigated to current article (direct link, Previous/Next buttons, etc.)
+  - [ ] Browser back button should still work as expected (respecting browser history)
+- **Implementation Approach**:
+  - Modify back button to use `router.push('/')` with preserved state instead of `router.back()`
+  - Ensure listing page state (filters, scroll position) is maintained
+  - Consider tracking "entry point" when user first enters article view
+- **Files to Modify**:
+  - `src/components/articles/ArticleView.tsx` - Back button logic
+  - `src/app/page.tsx` - State restoration logic
+- **Testing Scenarios**:
+  - Navigate to article from listing → use Previous/Next buttons → click Back button
+  - Direct link to article → click Back button  
+  - Navigate through 5+ articles → click Back button
+  - Verify browser back button still works for overall navigation
+
 ---
 
 ## 📊 SUCCESS METRICS

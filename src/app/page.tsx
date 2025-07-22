@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { ArticleList } from '@/components/articles/article-list';
-import { ReadStatusFilter } from '@/components/articles/read-status-filter';
+import { ArticleHeader } from '@/components/articles/article-header';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -21,12 +21,6 @@ export default function HomePage() {
     return null;
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { getFeed } = useFeedStore();
-  const { readStatusFilter, getArticleCount } = useArticleStore();
-
-  const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : null;
-  const pageTitle = selectedFeed ? selectedFeed.title : 'All Articles';
-  const articleCount = getArticleCount();
 
   const handleArticleClick = (articleId: string) => {
     router.push(`/article/${encodeURIComponent(articleId)}`);
@@ -77,37 +71,14 @@ export default function HomePage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="border-b px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-muted rounded-lg md:hidden flex-shrink-0"
-              aria-label="Toggle sidebar"
-            >
-              {isSidebarOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
-            
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl md:text-2xl font-semibold truncate">{pageTitle}</h1>
-              <p className="text-sm text-muted-foreground">
-                {readStatusFilter === 'unread' && `${articleCount.unread} unread`}
-                {readStatusFilter === 'read' && `${articleCount.total} read`}
-                {readStatusFilter === 'all' && `${articleCount.total} total, ${articleCount.unread} unread`}
-              </p>
-            </div>
-          </div>
-          
-          {/* Read Status Filter */}
-          <div className="flex-shrink-0">
-            <ReadStatusFilter />
-          </div>
-        </header>
+        {/* Enhanced Header with Database Counts */}
+        <ArticleHeader
+          selectedFeedId={selectedFeedId}
+          selectedFolderId={null}
+          isMobile={true}
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          menuIcon={isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        />
 
         {/* Article List */}
         <ArticleList

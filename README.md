@@ -214,6 +214,11 @@ src/
 - **No Client Authentication**: Access controlled by Tailscale network
 - **Server-Side Sync**: Efficient sync with 4-5 API calls
 - **Supabase Data Layer**: All client data from PostgreSQL
+- **Database-Driven Read Status Filtering**: Accurate article counts with smart caching
+  - Three filter options: Unread only (default), Read only, All articles
+  - Real-time database counts with 5-minute cache
+  - Dynamic page titles based on active filters
+  - Automatic cache invalidation on user actions
 - **Installable PWA**: Install on mobile and desktop
 - **Responsive Design**: Mobile-first layout with sidebar
 - **Theme System**: Manual light/dark mode control

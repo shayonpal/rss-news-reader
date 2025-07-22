@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Enhanced - January 22, 2025 Session (Database-Driven Read Status Filtering)
+- **Enhanced Read Status Filtering** (TODO-014a Re-implementation) - COMPLETED ✅
+  - Re-implemented following PRD specifications for database-driven counts
+  - **Database-Driven Counts**: Replaced in-memory counts with actual database queries
+  - **Smart Caching**: 5-minute cache TTL for performance optimization
+  - **Cache Invalidation**: Automatic cache refresh on article read/unread actions
+  - **Dynamic Headers**: Page titles change based on active filter and selection:
+    - "Unread Articles" / "Unread from [Feed Name]"
+    - "Read Articles" / "Read from [Feed Name]"
+    - "All Articles" / "All from [Feed Name]"
+  - **Accurate Count Display**: Shows real database counts, not just loaded articles:
+    - Unread filter: "296 unread articles"
+    - Read filter: "22 read articles"
+    - All filter: "318 total articles (296 unread)"
+  - **Enhanced Filter UI**: Dropdown shows descriptions for each filter option
+  - **Hydration Fix**: Resolved Next.js hydration error on iOS Safari
+  - **New Components**: ArticleCountManager for caching, enhanced ArticleHeader
+  - Filter preference still persists across sessions using localStorage
+  - Works seamlessly with existing feed/folder selection
+
 ### Added - January 22, 2025 Session (Read Status Filtering)
 - **Read Status Filtering** (TODO-014a, US-401a) - COMPLETED ✅
   - Added dropdown filter to toggle between Unread only/Read only/All articles
