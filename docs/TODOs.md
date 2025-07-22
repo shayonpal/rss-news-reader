@@ -181,6 +181,7 @@
 - **Issue**: Missing favicon and PWA icons causing 404s
 - **Solution**: Fixed by adding /reader basePath prefix to all icon URLs in metadata
 - **Completed**: January 22, 2025 - All assets existed, just needed correct URL paths
+- **Note**: Dev server shows 404s for `/apple-touch-icon.png` - these are browser automatic requests and can be safely ignored. They work correctly in production with basePath.
 - **Acceptance Criteria**:
   - [x] ~~Create missing favicon files (16x16, 32x32)~~ Files existed
   - [x] ~~Create missing Apple touch icons~~ Files existed
