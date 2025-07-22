@@ -97,7 +97,14 @@ export default function ArticlePage() {
       feedTitle={feed?.title || 'Unknown Feed'}
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}
-      onBack={() => router.push('/')}
+      onBack={() => {
+        // Use browser back if available, otherwise navigate with state
+        if (window.history.length > 1) {
+          router.back();
+        } else {
+          router.push('/');
+        }
+      }}
     />
   );
 }

@@ -1,8 +1,14 @@
 # Next Session Instructions
 
-**Last Updated:** Tuesday, January 21, 2025 at 3:42 PM
+**Last Updated:** Tuesday, January 22, 2025 at 12:30 AM
 
-## Latest Session - January 21, 2025 (3:00 PM - 3:42 PM)
+## Latest Session - January 22, 2025 (12:00 AM - 12:30 AM)
+- **Duration:** ~30 minutes
+- **Main focus:** Scroll Position Preservation Bug Fix (TODO-009a)
+- **Issues resolved:** TODO-009a (US-903 - Scroll Position Loss on Navigation Back)
+- **Achievement:** Successfully implemented hybrid scroll position preservation with feed filter persistence
+
+## Previous Session - January 21, 2025 (3:00 PM - 3:42 PM)
 - **Duration:** ~42 minutes
 - **Main focus:** Feed Stats Materialized View Refresh (TODO-005) and Fix
 - **Issues resolved:** TODO-005 (Materialized View Refresh After Sync)
@@ -31,8 +37,8 @@
 
 ## Current State
 - **Branch:** main
-- **Status:** 5 uncommitted files (modified code, docs, and new migration)
-- **Latest commit:** b1094d4
+- **Status:** Ready to commit TODO-009a fix
+- **Latest commit:** ab823d7 (docs: mark TODO-009 as completed in TODOs.md)
 - **Security Status:** ✅ ALL CRITICAL VULNERABILITIES RESOLVED
 - **Performance Status:** ✅ MAJOR OPTIMIZATIONS COMPLETED
   - 92.4% data reduction (unread counts function)
@@ -40,7 +46,16 @@
   - Feed stats refresh integrated and FIXED with unique index
   - Console logging added for refresh visibility
 
-## Completed This Session - FEED STATS REFRESH FIX ✅
+## Completed This Session - SCROLL POSITION FIX ✅
+- ✅ **TODO-009a: Scroll Position Loss on Navigation Back COMPLETED**
+  - Fixed scroll position resetting to top when returning from article detail
+  - Fixed feed filter not being preserved across navigation
+  - Implemented hybrid solution: `router.back()` with sessionStorage backup
+  - Initialized feed filter immediately to prevent race condition
+  - Tested successfully on iPhone and iPad Safari browsers
+  - Removed debug console.log statements added during development
+
+## Previously Completed - FEED STATS REFRESH FIX ✅
 - ✅ **TODO-005: Materialized View Refresh After Sync COMPLETED WITH FIX**
   - Added refresh_feed_stats() call to sync endpoint after article upserts
   - **Fixed concurrent refresh error** by creating unique index on feed_stats(feed_id)

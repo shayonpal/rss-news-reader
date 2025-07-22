@@ -1,16 +1,26 @@
-# Wireframes - Shayon's News
+# Wireframes - Shayon's News RSS Reader PWA
+
+**Last Updated:** January 22, 2025  
+**Status:** Updated to reflect current implementation
 
 ## Overview
 
-These wireframes illustrate the key screens and layouts for the RSS Reader PWA, inspired by Reeder 5's clean aesthetic. The design emphasizes typography, whitespace, and content-first approach.
+These wireframes document the actual implemented UI of the RSS Reader PWA, based on the server-client architecture where all Inoreader API communication happens server-side. The design maintains a clean, minimalist aesthetic while focusing on core functionality.
+
+## Current Architecture Context
+
+- **Server-Client Model**: Server handles all Inoreader API, Client reads from Supabase
+- **No Authentication**: Access controlled via Tailscale network only
+- **Data Flow**: Inoreader → Server → Supabase → Client
+- **Access URL**: http://100.96.166.53:3000/reader (dev) or http://100.96.166.53/reader (production)
 
 ## Mobile Wireframes (Primary Target)
 
-### 1. Article List View (Default Home)
+### 1. Article List View (Default Home) - IMPLEMENTED ✅
 
 ```
 ┌─────────────────────────────────────┐
-│ ≡  All Articles          (152) 🔄   │  <- Header
+│ ≡  All Articles          (152) 🔄   │  <- Header with sync
 ├─────────────────────────────────────┤
 │                                     │
 │ ┌─────────────────────────────────┐ │
@@ -29,31 +39,34 @@ These wireframes illustrate the key screens and layouts for the RSS Reader PWA, 
 │ │ ─────────────────────────────── │ │
 │ │ Microsoft announces major shift  │ │
 │ │ in AI development approach with  │ │  <- Full AI summary
-│ │ focus on enterprise integration  │ │     (100-120 words)
-│ │ and ethical AI principles. The   │ │
+│ │ focus on enterprise integration  │ │     (150-175 words)
+│ │ and ethical AI principles. The   │ │     with paragraphs
 │ │ company plans to invest $10B...  │ │
+│ │                                 │ │
+│ │ The new strategy positions...   │ │  <- Multiple paragraphs
 │ └─────────────────────────────────┘ │
 │                                     │
 │ ┌─────────────────────────────────┐ │
 │ │ Google Pixel 9 Review           │ │
-│ │ 9to5Mac • 5 hours ago      ○   │ │  <- ○ = Read
+│ │ 9to5Mac • 5 hours ago      ○   │ │  <- ○ = Read (grayed)
 │ │ ─────────────────────────────── │ │
 │ │ The Pixel 9 brings meaningful   │ │
 │ │ improvements to Google's flag... │ │
 │ └─────────────────────────────────┘ │
 │                                     │
-│              ↓ Pull to refresh       │
+│              ↓ Infinite scroll      │
 └─────────────────────────────────────┘
 
-Legend:
-≡  = Menu/Feed List
-🔄 = Manual Sync
-•  = Unread article
-○  = Read article
-⚡ = Has AI summary / Tap to generate summary
+Features Implemented:
+- Pull-to-refresh gesture
+- Infinite scroll with loading indicator
+- Summary generation from list view
+- Read/unread visual states
+- Star/unstar functionality
+- Scroll position preservation
 ```
 
-### Summary Interaction States
+### Summary States in List View - IMPLEMENTED ✅
 
 ```
 No Summary (List View):
@@ -66,83 +79,130 @@ No Summary (List View):
 
 Generating Summary (List View):
 ┌─────────────────────────────────┐
-│ Article Title Here          ⟳  │  <- Spinning animation
+│ Article Title Here              │
 │ Source • Time ago               │
 │ ─────────────────────────────── │
-│ Generating summary...           │  <- Loading state
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░  │  <- Shimmer animation
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░  │
+│ ░░░░░░░░░░░░░░░░░░░░░░        │
 └─────────────────────────────────┘
 
 Has Summary (List View):
 ┌─────────────────────────────────┐
-│ Article Title Here      ⚡ 🔄  │  <- ⚡ = has summary
-│ Source • Time ago               │     🔄 = re-generate
-│ ─────────────────────────────── │
-│ 🤖 Microsoft announces major... │  <- Full summary shown
-│ shift in AI development with... │
-│ focus on enterprise and...      │
-└─────────────────────────────────┘
-
-Summary Error (List View):
-┌─────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️  │  <- ⚠️ = error, tap ⚡ to retry
+│ Article Title Here          ⚡  │  <- ⚡ indicates has summary
 │ Source • Time ago               │
 │ ─────────────────────────────── │
-│ Summary generation failed.      │
-│ Tap ⚡ to try again.            │
+│ Microsoft announces major...    │  <- Full summary shown
+│ shift in AI development with... │     with proper paragraphs
+│ focus on enterprise and...      │
+│                                │
+│ The new strategy includes...    │  <- Multiple paragraphs
 └─────────────────────────────────┘
 ```
 
-### 2. Feed List (Slide-out Drawer)
+### 2. Feed Sidebar - IMPLEMENTED ✅
 
 ```
 ┌─────────────────────────────────────┐
-│ ╳  Feeds               Settings ⚙   │
+│  Feeds                              │
+│  152 unread articles          Sync  │  <- Header with count
 ├─────────────────────────────────────┤
 │                                     │
 │ 📰 All Articles               (152) │  <- Total unread
 │ ─────────────────────────────────── │
 │                                     │
-│ 📁 Tech                        (89) │  <- Folder
-│   ├─ The Verge                (23) │
-│   ├─ TechCrunch               (18) │
-│   ├─ 9to5Mac                  (12) │
-│   └─ Ars Technica             (36) │
-│                                     │
-│ 📁 News                        (42) │
-│   ├─ Reuters                  (15) │
-│   ├─ BBC                      (18) │
-│   └─ The Guardian              (9) │
-│                                     │
-│ 📁 Blogs                       (21) │  <- Collapsed folder
+│ The Verge                      (23) │  <- Individual feeds
+│ TechCrunch                     (18) │     (flat list, no folders)
+│ 9to5Mac                        (12) │
+│ Ars Technica                   (36) │
+│ Reuters                        (15) │
+│ BBC                            (18) │
+│ The Guardian                    (9) │
+│ Hacker News                    (21) │
 │                                     │
 │ ─────────────────────────────────── │
-│ Last sync: 2 hours ago             │
+│ Last sync: 10:23 AM                 │
+│ 8 feeds total                       │
+│ API usage: 42/100 calls today       │  <- Rate limit warning
 │                                     │
 └─────────────────────────────────────┘
 
-Interaction:
-- Tap folder to expand/collapse
-- Tap feed to filter article list
-- Swipe right to close drawer
+Current Implementation Notes:
+- Simple flat feed list (no folder hierarchy yet)
+- Sync button shows progress percentage
+- Rate limit warnings at 80% (yellow) and 95% (red)
+- Real-time sync progress indication
 ```
 
-### 3. Article Detail View
+### Sync States - IMPLEMENTED ✅
+
+```
+Initial Sync (Empty State):
+┌─────────────────────────────────────┐
+│  Feeds                              │
+│  0 unread articles            Sync  │
+├─────────────────────────────────────┤
+│                                     │
+│          ⟳ (spinning)               │
+│     Syncing your feeds...           │
+│                                     │
+│     ████████░░░░░░░░░░             │
+│           42%                       │
+│                                     │
+└─────────────────────────────────────┘
+
+Sync in Progress (With Feeds):
+┌─────────────────────────────────────┐
+│  Feeds                              │
+│  152 unread articles        [42%]   │  <- Progress in button
+├─────────────────────────────────────┤
+│ [Feed list continues normally]      │
+└─────────────────────────────────────┘
+
+Sync Error:
+┌─────────────────────────────────────┐
+│  Feeds                              │
+│  0 unread articles            Sync  │
+├─────────────────────────────────────┤
+│                                     │
+│     Failed to sync feeds            │
+│     Rate limit exceeded             │
+│                                     │
+│        [Retry]                      │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### 3. Article Detail View - IMPLEMENTED ✅
 
 ```
 ┌─────────────────────────────────────┐
-│ ←                          ⚡  •••  │  <- Back, Summarize, More
+│ ←                    ⭐ 🔗 ↗️ ⚡    │  <- Action buttons
 ├─────────────────────────────────────┤
 │                                     │
 │   Apple's October Event Announced   │  <- Large title
 │                                     │
 │   The Verge                         │
-│   By Jane Smith • Oct 5, 2024      │  <- Metadata
+│   By Jane Smith • 2 hours ago      │  <- Metadata
+│   ─────────────────────────────────│
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 🤖 AI Summary              [∨] │ │  <- Collapsible
+│ │                                 │ │
+│ │ Apple's October event will      │ │
+│ │ showcase new M3 MacBook Pros    │ │
+│ │ and updated iPads. The event    │ │
+│ │ focuses on professional users   │ │
+│ │ with significant performance    │ │
+│ │ improvements expected...        │ │
+│ └─────────────────────────────────┘ │
+│                                     │
 │   ─────────────────────────────────│
 │                                     │
 │   Apple has officially announced    │
 │   their October event, scheduled    │
 │   for October 23rd at 10 AM PST.   │  <- Clean typography
-│   The event, titled "Fast Forward" │     Good line height
+│   The event, titled "Fast Forward"  │     Good line height
 │   is expected to showcase new...   │     Readable width
 │                                     │
 │   [Embedded image]                  │  <- Rich media inline
@@ -152,76 +212,99 @@ Interaction:
 │   updated MacBook Pros with the     │
 │   latest M3 chips, new iPads...    │
 │                                     │
-│   [Embedded tweet]                  │
-│                                     │
-│   Industry analysts expect this     │
-│   event to be particularly focused  │
-│   on professional users with...     │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ 📄 Partial content detected      │ │  <- When needed
-│ │ [Fetch Full Article]            │ │
-│ └─────────────────────────────────┘ │
-└─────────────────────────────────────┘
-
-Bottom swipe indicators:
-← Previous Article | Next Article →
-```
-
-### 4. Article with AI Summary
-
-```
-┌─────────────────────────────────────┐
-│ ←                          🔄  •••  │  <- Re-summarize option
 ├─────────────────────────────────────┤
+│ ← Previous Article | Next Article → │  <- Navigation footer
+└─────────────────────────────────────┘
+
+Action Buttons:
+← = Back to list
+⭐ = Star/unstar (fills when starred)
+🔗 = Share (native share or copy link)
+↗️ = Open original article
+⚡ = Generate/regenerate summary
+```
+
+### 4. Summary Display Component - IMPLEMENTED ✅
+
+```
+Article View (Collapsible Summary):
+┌─────────────────────────────────────┐
+│ 🤖 AI Summary                   ∨  │  <- Gray background
+│                                     │     Click header to toggle
+│ Apple announces October event       │
+│ focusing on new M3 MacBook Pros    │
+│ and updated iPads with OLED        │
+│ displays. The event targets        │
+│ professional users with major      │
+│ performance improvements.          │
 │                                     │
-│   Microsoft's New AI Strategy       │
-│                                     │
-│   TechCrunch                        │
-│   By John Doe • Oct 5, 2024        │
-│   ─────────────────────────────────│
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ 🤖 AI Summary                   │ │  <- Highlighted box
-│ │                                 │ │
-│ │ Microsoft announces a major     │ │
-│ │ strategic shift in AI develop-  │ │
-│ │ ment, focusing on enterprise    │ │
-│ │ integration and ethical AI      │ │
-│ │ principles. The company plans   │ │
-│ │ to invest $10 billion over the  │ │
-│ │ next three years, partnering    │ │
-│ │ with OpenAI while developing    │ │
-│ │ proprietary models. Key focus   │ │
-│ │ areas include healthcare,       │ │
-│ │ education, and climate change.  │ │
-│ │                                 │ │
-│ │ 115 words • Generated 2 min ago │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-│   ─────────────────────────────────│
-│                                     │
-│   Full Article:                     │
-│                                     │
-│   Microsoft made waves in the tech  │
-│   industry today with their...      │
-│                                     │
+│ Key announcements expected to      │  <- Paragraph breaks
+│ include 14" and 16" MacBook Pros  │     preserved
+│ with M3 Pro/Max chips offering     │
+│ 40% faster performance...          │
+└─────────────────────────────────────┘
+
+Collapsed State:
+┌─────────────────────────────────────┐
+│ 🤖 AI Summary                   ›  │  <- Click to expand
 └─────────────────────────────────────┘
 ```
 
-### 5. Settings View
+## Features Not Yet Implemented
+
+### 1. Feed Organization (TODO-014)
 
 ```
+Future: Two-Tab Interface
+┌─────────────────────────────────────┐
+│ [Feeds]  Tags              Settings │  <- Tab navigation
+├─────────────────────────────────────┤
+│ 📁 Tech                        (89) │  <- Folder hierarchy
+│   ├─ The Verge                (23) │
+│   ├─ TechCrunch               (18) │
+│   └─ Ars Technica             (48) │
+│                                     │
+│ 📁 News                        (42) │
+│   ├─ Reuters                  (15) │
+│   └─ BBC                      (27) │
+└─────────────────────────────────────┘
+```
+
+### 2. Full Content Fetching (TODO-008)
+
+```
+Future: Fetch Full Content Button
+┌─────────────────────────────────────┐
+│ [Article content...]                │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 📄 Partial content detected      │ │
+│ │ [Fetch Full Article]            │ │  <- Server endpoint ready
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+
+### 3. Read Status Filter (TODO-014)
+
+```
+Future: Read Status Filter
+┌─────────────────────────────────────┐
+│ ≡  All Articles  [Unread only ▼]   │  <- Dropdown filter
+├─────────────────────────────────────┤
+│ Options:                            │
+│ • Unread only (default)             │
+│ • Read only                         │
+│ • All articles                      │
+└─────────────────────────────────────┘
+```
+
+### 4. Settings View (TODO-015)
+
+```
+Future: Settings Page
 ┌─────────────────────────────────────┐
 │ ←  Settings                         │
 ├─────────────────────────────────────┤
-│                                     │
-│ ACCOUNT                             │
-│ ┌─────────────────────────────────┐ │
-│ │ Inoreader                       │ │
-│ │ shayon@example.com             │ │
-│ │ Connected ✓                     │ │
-│ └─────────────────────────────────┘ │
 │                                     │
 │ APPEARANCE                          │
 │ ┌─────────────────────────────────┐ │
@@ -231,515 +314,142 @@ Bottom swipe indicators:
 │                                     │
 │ SYNC                                │
 │ ┌─────────────────────────────────┐ │
-│ │ Auto-sync                       │ │
-│ │ Every 6 hours              [✓] │ │
-│ │                                 │ │
 │ │ Last sync: Oct 5, 10:23 AM     │ │
-│ │ Next sync: Oct 5, 4:23 PM      │ │
-│ │                                 │ │
-│ │ [Sync Now]                      │ │
+│ │ Articles synced: 168            │ │
+│ │ API calls today: 42/100         │ │
 │ └─────────────────────────────────┘ │
-│                                     │
-│ DATA                                │
-│ ┌─────────────────────────────────┐ │
-│ │ Storage                         │ │
-│ │ 487 articles cached (78 MB)     │ │
-│ │                                 │ │
-│ │ API Usage →                     │ │
-│ └─────────────────────────────────┘ │
-│                                     │
 └─────────────────────────────────────┘
 ```
 
-### 6. API Usage Dashboard
+## Tablet/Desktop Layouts - BASIC SUPPORT
+
+Currently, the app uses responsive design but doesn't have tablet-specific layouts. The mobile layout scales up with wider content areas.
+
+### Future: Split View Layout (Tablet)
 
 ```
-┌─────────────────────────────────────┐
-│ ←  API Usage                        │
-├─────────────────────────────────────┤
-│                                     │
-│ TODAY                               │
-│ ┌─────────────────────────────────┐ │
-│ │ Inoreader API                   │ │
-│ │ ████████░░░░░░░░  42/100       │ │
-│ │                                 │ │
-│ │ AI Summaries                    │ │
-│ │ 23 summaries generated          │ │
-│ │ ~$0.12 estimated cost           │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-│ LAST 7 DAYS                         │
-│ ┌─────────────────────────────────┐ │
-│ │     API Calls                   │ │
-│ │ 100 ┃                           │ │
-│ │  80 ┃   ╱╲                      │ │
-│ │  60 ┃  ╱  ╲    ╱╲              │ │
-│ │  40 ┃ ╱    ╲__╱  ╲             │ │
-│ │  20 ┃╱            ╲            │ │
-│ │   0 ┗━━━━━━━━━━━━━━━━          │ │
-│ │     M  T  W  T  F  S  S        │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-│ MONTHLY SUMMARY                     │
-│ ┌─────────────────────────────────┐ │
-│ │ Total API calls: 1,247          │ │
-│ │ Total summaries: 312            │ │
-│ │ Estimated cost: $1.56           │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-└─────────────────────────────────────┘
-```
-
-## Tablet/iPad Wireframes
-
-### 7. Split View Layout (Landscape)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ ≡ All Articles (152)                              🔄  ⚙    │
-├────────────────────┬────────────────────────────────────────┤
-│                    │                                        │
-│ FEEDS              │  Apple's October Event Announced       │
-│                    │                                        │
-│ 📰 All      (152)  │  The Verge                            │
-│ ─────────────────  │  By Jane Smith • Oct 5, 2024          │
-│ 📁 Tech      (89)  │  ──────────────────────────────────── │
-│   The Verge  (23)  │                                        │
-│   TechCrunch (18)  │  Apple has officially announced their  │
-│   9to5Mac    (12)  │  October event, scheduled for October  │
-│   Ars Tech   (36)  │  23rd at 10 AM PST. The event titled  │
-│                    │  "Fast Forward" is expected to...      │
-│ 📁 News      (42)  │                                        │
-│   Reuters    (15)  │  [Embedded image - full width]         │
-│   BBC        (18)  │                                        │
-│   Guardian    (9)  │  The company has been working on       │
-│                    │  several new products including        │
-│ 📁 Blogs     (21)  │  updated MacBook Pros with the latest  │
-│                    │  M3 chips, new iPads with OLED...     │
-│                    │                                        │
-├────────────────────┼────────────────────────────────────────┤
-│                    │                                        │
-│ • Microsoft's...⚡ │  Article continues here...             │
-│ • Google Pixel...  │                                        │
-│ ○ iPhone 15 Pro... │                                        │
-│ • Tesla Model...   │                                        │
-│ • OpenAI GPT-5...⚡│                                        │
-│                    │                                        │
+┌────────────────────┬────────────────────────────────────────┐
+│ FEEDS              │  Article List                          │
+│                    ├────────────────────────────────────────┤
+│ 📰 All      (152)  │  Apple's October Event...         ⚡  │
+│ ─────────────────  │  The Verge • 2 hours ago              │
+│ The Verge    (23)  │  ──────────────────────────────────── │
+│ TechCrunch   (18)  │  Apple has officially announced...     │
+│ 9to5Mac      (12)  │                                        │
+│                    │  Microsoft's AI Strategy...        ⚡  │
+│                    │  TechCrunch • 3 hours ago             │
 └────────────────────┴────────────────────────────────────────┘
-
-Three-column layout:
-- Fixed feed list (200px)
-- Article list (350px)
-- Article content (remaining space)
 ```
 
-## Responsive Breakpoints
+## Visual Design Implementation
 
-### Phone (< 640px)
+### Typography (Implemented)
 
-- Single column
-- Bottom navigation
-- Slide-out feed drawer
-- Full-width article view
+- Article Title: text-base sm:text-lg (16-18px)
+- Source/Meta: text-xs sm:text-sm (12-14px)
+- Body Text: text-sm (14px)
+- Summary Text: text-sm (14px)
 
-### Tablet Portrait (640px - 1024px)
+### Spacing System (Implemented)
 
-- Two column: Article list + Article view
-- Slide-out feed drawer
-- Wider article reading width
+- Base unit: 4px (Tailwind spacing)
+- Card padding: p-4 sm:p-6 (16-24px)
+- Between cards: divide-y (1px border)
+- Line height: leading-relaxed for summaries
 
-### Tablet Landscape / Desktop (> 1024px)
+### Color System (Implemented)
 
-- Three column layout
-- Persistent feed list
-- Optimal reading width (max 720px)
-- More whitespace
+Using Tailwind CSS with dark mode support:
+- Background: bg-background (white/dark)
+- Text: text-foreground/text-muted-foreground
+- Borders: border/divide-border
+- Interactive: hover:bg-muted/50
+- Accent: text-primary (for counts/badges)
 
-## Interaction Patterns
+## Component States
 
-### Touch Targets
-
-```
-┌─────────────────────────────────────┐
-│ [TAP HERE TO OPEN ARTICLE-------]   │  <- Tappable area
-│ Article Title Here          ⚡ [TAP] │  <- ⚡ is separate tap target
-│ Source • Time ago                   │  <- Not tappable
-│ ─────────────────────────────────── │
-│ Summary or preview text here...     │  <- Not tappable
-└─────────────────────────────────────┘
-```
-
-### Touch Gestures
-
-- **Swipe right**: Open feed drawer (mobile)
-- **Swipe left**: Close feed drawer
-- **Pull down**: Refresh article list
-- **Horizontal swipe**: Navigate articles (detail view)
-- **Tap ⚡ icon**: Generate/regenerate summary (list view)
-- **Long press**: Future - quick actions
-
-### Summary Generation from List View
-
-1. **Articles without summary**: Show ⚡ icon on the right - tap to generate
-2. **Generating state**: ⚡ changes to spinning ⟳ icon
-3. **Articles with summary**: Show both ⚡ (indicates has summary) and 🔄 (regenerate)
-4. **Failed generation**: Show ⚡ with ⚠️ - tap ⚡ to retry
-5. **Offline state**: ⚡ icon is disabled/grayed out
-
-### Toast Notifications
+### Article Card States (Implemented)
 
 ```
-Success Toast:
-┌─────────────────────────────────────┐
-│ ✅ Summary generated successfully   │  <- Auto-dismiss after 3s
-└─────────────────────────────────────┘
+Unread Article:
+- Bold title (font-semibold)
+- Full opacity
+- Unread indicator (implicit)
 
-Error Toast:
-┌─────────────────────────────────────┐
-│ ❌ Summary generation failed   [✗]  │  <- Dismissible
-└─────────────────────────────────────┘
-```
-
-### Loading States
-
-```
-┌─────────────────────────────────────┐
-│ ≡  All Articles          ⟳ Syncing  │  <- Rotating icon
-├─────────────────────────────────────┤
-│                                     │
-│         ░░░░░░░░░░░░░░░            │  <- Skeleton screens
-│         ░░░░░░░░░░                 │     while loading
-│         ░░░░░░░░░░░░░░░░░░░░       │
-│                                     │
-│         ░░░░░░░░░░░░░░░            │
-│         ░░░░░░░░░░                 │
-│         ░░░░░░░░░░░░░░░░░░░░       │
-│                                     │
-└─────────────────────────────────────┘
-```
-
-### Offline State
-
-```
-┌─────────────────────────────────────┐
-│ ≡  All Articles (152)    🔄 ⚙       │
-├─────────────────────────────────────┤
-│ ┌─────────────────────────────────┐ │
-│ │ 🔌 Offline - Showing cached      │ │  <- Subtle banner
-│ └─────────────────────────────────┘ │
-│                                     │
-│ [Regular article list continues]    │
-│                                     │
-└─────────────────────────────────────┘
-```
-
-### Empty States
-
-```
-┌─────────────────────────────────────┐
-│ ≡  All Articles              🔄  ⚙  │
-├─────────────────────────────────────┤
-│                                     │
-│                                     │
-│          📰                         │
-│                                     │
-│     No articles to display          │
-│                                     │
-│     Pull down to refresh or         │
-│     check your feed settings        │
-│                                     │
-│         [Go to Settings]            │
-│                                     │
-│                                     │
-└─────────────────────────────────────┘
-```
-
-## Visual Design Principles
-
-### Typography Scale
-
-- Article Title: 20px bold
-- Source/Meta: 14px regular (muted)
-- Body Text: 16px regular
-- Summary Text: 15px regular
-- UI Labels: 14px medium
-
-### Spacing System
-
-- Base unit: 4px
-- Card padding: 16px
-- Between cards: 8px
-- Section spacing: 24px
-- Line height: 1.5 for body text
-
-### Color Palette (Dark Mode)
-
-- Background: #000000
-- Card Background: #1C1C1E
-- Text Primary: #FFFFFF
-- Text Secondary: #8E8E93
-- Accent (unread): #007AFF
-- Summary Background: #2C2C2E
-
-### Color Palette (Light Mode)
-
-- Background: #F2F2F7
-- Card Background: #FFFFFF
-- Text Primary: #000000
-- Text Secondary: #6C6C70
-- Accent (unread): #007AFF
-- Summary Background: #F2F2F7
-
-## Component Library
-
-### Article Card States
-
-```
-Default (Unread):
-┌─────────────────────────────────┐
-│ Title in Bold               •   │
-│ Source • Time ago               │
-│ ─────────────────────────────── │
-│ Preview text or summary...      │
-└─────────────────────────────────┘
-
-Read:
-┌─────────────────────────────────┐
-│ Title in Regular            ○   │  <- Muted colors
-│ Source • Time ago               │
-│ ─────────────────────────────── │
-│ Preview text or summary...      │
-└─────────────────────────────────┘
+Read Article:
+- Normal title (font-normal)
+- Reduced opacity (opacity-70)
+- Muted text color
 
 With Summary:
-┌─────────────────────────────────┐
-│ Title in Bold           ⚡  •   │  <- Lightning icon
-│ Source • Time ago               │
-│ ─────────────────────────────── │
-│ 🤖 Full AI summary text here    │  <- Different background
-└─────────────────────────────────┘
+- Lightning icon (⚡) shown
+- Full summary text displayed
+- Proper paragraph formatting
+
+Loading Summary:
+- Shimmer animation
+- Skeleton placeholder
 ```
 
-### Button Styles
+### Interactive Elements (Implemented)
 
-```
-Primary Action:
-[━━━━━━━━━━━━━━━━━]  <- Filled, rounded
+- **Touch Targets**: Minimum 44x44px (enforced)
+- **Hover States**: hover:bg-muted/50
+- **Active States**: Via IOSButton component for iOS
+- **Loading States**: Spinner animations and progress bars
+- **Error States**: Clear error messages with retry options
 
-Secondary Action:
-[                ]  <- Outlined, rounded
-
-Text Button:
- Fetch Full Article  <- No border, accent color
-```
-
-### Icons (Lucide React)
-
-- ≡ Menu
-- 🔄 RefreshCw
-- ⚙️ Settings
-- ← ChevronLeft
-- → ChevronRight
-- ⚡ Zap
-- 🤖 Bot
-- 📁 Folder
-- 📰 Newspaper
-- • Circle (filled)
-- ○ Circle (outline)
-
-## Accessibility Considerations
-
-- Minimum touch targets: 44x44px
-- Color contrast: WCAG AA compliant
-- Focus indicators on all interactive elements
-- Screen reader labels on all icons
-- Semantic HTML structure
-- Keyboard navigation support (future)
-
-## Performance Indicators
-
-### Skeleton Screens
-
-Show content structure while loading:
-
-- Gray boxes for text
-- Maintain layout structure
-- Animate with subtle pulse
+## Performance Optimizations (Implemented)
 
 ### Progressive Loading
+1. ✅ Skeleton screens while loading
+2. ✅ Infinite scroll for articles
+3. ✅ On-demand summary generation
+4. ✅ Scroll position preservation
 
-1. Show cached content immediately
-2. Load article list
-3. Fetch images lazily
-4. Generate summaries on demand
+### UI Optimizations
+1. ✅ Optimistic UI for read/star actions
+2. ✅ Debounced search/filter operations
+3. ✅ Efficient re-renders with Zustand
+4. ✅ Lazy loading for article content
 
-### Optimistic UI
-
-- Mark read immediately (sync later)
-- Show summary generation started
-- Update counts instantly
-
-## PWA Specific Elements
-
-### Install Prompt
-
-```
-┌─────────────────────────────────────┐
-│                                     │
-│    Add Shayon's News to Home       │
-│                                     │
-│    📱 Install this app for:        │
-│    • Offline reading               │
-│    • Faster launches               │
-│    • Home screen access            │
-│                                     │
-│    [Install]    [Not Now]          │
-│                                     │
-└─────────────────────────────────────┘
-```
-
-### App Icon
-
-- Monochrome newspaper icon
-- Works on light/dark backgrounds
-- Follows iOS/Android guidelines
-- Multiple sizes for different devices
-
-## Error States and Messages
+## Error Handling (Implemented)
 
 ### Summary Generation Errors
+- Network offline: Button disabled
+- Rate limit: Clear error message
+- Generation failed: Retry option available
 
-```
-1. Network Error (Offline)
-┌─────────────────────────────────────┐
-│ Article Title Here          ⚡      │  <- ⚡ grayed out
-│ Source • Time ago                   │
-│ ─────────────────────────────────── │
-│ Article preview text...             │
-└─────────────────────────────────────┘
-Toast: "🔌 No connection. Summary generation requires internet."
+### Sync Errors  
+- Rate limit warnings at 80% and 95%
+- Failed sync with retry button
+- Clear error messages
 
-2. API Rate Limit Exceeded
-┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │
-│ Source • Time ago                   │
-│ ─────────────────────────────────── │
-│ Summary limit reached for today     │
-└─────────────────────────────────────┘
-Toast: "🚫 Daily AI limit reached. Try again tomorrow."
+## Accessibility Features (Implemented)
 
-3. API Timeout
-┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │
-│ Source • Time ago                   │
-│ ─────────────────────────────────── │
-│ Request timed out. Tap ⚡ to retry │
-└─────────────────────────────────────┘
-Toast: "⏱️ Request timed out. Please try again."
+- ✅ Semantic HTML structure
+- ✅ ARIA labels on interactive elements
+- ✅ Keyboard navigation support (J/K keys)
+- ✅ Focus indicators on all buttons
+- ✅ Screen reader compatible
 
-4. Content Too Long
-┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │
-│ Source • Time ago                   │
-│ ─────────────────────────────────── │
-│ Article too long to summarize      │
-└─────────────────────────────────────┘
-Toast: "📝 Article exceeds AI token limit."
+## PWA Features (Partial)
 
-5. Generic API Error
-┌─────────────────────────────────────┐
-│ Article Title Here      ⚡ ⚠️      │
-│ Source • Time ago                   │
-│ ─────────────────────────────────── │
-│ Something went wrong. Try again.   │
-└─────────────────────────────────────┘
-Toast: "❌ Summary generation failed. Please try again."
-```
+### Implemented
+- ✅ Service worker registration
+- ✅ Basic offline detection
+- ✅ Web app manifest
 
-### Sync Errors
+### Not Yet Implemented
+- ❌ Install prompts
+- ❌ App icons for all platforms
+- ❌ Splash screens
+- ❌ Update notifications
 
-```
-1. Inoreader Authentication Error
-┌─────────────────────────────────────┐
-│ ≡  All Articles          ⚠️  ⚙️    │
-├─────────────────────────────────────┤
-│ ┌─────────────────────────────────┐ │
-│ │ 🔑 Inoreader authentication    │ │
-│ │ expired. Please reconnect.      │ │
-│ │                                 │ │
-│ │ [Go to Settings]                │ │
-│ └─────────────────────────────────┘ │
-└─────────────────────────────────────┘
+## Production Deployment Status
 
-2. Inoreader API Rate Limit
-┌─────────────────────────────────────┐
-│ ≡  All Articles          🅿️  ⚙️    │
-├─────────────────────────────────────┤
-│ ┌─────────────────────────────────┐ │
-│ │ 🚫 API limit reached (95/100)  │ │
-│ │ Next sync available at 12:00 AM │ │
-│ └─────────────────────────────────┘ │
-Toast: "🚫 Inoreader API limit reached. Try again tomorrow."
-
-3. Network Error During Sync
-┌─────────────────────────────────────┐
-│ ≡  All Articles          ❌  🔄    │
-├─────────────────────────────────────┤
-│ ┌─────────────────────────────────┐ │
-│ │ 🔌 Sync failed. Check your     │ │
-│ │ internet connection.            │ │
-│ └─────────────────────────────────┘ │
-Toast: "🔌 Connection lost. Sync failed."
-
-4. Partial Sync Success
-Toast: "⚠️ Sync completed with errors. 82 of 100 articles fetched."
-```
-
-### Content Fetching Errors
-
-```
-1. Fetch Full Content - Network Error
-┌─────────────────────────────────────┐
-│ ←                          ⚡  •••  │
-├─────────────────────────────────────┤
-│ Article content...                  │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ ❌ Failed to fetch full content │ │
-│ │ Check your connection           │ │
-│ │ [Retry]                         │ │
-│ └─────────────────────────────────┘ │
-└─────────────────────────────────────┘
-
-2. Fetch Full Content - Parsing Failed
-┌─────────────────────────────────────┐
-│ ←                          ⚡  •••  │
-├─────────────────────────────────────┤
-│ ┌─────────────────────────────────┐ │
-│ │ ⚠️ Could not parse article      │ │
-│ │ [View Original]                 │ │  <- Opens in browser
-│ └─────────────────────────────────┘ │
-│                                     │
-│ [Original partial content shown]    │
-└─────────────────────────────────────┘
-```
-
-### Error Message Reference
-
-| Error Type             | User Message                                           | Technical Log                                 |
-| ---------------------- | ------------------------------------------------------ | --------------------------------------------- |
-| **Summary Generation** |                                                        |                                               |
-| Network Offline        | "No connection. Summary generation requires internet." | `SUMMARY_ERROR: Network unavailable`          |
-| API Rate Limit         | "Daily AI limit reached. Try again tomorrow."          | `SUMMARY_ERROR: Rate limit exceeded (429)`    |
-| Timeout                | "Request timed out. Please try again."                 | `SUMMARY_ERROR: Request timeout (30s)`        |
-| Content Too Long       | "Article exceeds AI token limit."                      | `SUMMARY_ERROR: Token limit exceeded (>100k)` |
-| Generic Error          | "Summary generation failed. Please try again."         | `SUMMARY_ERROR: ${error.message}`             |
-| **Sync Errors**        |                                                        |                                               |
-| Auth Expired           | "Inoreader authentication expired. Please reconnect."  | `SYNC_ERROR: Auth token expired (401)`        |
-| API Rate Limit         | "Inoreader API limit reached. Try again tomorrow."     | `SYNC_ERROR: Rate limit (100/100)`            |
-| Network Error          | "Connection lost. Sync failed."                        | `SYNC_ERROR: Network unavailable`             |
-| Partial Success        | "Sync completed with errors. X of Y articles fetched." | `SYNC_WARNING: Partial sync (X/Y)`            |
-| **Content Errors**     |                                                        |                                               |
-| Fetch Failed           | "Failed to fetch full content"                         | `CONTENT_ERROR: Fetch failed ${url}`          |
-| Parse Failed           | "Could not parse article"                              | `CONTENT_ERROR: Readability parse failed`     |
-| URL Invalid            | "Invalid article URL"                                  | `CONTENT_ERROR: Invalid URL format`           |
+Currently running in development mode. Production deployment (TODO-011) will include:
+- Caddy reverse proxy at /reader path
+- PM2 process management
+- Tailscale network security
+- Final URL: http://100.96.166.53/reader

@@ -20,6 +20,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastPullY = useRef<number>(0);
   const isPulling = useRef<boolean>(false);
+  const hasRestoredScroll = useRef<boolean>(false);
   
   const {
     articles,
@@ -40,6 +41,32 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   useEffect(() => {
     loadArticles(feedId, folderId);
   }, [feedId, folderId, loadArticles]);
+
+
+  // Restore scroll position after articles load
+  useEffect(() => {
+    if (!loadingArticles && articles.size > 0 && !hasRestoredScroll.current) {
+      const savedScrollPos = sessionStorage.getItem('articleListScroll');
+      
+      if (savedScrollPos && scrollContainerRef.current) {
+        hasRestoredScroll.current = true;
+        // Small delay to ensure DOM is updated
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            const scrollPos = parseInt(savedScrollPos, 10);
+            scrollContainerRef.current.scrollTop = scrollPos;
+            // Clear the saved position after restoring
+            sessionStorage.removeItem('articleListScroll');
+          }
+        });
+      }
+    }
+  }, [loadingArticles, articles.size]);
+
+  // Reset restoration flag when feed changes
+  useEffect(() => {
+    hasRestoredScroll.current = false;
+  }, [feedId, folderId]);
 
   // Set up infinite scroll
   useEffect(() => {
@@ -91,6 +118,12 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
 
   // Handle article click
   const handleArticleClick = useCallback(async (article: Article) => {
+    // Save scroll position before navigating
+    if (scrollContainerRef.current) {
+      const currentScroll = scrollContainerRef.current.scrollTop;
+      sessionStorage.setItem('articleListScroll', currentScroll.toString());
+    }
+    
     if (!article.isRead) {
       await markAsRead(article.id);
     }

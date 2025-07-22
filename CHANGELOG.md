@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - January 22, 2025 Session (Scroll Position Preservation)
+- **Scroll Position Loss on Navigation Back** (TODO-009a, US-903) - COMPLETED ✅
+  - Fixed scroll position resetting to top when returning from article detail view
+  - Fixed feed filter not being preserved when navigating back
+  - Implemented hybrid solution combining browser history with sessionStorage backup
+  - Primary method: Use `router.back()` when browser history is available
+  - Backup method: Save/restore scroll position and filter state to sessionStorage
+  - Handles edge cases: new tabs, direct links, page refreshes
+  - Works with both UI back button and browser back button
+  - Initialized feed filter immediately from storage to prevent race condition
+  - Save scroll position only when clicking article (not on unmount)
+  - Restore scroll position after articles are loaded and rendered
+  - Tested successfully on iPhone and iPad Safari browsers
+
 ### Fixed - January 21, 2025 Session (iOS Safari Button Controls)
 - **Article View Interface Controls** (TODO-009, US-901) - COMPLETED ✅
   - Fixed iOS Safari button click issues requiring double-tap

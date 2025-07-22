@@ -152,43 +152,29 @@
 - **Solution**: Created IOSButton component with proper touch event handling
 - **Completed**: January 21, 2025 - All buttons work on first tap on iOS devices
 
-#### TODO-009a: US-903 - Fix Scroll Position Loss on Navigation Back (P1 - UX Bug)
-- **Status**: 🔴 TODO
+#### TODO-009a: US-903 - Fix Scroll Position Loss on Navigation Back (P1 - UX Bug) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Hybrid scroll position preservation implemented
 - **Issue**: When navigating back from article detail view (using back button or browser back), the article list scroll position is lost and resets to top
 - **Root Cause**: The app uses client-side navigation with `router.push('/')` which creates a new page instance instead of preserving the previous state
-- **Acceptance Criteria**:
-  - [ ] Implement scroll position preservation when navigating to article detail
-  - [ ] Restore scroll position when returning from article detail
-  - [ ] Works with both UI back button and browser back button
-  - [ ] Smooth user experience without jarring jumps
-- **Proposed Solutions**:
-  1. **Option 1 - History State**: Use `router.back()` instead of `router.push('/')` for back navigation
-  2. **Option 2 - Scroll Position Store**: Save scroll position in a store/context before navigation
-  3. **Option 3 - Next.js Scroll Restoration**: Configure Next.js experimental scroll restoration
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Implement scroll position preservation when navigating to article detail
+  - [x] Restore scroll position when returning from article detail
+  - [x] Works with both UI back button and browser back button
+  - [x] Smooth user experience without jarring jumps
+- **Implemented Solution**: Hybrid approach combining browser history with sessionStorage backup
+  - Primary: Use `router.back()` when browser history is available
+  - Backup: Save/restore scroll position and filter state to sessionStorage
+  - Handles edge cases: new tabs, direct links, page refreshes
 - **Implementation Details**:
-  ```typescript
-  // In article detail page (src/app/article/[id]/page.tsx):
-  // Change: onBack={() => router.push('/')}
-  // To: onBack={() => router.back()}
-  
-  // In article list component, add scroll position tracking:
-  useEffect(() => {
-    const scrollPos = sessionStorage.getItem('articleListScroll');
-    if (scrollPos && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = parseInt(scrollPos);
-    }
-    
-    return () => {
-      if (scrollContainerRef.current) {
-        sessionStorage.setItem('articleListScroll', scrollContainerRef.current.scrollTop.toString());
-      }
-    };
-  }, []);
-  ```
-- **Files to modify**:
-  - `src/app/article/[id]/page.tsx` - Change navigation method
-  - `src/components/articles/article-list.tsx` - Add scroll position tracking
-  - `src/app/layout.tsx` - Optional: Configure Next.js scroll restoration
+  - Changed article detail page to use `router.back()` with fallback to `router.push('/')`
+  - Added scroll position saving on ArticleList unmount
+  - Added scroll position restoration after articles load (with requestAnimationFrame)
+  - Added filter state persistence to maintain feed selection
+- **Files Modified**:
+  - `src/app/article/[id]/page.tsx` - Changed navigation to use router.back()
+  - `src/components/articles/article-list.tsx` - Added scroll position tracking
+  - `src/app/page.tsx` - Added filter state persistence
+- **Completed**: January 22, 2025 - Scroll position and filter state now preserved across navigation
 
 #### TODO-010: US-902 - Fix 404 Errors for Missing Assets (P1 - Quality Bug)
 - **Status**: 🔴 TODO
@@ -249,7 +235,7 @@
 
 ### Phase 4: UX Enhancements
 
-#### TODO-014: US-401 - Feed and Tag Filtering (P1 - UX)
+#### TODO-014: US-401 - Feed, Tag, and Read Status Filtering (P1 - UX)
 - **Status**: 🔴 TODO
 - **Current**: Basic feed filtering exists
 - **Missing**:
@@ -257,6 +243,25 @@
   - [ ] Tags tab with flat list
   - [ ] Mutually exclusive filtering (feed OR tag)
   - [ ] "All Articles" option to clear filters
+  - [ ] Read status filter dropdown/toggle with options:
+    - "Unread only" (default)
+    - "Read only"
+    - "All articles"
+  - [ ] Persist read status filter preference in localStorage
+  - [ ] Update article counts to reflect current filter
+  - [ ] Clear visual indicator of active filters
+- **Implementation Details**:
+  - Add read status filter state to article store
+  - Default to "unread only" on first load
+  - Filter should work in combination with feed/tag filters
+  - Update `loadArticles` query to include read status filter
+  - Show filter status in header (e.g., "Unread Articles in [Feed Name]")
+- **Acceptance Criteria**:
+  - [ ] Default view shows only unread articles
+  - [ ] Easy toggle between unread/read/all views
+  - [ ] Filter persists across sessions
+  - [ ] Works seamlessly with feed/tag filtering
+  - [ ] Article counts update based on active filters
 
 #### TODO-015: US-402 - Theme Toggle (P2 - UX)
 - **Status**: 🔴 TODO (Theme system partially exists)
@@ -421,9 +426,9 @@
 - [x] Average query response < 20ms ✅ Expected after applying performance migration
 
 ### User Experience
-- [ ] All UI controls function properly
-- [ ] No broken navigation flows
-- [ ] Consistent interaction feedback
+- [x] All UI controls function properly ✅ iOS Safari buttons fixed (TODO-009)
+- [x] No broken navigation flows ✅ Scroll position preserved (TODO-009a)
+- [x] Consistent interaction feedback ✅ Touch events working properly
 - [ ] Can read 50+ articles without friction
 
 ---

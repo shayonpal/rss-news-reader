@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { ArticleList } from '@/components/articles/article-list';
@@ -10,7 +10,14 @@ import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
-  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
+  // Initialize with saved filter to avoid race condition
+  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedFilter = sessionStorage.getItem('articleListFilter');
+      return savedFilter === 'null' ? null : savedFilter;
+    }
+    return null;
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { getFeed } = useFeedStore();
 
@@ -23,6 +30,8 @@ export default function HomePage() {
 
   const handleFeedSelect = (feedId: string | null) => {
     setSelectedFeedId(feedId);
+    // Save filter state for restoration
+    sessionStorage.setItem('articleListFilter', feedId || 'null');
     // Close sidebar on mobile after selection
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
