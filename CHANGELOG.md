@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - July 21, 2025 Session (Production Deployment Infrastructure)
+- **Caddy Configuration** (TODO-011, US-501) - COMPLETED ✅
+  - Created Caddyfile for reverse proxy configuration routing `/reader/*` to Next.js
+  - Created PM2 ecosystem.config.js with 1GB memory limit
+  - Created deployment scripts for easy production deployment
+  - Added service status checking and monitoring scripts
+  - Comprehensive documentation for Caddy and PM2 setup
+  - Ready for production deployment at http://100.96.166.53/reader
+  
+- **Tailscale Monitoring** (TODO-012, US-105) - COMPLETED ✅
+  - Automated monitoring script checks Tailscale connection every 5 minutes
+  - Auto-restart functionality with `sudo tailscale up` if disconnected
+  - Passwordless sudo configuration for automatic restarts
+  - Comprehensive logging of all monitoring activities
+  - macOS launchd service for automatic startup on boot
+  - Service successfully installed and running continuously
+  - Critical infrastructure to ensure clients can always access the service
+
 ### Enhanced - January 22, 2025 Session (Database-Driven Read Status Filtering)
 - **Enhanced Read Status Filtering** (TODO-014a Re-implementation) - COMPLETED ✅
   - Re-implemented following PRD specifications for database-driven counts

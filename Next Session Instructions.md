@@ -1,8 +1,14 @@
 # Next Session Instructions
 
-**Last Updated:** Wednesday, January 22, 2025 at 3:00 PM
+**Last Updated:** Sunday, July 21, 2025 at 11:17 PM
 
-## Latest Session - January 22, 2025 (3:00 PM - 3:30 PM)
+## Latest Session - July 21, 2025 (10:45 PM - 11:17 PM)
+- **Duration:** ~32 minutes
+- **Main focus:** Production Deployment Infrastructure (TODO-011 & TODO-012)
+- **Issues resolved:** TODO-011 (Caddy Configuration), TODO-012 (Tailscale Monitoring)
+- **Achievement:** Complete production deployment infrastructure ready - Caddy reverse proxy configured and Tailscale monitoring service running
+
+## Previous Session - January 22, 2025 (3:00 PM - 3:30 PM)
 - **Duration:** ~30 minutes  
 - **Main focus:** Re-implementation of Read Status Filtering with Database Counts (TODO-014a)
 - **Issues resolved:** TODO-014a (US-401a - Enhanced Read Status Filtering)
@@ -52,7 +58,26 @@
   - Feed stats refresh integrated and FIXED with unique index
   - Console logging added for refresh visibility
 
-## Completed This Session - ENHANCED READ STATUS FILTERING ✅
+## Completed This Session - PRODUCTION DEPLOYMENT INFRASTRUCTURE ✅
+- ✅ **TODO-011: Caddy Configuration COMPLETED**
+  - Created comprehensive reverse proxy setup for production deployment
+  - **Caddyfile**: Routes `/reader/*` requests to Next.js on port 3000
+  - **PM2 Configuration**: Process manager with 1GB memory limit and logging
+  - **Deployment Scripts**: One-command deployment with `./scripts/deploy.sh`
+  - **Testing Tools**: Local Caddy testing and service status checking
+  - **Documentation**: Complete setup guide at `/docs/deployment/caddy-pm2-setup.md`
+  - Production URL ready: http://100.96.166.53/reader
+
+- ✅ **TODO-012: Tailscale Monitoring COMPLETED**
+  - Implemented automatic Tailscale health monitoring and recovery
+  - **Monitor Script**: Checks connection every 5 minutes, auto-restarts if down
+  - **Passwordless Sudo**: Configured for automatic `tailscale up` execution
+  - **macOS Service**: Installed as launchd service for boot startup
+  - **Comprehensive Logging**: All activities logged to `logs/tailscale-monitor.log`
+  - **Service Running**: Currently active with PID tracking
+  - Critical infrastructure ensuring clients can always access the service
+
+## Previously Completed - ENHANCED READ STATUS FILTERING ✅
 - ✅ **TODO-014a: Read Status Filtering RE-IMPLEMENTED WITH DATABASE COUNTS**
   - **Database-Driven Counts**: Replaced in-memory counts with actual database queries
   - **Smart Caching**: 5-minute cache TTL for performance (as per PRD)
@@ -130,49 +155,34 @@
 - ✅ **Feed Loading**: Optimized from fetching 290 rows to just 22 rows
 - ✅ **Accuracy Verified**: Function results match manual count calculations
 
-## Next Priority - First Production Launch 🚀
+## Next Priority - Production Launch Final Steps 🚀
 
-**Target**: Launch PWA on Tailscale URL http://100.96.166.53:3000/reader/ for iPhone and iPad installation
+**Target**: Complete production deployment at http://100.96.166.53/reader for iPhone and iPad installation
 
-### Priority Order for Production Launch:
+### Completed Infrastructure ✅:
+1. ✅ **TODO-010**: 404 Errors Fixed - All PWA assets working correctly
+2. ✅ **TODO-014a**: Read Status Filtering - Database-driven with smart caching
+3. ✅ **TODO-011**: Caddy Configuration - Reverse proxy and PM2 ready
+4. ✅ **TODO-012**: Tailscale Monitoring - Auto-recovery service running
 
-1. **TODO-010: US-902 - Fix 404 Errors for Missing Assets** (P1 - Quality Bug)
-   - Create missing favicon files (16x16, 32x32)
-   - Create missing Apple touch icons
-   - Verify PWA manifest references correct paths
-   - Test icons display in browser/PWA
+### Remaining Tasks for Production:
 
-2. ✅ **TODO-014a: US-401a - Read Status Filtering** (P1 - Pre-Production) - COMPLETED
-   - Read status filter dropdown (Unread only/Read only/All) ✅
-   - Database-driven counts with 5-minute caching ✅
-   - Smart cache invalidation on user actions ✅
-   - Dynamic page titles based on active filters ✅
-   - Accurate count display from database ✅
-   - Works with existing feed selection ✅
-   - Hydration error fixed for iOS Safari ✅
-
-3. **TODO-006: Complete US-102 - Automatic Daily Sync** (P1 - Core)
+1. **TODO-006: Complete US-102 - Automatic Daily Sync** (P1 - Core)
    - Implement node-cron for scheduling (2am and 2pm)
    - Add sync error logging to database
    - Batch update read states to Inoreader
 
-4. **TODO-011: US-501 - Caddy Configuration** (P0 - Deployment)
-   - Configure Caddy reverse proxy for `/reader` path
-   - Update Next.js basePath to `/reader`
-   - Update PWA manifest for correct path
-   - Configure PM2 with 1GB memory limit
-
-5. **TODO-012: US-105 - Tailscale Monitoring** (P0 - Infrastructure)
-   - Health check every 5 minutes
-   - Auto-restart with `sudo tailscale up` if down
-   - Configure passwordless sudo for tailscale
-   - Log all restart attempts
-
-6. **TODO-013: US-502 - Clean Data Migration** (P1 - Deployment)
+2. **TODO-013: US-502 - Clean Data Migration** (P1 - Deployment)
    - Clear existing article data
    - Keep Supabase schema unchanged
    - Document clean-slate approach
    - **Fresh resync using Inoreader test creds from .env**
+
+3. **Production Deployment Steps**:
+   - Build the application: `npm run build`
+   - Deploy with: `./scripts/deploy.sh`
+   - Verify at: http://100.96.166.53/reader
+   - Test PWA installation on iPhone/iPad
 
 ### Features Deferred Post-Launch:
 - **TODO-007: Complete US-203** - "Fetch Full Content" UI integration

@@ -1,0 +1,25 @@
+:80 {
+	# RSS Reader App
+	handle_path /reader* {
+		reverse_proxy localhost:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	# Health check endpoint
+	handle /health {
+		respond "OK" 200
+	}
+
+	# Default response for root
+	handle / {
+		respond "RSS Reader is available at /reader" 200
+	}
+
+	# Enable access logs
+	log {
+		output file /Users/shayon/DevProjects/rss-news-reader/logs/caddy-access.log
+		format console
+	}
+}

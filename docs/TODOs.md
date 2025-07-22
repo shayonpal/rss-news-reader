@@ -190,42 +190,44 @@
 
 ### Phase 3: Production Deployment
 
-#### TODO-011: US-501 - Caddy Configuration (P0 - Deployment)
-- **Status**: 🔴 TODO
-- **Acceptance Criteria**:
-  - [ ] Configure Caddy reverse proxy for `/reader` path
-  - [ ] Update Next.js basePath to `/reader`
-  - [ ] Update PWA manifest for correct path
-  - [ ] Configure PM2 with 1GB memory limit
+#### TODO-011: US-501 - Caddy Configuration (P0 - Deployment) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Caddy and PM2 configuration ready
+- **Completed**: July 21, 2025 - All configuration files created
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Configure Caddy reverse proxy for `/reader` path - Caddyfile created
+  - [x] Update Next.js basePath to `/reader` - Already configured
+  - [x] Update PWA manifest for correct path - Already configured
+  - [x] Configure PM2 with 1GB memory limit - ecosystem.config.js created
 - **Production URL**: `http://100.96.166.53/reader`
+- **Files Created**:
+  - `/Caddyfile` - Reverse proxy configuration
+  - `/ecosystem.config.js` - PM2 process manager config
+  - `/scripts/deploy.sh` - Deployment script
+  - `/scripts/test-caddy.sh` - Local testing script
+  - `/scripts/check-status.sh` - Service status checker
+  - `/docs/deployment/caddy-pm2-setup.md` - Documentation
 
-#### TODO-012: US-105 - Tailscale Monitoring (P0 - Infrastructure)
-- **Status**: 🔴 TODO
+#### TODO-012: US-105 - Tailscale Monitoring (P0 - Infrastructure) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Monitoring service installed and running
+- **Completed**: July 21, 2025 - All monitoring components implemented
 - **Critical**: Without Tailscale, clients cannot access service
-- **Acceptance Criteria**:
-  - [ ] Health check every 5 minutes
-  - [ ] Auto-restart with `sudo tailscale up` if down
-  - [ ] Configure passwordless sudo for tailscale
-  - [ ] Log all restart attempts
-- **Implementation Details**:
-  ```bash
-  # Add to /etc/sudoers.d/tailscale
-  nodeuser ALL=(ALL) NOPASSWD: /usr/bin/tailscale up
-  
-  # PM2 ecosystem.config.js
-  module.exports = {
-    apps: [{
-      name: 'rss-reader',
-      script: 'npm',
-      args: 'start',
-      max_memory_restart: '1G',
-      error_file: 'logs/pm2-error.log',
-      out_file: 'logs/pm2-out.log',
-      merge_logs: true,
-      time: true
-    }]
-  }
-  ```
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Health check every 5 minutes - Monitor runs continuous checks
+  - [x] Auto-restart with `sudo tailscale up` if down - Automatic restart implemented
+  - [x] Configure passwordless sudo for tailscale - Setup script created and tested
+  - [x] Log all restart attempts - Comprehensive logging to logs/tailscale-monitor.log
+- **Files Created**:
+  - `/scripts/monitor-tailscale.sh` - Main monitoring script
+  - `/scripts/setup-tailscale-sudo.sh` - Passwordless sudo configuration
+  - `/scripts/install-tailscale-monitor.sh` - Service installer
+  - `/tailscale-monitor.plist` - macOS launchd service definition
+  - `/docs/deployment/tailscale-monitoring.md` - Complete documentation
+- **Implementation**:
+  - Monitor runs as launchd service on macOS
+  - Checks Tailscale connection every 5 minutes
+  - Automatically restarts if disconnected
+  - Logs all activities with timestamps
+  - Service starts automatically on boot
 
 #### TODO-013: US-502 - Clean Data Migration (P1 - Deployment)
 - **Status**: 🔴 TODO

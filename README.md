@@ -164,11 +164,24 @@ src/
 
 ## Current Development Status
 
-**Phase**: Server-Client Architecture Implementation
+**Phase**: Production Deployment Infrastructure
 
 **Version**: 0.4.0
 
 ### Completed ✅
+
+**July 21, 2025 - Production Deployment Infrastructure**
+- ✅ **TODO-011**: Caddy Configuration (US-501) - Ready for production deployment
+  - Caddyfile for reverse proxy at `/reader` path
+  - PM2 ecosystem configuration with 1GB memory limit
+  - Deployment and testing scripts
+  - Complete documentation at `/docs/deployment/caddy-pm2-setup.md`
+- ✅ **TODO-012**: Tailscale Monitoring (US-105) - Service running continuously
+  - Automatic health checks every 5 minutes
+  - Auto-restart if Tailscale disconnects
+  - Passwordless sudo configured and tested
+  - macOS launchd service installed and running
+  - Comprehensive activity logging to `logs/tailscale-monitor.log`
 
 **January 21, 2025 - Server-Client Architecture**
 - ✅ **US-101**: Server OAuth Setup - Server handles all Inoreader authentication
