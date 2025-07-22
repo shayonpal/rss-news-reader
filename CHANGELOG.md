@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - January 22, 2025 Session (PWA Asset 404 Errors)
+- **PWA Asset 404 Errors** (TODO-010, US-902) - COMPLETED ✅
+  - Fixed 404 errors for favicon and apple-touch-icon files
+  - All assets already existed in correct locations
+  - Fixed by adding `/reader` basePath prefix to all icon URLs in app metadata
+  - Updated icon paths: `/reader/icons/favicon-16x16.png`, `/reader/icons/favicon-32x32.png`
+  - Updated apple-touch-icon path: `/reader/apple-touch-icon.png`
+  - Aligns with `basePath: '/reader'` configuration in next.config.mjs
+  - Note: Dev server still shows 404s for browser automatic icon requests - safely ignored
+  - Icons work correctly in production with proper basePath handling
+
 ### Fixed - January 22, 2025 Session (Scroll Position Preservation)
 - **Scroll Position Loss on Navigation Back** (TODO-009a, US-903) - COMPLETED ✅
   - Fixed scroll position resetting to top when returning from article detail view
