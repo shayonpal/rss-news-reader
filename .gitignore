@@ -46,3 +46,6 @@ update-project-fields.js
 
 # Logs
 /logs/
+
+# Personal documentation
+docs/revised-priority.md

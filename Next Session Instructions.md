@@ -110,33 +110,51 @@
 - ✅ **Feed Loading**: Optimized from fetching 290 rows to just 22 rows
 - ✅ **Accuracy Verified**: Function results match manual count calculations
 
-## Next Priority - Feature Completion & Production Deployment
+## Next Priority - First Production Launch 🚀
 
-### 1. **Complete Existing Features**
+**Target**: Launch PWA on Tailscale URL http://100.96.166.53:3000/reader/ for iPhone and iPad installation
 
-- **TODO-006: Complete US-102** - Automatic daily sync cron job (2am and 2pm)
-  - Implement node-cron for scheduling
-  - Add sync error logging to database
-  - Batch update read states to Inoreader
-- **TODO-007: Complete US-203** - "Fetch Full Content" UI integration  
-  - Add button to article view
-  - Display extracted content when available
+### Priority Order for Production Launch:
+
+1. **TODO-010: US-902 - Fix 404 Errors for Missing Assets** (P1 - Quality Bug)
+   - Create missing favicon files (16x16, 32x32)
+   - Create missing Apple touch icons
+   - Verify PWA manifest references correct paths
+   - Test icons display in browser/PWA
+
+2. **TODO-014: US-401 - Feed, Tag, and Read Status Filtering** (P1 - UX)
+   - Two-tab interface: "Feeds" and "Tags"
+   - Read status filter dropdown (Unread only/Read only/All)
+   - Persist filter preferences in localStorage
+   - Update article counts to reflect current filter
+
+3. **TODO-006: Complete US-102 - Automatic Daily Sync** (P1 - Core)
+   - Implement node-cron for scheduling (2am and 2pm)
+   - Add sync error logging to database
+   - Batch update read states to Inoreader
+
+4. **TODO-011: US-501 - Caddy Configuration** (P0 - Deployment)
+   - Configure Caddy reverse proxy for `/reader` path
+   - Update Next.js basePath to `/reader`
+   - Update PWA manifest for correct path
+   - Configure PM2 with 1GB memory limit
+
+5. **TODO-012: US-105 - Tailscale Monitoring** (P0 - Infrastructure)
+   - Health check every 5 minutes
+   - Auto-restart with `sudo tailscale up` if down
+   - Configure passwordless sudo for tailscale
+   - Log all restart attempts
+
+6. **TODO-013: US-502 - Clean Data Migration** (P1 - Deployment)
+   - Clear existing article data
+   - Keep Supabase schema unchanged
+   - Document clean-slate approach
+   - **Fresh resync using Inoreader test creds from .env**
+
+### Features Deferred Post-Launch:
+- **TODO-007: Complete US-203** - "Fetch Full Content" UI integration
 - **TODO-008: Complete US-104** - Content extraction UI buttons
-  - UI to trigger extraction
-  - Loading states during extraction
-
-### 3. **Production Deployment Preparation**
-
-### 4. **US-301 & US-302: AI Summarization** ✅ COMPLETED
-- Server endpoints working perfectly
-- Summary UI fully integrated in article list and detail views
-- Shimmer loading states implemented
-- Re-summarize functionality working
-
-### 5. **Complete US-203** (Remaining tasks)
-- Add "Fetch Full Content" button to article view
-- Display extracted content when available
-- Server endpoint ready at `/api/articles/:id/fetch-content`
+- Additional UX enhancements and monitoring
 
 ## Commands to Run Next Session
 ```bash
