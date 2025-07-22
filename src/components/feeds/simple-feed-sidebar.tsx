@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
-import { Loader2 } from 'lucide-react';
+import { useUIStore } from '@/lib/stores/ui-store';
+import { Loader2, RefreshCw, Sun, Moon, Monitor } from 'lucide-react';
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -14,6 +15,7 @@ interface SimpleFeedSidebarProps {
 export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSidebarProps) {
   const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy } = useFeedStore();
   const { isSyncing, lastSyncTime, performFullSync, syncError, syncProgress, syncMessage, rateLimit } = useSyncStore();
+  const { theme, setTheme } = useUIStore();
   
   // Load feeds when component mounts
   useEffect(() => {
@@ -37,27 +39,53 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
     }
   }, []);
 
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'light': return <Sun className="h-4 w-4" />;
+      case 'dark': return <Moon className="h-4 w-4" />;
+      default: return <Monitor className="h-4 w-4" />;
+    }
+  };
+
+  const cycleTheme = () => {
+    const themes = ['light', 'dark', 'system'] as const;
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex]);
+  };
+
   return (
     <div className="h-full border-r bg-background flex flex-col">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Feeds</h2>
-          <button
-            onClick={performFullSync}
-            disabled={isSyncing}
-            className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 relative overflow-hidden min-w-[64px]"
-          >
-            {isSyncing && syncProgress > 0 && (
-              <div 
-                className="absolute inset-0 bg-white/20"
-                style={{ width: `${syncProgress}%` }}
-              />
-            )}
-            <span className="relative z-10">
-              {isSyncing ? (syncProgress > 0 ? `${syncProgress}%` : 'Syncing...') : 'Sync'}
-            </span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={cycleTheme}
+              className="p-2 rounded hover:bg-muted transition-colors"
+              aria-label={`Current theme: ${theme}`}
+            >
+              {getThemeIcon()}
+            </button>
+            <button
+              onClick={performFullSync}
+              disabled={isSyncing}
+              className="p-2 rounded hover:bg-muted disabled:opacity-50 relative"
+              aria-label={isSyncing ? 'Syncing...' : 'Sync feeds'}
+            >
+              {isSyncing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isSyncing && syncProgress > 0 && (
+                <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[10px] font-medium">
+                  {syncProgress}%
+                </span>
+              )}
+            </button>
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
           {totalUnreadCount} unread articles
@@ -160,6 +188,7 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
           </>
         )}
       </div>
+
     </div>
   );
 }

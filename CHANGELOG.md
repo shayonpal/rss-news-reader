@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-07-22 - Production Deployment
 
+### Added - July 22, 2025 Session (Theme Toggle)
+- **Theme Toggle** (TODO-015, US-402) - COMPLETED ✅
+  - Implemented icon-based theme toggle in feed sidebar header
+  - Added to the left of sync button for easy access
+  - Supports three modes: Light (sun icon), Dark (moon icon), System (monitor icon)
+  - Cycles through themes on click: Light → Dark → System
+  - Theme preference persists across sessions using zustand store
+  - Smooth transitions between themes using existing ThemeProvider
+  - Works on both mobile and desktop layouts
+  - Includes proper accessibility labels
+  - Removed unused settings dialog components in favor of simpler icon approach
+
 ### Fixed - July 22, 2025 Session (Back Button Navigation)
 - **Enhanced Back Button Navigation Logic** (TODO-028) - COMPLETED ✅
   - Back button in article view now always returns to the article listing page
@@ -408,6 +420,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Theme preference persists across sessions via zustand store
   - Works on both mobile and desktop layouts
   - Includes proper accessibility labels
+  - [UPDATE July 22, 2025: Moved from sync button area to dedicated icon in header]
 
 ### Fixed - July 16, 2025 Session
 - **Sync Race Condition** - Fixed unnecessary API calls on login

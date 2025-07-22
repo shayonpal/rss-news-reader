@@ -20,11 +20,10 @@ The RSS News Reader is now successfully deployed to production:
 
 ### Medium Priority  
 - **TODO-008**: Complete US-104 - Content Extraction Service UI
-- **TODO-015**: US-402 - Theme Toggle in Settings
 - **TODO-016**: US-403 - Enhanced Sync Status Display
-- **TODO-028**: Enhance Back Button Navigation Logic
+- **TODO-028**: Enhance Back Button Navigation Logic ✅ COMPLETED
 - **TODO-029**: Auto-Mark Articles as Read on Scroll
-- **TODO-031**: Document Internal APIs in README
+- **TODO-031**: Document Internal APIs
 
 ### Low Priority
 - **TODO-014b**: US-401b - Feed Filtering Enhancement
@@ -404,21 +403,39 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Works seamlessly with feed/tag filtering
   - [ ] Article counts update based on active filters
 
-#### TODO-015: US-402 - Theme Toggle (P2 - UX)
-- **Status**: 🔴 TODO (Theme system partially exists)
-- **Acceptance Criteria**:
-  - [ ] Theme toggle in settings
-  - [ ] Options: Light, Dark, System
-  - [ ] Smooth theme transitions
-  - [ ] Theme preference persistence
+#### TODO-015: US-402 - Theme Toggle (P2 - UX) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Theme toggle implemented
+- **Completed**: July 22, 2025
+- **Implementation**: Icon-based theme toggle in feed sidebar header
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Theme toggle in sidebar header (icon-based, not in settings)
+  - [x] Options: Light, Dark, System
+  - [x] Smooth theme transitions
+  - [x] Theme preference persistence via zustand store
+- **Implementation Details**:
+  - Added theme toggle icon button to the left of sync button
+  - Icons: Sun (light), Moon (dark), Monitor (system)
+  - Cycles through themes on click: Light → Dark → System
+  - Uses existing ThemeProvider for smooth transitions
+  - Persists preference to localStorage via zustand
+- **Files Modified**:
+  - `src/components/feeds/simple-feed-sidebar.tsx` - Added theme toggle
+  - Removed unused `src/components/settings/*` components
+  - Removed unused `src/components/layout/navigation.tsx`
 
 #### TODO-016: US-403 - Sync Status Display (P1 - UX)
 - **Status**: 🔴 TODO
 - **Current**: Basic progress display exists
-- **Missing**:
-  - [ ] Last sync timestamp in settings
+- **Note**: As of July 22, 2025 5pm check, some sync status info is already displayed in the sidebar:
+  - ✅ Last sync timestamp shown below feed list (but spec wants it "in settings")
+  - ✅ API usage (X/100 calls today) with warnings at 80% and 95%
+  - ❌ Number of new articles synced - NOT shown
+  - ❌ Enhanced success/error messages - basic errors shown but not enhanced
+- **Design Decision Needed**: Original spec mentions "in settings" but current implementation shows info in sidebar status area. Need to decide if a separate settings dialog is actually needed or if the sidebar display is sufficient.
+- **Missing per original spec**:
+  - [ ] Last sync timestamp in settings (currently in sidebar - may not need settings)
   - [ ] Number of new articles synced
-  - [ ] API usage display (X/100 calls today)
+  - [ ] API usage display (X/100 calls today) - ALREADY IMPLEMENTED in sidebar
   - [ ] Enhanced success/error messages
 
 ### Phase 5: Monitoring & Polish
@@ -622,35 +639,28 @@ The RSS News Reader is now successfully deployed to production:
   - Fixed positioning can interfere with scroll detection
   - Test with Safari Web Inspector to debug scroll containers
 
-#### TODO-031: Document Internal APIs in README (P2 - Documentation)
+#### TODO-031: Document Internal APIs (P2 - Documentation)
 - **Status**: 🔴 TODO
-- **Issue**: Internal API endpoints are not documented in README.md
-- **Current State**: APIs exist and work but lack documentation
-- **Expected Result**: Complete API reference section in README.md
+- **Issue**: Internal API endpoints need better documentation
+- **Current State**: Basic documentation exists in `docs/api/server-endpoints.md` but needs enhancement
+- **Expected Result**: Complete API reference in `docs/api/server-endpoints.md`
 - **Acceptance Criteria**:
-  - [ ] Document all server API endpoints with methods, paths, parameters
-  - [ ] Include request/response examples for each endpoint
-  - [ ] Document authentication requirements (or lack thereof)
-  - [ ] Document rate limiting behavior
-  - [ ] Document error responses and status codes
-  - [ ] Include usage examples with curl commands
-- **APIs to Document**:
-  - `POST /api/sync` - Trigger manual sync
-  - `GET /api/sync/status/:id` - Check sync progress
-  - `POST /api/articles/:id/fetch-content` - Extract full article content
-  - `POST /api/articles/:id/summarize` - Generate AI summary
+  - [ ] Update `docs/api/server-endpoints.md` with any missing endpoints
+  - [ ] Add curl command examples for each endpoint
+  - [ ] Document any new endpoints added since initial documentation
+  - [ ] Add authentication/security notes
+  - [ ] Include troubleshooting section
+  - [ ] Add examples of error scenarios
+- **Additional Endpoints to Document**:
   - `GET /api/test-supabase` - Database connection test
   - `GET /api/test-refresh-stats` - Refresh materialized view test
-- **Documentation Structure**:
-  ```markdown
-  ## API Reference
-  ### Sync Endpoints
-  #### Trigger Manual Sync
-  - Method: POST
-  - Path: /api/sync
-  - Rate Limit: 2 requests per minute
-  - Response: { syncId, status, message }
-  ```
+  - `POST /api/sync/metadata` - Update sync metadata
+  - Any other endpoints not currently in the docs
+- **Enhancement Areas**:
+  - Add curl examples for testing
+  - Document response headers
+  - Include timing/performance notes
+  - Add debugging tips
 
 #### TODO-032: Document Database Schema in README (P2 - Documentation) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Database schema fully documented

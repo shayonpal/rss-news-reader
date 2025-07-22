@@ -1,9 +1,11 @@
 'use client';
 
-import { X, Settings, Moon, Sun, Monitor } from 'lucide-react';
+import { useState } from 'react';
+import { X, Settings } from 'lucide-react';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { SettingsDialog } from '@/components/settings/settings-dialog';
 
 const mockFeeds = [
   { id: '1', name: 'All Articles', count: 152, active: true },
@@ -15,22 +17,8 @@ const mockFeeds = [
 ];
 
 export function Navigation() {
-  const { isSidebarOpen, setSidebarOpen, theme, setTheme } = useUIStore();
-
-  const getThemeIcon = () => {
-    switch (theme) {
-      case 'light': return <Sun className="h-4 w-4" />;
-      case 'dark': return <Moon className="h-4 w-4" />;
-      default: return <Monitor className="h-4 w-4" />;
-    }
-  };
-
-  const cycleTheme = () => {
-    const themes = ['light', 'dark', 'system'] as const;
-    const currentIndex = themes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    setTheme(themes[nextIndex]);
-  };
+  const { isSidebarOpen, setSidebarOpen } = useUIStore();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <>
@@ -53,26 +41,15 @@ export function Navigation() {
           {/* Header */}
           <div className="flex items-center justify-between border-b p-4">
             <h2 className="text-lg font-semibold">Feeds</h2>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={cycleTheme}
-                className="h-9 w-9"
-                aria-label="Toggle theme"
-              >
-                {getThemeIcon()}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen(false)}
-                className="h-9 w-9 md:hidden"
-                aria-label="Close menu"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              className="h-9 w-9 md:hidden"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
           {/* Feed List */}
@@ -103,7 +80,7 @@ export function Navigation() {
               variant="ghost"
               className="w-full justify-start"
               onClick={() => {
-                // TODO: Open settings
+                setSettingsOpen(true);
                 setSidebarOpen(false);
               }}
             >
@@ -113,6 +90,9 @@ export function Navigation() {
           </div>
         </div>
       </aside>
+
+      {/* Settings Dialog */}
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }
