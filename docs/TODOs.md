@@ -107,25 +107,28 @@
 
 ### Phase 1: Complete Existing Features
 
-#### TODO-006: Complete US-102 - Automatic Daily Sync (P1 - Core)
-- **Status**: 🟡 PARTIALLY COMPLETE - Manual sync working perfectly
-- **Completed**: ✅ Manual sync, API endpoints, progress polling, rate limiting
-- **Missing**:
-  - [ ] Implement daily cron job (node-cron) for 2am and 2pm server time
-  - [ ] Add JSONL logging for all sync operations
-  - [ ] Update sync metadata in database with success/failure counts
+#### TODO-006: Complete US-102 - Automatic Daily Sync (P1 - Core) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Automatic daily sync fully implemented
+- **Completed**: ✅ Manual sync, API endpoints, progress polling, rate limiting, automatic sync
+- **Implementation**:
+  - [x] Installed node-cron dependency
+  - [x] Created /src/server/cron.js service with JSONL logging
+  - [x] Added cron process to PM2 ecosystem configuration
+  - [x] Created sync metadata endpoint for database updates
+  - [x] Added test scripts for verification
+  - [x] Documented in README and deployment docs
 - **Documentation**:
   - **Product Requirements**: See [Automatic Sync section in PRD](/docs/product/PRD.md#automatic-sync-server-side)
   - **Technical Implementation**: See [Automatic Daily Sync Implementation](/docs/tech/implementation-strategy.md#3-automatic-daily-sync-implementation)
-- **Implementation Plan**:
-  1. Install node-cron dependency: `npm install node-cron`
-  2. Create `/src/server/cron.js` service with JSONL logging
-  3. Add cron process to PM2 ecosystem configuration
-  4. Use existing `/api/sync` endpoint (no new endpoint needed)
-  5. Log to `logs/sync-cron.jsonl` for troubleshooting
-  6. Update sync_metadata table with last sync status and counts
-- **Deferred to separate TODO**:
-  - Read state sync back to Inoreader (complex feature, needs own TODO)
+  - **Deployment Guide**: See [Automatic Sync Documentation](/docs/deployment/automatic-sync.md)
+- **Completed**: January 22, 2025 - Cron service runs at 2am/2pm America/Toronto
+- **Files Created/Modified**:
+  - `/src/server/cron.js` - Main cron service
+  - `/src/app/api/sync/metadata/route.ts` - Metadata update endpoint
+  - `/ecosystem.config.js` - Added cron process configuration
+  - `/scripts/test-cron-sync.js` - Test script for cron service
+  - `/scripts/test-manual-sync.sh` - Test script for manual sync
+  - `/docs/deployment/automatic-sync.md` - Complete documentation
 
 #### TODO-007: Complete US-203 - Content/Summary UI Integration (P1 - Core)
 - **Status**: 🔴 TODO
@@ -565,6 +568,70 @@
   - Multiple scrollable elements on screen breaks the gesture
   - Fixed positioning can interfere with scroll detection
   - Test with Safari Web Inspector to debug scroll containers
+
+#### TODO-031: Document Internal APIs in README (P2 - Documentation)
+- **Status**: 🔴 TODO
+- **Issue**: Internal API endpoints are not documented in README.md
+- **Current State**: APIs exist and work but lack documentation
+- **Expected Result**: Complete API reference section in README.md
+- **Acceptance Criteria**:
+  - [ ] Document all server API endpoints with methods, paths, parameters
+  - [ ] Include request/response examples for each endpoint
+  - [ ] Document authentication requirements (or lack thereof)
+  - [ ] Document rate limiting behavior
+  - [ ] Document error responses and status codes
+  - [ ] Include usage examples with curl commands
+- **APIs to Document**:
+  - `POST /api/sync` - Trigger manual sync
+  - `GET /api/sync/status/:id` - Check sync progress
+  - `POST /api/articles/:id/fetch-content` - Extract full article content
+  - `POST /api/articles/:id/summarize` - Generate AI summary
+  - `GET /api/test-supabase` - Database connection test
+  - `GET /api/test-refresh-stats` - Refresh materialized view test
+- **Documentation Structure**:
+  ```markdown
+  ## API Reference
+  ### Sync Endpoints
+  #### Trigger Manual Sync
+  - Method: POST
+  - Path: /api/sync
+  - Rate Limit: 2 requests per minute
+  - Response: { syncId, status, message }
+  ```
+
+#### TODO-032: Document Database Schema in README (P2 - Documentation)
+- **Status**: 🔴 TODO
+- **Issue**: Supabase database schema is not documented in README.md
+- **Current State**: Database exists with 6 tables but lacks documentation
+- **Expected Result**: Complete database schema section in README.md
+- **Acceptance Criteria**:
+  - [ ] Document all 6 tables with their purposes
+  - [ ] List all columns with data types and constraints
+  - [ ] Explain relationships between tables
+  - [ ] Document indexes and their purposes
+  - [ ] Document RLS policies (after TODO-001 completion)
+  - [ ] Include example queries for common operations
+- **Tables to Document**:
+  - `users` - User accounts (currently single-user)
+  - `feeds` - RSS feed subscriptions
+  - `articles` - Individual articles from feeds
+  - `folders` - Feed organization hierarchy
+  - `sync_metadata` - Sync operation tracking
+  - `system_config` - System configuration cache
+- **Additional Database Features**:
+  - `feed_stats` materialized view for performance
+  - `update_updated_at_column` trigger function
+  - `refresh_feed_stats()` function
+- **Documentation Format**:
+  ```markdown
+  ## Database Schema
+  ### Users Table
+  - Purpose: Store user accounts
+  - Columns:
+    - id (uuid, primary key)
+    - inoreader_id (text, unique)
+    - created_at (timestamp)
+  ```
 
 ---
 

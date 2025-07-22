@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - January 22, 2025 Session (Automatic Daily Sync)
+- **Automatic Daily Sync** (TODO-006, US-102) - COMPLETED ✅
+  - Implemented node-cron based automatic sync service
+  - Syncs run at 2:00 AM and 2:00 PM (America/Toronto timezone)
+  - Created `/src/server/cron.js` with comprehensive JSONL logging
+  - Added `/api/sync/metadata` endpoint for sync statistics tracking
+  - Integrated with PM2 ecosystem configuration as separate process
+  - Tracks success/failure counts and last sync status
+  - Efficient API usage: only 4-5 calls per sync
+  - Created test scripts for verification
+  - PM2 startup configured for persistence across reboots
+  - Service successfully running with `pm2 status` confirmation
+  - Complete documentation at `/docs/deployment/automatic-sync.md`
+
 ### Added - July 21, 2025 Session (Production Deployment Infrastructure)
 - **Caddy Configuration** (TODO-011, US-501) - COMPLETED ✅
   - Created Caddyfile for reverse proxy configuration routing `/reader/*` to Next.js

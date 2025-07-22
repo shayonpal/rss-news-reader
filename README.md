@@ -37,6 +37,34 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **UI Components**: Radix UI primitives + custom components
 - **PWA**: Service Worker with Workbox
 
+## Automatic Daily Sync
+
+The RSS reader includes an automatic sync service that runs twice daily to keep your articles fresh:
+
+- **Schedule**: 2:00 AM and 2:00 PM (America/Toronto timezone)
+- **Implementation**: Node.js cron service running as separate PM2 process
+- **API Efficiency**: Only 4-5 API calls per sync (out of 100 daily limit)
+- **Logging**: All sync operations logged to JSONL format for analysis
+- **Error Handling**: Automatic retry with exponential backoff
+
+### Sync Features
+- Fetches up to 100 new articles per sync
+- Round-robin distribution across feeds (max 20 per feed)
+- Updates read/unread counts
+- Refreshes feed statistics materialized view
+- Tracks success/failure metrics
+
+### Production Deployment
+```bash
+# Start both app and cron service
+pm2 start ecosystem.config.js
+
+# Monitor sync logs
+tail -f logs/sync-cron.jsonl | jq .
+```
+
+For detailed automatic sync documentation, see [docs/deployment/automatic-sync.md](docs/deployment/automatic-sync.md).
+
 ## Development Setup
 
 ### Prerequisites
