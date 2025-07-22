@@ -29,7 +29,7 @@ git pull origin main
 
 # 4. Install dependencies if package.json changed
 echo "📦 Checking dependencies..."
-npm install
+npm install --legacy-peer-deps
 
 # 5. Run quality checks
 echo "🔍 Running quality checks..."
