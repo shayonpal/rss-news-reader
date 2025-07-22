@@ -633,6 +633,193 @@ const useArticleFilters = () => {
 };
 ```
 
+### Read Status Filtering with Database Counts
+
+```typescript
+// Enhanced read status filtering with accurate database counts
+interface ArticleCountCache {
+  counts: {
+    total: number;
+    unread: number;
+    read: number;
+  };
+  timestamp: number;
+  feedId?: string;
+  folderId?: string;
+}
+
+class ArticleCountManager {
+  private cache: Map<string, ArticleCountCache> = new Map();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  
+  // Get counts from database with smart caching
+  async getArticleCounts(feedId?: string, folderId?: string): Promise<ArticleCounts> {
+    const cacheKey = `${feedId || 'all'}-${folderId || 'all'}`;
+    const cached = this.cache.get(cacheKey);
+    
+    // Return cached if still valid
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.counts;
+    }
+    
+    // Fetch fresh counts from database
+    const counts = await this.fetchCountsFromDatabase(feedId, folderId);
+    
+    // Update cache
+    this.cache.set(cacheKey, {
+      counts,
+      timestamp: Date.now(),
+      feedId,
+      folderId
+    });
+    
+    return counts;
+  }
+  
+  // Fetch actual counts from Supabase
+  private async fetchCountsFromDatabase(feedId?: string, folderId?: string) {
+    let query = supabase
+      .from('articles')
+      .select('is_read', { count: 'exact', head: true });
+    
+    // Apply feed/folder filters
+    if (feedId) {
+      query = query.eq('feed_id', feedId);
+    } else if (folderId) {
+      // Get feeds in folder first
+      const { data: feeds } = await supabase
+        .from('feeds')
+        .select('id')
+        .eq('folder_id', folderId);
+      
+      const feedIds = feeds?.map(f => f.id) || [];
+      if (feedIds.length > 0) {
+        query = query.in('feed_id', feedIds);
+      }
+    }
+    
+    // Get total count
+    const { count: total } = await query;
+    
+    // Get unread count
+    const { count: unread } = await query.eq('is_read', false);
+    
+    return {
+      total: total || 0,
+      unread: unread || 0,
+      read: (total || 0) - (unread || 0)
+    };
+  }
+  
+  // Invalidate cache when articles change
+  invalidateCache(feedId?: string) {
+    if (feedId) {
+      // Invalidate specific feed and 'all' cache
+      for (const [key, value] of this.cache.entries()) {
+        if (key.includes(feedId) || key.startsWith('all-')) {
+          this.cache.delete(key);
+        }
+      }
+    } else {
+      // Clear all cache
+      this.cache.clear();
+    }
+  }
+}
+
+// Dynamic header based on read status filter
+const getDynamicPageTitle = (
+  readStatusFilter: 'all' | 'unread' | 'read',
+  selectedFeed?: Feed,
+  selectedFolder?: Folder
+) => {
+  // Base title from feed/folder selection
+  let baseTitle: string;
+  if (selectedFeed) {
+    baseTitle = selectedFeed.title;
+  } else if (selectedFolder) {
+    baseTitle = selectedFolder.title;
+  } else {
+    baseTitle = 'Articles';
+  }
+  
+  // Apply read status prefix
+  switch (readStatusFilter) {
+    case 'unread':
+      return selectedFeed || selectedFolder 
+        ? `Unread from ${baseTitle}` 
+        : 'Unread Articles';
+        
+    case 'read':
+      return selectedFeed || selectedFolder 
+        ? `Read from ${baseTitle}` 
+        : 'Read Articles';
+        
+    case 'all':
+    default:
+      return selectedFeed || selectedFolder 
+        ? `All from ${baseTitle}` 
+        : 'All Articles';
+  }
+};
+
+// Header component with accurate counts
+const ArticleHeader = () => {
+  const { readStatusFilter, selectedFeedId, selectedFolderId } = useArticleStore();
+  const [counts, setCounts] = useState<ArticleCounts>({ total: 0, unread: 0, read: 0 });
+  const countManager = useRef(new ArticleCountManager());
+  
+  // Fetch counts when filters change
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const newCounts = await countManager.current.getArticleCounts(
+        selectedFeedId || undefined,
+        selectedFolderId || undefined
+      );
+      setCounts(newCounts);
+    };
+    
+    fetchCounts();
+  }, [readStatusFilter, selectedFeedId, selectedFolderId]);
+  
+  // Invalidate cache on article actions
+  const handleArticleAction = () => {
+    countManager.current.invalidateCache(selectedFeedId || undefined);
+  };
+  
+  // Get dynamic title
+  const pageTitle = getDynamicPageTitle(
+    readStatusFilter,
+    selectedFeed,
+    selectedFolder
+  );
+  
+  // Get count display based on filter
+  const getCountDisplay = () => {
+    switch (readStatusFilter) {
+      case 'unread':
+        return `${counts.unread} unread articles`;
+      case 'read':
+        return `${counts.read} read articles`;
+      case 'all':
+        return `${counts.total} total articles (${counts.unread} unread)`;
+    }
+  };
+  
+  return (
+    <header className="border-b px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{pageTitle}</h1>
+          <p className="text-sm text-muted-foreground">{getCountDisplay()}</p>
+        </div>
+        <ReadStatusFilter />
+      </div>
+    </header>
+  );
+};
+```
+
 ### Gesture-Based Navigation
 
 ```typescript

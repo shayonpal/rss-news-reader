@@ -47,6 +47,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - No manual feed management within the app
 - Client reads exclusively from Supabase
 - Filter articles by feed OR tag (mutually exclusive)
+- Filter articles by read status: Unread only (default), Read only, All articles
 
 ### Article Synchronization
 
@@ -235,6 +236,27 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 - Batch updates during sync operations
 - Conflict resolution: most recent change wins
 
+#### Read Status Filtering
+
+- **Filter Options**: Dropdown with three choices:
+  - "Unread only" (default) - Focus on new content
+  - "Read only" - Review previously read articles
+  - "All articles" - Complete view of all content
+- **Filter Persistence**: User's preference saved in localStorage
+- **Dynamic Headers**: Page title changes based on active filter
+  - "Unread Articles" when showing unread only
+  - "Read Articles" when showing read only  
+  - "All Articles" when showing everything
+- **Database Counts**: Article counts fetched from database, not loaded articles
+  - Smart caching with 5-minute TTL for performance
+  - Cache invalidation on user actions (mark read/unread)
+  - Accurate counts that respect current feed/folder selection
+- **Count Display Examples**:
+  - Unread filter: "296 unread articles"
+  - Read filter: "1,204 read articles"
+  - All filter: "1,500 total articles (296 unread)"
+- **Integration**: Works seamlessly with existing feed/folder filters
+
 ### Summary Generation
 
 #### AI Configuration
@@ -287,15 +309,19 @@ Write a clear, informative summary that captures the essence of this article.
 
 2. **Article List** (Main View)
 
-   - Shows articles based on selected filter:
-     - All articles (default)
-     - Articles from selected feed
-     - Articles with selected tag
+   - Shows articles based on selected filters:
+     - Feed/tag filter: All articles, specific feed, or specific tag
+     - Read status filter: Unread only (default), Read only, All articles
+   - Dynamic header based on active filters:
+     - "Unread Articles" / "Unread from [Feed Name]"
+     - "Read Articles" / "Read from [Feed Name]"
+     - "All Articles" / "All from [Feed Name]"
+   - Accurate article counts from database (not just loaded articles)
    - Newest first, no sorting options
    - Clear visual hierarchy
    - Read/unread distinction
    - Summary/snippet display
-   - Current filter shown at top
+   - Current filters shown in header
 
 3. **Article Detail**
 
@@ -394,6 +420,7 @@ Write a clear, informative summary that captures the essence of this article.
 - Tap to read article
 - Tap feed/folder to filter articles
 - Tap tag to filter articles
+- Tap read status filter to toggle between unread/read/all
 - Clear filter to show all articles
 - Long-press for quick actions (future)
 - Swipe between articles in detail view
@@ -470,6 +497,7 @@ Write a clear, informative summary that captures the essence of this article.
 - Article list render: < 1 second
 - Article open: < 0.5 seconds
 - Summary generation: < 5 seconds
+- Article count queries: < 200ms (with 5-minute caching)
 - Smooth 60fps scrolling
 
 ### API Usage Monitoring (Server-Side)
