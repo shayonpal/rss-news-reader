@@ -85,7 +85,162 @@ class ServerSyncService {
 }
 ```
 
-#### 3. OAuth Setup Automation
+#### 3. Automatic Daily Sync Implementation
+
+```javascript
+// Node-cron based automatic sync service
+const cron = require('node-cron');
+const fs = require('fs').promises;
+const path = require('path');
+
+class CronSyncService {
+  constructor() {
+    this.logPath = process.env.SYNC_LOG_PATH || './logs/sync-cron.jsonl';
+    this.isEnabled = process.env.ENABLE_AUTO_SYNC === 'true';
+    this.schedule = process.env.SYNC_CRON_SCHEDULE || '0 2,14 * * *'; // 2am, 2pm
+  }
+
+  async start() {
+    if (!this.isEnabled) {
+      console.log('[Cron] Automatic sync is disabled');
+      return;
+    }
+
+    // Schedule cron job
+    cron.schedule(this.schedule, async () => {
+      const trigger = this.getTriggerName();
+      await this.executeSyncWithLogging(trigger);
+    }, {
+      timezone: 'America/Toronto'
+    });
+
+    console.log(`[Cron] Automatic sync scheduled: ${this.schedule}`);
+  }
+
+  async executeSyncWithLogging(trigger) {
+    const syncId = uuidv4();
+    const startTime = Date.now();
+
+    // Log sync start
+    await this.logEvent({
+      timestamp: new Date().toISOString(),
+      trigger,
+      status: 'started',
+      syncId
+    });
+
+    try {
+      // Call the sync API endpoint
+      const response = await fetch('http://localhost:3000/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Sync API returned ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Poll for completion
+      await this.pollSyncStatus(result.syncId, trigger, startTime);
+      
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      // Log sync error
+      await this.logEvent({
+        timestamp: new Date().toISOString(),
+        trigger,
+        status: 'error',
+        error: error.message,
+        duration
+      });
+
+      // Update sync metadata
+      await this.updateSyncMetadata({
+        last_sync_status: 'failed',
+        last_sync_error: error.message,
+        sync_failure_count: { increment: 1 }
+      });
+    }
+  }
+
+  async pollSyncStatus(syncId, trigger, startTime) {
+    const maxAttempts = 60; // 2 minutes max
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const status = await this.checkSyncStatus(syncId);
+      
+      if (status.status === 'completed') {
+        const duration = Date.now() - startTime;
+        
+        // Log success
+        await this.logEvent({
+          timestamp: new Date().toISOString(),
+          trigger,
+          status: 'completed',
+          duration,
+          feeds: status.feedsCount,
+          articles: status.articlesCount
+        });
+
+        // Update sync metadata
+        await this.updateSyncMetadata({
+          last_sync_time: new Date().toISOString(),
+          last_sync_status: 'success',
+          last_sync_error: null,
+          sync_success_count: { increment: 1 }
+        });
+        
+        return;
+      } else if (status.status === 'failed') {
+        throw new Error(status.error || 'Sync failed');
+      }
+
+      // Log progress updates
+      if (status.progress % 20 === 0) {
+        await this.logEvent({
+          timestamp: new Date().toISOString(),
+          trigger,
+          status: 'running',
+          progress: status.progress,
+          message: status.message
+        });
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      attempts++;
+    }
+
+    throw new Error('Sync timeout after 2 minutes');
+  }
+
+  async logEvent(event) {
+    const line = JSON.stringify(event) + '\n';
+    await fs.appendFile(this.logPath, line);
+  }
+
+  getTriggerName() {
+    const hour = new Date().getHours();
+    return hour < 12 ? 'cron-2am' : 'cron-2pm';
+  }
+}
+
+// Entry point for PM2
+if (require.main === module) {
+  const cronService = new CronSyncService();
+  cronService.start();
+  
+  // Keep process alive
+  process.stdin.resume();
+}
+
+module.exports = CronSyncService;
+```
+
+#### 4. OAuth Setup Automation
 
 ```typescript
 // Automated OAuth setup with Playwright
@@ -212,6 +367,93 @@ class ServerStateManager {
       const newToken = await this.inoreaderApi.refreshToken(token.refresh_token);
       await this.tokenManager.storeToken(newToken);
     }
+  }
+}
+```
+
+## JSONL Logging and Analysis
+
+### Sync Log Format
+
+```jsonl
+{"timestamp":"2025-01-22T07:00:00.123Z","trigger":"cron-2am","status":"started","syncId":"uuid-here"}
+{"timestamp":"2025-01-22T07:00:02.456Z","trigger":"cron-2am","status":"running","progress":30,"message":"Found 22 feeds..."}
+{"timestamp":"2025-01-22T07:00:45.789Z","trigger":"cron-2am","status":"completed","duration":45666,"feeds":22,"articles":156}
+{"timestamp":"2025-01-22T14:00:00.123Z","trigger":"cron-2pm","status":"started","syncId":"uuid-here"}
+{"timestamp":"2025-01-22T14:00:01.234Z","trigger":"cron-2pm","status":"error","error":"Rate limit exceeded","duration":1111}
+```
+
+### Log Analysis Commands
+
+```bash
+# Watch sync logs in real-time
+tail -f logs/sync-cron.jsonl | jq .
+
+# Count syncs by status
+cat logs/sync-cron.jsonl | jq -r .status | sort | uniq -c
+
+# See failed syncs with details
+cat logs/sync-cron.jsonl | jq 'select(.status == "error")'
+
+# Calculate average sync duration
+cat logs/sync-cron.jsonl | jq 'select(.duration) | .duration' | awk '{sum+=$1; count++} END {print sum/count}'
+
+# Get sync stats by trigger
+cat logs/sync-cron.jsonl | jq -r .trigger | sort | uniq -c
+
+# Find syncs that took longer than 1 minute
+cat logs/sync-cron.jsonl | jq 'select(.duration > 60000)'
+
+# Get daily sync summary
+cat logs/sync-cron.jsonl | jq 'select(.status == "completed") | {date: .timestamp[0:10], articles: .articles}' | jq -s 'group_by(.date) | map({date: .[0].date, total_articles: map(.articles) | add})'
+```
+
+### Sync Metadata Management
+
+```typescript
+// Update sync metadata in Supabase
+class SyncMetadataManager {
+  async updateSyncMetadata(updates: Partial<SyncMetadata>) {
+    const operations = [];
+    
+    for (const [key, value] of Object.entries(updates)) {
+      if (typeof value === 'object' && value.increment) {
+        // Handle increment operations
+        const current = await this.getMetadataValue(key) || 0;
+        operations.push({
+          key,
+          value: (parseInt(current) + value.increment).toString()
+        });
+      } else {
+        // Direct value update
+        operations.push({ key, value: String(value) });
+      }
+    }
+    
+    // Batch upsert
+    await supabase
+      .from('sync_metadata')
+      .upsert(operations, { onConflict: 'key' });
+  }
+  
+  async getSyncStats() {
+    const keys = [
+      'last_sync_time',
+      'last_sync_status',
+      'last_sync_error',
+      'sync_success_count',
+      'sync_failure_count'
+    ];
+    
+    const { data } = await supabase
+      .from('sync_metadata')
+      .select('key, value')
+      .in('key', keys);
+    
+    return data.reduce((acc, { key, value }) => {
+      acc[key] = value;
+      return acc;
+    }, {});
   }
 }
 ```
@@ -994,7 +1236,7 @@ if (useMockData) {
 ### Production Deployment on Mac Mini
 
 ```typescript
-// PM2 ecosystem configuration
+// PM2 ecosystem configuration with cron service
 module.exports = {
   apps: [{
     name: 'rss-reader',
@@ -1013,7 +1255,51 @@ module.exports = {
     time: true,
     autorestart: true,
     watch: false
+  }, {
+    name: 'rss-sync-cron',
+    script: './src/server/cron.js',
+    cwd: '/path/to/rss-reader',
+    instances: 1,
+    env: {
+      NODE_ENV: 'production',
+      ENABLE_AUTO_SYNC: 'true',
+      SYNC_CRON_SCHEDULE: '0 2,14 * * *',
+      SYNC_LOG_PATH: './logs/sync-cron.jsonl'
+    },
+    max_memory_restart: '256M',
+    error_file: 'logs/cron-error.log',
+    out_file: 'logs/cron-out.log',
+    merge_logs: true,
+    time: true,
+    autorestart: true,
+    watch: false
   }]
+};
+
+// PM2 Management Commands
+const pm2Commands = {
+  // Start all services
+  startAll: 'pm2 start ecosystem.config.js',
+  
+  // Check status
+  status: 'pm2 status',
+  
+  // View logs
+  logs: {
+    all: 'pm2 logs',
+    cron: 'pm2 logs rss-sync-cron',
+    app: 'pm2 logs rss-reader'
+  },
+  
+  // Restart services
+  restart: {
+    all: 'pm2 restart all',
+    cron: 'pm2 restart rss-sync-cron',
+    app: 'pm2 restart rss-reader'
+  },
+  
+  // Monitor resources
+  monitor: 'pm2 monit'
 };
 
 // Caddy configuration
@@ -1031,7 +1317,7 @@ class ProductionDeployment {
     // 1. Pull latest code
     await exec('git pull origin main');
     
-    // 2. Install dependencies
+    // 2. Install dependencies (including node-cron)
     await exec('npm ci --production');
     
     // 3. Build Next.js app
@@ -1040,11 +1326,24 @@ class ProductionDeployment {
     // 4. Run database migrations
     await this.runMigrations();
     
-    // 5. Restart PM2 process
-    await exec('pm2 restart rss-reader');
+    // 5. Restart PM2 processes
+    await exec('pm2 restart ecosystem.config.js');
     
     // 6. Verify deployment
     await this.verifyDeployment();
+    
+    // 7. Check cron service
+    await this.verifyCronService();
+  }
+  
+  async verifyCronService() {
+    // Check if cron is running
+    const status = await exec('pm2 show rss-sync-cron');
+    console.log('Cron service status:', status);
+    
+    // Check recent logs
+    const logs = await exec('tail -n 10 logs/sync-cron.jsonl');
+    console.log('Recent sync activity:', logs);
   }
 }
 ```

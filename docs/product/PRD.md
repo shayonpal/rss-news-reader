@@ -163,9 +163,10 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 
 #### Sync Frequency
 
-- Automatic sync every 24 hours
-- Manual sync available anytime
+- Automatic sync twice daily at 2am and 2pm server time (America/Toronto)
+- Manual sync available anytime via UI button
 - Respect Inoreader API rate limits (100 calls/day for Zone 1)
+- All sync activity logged to JSONL file for troubleshooting
 
 #### Sync Process (Server-Side)
 
@@ -440,10 +441,14 @@ Write a clear, informative summary that captures the essence of this article.
 
 #### Automatic Sync (Server-Side)
 
-- Cron job runs every 24 hours
+- Node.js cron service runs at 2am and 2pm daily (America/Toronto)
 - Server fetches from Inoreader → writes to Supabase
 - Handle token refresh automatically
-- Log all operations for debugging
+- Log all operations to JSONL file:
+  - Sync start/completion with timestamps
+  - Progress updates and article counts
+  - Error details with duration tracking
+  - Analysis-friendly format for troubleshooting
 
 #### Manual Sync
 
@@ -772,14 +777,20 @@ interface ErrorResponse {
 ### Failure Handling
 
 - **Partial sync failures**: Continue with remaining items
-- **Failed items**: Logged in sync_errors table with:
-  - sync_id: Links to specific sync operation
-  - error_type: 'api_error', 'parse_error', 'db_error'
-  - error_message: Detailed error description
-  - item_reference: Feed/article ID that failed
-- **Retry logic**: Automatic retry for transient failures (3 attempts)
+- **Failed items**: Logged to JSONL file with:
+  - timestamp: ISO 8601 format
+  - trigger: 'cron-2am' or 'cron-2pm' or 'manual-sync'
+  - status: 'error'
+  - error: Detailed error message
+  - duration: How long sync ran before failure
+- **Sync metadata tracking**: Update sync_metadata table with:
+  - last_sync_time: Timestamp of last attempt
+  - last_sync_status: 'success' or 'failed'
+  - last_sync_error: Error message if failed
+  - sync_success_count: Running total
+  - sync_failure_count: Running total
+- **Log analysis**: Use jq commands to analyze JSONL logs
 - **User notification**: Clear error messages in UI
-- **Cleanup**: Old sync errors deleted after 30 days
 
 ## Article Limit Algorithm
 
@@ -826,7 +837,7 @@ const MAX_PER_FEED = 20;
 
 ### PM2 Configuration
 - **Auto-restart**: Yes, enable on crashes
-- **Memory limit**: 1GB (adjust based on usage)
+- **Memory limit**: 1GB for Next.js app, 256MB for cron service
 - **Config file** (`ecosystem.config.js`):
   ```javascript
   module.exports = {
@@ -839,6 +850,20 @@ const MAX_PER_FEED = 20;
       out_file: 'logs/pm2-out.log',
       merge_logs: true,
       time: true
+    }, {
+      name: 'rss-sync-cron',
+      script: './src/server/cron.js',
+      instances: 1,
+      max_memory_restart: '256M',
+      error_file: 'logs/cron-error.log',
+      out_file: 'logs/cron-out.log',
+      merge_logs: true,
+      time: true,
+      env: {
+        ENABLE_AUTO_SYNC: true,
+        SYNC_CRON_SCHEDULE: '0 2,14 * * *',
+        SYNC_LOG_PATH: './logs/sync-cron.jsonl'
+      }
     }]
   }
   ```
@@ -850,7 +875,9 @@ const MAX_PER_FEED = 20;
 - Server-side Inoreader OAuth setup (localhost callback)
 - Token storage mechanism
 - Basic sync service (Inoreader → Supabase)
-- Cron job configuration
+- Node-cron automatic sync service (2am/2pm daily)
+- JSONL logging for all sync operations
+- Sync metadata tracking in database
 - API endpoints: manual sync, full content fetch
 - Mozilla Readability integration
 

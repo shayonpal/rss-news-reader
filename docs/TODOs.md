@@ -112,12 +112,20 @@
 - **Completed**: ✅ Manual sync, API endpoints, progress polling, rate limiting
 - **Missing**:
   - [ ] Implement daily cron job (node-cron) for 2am and 2pm server time
-  - [ ] Add sync error logging to database
-  - [ ] Implement read state sync back to Inoreader (batch updates)
-- **Implementation**:
-  - Use node-cron for scheduling
-  - Create sync_errors table entries  
-  - Batch update read states to Inoreader
+  - [ ] Add JSONL logging for all sync operations
+  - [ ] Update sync metadata in database with success/failure counts
+- **Documentation**:
+  - **Product Requirements**: See [Automatic Sync section in PRD](/docs/product/PRD.md#automatic-sync-server-side)
+  - **Technical Implementation**: See [Automatic Daily Sync Implementation](/docs/tech/implementation-strategy.md#3-automatic-daily-sync-implementation)
+- **Implementation Plan**:
+  1. Install node-cron dependency: `npm install node-cron`
+  2. Create `/src/server/cron.js` service with JSONL logging
+  3. Add cron process to PM2 ecosystem configuration
+  4. Use existing `/api/sync` endpoint (no new endpoint needed)
+  5. Log to `logs/sync-cron.jsonl` for troubleshooting
+  6. Update sync_metadata table with last sync status and counts
+- **Deferred to separate TODO**:
+  - Read state sync back to Inoreader (complex feature, needs own TODO)
 
 #### TODO-007: Complete US-203 - Content/Summary UI Integration (P1 - Core)
 - **Status**: 🔴 TODO
@@ -499,6 +507,64 @@
   - Direct link to article → click Back button  
   - Navigate through 5+ articles → click Back button
   - Verify browser back button still works for overall navigation
+
+#### TODO-029: Auto-Mark Articles as Read on Scroll (P2 - UX Enhancement)
+- **Status**: 🔴 TODO
+- **Issue**: Articles should automatically be marked as read when they scroll out of viewport
+- **Current Behavior**: Articles must be manually clicked to be marked as read
+- **Expected Behavior**: As user scrolls down the article list, articles that leave the viewport should automatically be marked as read
+- **Use Case**: User scrolls through article list to quickly scan headlines, articles they've seen should be automatically marked as read
+- **Acceptance Criteria**:
+  - [ ] Detect when article list items scroll out of viewport (top edge)
+  - [ ] Mark article as read when it completely leaves viewport
+  - [ ] Only mark as read when scrolling down (not when scrolling up)
+  - [ ] Debounce/throttle scroll events for performance
+  - [ ] Visual feedback when article is marked as read (smooth opacity transition)
+  - [ ] Option to disable this feature in settings (future enhancement)
+- **Implementation Approach**:
+  - Use Intersection Observer API to detect when articles leave viewport
+  - Track scroll direction to only mark on downward scroll
+  - Batch API calls to update read status
+  - Add smooth visual transition when marking as read
+- **Files to Modify**:
+  - `src/components/articles/article-list.tsx` - Add Intersection Observer logic
+  - `src/stores/article-store.ts` - Add batch mark as read functionality
+- **Technical Considerations**:
+  - Use `IntersectionObserver` with `rootMargin` to detect when article leaves top
+  - Throttle updates to avoid excessive API calls
+  - Consider viewport height to determine appropriate trigger point
+  - Ensure works with infinite scroll/pagination
+
+#### TODO-030: iOS Scroll-to-Top Gesture Support (P1 - Platform UX)
+- **Status**: 🔴 TODO
+- **Issue**: iOS native scroll-to-top gesture (tap status bar) doesn't work in the app
+- **Current Behavior**: Tapping the iOS status bar does nothing
+- **Expected Behavior**: Tapping the iOS status bar should scroll the current view to the top
+- **Platforms Affected**: iOS Safari (iPhone and iPad)
+- **Context**: This is a standard iOS behavior that users expect in all apps
+- **Acceptance Criteria**:
+  - [ ] Status bar tap scrolls article list to top on home page
+  - [ ] Status bar tap scrolls article content to top in article view
+  - [ ] Works on both iPhone and iPad
+  - [ ] Smooth scroll animation matches iOS native behavior
+  - [ ] Works in both portrait and landscape orientations
+  - [ ] Respects current scroll container (list vs article)
+- **Implementation Approach**:
+  - Ensure main scrollable containers use native overflow scrolling
+  - Remove any `overflow-scrolling: touch` CSS (deprecated)
+  - Use `-webkit-overflow-scrolling: auto` for proper iOS scroll behavior
+  - Ensure only one main scrollable element per view
+  - Avoid nested scrollable containers that break the gesture
+- **Files to Modify**:
+  - `src/components/articles/article-list.tsx` - Ensure proper scroll container
+  - `src/components/articles/ArticleView.tsx` - Ensure proper scroll container
+  - `src/app/globals.css` - Update scrolling CSS properties
+  - Layout components that might have scroll containers
+- **Technical Considerations**:
+  - iOS automatically handles scroll-to-top if there's only one scrollable element
+  - Multiple scrollable elements on screen breaks the gesture
+  - Fixed positioning can interfere with scroll detection
+  - Test with Safari Web Inspector to debug scroll containers
 
 ---
 
