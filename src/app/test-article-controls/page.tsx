@@ -7,22 +7,22 @@ import { Button } from '@/components/ui/button';
 
 export default function TestArticleControls() {
   const router = useRouter();
-  const { articles, fetchArticles } = useArticleStore();
+  const { articles, loadArticles } = useArticleStore();
   const [loading, setLoading] = useState(true);
   const [testResults, setTestResults] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadArticles = async () => {
+    const fetchArticles = async () => {
       try {
-        await fetchArticles();
+        await loadArticles();
         setLoading(false);
       } catch (error) {
         console.error('Failed to load articles:', error);
         setLoading(false);
       }
     };
-    loadArticles();
-  }, [fetchArticles]);
+    fetchArticles();
+  }, [loadArticles]);
 
   const runTests = () => {
     const results: string[] = [];

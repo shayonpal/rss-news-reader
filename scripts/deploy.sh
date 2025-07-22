@@ -1,38 +1,50 @@
 #!/bin/bash
 
-# RSS Reader Production Deployment Script
+# RSS Reader Deployment Script - Simplified for Single Database
+# Supports both development and production deployments
 
 set -e  # Exit on error
 
-echo "🚀 Starting RSS Reader deployment..."
+# Default to development
+DEPLOY_ENV=${1:-dev}
+
+echo "🚀 Starting RSS Reader deployment for: $DEPLOY_ENV"
 
 # Change to project directory
 cd /Users/shayon/DevProjects/rss-news-reader
 
-# Build the Next.js app
-echo "📦 Building Next.js application..."
-npm run build
+if [ "$DEPLOY_ENV" = "prod" ] || [ "$DEPLOY_ENV" = "production" ]; then
+    # Production deployment
+    ./scripts/deploy-production.sh
+elif [ "$DEPLOY_ENV" = "dev" ] || [ "$DEPLOY_ENV" = "development" ]; then
+    # Development deployment
+    echo "📦 Installing dependencies..."
+    npm install
+    
+    echo "🔍 Type checking..."
+    npm run type-check || true  # Don't fail on type errors in dev
+    
+    # Check if dev app is running
+    if pm2 describe rss-reader-dev > /dev/null 2>&1; then
+        echo "♻️  Restarting development app..."
+        pm2 restart rss-reader-dev
+    else
+        echo "🚀 Starting development app..."
+        pm2 start ecosystem.config.js --only rss-reader-dev
+    fi
+    
+    echo "✅ Development deployment complete!"
+    echo "🌐 Development URL: http://100.96.166.53:3000/reader"
+    echo "📊 View logs: pm2 logs rss-reader-dev"
+else
+    echo "❌ Unknown environment: $DEPLOY_ENV"
+    echo "Usage: ./scripts/deploy.sh [dev|prod]"
+    exit 1
+fi
 
-# Start PM2 process
-echo "🔄 Starting PM2..."
-pm2 start ecosystem.config.js
-
-# Save PM2 configuration
-pm2 save
-
-# Setup PM2 startup (run once)
-# pm2 startup
-
-# Start Caddy
-echo "🌐 Starting Caddy..."
-caddy start --config ./Caddyfile
-
-echo "✅ Deployment complete!"
-echo "📱 RSS Reader is available at: http://100.96.166.53/reader"
 echo ""
 echo "📊 Useful commands:"
-echo "  pm2 status        - Check app status"
-echo "  pm2 logs          - View app logs"
-echo "  pm2 restart all   - Restart the app"
-echo "  caddy reload      - Reload Caddy config"
-echo "  caddy stop        - Stop Caddy"
+echo "  pm2 status              - Check app status"
+echo "  pm2 logs [app-name]     - View specific app logs"
+echo "  pm2 monit               - Real-time monitoring"
+echo "  ./scripts/check-status.sh - Check all services"
