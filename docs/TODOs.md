@@ -204,14 +204,19 @@ The RSS News Reader is now successfully deployed to production:
   - All constraints and foreign keys properly configured
 
 #### TODO-007b: Article Detail Header Reorganization
-- **Status**: 🔴 NOT STARTED
+- **Status**: ✅ COMPLETED (2025-07-23)
 - **Tasks**:
-  - [ ] Move Share & External Link buttons to More (⋮) dropdown menu
-  - [ ] Add "Fetch Full Content" button to article header
-  - [ ] Ensure responsive design on mobile/tablet
-  - [ ] Maintain existing button functionality
-- **Files**: `src/components/articles/article-detail.tsx`
+  - [x] Move Share & External Link buttons to More (⋮) dropdown menu
+  - [x] Placeholder added for "Fetch Full Content" button (will be added in TODO-007c)
+  - [x] Ensure responsive design on mobile/tablet
+  - [x] Maintain existing button functionality
+  - [x] Fix IOSButton compatibility with dropdown menus
+- **Files**: `src/components/articles/article-detail.tsx`, `src/components/ui/ios-button.tsx`
 - **Acceptance Criteria**: Header shows new layout, all buttons functional
+- **Implementation Notes**:
+  - Made IOSButton use forwardRef for proper Radix UI compatibility
+  - Dropdown menu works seamlessly with touch devices
+  - Ready for Fetch Full Content button integration
 
 #### TODO-007c: Manual Fetch Content Implementation
 - **Status**: 🔴 NOT STARTED

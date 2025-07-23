@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Marked 3 known partial content feeds: BBC, Forbes Tech, Wawa News
   - Foundation ready for manual and automatic full content fetching
 
+### Enhanced - Article Header UI Reorganization (TODO-007b)
+- **Article Detail Header Improvements** - COMPLETED ✅
+  - Moved Share and Open Original buttons to More (⋮) dropdown menu
+  - Maintained Star and Summary buttons in main header for quick access
+  - Fixed IOSButton compatibility with Radix UI dropdown components
+  - Made IOSButton use forwardRef for proper ref and onClick forwarding
+  - Clean, organized header ready for Fetch Full Content button
+  - Responsive design maintained across all device sizes
+
 ## [0.5.1] - 2025-07-23
 
 ### Fixed - July 23, 2025 Session (Critical Bug Fix)

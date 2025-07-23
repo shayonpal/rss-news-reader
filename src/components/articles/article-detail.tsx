@@ -4,13 +4,20 @@ import { useEffect, useRef, useState } from 'react';
 import type { Article } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import { SummaryButton } from './summary-button';
 import { SummaryDisplay } from './summary-display';
 import { useArticleStore } from '@/lib/stores/article-store';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ArticleDetailProps {
   article: Article;
@@ -205,34 +212,39 @@ export function ArticleDetail({
               <Star className={cn("h-5 w-5", currentArticle.tags?.includes('starred') && "fill-current")} />
             </IOSButton>
             
-            <IOSButton
-              variant="ghost"
-              size="icon"
-              onPress={handleShare}
-              aria-label="Share article"
-              className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
-            >
-              <Share2 className="h-5 w-5" />
-            </IOSButton>
-            
-            {currentArticle.url && (
-              <IOSButton
-                variant="ghost"
-                size="icon"
-                onPress={() => window.open(currentArticle.url, '_blank', 'noopener,noreferrer')}
-                aria-label="Open original article"
-                className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
-              >
-                <ExternalLink className="h-5 w-5" />
-              </IOSButton>
-            )}
-            
             <SummaryButton
               articleId={currentArticle.id}
               hasSummary={!!currentArticle.summary}
               variant="icon"
               onSuccess={handleSummarySuccess}
             />
+            
+            {/* Placeholder for Fetch Full Content button (TODO-007c) */}
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <IOSButton
+                  variant="ghost"
+                  size="icon"
+                  aria-label="More options"
+                  className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </IOSButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onSelect={handleShare}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share
+                </DropdownMenuItem>
+                {currentArticle.url && (
+                  <DropdownMenuItem onSelect={() => window.open(currentArticle.url, '_blank', 'noopener,noreferrer')}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Original
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
