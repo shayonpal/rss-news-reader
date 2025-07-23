@@ -13,6 +13,88 @@ The RSS News Reader is now successfully deployed to production:
 
 ## 🚧 IN PROGRESS & TODO ITEMS
 
+### TODO-039a: Add Health Check Endpoints to All Services (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Issue**: Services lack health check endpoints for monitoring
+- **Acceptance Criteria**:
+  - [ ] Add `/api/health/app` endpoint to Next.js app
+  - [ ] Add `/server/health` endpoint to sync server (port 3001)
+  - [ ] Add health check capability to cron service
+  - [ ] Each endpoint returns: status, uptime, version, last_activity
+  - [ ] Test endpoints respond within 1 second
+- **Implementation**:
+  - Extend existing `/api/health` route for app health
+  - Create new Express route in sync server
+  - Add process.send() health reporting for cron
+
+### TODO-039b: Create Basic Health Monitor Script (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Depends On**: TODO-039a (Health endpoints must exist first)
+- **Issue**: Need automated health checking of all services
+- **Acceptance Criteria**:
+  - [ ] Create `/scripts/monitor-services.js` script
+  - [ ] Check health endpoints every 5 minutes
+  - [ ] Log results to `logs/health-monitoring.jsonl`
+  - [ ] Detect: HTTP errors, timeouts, process not running
+  - [ ] Simple console output for manual testing
+- **Implementation**:
+  - Use node-fetch for HTTP health checks
+  - Check PM2 process list for running status
+  - JSONL format: timestamp, service, status, response_time, error
+
+### TODO-039c: Integrate PM2 Auto-Recovery (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Depends On**: TODO-039b (Monitor must detect failures first)
+- **Issue**: Failed services need automatic restart
+- **Acceptance Criteria**:
+  - [ ] Monitor script can restart failed PM2 processes
+  - [ ] Implement retry limit (3 attempts per hour)
+  - [ ] Track restart history in monitoring log
+  - [ ] Add exponential backoff for repeated failures
+  - [ ] Test with intentional service crashes
+- **Implementation**:
+  - Use PM2 programmatic API
+  - Track restart attempts in memory/file
+  - Wait 1min, 5min, 15min between retries
+
+### TODO-039d: Deploy Monitor as PM2 Service (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Depends On**: TODO-039c (Monitor script must be complete)
+- **Issue**: Monitor needs to run continuously
+- **Acceptance Criteria**:
+  - [ ] Add health-monitor to ecosystem.config.js
+  - [ ] Configure to start on system boot
+  - [ ] Set memory limit and restart policy
+  - [ ] Update deployment scripts to include monitor
+  - [ ] Test monitor survives PM2 reload
+- **Implementation**:
+  - Add as fourth app in PM2 ecosystem
+  - Use cron_restart for daily refresh
+  - Log rotation for monitoring logs
+
+### TODO-039e: Add Discord Webhook Notifications (P2 - Enhancement)
+- **Status**: 🔴 TODO
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Depends On**: TODO-039d (Monitor must be running first)
+- **Issue**: Critical failures need external notifications
+- **Acceptance Criteria**:
+  - [ ] Configure Discord webhook for server alerts
+  - [ ] Send notifications for: repeated failures, manual intervention needed
+  - [ ] Include service name, error details, timestamp, suggested actions
+  - [ ] Rate limit notifications (max 1 per service per hour)
+  - [ ] Format messages with Discord embeds for clarity
+  - [ ] Test with simulated failures
+- **Implementation**:
+  - Store Discord webhook URL in environment variable
+  - Use Discord webhook format with embeds
+  - Color code by severity (red=critical, yellow=warning)
+  - Queue notifications to prevent spam
+  - Include recovery suggestions in alerts
+
 ### TODO-007: Complete Content/Summary UI Integration (P1 - Core)
 - **Status**: 🔴 TODO
 - **Current**: Server endpoints created but NOT implemented, UI integration missing
@@ -167,6 +249,36 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Consider implementation only if API limits become constraining
   - [ ] Maintain current simplicity unless scaling issues arise
 
+### TODO-039: Implement Server Health Monitoring and Auto-Recovery Service (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Issue**: No automated monitoring for critical servers (sync server stopped without detection)
+- **Context**: Bi-directional sync server was not running for hours without any alerts
+- **Acceptance Criteria**:
+  - [ ] Create health check endpoints for all critical services:
+    - [ ] Main Next.js app (ports 3000/3147)
+    - [ ] Bi-directional sync server (port 3001)
+    - [ ] Sync cron service
+  - [ ] Implement monitoring service that checks health every 5 minutes
+  - [ ] Auto-restart failed services with PM2
+  - [ ] Log all health check results and recovery actions
+  - [ ] Track service uptime and crash frequency
+  - [ ] Implement exponential backoff for repeated failures
+  - [ ] Create GitHub webhook integration for exception notifications
+  - [ ] Send alerts when services fail or require manual intervention
+- **Technical Requirements**:
+  - [ ] Health endpoints should return: status, uptime, last activity, error count
+  - [ ] Monitor should detect: process not running, port not responding, health check failures
+  - [ ] Use PM2 API for process management
+  - [ ] Store health history in logs/health-monitoring.jsonl
+  - [ ] GitHub webhook for critical alerts (crashes, repeated failures)
+- **Implementation Approach**:
+  - Create `/server/health` endpoint for sync server
+  - Add `/api/health/services` endpoint to check all services
+  - Create monitoring script with PM2 integration
+  - Use node-cron for periodic health checks
+  - Configure GitHub Actions or webhooks for notifications
+- **Related**: Tailscale monitoring (TODO-012) already implemented similar pattern
+
 ### TODO-031: Document Internal APIs (P2 - Documentation)
 - **Status**: 🔴 TODO
 - **Issue**: Internal API endpoints need better documentation
@@ -191,20 +303,20 @@ The RSS News Reader is now successfully deployed to production:
   - Add debugging tips
 
 ### TODO-037: Implement Bi-directional Sync to Inoreader (P1 - Core Feature)
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED (July 23, 2025)
 - **Issue**: Read/unread status changes made in the app are not synced back to Inoreader
 - **Current Behavior**: Sync is one-way only (Inoreader → Server → Supabase → Client)
 - **Expected Behavior**: Changes made in the app should sync back to Inoreader
 - **Context**: Architecture supports bi-directional sync but implementation was deferred
-- **Acceptance Criteria**:
-  - [ ] Track all read/unread status changes in the app
-  - [ ] Implement offline queue for status changes
-  - [ ] Batch changes to minimize API calls
-  - [ ] Use `/edit-tag` endpoint to update Inoreader
-  - [ ] Handle conflicts (most recent change wins)
-  - [ ] Sync back changes during regular sync operations
-  - [ ] Add retry mechanism for failed sync attempts
-  - [ ] Display sync status for bi-directional operations
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Track all read/unread status changes in the app
+  - [x] Implement offline queue for status changes
+  - [x] Batch changes to minimize API calls
+  - [x] Use `/edit-tag` endpoint to update Inoreader
+  - [x] Handle conflicts (most recent change wins)
+  - [x] Sync back changes during regular sync operations
+  - [x] Add retry mechanism for failed sync attempts
+  - [x] Display sync status for bi-directional operations
 - **Implementation Approach**:
   - Create sync_queue table for tracking pending changes
   - Add timestamp to all read/unread actions
@@ -229,6 +341,7 @@ The RSS News Reader is now successfully deployed to production:
   - Changes persist in Inoreader ecosystem
   - Better integration with other Inoreader clients
   - Reduced confusion about read state
+- **Completed**: July 23, 2025 - Feature fully implemented and verified working. The only issue was the sync server wasn't running in production. Once started, all functionality worked as designed with efficient batching and proper error handling.
 
 ## ✅ COMPLETED TODOS
 
