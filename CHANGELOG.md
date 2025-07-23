@@ -5,9 +5,9 @@ All notable changes to Shayon's News RSS Reader PWA will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.1] - 2025-07-22
+## [0.5.1] - 2025-07-23
 
-### Added - Juy 22, 2025 Session (Auto-Mark as Read)
+### Added - July 22, 2025 Session (Auto-Mark as Read)
 - **Auto-Mark Articles as Read on Scroll** (TODO-029) - COMPLETED ✅
   - Implemented Intersection Observer to detect articles leaving viewport
   - Articles automatically marked as read when scrolling down past them
