@@ -28,6 +28,8 @@ export function ArticleDetail({
   onBack,
 }: ArticleDetailProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentArticle, setCurrentArticle] = useState(article);
@@ -76,6 +78,46 @@ export function ArticleDetail({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onNavigate, onBack]);
+
+  // Header show/hide on scroll
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const scrollDelta = currentScrollY - lastScrollY.current;
+          
+          if (!headerRef.current) return;
+          
+          // Scrolling down - hide header after scrolling 50px down
+          if (scrollDelta > 0 && currentScrollY > 50) {
+            headerRef.current.style.transform = 'translateY(-100%)';
+          }
+          // Scrolling up - show header immediately (even 1px scroll up)
+          else if (scrollDelta < 0) {
+            headerRef.current.style.transform = 'translateY(0)';
+          }
+          // At very top - ensure header is visible
+          else if (currentScrollY < 5) {
+            headerRef.current.style.transform = 'translateY(0)';
+          }
+          
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        
+        ticking = true;
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Touch handlers for swipe navigation
   const onTouchStart = (e: React.TouchEvent) => {
@@ -133,7 +175,11 @@ export function ArticleDetail({
       onTouchEnd={onTouchEnd}
     >
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+      <header 
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out"
+        style={{ transform: 'translateY(0)' }}
+      >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <IOSButton
             variant="ghost"
@@ -190,6 +236,9 @@ export function ArticleDetail({
           </div>
         </div>
       </header>
+
+      {/* Spacer for fixed header */}
+      <div className="h-[60px]" />
 
       {/* Article Content */}
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

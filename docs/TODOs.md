@@ -597,32 +597,28 @@ The RSS News Reader is now successfully deployed to production:
   - `src/app/article/[id]/page.tsx` - Changed onBack handler to always push to '/'
 - **Completed**: January 23, 2025 - Back button now consistently returns to listing page
 
-#### TODO-029: Auto-Mark Articles as Read on Scroll (P2 - UX Enhancement)
-- **Status**: 🔴 TODO
+#### TODO-029: Auto-Mark Articles as Read on Scroll (P2 - UX Enhancement) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
 - **Issue**: Articles should automatically be marked as read when they scroll out of viewport
-- **Current Behavior**: Articles must be manually clicked to be marked as read
-- **Expected Behavior**: As user scrolls down the article list, articles that leave the viewport should automatically be marked as read
-- **Use Case**: User scrolls through article list to quickly scan headlines, articles they've seen should be automatically marked as read
-- **Acceptance Criteria**:
-  - [ ] Detect when article list items scroll out of viewport (top edge)
-  - [ ] Mark article as read when it completely leaves viewport
-  - [ ] Only mark as read when scrolling down (not when scrolling up)
-  - [ ] Debounce/throttle scroll events for performance
-  - [ ] Visual feedback when article is marked as read (smooth opacity transition)
-  - [ ] Option to disable this feature in settings (future enhancement)
-- **Implementation Approach**:
-  - Use Intersection Observer API to detect when articles leave viewport
-  - Track scroll direction to only mark on downward scroll
-  - Batch API calls to update read status
-  - Add smooth visual transition when marking as read
-- **Files to Modify**:
-  - `src/components/articles/article-list.tsx` - Add Intersection Observer logic
-  - `src/stores/article-store.ts` - Add batch mark as read functionality
-- **Technical Considerations**:
-  - Use `IntersectionObserver` with `rootMargin` to detect when article leaves top
-  - Throttle updates to avoid excessive API calls
-  - Consider viewport height to determine appropriate trigger point
-  - Ensure works with infinite scroll/pagination
+- **Implementation**: Articles now automatically marked as read when scrolling down past them
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Detect when article list items scroll out of viewport (top edge)
+  - [x] Mark article as read when it completely leaves viewport
+  - [x] Only mark as read when scrolling down (not when scrolling up)
+  - [x] Debounce/throttle scroll events for performance (500ms batch)
+  - [x] Visual feedback when article is marked as read (smooth opacity transition)
+  - [x] Articles remain visible until view changes (no jarring UI changes)
+- **Implementation Details**:
+  - Used Intersection Observer API to detect when articles leave viewport
+  - Track scroll direction with `window.scrollY` comparison
+  - Batch API calls with 500ms debounce for efficiency
+  - Created `markMultipleAsRead` function in article store
+  - Works on all article views (not just "unread only" filter)
+  - Articles fade to 70% opacity when marked as read
+- **Files Modified**:
+  - `src/components/articles/article-list.tsx` - Added Intersection Observer logic
+  - `src/lib/stores/article-store.ts` - Added batch mark as read functionality
+- **Completed**: January 23, 2025 - Feature working smoothly across all views
 
 #### TODO-030: iOS Scroll-to-Top Gesture Support (P1 - Platform UX) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - July 22, 2025

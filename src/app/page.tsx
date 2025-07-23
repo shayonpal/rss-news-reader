@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SimpleFeedSidebar } from '@/components/feeds/simple-feed-sidebar';
 import { ArticleList } from '@/components/articles/article-list';
@@ -15,6 +15,11 @@ export default function HomePage() {
   const router = useRouter();
   // Fix hydration issues with localStorage
   useHydrationFix();
+  
+  // Header show/hide refs
+  const lastScrollY = useRef(0);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
   
   // Initialize with saved filter to avoid race condition
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(() => {
@@ -39,6 +44,46 @@ export default function HomePage() {
       setIsSidebarOpen(false);
     }
   };
+
+  // Header show/hide on scroll
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const scrollDelta = currentScrollY - lastScrollY.current;
+          
+          if (!headerRef.current) return;
+          
+          // Scrolling down - hide header after scrolling 50px down
+          if (scrollDelta > 0 && currentScrollY > 50) {
+            headerRef.current.style.transform = 'translateY(-100%)';
+          }
+          // Scrolling up - show header immediately (even 1px scroll up)
+          else if (scrollDelta < 0) {
+            headerRef.current.style.transform = 'translateY(0)';
+          }
+          // At very top - ensure header is visible
+          else if (currentScrollY < 5) {
+            headerRef.current.style.transform = 'translateY(0)';
+          }
+          
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        
+        ticking = true;
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background relative w-full overflow-x-hidden">
@@ -76,13 +121,22 @@ export default function HomePage() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Enhanced Header with Database Counts */}
-        <ArticleHeader
-          selectedFeedId={selectedFeedId}
-          selectedFolderId={null}
-          isMobile={true}
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          menuIcon={isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        />
+        <div 
+          ref={headerRef}
+          className="fixed top-0 left-0 right-0 md:left-80 z-30 bg-background border-b transition-transform duration-300 ease-in-out"
+          style={{ transform: 'translateY(0)' }}
+        >
+          <ArticleHeader
+            selectedFeedId={selectedFeedId}
+            selectedFolderId={null}
+            isMobile={true}
+            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            menuIcon={isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          />
+        </div>
+        
+        {/* Spacer for fixed header */}
+        <div className="h-[73px]" />
 
         {/* Article List */}
         <ArticleList

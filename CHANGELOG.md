@@ -5,7 +5,43 @@ All notable changes to Shayon's News RSS Reader PWA will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2025-07-22 - Production Deployment
+## [0.5.1] - 2025-01-23
+
+### Added - January 23, 2025 Session (Auto-Mark as Read)
+- **Auto-Mark Articles as Read on Scroll** (TODO-029) - COMPLETED ✅
+  - Implemented Intersection Observer to detect articles leaving viewport
+  - Articles automatically marked as read when scrolling down past them
+  - Only triggers on downward scroll to prevent accidental marking
+  - Batch processing of mark operations for efficiency (500ms debounce)
+  - Articles remain visible in current view until navigation/filter change
+  - Works on all article views (not just "unread only" filter)
+  - Smooth opacity transition (70%) provides visual feedback
+  - Created `markMultipleAsRead` batch operation in article store
+  - Prevents jarring UI changes by keeping marked articles visible
+
+### Enhanced - January 23, 2025 Session (Header Improvements)
+- **Simplified Article Header Titles**
+  - Removed redundant filter prefixes from headers
+  - Shows just "Articles" for main list instead of "All/Unread/Read Articles"
+  - Displays folder/feed name directly when viewing specific collections
+  - Cleaner, more intuitive navigation experience
+
+- **Mobile-Responsive Header Text**
+  - Fixed folder name truncation on mobile devices
+  - Changed from `truncate` to `break-words` for proper text wrapping
+  - Added responsive font sizing: `text-lg` (mobile) → `text-xl` (tablet) → `text-2xl` (desktop)
+  - Long folder names now wrap instead of being cut off
+
+- **Reddit-Style Auto-Hiding Header**
+  - Implemented scroll-based header show/hide behavior
+  - Header hides when scrolling down (after 50px)
+  - Header immediately shows when scrolling up (even 1px)
+  - Smooth slide animation (300ms transition)
+  - Saves valuable screen space, especially on mobile
+  - Applied to both article list and article detail views
+  - Uses `requestAnimationFrame` for optimal performance
+
+## [0.5.0] - 2025-01-22 - Production Deployment
 
 ### Added - July 22, 2025 Session (AI Summarization)
 - **Configurable AI Summarization Prompt** (TODO-023, US-704) - COMPLETED ✅
