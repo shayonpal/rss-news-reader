@@ -57,13 +57,56 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - Round-robin fetching to ensure all feeds get representation
 - URL-based deduplication in Supabase
 
-### Content Processing
+### Content Processing & Full Content Extraction
 
-- Server stores RSS content as-is from Inoreader
-- User-triggered full content fetching via "Fetch Full Content" button
+#### Core Content Handling
+- Server stores RSS content as-is from Inoreader (never replaced)
+- Full content stored in separate `full_content` field in database
 - Server uses Mozilla Readability for content extraction
 - Preserve essential rich media (images, videos, embedded tweets)
-- Display 4 lines of RSS content for articles without summaries
+- Visual indicator for fetched content (2% opacity overlay)
+
+#### Article List Display Priority
+- **Content snippets in article list use priority order**:
+  1. AI summary (if available) - displayed in full
+  2. Full content (if fetched) - line-clamped to 4 lines
+  3. RSS content (fallback) - line-clamped to 4 lines
+- Ensures best available content is shown to users
+- AI summaries exempt from line-clamping for complete context
+
+#### User Interface
+- **Header Menu**: "Fetch Full Content" button moved to "More" (⋮) dropdown
+  - Header buttons: Back, Star, Summary, Fetch Full Content, More
+  - More menu contains: Share, External Link, Feed Settings
+- **Article Bottom**: Additional fetch options below article content
+  - "Fetch Full Content" button (always visible)
+  - "Always fetch for this feed" toggle option
+- **Visual Feedback**:
+  - Loading state: Disabled button + "Fetching..." text + progress bar
+  - Fetched content: 2% opacity overlay (black in light mode, white in dark mode)
+  - Feed setting: Toggle updates only after database confirmation
+
+#### Extraction Behavior
+- User-triggered full content fetching via buttons in article view
+- Server fetches article URL and extracts using Mozilla Readability
+- Clean, readable content extracted (ads/navigation removed)
+- Original RSS content always preserved in `content` field
+- Fetched content stored in separate `full_content` field
+- Failed extractions show user-friendly error with reason (manual fetch only)
+
+#### Auto-Fetch for Partial Feeds
+- Feeds can be marked as "partial content" via toggle in article view
+- Auto-fetch runs as part of sync process (after normal article sync completes)
+- Applies to: Manual sync, 2am automatic sync, 2pm automatic sync
+- Rate limit: Maximum 10 articles per 30 minutes
+- Processes only articles from feeds marked as partial
+- All fetch attempts logged in database (success/failure/reason)
+- Silent failures for auto-fetch (no user notification)
+
+#### Database Changes
+- Add `is_partial_content` boolean to feeds table
+- Add fetch_logs table for tracking all extraction attempts
+- Track attempt timestamp, success/failure, error reason
 
 ### AI Summarization
 
@@ -73,15 +116,6 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - Summaries stored in Supabase
 - Display full summary in list view when available
 - Client triggers summarization via API endpoint
-
-### Full Content Fetching
-
-- User-triggered via "Fetch Full Content" button in article view
-- Server fetches article URL and extracts content using Mozilla Readability
-- Clean, readable content extracted (ads/navigation removed)
-- Stored in separate `full_content` field in Supabase
-- Button shows loading state during fetch
-- Once fetched, article displays full content instead of RSS snippet
 
 ### User Interface
 

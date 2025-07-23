@@ -124,6 +124,33 @@ The RSS News Reader is now successfully deployed to production:
 - **Discovered**: July 23, 2025 at 2:19 AM EDT (just after failed 2:00 AM sync)
 - **Fixed**: July 23, 2025 - Applied environment variable approach with correct /reader prefix
 
+### TODO-042: Fix Sync Overwriting Local Star/Read Status (P0 - Critical Bug)
+- **Status**: 🔴 TODO
+- **Issue**: Sync from Inoreader overwrites local star/read status changes
+- **Root Cause**: 
+  - User stars/marks articles as read locally → Updates `is_starred`/`is_read` in DB
+  - Changes are queued for bidirectional sync → Added to `sync_queue` table
+  - Bidirectional sync runs (every 5 min) → Sends changes to Inoreader
+  - BUT: Regular sync from Inoreader (2AM/2PM) → Fetches articles and overwrites ALL fields including `is_starred`/`is_read`
+  - This happens because sync uses `upsert` without checking `last_local_update` timestamp
+- **Evidence**:
+  - 0 articles currently starred in DB (despite user starring articles)
+  - 26 articles have `last_local_update > last_sync_update` 
+  - Sync code unconditionally sets: `is_starred: article.categories?.includes('user/-/state/com.google/starred') || false`
+- **Acceptance Criteria**:
+  - [ ] Sync should check `last_local_update` before overwriting `is_read`/`is_starred`
+  - [ ] If local update is newer than sync timestamp, preserve local values
+  - [ ] Add tests to verify local changes aren't overwritten
+  - [ ] Ensure bidirectional sync changes are preserved
+- **Files to modify**:
+  - `src/app/api/sync/route.ts` - Add timestamp comparison logic
+  - Consider creating a merge strategy for sync conflicts
+- **Testing**:
+  - Star an article locally
+  - Wait for bidirectional sync to complete
+  - Trigger manual sync from Inoreader
+  - Verify starred status is preserved
+
 ### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt)
 - **Status**: 🔴 TODO
 - **Issue**: `/api/mark-all-read` route exists but is not integrated into the UI
@@ -148,27 +175,49 @@ The RSS News Reader is now successfully deployed to production:
   - Would be useful for users who want to clear unread counts quickly
   - Similar functionality exists in most RSS readers
 
-### TODO-007: Complete Content/Summary UI Integration (P1 - Core)
-- **Status**: 🔴 TODO
-- **Current**: Server endpoints created but NOT implemented, UI integration missing
-- **Missing**:
-  - [ ] Implement server-side content extraction logic
-  - [ ] Add "Fetch Full Content" button to article view
-  - [ ] Display extracted content when available
-  - [ ] Integrate with existing `/api/articles/:id/fetch-content` endpoint
+### TODO-007: Complete Full Content Extraction Feature (P1 - Core)
+- **Status**: 🟡 PARTIALLY COMPLETE - Basic backend ready, enhanced features pending
+- **Context**: Feature allows users to fetch full article content beyond RSS snippets
+- **Specifications**:
+  - Product: [[PRD#Content Processing & Full Content Extraction]]
+  - Technical: [[full-content-extraction-implementation]]
+- **Completed**:
+  - ✅ Basic server endpoint `/api/articles/[id]/fetch-content` implemented
+  - ✅ Mozilla Readability integration configured
+  - ✅ Database columns `full_content` and `has_full_content` exist
+  - ✅ Basic error handling and caching logic in place
+  - ✅ Feature fully specified in PRD and tech docs
+- **Missing - UI Components**:
+  - [ ] Header reorganization (move Share/External to More menu)
+  - [ ] "Fetch Full Content" button in header
+  - [ ] Fetch content section at article bottom
+  - [ ] Visual indicator for fetched content (2% opacity overlay)
+  - [ ] "Always fetch for feed" toggle with DB confirmation
+  - [ ] Loading states (disabled button + progress bar)
+  - [ ] Error display for failed manual fetches
+  - [ ] Update article list to show content priority: AI summary → Full content → RSS content
+- **Missing - Database & Backend**:
+  - [ ] Add `is_partial_content` column to feeds table
+  - [ ] Create `fetch_logs` table for tracking attempts
+  - [ ] Integrate auto-fetch into existing sync process (after normal sync)
+  - [ ] Implement rate-limited auto-fetch logic (10 articles/30min)
+  - [ ] Update existing fetch endpoint to log attempts in fetch_logs
+  - [ ] Add feed partial content toggle endpoint
+  - [ ] Update article store with fetch methods
 - **Files to modify**:
-  - `src/app/api/articles/[id]/fetch-content/route.ts` (implement logic)
-  - `src/components/articles/ArticleView.tsx`
-  - `src/components/ui/Button.tsx`
-
-### TODO-008: Complete Content Extraction Service (P2 - Enhancement)
-- **Status**: 🟡 PARTIALLY COMPLETE - Server endpoint fully functional
-- **Completed**: ✅ Mozilla Readability integration, server API endpoint `/api/articles/:id/fetch-content`
-- **Missing**:
-  - [ ] UI button to trigger extraction in article view
-  - [ ] Display extracted vs RSS content
-  - [ ] Loading states during extraction
-  - [ ] Error handling for failed extractions
+  - `src/components/articles/article-detail.tsx` (header reorganization)
+  - `src/components/articles/article-list-item.tsx` (content priority display)
+  - `src/components/articles/fetch-content-button.tsx` (new component)
+  - `src/components/articles/feed-partial-toggle.tsx` (new component)
+  - `src/lib/stores/article-store.ts` (add fetch methods)
+  - `src/server/services/auto-fetch-service.js` (new service)
+  - Database migrations for new columns/tables
+- **Testing Required**:
+  - [ ] Manual fetch flow with various article types
+  - [ ] Visual indicators in light/dark modes
+  - [ ] Feed toggle persistence
+  - [ ] Auto-fetch service with rate limiting
+  - [ ] Error handling for paywalls, timeouts, blocked sites
 
 ### TODO-014b: Feed Filtering Enhancement (P2 - Post-Production)
 - **Status**: ✅ MOSTLY COMPLETE (July 22, 2025)
