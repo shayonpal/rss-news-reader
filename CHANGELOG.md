@@ -5,9 +5,9 @@ All notable changes to Shayon's News RSS Reader PWA will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.1] - 2025-01-23
+## [0.5.1] - 2025-07-22
 
-### Added - January 23, 2025 Session (Auto-Mark as Read)
+### Added - Juy 22, 2025 Session (Auto-Mark as Read)
 - **Auto-Mark Articles as Read on Scroll** (TODO-029) - COMPLETED ✅
   - Implemented Intersection Observer to detect articles leaving viewport
   - Articles automatically marked as read when scrolling down past them
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created `markMultipleAsRead` batch operation in article store
   - Prevents jarring UI changes by keeping marked articles visible
 
-### Enhanced - January 23, 2025 Session (Header Improvements)
+### Enhanced - July 22, 2025 Session (Header Improvements)
 - **Simplified Article Header Titles**
   - Removed redundant filter prefixes from headers
   - Shows just "Articles" for main list instead of "All/Unread/Read Articles"
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Applied to both article list and article detail views
   - Uses `requestAnimationFrame` for optimal performance
 
-## [0.5.0] - 2025-01-22 - Production Deployment
+## [0.5.0] - 2025-07-22 - Production Deployment
 
 ### Added - July 22, 2025 Session (AI Summarization)
 - **Configurable AI Summarization Prompt** (TODO-023, US-704) - COMPLETED ✅
@@ -105,7 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Browser back button continues to work normally for overall navigation
   - Improves navigation consistency when browsing through multiple articles
 
-### Added - July 21, 2025 Session (Bi-directional Sync Implementation)
+### Added - July 22, 2025 Session (Bi-directional Sync Implementation)
 - **Bi-directional Sync to Inoreader** (TODO-037) - COMPLETED ✅
   - Implemented sync queue pattern for tracking local changes
   - Created database migration with sync_queue table and helper functions
@@ -117,7 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added sync queue statistics view for monitoring
   - Successfully tested with real user actions
 
-### Fixed - July 21, 2025 Session (Bi-directional Sync Bug Fix)
+### Fixed - July 22, 2025 Session (Bi-directional Sync Bug Fix)
 - **Client-Side Sync Queue RPC Calls** (TODO-038) - COMPLETED ✅
   - Fixed SQL syntax error in add_to_sync_queue function
   - Changed from invalid CASE statement with arrays to IF/ELSIF logic
@@ -222,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restore scroll position after articles are loaded and rendered
   - Tested successfully on iPhone and iPad Safari browsers
 
-### Fixed - July 20, 2025 Session (iOS Safari Button Controls)
+### Fixed - July 21, 2025 Session (iOS Safari Button Controls)
 - **Article View Interface Controls** (TODO-009, US-901) - COMPLETED ✅
   - Fixed iOS Safari button click issues requiring double-tap
   - Created IOSButton component with proper touch event handling

@@ -1,6 +1,6 @@
 # Master TODO List - RSS News Reader
 
-**Last Updated:** July 22, 2025  
+**Last Updated:** July 23ß, 2025  
 **Status:** ✅ Production Deployed
 
 ## 🎉 PRODUCTION DEPLOYMENT COMPLETE
@@ -23,10 +23,12 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Add health check capability to cron service
   - [ ] Each endpoint returns: status, uptime, version, last_activity
   - [ ] Test endpoints respond within 1 second
+  - [ ] Add startup check that verifies all services start correctly after system reboot
 - **Implementation**:
   - Extend existing `/api/health` route for app health
   - Create new Express route in sync server
   - Add process.send() health reporting for cron
+  - Include startup verification in monitor to catch post-reboot failures
 
 ### TODO-039b: Create Basic Health Monitor Script (P1 - Infrastructure)
 - **Status**: 🔴 TODO
@@ -190,14 +192,6 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Search input at top of feed sidebar
   - [ ] Real-time filtering as user types
   - [ ] Keyboard shortcut (Cmd/Ctrl + K)
-
-### TODO-020: Persist Folder Expansion State
-- **GitHub Issue**: #31
-- **Status**: 🔵 Future
-- **Acceptance Criteria**:
-  - [ ] Folder states save on expand/collapse
-  - [ ] States persist across sessions
-  - [ ] Use localStorage for persistence
 
 ### TODO-021: Performance Optimization (P2 - Quality)
 - **Status**: 🔴 TODO
