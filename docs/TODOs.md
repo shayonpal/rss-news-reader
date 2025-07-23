@@ -1,6 +1,6 @@
 # Master TODO List - RSS News Reader
 
-**Last Updated:** July 23ß, 2025  
+**Last Updated:** July 23, 2025  
 **Status:** ✅ Production Deployed
 
 ## 🎉 PRODUCTION DEPLOYMENT COMPLETE
@@ -96,6 +96,33 @@ The RSS News Reader is now successfully deployed to production:
   - Color code by severity (red=critical, yellow=warning)
   - Queue notifications to prevent spam
   - Include recovery suggestions in alerts
+
+### TODO-041: Fix Cron Sync URL Missing /reader Prefix (P0 - Critical Bug)
+- **Status**: ✅ COMPLETED
+- **Issue**: Automatic sync has been failing since deployment because cron service calls wrong URL
+- **Root Cause**: Cron service configured to call `http://localhost:3147/api/sync` but app uses `/reader` basePath
+- **Evidence**: 
+  - All automatic syncs failing with "fetch failed" or "404" errors since July 22
+  - Manual test confirms `/api/sync` returns 404, but `/reader/api/sync` works correctly
+  - Logs show consistent failures at 2:00 AM and 2:00 PM daily
+- **Current Configuration**:
+  ```javascript
+  // ecosystem.config.js line 91
+  NEXT_PUBLIC_BASE_URL: 'http://localhost:3147'  // Missing /reader prefix
+  ```
+- **Fix Applied**: Updated ecosystem.config.js to use environment variable with correct default:
+  ```javascript
+  NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+  ```
+- **Acceptance Criteria**:
+  - [x] Update ecosystem.config.js to use correct URL with /reader prefix
+  - [x] Use environment variable instead of hardcoding URL
+  - [x] Test manual sync via cron service succeeds - Tested at 2:35 AM
+  - [x] Verify automatic sync runs successfully at next scheduled time - Completed in 4.4 seconds
+  - [ ] Update deployment documentation if needed
+- **Impact**: HIGH - No automatic syncs have been running in production
+- **Discovered**: July 23, 2025 at 2:19 AM EDT (just after failed 2:00 AM sync)
+- **Fixed**: July 23, 2025 - Applied environment variable approach with correct /reader prefix
 
 ### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt)
 - **Status**: 🔴 TODO

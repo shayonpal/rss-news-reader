@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.1] - 2025-07-23
 
+### Fixed - July 23, 2025 Session (Critical Bug Fix)
+- **Cron Sync URL Missing /reader Prefix** (TODO-041) - COMPLETED ✅
+  - Fixed automatic sync failing since deployment due to missing basePath
+  - Root cause: Cron service calling `http://localhost:3147/api/sync` instead of `/reader/api/sync`
+  - All automatic syncs had been failing with 404 errors since July 22 deployment
+  - Solution: Updated ecosystem.config.js to use environment variable with correct default:
+    ```javascript
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+    ```
+  - Tested with ad-hoc 2:35 AM sync - completed successfully in 4.4 seconds
+  - Automatic syncs now working at 2:00 AM and 2:00 PM daily
+  - High impact fix - restored critical background sync functionality
+
 ### Added - July 22, 2025 Session (Auto-Mark as Read)
 - **Auto-Mark Articles as Read on Scroll** (TODO-029) - COMPLETED ✅
   - Implemented Intersection Observer to detect articles leaving viewport
