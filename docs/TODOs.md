@@ -179,45 +179,98 @@ The RSS News Reader is now successfully deployed to production:
 - **Status**: 🟡 PARTIALLY COMPLETE - Basic backend ready, enhanced features pending
 - **Context**: Feature allows users to fetch full article content beyond RSS snippets
 - **Specifications**:
-  - Product: [[PRD#Content Processing & Full Content Extraction]]
-  - Technical: [[full-content-extraction-implementation]]
+  - Product: [../product/PRD.md](../product/PRD.md) (lines 60-109)
+  - Technical: [../tech/implementation-strategy.md](../tech/implementation-strategy.md) (lines 735-758)
 - **Completed**:
   - ✅ Basic server endpoint `/api/articles/[id]/fetch-content` implemented
   - ✅ Mozilla Readability integration configured
   - ✅ Database columns `full_content` and `has_full_content` exist
   - ✅ Basic error handling and caching logic in place
   - ✅ Feature fully specified in PRD and tech docs
-- **Missing - UI Components**:
-  - [ ] Header reorganization (move Share/External to More menu)
-  - [ ] "Fetch Full Content" button in header
-  - [ ] Fetch content section at article bottom
-  - [ ] Visual indicator for fetched content (2% opacity overlay)
-  - [ ] "Always fetch for feed" toggle with DB confirmation
-  - [ ] Loading states (disabled button + progress bar)
-  - [ ] Error display for failed manual fetches
-  - [ ] Update article list to show content priority: AI summary → Full content → RSS content
-- **Missing - Database & Backend**:
-  - [ ] Add `is_partial_content` column to feeds table
-  - [ ] Create `fetch_logs` table for tracking attempts
-  - [ ] Integrate auto-fetch into existing sync process (after normal sync)
-  - [ ] Implement rate-limited auto-fetch logic (10 articles/30min)
-  - [ ] Update existing fetch endpoint to log attempts in fetch_logs
-  - [ ] Add feed partial content toggle endpoint
-  - [ ] Update article store with fetch methods
-- **Files to modify**:
-  - `src/components/articles/article-detail.tsx` (header reorganization)
-  - `src/components/articles/article-list-item.tsx` (content priority display)
-  - `src/components/articles/fetch-content-button.tsx` (new component)
-  - `src/components/articles/feed-partial-toggle.tsx` (new component)
-  - `src/lib/stores/article-store.ts` (add fetch methods)
-  - `src/server/services/auto-fetch-service.js` (new service)
-  - Database migrations for new columns/tables
-- **Testing Required**:
-  - [ ] Manual fetch flow with various article types
-  - [ ] Visual indicators in light/dark modes
-  - [ ] Feed toggle persistence
-  - [ ] Auto-fetch service with rate limiting
-  - [ ] Error handling for paywalls, timeouts, blocked sites
+- **User Stories** (implement in order):
+
+#### TODO-007a: Database Schema Updates
+- **Status**: ✅ COMPLETED (2025-07-23)
+- **Tasks**:
+  - [x] Add `is_partial_content` boolean column to feeds table
+  - [x] Create `fetch_logs` table with columns: id, article_id, feed_id, timestamp, success, error_reason, fetch_type
+  - [x] Add indexes for efficient querying
+  - [x] Run migrations and verify schema
+  - [x] Mark known partial content feeds (BBC, Forbes Tech, Wawa News)
+- **Acceptance Criteria**: Can query new columns/tables successfully
+- **Implementation Notes**:
+  - Added `fetch_type` column to distinguish manual vs auto fetches
+  - Migration file: `20250123_add_full_content_extraction.sql`
+  - All constraints and foreign keys properly configured
+
+#### TODO-007b: Article Detail Header Reorganization
+- **Status**: 🔴 NOT STARTED
+- **Tasks**:
+  - [ ] Move Share & External Link buttons to More (⋮) dropdown menu
+  - [ ] Add "Fetch Full Content" button to article header
+  - [ ] Ensure responsive design on mobile/tablet
+  - [ ] Maintain existing button functionality
+- **Files**: `src/components/articles/article-detail.tsx`
+- **Acceptance Criteria**: Header shows new layout, all buttons functional
+
+#### TODO-007c: Manual Fetch Content Implementation
+- **Status**: 🔴 NOT STARTED
+- **Tasks**:
+  - [ ] Add "Fetch Full Content" button at article bottom
+  - [ ] Implement loading state: disabled button + "Fetching..." text + progress bar
+  - [ ] Show 2% opacity overlay on success (black in light mode, white in dark mode)
+  - [ ] Display user-friendly error messages for failures
+  - [ ] Create `fetch-content-button.tsx` component
+- **Files**: `src/components/articles/fetch-content-button.tsx`
+- **Acceptance Criteria**: Can manually fetch content with proper visual feedback
+
+#### TODO-007d: Feed Partial Content Toggle
+- **Status**: 🔴 NOT STARTED
+- **Tasks**:
+  - [ ] Add "Always fetch for this feed" toggle in article view
+  - [ ] Create API endpoint `/api/feeds/[id]/toggle-partial-content`
+  - [ ] Update feed preferences in database
+  - [ ] Show confirmation only after successful DB update
+  - [ ] Create `feed-partial-toggle.tsx` component
+- **Files**: `src/components/articles/feed-partial-toggle.tsx`, new API endpoint
+- **Acceptance Criteria**: Toggle persists across sessions, affects future syncs
+
+#### TODO-007e: Article List Content Priority Display
+- **Status**: 🔴 NOT STARTED
+- **Tasks**:
+  - [ ] Update article list item to check content availability
+  - [ ] Display by priority: AI summary (full) → Full content (4 lines) → RSS content (4 lines)
+  - [ ] Ensure smooth rendering without layout shifts
+  - [ ] Maintain scroll performance
+- **Files**: `src/components/articles/article-list-item.tsx`
+- **Acceptance Criteria**: List shows appropriate content based on availability
+
+#### TODO-007f: Auto-Fetch Service Integration
+- **Status**: 🔴 NOT STARTED
+- **Tasks**:
+  - [ ] Create auto-fetch service with configurable rate limiting
+  - [ ] Integrate into sync process (runs after normal article sync)
+  - [ ] Process only feeds marked as `is_partial_content`
+  - [ ] Implement rate limit: max 10 articles per 30 minutes
+  - [ ] Log all attempts to `fetch_logs` table
+- **Files**: `src/server/services/auto-fetch-service.js`
+- **Acceptance Criteria**: Auto-fetch runs during sync, respects rate limits
+
+#### TODO-007g: Fetch Logging & Monitoring
+- **Status**: 🔴 NOT STARTED
+- **Tasks**:
+  - [ ] Implement comprehensive logging for all fetch attempts (manual & auto)
+  - [ ] Track success/failure rates per feed
+  - [ ] Add monitoring for rate limit compliance
+  - [ ] Create analytics queries for fetch performance
+- **Files**: Update existing fetch endpoint, logging utilities
+- **Acceptance Criteria**: Can query fetch history and see success metrics
+
+- **Testing Strategy**:
+  - Test each user story independently
+  - Manual testing for UI components
+  - Integration testing for auto-fetch service
+  - Monitor API rate limits during testing
 
 ### TODO-014b: Feed Filtering Enhancement (P2 - Post-Production)
 - **Status**: ✅ MOSTLY COMPLETE (July 22, 2025)

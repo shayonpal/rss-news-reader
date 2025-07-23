@@ -5,6 +5,17 @@ All notable changes to Shayon's News RSS Reader PWA will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added - Full Content Extraction Database Schema (TODO-007a)
+- **Database Schema for Full Content Extraction** - COMPLETED ✅
+  - Added `is_partial_content` boolean column to feeds table
+  - Created `fetch_logs` table to track all content extraction attempts
+  - Table includes: article_id, feed_id, timestamp, success, error_reason, fetch_type
+  - Added proper indexes for efficient querying
+  - Marked 3 known partial content feeds: BBC, Forbes Tech, Wawa News
+  - Foundation ready for manual and automatic full content fetching
+
 ## [0.5.1] - 2025-07-23
 
 ### Fixed - July 23, 2025 Session (Critical Bug Fix)
