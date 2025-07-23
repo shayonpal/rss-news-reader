@@ -21,6 +21,7 @@ export interface Article {
   state?: ArticleState;
   fullContentUrl?: string;
   hasFullContent?: boolean;
+  fullContent?: string;
 }
 
 export interface Feed {

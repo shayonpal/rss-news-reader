@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import { SummaryButton } from './summary-button';
 import { SummaryDisplay } from './summary-display';
+import { FetchContentButton } from './fetch-content-button';
 import { useArticleStore } from '@/lib/stores/article-store';
 import {
   DropdownMenu,
@@ -59,8 +60,34 @@ export function ArticleDetail({
     }
   };
 
-  // Clean and sanitize HTML content
-  const cleanContent = DOMPurify.sanitize(currentArticle.content, {
+  // Handle fetch content success
+  const handleFetchContentSuccess = async (content: string) => {
+    // Update the current article with the full content
+    setCurrentArticle({
+      ...currentArticle,
+      fullContent: content,
+      hasFullContent: true
+    });
+    // Also refresh from store to ensure consistency
+    const updatedArticle = await getArticle(article.id);
+    if (updatedArticle) {
+      setCurrentArticle(updatedArticle);
+    }
+  };
+
+  // Handle revert to RSS content
+  const handleRevertContent = () => {
+    // Clear full content to show RSS content
+    setCurrentArticle({
+      ...currentArticle,
+      fullContent: undefined,
+      hasFullContent: false
+    });
+  };
+
+  // Clean and sanitize HTML content - prioritize full content over RSS content
+  const contentToDisplay = currentArticle.fullContent || currentArticle.content;
+  const cleanContent = DOMPurify.sanitize(contentToDisplay, {
     ALLOWED_TAGS: ['p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'em', 
                    'strong', 'br', 'figure', 'figcaption', 'iframe', 'video'],
@@ -219,7 +246,13 @@ export function ArticleDetail({
               onSuccess={handleSummarySuccess}
             />
             
-            {/* Placeholder for Fetch Full Content button (TODO-007c) */}
+            <FetchContentButton
+              articleId={currentArticle.id}
+              hasFullContent={currentArticle.hasFullContent}
+              variant="icon"
+              onSuccess={handleFetchContentSuccess}
+              onRevert={handleRevertContent}
+            />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -297,10 +330,21 @@ export function ArticleDetail({
                      [&>*]:break-words"
           dangerouslySetInnerHTML={{ __html: cleanContent }}
         />
+        
+        {/* Fetch/Revert Full Content button at bottom */}
+        <div className="mt-8 mb-8 flex justify-center">
+          <FetchContentButton
+            articleId={currentArticle.id}
+            hasFullContent={currentArticle.hasFullContent}
+            variant="button"
+            onSuccess={handleFetchContentSuccess}
+            onRevert={handleRevertContent}
+          />
+        </div>
       </article>
 
       {/* Navigation Footer */}
-      <footer className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+      <footer className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <IOSButton
             variant="ghost"
@@ -325,6 +369,9 @@ export function ArticleDetail({
           </IOSButton>
         </div>
       </footer>
+      
+      {/* Spacer for fixed footer */}
+      <div className="h-[60px]" />
     </div>
   );
 }

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Full Content Extraction (TODO-007c)
+- **Manual Fetch Full Content Button** - COMPLETED ✅
+  - Added "Fetch Full Content" button to article header and bottom
+  - Implemented loading states with spinner during content fetching
+  - Successfully extracts full article content using Mozilla Readability
+  - Stores extracted content in database for offline access
+  - Falls back to RSS content if extraction fails
+  - Added ability to revert from full content back to RSS content
+  - Fixed API endpoint to work with Next.js basePath configuration
+  - Enhanced fetch_logs table with response_time_ms, content_length, extraction_method columns
+  - Comprehensive error handling and user-friendly error messages
+
 ### Added - Full Content Extraction Database Schema (TODO-007a)
 - **Database Schema for Full Content Extraction** - COMPLETED ✅
   - Added `is_partial_content` boolean column to feeds table
@@ -24,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Made IOSButton use forwardRef for proper ref and onClick forwarding
   - Clean, organized header ready for Fetch Full Content button
   - Responsive design maintained across all device sizes
+
+### Fixed
+- **Navigation Footer Positioning** - Fixed footer to stay visible at bottom like header
+- **Fetch Logs Schema** - Added missing columns (response_time_ms, content_length, etc.) to properly track fetch metrics
 
 ## [0.5.1] - 2025-07-23
 

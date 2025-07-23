@@ -75,16 +75,23 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - AI summaries exempt from line-clamping for complete context
 
 #### User Interface
-- **Header Menu**: "Fetch Full Content" button moved to "More" (⋮) dropdown
-  - Header buttons: Back, Star, Summary, Fetch Full Content, More
-  - More menu contains: Share, External Link, Feed Settings
-- **Article Bottom**: Additional fetch options below article content
-  - "Fetch Full Content" button (always visible)
-  - "Always fetch for this feed" toggle option
+- **Header Menu**: Reorganized for cleaner layout
+  - Header buttons: Back, Star, Summary, Fetch Full Content, More (⋮)
+  - More dropdown contains: Share, Open Original
+- **Article Bottom**: Centered fetch button below article content
+  - "Fetch Full Content" button (full-width on mobile, fixed width on desktop)
+  - Positioned between article content and navigation buttons
+  - "Always fetch for this feed" toggle appears after successful fetch
 - **Visual Feedback**:
-  - Loading state: Disabled button + "Fetching..." text + progress bar
-  - Fetched content: 2% opacity overlay (black in light mode, white in dark mode)
-  - Feed setting: Toggle updates only after database confirmation
+  - Loading state: Disabled button + "Fetching..." text + indeterminate progress bar
+  - Success: 2% opacity overlay flash (black in light mode, white in dark mode)
+  - Errors: Inline message with AlertCircle icon below button
+  - Feed toggle: Updates only after database confirmation
+- **Error Messages**:
+  - "Failed to fetch content. Please try again."
+  - "Content not accessible from this source."
+  - "Network error. Check your connection."
+  - "Content extraction failed. The article may be behind a paywall."
 
 #### Extraction Behavior
 - User-triggered full content fetching via buttons in article view

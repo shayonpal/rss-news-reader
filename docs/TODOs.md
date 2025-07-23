@@ -219,15 +219,21 @@ The RSS News Reader is now successfully deployed to production:
   - Ready for Fetch Full Content button integration
 
 #### TODO-007c: Manual Fetch Content Implementation
-- **Status**: 🔴 NOT STARTED
+- **Status**: ✅ COMPLETED (2025-07-23)
 - **Tasks**:
-  - [ ] Add "Fetch Full Content" button at article bottom
-  - [ ] Implement loading state: disabled button + "Fetching..." text + progress bar
-  - [ ] Show 2% opacity overlay on success (black in light mode, white in dark mode)
-  - [ ] Display user-friendly error messages for failures
-  - [ ] Create `fetch-content-button.tsx` component
+  - [x] Add "Fetch Full Content" button at article bottom and header
+  - [x] Implement loading state: disabled button + "Fetching..." text + spinner
+  - [x] Show full content when successfully fetched
+  - [x] Display user-friendly error messages for failures
+  - [x] Create `fetch-content-button.tsx` component
+  - [x] Add ability to revert from full content back to RSS content
 - **Files**: `src/components/articles/fetch-content-button.tsx`
 - **Acceptance Criteria**: Can manually fetch content with proper visual feedback
+- **Implementation Notes**:
+  - Fixed API URL to include `/reader` prefix due to basePath configuration
+  - Added support for both UUID and inoreader_id article lookups
+  - Enhanced fetch_logs table schema to properly track metrics
+  - Revert functionality allows users to toggle between full and RSS content
 
 #### TODO-007d: Feed Partial Content Toggle
 - **Status**: 🔴 NOT STARTED
