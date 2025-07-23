@@ -22,6 +22,12 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   const isPulling = useRef<boolean>(false);
   const hasRestoredScroll = useRef<boolean>(false);
   
+  // Auto-mark as read refs
+  const autoMarkObserverRef = useRef<IntersectionObserver | null>(null);
+  const lastScrollY = useRef<number>(0);
+  const pendingMarkAsRead = useRef<Set<string>>(new Set());
+  const markAsReadTimer = useRef<NodeJS.Timeout | null>(null);
+  
   const {
     articles,
     loadingArticles,
@@ -32,15 +38,94 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
     loadArticles,
     loadMoreArticles,
     markAsRead,
+    markMultipleAsRead,
     toggleStar,
     refreshArticles,
-    clearError
+    clearError,
+    readStatusFilter
   } = useArticleStore();
 
   // Load articles on mount or when feed/folder changes
   useEffect(() => {
+    // Clear pending marks when view changes
+    pendingMarkAsRead.current.clear();
+    if (markAsReadTimer.current) {
+      clearTimeout(markAsReadTimer.current);
+    }
     loadArticles(feedId, folderId);
   }, [feedId, folderId, loadArticles]);
+
+  // Batch mark as read with debounce
+  const processPendingMarkAsRead = useCallback(() => {
+    if (pendingMarkAsRead.current.size > 0) {
+      const articleIds = Array.from(pendingMarkAsRead.current);
+      pendingMarkAsRead.current.clear();
+      markMultipleAsRead(articleIds);
+    }
+  }, [markMultipleAsRead]);
+
+  // Set up auto-mark as read observer
+  useEffect(() => {
+    // Clear pending marks when filter changes
+    pendingMarkAsRead.current.clear();
+    if (markAsReadTimer.current) {
+      clearTimeout(markAsReadTimer.current);
+    }
+
+    // Track scroll direction
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY.current;
+      lastScrollY.current = currentScrollY;
+
+      // Only process if scrolling down
+      if (isScrollingDown && pendingMarkAsRead.current.size > 0) {
+        // Clear existing timer
+        if (markAsReadTimer.current) {
+          clearTimeout(markAsReadTimer.current);
+        }
+        // Set new timer to batch process
+        markAsReadTimer.current = setTimeout(processPendingMarkAsRead, 500);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Create observer for articles leaving viewport
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        // Article is leaving the viewport from the top
+        if (!entry.isIntersecting && entry.boundingClientRect.bottom < 0) {
+          const articleElement = entry.target as HTMLElement;
+          const articleId = articleElement.getAttribute('data-article-id');
+          const isRead = articleElement.getAttribute('data-is-read') === 'true';
+          
+          if (articleId && !isRead) {
+            pendingMarkAsRead.current.add(articleId);
+          }
+        }
+      });
+    };
+
+    autoMarkObserverRef.current = new IntersectionObserver(observerCallback, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0
+    });
+
+    // Clean up on unmount or when filter changes
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (autoMarkObserverRef.current) {
+        autoMarkObserverRef.current.disconnect();
+      }
+      if (markAsReadTimer.current) {
+        clearTimeout(markAsReadTimer.current);
+      }
+      // Process any pending marks before cleanup
+      processPendingMarkAsRead();
+    };
+  }, [readStatusFilter, processPendingMarkAsRead]);
 
 
   // Restore scroll position after articles load
@@ -223,7 +308,14 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
         {Array.from(articles.values()).map((article) => (
           <article
             key={article.id}
-            className={`relative p-4 sm:p-6 cursor-pointer transition-colors hover:bg-muted/50 overflow-hidden ${
+            data-article-id={article.id}
+            data-is-read={article.isRead}
+            ref={(el) => {
+              if (el && autoMarkObserverRef.current && !article.isRead) {
+                autoMarkObserverRef.current.observe(el);
+              }
+            }}
+            className={`relative p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:bg-muted/50 overflow-hidden ${
               article.isRead ? 'opacity-70' : ''
             }`}
             onClick={() => handleArticleClick(article)}

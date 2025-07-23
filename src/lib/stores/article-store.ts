@@ -31,6 +31,7 @@ interface ArticleStoreState {
   markAsRead: (articleId: string) => Promise<void>;
   markAsUnread: (articleId: string) => Promise<void>;
   toggleStar: (articleId: string) => Promise<void>;
+  markMultipleAsRead: (articleIds: string[]) => Promise<void>;
   
   // Summary operations
   generateSummary: (articleId: string, regenerate?: boolean) => Promise<Summary | null>;
@@ -360,6 +361,93 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to mark as read:', error);
+    }
+  },
+
+  // Mark multiple as read (batch operation)
+  markMultipleAsRead: async (articleIds: string[]) => {
+    if (articleIds.length === 0) return;
+    
+    try {
+      const { articles } = get();
+      const timestamp = new Date().toISOString();
+      
+      // Filter out articles that are already read
+      const articlesToMark = articleIds.filter(id => {
+        const article = articles.get(id);
+        return article && !article.isRead;
+      });
+      
+      if (articlesToMark.length === 0) return;
+      
+      // Update in database with local update timestamp
+      const { error } = await supabase
+        .from('articles')
+        .update({ 
+          is_read: true,
+          last_local_update: timestamp,
+          updated_at: timestamp
+        })
+        .in('id', articlesToMark);
+
+      if (error) throw error;
+      
+      // Add to sync queue for bi-directional sync (batch)
+      const syncQueueEntries = articlesToMark
+        .map(id => {
+          const article = articles.get(id);
+          return article?.inoreaderItemId ? {
+            article_id: id,
+            inoreader_id: article.inoreaderItemId,
+            action_type: 'read'
+          } : null;
+        })
+        .filter(Boolean);
+      
+      if (syncQueueEntries.length > 0) {
+        // We'll add them one by one since the RPC function takes single entries
+        for (const entry of syncQueueEntries) {
+          if (entry) {
+            const { error: rpcError } = await supabase.rpc('add_to_sync_queue', {
+              p_article_id: entry.article_id,
+              p_inoreader_id: entry.inoreader_id,
+              p_action_type: entry.action_type
+            });
+            
+            if (rpcError) {
+              console.error('Failed to add to sync queue:', rpcError);
+            }
+          }
+        }
+      }
+      
+      // Update in store
+      const updatedArticles = new Map(articles);
+      articlesToMark.forEach(id => {
+        const article = articles.get(id);
+        if (article) {
+          updatedArticles.set(id, { ...article, isRead: true });
+        }
+      });
+      set({ articles: updatedArticles });
+      
+      // Invalidate article count cache for affected feeds
+      if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
+        const affectedFeeds = new Set<string>();
+        articlesToMark.forEach(id => {
+          const article = articles.get(id);
+          if (article) {
+            affectedFeeds.add(article.feedId);
+          }
+        });
+        affectedFeeds.forEach(feedId => {
+          (window as any).__articleCountManager.invalidateCache(feedId);
+        });
+      }
+      
+      console.log(`Marked ${articlesToMark.length} articles as read`);
+    } catch (error) {
+      console.error('Failed to mark multiple as read:', error);
     }
   },
 

@@ -155,40 +155,20 @@ export class ArticleCountManager {
 
 /**
  * Get dynamic page title based on read status filter and feed selection
- * Implementation follows PRD specifications for dynamic headers
+ * Simplified to show just "Articles" or the folder/feed name
  */
 export const getDynamicPageTitle = (
   readStatusFilter: 'all' | 'unread' | 'read',
   selectedFeed?: { title: string },
   selectedFolder?: { title: string }
 ): string => {
-  // Base title from feed/folder selection
-  let baseTitle: string;
-  if (selectedFeed) {
-    baseTitle = selectedFeed.title;
-  } else if (selectedFolder) {
-    baseTitle = selectedFolder.title;
+  // Return folder or feed name directly, or "Articles" for all
+  if (selectedFolder) {
+    return selectedFolder.title;
+  } else if (selectedFeed) {
+    return selectedFeed.title;
   } else {
-    baseTitle = 'Articles';
-  }
-  
-  // Apply read status prefix as specified in PRD
-  switch (readStatusFilter) {
-    case 'unread':
-      return selectedFeed || selectedFolder 
-        ? `Unread from ${baseTitle}` 
-        : 'Unread Articles';
-        
-    case 'read':
-      return selectedFeed || selectedFolder 
-        ? `Read from ${baseTitle}` 
-        : 'Read Articles';
-        
-    case 'all':
-    default:
-      return selectedFeed || selectedFolder 
-        ? `All from ${baseTitle}` 
-        : 'All Articles';
+    return 'Articles';
   }
 };
 

@@ -119,7 +119,7 @@ export function ArticleHeader({
         )}
         
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl md:text-2xl font-semibold truncate">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold break-words">
             {pageTitle}
           </h1>
           <p className="text-sm text-muted-foreground">
