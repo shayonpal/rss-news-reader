@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Article, Feed } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3, ArrowUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
@@ -49,6 +49,8 @@ export function ArticleDetail({
   const { getArticle } = useArticleStore();
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const isIOS = typeof window !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -145,6 +147,11 @@ export function ArticleDetail({
             headerRef.current.style.transform = 'translateY(0)';
           }
           
+          // Show/hide scroll to top button on iOS
+          if (isIOS) {
+            setShowScrollToTop(currentScrollY > 300);
+          }
+          
           lastScrollY.current = currentScrollY;
           ticking = false;
         });
@@ -158,7 +165,7 @@ export function ArticleDetail({
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isIOS]);
 
   // Touch handlers for swipe navigation
   const onTouchStart = (e: React.TouchEvent) => {
@@ -422,6 +429,19 @@ export function ArticleDetail({
       
       {/* Spacer for fixed footer */}
       <div className="h-[60px]" />
+      
+      {/* Liquid Glass Scroll to Top button for iOS */}
+      {isIOS && showScrollToTop && (
+        <button
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="liquid-glass-btn"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 }

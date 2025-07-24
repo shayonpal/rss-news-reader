@@ -13,6 +13,11 @@ html, body {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Safe area padding utility */
+.pwa-standalone .pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
 /* Additional padding for article list in PWA mode */
 .pwa-standalone .article-list-container {
   padding-top: 1rem; /* Extra padding to prevent cutoff */
@@ -180,5 +185,127 @@ button:not(:disabled) {
     overflow-y: auto;
     /* Prevent scroll chaining to parent */
     overscroll-behavior: contain;
+    /* Ensure scrollbar is visible on desktop for independent scrolling */
+    scrollbar-gutter: stable;
+  }
+}
+
+/* Apple Liquid Glass Design */
+@layer components {
+  .liquid-glass-btn {
+    position: fixed;
+    bottom: 80px; /* Increased to account for navigation footer */
+    right: 24px;
+    z-index: 50;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Liquid glass effect */
+    background: rgba(255, 255, 255, 0.60);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    
+    /* Fully rounded for circular button */
+    border-radius: 999px;
+    
+    /* Subtle border */
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    
+    /* Layered shadows for depth */
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    
+    /* Icon color */
+    color: rgba(0, 0, 0, 0.85);
+    
+    /* Smooth transitions */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+    
+    /* Prevent text selection */
+    user-select: none;
+    -webkit-user-select: none;
+    
+    /* Force GPU acceleration */
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  /* Glossy highlight overlay */
+  .liquid-glass-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      135deg, 
+      rgba(255, 255, 255, 0.35) 0%, 
+      rgba(255, 255, 255, 0.1) 40%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 1;
+    border-radius: inherit;
+  }
+  
+  /* Hover state */
+  .liquid-glass-btn:hover {
+    background: rgba(255, 255, 255, 0.70);
+    transform: translateZ(0) scale(1.05);
+    box-shadow: 
+      0 12px 48px rgba(0, 0, 0, 0.15),
+      0 2px 4px rgba(0, 0, 0, 0.04),
+      inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  }
+  
+  /* Active/pressed state */
+  .liquid-glass-btn:active {
+    transform: translateZ(0) scale(0.98);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.10),
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      inset 0 1px 1px rgba(255, 255, 255, 0.20);
+  }
+  
+  /* Dark mode adjustments */
+  .dark .liquid-glass-btn {
+    background: rgba(30, 30, 30, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.90);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.25),
+      0 1px 3px rgba(0, 0, 0, 0.10),
+      inset 0 1px 1px rgba(255, 255, 255, 0.10);
+  }
+  
+  .dark .liquid-glass-btn:hover {
+    background: rgba(40, 40, 40, 0.45);
+  }
+  
+  /* Icon inside button */
+  .liquid-glass-btn svg {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Animation on appearance */
+  @keyframes liquid-glass-fade-in {
+    from {
+      opacity: 0;
+      transform: translateZ(0) scale(0.8) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateZ(0) scale(1) translateY(0);
+    }
+  }
+  
+  .liquid-glass-btn {
+    animation: liquid-glass-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 }

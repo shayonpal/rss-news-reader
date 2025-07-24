@@ -472,6 +472,61 @@ Write a clear, informative summary that captures the essence of this article wit
 
 ## User Interface Specifications
 
+### Independent Scrolling Feature (TODO-055)
+
+#### Overview
+
+Enable independent scrolling for the sidebar and article list, allowing users to maintain their position in one area while scrolling in the other. This improves navigation efficiency by preventing scroll position loss when browsing feeds or articles.
+
+#### Feature Requirements
+
+- **Sidebar Scroll Independence**: Sidebar maintains its own scroll container and position
+- **Article List Scroll Independence**: Article list maintains its own scroll container and position
+- **No Scroll Chaining**: Scrolling in one area does not affect the other area's position
+- **Header Auto-Hide**: Article list scrolling controls header visibility (not sidebar scrolling)
+- **iOS Compatibility**: Preserves iOS scroll-to-top gesture functionality
+- **Layout Structure**: Fixed viewport height with overflow containers
+
+#### Technical Implementation
+
+**CSS Layout Structure**:
+- Main container: `h-screen` with `overflow-hidden` to prevent document scrolling
+- Sidebar: Fixed height container with `overflow-y-auto`
+- Article list: Flexible height container with `overflow-y-auto` and `ios-scroll-container` class
+- Header: Positioned fixed, controlled by article list scroll events
+
+**Scroll Container Management**:
+- Pass `scrollContainerRef` from parent components to children
+- Update all scroll event listeners to use container references instead of window
+- Apply `overscroll-behavior: contain` to prevent scroll chaining
+
+**iOS Considerations**:
+- Dual approach for auto-mark-as-read: IntersectionObserver + manual position checking
+- Liquid glass scroll-to-top buttons as workaround for iOS gesture limitation
+- Safe area padding for PWA mode to prevent status bar overlap
+
+**Component Updates**:
+- `src/app/page.tsx`: Main layout restructuring with container refs
+- `src/components/articles/article-list.tsx`: Container-based scrolling
+- `src/components/feeds/simple-feed-sidebar.tsx`: Independent scroll container
+- `src/components/articles/article-detail.tsx`: Scroll-to-top button for iOS
+- `src/app/globals.css`: Liquid glass button styles and iOS utilities
+
+#### User Experience
+
+- Users can scroll through their feed list while maintaining position in article list
+- Users can scroll through articles while maintaining position in feed list
+- Smooth transitions with no jarring scroll position changes
+- Visual feedback with liquid glass scroll-to-top buttons on iOS
+- Auto-hide header saves screen space during article browsing
+
+#### Success Metrics
+
+- Zero scroll position loss when switching between areas
+- iOS scroll-to-top gesture works in focused container
+- No performance degradation from multiple scroll containers
+- Header auto-hide continues to function correctly
+
 ### Design Principles
 
 1. **Typography First**: Large, readable fonts with clear hierarchy

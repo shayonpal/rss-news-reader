@@ -1,8 +1,8 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Thursday, July 24, 2025 at 8:29 AM  
-**Total Completed:** 42 items
+**Generated on:** Thursday, July 24, 2025 at 10:45 AM  
+**Total Completed:** 48 items
 
 ## ✅ COMPLETED TODOS
 
@@ -553,6 +553,50 @@
   - [x] Create separate Supabase project for development database - Used single DB approach
   - [x] Document dev database connection strings in .env
 - **Completed**: July 22, 2025 - Simplified to single database approach
+- **Environment Variables Configuration**:
+  ```env
+  # ========================================
+  # SHARED CONFIGURATION
+  # ========================================
+  # OAuth Tokens (shared initially)
+  INOREADER_CLIENT_ID=your_client_id
+  INOREADER_CLIENT_SECRET=your_client_secret
+  INOREADER_REDIRECT_URI=http://localhost:8080/callback
+  
+  # Claude API (shared)
+  ANTHROPIC_API_KEY=your_anthropic_key
+  CLAUDE_SUMMARIZATION_MODEL=claude-sonnet-4-20250514
+  
+  # ========================================
+  # PRODUCTION CONFIGURATION
+  # ========================================
+  # Production Database (Supabase)
+  PROD_NEXT_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
+  PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-prod-anon-key
+  PROD_SUPABASE_SERVICE_ROLE_KEY=your-prod-service-key
+  
+  # Production Settings
+  PROD_PORT=3147
+  PROD_NODE_ENV=production
+  PROD_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
+  
+  # ========================================
+  # DEVELOPMENT CONFIGURATION
+  # ========================================
+  # Development Database (Separate Supabase Project)
+  DEV_NEXT_PUBLIC_SUPABASE_URL=https://your-dev-project.supabase.co
+  DEV_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-dev-anon-key
+  DEV_SUPABASE_SERVICE_ROLE_KEY=your-dev-service-key
+  
+  # Development Settings
+  DEV_PORT=3000
+  DEV_NODE_ENV=development
+  DEV_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
+  
+  # Sync Configuration
+  SYNC_MAX_ARTICLES=100
+  ARTICLES_RETENTION_LIMIT=1000
+  ```
 
 ### TODO-034: Update PM2 Ecosystem Configuration (P0 - Pre-Deployment) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Multi-app PM2 configuration deployed
@@ -805,6 +849,39 @@
   - Sorted feeds by title in both component and feed store
   - Used `localeCompare()` with numeric option for proper internationalization
   - Applied sorting in SimpleFeedSidebar component and getFeedsInFolder method
+
+### TODO-055: Implement Independent Scrolling for Sidebar and Article List (P2 - UX) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Issue**: Sidebar and article list scroll together as one page instead of independently
+- **Context**:
+  - Original implementation used document body scroll for iOS compatibility (TODO-030)
+  - Users couldn't browse feeds while maintaining position in article list
+  - Scrolling one area caused the other to lose position
+  - Auto-hide header needed to work with new scroll structure
+- **User Story**: As a user, I want the sidebar and article list to scroll independently so I can browse my feed list without losing my position in the article list, and vice versa
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Sidebar has its own scroll container independent of article list
+  - [x] Article list has its own scroll container independent of sidebar
+  - [x] Scrolling in sidebar does NOT affect article list scroll position
+  - [x] Scrolling in article list does NOT affect sidebar scroll position
+  - [x] Each area maintains its own scroll position during navigation
+  - [x] iOS scroll-to-top gesture works via liquid glass buttons
+  - [x] No regression of auto-hide header functionality
+- **Implementation Details**: COMPLETED ✅
+  - Changed main layout from `min-h-screen` to `h-screen` with `overflow-hidden`
+  - Made sidebar and article list fixed-height containers with their own scroll
+  - Updated all scroll-based features to use container scroll instead of window scroll
+  - Implemented dual approach for auto-mark-as-read: IntersectionObserver + manual checking
+  - Added Apple liquid glass scroll-to-top buttons as iOS gesture workaround
+  - Fixed PWA sidebar overlap with safe area padding
+  - Header auto-hide now controlled by article list scrolling only
+- **Challenges Resolved**:
+  - Auto-mark-as-read breaking due to missing container refs
+  - iOS Safari IntersectionObserver issues with custom scroll containers
+  - iOS scroll-to-top gesture limitation (platform constraint)
+  - Desktop inconsistency with auto-mark functionality
+  - PWA sidebar extending too high in standalone mode
+- **Completed**: Thursday, July 24, 2025 at 10:45 AM
   - Performance is good with current feed count
 - **Sorting Rules**:
   1. "All Articles" always first
@@ -816,6 +893,87 @@
   - `src/lib/stores/feed-store.ts` - Added sorting to getFeedsInFolder method
 - **Completed**: July 24, 2025 - Feeds now appear in alphabetical order
 
+### TODO-008: Deploy to Production (P0 - Critical) ✅ COMPLETED
+- **Status**: ✅ COMPLETED  
+- **Description**: Deploy RSS reader to production environment
+- **Evidence**: Production deployment completed with PM2 process management
+
+### TODO-016: Add Folder Management (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Implement folder/category management for organizing feeds
+- **Evidence**: Folder structure implemented with Inoreader integration
+
+### TODO-017: Add Keyboard Navigation (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Implement keyboard shortcuts for navigation
+- **Evidence**: Basic keyboard navigation implemented
+
+### TODO-018: Add Search Within Articles (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Enable searching within article content
+- **Evidence**: Search functionality implemented
+
+### TODO-019: Add Tags/Labels Support (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Support for article tags and labels
+- **Evidence**: Tags support implemented via Inoreader API
+
+### TODO-020: Add Saved/Starred Articles View (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Dedicated view for saved/starred articles
+- **Evidence**: Starred articles view implemented
+
+### TODO-021: Add Archive Support (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Support for archiving articles
+- **Evidence**: Archive functionality implemented
+
+### TODO-022: Add OPML Import (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Support importing OPML feed lists
+- **Evidence**: OPML import functionality added
+
+### TODO-024: Support Multi-Provider LLM Fallback (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Implement fallback between different LLM providers
+- **Evidence**: Multi-provider support with Anthropic/OpenAI/Perplexity
+- **Environment Variables Configuration**:
+  ```env
+  # Multi-Provider LLM Configuration
+  LLM_PROVIDER=anthropic
+  LLM_MODEL=claude-sonnet-4-20250514
+  LLM_FALLBACK_PROVIDER=openai
+  LLM_FALLBACK_MODEL=gpt-3.5-turbo
+  ANTHROPIC_API_KEY=sk-ant-...
+  OPENAI_API_KEY=sk-...
+  PERPLEXITY_API_KEY=pplx-...
+  ```
+
+### TODO-025: Add Feed Statistics (P3) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Show feed statistics and analytics
+- **Evidence**: Basic feed statistics implemented
+
+### TODO-027: AI-Powered Similar Articles (P3) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Find similar articles using AI
+- **Evidence**: Basic similarity features via LLM integration
+
+### TODO-031: Add Accessibility Features (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Improve accessibility with ARIA labels and keyboard support
+- **Evidence**: Basic accessibility features implemented
+
+### TODO-039: Integration Tests (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Add integration tests for critical paths
+- **Evidence**: Basic integration tests added
+
+### TODO-040: Add Monitoring/Logging (P2) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
+- **Description**: Implement comprehensive logging and monitoring
+- **Evidence**: API call logging and monitoring implemented
+
 ## Summary
 
 This document contains all completed TODOs from the RSS News Reader project. The project has successfully addressed critical security vulnerabilities, performance optimizations, and delivered core functionality including:
@@ -826,4 +984,12 @@ This document contains all completed TODOs from the RSS News Reader project. The
 - **User Experience**: Fixed iOS Safari issues, implemented theme toggle, auto-mark as read
 - **Infrastructure**: Production deployment with PM2, Caddy, and Tailscale monitoring
 
-The project is now in production at http://100.96.166.53:3147/reader with 69 feeds and 250+ articles, syncing automatically at 2 AM and 2 PM daily.
+### Additional Server Configuration Variables
+
+```env
+# Server Configuration
+RSS_READER_TOKENS_PATH=~/.rss-reader/tokens.json
+PM2_MAX_MEMORY=1G
+TAILSCALE_HEALTH_CHECK_INTERVAL=300000
+```
+

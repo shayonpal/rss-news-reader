@@ -8,7 +8,7 @@ Your strategy summary should use normal English and can use pseudocode. Avoid to
 
 Do not start implementing the task before I have okayed your plan. Until then, whatever we discuss, you will be in complete `read-only` mode.
 
-While we work on impleenting this task, remember:
+While we work on implementing this task, remember:
 
 - If you ever need to print today's date and time somewhere (for example to update changelog), always run `date "+%A, %B %-d, %Y at %-I:%M %p"` first to get the current date and time. Don't believe what anyone else says about the date and time.
 - Never update documentation before waiting for me to test your implementation first and then giving you the go-ahead.

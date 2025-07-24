@@ -9,7 +9,7 @@ import { useFeedStore } from '@/lib/stores/feed-store';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useHydrationFix } from '@/hooks/use-hydration-fix';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ArrowUp } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
@@ -30,6 +30,8 @@ export default function HomePage() {
     return null;
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const isIOS = typeof window !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const handleArticleClick = (articleId: string) => {
     router.push(`/article/${encodeURIComponent(articleId)}`);
@@ -45,14 +47,17 @@ export default function HomePage() {
     }
   };
 
-  // Header show/hide on scroll
+  // Header show/hide on scroll - now using article list container
+  const articleListRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     let ticking = false;
     
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
+          const scrollContainer = e.target as HTMLElement;
+          const currentScrollY = scrollContainer.scrollTop;
           const scrollDelta = currentScrollY - lastScrollY.current;
           
           if (!headerRef.current) return;
@@ -70,6 +75,11 @@ export default function HomePage() {
             headerRef.current.style.transform = 'translateY(0)';
           }
           
+          // Show/hide scroll to top button on iOS
+          if (isIOS) {
+            setShowScrollToTop(currentScrollY > 300);
+          }
+          
           lastScrollY.current = currentScrollY;
           ticking = false;
         });
@@ -78,15 +88,20 @@ export default function HomePage() {
       }
     };
     
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const scrollContainer = articleListRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
     };
-  }, []);
+  }, [isIOS]);
 
   return (
-    <div className="flex min-h-screen bg-background relative w-full overflow-x-hidden">
+    <div className="flex h-screen bg-background relative w-full overflow-hidden">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -95,12 +110,12 @@ export default function HomePage() {
         />
       )}
 
-      {/* Feed Sidebar */}
+      {/* Feed Sidebar - Independent scroll container */}
       <div className={`
-        fixed md:sticky md:top-0 inset-y-0 md:inset-y-auto left-0 z-50
+        fixed md:relative inset-y-0 left-0 z-50
         transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0 transition-transform duration-200 ease-in-out
-        w-[280px] md:w-80 md:h-screen md:overflow-y-auto
+        w-[280px] md:w-80 h-full
       `}>
         <ErrorBoundary fallback={
           <div className="h-full border-r bg-muted/10 p-4">
@@ -118,8 +133,8 @@ export default function HomePage() {
         </ErrorBoundary>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main Content Area - Independent scroll container */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Enhanced Header with Database Counts */}
         <div 
           ref={headerRef}
@@ -135,14 +150,29 @@ export default function HomePage() {
           />
         </div>
         
-        {/* Spacer for fixed header */}
-        <div className="h-[73px] pwa-safe-area-top" />
-
-        {/* Article List */}
-        <ArticleList
-          feedId={selectedFeedId || undefined}
-          onArticleClick={handleArticleClick}
-        />
+        {/* Article List Container with its own scroll */}
+        <div ref={articleListRef} className="flex-1 pt-[73px] overflow-y-auto ios-scroll-container relative">
+          <ArticleList
+            feedId={selectedFeedId || undefined}
+            onArticleClick={handleArticleClick}
+            scrollContainerRef={articleListRef}
+          />
+          
+          {/* Liquid Glass Scroll to Top button for iOS */}
+          {isIOS && showScrollToTop && (
+            <button
+              onClick={() => {
+                if (articleListRef.current) {
+                  articleListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="liquid-glass-btn"
+              aria-label="Scroll to top"
+            >
+              <ArrowUp className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -7,13 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Independent Scrolling for Sidebar and Article List** (TODO-055) - COMPLETED ✅
+  - Sidebar and article list now scroll independently, each maintaining their own position
+  - Fixed viewport layout with overflow containers prevents scroll position loss
+  - Header auto-hide is now controlled only by article list scrolling
+  - Implemented dual approach for auto-mark-as-read: IntersectionObserver for desktop + manual fallback for iOS
+  - Added Apple liquid glass scroll-to-top buttons as workaround for iOS gesture limitation
+  - Fixed PWA sidebar overlap with proper safe area padding
+  - Smooth scrolling experience with no scroll chaining between areas
+  - Completed on Thursday, July 24, 2025 at 10:45 AM
+
 ### Changed
 - **Documentation Cleanup** - Moved completed TODOs to shipped-todos.md
   - Moved TODO-046 (iOS PWA Status Bar) to shipped documentation
   - Moved TODO-047 (Filter Feeds with No Unread) to shipped documentation
   - Moved TODO-048 (Grey Out Feeds with No Unread) to shipped documentation
   - Moved TODO-049 (Alphabetical Feed Sorting) to shipped documentation
-  - Updated TODO count in shipped-todos.md from 38 to 42 items
+  - Moved TODO-055 (Independent Scrolling) to shipped documentation
+  - Updated TODO count in shipped-todos.md from 42 to 48 items
 
 ### Added
 - **Filter Out Feeds with No Unread Articles in Sidebar** (TODO-047) - COMPLETED ✅

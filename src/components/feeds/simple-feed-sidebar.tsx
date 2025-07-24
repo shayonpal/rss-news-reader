@@ -75,7 +75,7 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
   };
 
   return (
-    <div className="h-full border-r bg-background flex flex-col">
+    <div className="h-full border-r bg-background flex flex-col pt-[env(safe-area-inset-top)]">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">
