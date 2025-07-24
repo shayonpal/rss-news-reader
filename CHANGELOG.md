@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Documentation Cleanup** - Moved completed TODOs to shipped-todos.md
+  - Moved TODO-046 (iOS PWA Status Bar) to shipped documentation
+  - Moved TODO-047 (Filter Feeds with No Unread) to shipped documentation
+  - Moved TODO-048 (Grey Out Feeds with No Unread) to shipped documentation
+  - Moved TODO-049 (Alphabetical Feed Sorting) to shipped documentation
+  - Updated TODO count in shipped-todos.md from 38 to 42 items
+
 ### Added
 - **Filter Out Feeds with No Unread Articles in Sidebar** (TODO-047) - COMPLETED ✅
   - When "Unread Only" filter is selected, feeds with zero unread articles are now hidden from sidebar

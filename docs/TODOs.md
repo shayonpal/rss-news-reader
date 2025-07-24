@@ -1,7 +1,6 @@
 # Master TODO List - RSS News Reader
 
-**Last Updated:** July 24, 2025
-**Status:** ✅ Production Deployed
+**Last Updated:** Thursday, July 24, 2025 at 8:29 AM
 
 ## 🎉 PRODUCTION DEPLOYMENT COMPLETE
 
@@ -10,7 +9,6 @@ The RSS News Reader is now successfully deployed to production:
 - **Production URL**: http://100.96.166.53:3147/reader
 - **Automatic Startup**: Configured with macOS LaunchAgent
 - **Daily Sync**: Running at 2:00 AM and 2:00 PM Toronto time
-- **69 feeds** and **250 articles** synced and available
 
 ## 🚧 IN PROGRESS & TODO ITEMS
 
@@ -441,130 +439,6 @@ The RSS News Reader is now successfully deployed to production:
   - Test PWA on iPad/iPhone
   - Test clipboard fallback on Chrome/Firefox
   - Ensure share data formats correctly for different apps
-
-### TODO-046: Fix Orange Status Bar in PWA on iPhone (P1 - UI Bug) ✅ COMPLETED
-
-- **Status**: ✅ COMPLETED
-- **Issue**: Orange header/status bar appears above app header when saved as PWA on iPhone
-- **Context**:
-  - When RSS reader is saved as a web app on iPhone, an orange bar appears above the app header
-  - The status bar should match the app header color (black in dark mode)
-  - This creates a visual inconsistency in the PWA experience
-  - @screenshot.png shows orange status bar with black app header below
-- **Evidence**: User provided @screenshot.png showing orange status bar in PWA mode
-- **Potential Causes**:
-  - Missing or incorrect `theme-color` meta tag
-  - PWA manifest not properly configured for status bar
-  - iOS Safari PWA viewport configuration issues
-  - Missing `apple-mobile-web-app-status-bar-style` meta tag
-- **Acceptance Criteria**: ALL COMPLETED ✅
-  - [x] Status bar color matches app header in PWA mode
-  - [x] Works correctly in both light and dark themes
-  - [x] Status bar styling persists across app navigation
-  - [x] Test on iPhone with different iOS versions
-  - [x] Ensure no regression on iPad PWA
-- **Solution Implemented**:
-  - Changed `statusBarStyle` from "default" to "black-translucent"
-  - Updated theme colors: white for light mode, black for dark mode
-  - Added PWA standalone mode detection with PWADetector component
-  - CSS classes apply safe area padding only in PWA mode
-  - No extra padding in regular browser mode
-  - Fixed article title cutoff with conditional padding
-- **Completed**: July 24, 2025
-
-### TODO-047: Filter Out Feeds with No Unread Articles in Sidebar (P2 - Enhancement) ✅ COMPLETED
-
-- **Status**: ✅ COMPLETED
-- **Issue**: When "Unread Only" filter is selected, feeds with zero unread articles still appear in sidebar
-- **Context**:
-  - Currently, the "Unread Only" filter only affects the article list
-  - Sidebar continues to show all feeds, even those with 0 unread count
-  - This creates visual clutter and makes it harder to find feeds with unread content
-  - Users expect feeds with no unread articles to be hidden when filtering for unread
-- **User Story**: As a user filtering for unread articles, I want feeds with no unread articles to be hidden in the sidebar so I can quickly see which feeds have new content
-- **Acceptance Criteria**: ALL COMPLETED ✅
-  - [x] When "Unread Only" filter is active, hide feeds with 0 unread count
-  - [x] When "Read Only" or "All Articles" is selected, show all feeds
-  - [x] Maintain folder structure (hide empty folders too) - N/A (no folders in use)
-  - [x] Show folder only if it contains feeds with unread articles - N/A (no folders in use)
-  - [x] Update feed counts dynamically as articles are read
-  - [x] Preserve feed selection if switching between filters (selected feed stays visible)
-  - [x] Add smooth transitions when feeds appear/disappear
-- **Implementation Details**: COMPLETED ✅
-  - Added check for `readStatusFilter` from article store
-  - Filter feeds based on unread count > 0 when filter is "unread"
-  - Currently selected feed always remains visible even if 0 unread
-  - Scroll position preserved when switching filters
-- **Edge Cases**: ALL HANDLED ✅
-  - "All Articles" feed always remains visible
-  - Selected feed with 0 unread stays visible until deselected
-  - No folder structures currently in use
-  - Unread counts update in real-time
-- **Files Modified**:
-  - `src/components/feeds/simple-feed-sidebar.tsx` - Added filtering logic and scroll preservation
-- **Completed**: Thursday, July 24, 2025 at 8:15 AM
-
-### TODO-048: Grey Out Feeds with No Unread Articles in Sidebar (P3 - UI Enhancement) ✅ COMPLETED
-
-- **Status**: ✅ COMPLETED
-- **Issue**: Feeds with zero unread articles have the same visual prominence as feeds with new content
-- **Context**:
-  - Currently all feeds appear with the same opacity/color regardless of unread count
-  - Users need to look at the unread count badge to identify feeds with new content
-  - Visual hierarchy would help users quickly scan for feeds with unread articles
-  - This enhancement applies when viewing "All Articles" or "Read Only" filters
-  - This is a less aggressive approach than TODO-047 (hiding feeds completely)
-- **User Story**: As a user, I want feeds with no unread articles to be visually de-emphasized so I can quickly identify feeds with new content
-- **Acceptance Criteria**: ALL COMPLETED ✅
-  - [x] Feeds with 0 unread count appear with reduced opacity (35%)
-  - [x] Feeds with unread articles maintain full opacity
-  - [x] Apply to both feed names and icons
-  - [x] Unread count badge removed for feeds with zero unread
-  - [x] Hover state temporarily restores full opacity
-  - [x] Selected feed maintains full opacity even if no unread
-  - [x] Works in both light and dark themes
-- **Implementation Details**: COMPLETED ✅
-  - Added conditional opacity (35%) based on unread count
-  - Used Tailwind CSS classes with smooth transitions
-  - Removed "0" badges for cleaner appearance
-  - Applied to both SimpleFeedSidebar and FeedTreeItem components
-- **Files Modified**:
-  - `src/components/feeds/simple-feed-sidebar.tsx` - Applied conditional styling
-  - `src/components/feeds/feed-tree-item.tsx` - Applied same logic for consistency
-- **Completed**: July 24, 2025 - Visual hierarchy implemented
-
-### TODO-049: Sort Feed List Alphabetically in Sidebar (P2 - Enhancement) ✅ COMPLETED
-
-- **Status**: ✅ COMPLETED
-- **Issue**: Feeds in sidebar are not consistently sorted, making it difficult to find specific feeds
-- **Context**:
-  - Currently feeds appear to be sorted by their Inoreader order or creation time
-  - Users expect alphabetical sorting for easier navigation
-  - With 69+ feeds, finding a specific feed without alphabetical order is challenging
-  - Alphabetical sorting is a standard pattern in RSS readers
-- **User Story**: As a user with many feeds, I want feeds sorted alphabetically so I can quickly locate specific feeds
-- **Acceptance Criteria**: ALL COMPLETED ✅
-  - [x] All feeds within a folder are sorted alphabetically (A-Z)
-  - [x] Sort is case-insensitive
-  - [x] Folders themselves are sorted alphabetically
-  - [x] Feeds at root level (no folder) are sorted alphabetically
-  - [x] "All Articles" special feed remains at the top
-  - [x] Sorting persists across app sessions
-  - [x] New feeds are inserted in correct alphabetical position
-- **Implementation Details**: COMPLETED ✅
-  - Sorted feeds by title in both component and feed store
-  - Used `localeCompare()` with numeric option for proper internationalization
-  - Applied sorting in SimpleFeedSidebar component and getFeedsInFolder method
-  - Performance is good with current feed count
-- **Sorting Rules**:
-  1. "All Articles" always first
-  2. Folders sorted alphabetically (no folders currently in use)
-  3. Within each folder, feeds sorted alphabetically
-  4. Root-level feeds sorted alphabetically
-- **Files Modified**:
-  - `src/components/feeds/simple-feed-sidebar.tsx` - Added sorting when converting feeds Map to array
-  - `src/lib/stores/feed-store.ts` - Added sorting to getFeedsInFolder method
-- **Completed**: July 24, 2025 - Feeds now appear in alphabetical order
 
 ### TODO-050: Unify Summarize Icon Style with Star Icon in Article List (P3 - UI Consistency)
 
