@@ -160,11 +160,17 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
             {Array.from(feeds.values()).map((feed) => {
           const feedWithCount = feedsWithCounts.get(feed.id);
           const unreadCount = feedWithCount?.unreadCount || 0;
+          const isSelected = selectedFeedId === feed.id;
+          const hasUnread = unreadCount > 0;
           
           return (
             <div
               key={feed.id}
-              className={`p-3 cursor-pointer hover:bg-muted/50 ${selectedFeedId === feed.id ? 'bg-muted font-medium' : ''}`}
+              className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
+                isSelected ? 'bg-muted font-medium' : ''
+              } ${
+                !hasUnread && !isSelected ? 'opacity-35 hover:opacity-100' : ''
+              }`}
               onClick={() => onFeedSelect(feed.id)}
             >
               <div className="flex items-center justify-between">

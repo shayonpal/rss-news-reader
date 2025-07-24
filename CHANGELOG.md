@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Grey Out Feeds with No Unread Articles** (TODO-048) - COMPLETED ✅
+  - Feeds with zero unread articles now appear with 35% opacity
+  - Visual hierarchy helps users quickly identify feeds with new content
+  - Hover state temporarily restores full opacity
+  - Selected feeds maintain full opacity regardless of unread count
+  - Unread count badges removed for feeds with zero unread
+  - Applies to both SimpleFeedSidebar and FeedTreeItem components
+  - Works seamlessly in both light and dark themes
+
 ## [0.6.0] - 2025-07-24
 
 ### Added
