@@ -283,14 +283,20 @@ The RSS News Reader is now successfully deployed to production:
   - Properly respects rate limits and logs all attempts
 
 #### TODO-007g: Fetch Logging & Monitoring
-- **Status**: 🔴 NOT STARTED
+- **Status**: ✅ COMPLETED (2025-01-24)
 - **Tasks**:
-  - [ ] Implement comprehensive logging for all fetch attempts (manual & auto)
-  - [ ] Track success/failure rates per feed
-  - [ ] Add monitoring for rate limit compliance
-  - [ ] Create analytics queries for fetch performance
-- **Files**: Update existing fetch endpoint, logging utilities
-- **Acceptance Criteria**: Can query fetch history and see success metrics
+  - [x] Implement comprehensive logging for all fetch attempts (manual & auto) ✅
+  - [x] Track success/failure rates per feed ✅
+  - [x] Add monitoring for rate limit compliance ✅
+  - [x] Create analytics queries for fetch performance ✅
+- **Files**: Created /api/analytics/fetch-stats, /fetch-stats page
+- **Acceptance Criteria**: Can query fetch history and see success metrics ✅
+- **Implementation Notes**:
+  - Logging infrastructure was already in place (fetch_logs table)
+  - Created comprehensive statistics dashboard showing time-based aggregation
+  - Added navigation links from article dropdown and homepage header
+  - Dashboard differentiates between auto and manual fetches with icons
+  - Shows top issues including problematic feeds and recent failures
 
 - **Testing Strategy**:
   - Test each user story independently

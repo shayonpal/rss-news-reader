@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Article, Feed } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
@@ -38,6 +39,7 @@ export function ArticleDetail({
   onNavigate,
   onBack,
 }: ArticleDetailProps) {
+  const router = useRouter();
   const contentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
@@ -322,6 +324,11 @@ export function ArticleDetail({
                     Open Original
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => router.push('/fetch-stats')}>
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Fetch Stats
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

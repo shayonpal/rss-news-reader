@@ -1,82 +1,82 @@
 # Next Session Instructions
 
-**Last Updated:** Thursday, January 23, 2025 at 9:45 PM
+**Last Updated:** Friday, January 24, 2025 at 11:30 AM
 
-## Latest Session - January 23, 2025 (Evening)
-- **Duration:** ~3 hours (6:45 PM - 9:45 PM)
-- **Main focus:** Full content extraction foundation (TODO-007a, 007b)
-- **Issues worked:** TODO-007 subtasks
+## Latest Session - January 24, 2025 (Morning)
+- **Duration:** ~2 hours (9:30 AM - 11:30 AM)
+- **Main focus:** Completed fetch statistics dashboard (TODO-007g)
+- **Major achievement:** Comprehensive fetch monitoring with time-based analytics
 
 ## Current State
 - **Branch:** dev
-- **Uncommitted changes:** None (all pushed)
-- **Work in progress:** TODO-007c ready to implement
+- **Uncommitted changes:** Yes (CHANGELOG.md, TODOs.md, Next Session Instructions.md)
+- **Work in progress:** TODO-007e ready to implement (last remaining sub-task)
+- **Production:** Fetch statistics dashboard live at /fetch-stats
 
 ## Completed This Session
-- ✅ TODO-007a: Database schema for full content extraction
-  - Added is_partial_content column to feeds table
-  - Created fetch_logs table with tracking fields
-  - Marked BBC, Forbes Tech, Wawa News as partial feeds
-- ✅ TODO-007b: Article header UI reorganization
-  - Moved Share/Open Original to More dropdown
-  - Fixed IOSButton compatibility with Radix UI
-  - Ready for Fetch Full Content button
+- ✅ TODO-007g: Fetch Logging & Monitoring
+  - Created API endpoint at /api/analytics/fetch-stats
+  - Built comprehensive statistics dashboard at /fetch-stats
+  - Time-based aggregation: today, this month, lifetime
+  - Per-feed breakdown with expandable details
+  - Top issues section showing problematic feeds and recent failures
+  - Added navigation links from article dropdown and homepage header
+  - Differentiates between auto and manual fetches with icons
+  - Fixed basePath issues, empty feeds display, and styling
 
 ## Next Priority
-1. **TODO-007c: Manual Fetch Content Implementation** (High priority)
-   - Add Fetch Full Content button in header placeholder
-   - Add centered button at article bottom
-   - Implement loading states and progress bar
-   - Create fetch-content-button.tsx component
-   - Handle errors with inline messages
+1. **TODO-007e: Multi-format content storage** (ONLY remaining sub-task)
+   - Store both original RSS and cleaned content in database
+   - Consider versioning or format preferences
+   - Update article model to support multiple content formats
+   - Plan content priority system for display
 
-2. **TODO-007d: Feed Partial Content Toggle** (Medium priority)
-   - Add "Always fetch for this feed" toggle
-   - Create API endpoint for toggling
-   - Update feed preferences in database
+2. **After TODO-007 completion:**
+   - Consider implementing remaining TODOs from the backlog
+   - Review and prioritize based on user needs
 
-3. **TODO-007e: Article List Content Priority** (Medium priority)
-   - Implement display priority: AI summary → Full → RSS
-   - Update article-list-item.tsx
+## Recent Accomplishments Summary
+- TODO-007 is now 90% complete (6 of 7 sub-tasks done)
+- Completed sub-tasks:
+  - ✅ 007a: DB schema for full content
+  - ✅ 007b: Server endpoint with rate limiting
+  - ✅ 007c: Manual fetch button
+  - ✅ 007d: Auto-fetch integration
+  - ✅ 007f: UI integration
+  - ✅ 007g: Fetch monitoring
 
-## Important Context
-- **Workflow established:** Follow the 8-step process documented
-- **UI decisions made:** 
-  - Bottom button: centered, inline placement
-  - Errors: inline with AlertCircle icon
-  - No toast system - using existing patterns
-- **Technical notes:**
-  - IOSButton now uses forwardRef for dropdown compatibility
-  - fetch_type column added to distinguish manual/auto fetches
-- **Testing URLs:**
-  - Dev: http://100.96.166.53:3000/reader
-  - Prod: http://100.96.166.53:3147/reader
+## Important Production Notes
+- **Fetch Statistics**: Live dashboard accessible from multiple entry points
+- **Auto-Fetch**: Continues to run during syncs (50 articles/30 min)
+- **Success Rates**: Visible per-feed in the new dashboard
+- **Database**: fetch_logs table actively collecting metrics
 
 ## Commands to Run Next Session
 ```bash
 # Continue where left off
 cd /Users/shayon/DevProjects/rss-news-reader
 git status
+git add -A
+git commit -m "feat: add fetch statistics dashboard (TODO-007g)"
+git push origin dev
+
+# Start dev server
 npm run dev
 
-# View article detail to test (example)
-open http://100.96.166.53:3000/reader/article/[article-id]
+# Check fetch statistics
+open http://100.96.166.53:3000/reader/fetch-stats
 ```
 
-## Internal TODO Tracking
-Current TodoWrite state for TODO-007:
-1. ✅ 007-context: Understand requirements
-2. ✅ 007a-schema: Database updates
-3. ✅ 007b-header: Header reorganization
-4. 🔄 007c-manual: Manual fetch button (NEXT)
-5. ⏳ 007d-toggle: Feed partial toggle
-6. ⏳ 007e-list: Article list priority
-7. ⏳ 007f-auto: Auto-fetch service
-8. ⏳ 007g-logging: Fetch logging
+## Key Implementation Details
+- Fetch stats API aggregates data in-memory for efficiency
+- Dashboard uses collapsible sections for better UX
+- Icons differentiate auto (RefreshCw) vs manual (MousePointer) fetches
+- Back button properly styled with theme-aware colors
+- Navigation added to both article view and homepage
 
 ## Architecture Summary
-- Server handles all Inoreader API calls
-- Supabase stores article data including full_content
-- Client fetches from server endpoint /api/articles/[id]/fetch-content
-- Mozilla Readability extracts clean content
-- Original RSS content preserved in separate field
+- Server-side analytics with Supabase queries
+- Client-side dashboard with real-time data fetching
+- Time-based aggregation for meaningful insights
+- Performance optimized with in-memory processing
+- Responsive design works on all devices

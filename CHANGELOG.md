@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Fetch Logging & Monitoring (TODO-007g)
+- **Fetch Statistics Dashboard** - COMPLETED ✅
+  - Created comprehensive analytics API endpoint `/api/analytics/fetch-stats`
+  - Displays overall statistics for today, this month, and lifetime
+  - Breaks down fetches by type (auto vs manual) with icons
+  - Per-feed performance metrics with collapsible details
+  - Success rate indicators with color coding (green >95%, yellow 80-95%, red <80%)
+  - Average fetch duration tracking for performance monitoring
+  - "Top Issues" section shows problematic feeds and recent failures
+  - Added "Fetch Stats" button to homepage header (next to sync button)
+  - Added "Fetch Stats" option to More (⋮) dropdown in article view
+  - Mobile-responsive design with proper theme support
+  - Real-time data aggregation from fetch_logs table
+
 ### Added - Feed Partial Content Toggle & Auto-Fetch (TODO-007d)
 - **Feed Partial Content Toggle & Auto-Fetch Integration** - COMPLETED ✅
   - Added toggle in article view to mark feeds as "partial content"
