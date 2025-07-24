@@ -176,7 +176,7 @@ The RSS News Reader is now successfully deployed to production:
   - Similar functionality exists in most RSS readers
 
 ### TODO-007: Complete Full Content Extraction Feature (P1 - Core)
-- **Status**: 🟡 PARTIALLY COMPLETE - Basic backend ready, enhanced features pending
+- **Status**: ✅ COMPLETED (2025-07-24) - All sub-tasks finished
 - **Context**: Feature allows users to fetch full article content beyond RSS snippets
 - **Specifications**:
   - Product: [../product/PRD.md](../product/PRD.md) (lines 60-109)
@@ -258,14 +258,18 @@ The RSS News Reader is now successfully deployed to production:
   - All fetch attempts logged to fetch_logs table with proper error handling
 
 #### TODO-007e: Article List Content Priority Display
-- **Status**: 🔴 NOT STARTED
+- **Status**: ✅ COMPLETED
 - **Tasks**:
-  - [ ] Update article list item to check content availability
-  - [ ] Display by priority: AI summary (full) → Full content (4 lines) → RSS content (4 lines)
-  - [ ] Ensure smooth rendering without layout shifts
-  - [ ] Maintain scroll performance
-- **Files**: `src/components/articles/article-list-item.tsx`
+  - [x] Update article list item to check content availability
+  - [x] Display by priority: AI summary (full) → Full content (4 lines) → RSS content (4 lines)
+  - [x] Ensure smooth rendering without layout shifts
+  - [x] Maintain scroll performance
+- **Files**: `src/components/articles/article-list.tsx`
 - **Acceptance Criteria**: List shows appropriate content based on availability
+- **Implementation Notes**: 
+  - Modified `renderPreview` function to check for `fullContent` after AI summary
+  - Uses existing `extractTextContent` utility for consistent text extraction
+  - Maintains 4-line preview for both full content and RSS content
 
 #### TODO-007f: Auto-Fetch Service Integration
 - **Status**: ✅ COMPLETED (Merged into TODO-007d)

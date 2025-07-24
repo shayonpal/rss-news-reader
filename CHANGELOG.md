@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Feature Complete - Full Content Extraction (TODO-007)
+- **Comprehensive Full Content Extraction System** - COMPLETED ✅
+  - All 7 sub-tasks completed successfully
+  - Articles can now be extracted beyond RSS snippets
+  - Automatic and manual fetch capabilities
+  - Smart content priority display in article list
+  - Complete monitoring and analytics dashboard
+  - Production-ready with proper error handling and logging
+
+### Added - Article List Content Priority Display (TODO-007e)
+- **Content Priority System** - COMPLETED ✅
+  - Article list now displays content by priority
+  - Priority 1: AI summary (shown in full)
+  - Priority 2: Full extracted content (4-line preview)
+  - Priority 3: RSS content (4-line preview)
+  - Ensures best available content is always shown to users
+  - Smooth rendering without layout shifts
+  - Maintains scroll performance with large article lists
+
 ### Added - Fetch Logging & Monitoring (TODO-007g)
 - **Fetch Statistics Dashboard** - COMPLETED ✅
   - Created comprehensive analytics API endpoint `/api/analytics/fetch-stats`
