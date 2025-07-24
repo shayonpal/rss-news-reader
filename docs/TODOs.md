@@ -472,9 +472,9 @@ The RSS News Reader is now successfully deployed to production:
   - Fixed article title cutoff with conditional padding
 - **Completed**: July 24, 2025
 
-### TODO-047: Filter Out Feeds with No Unread Articles in Sidebar (P2 - Enhancement)
+### TODO-047: Filter Out Feeds with No Unread Articles in Sidebar (P2 - Enhancement) ✅ COMPLETED
 
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED
 - **Issue**: When "Unread Only" filter is selected, feeds with zero unread articles still appear in sidebar
 - **Context**:
   - Currently, the "Unread Only" filter only affects the article list
@@ -482,34 +482,27 @@ The RSS News Reader is now successfully deployed to production:
   - This creates visual clutter and makes it harder to find feeds with unread content
   - Users expect feeds with no unread articles to be hidden when filtering for unread
 - **User Story**: As a user filtering for unread articles, I want feeds with no unread articles to be hidden in the sidebar so I can quickly see which feeds have new content
-- **Acceptance Criteria**:
-  - [ ] When "Unread Only" filter is active, hide feeds with 0 unread count
-  - [ ] When "Read Only" or "All Articles" is selected, show all feeds
-  - [ ] Maintain folder structure (hide empty folders too)
-  - [ ] Show folder only if it contains feeds with unread articles
-  - [ ] Update feed counts dynamically as articles are read
-  - [ ] Preserve feed selection if switching between filters
-  - [ ] Add smooth transitions when feeds appear/disappear
-- **Implementation Details**:
-  - Check `readStatusFilter` from article store
-  - Filter feeds based on unread count > 0
-  - Recursively check folders for any unread content
-  - Consider performance with many feeds
-- **Edge Cases**:
-  - "All Articles" feed should remain visible
-  - Handle nested folder structures correctly
-  - What if selected feed becomes hidden due to filter?
-  - Ensure unread counts are accurate and real-time
-- **Files to Modify**:
-  - `src/components/feeds/simple-feed-sidebar.tsx` - Main sidebar component
-  - `src/components/feeds/feed-item.tsx` - Individual feed display logic
-  - `src/lib/stores/feed-store.ts` - May need filtered feed getter
-  - `src/lib/stores/article-store.ts` - Read status filter state
-- **Testing Notes**:
-  - Test with deeply nested folder structures
-  - Verify performance with many feeds
-  - Test filter changes update sidebar immediately
-  - Ensure no flashing/jumping when feeds hide/show
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] When "Unread Only" filter is active, hide feeds with 0 unread count
+  - [x] When "Read Only" or "All Articles" is selected, show all feeds
+  - [x] Maintain folder structure (hide empty folders too) - N/A (no folders in use)
+  - [x] Show folder only if it contains feeds with unread articles - N/A (no folders in use)
+  - [x] Update feed counts dynamically as articles are read
+  - [x] Preserve feed selection if switching between filters (selected feed stays visible)
+  - [x] Add smooth transitions when feeds appear/disappear
+- **Implementation Details**: COMPLETED ✅
+  - Added check for `readStatusFilter` from article store
+  - Filter feeds based on unread count > 0 when filter is "unread"
+  - Currently selected feed always remains visible even if 0 unread
+  - Scroll position preserved when switching filters
+- **Edge Cases**: ALL HANDLED ✅
+  - "All Articles" feed always remains visible
+  - Selected feed with 0 unread stays visible until deselected
+  - No folder structures currently in use
+  - Unread counts update in real-time
+- **Files Modified**:
+  - `src/components/feeds/simple-feed-sidebar.tsx` - Added filtering logic and scroll preservation
+- **Completed**: Thursday, July 24, 2025 at 8:15 AM
 
 ### TODO-048: Grey Out Feeds with No Unread Articles in Sidebar (P3 - UI Enhancement) ✅ COMPLETED
 

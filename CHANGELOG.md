@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Filter Out Feeds with No Unread Articles in Sidebar** (TODO-047) - COMPLETED ✅
+  - When "Unread Only" filter is selected, feeds with zero unread articles are now hidden from sidebar
+  - Currently selected feed remains visible even if it has zero unread (until deselected)
+  - Filter applies only when "Unread Only" is active; all feeds visible for "Read Only" or "All Articles"
+  - Scroll position is preserved when switching between filters
+  - Smooth transitions when feeds appear/disappear
+  - "All Articles" feed always remains visible
+  - Improves focus on feeds with new content when filtering for unread articles
+  - Completed on Thursday, July 24, 2025 at 8:15 AM
+
 - **Sort Feed List Alphabetically in Sidebar** (TODO-049) - COMPLETED ✅
   - All feeds are now sorted alphabetically (A-Z) for easier navigation
   - Sorting is case-insensitive using `localeCompare()` for proper internationalization
