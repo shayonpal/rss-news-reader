@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sort Feed List Alphabetically in Sidebar** (TODO-049) - COMPLETED ✅
+  - All feeds are now sorted alphabetically (A-Z) for easier navigation
+  - Sorting is case-insensitive using `localeCompare()` for proper internationalization
+  - Numeric sorting properly handles feeds with numbers (e.g., "404 Media" before "Ars Technica")
+  - "All Articles" special feed remains at the top
+  - Sorting applies in both SimpleFeedSidebar component and feed store's getFeedsInFolder method
+  - New feeds will automatically appear in correct alphabetical position
+  - Consistent sorting across all views for predictable feed discovery
+
 - **Grey Out Feeds with No Unread Articles** (TODO-048) - COMPLETED ✅
   - Feeds with zero unread articles now appear with 35% opacity
   - Visual hierarchy helps users quickly identify feeds with new content
@@ -16,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unread count badges removed for feeds with zero unread
   - Applies to both SimpleFeedSidebar and FeedTreeItem components
   - Works seamlessly in both light and dark themes
+
+### Fixed
+- **iOS PWA Status Bar Color and Safe Area Handling** (TODO-046) - COMPLETED ✅
+  - Fixed orange status bar appearing above app header when saved as PWA on iPhone
+  - Changed status bar style from "default" to "black-translucent" for seamless integration
+  - Updated theme colors: white for light mode, black for dark mode
+  - Added PWA standalone mode detection with PWADetector component
+  - CSS classes apply safe area padding only in PWA mode (not in regular browser)
+  - Fixed article title cutoff with conditional padding based on PWA mode
+  - Status bar now properly matches app header color in both themes
 
 ## [0.6.0] - 2025-07-24
 

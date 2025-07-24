@@ -157,7 +157,15 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
             )}
 
             {/* Individual Feeds */}
-            {Array.from(feeds.values()).map((feed) => {
+            {Array.from(feeds.values())
+              .sort((a, b) => 
+                String(a.title || '').localeCompare(
+                  String(b.title || ''), 
+                  undefined, 
+                  { numeric: true, sensitivity: 'base' }
+                )
+              )
+              .map((feed) => {
           const feedWithCount = feedsWithCounts.get(feed.id);
           const unreadCount = feedWithCount?.unreadCount || 0;
           const isSelected = selectedFeedId === feed.id;

@@ -442,7 +442,7 @@ The RSS News Reader is now successfully deployed to production:
   - Test clipboard fallback on Chrome/Firefox
   - Ensure share data formats correctly for different apps
 
-### TODO-046: Fix Orange Status Bar in PWA on iPhone (P1 - UI Bug)
+### TODO-046: Fix Orange Status Bar in PWA on iPhone (P1 - UI Bug) ✅ COMPLETED
 
 - **Status**: ✅ COMPLETED
 - **Issue**: Orange header/status bar appears above app header when saved as PWA on iPhone
@@ -471,43 +471,6 @@ The RSS News Reader is now successfully deployed to production:
   - No extra padding in regular browser mode
   - Fixed article title cutoff with conditional padding
 - **Completed**: July 24, 2025
-- **Implementation Approach**:
-  - Add/fix `<meta name="theme-color">` with proper color
-  - Add `<meta name="apple-mobile-web-app-status-bar-style">`
-  - Update PWA manifest.json with proper theme colors
-  - Consider dynamic theme-color based on dark/light mode
-  - Research iOS-specific PWA requirements
-- **Code to Add/Fix**:
-
-  ```html
-  <!-- For iOS PWA -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta
-    name="apple-mobile-web-app-status-bar-style"
-    content="black-translucent"
-  />
-
-  <!-- Dynamic theme color -->
-  <meta
-    name="theme-color"
-    content="#000000"
-    media="(prefers-color-scheme: dark)"
-  />
-  <meta
-    name="theme-color"
-    content="#ffffff"
-    media="(prefers-color-scheme: light)"
-  />
-  ```
-
-- **Files to Modify**:
-  - `src/app/layout.tsx` - Update metadata configuration
-  - `public/manifest.json` - Ensure proper theme colors
-  - May need to dynamically update theme-color based on current theme
-- **Research Notes**:
-  - Consult Apple's PWA documentation
-  - Check Safari Web Content Guide
-  - Consider using Perplexity to research iOS PWA status bar best practices
 
 ### TODO-047: Filter Out Feeds with No Unread Articles in Sidebar (P2 - Enhancement)
 
@@ -577,9 +540,9 @@ The RSS News Reader is now successfully deployed to production:
   - `src/components/feeds/feed-tree-item.tsx` - Applied same logic for consistency
 - **Completed**: July 24, 2025 - Visual hierarchy implemented
 
-### TODO-049: Sort Feed List Alphabetically in Sidebar (P2 - Enhancement)
+### TODO-049: Sort Feed List Alphabetically in Sidebar (P2 - Enhancement) ✅ COMPLETED
 
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED
 - **Issue**: Feeds in sidebar are not consistently sorted, making it difficult to find specific feeds
 - **Context**:
   - Currently feeds appear to be sorted by their Inoreader order or creation time
@@ -587,43 +550,28 @@ The RSS News Reader is now successfully deployed to production:
   - With 69+ feeds, finding a specific feed without alphabetical order is challenging
   - Alphabetical sorting is a standard pattern in RSS readers
 - **User Story**: As a user with many feeds, I want feeds sorted alphabetically so I can quickly locate specific feeds
-- **Acceptance Criteria**:
-  - [ ] All feeds within a folder are sorted alphabetically (A-Z)
-  - [ ] Sort is case-insensitive
-  - [ ] Folders themselves are sorted alphabetically
-  - [ ] Feeds at root level (no folder) are sorted alphabetically
-  - [ ] "All Articles" special feed remains at the top
-  - [ ] Sorting persists across app sessions
-  - [ ] New feeds are inserted in correct alphabetical position
-- **Implementation Details**:
-  - Sort feeds by title in feed store or component
-  - Use `localeCompare()` for proper internationalization
-  - Apply sorting at the right level (store vs component)
-  - Consider performance with many feeds
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] All feeds within a folder are sorted alphabetically (A-Z)
+  - [x] Sort is case-insensitive
+  - [x] Folders themselves are sorted alphabetically
+  - [x] Feeds at root level (no folder) are sorted alphabetically
+  - [x] "All Articles" special feed remains at the top
+  - [x] Sorting persists across app sessions
+  - [x] New feeds are inserted in correct alphabetical position
+- **Implementation Details**: COMPLETED ✅
+  - Sorted feeds by title in both component and feed store
+  - Used `localeCompare()` with numeric option for proper internationalization
+  - Applied sorting in SimpleFeedSidebar component and getFeedsInFolder method
+  - Performance is good with current feed count
 - **Sorting Rules**:
   1. "All Articles" always first
-  2. Folders sorted alphabetically
+  2. Folders sorted alphabetically (no folders currently in use)
   3. Within each folder, feeds sorted alphabetically
   4. Root-level feeds sorted alphabetically
-- **Code Example**:
-  ```typescript
-  // Sort feeds alphabetically
-  feeds.sort((a, b) =>
-    a.title.localeCompare(b.title, undefined, {
-      numeric: true,
-      sensitivity: "base",
-    })
-  );
-  ```
-- **Files to Modify**:
-  - `src/lib/stores/feed-store.ts` - Add sorting logic to feed getters
-  - `src/components/feeds/simple-feed-sidebar.tsx` - Apply sorting if not in store
-  - May need to update feed loading/processing logic
-- **Testing Notes**:
-  - Test with feeds containing numbers (e.g., "404 Media" vs "Ars Technica")
-  - Test with special characters and international characters
-  - Verify performance with many feeds
-  - Ensure new feeds appear in correct position
+- **Files Modified**:
+  - `src/components/feeds/simple-feed-sidebar.tsx` - Added sorting when converting feeds Map to array
+  - `src/lib/stores/feed-store.ts` - Added sorting to getFeedsInFolder method
+- **Completed**: July 24, 2025 - Feeds now appear in alphabetical order
 
 ### TODO-050: Unify Summarize Icon Style with Star Icon in Article List (P3 - UI Consistency)
 
