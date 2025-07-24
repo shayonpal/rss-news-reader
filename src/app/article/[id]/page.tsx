@@ -94,6 +94,7 @@ export default function ArticlePage() {
   return (
     <ArticleDetail
       article={article}
+      feed={feed}
       feedTitle={feed?.title || 'Unknown Feed'}
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Article } from '@/types';
+import type { Article, Feed } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
@@ -12,6 +12,7 @@ import { SummaryButton } from './summary-button';
 import { SummaryDisplay } from './summary-display';
 import { FetchContentButton } from './fetch-content-button';
 import { useArticleStore } from '@/lib/stores/article-store';
+import { useFeedStore } from '@/lib/stores/feed-store';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ import {
 
 interface ArticleDetailProps {
   article: Article;
+  feed?: Feed;
   feedTitle: string;
   onToggleStar: () => void;
   onNavigate: (direction: 'prev' | 'next') => void;
@@ -30,6 +32,7 @@ interface ArticleDetailProps {
 
 export function ArticleDetail({
   article,
+  feed,
   feedTitle,
   onToggleStar,
   onNavigate,
@@ -42,6 +45,8 @@ export function ArticleDetail({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentArticle, setCurrentArticle] = useState(article);
   const { getArticle } = useArticleStore();
+  const { updateFeedPartialContent } = useFeedStore();
+  const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -201,6 +206,22 @@ export function ArticleDetail({
     }
   };
 
+  const handleToggleFeedPartialContent = async () => {
+    if (!feed || !article.feedId) return;
+    
+    setIsUpdatingFeed(true);
+    try {
+      // Toggle the partial content setting
+      await updateFeedPartialContent(article.feedId, !feed.isPartialContent);
+      // The UI will update automatically when the feed store updates
+    } catch (error) {
+      console.error('Failed to update feed setting:', error);
+      // Could show a toast notification here for error feedback
+    } finally {
+      setIsUpdatingFeed(false);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen bg-white dark:bg-gray-900 w-full overflow-x-hidden"
@@ -266,6 +287,31 @@ export function ArticleDetail({
                 </IOSButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                {feed && (
+                  <DropdownMenuItem 
+                    onSelect={handleToggleFeedPartialContent}
+                    disabled={isUpdatingFeed}
+                    className="relative"
+                  >
+                    <span className={cn(
+                      "mr-2 text-base transition-opacity duration-200",
+                      isUpdatingFeed && "opacity-50"
+                    )}>
+                      {feed.isPartialContent ? '☑' : '☐'}
+                    </span>
+                    <span className={cn(
+                      "transition-opacity duration-200",
+                      isUpdatingFeed && "opacity-50"
+                    )}>
+                      Partial Feed
+                    </span>
+                    {isUpdatingFeed && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
+                      </div>
+                    )}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onSelect={handleShare}>
                   <Share2 className="mr-2 h-4 w-4" />
                   Share

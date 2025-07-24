@@ -236,15 +236,24 @@ The RSS News Reader is now successfully deployed to production:
   - Revert functionality allows users to toggle between full and RSS content
 
 #### TODO-007d: Feed Partial Content Toggle
-- **Status**: 🔴 NOT STARTED
+- **Status**: 🟡 IN PROGRESS - UI Complete, Auto-fetch pending
 - **Tasks**:
-  - [ ] Add "Always fetch for this feed" toggle in article view
-  - [ ] Create API endpoint `/api/feeds/[id]/toggle-partial-content`
-  - [ ] Update feed preferences in database
-  - [ ] Show confirmation only after successful DB update
-  - [ ] Create `feed-partial-toggle.tsx` component
-- **Files**: `src/components/articles/feed-partial-toggle.tsx`, new API endpoint
-- **Acceptance Criteria**: Toggle persists across sessions, affects future syncs
+  - [x] Add "Partial Feed" toggle in More (⋮) dropdown menu
+  - [x] Implement toggle via feed store method `updateFeedPartialContent`
+  - [x] Update feed preferences in database
+  - [x] Show visual feedback during update (spinner + opacity change)
+  - [x] Toggle state only changes after database confirmation
+  - [ ] Integrate with sync process to auto-fetch for partial feeds
+  - [ ] Implement rate limiting (10 articles per 30 minutes)
+  - [ ] Silent failures for auto-fetch attempts
+- **Files**: `src/components/articles/article-detail.tsx`, `src/lib/stores/feed-store.ts`
+- **Acceptance Criteria**: Toggle persists AND triggers auto-fetch during sync
+- **Implementation Notes**:
+  - UI COMPLETE: Toggle always available regardless of full content status
+  - Shows "☐ Partial Feed" when disabled, "☑ Partial Feed" when enabled
+  - Visual feedback includes opacity animation and loading spinner
+  - Database update handled by feed store for proper state management
+  - PENDING: Actual auto-fetch integration with sync process (TODO-007f)
 
 #### TODO-007e: Article List Content Priority Display
 - **Status**: 🔴 NOT STARTED

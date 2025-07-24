@@ -1,3 +1,7 @@
+// DISABLED: This route is temporarily disabled due to missing environment variables
+// To re-enable, uncomment the code below and ensure SUPABASE_SERVICE_ROLE_KEY is set
+
+/*
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -141,4 +145,15 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+*/
+
+// Temporary disabled response
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  return NextResponse.json(
+    { error: 'This endpoint is temporarily disabled' },
+    { status: 503 }
+  );
 }
