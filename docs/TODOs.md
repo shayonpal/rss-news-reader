@@ -788,36 +788,45 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Can be used for monitoring/alerts
 - **Testing**: Call endpoint and verify all metrics returned
 
-### TODO-055: Preserve Sidebar Scroll Position When Navigating Articles (P2 - UX)
+### TODO-055: Implement Independent Scrolling for Sidebar and Article List (P2 - UX)
 
 - **Status**: 🔴 TODO
-- **Issue**: Sidebar scroll position resets when users navigate between articles
-- **Context**:
-  - When users click on different articles in the article list, the sidebar scroll jumps
-  - Users lose their place in the feed/folder list, especially problematic with many feeds
-  - Disrupts reading flow as users have to re-scroll to find their current feed
-- **User Story**: As a user with many feeds, I want the sidebar to maintain its scroll position when I navigate between articles so I don't lose my place in the feed list
+- **Issue**: Sidebar and article list scroll together as one page instead of independently
+- **Current Problem**:
+  - When user scrolls the article list, the entire page scrolls including the sidebar
+  - When user scrolls the sidebar (feed list), it affects the article list position
+  - Both areas share the same scroll context (document body)
+  - Makes it difficult to browse feeds while maintaining article list position
+- **User Story**: As a user, I want the sidebar and article list to scroll independently so I can browse my feed list without losing my position in the article list, and vice versa
 - **Acceptance Criteria**:
-  - [ ] Sidebar scroll position is preserved when clicking articles
-  - [ ] Position maintained when switching between feeds
-  - [ ] Position maintained when toggling read/starred status
-  - [ ] Position reset only when explicitly navigating to a different feed/folder
-  - [ ] Works smoothly without visual jumps or flickers
-  - [ ] Preserves position across both feed and folder tabs
+  - [ ] Sidebar has its own scroll container independent of article list
+  - [ ] Article list has its own scroll container independent of sidebar
+  - [ ] Scrolling in sidebar does NOT affect article list scroll position
+  - [ ] Scrolling in article list does NOT affect sidebar scroll position
+  - [ ] Each area maintains its own scroll position during navigation
+  - [ ] iOS scroll-to-top gesture still works for the focused area
+  - [ ] No regression of auto-hide header functionality
+- **Technical Context**:
+  - Currently using document body scroll for iOS compatibility (TODO-030)
+  - Need to balance iOS gestures with independent scroll containers
+  - May need to reconsider layout structure
 - **Implementation Approach**:
-  - Option 1: Store scroll position in component state before navigation
-  - Option 2: Use CSS to prevent re-renders of sidebar during article changes
-  - Option 3: Implement scroll restoration with useEffect hook
-  - Consider using React's useLayoutEffect for smoother restoration
+  - Option 1: Fixed height containers with overflow-y-auto for each section
+  - Option 2: CSS Grid/Flexbox with proper overflow handling
+  - Option 3: Sticky positioning with scroll containers
+  - Must preserve iOS scroll-to-top gesture functionality
+  - Consider using CSS `overscroll-behavior: contain` to prevent scroll chaining
 - **Files to Modify**:
-  - `src/components/sidebar/sidebar.tsx` - Main sidebar component
-  - May need to lift scroll state up or use context
-  - Check if sidebar is re-rendering unnecessarily
+  - `src/app/page.tsx` - Main layout structure
+  - `src/components/feeds/simple-feed-sidebar.tsx` - Sidebar scroll container
+  - `src/components/articles/article-list.tsx` - Article list scroll container
+  - May need to adjust auto-hide header logic
 - **Testing Notes**:
-  - Test with long feed list requiring scrolling
-  - Verify position maintained during various interactions
-  - Ensure no performance impact from scroll tracking
-  - Test on both desktop and mobile viewports
+  - Test independent scrolling on desktop browsers
+  - Verify iOS scroll-to-top still works
+  - Ensure auto-hide header works with new scroll structure
+  - Test with long feed lists and article lists
+  - Verify no scroll position loss during navigation
 
 ## ✅ COMPLETED TODOS
 
