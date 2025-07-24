@@ -15,13 +15,13 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   console.log('=== FETCH CONTENT API CALLED ===', { params });
+  const startTime = Date.now();
   
   try {
     // In Next.js 13+, params might be a Promise
     const resolvedParams = await Promise.resolve(params);
     const { id } = resolvedParams;
     const decodedId = decodeURIComponent(id);
-    const startTime = Date.now();
     
     console.log('Fetch content request:', { id, decodedId });
     
@@ -86,6 +86,18 @@ export async function POST(
 
     // Fetch the article URL
     if (!article.url) {
+      // Log failure
+      await supabase
+        .from('fetch_logs')
+        .insert({
+          article_id: article.id,
+          feed_id: article.feed_id,
+          fetch_type: 'manual',
+          status: 'failure',
+          error_reason: 'no_url',
+          duration_ms: Date.now() - startTime
+        });
+      
       return NextResponse.json(
         {
           error: 'no_url',
@@ -94,6 +106,16 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    // Log attempt
+    await supabase
+      .from('fetch_logs')
+      .insert({
+        article_id: article.id,
+        feed_id: article.feed_id,
+        fetch_type: 'manual',
+        status: 'attempt'
+      });
 
     // Fetch the content
     const response = await fetch(article.url, {
@@ -118,6 +140,19 @@ export async function POST(
     const extracted = reader.parse();
 
     if (!extracted) {
+      // Log failure
+      await supabase
+        .from('fetch_logs')
+        .insert({
+          article_id: article.id,
+          feed_id: article.feed_id,
+          fetch_type: 'manual',
+          status: 'failure',
+          error_reason: 'extraction_failed',
+          error_details: { message: 'Readability could not extract content' },
+          duration_ms: Date.now() - startTime
+        });
+      
       // Fall back to RSS content
       return NextResponse.json({
         success: true,
@@ -149,23 +184,17 @@ export async function POST(
       // Don't fail the request, just log the error
     }
 
-    // Log the fetch to fetch_logs table
-    const { error: logError } = await supabase
+    // Log success
+    const duration = Date.now() - startTime;
+    await supabase
       .from('fetch_logs')
       .insert({
         article_id: article.id,
         feed_id: article.feed_id,
         fetch_type: 'manual',
-        success: true,
-        response_time_ms: Date.now() - startTime,
-        content_length: cleanContent.length,
-        extraction_method: 'readability',
-        user_id: 'shayon'
+        status: 'success',
+        duration_ms: duration
       });
-    
-    if (logError) {
-      console.error('Failed to log fetch:', logError);
-    }
 
     return NextResponse.json({
       success: true,
@@ -179,6 +208,51 @@ export async function POST(
 
   } catch (error) {
     console.error('=== CONTENT EXTRACTION ERROR ===', error);
+    const duration = Date.now() - startTime;
+    
+    // Try to get article ID for logging (might have failed before fetching article)
+    let articleId: string | undefined;
+    let feedId: string | undefined;
+    
+    try {
+      const resolvedParams = await Promise.resolve(params);
+      const { id } = resolvedParams;
+      const decodedId = decodeURIComponent(id);
+      
+      // Try to get article info for logging
+      const { data: article } = await supabase
+        .from('articles')
+        .select('id, feed_id')
+        .or(`id.eq.${decodedId},inoreader_id.eq.${decodedId}`)
+        .single();
+      
+      articleId = article?.id;
+      feedId = article?.feed_id;
+    } catch (err) {
+      // Ignore errors in error handler
+    }
+    
+    // Log error if we have article info
+    if (articleId) {
+      const errorReason = error instanceof Error && error.name === 'AbortError' 
+        ? 'timeout' 
+        : 'exception';
+      
+      await supabase
+        .from('fetch_logs')
+        .insert({
+          article_id: articleId,
+          feed_id: feedId,
+          fetch_type: 'manual',
+          status: 'failure',
+          error_reason: errorReason,
+          error_details: {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined
+          },
+          duration_ms: duration
+        });
+    }
     
     // Check if it's a timeout
     if (error instanceof Error && error.name === 'AbortError') {

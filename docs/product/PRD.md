@@ -105,7 +105,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - Feeds can be marked as "partial content" via toggle in article view
 - Auto-fetch runs as part of sync process (after normal article sync completes)
 - Applies to: Manual sync, 2am automatic sync, 2pm automatic sync
-- Rate limit: Maximum 10 articles per 30 minutes
+- Rate limit: Maximum 50 articles per 30 minutes
 - Processes only articles from feeds marked as partial
 - All fetch attempts logged in database (success/failure/reason)
 - Silent failures for auto-fetch (no user notification)

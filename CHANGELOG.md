@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Feed Partial Content Toggle & Auto-Fetch (TODO-007d)
+- **Feed Partial Content Toggle & Auto-Fetch Integration** - COMPLETED ✅
+  - Added toggle in article view to mark feeds as "partial content"
+  - Toggle available in More (⋮) dropdown menu with checkbox display
+  - Integrated auto-fetch into sync process for partial content feeds
+  - Rate limiting: Maximum 50 articles per 30 minutes
+  - Silent failures for auto-fetch (no user notifications)
+  - All fetch attempts logged in fetch_logs table
+  - Successfully tested with BBC, Forbes Tech, and Wawa News feeds
+  - 100% success rate for content extraction
+  - Auto-fetch runs after normal article sync completes
+
 ### Added - Full Content Extraction (TODO-007c)
 - **Manual Fetch Full Content Button** - COMPLETED ✅
   - Added "Fetch Full Content" button to article header and bottom

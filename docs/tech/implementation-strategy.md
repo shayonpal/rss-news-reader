@@ -2679,7 +2679,7 @@ class AutoFetchService {
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
-    this.maxArticlesPerRun = 10;
+    this.maxArticlesPerRun = 50;
     this.runIntervalMinutes = 30;
   }
 
@@ -2889,7 +2889,7 @@ Add to `.env`:
 # Full Content Extraction
 ENABLE_AUTO_FETCH=true
 AUTO_FETCH_INTERVAL_MINUTES=30
-AUTO_FETCH_MAX_ARTICLES=10
+AUTO_FETCH_MAX_ARTICLES=50
 AUTO_FETCH_DELAY_MS=2000
 ```
 
