@@ -7,96 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **Codebase Cleanup** - Removed duplicate and obsolete files
-  - Removed duplicate `public/apple-touch-icon.png` (keeping the one in `public/icons/`)
-  - Removed commented-out API route `src/app/api/mark-all-read/route.ts` (functionality handled by server route)
-  - Removed duplicate service worker `src/sw.js` (keeping the built version in `public/sw.js`)
-  - Removed unused `.env.development.local` file containing obsolete `NEXT_PUBLIC_MOCK_AUTH` variable
-  - Removed obsolete SQL scripts: `scripts/create-api-usage-tables.sql` and `scripts/clean-database.sql` (tables already exist in migrations)
-  - Removed standalone test script `test-rls-security.js` (one-off security test no longer needed)
-  - Removed old release documentation: `DEPLOYMENT_v0.5.1.md` and `RELEASE_NOTES_v0.5.1.md` (preserved in git history)
-  - Removed test shell scripts: `scripts/test-caddy.sh`, `scripts/test-manual-sync.sh`, and `server/scripts/test-tokens.js`
-  - Removed outdated technical documentation: `docs/tech/README.md` (project has evolved beyond initial plans)
+## [0.6.0] - 2025-07-24
 
-### Feature Complete - Full Content Extraction (TODO-007)
-- **Comprehensive Full Content Extraction System** - COMPLETED ✅
-  - All 7 sub-tasks completed successfully
-  - Articles can now be extracted beyond RSS snippets
-  - Automatic and manual fetch capabilities
+### Added
+- **Full Content Extraction Feature (TODO-007)** - COMPLETED ✅
+  - Comprehensive system for extracting full article content beyond RSS snippets
+  - All 7 sub-tasks successfully implemented
+  - Automatic and manual fetch capabilities with rate limiting
   - Smart content priority display in article list
-  - Complete monitoring and analytics dashboard
+  - Complete monitoring dashboard with analytics
   - Production-ready with proper error handling and logging
 
-### Added - Article List Content Priority Display (TODO-007e)
-- **Content Priority System** - COMPLETED ✅
-  - Article list now displays content by priority
+- **Fetch Statistics Dashboard (TODO-007g)** - COMPLETED ✅
+  - Comprehensive analytics at `/reader/fetch-stats`
+  - Real-time statistics for today, this month, and lifetime
+  - Per-feed performance metrics with success rates
+  - Average fetch duration tracking
+  - "Top Issues" section for problematic feeds
+  - Mobile-responsive design with theme support
+
+- **Content Priority Display (TODO-007e)** - COMPLETED ✅
+  - Smart article list display by content priority
   - Priority 1: AI summary (shown in full)
   - Priority 2: Full extracted content (4-line preview)
   - Priority 3: RSS content (4-line preview)
-  - Ensures best available content is always shown to users
   - Smooth rendering without layout shifts
-  - Maintains scroll performance with large article lists
 
-### Added - Fetch Logging & Monitoring (TODO-007g)
-- **Fetch Statistics Dashboard** - COMPLETED ✅
-  - Created comprehensive analytics API endpoint `/api/analytics/fetch-stats`
-  - Displays overall statistics for today, this month, and lifetime
-  - Breaks down fetches by type (auto vs manual) with icons
-  - Per-feed performance metrics with collapsible details
-  - Success rate indicators with color coding (green >95%, yellow 80-95%, red <80%)
-  - Average fetch duration tracking for performance monitoring
-  - "Top Issues" section shows problematic feeds and recent failures
-  - Added "Fetch Stats" button to homepage header (next to sync button)
-  - Added "Fetch Stats" option to More (⋮) dropdown in article view
-  - Mobile-responsive design with proper theme support
-  - Real-time data aggregation from fetch_logs table
+- **Auto-Fetch Integration (TODO-007d)** - COMPLETED ✅
+  - Automatic full content fetching for partial content feeds
+  - Toggle to mark feeds as "partial content"
+  - Rate limiting: 50 articles per 30 minutes
+  - Silent operation with comprehensive logging
+  - Tested with BBC, Forbes Tech, and Wawa News feeds
 
-### Added - Feed Partial Content Toggle & Auto-Fetch (TODO-007d)
-- **Feed Partial Content Toggle & Auto-Fetch Integration** - COMPLETED ✅
-  - Added toggle in article view to mark feeds as "partial content"
-  - Toggle available in More (⋮) dropdown menu with checkbox display
-  - Integrated auto-fetch into sync process for partial content feeds
-  - Rate limiting: Maximum 50 articles per 30 minutes
-  - Silent failures for auto-fetch (no user notifications)
-  - All fetch attempts logged in fetch_logs table
-  - Successfully tested with BBC, Forbes Tech, and Wawa News feeds
-  - 100% success rate for content extraction
-  - Auto-fetch runs after normal article sync completes
+- **Manual Fetch Button (TODO-007c)** - COMPLETED ✅
+  - "Fetch Full Content" button in article view
+  - Loading states with spinner feedback
+  - Mozilla Readability integration
+  - Offline access to extracted content
+  - Revert capability to RSS content
 
-### Added - Full Content Extraction (TODO-007c)
-- **Manual Fetch Full Content Button** - COMPLETED ✅
-  - Added "Fetch Full Content" button to article header and bottom
-  - Implemented loading states with spinner during content fetching
-  - Successfully extracts full article content using Mozilla Readability
-  - Stores extracted content in database for offline access
-  - Falls back to RSS content if extraction fails
-  - Added ability to revert from full content back to RSS content
-  - Fixed API endpoint to work with Next.js basePath configuration
-  - Enhanced fetch_logs table with response_time_ms, content_length, extraction_method columns
-  - Comprehensive error handling and user-friendly error messages
+- **Database Schema for Full Content (TODO-007a)** - COMPLETED ✅
+  - `is_partial_content` flag for feeds
+  - `fetch_logs` table for tracking attempts
+  - Proper indexing for performance
+  - Support for manual and automatic fetching
 
-### Added - Full Content Extraction Database Schema (TODO-007a)
-- **Database Schema for Full Content Extraction** - COMPLETED ✅
-  - Added `is_partial_content` boolean column to feeds table
-  - Created `fetch_logs` table to track all content extraction attempts
-  - Table includes: article_id, feed_id, timestamp, success, error_reason, fetch_type
-  - Added proper indexes for efficient querying
-  - Marked 3 known partial content feeds: BBC, Forbes Tech, Wawa News
-  - Foundation ready for manual and automatic full content fetching
+- **Article Header UI Improvements (TODO-007b)** - COMPLETED ✅
+  - Reorganized header with dropdown menu
+  - Moved Share and Open Original to More (⋮) menu
+  - Fixed IOSButton compatibility with Radix UI
+  - Maintained responsive design
 
-### Enhanced - Article Header UI Reorganization (TODO-007b)
-- **Article Detail Header Improvements** - COMPLETED ✅
-  - Moved Share and Open Original buttons to More (⋮) dropdown menu
-  - Maintained Star and Summary buttons in main header for quick access
-  - Fixed IOSButton compatibility with Radix UI dropdown components
-  - Made IOSButton use forwardRef for proper ref and onClick forwarding
-  - Clean, organized header ready for Fetch Full Content button
-  - Responsive design maintained across all device sizes
+### Changed
+- **Codebase Cleanup** - Removed duplicate and obsolete files
+  - Removed duplicate icons and service workers
+  - Removed obsolete SQL scripts and test files
+  - Removed old release documentation (preserved in git history)
+  - Cleaned up outdated technical documentation
 
 ### Fixed
 - **Navigation Footer Positioning** - Fixed footer to stay visible at bottom like header
-- **Fetch Logs Schema** - Added missing columns (response_time_ms, content_length, etc.) to properly track fetch metrics
+- **Fetch Logs Schema** - Added missing columns for proper metrics tracking
+- **Cron Sync URL** - Fixed automatic sync URL missing /reader prefix (TODO-041)
 
 ## [0.5.1] - 2025-07-23
 

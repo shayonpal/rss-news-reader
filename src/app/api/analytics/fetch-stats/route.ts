@@ -83,24 +83,25 @@ export async function GET() {
 
       // Update overall stats
       if (log.status !== 'attempt') {
-        overallStats[period][log.fetch_type].total++;
-        overallStats.lifetime[log.fetch_type].total++;
+        const fetchType = log.fetch_type as 'auto' | 'manual';
+        overallStats[period][fetchType].total++;
+        overallStats.lifetime[fetchType].total++;
         
         if (log.status === 'success') {
-          overallStats[period][log.fetch_type].successful++;
-          overallStats.lifetime[log.fetch_type].successful++;
+          overallStats[period][fetchType].successful++;
+          overallStats.lifetime[fetchType].successful++;
         } else if (log.status === 'failure') {
-          overallStats[period][log.fetch_type].failed++;
-          overallStats.lifetime[log.fetch_type].failed++;
+          overallStats[period][fetchType].failed++;
+          overallStats.lifetime[fetchType].failed++;
         }
 
         // Also update thisMonth if it's today
         if (period === 'today') {
-          overallStats.thisMonth[log.fetch_type].total++;
+          overallStats.thisMonth[fetchType].total++;
           if (log.status === 'success') {
-            overallStats.thisMonth[log.fetch_type].successful++;
+            overallStats.thisMonth[fetchType].successful++;
           } else if (log.status === 'failure') {
-            overallStats.thisMonth[log.fetch_type].failed++;
+            overallStats.thisMonth[fetchType].failed++;
           }
         }
       }
