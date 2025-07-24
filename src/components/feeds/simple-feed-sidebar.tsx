@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
 import { useUIStore } from '@/lib/stores/ui-store';
-import { Loader2, RefreshCw, Sun, Moon, Monitor } from 'lucide-react';
+import { Loader2, RefreshCw, Sun, Moon, Monitor, BarChart3 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -13,6 +14,7 @@ interface SimpleFeedSidebarProps {
 }
 
 export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSidebarProps) {
+  const router = useRouter();
   const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy } = useFeedStore();
   const { isSyncing, lastSyncTime, performFullSync, syncError, syncProgress, syncMessage, rateLimit } = useSyncStore();
   const { theme, setTheme } = useUIStore();
@@ -67,6 +69,13 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
               aria-label={`Current theme: ${theme}`}
             >
               {getThemeIcon()}
+            </button>
+            <button
+              onClick={() => router.push('/fetch-stats')}
+              className="p-2 rounded hover:bg-muted transition-colors"
+              aria-label="View fetch statistics"
+            >
+              <BarChart3 className="h-4 w-4" />
             </button>
             <button
               onClick={performFullSync}

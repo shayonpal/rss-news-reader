@@ -1,19 +1,30 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Article } from '@/types';
+import { useRouter } from 'next/navigation';
+import type { Article, Feed } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import { SummaryButton } from './summary-button';
 import { SummaryDisplay } from './summary-display';
+import { FetchContentButton } from './fetch-content-button';
 import { useArticleStore } from '@/lib/stores/article-store';
+import { useFeedStore } from '@/lib/stores/feed-store';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ArticleDetailProps {
   article: Article;
+  feed?: Feed;
   feedTitle: string;
   onToggleStar: () => void;
   onNavigate: (direction: 'prev' | 'next') => void;
@@ -22,11 +33,13 @@ interface ArticleDetailProps {
 
 export function ArticleDetail({
   article,
+  feed,
   feedTitle,
   onToggleStar,
   onNavigate,
   onBack,
 }: ArticleDetailProps) {
+  const router = useRouter();
   const contentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
@@ -34,6 +47,8 @@ export function ArticleDetail({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentArticle, setCurrentArticle] = useState(article);
   const { getArticle } = useArticleStore();
+  const { updateFeedPartialContent } = useFeedStore();
+  const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -52,8 +67,34 @@ export function ArticleDetail({
     }
   };
 
-  // Clean and sanitize HTML content
-  const cleanContent = DOMPurify.sanitize(currentArticle.content, {
+  // Handle fetch content success
+  const handleFetchContentSuccess = async (content: string) => {
+    // Update the current article with the full content
+    setCurrentArticle({
+      ...currentArticle,
+      fullContent: content,
+      hasFullContent: true
+    });
+    // Also refresh from store to ensure consistency
+    const updatedArticle = await getArticle(article.id);
+    if (updatedArticle) {
+      setCurrentArticle(updatedArticle);
+    }
+  };
+
+  // Handle revert to RSS content
+  const handleRevertContent = () => {
+    // Clear full content to show RSS content
+    setCurrentArticle({
+      ...currentArticle,
+      fullContent: undefined,
+      hasFullContent: false
+    });
+  };
+
+  // Clean and sanitize HTML content - prioritize full content over RSS content
+  const contentToDisplay = currentArticle.fullContent || currentArticle.content;
+  const cleanContent = DOMPurify.sanitize(contentToDisplay, {
     ALLOWED_TAGS: ['p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'em', 
                    'strong', 'br', 'figure', 'figcaption', 'iframe', 'video'],
@@ -167,6 +208,22 @@ export function ArticleDetail({
     }
   };
 
+  const handleToggleFeedPartialContent = async () => {
+    if (!feed || !article.feedId) return;
+    
+    setIsUpdatingFeed(true);
+    try {
+      // Toggle the partial content setting
+      await updateFeedPartialContent(article.feedId, !feed.isPartialContent);
+      // The UI will update automatically when the feed store updates
+    } catch (error) {
+      console.error('Failed to update feed setting:', error);
+      // Could show a toast notification here for error feedback
+    } finally {
+      setIsUpdatingFeed(false);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen bg-white dark:bg-gray-900 w-full overflow-x-hidden"
@@ -205,34 +262,75 @@ export function ArticleDetail({
               <Star className={cn("h-5 w-5", currentArticle.tags?.includes('starred') && "fill-current")} />
             </IOSButton>
             
-            <IOSButton
-              variant="ghost"
-              size="icon"
-              onPress={handleShare}
-              aria-label="Share article"
-              className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
-            >
-              <Share2 className="h-5 w-5" />
-            </IOSButton>
-            
-            {currentArticle.url && (
-              <IOSButton
-                variant="ghost"
-                size="icon"
-                onPress={() => window.open(currentArticle.url, '_blank', 'noopener,noreferrer')}
-                aria-label="Open original article"
-                className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
-              >
-                <ExternalLink className="h-5 w-5" />
-              </IOSButton>
-            )}
-            
             <SummaryButton
               articleId={currentArticle.id}
               hasSummary={!!currentArticle.summary}
               variant="icon"
               onSuccess={handleSummarySuccess}
             />
+            
+            <FetchContentButton
+              articleId={currentArticle.id}
+              hasFullContent={currentArticle.hasFullContent}
+              variant="icon"
+              onSuccess={handleFetchContentSuccess}
+              onRevert={handleRevertContent}
+            />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <IOSButton
+                  variant="ghost"
+                  size="icon"
+                  aria-label="More options"
+                  className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </IOSButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {feed && (
+                  <DropdownMenuItem 
+                    onSelect={handleToggleFeedPartialContent}
+                    disabled={isUpdatingFeed}
+                    className="relative"
+                  >
+                    <span className={cn(
+                      "mr-2 text-base transition-opacity duration-200",
+                      isUpdatingFeed && "opacity-50"
+                    )}>
+                      {feed.isPartialContent ? '☑' : '☐'}
+                    </span>
+                    <span className={cn(
+                      "transition-opacity duration-200",
+                      isUpdatingFeed && "opacity-50"
+                    )}>
+                      Partial Feed
+                    </span>
+                    {isUpdatingFeed && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
+                      </div>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={handleShare}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share
+                </DropdownMenuItem>
+                {currentArticle.url && (
+                  <DropdownMenuItem onSelect={() => window.open(currentArticle.url, '_blank', 'noopener,noreferrer')}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Original
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => router.push('/fetch-stats')}>
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Fetch Stats
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -285,10 +383,21 @@ export function ArticleDetail({
                      [&>*]:break-words"
           dangerouslySetInnerHTML={{ __html: cleanContent }}
         />
+        
+        {/* Fetch/Revert Full Content button at bottom */}
+        <div className="mt-8 mb-8 flex justify-center">
+          <FetchContentButton
+            articleId={currentArticle.id}
+            hasFullContent={currentArticle.hasFullContent}
+            variant="button"
+            onSuccess={handleFetchContentSuccess}
+            onRevert={handleRevertContent}
+          />
+        </div>
       </article>
 
       {/* Navigation Footer */}
-      <footer className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+      <footer className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <IOSButton
             variant="ghost"
@@ -313,6 +422,9 @@ export function ArticleDetail({
           </IOSButton>
         </div>
       </footer>
+      
+      {/* Spacer for fixed footer */}
+      <div className="h-[60px]" />
     </div>
   );
 }

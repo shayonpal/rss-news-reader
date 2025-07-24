@@ -21,6 +21,7 @@ export interface Article {
   state?: ArticleState;
   fullContentUrl?: string;
   hasFullContent?: boolean;
+  fullContent?: string;
 }
 
 export interface Feed {
@@ -34,6 +35,7 @@ export interface Feed {
   folderId?: string | null;
   unreadCount: number;
   isActive: boolean;
+  isPartialContent?: boolean; // Whether feed typically has partial content
   lastFetchedAt?: Date;
   inoreaderId?: string; // Inoreader's feed ID
   createdAt: Date;

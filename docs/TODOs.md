@@ -1,6 +1,6 @@
 # Master TODO List - RSS News Reader
 
-**Last Updated:** July 23ß, 2025  
+**Last Updated:** July 23, 2025  
 **Status:** ✅ Production Deployed
 
 ## 🎉 PRODUCTION DEPLOYMENT COMPLETE
@@ -97,27 +97,216 @@ The RSS News Reader is now successfully deployed to production:
   - Queue notifications to prevent spam
   - Include recovery suggestions in alerts
 
-### TODO-007: Complete Content/Summary UI Integration (P1 - Core)
-- **Status**: 🔴 TODO
-- **Current**: Server endpoints created but NOT implemented, UI integration missing
-- **Missing**:
-  - [ ] Implement server-side content extraction logic
-  - [ ] Add "Fetch Full Content" button to article view
-  - [ ] Display extracted content when available
-  - [ ] Integrate with existing `/api/articles/:id/fetch-content` endpoint
-- **Files to modify**:
-  - `src/app/api/articles/[id]/fetch-content/route.ts` (implement logic)
-  - `src/components/articles/ArticleView.tsx`
-  - `src/components/ui/Button.tsx`
+### TODO-041: Fix Cron Sync URL Missing /reader Prefix (P0 - Critical Bug)
+- **Status**: ✅ COMPLETED
+- **Issue**: Automatic sync has been failing since deployment because cron service calls wrong URL
+- **Root Cause**: Cron service configured to call `http://localhost:3147/api/sync` but app uses `/reader` basePath
+- **Evidence**: 
+  - All automatic syncs failing with "fetch failed" or "404" errors since July 22
+  - Manual test confirms `/api/sync` returns 404, but `/reader/api/sync` works correctly
+  - Logs show consistent failures at 2:00 AM and 2:00 PM daily
+- **Current Configuration**:
+  ```javascript
+  // ecosystem.config.js line 91
+  NEXT_PUBLIC_BASE_URL: 'http://localhost:3147'  // Missing /reader prefix
+  ```
+- **Fix Applied**: Updated ecosystem.config.js to use environment variable with correct default:
+  ```javascript
+  NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+  ```
+- **Acceptance Criteria**:
+  - [x] Update ecosystem.config.js to use correct URL with /reader prefix
+  - [x] Use environment variable instead of hardcoding URL
+  - [x] Test manual sync via cron service succeeds - Tested at 2:35 AM
+  - [x] Verify automatic sync runs successfully at next scheduled time - Completed in 4.4 seconds
+  - [ ] Update deployment documentation if needed
+- **Impact**: HIGH - No automatic syncs have been running in production
+- **Discovered**: July 23, 2025 at 2:19 AM EDT (just after failed 2:00 AM sync)
+- **Fixed**: July 23, 2025 - Applied environment variable approach with correct /reader prefix
 
-### TODO-008: Complete Content Extraction Service (P2 - Enhancement)
-- **Status**: 🟡 PARTIALLY COMPLETE - Server endpoint fully functional
-- **Completed**: ✅ Mozilla Readability integration, server API endpoint `/api/articles/:id/fetch-content`
-- **Missing**:
-  - [ ] UI button to trigger extraction in article view
-  - [ ] Display extracted vs RSS content
-  - [ ] Loading states during extraction
-  - [ ] Error handling for failed extractions
+### TODO-042: Fix Sync Overwriting Local Star/Read Status (P0 - Critical Bug)
+- **Status**: 🔴 TODO
+- **Issue**: Sync from Inoreader overwrites local star/read status changes
+- **Root Cause**: 
+  - User stars/marks articles as read locally → Updates `is_starred`/`is_read` in DB
+  - Changes are queued for bidirectional sync → Added to `sync_queue` table
+  - Bidirectional sync runs (every 5 min) → Sends changes to Inoreader
+  - BUT: Regular sync from Inoreader (2AM/2PM) → Fetches articles and overwrites ALL fields including `is_starred`/`is_read`
+  - This happens because sync uses `upsert` without checking `last_local_update` timestamp
+- **Evidence**:
+  - 0 articles currently starred in DB (despite user starring articles)
+  - 26 articles have `last_local_update > last_sync_update` 
+  - Sync code unconditionally sets: `is_starred: article.categories?.includes('user/-/state/com.google/starred') || false`
+- **Acceptance Criteria**:
+  - [ ] Sync should check `last_local_update` before overwriting `is_read`/`is_starred`
+  - [ ] If local update is newer than sync timestamp, preserve local values
+  - [ ] Add tests to verify local changes aren't overwritten
+  - [ ] Ensure bidirectional sync changes are preserved
+- **Files to modify**:
+  - `src/app/api/sync/route.ts` - Add timestamp comparison logic
+  - Consider creating a merge strategy for sync conflicts
+- **Testing**:
+  - Star an article locally
+  - Wait for bidirectional sync to complete
+  - Trigger manual sync from Inoreader
+  - Verify starred status is preserved
+
+### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt)
+- **Status**: 🔴 TODO
+- **Issue**: `/api/mark-all-read` route exists but is not integrated into the UI
+- **Context**: 
+  - Route was created but never connected to any frontend components
+  - Causes build issues because it initializes Supabase client at module level
+  - Build fails when environment variables aren't available during static generation
+  - Currently worked around by temporarily renaming file during build
+- **Root Cause**: Supabase client is initialized outside the POST function, which runs during build time when env vars may not be available
+- **Options**:
+  1. **Fix the route**: Move Supabase client initialization inside the POST function (lazy loading)
+  2. **Remove the route**: Delete if the feature isn't planned for implementation
+  3. **Implement the feature**: Add UI buttons to mark all articles as read in a feed/folder
+- **Acceptance Criteria**:
+  - [ ] Decide whether to fix, remove, or implement the feature
+  - [ ] If fixing: Move `createClient()` call inside the POST handler
+  - [ ] If removing: Delete the route file entirely
+  - [ ] If implementing: Add "Mark all as read" buttons to feed/folder context menus
+  - [ ] Build completes without workarounds
+- **Implementation Notes**:
+  - The route is designed to mark all articles in a feed or folder as read
+  - Would be useful for users who want to clear unread counts quickly
+  - Similar functionality exists in most RSS readers
+
+### TODO-007: Complete Full Content Extraction Feature (P1 - Core)
+- **Status**: ✅ COMPLETED (2025-07-24) - All sub-tasks finished
+- **Context**: Feature allows users to fetch full article content beyond RSS snippets
+- **Specifications**:
+  - Product: [../product/PRD.md](../product/PRD.md) (lines 60-109)
+  - Technical: [../tech/implementation-strategy.md](../tech/implementation-strategy.md) (lines 735-758)
+- **Completed**:
+  - ✅ Basic server endpoint `/api/articles/[id]/fetch-content` implemented
+  - ✅ Mozilla Readability integration configured
+  - ✅ Database columns `full_content` and `has_full_content` exist
+  - ✅ Basic error handling and caching logic in place
+  - ✅ Feature fully specified in PRD and tech docs
+- **User Stories** (implement in order):
+
+#### TODO-007a: Database Schema Updates
+- **Status**: ✅ COMPLETED (2025-07-23)
+- **Tasks**:
+  - [x] Add `is_partial_content` boolean column to feeds table
+  - [x] Create `fetch_logs` table with columns: id, article_id, feed_id, timestamp, success, error_reason, fetch_type
+  - [x] Add indexes for efficient querying
+  - [x] Run migrations and verify schema
+  - [x] Mark known partial content feeds (BBC, Forbes Tech, Wawa News)
+- **Acceptance Criteria**: Can query new columns/tables successfully
+- **Implementation Notes**:
+  - Added `fetch_type` column to distinguish manual vs auto fetches
+  - Migration file: `20250123_add_full_content_extraction.sql`
+  - All constraints and foreign keys properly configured
+
+#### TODO-007b: Article Detail Header Reorganization
+- **Status**: ✅ COMPLETED (2025-07-23)
+- **Tasks**:
+  - [x] Move Share & External Link buttons to More (⋮) dropdown menu
+  - [x] Placeholder added for "Fetch Full Content" button (will be added in TODO-007c)
+  - [x] Ensure responsive design on mobile/tablet
+  - [x] Maintain existing button functionality
+  - [x] Fix IOSButton compatibility with dropdown menus
+- **Files**: `src/components/articles/article-detail.tsx`, `src/components/ui/ios-button.tsx`
+- **Acceptance Criteria**: Header shows new layout, all buttons functional
+- **Implementation Notes**:
+  - Made IOSButton use forwardRef for proper Radix UI compatibility
+  - Dropdown menu works seamlessly with touch devices
+  - Ready for Fetch Full Content button integration
+
+#### TODO-007c: Manual Fetch Content Implementation
+- **Status**: ✅ COMPLETED (2025-07-23)
+- **Tasks**:
+  - [x] Add "Fetch Full Content" button at article bottom and header
+  - [x] Implement loading state: disabled button + "Fetching..." text + spinner
+  - [x] Show full content when successfully fetched
+  - [x] Display user-friendly error messages for failures
+  - [x] Create `fetch-content-button.tsx` component
+  - [x] Add ability to revert from full content back to RSS content
+- **Files**: `src/components/articles/fetch-content-button.tsx`
+- **Acceptance Criteria**: Can manually fetch content with proper visual feedback
+- **Implementation Notes**:
+  - Fixed API URL to include `/reader` prefix due to basePath configuration
+  - Added support for both UUID and inoreader_id article lookups
+  - Enhanced fetch_logs table schema to properly track metrics
+  - Revert functionality allows users to toggle between full and RSS content
+
+#### TODO-007d: Feed Partial Content Toggle
+- **Status**: ✅ COMPLETED
+- **Tasks**:
+  - [x] Add "Partial Feed" toggle in More (⋮) dropdown menu
+  - [x] Implement toggle via feed store method `updateFeedPartialContent`
+  - [x] Update feed preferences in database
+  - [x] Show visual feedback during update (spinner + opacity change)
+  - [x] Toggle state only changes after database confirmation
+  - [x] Integrate with sync process to auto-fetch for partial feeds
+  - [x] Implement rate limiting (50 articles per 30 minutes)
+  - [x] Silent failures for auto-fetch attempts
+- **Files**: `src/components/articles/article-detail.tsx`, `src/lib/stores/feed-store.ts`, `src/app/api/sync/route.ts`
+- **Acceptance Criteria**: Toggle persists AND triggers auto-fetch during sync
+- **Implementation Notes**:
+  - Toggle always available regardless of full content status
+  - Shows "☐ Partial Feed" when disabled, "☑ Partial Feed" when enabled
+  - Visual feedback includes opacity animation and loading spinner
+  - Database update handled by feed store for proper state management
+  - Auto-fetch fully integrated into sync process (performAutoFetch function)
+  - Successfully tested with 100% success rate on BBC, Forbes Tech, and Wawa News
+  - All fetch attempts logged to fetch_logs table with proper error handling
+
+#### TODO-007e: Article List Content Priority Display
+- **Status**: ✅ COMPLETED
+- **Tasks**:
+  - [x] Update article list item to check content availability
+  - [x] Display by priority: AI summary (full) → Full content (4 lines) → RSS content (4 lines)
+  - [x] Ensure smooth rendering without layout shifts
+  - [x] Maintain scroll performance
+- **Files**: `src/components/articles/article-list.tsx`
+- **Acceptance Criteria**: List shows appropriate content based on availability
+- **Implementation Notes**: 
+  - Modified `renderPreview` function to check for `fullContent` after AI summary
+  - Uses existing `extractTextContent` utility for consistent text extraction
+  - Maintains 4-line preview for both full content and RSS content
+
+#### TODO-007f: Auto-Fetch Service Integration
+- **Status**: ✅ COMPLETED (Merged into TODO-007d)
+- **Tasks**:
+  - [x] Create auto-fetch service with configurable rate limiting
+  - [x] Integrate into sync process (runs after normal article sync)
+  - [x] Process only feeds marked as `is_partial_content`
+  - [x] Implement rate limit: max 50 articles per 30 minutes
+  - [x] Log all attempts to `fetch_logs` table
+- **Files**: `src/app/api/sync/route.ts` (performAutoFetch function)
+- **Acceptance Criteria**: Auto-fetch runs during sync, respects rate limits
+- **Implementation Notes**: 
+  - Functionality was integrated directly into sync route rather than separate service
+  - Successfully fetches content with 100% success rate
+  - Properly respects rate limits and logs all attempts
+
+#### TODO-007g: Fetch Logging & Monitoring
+- **Status**: ✅ COMPLETED (2025-01-24)
+- **Tasks**:
+  - [x] Implement comprehensive logging for all fetch attempts (manual & auto) ✅
+  - [x] Track success/failure rates per feed ✅
+  - [x] Add monitoring for rate limit compliance ✅
+  - [x] Create analytics queries for fetch performance ✅
+- **Files**: Created /api/analytics/fetch-stats, /fetch-stats page
+- **Acceptance Criteria**: Can query fetch history and see success metrics ✅
+- **Implementation Notes**:
+  - Logging infrastructure was already in place (fetch_logs table)
+  - Created comprehensive statistics dashboard showing time-based aggregation
+  - Added navigation links from article dropdown and homepage header
+  - Dashboard differentiates between auto and manual fetches with icons
+  - Shows top issues including problematic feeds and recent failures
+
+- **Testing Strategy**:
+  - Test each user story independently
+  - Manual testing for UI components
+  - Integration testing for auto-fetch service
+  - Monitor API rate limits during testing
 
 ### TODO-014b: Feed Filtering Enhancement (P2 - Post-Production)
 - **Status**: ✅ MOSTLY COMPLETE (July 22, 2025)

@@ -11,6 +11,11 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **Server-Client Architecture**: Server handles all external APIs, client is presentation only
 - **No Client Authentication**: Access controlled by Tailscale network
 - **Progressive Web App**: Install on mobile and desktop devices
+- **Full Content Extraction**: Extract complete articles beyond RSS snippets (v0.6.0)
+  - Manual fetch button for any article
+  - Automatic fetching for partial content feeds
+  - Smart content priority display
+  - Comprehensive fetch statistics dashboard
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
 - **Server-Side Sync**: Efficient sync with only 4-5 API calls
 - **Bi-directional Sync**: Changes sync back to Inoreader (read/unread, star/unstar)
@@ -189,7 +194,6 @@ npm run analyze         # Bundle size analysis
 npm run clean           # Clean build artifacts
 ```
 
-For detailed setup instructions, see [docs/development-setup.md](docs/development-setup.md).
 
 ## Project Structure
 
@@ -216,7 +220,7 @@ src/
 
 **Phase**: Production Deployed
 
-**Version**: 0.5.1
+**Version**: 0.6.0
 
 ### Production Access
 
@@ -265,32 +269,14 @@ src/
 - **Article List**: Infinite scroll with read/unread states
 - **Offline Queue**: Actions synced when back online
 
-
-### Next Steps
-
-**UI Enhancements**:
-- [ ] Add "Fetch Full Content" button UI for articles
-- [ ] Add "Generate Summary" button UI for articles  
-- [ ] Implement feed search functionality
-- [ ] Add theme toggle in settings
-- [ ] Fix Previous/Next button regression on iOS
-
-**Performance & Polish**:
-- [ ] Document internal API endpoints
-- [ ] Add error handling for offline scenarios
-- [ ] Implement incremental sync if needed
-- [ ] iOS scroll-to-top gesture support
-
-See all issues on the [GitHub Issues page](https://github.com/shayonpal/rss-news-reader/issues) or [Project Board](https://github.com/users/shayonpal/projects/7).
-
 ## Documentation
 
-- **[Development Setup](docs/development-setup.md)**: Complete development environment guide
-- **[Development Strategy](docs/development-strategy.md)**: GitHub workflow and project management
 - **[Product Requirements](docs/product/PRD.md)**: Detailed product specifications
 - **[User Stories](docs/product/user-stories.md)**: All user stories with acceptance criteria
 - **[Technical Architecture](docs/tech/)**: Implementation decisions and architecture
 - **[Health Check System](docs/health-check-system.md)**: System monitoring and health checks
+- **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
+- **[Deployment Guide](docs/deployment/caddy-pm2-setup.md)**: Production deployment instructions
 
 ## API Integration
 
@@ -349,7 +335,8 @@ Inoreader API → Server (Node.js) → Supabase → Client (Next.js)
 - **API Communication**: All Inoreader API calls (4-5 per sync)
 - **Data Sync**: Efficient sync to Supabase
 - **Token Refresh**: Automatic before expiration
-- **Future**: Content extraction, AI summaries, cron jobs
+- **Content Extraction**: Mozilla Readability for full article content
+- **AI Summaries**: Claude API integration for article summaries
 
 ### Client Responsibilities
 
@@ -411,6 +398,7 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 | site_url | text | | Website URL |
 | icon_url | text | | Feed icon/favicon URL |
 | folder_id | uuid | REFERENCES folders(id) ON DELETE SET NULL | Parent folder |
+| is_partial_content | boolean | DEFAULT false | Requires full content extraction |
 | created_at | timestamptz | DEFAULT now() | Subscription timestamp |
 | updated_at | timestamptz | DEFAULT now() | Last update timestamp |
 
@@ -541,6 +529,29 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 - Index on `sync_attempts` for retry queries
 - Index on `created_at` for batch processing
 
+#### 9. Fetch Logs Table
+**Purpose**: Track full content extraction attempts
+
+| Column | Type | Constraints | Description |
+|--------|------|------------|-------------|
+| id | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique log entry |
+| article_id | uuid | REFERENCES articles(id) ON DELETE CASCADE | Article being fetched |
+| feed_id | uuid | REFERENCES feeds(id) ON DELETE CASCADE | Parent feed |
+| fetch_type | text | NOT NULL, CHECK IN ('manual','auto') | Fetch trigger type |
+| success | boolean | NOT NULL | Extraction success status |
+| error_reason | text | | Error message if failed |
+| response_time_ms | integer | | API response time |
+| content_length | integer | | Extracted content size |
+| extraction_method | text | | Method used (readability, etc) |
+| created_at | timestamptz | DEFAULT now() | Fetch timestamp |
+
+**Indexes**:
+- Primary key on `id`
+- Foreign key index on `article_id`
+- Foreign key index on `feed_id`
+- Index on `created_at` for time-based queries
+- Index on `fetch_type` for analytics
+
 ### Performance Optimizations
 
 #### Materialized View: feed_stats
@@ -644,8 +655,7 @@ WHERE user_id = $1;
 
 1. Check [GitHub Issues](https://github.com/shayonpal/rss-news-reader/issues) for open tasks
 2. View [Project Board](https://github.com/users/shayonpal/projects/7) for current sprint
-3. Follow development workflow in [docs/development-strategy.md](docs/development-strategy.md)
-4. Run quality gates before committing: `npm run pre-commit`
+3. Run quality gates before committing: `npm run pre-commit`
 
 ## License
 

@@ -26,6 +26,7 @@ interface FeedStoreState {
   updateFeedTitle: (feedId: string, title: string) => Promise<void>;
   toggleFeedActive: (feedId: string) => Promise<void>;
   moveFeedToFolder: (feedId: string, folderId: string | null) => Promise<void>;
+  updateFeedPartialContent: (feedId: string, isPartialContent: boolean) => Promise<void>;
   
   // Folder operations
   createFolder: (name: string, parentId?: string | null) => Promise<string | null>;
@@ -113,6 +114,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           folderId: feed.folder_id,
           unreadCount: feed.unread_count || 0,
           isActive: true,
+          isPartialContent: feed.is_partial_content || false,
           createdAt: new Date(feed.created_at || Date.now()),
           updatedAt: new Date(feed.updated_at || Date.now()),
           inoreaderId: feed.inoreader_id || undefined
@@ -239,6 +241,33 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       await get().updateUnreadCounts();
     } catch (error) {
       console.error('Failed to move feed:', error);
+    }
+  },
+
+  // Update feed partial content setting
+  updateFeedPartialContent: async (feedId: string, isPartialContent: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('feeds')
+        .update({ 
+          is_partial_content: isPartialContent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', feedId);
+
+      if (error) throw error;
+      
+      // Update in store
+      const { feeds } = get();
+      const feed = feeds.get(feedId);
+      if (feed) {
+        const updatedFeeds = new Map(feeds);
+        updatedFeeds.set(feedId, { ...feed, isPartialContent });
+        set({ feeds: updatedFeeds });
+      }
+    } catch (error) {
+      console.error('Failed to update feed partial content setting:', error);
+      set({ feedsError: `Failed to update feed setting: ${error}` });
     }
   },
 

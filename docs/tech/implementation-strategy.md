@@ -2263,16 +2263,742 @@ class SummaryMetrics {
 }
 ```
 
+## Full Content Extraction Implementation (TODO-007)
+
+### Overview
+
+This section outlines the technical implementation for completing the Full Content Extraction feature. The backend is already implemented; this focuses on UI integration, database schema updates, and the auto-fetch system.
+
+### Current State
+
+#### Already Implemented
+- ✅ Server endpoint `/api/articles/[id]/fetch-content`
+- ✅ Mozilla Readability integration
+- ✅ Database columns `full_content` and `has_full_content`
+- ✅ Error handling and caching logic
+- ✅ 10-second timeout for slow sites
+
+#### Missing Components
+- ❌ UI buttons and interaction flows
+- ❌ Visual indicators for fetched content
+- ❌ Feed marking system for partial content
+- ❌ Auto-fetch background job
+- ❌ Fetch attempt logging system
+
+### Implementation Plan
+
+#### Phase 1: Database Schema Updates
+
+##### 1.1 Add Partial Content Flag to Feeds Table
+```sql
+-- Migration: add_partial_content_flag
+ALTER TABLE feeds 
+ADD COLUMN is_partial_content BOOLEAN DEFAULT FALSE;
+
+-- Index for efficient filtering
+CREATE INDEX idx_feeds_partial_content ON feeds(is_partial_content) 
+WHERE is_partial_content = true;
+```
+
+##### 1.2 Create Fetch Logs Table
+```sql
+-- Migration: create_fetch_logs_table
+CREATE TABLE fetch_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  feed_id UUID REFERENCES feeds(id) ON DELETE CASCADE,
+  fetch_type TEXT NOT NULL CHECK (fetch_type IN ('manual', 'auto')),
+  status TEXT NOT NULL CHECK (status IN ('attempt', 'success', 'failure')),
+  error_reason TEXT,
+  error_details JSONB,
+  duration_ms INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for querying
+CREATE INDEX idx_fetch_logs_article ON fetch_logs(article_id);
+CREATE INDEX idx_fetch_logs_feed ON fetch_logs(feed_id);
+CREATE INDEX idx_fetch_logs_status ON fetch_logs(status);
+CREATE INDEX idx_fetch_logs_created ON fetch_logs(created_at DESC);
+```
+
+#### Phase 2: UI Components Implementation
+
+##### 2.1 Header Reorganization
+
+**File**: `src/components/articles/article-detail.tsx`
+
+```typescript
+// Update header button layout
+// Move Share and ExternalLink to More menu
+// Keep: Back, Star, Summary, Fetch Content, More
+
+interface MoreMenuProps {
+  onShare: () => void;
+  onOpenExternal: () => void;
+  onToggleFeedSetting: () => void;
+  isFeedPartial: boolean;
+}
+
+const MoreMenu: React.FC<MoreMenuProps> = ({ ... }) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <IOSButton variant="ghost" size="icon">
+          <MoreVertical className="h-5 w-5" />
+        </IOSButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onShare}>
+          <Share2 className="mr-2 h-4 w-4" />
+          Share
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onOpenExternal}>
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Open Original
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onToggleFeedSetting}>
+          <Settings className="mr-2 h-4 w-4" />
+          {isFeedPartial ? '✓ Auto-fetch enabled' : 'Always fetch for feed'}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+```
+
+##### 2.2 Fetch Content Button Component
+
+**File**: `src/components/articles/fetch-content-button.tsx`
+
+```typescript
+interface FetchContentButtonProps {
+  articleId: string;
+  hasFullContent: boolean;
+  onSuccess: () => void;
+  variant?: 'header' | 'inline';
+}
+
+export function FetchContentButton({ 
+  articleId, 
+  hasFullContent, 
+  onSuccess,
+  variant = 'header' 
+}: FetchContentButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFetch = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/reader/api/articles/${articleId}/fetch-content`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch content');
+      }
+
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (variant === 'header') {
+    return (
+      <IOSButton
+        variant="ghost"
+        size="icon"
+        onPress={handleFetch}
+        disabled={isLoading || hasFullContent}
+        aria-label="Fetch full content"
+      >
+        {isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <FileText className="h-5 w-5" />
+        )}
+      </IOSButton>
+    );
+  }
+
+  // Inline variant for article bottom
+  return (
+    <div className="border-t border-gray-200 dark:border-gray-800 pt-6 mt-8">
+      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          Want to read the full article?
+        </p>
+        <Button
+          onClick={handleFetch}
+          disabled={isLoading || hasFullContent}
+          className="w-full sm:w-auto"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Fetching content...
+            </>
+          ) : hasFullContent ? (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Full content loaded
+            </>
+          ) : (
+            <>
+              <FileText className="mr-2 h-4 w-4" />
+              Fetch Full Content
+            </>
+          )}
+        </Button>
+        {error && (
+          <p className="text-sm text-red-500 mt-2">{error}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+##### 2.3 Feed Settings Toggle
+
+**File**: `src/components/articles/feed-partial-toggle.tsx`
+
+```typescript
+interface FeedPartialToggleProps {
+  feedId: string;
+  isPartial: boolean;
+  feedName: string;
+}
+
+export function FeedPartialToggle({ feedId, isPartial, feedName }: FeedPartialToggleProps) {
+  const [isPending, setIsPending] = useState(false);
+  const { updateFeedSettings } = useFeedStore();
+
+  const handleToggle = async () => {
+    setIsPending(true);
+    
+    try {
+      const { error } = await supabase
+        .from('feeds')
+        .update({ is_partial_content: !isPartial })
+        .eq('id', feedId);
+
+      if (error) throw error;
+
+      // Update local state only after DB confirms
+      updateFeedSettings(feedId, { is_partial_content: !isPartial });
+    } catch (err) {
+      console.error('Failed to update feed settings:', err);
+      // Could show toast notification here
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleToggle}
+      disabled={isPending}
+      className="mt-2"
+    >
+      {isPending ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : isPartial ? (
+        <Check className="mr-2 h-4 w-4" />
+      ) : null}
+      {isPartial ? 'Auto-fetch enabled' : 'Always fetch for this feed'}
+    </Button>
+  );
+}
+```
+
+##### 2.4 Visual Indicator for Fetched Content
+
+**File**: `src/components/articles/article-detail.tsx`
+
+```css
+/* Add to article content container classes */
+.article-content-fetched-light {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.article-content-fetched-dark {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+```
+
+```typescript
+// In ArticleDetail component
+const contentClasses = cn(
+  "prose prose-base sm:prose-lg dark:prose-invert max-w-none",
+  // ... existing classes
+  currentArticle.has_full_content && [
+    "article-content-fetched-light",
+    "dark:article-content-fetched-dark"
+  ]
+);
+```
+
+##### 2.5 Article List Content Display Update
+
+**File**: `src/components/articles/article-list-item.tsx`
+
+```typescript
+// Update the content display logic to use priority order
+const getDisplayContent = (article: Article): { content: string; isFullDisplay: boolean } => {
+  // Priority 1: AI Summary (show in full, no line clamping)
+  if (article.summary) {
+    return { content: article.summary, isFullDisplay: true };
+  }
+  
+  // Priority 2: Full Content (line-clamp to 4 lines)
+  if (article.has_full_content && article.full_content) {
+    // Strip HTML and truncate for preview
+    const stripped = stripHtml(article.full_content);
+    return { content: stripped, isFullDisplay: false };
+  }
+  
+  // Priority 3: RSS Content (line-clamp to 4 lines)
+  return { content: article.content || '', isFullDisplay: false };
+};
+
+// In the component render
+const { content, isFullDisplay } = getDisplayContent(article);
+
+<div className={cn(
+  "text-sm text-gray-600 dark:text-gray-400",
+  !isFullDisplay && "line-clamp-4"
+)}>
+  {content}
+</div>
+```
+
+#### Phase 3: Store Updates
+
+##### 3.1 Article Store Enhancement
+
+**File**: `src/lib/stores/article-store.ts`
+
+```typescript
+interface ArticleStore {
+  // ... existing properties
+  fetchFullContent: (articleId: string) => Promise<void>;
+  logFetchAttempt: (
+    articleId: string, 
+    feedId: string,
+    type: 'manual' | 'auto',
+    status: 'attempt' | 'success' | 'failure',
+    errorReason?: string
+  ) => Promise<void>;
+}
+
+// Add methods to store
+fetchFullContent: async (articleId: string) => {
+  const article = get().articles.get(articleId);
+  if (!article) return;
+
+  // Log attempt
+  await get().logFetchAttempt(articleId, article.feedId, 'manual', 'attempt');
+
+  try {
+    const response = await fetch(`/reader/api/articles/${articleId}/fetch-content`, {
+      method: 'POST',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch content');
+    }
+
+    // Update article with full content
+    set((state) => ({
+      articles: new Map(state.articles).set(articleId, {
+        ...article,
+        full_content: data.content,
+        has_full_content: true,
+      }),
+    }));
+
+    // Log success
+    await get().logFetchAttempt(articleId, article.feedId, 'manual', 'success');
+  } catch (error) {
+    // Log failure
+    await get().logFetchAttempt(
+      articleId, 
+      article.feedId, 
+      'manual', 
+      'failure',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+    throw error;
+  }
+},
+
+logFetchAttempt: async (articleId, feedId, type, status, errorReason) => {
+  try {
+    await supabase.from('fetch_logs').insert({
+      article_id: articleId,
+      feed_id: feedId,
+      fetch_type: type,
+      status,
+      error_reason: errorReason,
+    });
+  } catch (err) {
+    console.error('Failed to log fetch attempt:', err);
+  }
+},
+```
+
+#### Phase 4: Auto-Fetch Background Service
+
+##### 4.1 Background Job Implementation
+
+**File**: `src/server/services/auto-fetch-service.js`
+
+```javascript
+const { createClient } = require('@supabase/supabase-js');
+const fetch = require('node-fetch');
+const { JSDOM } = require('jsdom');
+const { Readability } = require('@mozilla/readability');
+
+class AutoFetchService {
+  constructor() {
+    this.supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    this.maxArticlesPerRun = 50;
+    this.runIntervalMinutes = 30;
+  }
+
+  async run() {
+    console.log('[AutoFetch] Starting auto-fetch run');
+    
+    try {
+      // Get feeds marked as partial
+      const { data: partialFeeds, error: feedError } = await this.supabase
+        .from('feeds')
+        .select('id')
+        .eq('is_partial_content', true);
+
+      if (feedError) throw feedError;
+      if (!partialFeeds?.length) {
+        console.log('[AutoFetch] No partial feeds found');
+        return;
+      }
+
+      // Get articles needing fetch (limit 10)
+      const { data: articles, error: articleError } = await this.supabase
+        .from('articles')
+        .select('id, url, feed_id')
+        .in('feed_id', partialFeeds.map(f => f.id))
+        .eq('has_full_content', false)
+        .order('published', { ascending: false })
+        .limit(this.maxArticlesPerRun);
+
+      if (articleError) throw articleError;
+      if (!articles?.length) {
+        console.log('[AutoFetch] No articles to fetch');
+        return;
+      }
+
+      console.log(`[AutoFetch] Processing ${articles.length} articles`);
+
+      // Process articles
+      for (const article of articles) {
+        await this.fetchArticleContent(article);
+        
+        // Add delay between fetches
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      console.log('[AutoFetch] Run completed');
+    } catch (error) {
+      console.error('[AutoFetch] Error:', error);
+    }
+  }
+
+  async fetchArticleContent(article) {
+    const startTime = Date.now();
+
+    // Log attempt
+    await this.logFetchAttempt(article.id, article.feed_id, 'auto', 'attempt');
+
+    try {
+      // Fetch content with timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(article.url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; RSSReader/1.0)'
+        }
+      });
+      
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const html = await response.text();
+      
+      // Extract with Readability
+      const dom = new JSDOM(html, { url: article.url });
+      const reader = new Readability(dom.window.document);
+      const parsed = reader.parse();
+
+      if (!parsed?.content) {
+        throw new Error('No content extracted');
+      }
+
+      // Save to database
+      const { error: updateError } = await this.supabase
+        .from('articles')
+        .update({
+          full_content: parsed.content,
+          has_full_content: true
+        })
+        .eq('id', article.id);
+
+      if (updateError) throw updateError;
+
+      // Log success
+      await this.logFetchAttempt(
+        article.id, 
+        article.feed_id, 
+        'auto', 
+        'success',
+        null,
+        Date.now() - startTime
+      );
+
+      console.log(`[AutoFetch] Success: ${article.url}`);
+    } catch (error) {
+      // Log failure
+      await this.logFetchAttempt(
+        article.id,
+        article.feed_id,
+        'auto',
+        'failure',
+        error.message,
+        Date.now() - startTime
+      );
+
+      console.error(`[AutoFetch] Failed: ${article.url} - ${error.message}`);
+    }
+  }
+
+  async logFetchAttempt(articleId, feedId, type, status, errorReason, duration) {
+    try {
+      await this.supabase.from('fetch_logs').insert({
+        article_id: articleId,
+        feed_id: feedId,
+        fetch_type: type,
+        status,
+        error_reason: errorReason,
+        duration_ms: duration,
+        error_details: errorReason ? { message: errorReason } : null
+      });
+    } catch (err) {
+      console.error('[AutoFetch] Failed to log attempt:', err);
+    }
+  }
+}
+
+module.exports = AutoFetchService;
+```
+
+##### 4.2 Sync Service Integration
+
+**File**: `src/server/sync-service.js` (update existing)
+
+```javascript
+const AutoFetchService = require('./services/auto-fetch-service');
+
+class SyncService {
+  constructor() {
+    // ... existing setup
+    this.autoFetchService = new AutoFetchService();
+  }
+
+  async performFullSync() {
+    try {
+      // ... existing sync logic
+      
+      // After normal sync completes, run auto-fetch
+      if (process.env.ENABLE_AUTO_FETCH === 'true') {
+        console.log('[Sync] Starting auto-fetch for partial feeds');
+        await this.autoFetchService.run();
+      }
+      
+      return { success: true };
+    } catch (error) {
+      // ... error handling
+    }
+  }
+}
+```
+
+**Note**: This ensures auto-fetch runs as part of the regular sync process (manual sync, 2am/2pm automatic syncs) rather than as a separate scheduled job.
+
+#### Phase 5: Testing Strategy
+
+##### 5.1 Manual Testing Checklist
+- [ ] Fetch button appears in header
+- [ ] Fetch button appears at article bottom
+- [ ] Loading states display correctly
+- [ ] Error messages show for failed fetches
+- [ ] Visual indicator appears for fetched content
+- [ ] Feed toggle updates after DB confirmation
+- [ ] More menu contains Share and External Link
+- [ ] Auto-fetch processes partial feeds
+- [ ] Fetch logs record all attempts
+
+##### 5.2 Edge Cases to Test
+- [ ] Paywalled articles (WSJ, NYT)
+- [ ] JavaScript-heavy SPAs
+- [ ] Sites blocking automated access
+- [ ] Slow-loading sites (timeout handling)
+- [ ] Articles already having full content
+- [ ] Network failures during fetch
+
+##### 5.3 Performance Testing
+- [ ] Loading state doesn't block UI
+- [ ] Multiple fetches don't overwhelm server
+- [ ] Background job respects rate limits
+- [ ] Database queries remain efficient
+
+#### Phase 6: Environment Configuration
+
+Add to `.env`:
+```bash
+# Full Content Extraction
+ENABLE_AUTO_FETCH=true
+AUTO_FETCH_INTERVAL_MINUTES=30
+AUTO_FETCH_MAX_ARTICLES=50
+AUTO_FETCH_DELAY_MS=2000
+```
+
+Update PM2 config:
+```javascript
+{
+  name: 'rss-auto-fetch',
+  script: './src/server/services/auto-fetch-runner.js',
+  instances: 1,
+  max_memory_restart: '256M',
+  env: {
+    ENABLE_AUTO_FETCH: true,
+    // ... other env vars
+  }
+}
+```
+
+### Rollout Plan
+
+#### Stage 1: UI Implementation (2-3 days)
+1. Implement header reorganization
+2. Add fetch content buttons
+3. Add visual indicators
+4. Test manual fetching flow
+
+#### Stage 2: Database Updates (1 day)
+1. Run migrations in development
+2. Test with sample data
+3. Deploy to production
+
+#### Stage 3: Auto-Fetch Service (2-3 days)
+1. Implement background service
+2. Test with limited feeds
+3. Monitor performance and logs
+4. Deploy with feature flag
+
+#### Stage 4: Production Rollout (1 day)
+1. Enable for subset of feeds
+2. Monitor fetch logs
+3. Adjust rate limits if needed
+4. Full rollout
+
+### Monitoring & Success Metrics
+
+#### Key Metrics
+- Fetch success rate (target: >80%)
+- Average fetch duration (<3 seconds)
+- API rate limit usage (<100 calls/day)
+- User engagement with fetched content
+
+#### Monitoring Queries
+```sql
+-- Daily fetch statistics
+SELECT 
+  DATE(created_at) as date,
+  fetch_type,
+  status,
+  COUNT(*) as count,
+  AVG(duration_ms) as avg_duration
+FROM fetch_logs
+WHERE created_at > NOW() - INTERVAL '7 days'
+GROUP BY DATE(created_at), fetch_type, status
+ORDER BY date DESC;
+
+-- Problematic feeds
+SELECT 
+  f.title,
+  COUNT(*) as failure_count,
+  COUNT(DISTINCT fl.error_reason) as unique_errors
+FROM fetch_logs fl
+JOIN feeds f ON fl.feed_id = f.id
+WHERE fl.status = 'failure'
+  AND fl.created_at > NOW() - INTERVAL '24 hours'
+GROUP BY f.id, f.title
+HAVING COUNT(*) > 5
+ORDER BY failure_count DESC;
+```
+
+### Risk Mitigation
+
+#### Potential Issues & Solutions
+
+1. **Rate Limiting by Websites**
+   - Solution: Implement per-domain rate limiting
+   - Add User-Agent rotation if needed
+
+2. **Resource Exhaustion**
+   - Solution: Strict timeouts and memory limits
+   - Queue management for concurrent fetches
+
+3. **Content Quality**
+   - Solution: Fallback to RSS content
+   - User feedback mechanism for improvements
+
+4. **Database Growth**
+   - Solution: Periodic cleanup of old fetch logs
+   - Archive strategy for historical data
+
 ## Summary
 
-This implementation strategy now includes comprehensive bi-directional sync and configurable AI summarization, ensuring:
+This implementation strategy now includes comprehensive bi-directional sync, configurable AI summarization, and full content extraction, ensuring:
 
-1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization (with customizable prompts), and bi-directional sync
+1. **Server handles everything complex**: OAuth, Inoreader API, content extraction, AI summarization (with customizable prompts), bi-directional sync, and auto-fetch
 2. **Client is purely presentational**: Reads from Supabase, calls server endpoints, queues local changes
 3. **Clean-slate migration**: No data migration complexity
 4. **Single-user optimization**: Dramatic simplification throughout
 5. **Tailscale security**: Network-level access control
 6. **Efficient sync**: Batched operations, smart timing, and conflict resolution
 7. **Flexible AI summarization**: Environment variable configuration for different content types
+8. **Robust content extraction**: Manual and automatic fetching with comprehensive error handling
 
-The strategy ensures efficient API usage (4-5 calls per sync + bi-directional sync calls), automated setup (Playwright OAuth), configurable AI summaries, and a maintainable architecture suitable for open-sourcing.
+The strategy ensures efficient API usage (4-5 calls per sync + bi-directional sync calls), automated setup (Playwright OAuth), configurable AI summaries, robust content extraction, and a maintainable architecture suitable for open-sourcing.

@@ -142,6 +142,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           inoreaderItemId: article.inoreader_id,
           fullContentUrl: article.url,
           hasFullContent: article.has_full_content || false,
+          fullContent: article.full_content || undefined,
           summary: article.ai_summary || undefined,
           isPartial: false,
           feedTitle: article.feed?.title || ''
@@ -242,6 +243,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           inoreaderItemId: article.inoreader_id,
           fullContentUrl: article.url,
           hasFullContent: article.has_full_content || false,
+          fullContent: article.full_content || undefined,
           summary: article.ai_summary || undefined,
           isPartial: false,
           feedTitle: article.feed?.title || ''
@@ -286,6 +288,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           inoreaderItemId: article.inoreader_id,
           fullContentUrl: article.url,
           hasFullContent: article.has_full_content || false,
+          fullContent: article.full_content || undefined,
           summary: article.ai_summary || undefined,
           isPartial: false,
           feedTitle: article.feed?.title || ''

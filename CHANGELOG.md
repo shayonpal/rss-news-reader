@@ -5,7 +5,86 @@ All notable changes to Shayon's News RSS Reader PWA will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.6.0] - 2025-07-24
+
+### Added
+- **Full Content Extraction Feature (TODO-007)** - COMPLETED ✅
+  - Comprehensive system for extracting full article content beyond RSS snippets
+  - All 7 sub-tasks successfully implemented
+  - Automatic and manual fetch capabilities with rate limiting
+  - Smart content priority display in article list
+  - Complete monitoring dashboard with analytics
+  - Production-ready with proper error handling and logging
+
+- **Fetch Statistics Dashboard (TODO-007g)** - COMPLETED ✅
+  - Comprehensive analytics at `/reader/fetch-stats`
+  - Real-time statistics for today, this month, and lifetime
+  - Per-feed performance metrics with success rates
+  - Average fetch duration tracking
+  - "Top Issues" section for problematic feeds
+  - Mobile-responsive design with theme support
+
+- **Content Priority Display (TODO-007e)** - COMPLETED ✅
+  - Smart article list display by content priority
+  - Priority 1: AI summary (shown in full)
+  - Priority 2: Full extracted content (4-line preview)
+  - Priority 3: RSS content (4-line preview)
+  - Smooth rendering without layout shifts
+
+- **Auto-Fetch Integration (TODO-007d)** - COMPLETED ✅
+  - Automatic full content fetching for partial content feeds
+  - Toggle to mark feeds as "partial content"
+  - Rate limiting: 50 articles per 30 minutes
+  - Silent operation with comprehensive logging
+  - Tested with BBC, Forbes Tech, and Wawa News feeds
+
+- **Manual Fetch Button (TODO-007c)** - COMPLETED ✅
+  - "Fetch Full Content" button in article view
+  - Loading states with spinner feedback
+  - Mozilla Readability integration
+  - Offline access to extracted content
+  - Revert capability to RSS content
+
+- **Database Schema for Full Content (TODO-007a)** - COMPLETED ✅
+  - `is_partial_content` flag for feeds
+  - `fetch_logs` table for tracking attempts
+  - Proper indexing for performance
+  - Support for manual and automatic fetching
+
+- **Article Header UI Improvements (TODO-007b)** - COMPLETED ✅
+  - Reorganized header with dropdown menu
+  - Moved Share and Open Original to More (⋮) menu
+  - Fixed IOSButton compatibility with Radix UI
+  - Maintained responsive design
+
+### Changed
+- **Codebase Cleanup** - Removed duplicate and obsolete files
+  - Removed duplicate icons and service workers
+  - Removed obsolete SQL scripts and test files
+  - Removed old release documentation (preserved in git history)
+  - Cleaned up outdated technical documentation
+
+### Fixed
+- **Navigation Footer Positioning** - Fixed footer to stay visible at bottom like header
+- **Fetch Logs Schema** - Added missing columns for proper metrics tracking
+- **Cron Sync URL** - Fixed automatic sync URL missing /reader prefix (TODO-041)
+
 ## [0.5.1] - 2025-07-23
+
+### Fixed - July 23, 2025 Session (Critical Bug Fix)
+- **Cron Sync URL Missing /reader Prefix** (TODO-041) - COMPLETED ✅
+  - Fixed automatic sync failing since deployment due to missing basePath
+  - Root cause: Cron service calling `http://localhost:3147/api/sync` instead of `/reader/api/sync`
+  - All automatic syncs had been failing with 404 errors since July 22 deployment
+  - Solution: Updated ecosystem.config.js to use environment variable with correct default:
+    ```javascript
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+    ```
+  - Tested with ad-hoc 2:35 AM sync - completed successfully in 4.4 seconds
+  - Automatic syncs now working at 2:00 AM and 2:00 PM daily
+  - High impact fix - restored critical background sync functionality
 
 ### Added - July 22, 2025 Session (Auto-Mark as Read)
 - **Auto-Mark Articles as Read on Scroll** (TODO-029) - COMPLETED ✅

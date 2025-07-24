@@ -224,7 +224,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       );
     }
     
-    // If we have an AI summary, show it in full
+    // Priority 1: If we have an AI summary, show it in full
     if (article.summary) {
       return (
         <div className="mt-2 space-y-2">
@@ -237,7 +237,19 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       );
     }
     
-    // Otherwise show a snippet of the content
+    // Priority 2: If we have full content (extracted), show 4-line preview
+    if (article.fullContent) {
+      const fullContentText = extractTextContent(article.fullContent);
+      if (fullContentText) {
+        return (
+          <p className="text-sm text-muted-foreground line-clamp-4 mt-2 break-words">
+            {fullContentText}
+          </p>
+        );
+      }
+    }
+    
+    // Priority 3: Show RSS content as 4-line preview
     const contentText = extractTextContent(article.content);
     if (contentText) {
       return (
