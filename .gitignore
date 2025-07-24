@@ -49,3 +49,6 @@ update-project-fields.js
 
 # Personal documentation
 docs/revised-priority.md
+
+# Token files
+~/.rss-reader/tokens.json
