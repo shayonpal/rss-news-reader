@@ -194,16 +194,14 @@ export function ArticleDetail({
         });
       } catch (error) {
         // User cancelled or share failed
-        console.log('Share failed:', error);
       }
     } else if (currentArticle.url) {
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(currentArticle.url);
         // Could add a toast notification here
-        console.log('Link copied to clipboard');
       } catch (error) {
-        console.error('Failed to copy link:', error);
+        // Failed to copy link
       }
     }
   };
@@ -217,7 +215,6 @@ export function ArticleDetail({
       await updateFeedPartialContent(article.feedId, !feed.isPartialContent);
       // The UI will update automatically when the feed store updates
     } catch (error) {
-      console.error('Failed to update feed setting:', error);
       // Could show a toast notification here for error feedback
     } finally {
       setIsUpdatingFeed(false);
@@ -234,7 +231,7 @@ export function ArticleDetail({
       {/* Header */}
       <header 
         ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out"
+        className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out pwa-safe-area-top"
         style={{ transform: 'translateY(0)' }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -336,7 +333,7 @@ export function ArticleDetail({
       </header>
 
       {/* Spacer for fixed header */}
-      <div className="h-[60px]" />
+      <div className="h-[60px] pwa-safe-area-top" />
 
       {/* Article Content */}
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

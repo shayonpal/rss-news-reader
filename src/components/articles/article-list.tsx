@@ -316,7 +316,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="divide-y divide-border overflow-x-hidden">
+      <div className="divide-y divide-border overflow-x-hidden article-list-container">
         {Array.from(articles.values()).map((article) => (
           <article
             key={article.id}

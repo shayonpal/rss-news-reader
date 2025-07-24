@@ -105,7 +105,7 @@ export function ArticleHeader({
   };
 
   return (
-    <header className="border-b px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3">
+    <header className="border-b px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3 pwa-safe-area-top">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Mobile Menu Button */}
         {isMobile && onMenuClick && (

@@ -8,6 +8,16 @@ html, body {
   width: 100%;
 }
 
+/* iOS PWA safe area handling - only applies in standalone mode */
+.pwa-standalone .pwa-safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Additional padding for article list in PWA mode */
+.pwa-standalone .article-list-container {
+  padding-top: 1rem; /* Extra padding to prevent cutoff */
+}
+
 /* Prevent horizontal scroll on mobile */
 * {
   max-width: 100vw;

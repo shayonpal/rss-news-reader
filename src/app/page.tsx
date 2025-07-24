@@ -136,7 +136,7 @@ export default function HomePage() {
         </div>
         
         {/* Spacer for fixed header */}
-        <div className="h-[73px]" />
+        <div className="h-[73px] pwa-safe-area-top" />
 
         {/* Article List */}
         <ArticleList

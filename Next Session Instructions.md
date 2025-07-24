@@ -1,19 +1,37 @@
 # Next Session Instructions
 
-**Last Updated:** Thursday, July 24, 2025 at 12:07 AM
+**Last Updated:** Thursday, July 24, 2025 at 7:00 AM
 
-## Latest Session - July 24, 2025 (Late Evening)
+## Latest Session - July 24, 2025 (Morning)
+- **Duration:** ~20 minutes (6:53 AM - 7:13 AM)  
+- **Main focus:** Fixed iOS PWA orange status bar issue (TODO-046)
+- **Achievement:** Status bar fixed with conditional PWA-only padding, no browser mode issues
+
+## Previous Session - July 24, 2025 (Late Evening/Early Morning)
 - **Duration:** ~1 hour 22 minutes (10:45 PM - 12:07 AM)
 - **Main focus:** Completed TODO-007e (article list content priority)
 - **Major achievement:** TODO-007 FULLY COMPLETE! All 7 sub-tasks finished
 
 ## Current State
 - **Branch:** dev
-- **Uncommitted changes:** Yes (article-list.tsx, CHANGELOG.md, TODOs.md, Next Session Instructions.md)
-- **Work completed:** TODO-007 FULLY FINISHED! 🎉
-- **Production:** Fetch statistics dashboard live at /fetch-stats
+- **Last commit:** TODO-046 completed - iOS PWA status bar fix
+- **Production:** App deployed at http://100.96.166.53:3147/reader
+- **Next up:** TODO-048 (Grey Out Feeds with No Unread Articles)
 
-## Completed This Session
+## Completed This Session (July 24 Morning)
+- ✅ TODO-046: Fixed iOS PWA Orange Status Bar
+  - Changed statusBarStyle from "default" to "black-translucent"
+  - Updated theme colors: white for light mode, black for dark mode
+  - Created PWADetector component to detect standalone mode
+  - Applied conditional CSS classes for PWA-only padding:
+    - .pwa-standalone class added to html element in PWA mode
+    - .pwa-safe-area-top applies env(safe-area-inset-top) only in PWA
+    - .article-list-container gets extra padding only in PWA
+  - Removed hardcoded padding that caused issues in browser mode
+  - Created error.tsx to fix build issue
+  - Result: Status bar works correctly in PWA, no extra padding in browser
+
+## Previously Completed
 - ✅ TODO-007e: Article List Content Priority Display
   - Updated `renderPreview` function in article-list.tsx
   - Implemented 3-tier content priority system:
