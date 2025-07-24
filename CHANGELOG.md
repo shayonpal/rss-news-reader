@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Codebase Cleanup** - Removed duplicate and obsolete files
+  - Removed duplicate `public/apple-touch-icon.png` (keeping the one in `public/icons/`)
+  - Removed commented-out API route `src/app/api/mark-all-read/route.ts` (functionality handled by server route)
+  - Removed duplicate service worker `src/sw.js` (keeping the built version in `public/sw.js`)
+  - Removed unused `.env.development.local` file containing obsolete `NEXT_PUBLIC_MOCK_AUTH` variable
+  - Removed obsolete SQL scripts: `scripts/create-api-usage-tables.sql` and `scripts/clean-database.sql` (tables already exist in migrations)
+  - Removed standalone test script `test-rls-security.js` (one-off security test no longer needed)
+  - Removed old release documentation: `DEPLOYMENT_v0.5.1.md` and `RELEASE_NOTES_v0.5.1.md` (preserved in git history)
+  - Removed test shell scripts: `scripts/test-caddy.sh`, `scripts/test-manual-sync.sh`, and `server/scripts/test-tokens.js`
+  - Removed outdated technical documentation: `docs/tech/README.md` (project has evolved beyond initial plans)
+
 ### Feature Complete - Full Content Extraction (TODO-007)
 - **Comprehensive Full Content Extraction System** - COMPLETED ✅
   - All 7 sub-tasks completed successfully
