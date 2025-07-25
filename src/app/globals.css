@@ -159,7 +159,7 @@ button:not(:disabled) {
     @apply prose prose-gray max-w-none dark:prose-invert;
     @apply prose-headings:font-semibold prose-headings:tracking-tight;
     @apply prose-p:text-base prose-p:leading-relaxed;
-    @apply prose-a:text-primary prose-a:no-underline hover:prose-a:underline;
+    @apply prose-a:text-primary prose-a:underline;
     @apply prose-img:rounded-lg prose-img:shadow-sm;
   }
 
@@ -172,6 +172,27 @@ button:not(:disabled) {
   .article-list-item {
     @apply border-b border-border last:border-b-0;
     @apply transition-colors hover:bg-accent/50;
+  }
+}
+
+/* Fix iOS double-tap issue for links in article content */
+@layer base {
+  /* Apply touch-action high up as recommended by UX expert */
+  .prose {
+    touch-action: manipulation;
+  }
+  
+  .prose a {
+    /* Basic link styling */
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    /* Ensure touch-action is inherited */
+    touch-action: manipulation;
+  }
+  
+  /* Visual feedback on tap */
+  .prose a:active {
+    opacity: 0.7;
   }
 }
 

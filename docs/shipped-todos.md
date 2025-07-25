@@ -1,8 +1,8 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Thursday, July 24, 2025 at 10:45 AM  
-**Total Completed:** 48 items
+**Generated on:** Friday, July 25, 2025 at 9:31 AM  
+**Total Completed:** 48 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
 
@@ -983,6 +983,22 @@ This document contains all completed TODOs from the RSS News Reader project. The
 - **Core Features**: Automatic daily sync, full content extraction, bi-directional sync
 - **User Experience**: Fixed iOS Safari issues, implemented theme toggle, auto-mark as read
 - **Infrastructure**: Production deployment with PM2, Caddy, and Tailscale monitoring
+
+### TODO-044: Open All Article Links in External Tab (P2 - Enhancement) ⚠️ PARTIALLY COMPLETED
+- **Status**: ⚠️ PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
+- **Issue**: Links within article content open in the same tab, causing users to lose their place
+- **Resolution**: Created link-processor utility that processes all article content to add target="_blank" and rel="noopener noreferrer" to external links. Main functionality working but iOS double-tap issue remains.
+- **Implementation**:
+  - ✅ All links in article content now open in new tabs
+  - ✅ Added proper security attributes (target="_blank" and rel="noopener noreferrer")
+  - ✅ Applied to RSS content, full fetched content, and AI summaries
+  - ✅ Created consistent link processing utility
+  - ❌ iOS Safari/PWA double-tap issue remains unresolved
+- **Known Issues**:
+  - iOS users still need to tap links twice before they open
+  - Attempted fixes: CSS hover removal, inline styles, touch-action manipulation, JavaScript handlers
+  - Issue appears to be a deeper iOS Safari behavior requiring further investigation
+- **Impact**: Improved user experience on desktop and Android, but iOS users still face double-tap requirement
 
 ### Additional Server Configuration Variables
 

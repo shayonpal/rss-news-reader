@@ -10,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import { SummaryButton } from './summary-button';
+import { processArticleLinksSSR } from '@/lib/utils/link-processor';
 import { SummaryDisplay } from './summary-display';
 import { FetchContentButton } from './fetch-content-button';
 import { useArticleStore } from '@/lib/stores/article-store';
@@ -96,7 +97,11 @@ export function ArticleDetail({
 
   // Clean and sanitize HTML content - prioritize full content over RSS content
   const contentToDisplay = currentArticle.fullContent || currentArticle.content;
-  const cleanContent = DOMPurify.sanitize(contentToDisplay, {
+  
+  // Process links BEFORE sanitization to ensure attributes are preserved
+  const processedContent = processArticleLinksSSR(contentToDisplay);
+  
+  const cleanContent = DOMPurify.sanitize(processedContent, {
     ALLOWED_TAGS: ['p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'em', 
                    'strong', 'br', 'figure', 'figcaption', 'iframe', 'video'],
@@ -104,6 +109,8 @@ export function ArticleDetail({
                    'target', 'rel', 'class', 'id', 'allowfullscreen', 
                    'frameborder'],
     ALLOW_DATA_ATTR: false,
+    ADD_TAGS: ['a'], // Ensure anchor tags are allowed
+    ADD_ATTR: ['target', 'rel'], // Ensure these attributes are allowed
   });
 
   // Handle keyboard navigation
@@ -121,6 +128,7 @@ export function ArticleDetail({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onNavigate, onBack]);
+
 
   // Header show/hide on scroll
   useEffect(() => {
@@ -385,6 +393,7 @@ export function ArticleDetail({
                      prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:rounded prose-code:px-1
                      prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:overflow-x-auto
                      [&>*]:break-words"
+          style={{ touchAction: 'manipulation' }}
           dangerouslySetInnerHTML={{ __html: cleanContent }}
         />
         

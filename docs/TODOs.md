@@ -356,35 +356,6 @@ The RSS News Reader is now successfully deployed to production:
   - May need iPad-specific icon sizes (152x152, 167x167, 180x180)
   - Consider using absolute URLs for production environment
 
-### TODO-044: Open All Article Links in External Tab (P2 - Enhancement)
-
-- **Status**: 🔴 TODO
-- **Issue**: Links within article content open in the same tab, causing users to lose their place
-- **Context**:
-  - Users reading articles may click on links within the content
-  - Currently these links navigate away from the RSS reader
-  - Users must use browser back button to return to their article
-- **User Story**: As a user reading articles, I want all links within article content to open in new tabs so I don't lose my reading position
-- **Acceptance Criteria**:
-  - [ ] All links in article content open in new tab (target="\_blank")
-  - [ ] Add rel="noopener noreferrer" for security
-  - [ ] Apply to both RSS content and full fetched content
-  - [ ] Apply to AI summary content if it contains links
-  - [ ] Ensure external link icon indicator if space permits
-  - [ ] Test on both desktop and mobile/iPad
-- **Implementation Approach**:
-  - Option 1: Add link processing in article content rendering
-  - Option 2: Use CSS/JavaScript to add target="\_blank" to all links
-  - Option 3: Process content server-side before storing
-  - Consider using DOMParser or regex to modify links
-- **Files to Modify**:
-  - `src/components/articles/article-detail.tsx` - Article content display
-  - Utility function for link processing
-  - May need to handle different content types (RSS, full content, AI summary)
-- **Testing Notes**:
-  - Test with articles containing various link types
-  - Ensure no breaking of existing link functionality
-  - Verify security attributes are properly added
 
 ### TODO-045: Enable Native Share Sheet on Apple Devices (P2 - Enhancement)
 
@@ -494,6 +465,50 @@ The RSS News Reader is now successfully deployed to production:
   - Test in both light and dark themes
   - Verify hover states work consistently
   - Check on different screen sizes
+
+### TODO-050a: Fix iOS Safari Double-Tap Link Issue (P3 - Quality)
+
+- **Status**: 🔴 TODO
+- **Parent**: TODO-044 (partially completed)
+- **Issue**: iOS Safari/PWA users must tap links twice before they open in new tabs
+- **Context**:
+  - Links do successfully open in new tabs with proper target="_blank" attributes
+  - However, iOS requires two taps: first tap seems to "focus", second tap opens link
+  - Issue specific to iOS Safari and PWA mode, not present on desktop or Android
+  - Multiple attempted fixes have failed to resolve the issue
+- **User Story**: As an iOS user, I want to tap links once to open them, not twice
+- **Previous Attempts That Failed**:
+  - Removing CSS hover states
+  - Adding inline styles to override hover behavior
+  - Manipulating touch-action CSS property
+  - JavaScript event handlers for touch events
+  - iOS-specific button component approach
+- **Acceptance Criteria**:
+  - [ ] Links open on first tap in iOS Safari
+  - [ ] Links open on first tap in iOS PWA mode
+  - [ ] Solution doesn't break desktop hover states
+  - [ ] Solution doesn't affect Android behavior
+  - [ ] No visual regression in link appearance
+- **Potential Solutions to Investigate**:
+  - Use `onclick` handler instead of relying on href behavior
+  - Implement custom touch handling with preventDefault
+  - Research iOS-specific link handling patterns
+  - Consider using buttons styled as links
+  - Investigate if issue is related to focus management
+  - Check if parent container event handling interferes
+- **Technical Notes**:
+  - Issue may be related to iOS's tap delay for detecting double-tap zoom
+  - Could be interaction between React event handling and iOS Safari
+  - May need to disable certain iOS gestures on link containers
+- **Files to Investigate**:
+  - `src/lib/utils/link-processor.ts` - Current link processing logic
+  - Components that display processed content
+  - Any parent containers that might have touch handlers
+- **Testing Requirements**:
+  - Test on physical iOS device (not just simulator)
+  - Test in both Safari and PWA mode
+  - Test with various link types (short, long, with/without protocols)
+  - Verify solution works across iOS versions
 
 ### TODO-051: Create AI Summarization Logging and Analytics Page (P2 - Analytics)
 

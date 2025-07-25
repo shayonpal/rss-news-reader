@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **TODO-044 Documentation Update** - Friday, July 25, 2025 at 9:31 AM
+  - Updated CHANGELOG.md to reflect TODO-044 as partially completed
+  - Clarified that links do open in new tabs successfully (main requirement met)
+  - Documented iOS double-tap issue as known limitation with attempted fixes
+  - Created new TODO-050a specifically for iOS double-tap link issue
+  - Added technical documentation in `docs/tech/known-issues.md` for iOS Safari behavior
+  - Maintained TODO-044 in shipped-todos.md with partially completed status
+
 ### Fixed
 - **Bidirectional Sync Overwriting Local Read States** - Friday, July 25, 2025 at 8:26 AM
   - Fixed sync process unconditionally overwriting local article states with Inoreader data
@@ -15,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed race condition in timestamp comparison by properly selecting last_sync_update in queries
   - Preserves local changes made between syncs, preventing data loss
   - Ensures read/unread states sync correctly in both directions
+
+- **Open All Article Links in External Tab** (TODO-044) - PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
+  - Fixed links within article content opening in the same tab, causing users to lose their reading position
+  - All links in article content now successfully open in new tabs with proper security attributes (target="_blank" and rel="noopener noreferrer")
+  - Created new link-processor utility for consistent link handling across RSS content, full fetched content, and AI summaries
+  - Improved user experience by ensuring external links don't navigate away from the RSS reader
+  - **Known Issue**: iOS Safari/PWA double-tap issue remains unresolved despite multiple approaches
+    - Attempted fixes: CSS hover state removal, inline styles, touch-action manipulation, JavaScript event handlers
+    - The issue appears to be a deeper iOS Safari behavior that requires further investigation
+    - Links do open in new tabs successfully, but iOS users still need to tap twice
 
 - **Database Performance and Security Improvements** - Friday, July 25, 2025 at 6:27 AM
   - **Security Fixes**:
@@ -49,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Moved TODO-048 (Grey Out Feeds with No Unread) to shipped documentation
   - Moved TODO-049 (Alphabetical Feed Sorting) to shipped documentation
   - Moved TODO-055 (Independent Scrolling) to shipped documentation
-  - Updated TODO count in shipped-todos.md from 42 to 48 items
+  - Updated TODO count in shipped-todos.md from 48 to 49 items
 
 ### Added
 - **Filter Out Feeds with No Unread Articles in Sidebar** (TODO-047) - COMPLETED ✅
