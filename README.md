@@ -552,6 +552,11 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 - Index on `created_at` for time-based queries
 - Index on `fetch_type` for analytics
 
+**Security**:
+- Row Level Security (RLS) enabled
+- Authenticated users can view and insert fetch logs
+- No public access allowed
+
 ### Performance Optimizations
 
 #### Materialized View: feed_stats
@@ -574,6 +579,14 @@ GROUP BY f.id, f.user_id;
 - Unique index on `feed_id` for concurrent refresh
 - Index on `user_id`
 
+#### Recent Performance Improvements (July 25, 2025)
+
+1. **Added Missing Index**: Created index on `sync_queue.article_id` foreign key to improve join performance
+2. **Removed Duplicate Indexes**: Eliminated redundant indexes on `fetch_logs` table:
+   - Dropped `idx_fetch_logs_article_id` (duplicate of `idx_fetch_logs_article`)
+   - Dropped `idx_fetch_logs_feed_id` (duplicate of `idx_fetch_logs_feed`)
+3. **Fixed RLS Policy Issue**: Resolved multiple permissive policies on `system_config` table by creating specific policies for each operation (SELECT, INSERT, UPDATE, DELETE)
+
 #### Database Functions
 
 1. **get_unread_counts_by_feed(p_user_id uuid)**
@@ -587,6 +600,13 @@ GROUP BY f.id, f.user_id;
 3. **update_updated_at_column()**
    - Trigger function to maintain `updated_at` timestamps
    - Applied to all tables with `updated_at` column
+
+#### Database Views
+
+1. **sync_queue_stats**
+   - Provides summary statistics for the sync queue
+   - Shows pending, never attempted, retry pending, and failed counts
+   - No SECURITY DEFINER - inherits caller's permissions
 
 ### Row Level Security (RLS) Policies
 
@@ -606,6 +626,11 @@ All tables have RLS enabled with the following policies:
 
 3. **Sync Metadata, API Usage Tables**:
    - All operations restricted to service role (server only)
+
+4. **Fetch Logs Table**:
+   - SELECT: Authenticated users can view all logs
+   - INSERT: Authenticated users can insert logs
+   - UPDATE/DELETE: No updates or deletes allowed
 
 ### Table Relationships
 

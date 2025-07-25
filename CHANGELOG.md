@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Database Performance and Security Improvements** - Friday, July 25, 2025 at 6:27 AM
+  - **Security Fixes**:
+    - Enabled Row Level Security on `fetch_logs` table (was exposing data without authorization)
+    - Fixed SECURITY DEFINER on `sync_queue_stats` view (was bypassing row-level security)
+    - Set explicit search_path for 5 functions to prevent security vulnerabilities
+  - **Performance Optimizations**:
+    - Added missing index on `sync_queue.article_id` foreign key for faster joins
+    - Removed duplicate indexes on `fetch_logs` table (saving storage and maintenance overhead)
+    - Consolidated multiple RLS policies on `system_config` table for better query performance
+    - Performed VACUUM ANALYZE on all tables to clean up dead rows (eliminated 179 dead rows from articles, 43 from sync_metadata, etc.)
+  - **Database Health**:
+    - Total database size: ~5.7MB (very lightweight)
+    - Autovacuum properly configured and running
+    - All critical security and performance issues resolved
+
 ### Added
 - **Independent Scrolling for Sidebar and Article List** (TODO-055) - COMPLETED ✅
   - Sidebar and article list now scroll independently, each maintaining their own position
