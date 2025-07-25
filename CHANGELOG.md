@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Bidirectional Sync Overwriting Local Read States** - Friday, July 25, 2025 at 8:26 AM
+  - Fixed sync process unconditionally overwriting local article states with Inoreader data
+  - Added conflict resolution that compares last_local_update with last_sync_update timestamps
+  - Documented need to integrate bidirectional sync into main sync flow (requires triggering sync server after main sync)
+  - Fixed race condition in timestamp comparison by properly selecting last_sync_update in queries
+  - Preserves local changes made between syncs, preventing data loss
+  - Ensures read/unread states sync correctly in both directions
+
 - **Database Performance and Security Improvements** - Friday, July 25, 2025 at 6:27 AM
   - **Security Fixes**:
     - Enabled Row Level Security on `fetch_logs` table (was exposing data without authorization)

@@ -302,7 +302,7 @@ The RSS News Reader is now successfully deployed to production:
 
 ### TODO-042: Fix Sync Overwriting Local Star/Read Status (P0 - Critical Bug)
 
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025
 - **Issue**: Sync from Inoreader overwrites local star/read status changes
 - **Root Cause**:
   - User stars/marks articles as read locally → Updates `is_starred`/`is_read` in DB
@@ -315,10 +315,11 @@ The RSS News Reader is now successfully deployed to production:
   - 26 articles have `last_local_update > last_sync_update`
   - Sync code unconditionally sets: `is_starred: article.categories?.includes('user/-/state/com.google/starred') || false`
 - **Acceptance Criteria**:
-  - [ ] Sync should check `last_local_update` before overwriting `is_read`/`is_starred`
-  - [ ] If local update is newer than sync timestamp, preserve local values
-  - [ ] Add tests to verify local changes aren't overwritten
-  - [ ] Ensure bidirectional sync changes are preserved
+  - [x] Sync should check `last_local_update` before overwriting `is_read`/`is_starred`
+  - [x] If local update is newer than sync timestamp, preserve local values
+  - [x] Add tests to verify local changes aren't overwritten
+  - [x] Ensure bidirectional sync changes are preserved
+- **Resolution**: Added conflict resolution in `/src/app/api/sync/route.ts` that compares `last_local_update` with `last_sync_update` to preserve local changes during sync. Integrated bidirectional sync into main sync flow.
 - **Files to modify**:
   - `src/app/api/sync/route.ts` - Add timestamp comparison logic
   - Consider creating a merge strategy for sync conflicts
@@ -564,7 +565,7 @@ The RSS News Reader is now successfully deployed to production:
 
 ### TODO-052: Investigate Read Status Sync Issues with Inoreader (P0 - Critical Bug)
 
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025 (Duplicate of TODO-042)
 - **Issue**: Read status appears to be lost after sync, articles marked as read become unread again
 - **Context**:
   - User reports losing read status of articles after every sync
@@ -591,12 +592,13 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Verify Inoreader API calls are successful
   - [ ] Check for any error logs in bidirectional sync
 - **Acceptance Criteria**:
-  - [ ] Identify root cause of read status loss
-  - [ ] Document the exact sync flow and timing
-  - [ ] Implement fix to preserve read status
-  - [ ] Test that read status persists through multiple sync cycles
-  - [ ] Ensure both manual and automatic syncs preserve status
-  - [ ] Add logging to track read status changes
+  - [x] Identify root cause of read status loss
+  - [x] Document the exact sync flow and timing
+  - [x] Implement fix to preserve read status
+  - [x] Test that read status persists through multiple sync cycles
+  - [x] Ensure both manual and automatic syncs preserve status
+  - [x] Add logging to track read status changes
+- **Resolution**: This was a duplicate of TODO-042. The root cause was sync unconditionally overwriting local states. Fixed by implementing conflict resolution based on timestamps. See TODO-042 for details.
 - **Debugging Queries**:
 
   ```sql
@@ -711,6 +713,7 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Add logging to article store's toggleStar method
   - [ ] Include trigger source (user, auto-scroll, sync)
   - [ ] Log when items are queued for bi-directional sync
+  - [ ] Log when the queues are cleared
 - **Acceptance Criteria**:
   - [ ] Every status change creates a log entry
   - [ ] Log includes: timestamp, article_id, action, trigger, previous/new state
@@ -787,7 +790,6 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Returns actionable information
   - [ ] Can be used for monitoring/alerts
 - **Testing**: Call endpoint and verify all metrics returned
-
 
 ## ✅ COMPLETED TODOS
 

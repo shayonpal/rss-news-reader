@@ -268,15 +268,59 @@ async function performServerSync(syncId: string) {
           .delete()
           .in('inoreader_id', inoreaderIds);
 
+        // BIDIRECTIONAL SYNC CONFLICT RESOLUTION
+        // ========================================
+        // Get existing articles to check for local changes that need to be preserved.
+        // We need to compare timestamps to avoid overwriting user actions made between syncs.
+        const { data: existingArticles } = await supabase
+          .from('articles')
+          .select('inoreader_id, is_read, is_starred, last_local_update, last_sync_update, updated_at')
+          .in('inoreader_id', inoreaderIds);
+
+        const existingMap = new Map(
+          existingArticles?.map(a => [a.inoreader_id, a]) || []
+        );
+
+        // Apply conflict resolution to preserve local changes
+        const articlesWithConflictResolution = articlesToUpsert.map((article: any) => {
+          const existing = existingMap.get(article.inoreader_id);
+          
+          if (existing && existing.last_local_update) {
+            // IMPORTANT: We compare last_local_update with last_sync_update (not current time)
+            // This ensures we only preserve changes made AFTER the last sync from Inoreader.
+            // Using current time would cause a race condition where all local changes would
+            // always win, preventing Inoreader changes from ever being applied.
+            const lastSyncTime = existing.last_sync_update || existing.updated_at;
+            if (new Date(existing.last_local_update) > new Date(lastSyncTime)) {
+              // Local changes are newer than last sync - preserve local state
+              // This handles the case where user marked articles as read/starred
+              // between the last sync and now. Without this, their changes would
+              // be lost every time we sync from Inoreader.
+              console.log(`[Sync] Preserving local state for article ${article.inoreader_id}`);
+              return {
+                ...article,
+                is_read: existing.is_read,
+                is_starred: existing.is_starred,
+                // Update sync timestamp but keep local changes
+                last_sync_update: syncTimestamp
+              };
+            }
+          }
+          
+          // No local changes or Inoreader state is newer - use Inoreader state
+          // This is the normal case for articles that haven't been modified locally
+          return article;
+        });
+
         // Batch insert in chunks
         const chunkSize = 50;
-        for (let i = 0; i < articlesToUpsert.length; i += chunkSize) {
-          const chunk = articlesToUpsert.slice(i, i + chunkSize);
+        for (let i = 0; i < articlesWithConflictResolution.length; i += chunkSize) {
+          const chunk = articlesWithConflictResolution.slice(i, i + chunkSize);
           await supabase
             .from('articles')
             .upsert(chunk, { onConflict: 'inoreader_id' });
           
-          status.progress = 70 + Math.floor((i / articlesToUpsert.length) * 20);
+          status.progress = 70 + Math.floor((i / articlesWithConflictResolution.length) * 20);
         }
       }
     }
@@ -325,6 +369,29 @@ async function performServerSync(syncId: string) {
 
     // Track API usage (approximately 4-5 calls per sync)
     await trackApiUsage('inoreader', 4);
+
+    // Trigger bidirectional sync to push local changes to Inoreader
+    status.progress = 98;
+    status.message = 'Syncing local changes to Inoreader...';
+    console.log('[Sync] Triggering bidirectional sync...');
+    
+    try {
+      const syncServerUrl = process.env.SYNC_SERVER_URL || 'http://localhost:3001';
+      const syncResponse = await fetch(`${syncServerUrl}/server/sync/trigger`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force: true }) // Force sync even if < 5 changes
+      });
+      
+      if (syncResponse.ok) {
+        console.log('[Sync] Bidirectional sync triggered successfully');
+      } else {
+        console.error('[Sync] Failed to trigger bidirectional sync:', await syncResponse.text());
+      }
+    } catch (error) {
+      console.error('[Sync] Error triggering bidirectional sync:', error);
+      // Don't fail the main sync if bidirectional sync fails
+    }
 
     // Complete
     status.status = 'completed';
