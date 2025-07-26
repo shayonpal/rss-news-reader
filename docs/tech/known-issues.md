@@ -1,6 +1,6 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Friday, July 25, 2025 at 9:31 AM
+**Last Updated:** Saturday, July 26, 2025 at 1:36 AM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
 
@@ -67,6 +67,40 @@ The Inoreader API limit of 100 calls per day constrains how often users can manu
 **Severity:** Low  
 
 The PWA can be installed over HTTP (required for Tailscale network) but some features like push notifications are unavailable without HTTPS.
+
+## Production Deployment Issues (Resolved)
+
+### Next.js App Router vs Pages Router Confusion
+**Status:** 🟢 Resolved (July 26, 2025)  
+**Severity:** High  
+
+#### Description
+Production server returned 500 Internal Server Error on all routes when an empty `src/pages/` directory existed. This confused Next.js about whether to use App Router or Pages Router.
+
+#### Root Cause
+- Project uses App Router (routes in `src/app/`)
+- Empty `src/pages/` directory made Next.js uncertain about routing mode
+- Production builds failed to resolve routes correctly
+
+#### Solution
+1. Remove empty `src/pages/` directory
+2. Clear `.next` cache
+3. Rebuild and restart production
+
+### PM2 Cluster Mode Incompatibility
+**Status:** 🟢 Resolved (July 26, 2025)  
+**Severity:** High  
+
+#### Description
+PM2 service was restarting continuously (105+ times) when configured in cluster mode with Next.js production build.
+
+#### Root Cause
+- Next.js production builds are incompatible with PM2 cluster mode
+- Cluster mode attempts to fork multiple processes but Next.js expects single process
+- Results in immediate crashes and restart loops
+
+#### Solution
+Changed `ecosystem.config.js` from `exec_mode: 'cluster'` to `exec_mode: 'fork'`
 
 ## Future Considerations
 

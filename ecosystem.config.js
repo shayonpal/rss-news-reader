@@ -7,8 +7,9 @@ module.exports = {
       args: 'start',
       cwd: '/Users/shayon/DevProjects/rss-news-reader',
       instances: 1,
-      exec_mode: 'cluster',
+      exec_mode: 'fork',
       max_memory_restart: '1G',
+      env_file: '.env',
       env: {
         NODE_ENV: 'production',
         PORT: 3147,
@@ -44,6 +45,7 @@ module.exports = {
       instances: 1,
       exec_mode: 'fork',
       watch: false,  // Disable in PM2, Next.js handles HMR
+      env_file: '.env',
       env: {
         NODE_ENV: 'development',
         PORT: 3000,

@@ -18,6 +18,7 @@ Located at `/Caddyfile` - Configures Caddy reverse proxy to:
 ### 2. ecosystem.config.js
 Located at `/ecosystem.config.js` - Configures PM2 to:
 - Run the production build with `npm start`
+- Use **fork mode** (not cluster mode) - Next.js production builds are incompatible with PM2 cluster mode
 - Restart if memory usage exceeds 1GB
 - Log to `logs/pm2-*.log` files
 - Add timestamps to all log entries
@@ -96,6 +97,23 @@ caddy list-modules                  # List available modules
 2. Check PM2 logs: `pm2 logs`
 3. Check if Caddy is running: `ps aux | grep caddy`
 4. Check Caddy logs: `tail -f logs/caddy-access.log`
+
+### 500 Internal Server Error
+**Issue**: Production returns 500 errors on homepage or API endpoints
+**Cause**: Empty `src/pages/` directory confuses Next.js (project uses App Router)
+**Solution**: 
+1. Remove the empty `src/pages/` directory: `rm -rf src/pages`
+2. Clear Next.js cache: `rm -rf .next`
+3. Rebuild: `npm run build`
+4. Restart PM2: `pm2 restart rss-reader-prod`
+
+### PM2 Restart Loops
+**Issue**: PM2 service restarts continuously (100+ times)
+**Cause**: PM2 cluster mode is incompatible with Next.js production builds
+**Solution**: 
+1. Edit `ecosystem.config.js` and change `exec_mode: 'cluster'` to `exec_mode: 'fork'`
+2. Restart PM2: `pm2 delete rss-reader-prod && pm2 start ecosystem.config.js --only rss-reader-prod`
+3. Verify stability: `pm2 status` (check restart count)
 
 ### Port conflicts
 - Ensure nothing else is running on port 80 (Caddy)

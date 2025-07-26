@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Critical Production Server Issues** - Saturday, July 26, 2025 at 1:36 AM
+  - **Fixed Production 500 Internal Server Error**: Homepage (`/reader`) and `/reader/fetch-stats` endpoint were returning 500 errors
+    - Root cause: Empty `src/pages/` directory was confusing Next.js (project uses App Router, not Pages Router)
+    - Solution: Removed empty `src/pages/` directory and rebuilt production
+    - Both production endpoints now working correctly
+  - **Fixed PM2 Service Restart Loops**: Production service was restarting 105+ times
+    - Root cause: PM2 cluster mode is incompatible with Next.js production builds
+    - Solution: Changed from cluster mode to fork mode in `ecosystem.config.js` (line 10)
+    - Service now stable with minimal restarts
+  - **Fixed Dev Server Failure**: Dev server was failing to start after pages directory removal
+    - Solution: Cleared `.next` cache and restarted
+    - Dev server now fully operational
+  - **Current Status**:
+    - Production server: Fully operational at http://100.96.166.53:3147/reader
+    - Dev server: Fully operational at http://100.96.166.53:3000/reader
+    - All endpoints working correctly
+
 ### Documentation
+- **Uptime Kuma Monitoring Strategy** - Friday, July 25, 2025 at 10:35 PM
+  - Created comprehensive monitoring implementation guide at `docs/tech/uptime-kuma-monitoring-strategy.md`
+  - Detailed setup instructions for Uptime Kuma using Docker/Colima on macOS
+  - Discord webhook integration for multi-channel alert notifications
+  - Six monitor configurations: health checks, API limits, sync status, cron jobs, database, PM2
+  - Custom health endpoint specifications for enhanced monitoring capabilities
+  - Alert rules with critical/warning/status categories and escalation procedures
+  - Maintenance procedures including backup, log rotation, and troubleshooting guides
+  - Practical testing and validation steps to ensure monitoring effectiveness
+
 - **TODO Management Update** - Friday, July 25, 2025 at 9:46 PM
   - Moved completed TODOs from docs/TODOs.md to docs/shipped-todos.md
   - Moved TODO-042 (Fix Sync Overwriting Local Star/Read Status) - completed Friday, July 25, 2025
