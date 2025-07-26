@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Claude Project Configuration Updates** - Friday, July 25, 2025 at 9:39 PM
+  - Added `.claude/settings.local.json` to .gitignore to prevent committing local Claude settings
+  - Created `.claude/agents/git-expert.md` for specialized git operations agent configuration
+  - Added `.claude/commands/impactful-task.md` command template for high-value feature identification
+  - Renamed `.claude/commands/quick-win.md` to `.claude/commands/quick-win-task.md` for better clarity
+  - Ensures Claude project settings remain local and are not accidentally synced to repository
+
+### Added
 - **Mark All Read Feature** (TODO-040) - Friday, July 25, 2025 at 8:39 PM
   - Added "Mark All Read" button to article header when viewing specific feeds with unread articles
   - Implemented two-tap confirmation pattern with muted red warning state instead of dialog
