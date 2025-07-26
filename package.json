@@ -8,6 +8,7 @@
     "dev:https": "node server.js",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "dev:turbo": "next dev --turbo",
+    "prebuild": "./scripts/validate-env.sh",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

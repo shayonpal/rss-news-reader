@@ -214,6 +214,13 @@ This ensures your reading progress stays synchronized across all Inoreader clien
 
    Edit `.env` with your API credentials (see .env.example for all required values)
 
+   **Important**: All environment variables are REQUIRED. Use the validation script to verify:
+   ```bash
+   ./scripts/validate-env.sh
+   ```
+
+   The build process will automatically validate environment variables before building.
+
 4. **Set up server OAuth (one-time)**
 
    ```bash

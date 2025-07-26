@@ -1,8 +1,8 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Saturday, July 26, 2025 at 5:10 PM  
-**Total Completed:** 55 items (plus 1 partially completed)
+**Generated on:** Saturday, July 26, 2025 at 5:50 PM  
+**Total Completed:** 56 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
 
@@ -31,6 +31,34 @@
 - **Results**: System successfully prevents the exact production failures it was designed to catch
 - **Major Achievement**: No more broken production deployments with missing API routes
 - **Completed**: Saturday, July 26, 2025 at 5:10 PM
+
+### TODO-039d: Environment Variable Management (P1 - Critical) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Environment variable management system fully implemented
+- **Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables
+- **Context**: PM2 runtime injection doesn't work for Next.js client builds
+- **Root Cause**: Next.js requires NEXT_PUBLIC_* variables available during build, not just runtime
+- **Implementation Details**:
+  - Created centralized environment validation system
+  - Kept single .env file with clear sections (not separate files)
+  - All variables are critical - any missing variable fails the build
+  - Fixed missing variables: NEXT_PUBLIC_BASE_URL and NEXT_PUBLIC_APP_URL
+  - Standardized naming: use SUPABASE_SERVICE_ROLE_KEY consistently
+- **Solution Implemented**:
+  - Created `scripts/validate-env.sh` that validates ALL 30+ environment variables
+  - Modified `scripts/build-and-start-prod.sh` to export NEXT_PUBLIC_* vars before build
+  - Added "prebuild" script to package.json for automatic validation
+  - Fixed SUPABASE_SERVICE_KEY → SUPABASE_SERVICE_ROLE_KEY naming across 7 files
+  - Deleted redundant .env.server.example and .env.test files
+  - Created comprehensive .env.example with all required variables
+  - Created `docs/deployment/environment-variables.md` with complete documentation
+- **Key Features**:
+  - All variables are REQUIRED - no optional ones
+  - Script checks existence and non-empty values
+  - Clear error messages for missing variables
+  - Exit code 1 on validation failure to prevent bad builds
+  - Automatic validation before every build
+- **Results**: Environment variable issues resolved, critical issues reduced from 5 to 3
+- **Completed**: Saturday, July 26, 2025 at 5:50 PM
 
 ### TODO-039i: Implement Uptime Kuma Monitoring Infrastructure (P1 - Infrastructure) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Uptime Kuma monitoring infrastructure deployed

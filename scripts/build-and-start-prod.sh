@@ -17,17 +17,46 @@ echo "=================================================="
 
 # Load environment variables
 if [[ -f "$PROJECT_ROOT/.env" ]]; then
+    # Load variables into current shell
+    set -a
     source "$PROJECT_ROOT/.env"
+    set +a
     echo -e "${GREEN}✓${NC} Environment variables loaded"
 else
     echo -e "${RED}✗${NC} .env file not found"
     exit 1
 fi
 
-# Export NEXT_PUBLIC variables for the build
+# Run environment validation
+echo ""
+echo "Validating environment variables..."
+if "$SCRIPT_DIR/validate-env.sh"; then
+    echo -e "${GREEN}✓${NC} Environment validation passed"
+else
+    echo -e "${RED}✗${NC} Environment validation failed"
+    exit 1
+fi
+
+# Export all NEXT_PUBLIC_* variables for the build
+# These must be available at build time for Next.js to embed them
 export NEXT_PUBLIC_SUPABASE_URL
 export NEXT_PUBLIC_SUPABASE_ANON_KEY
-export NEXT_PUBLIC_BASE_URL="http://100.96.166.53"
+export NEXT_PUBLIC_BASE_URL="${NEXT_PUBLIC_BASE_URL:-http://100.96.166.53}"
+export NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL:-http://100.96.166.53:3147}"
+export NEXT_PUBLIC_INOREADER_CLIENT_ID
+export NEXT_PUBLIC_INOREADER_REDIRECT_URI
+
+# Also export other critical variables
+export NODE_ENV="${PROD_NODE_ENV:-production}"
+export PORT="${PROD_PORT:-3147}"
+
+echo ""
+echo "Build-time environment variables exported:"
+echo "  NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:0:50}..."
+echo "  NEXT_PUBLIC_BASE_URL: $NEXT_PUBLIC_BASE_URL"
+echo "  NEXT_PUBLIC_APP_URL: $NEXT_PUBLIC_APP_URL"
+echo "  NODE_ENV: $NODE_ENV"
+echo "  PORT: $PORT"
 
 echo ""
 echo "Step 1: Building application..."

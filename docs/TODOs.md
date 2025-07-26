@@ -139,7 +139,7 @@ The RSS News Reader is now successfully deployed to production:
 
 ### TODO-039: Server Stability, Monitoring, and Deployment Pipeline Improvements (P1 - Infrastructure)
 
-- **Status**: 🔴 TODO
+- **Status**: 🟡 IN PROGRESS (3 of 10 sub-tasks completed)
 - **Issue**: Frequent server crashes, incomplete builds, and lack of monitoring causing production instability
 - **Context**: Investigation revealed cascading failures from incomplete builds, PM2 misconfigurations, and missing recovery mechanisms
 - **Implementation Strategy**: Comprehensive approach to stability including monitoring, validation, and safe deployment
@@ -167,20 +167,36 @@ This is the main task for all server stability improvements. The investigation f
 
 ##### TODO-039d: Environment Variable Management (P1 - Critical)
 
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED Saturday, July 26, 2025
 - **Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables
 - **Context**: PM2 runtime injection doesn't work for Next.js client builds
 - **Implementation Details**:
-  - Critical fix - ensures client-side code receives NEXT*PUBLIC*\* variables
-  - Create build-time validation script
-- **Acceptance Criteria**:
-  - [ ] Create centralized environment configuration system
-  - [ ] Ensure build-time variable availability
-  - [ ] Validate all required variables before build
-  - [ ] Create `.env.example` with all variables documented
-  - [ ] Add pre-build script to check environment completeness
-  - [ ] Document variable loading order and precedence
-  - [ ] Test in both development and production modes
+  - Critical fix - ensures client-side code receives NEXT_PUBLIC_* variables at build time
+  - Create centralized environment validation system
+  - Keep single .env file with clear sections (not separate files)
+  - All variables are critical - any missing variable should fail the build
+  - Fix missing variables: NEXT_PUBLIC_BASE_URL and NEXT_PUBLIC_APP_URL
+  - Standardize naming: use SUPABASE_SERVICE_ROLE_KEY consistently
+- **Revised Acceptance Criteria**:
+  - [x] Create scripts/validate-env.sh that validates ALL required variables exist
+  - [x] Validation script fails build if ANY variable is missing (all are critical)
+  - [x] Add missing NEXT_PUBLIC_BASE_URL and NEXT_PUBLIC_APP_URL to .env
+  - [x] Update .env.example with all variables documented (marking all as required)
+  - [x] Modify build-and-start-prod.sh to export all NEXT_PUBLIC_* variables before build
+  - [x] Fix SUPABASE_SERVICE_KEY naming inconsistency in codebase
+  - [x] Add pre-build validation to ensure variables are available at build time
+  - [x] Document variable loading order, build-time vs runtime requirements
+  - [x] Test validation works in both development and production modes
+  - [x] Ensure client-side code receives all NEXT_PUBLIC_* variables correctly
+- **Resolution**:
+  - Created comprehensive scripts/validate-env.sh that validates ALL 30+ environment variables
+  - Modified scripts/build-and-start-prod.sh to export NEXT_PUBLIC_* vars before build
+  - Added "prebuild" script to package.json for automatic validation
+  - Fixed SUPABASE_SERVICE_KEY → SUPABASE_SERVICE_ROLE_KEY naming across 7 files
+  - Deleted redundant .env.server.example and .env.test files
+  - Created comprehensive .env.example with all required variables
+  - Created docs/deployment/environment-variables.md with complete documentation
+  - Result: Environment variable issues resolved, critical issues reduced from 5 to 3
 
 ##### TODO-039a: Create Health Check Endpoints (P1 - Prerequisite)
 
