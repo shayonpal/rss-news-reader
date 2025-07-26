@@ -117,8 +117,14 @@ module.exports = {
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        // Inoreader OAuth
+        INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
+        INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
+        INOREADER_REDIRECT_URI: process.env.INOREADER_REDIRECT_URI,
         // Token encryption
-        TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY
+        TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
+        // Token path (expand ~ to full path)
+        RSS_READER_TOKENS_PATH: '/Users/shayon/.rss-reader/tokens.json'
       },
       error_file: './logs/sync-server-error.log',
       out_file: './logs/sync-server-out.log',

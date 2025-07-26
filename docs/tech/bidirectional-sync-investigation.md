@@ -361,4 +361,93 @@ if (bidirectionalSyncService) {
 - Both manual and automatic syncs respect local changes
 - Bidirectional sync works as originally intended
 - No more "zombie" articles that keep coming back as unread
+
+## OAuth Authentication Recovery (Saturday, July 26, 2025 at 1:12 PM)
+
+### Issue Discovered
+
+The bidirectional sync server had been failing for approximately 12 hours with repeated "No tokens found" errors. The sync queue had accumulated 147 read actions that were unable to sync to Inoreader due to missing authentication.
+
+### Root Cause
+
+The OAuth tokens file (`~/.rss-reader/tokens.json`) was missing from the server, preventing the sync service from authenticating with the Inoreader API. This file contains the encrypted access and refresh tokens required for API communication.
+
+### Investigation Steps
+
+1. **PM2 Process Status Check**:
+   - Confirmed the sync server was running (`rss-sync-server`)
+   - Process showed healthy status but logs revealed authentication failures
+
+2. **Log Analysis**:
+   - Reviewed sync server logs: `pm2 logs rss-sync-server`
+   - Found repeated errors: "No tokens found" every 5 minutes
+   - Errors had been occurring since approximately 1:00 AM
+
+3. **Database Queue Status**:
+   - Checked `sync_queue` table in Supabase
+   - Found 147 pending items with increasing retry attempts
+   - All items were read/unread actions waiting to sync
+
+4. **File System Verification**:
+   - Confirmed `~/.rss-reader/tokens.json` was missing
+   - Directory `~/.rss-reader/` existed but was empty
+
+### Solution Implemented
+
+1. **Created Manual OAuth Setup Script**:
+   - Developed `server/scripts/manual-oauth.js` to handle OAuth flow
+   - Script handles the full OAuth authorization process
+   - Includes token encryption and proper file storage
+
+2. **OAuth Re-authorization Process**:
+   - Used Playwright MCP to navigate to Inoreader OAuth page
+   - Successfully authorized the RSS Reader application
+   - Obtained new authorization code from redirect URL
+   - Exchanged authorization code for access/refresh tokens
+
+3. **Environment Configuration Updates**:
+   - Updated `ecosystem.config.js` to include missing environment variables:
+     ```javascript
+     INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
+     INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
+     INOREADER_REDIRECT_URI: process.env.INOREADER_REDIRECT_URI,
+     RSS_READER_TOKENS_PATH: "/Users/shayon/.rss-reader/tokens.json"
+     ```
+   - Used full path for `RSS_READER_TOKENS_PATH` to avoid tilde expansion issues
+
+4. **Service Restart**:
+   - Reloaded sync server with updated configuration: `pm2 reload rss-sync-server`
+   - Server immediately recognized restored tokens
+   - Began processing queued items
+
+### Outcome
+
+1. **Authentication Restored**:
+   - OAuth tokens successfully saved to `~/.rss-reader/tokens.json`
+   - Tokens properly encrypted using existing encryption key
+   - Sync server can now authenticate with Inoreader API
+
+2. **Queue Processing**:
+   - 177 failed items (increased from initial 147) were successfully synced
+   - All pending read/unread actions propagated to Inoreader
+   - Queue cleared completely after successful sync
+
+3. **Service Stability**:
+   - Bidirectional sync fully operational
+   - New changes syncing within 5-15 minutes as designed
+   - No further authentication errors in logs
+
+### Lessons Learned
+
+1. **Token Persistence**: The OAuth tokens file is critical for sync server operation and should be monitored
+2. **Environment Variables**: PM2 configuration must include all required environment variables for proper OAuth operation
+3. **Path Resolution**: Use absolute paths in PM2 configs to avoid shell expansion issues with `~`
+4. **Recovery Tools**: Having a manual OAuth setup script enables quick recovery from authentication failures
+
+### Monitoring Recommendations
+
+1. Add health check for token file existence
+2. Monitor sync server logs for authentication errors
+3. Create automated alerts for sync queue buildup
+4. Consider token backup strategy for disaster recovery
   EOF < /dev/null

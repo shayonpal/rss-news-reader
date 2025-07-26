@@ -7,7 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Restored Bidirectional Sync Authentication** - Saturday, July 26, 2025 at 1:16 PM
+  - Fixed sync server authentication failure that had been ongoing for ~12 hours
+  - Regenerated missing OAuth tokens file (`~/.rss-reader/tokens.json`) using manual OAuth flow
+  - Updated `ecosystem.config.js` to include missing Inoreader OAuth credentials for sync server
+  - Cleared 177 failed sync queue items that had reached max retry attempts
+  - Bidirectional sync is now fully operational with 5-minute sync intervals
+
+### Known Issues
+- **Production Server Down** - Saturday, July 26, 2025 at 1:16 PM
+  - Production server is currently experiencing issues and needs to be fixed
+  - Will be addressed after this commit
+
+### Documentation
+- **OAuth Authentication Recovery Investigation** - Saturday, July 26, 2025 at 1:14 PM
+  - Added comprehensive documentation of OAuth token recovery to `docs/tech/bidirectional-sync-investigation.md`
+  - Documented issue where sync server failed for ~12 hours with missing tokens file
+  - Detailed investigation steps including PM2 logs, database queue status, and file system checks
+  - Documented solution including manual OAuth setup script and environment configuration fixes
+  - Added lessons learned and monitoring recommendations for preventing future authentication failures
+  - Ensures knowledge is preserved for handling similar issues in the future
+
 ## [0.7.0] - 2025-07-26
+
+### Documentation
+- **TODO-039 Cleanup: Removed Unnecessary Monitoring Subtasks** - Saturday, July 26, 2025 at 2:49 AM
+  - Removed TODO-039b (Create Basic Health Monitor Script) - Uptime Kuma handles all health checking
+  - Removed TODO-039d (Deploy Monitor as PM2 Service) - Uptime Kuma runs as Docker container
+  - Removed TODO-039e (Add Discord Webhook Notifications) - Uptime Kuma has native Discord support
+  - Updated TODO-039c to integrate with Uptime Kuma webhooks rather than standalone monitoring
+  - Modified TODO-039c title and description to reflect webhook handler implementation
+  - Updated parent TODO-039 to indicate only auto-recovery subtask remains
+  - Streamlined implementation approach to leverage Uptime Kuma's built-in capabilities
+
+### Documentation
+- **TODO-039 Update: Uptime Kuma Integration** - Saturday, July 26, 2025 at 2:43 AM
+  - Updated TODO-039 (Server Health Monitoring) to reference Uptime Kuma monitoring strategy document
+  - Added implementation strategy section pointing to `docs/tech/uptime-kuma-monitoring-strategy.md`
+  - Modified acceptance criteria to align with Uptime Kuma capabilities
+  - Marked TODO-039a as DONE - strategy documentation completed
+  - Moved completed TODO-039a to `docs/shipped-todos.md`
+  - Updated total completed items count to 53 (52 + TODO-039a)
 
 ### Fixed
 - **Critical Production Server Issues** - Saturday, July 26, 2025 at 1:36 AM
