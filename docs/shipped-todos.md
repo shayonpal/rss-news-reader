@@ -2,7 +2,7 @@
 
 **Generated from:** TODOs.md  
 **Generated on:** Friday, July 25, 2025 at 9:23 PM  
-**Total Completed:** 50 items (plus 1 partially completed)
+**Total Completed:** 52 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
 
@@ -1055,6 +1055,53 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - `src/components/ui/article-action-button.tsx` - New base component
   - `src/components/articles/article-list.tsx` - Updated to use new components
   - `docs/tech/button-architecture.md` - Documentation for button system
+
+### TODO-042: Fix Sync Overwriting Local Star/Read Status (P0 - Critical Bug) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025
+- **Issue**: Sync from Inoreader overwrites local star/read status changes
+- **Root Cause**:
+  - User stars/marks articles as read locally → Updates `is_starred`/`is_read` in DB
+  - Changes are queued for bidirectional sync → Added to `sync_queue` table
+  - Bidirectional sync runs (every 5 min) → Sends changes to Inoreader
+  - BUT: Regular sync from Inoreader (2AM/2PM) → Fetches articles and overwrites ALL fields including `is_starred`/`is_read`
+  - This happens because sync uses `upsert` without checking `last_local_update` timestamp
+- **Evidence**:
+  - 0 articles currently starred in DB (despite user starring articles)
+  - 26 articles have `last_local_update > last_sync_update`
+  - Sync code unconditionally sets: `is_starred: article.categories?.includes('user/-/state/com.google/starred') || false`
+- **Resolution**: Added conflict resolution in `/src/app/api/sync/route.ts` that compares `last_local_update` with `last_sync_update` to preserve local changes during sync. Integrated bidirectional sync into main sync flow.
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Sync should check `last_local_update` before overwriting `is_read`/`is_starred`
+  - [x] If local update is newer than sync timestamp, preserve local values
+  - [x] Add tests to verify local changes aren't overwritten
+  - [x] Ensure bidirectional sync changes are preserved
+- **Technical Implementation**:
+  - Modified sync logic to compare timestamps before updating read/starred status
+  - Preserves local changes when `last_local_update > last_sync_update`
+  - Integrated bidirectional sync processing into main sync flow
+  - Tested with real user actions to verify preservation of local states
+
+### TODO-052: Investigate Read Status Sync Issues with Inoreader (P0 - Critical Bug) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025 (Duplicate of TODO-042)
+- **Issue**: Read status appears to be lost after sync, articles marked as read become unread again
+- **Context**:
+  - User reports losing read status of articles after every sync
+  - This was related to TODO-042 (Sync Overwriting Local Star/Read Status)
+  - Bi-directional sync was implemented in TODO-037 but had issues
+  - Critical bug affecting core functionality and user experience
+- **Resolution**: This was a duplicate of TODO-042. The root cause was sync unconditionally overwriting local states. Fixed by implementing conflict resolution based on timestamps. See TODO-042 for details.
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Identify root cause of read status loss
+  - [x] Document the exact sync flow and timing
+  - [x] Implement fix to preserve read status
+  - [x] Test that read status persists through multiple sync cycles
+  - [x] Ensure both manual and automatic syncs preserve status
+  - [x] Add logging to track read status changes
+- **Technical Details**:
+  - Root cause: Sync was overwriting all article fields without checking local updates
+  - Solution: Timestamp-based conflict resolution preserves newer local changes
+  - Both manual and automatic syncs now respect local modifications
+  - Read status properly syncs in both directions (local → Inoreader → local)
 
 ### Additional Server Configuration Variables
 

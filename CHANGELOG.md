@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **TODO Management Update** - Friday, July 25, 2025 at 9:46 PM
+  - Moved completed TODOs from docs/TODOs.md to docs/shipped-todos.md
+  - Moved TODO-042 (Fix Sync Overwriting Local Star/Read Status) - completed Friday, July 25, 2025
+  - Moved TODO-052 (Investigate Read Status Sync Issues) - completed as duplicate of TODO-042
+  - Updated shipped-todos.md count from 50 to 52 completed items
+  - Removed completed items from active TODOs.md to maintain clarity
+
 ### Added
 - **Claude Project Configuration Updates** - Friday, July 25, 2025 at 9:39 PM
   - Added `.claude/settings.local.json` to .gitignore to prevent committing local Claude settings
