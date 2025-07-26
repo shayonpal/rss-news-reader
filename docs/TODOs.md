@@ -50,23 +50,7 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] API usage display (X/100 calls today) - ALREADY IMPLEMENTED in sidebar
   - [ ] Enhanced success/error messages
 
-### TODO-017: Error Handling & Monitoring (P1 - Production Quality)
 
-- **Status**: 🔴 TODO
-- **Acceptance Criteria**:
-  - [ ] Server API errors display clearly in UI
-  - [ ] Tailscale connection errors handled gracefully
-  - [ ] Supabase connection errors handled
-  - [ ] Rate limit warnings at 80% and 95%
-
-### TODO-018: Database Monitoring (P2 - Monitoring)
-
-- **Status**: 🔴 TODO
-- **Acceptance Criteria**:
-  - [ ] Set up automated Supabase advisor reports
-  - [ ] Create alerts for slow queries (>100ms)
-  - [ ] Create alerts for failed RLS policy checks
-  - [ ] Document monitoring setup
 
 ### TODO-019: Feed Search Functionality
 
@@ -155,127 +139,182 @@ The RSS News Reader is now successfully deployed to production:
   - Include timing/performance notes
   - Add debugging tips
 
-### TODO-039: Implement Server Health Monitoring and Auto-Recovery Service (P1 - Infrastructure)
+### TODO-039: Server Stability, Monitoring, and Deployment Pipeline Improvements (P1 - Infrastructure)
 
 - **Status**: 🔴 TODO
-- **Issue**: No automated monitoring for critical servers (sync server stopped without detection)
-- **Context**: Bi-directional sync server was not running for hours without any alerts
-- **Acceptance Criteria**:
-  - [ ] Create health check endpoints for all critical services:
-    - [ ] Main Next.js app (ports 3000/3147)
-    - [ ] Bi-directional sync server (port 3001)
-    - [ ] Sync cron service
-  - [ ] Implement monitoring service that checks health every 5 minutes
-  - [ ] Auto-restart failed services with PM2
-  - [ ] Log all health check results and recovery actions
-  - [ ] Track service uptime and crash frequency
-  - [ ] Implement exponential backoff for repeated failures
-  - [ ] Create GitHub webhook integration for exception notifications
-  - [ ] Send alerts when services fail or require manual intervention
-- **Technical Requirements**:
-  - [ ] Health endpoints should return: status, uptime, last activity, error count
-  - [ ] Monitor should detect: process not running, port not responding, health check failures
-  - [ ] Use PM2 API for process management
-  - [ ] Store health history in logs/health-monitoring.jsonl
-  - [ ] GitHub webhook for critical alerts (crashes, repeated failures)
-- **Implementation Approach**:
-  - Create `/server/health` endpoint for sync server
-  - Add `/api/health/services` endpoint to check all services
-  - Create monitoring script with PM2 integration
-  - Use node-cron for periodic health checks
-  - Configure GitHub Actions or webhooks for notifications
-- **Related**: Tailscale monitoring (TODO-012) already implemented similar pattern
+- **Issue**: Frequent server crashes, incomplete builds, and lack of monitoring causing production instability
+- **Context**: Investigation revealed cascading failures from incomplete builds, PM2 misconfigurations, and missing recovery mechanisms
+- **Implementation Strategy**: Comprehensive approach to stability including monitoring, validation, and safe deployment
+- **Reference**: See `docs/server-instability-issues/investigation-report-2025-07-26_14-30-20.md` for detailed findings
 
-### TODO-039a: Add Health Check Endpoints to All Services (P1 - Infrastructure)
+#### Parent Task Overview:
+This is the main task for all server stability improvements. The investigation found multiple issues:
+- API routes not being compiled in production builds
+- PM2 restarting services excessively (16+ times in 30 minutes)
+- Environment variables not reaching client-side code
+- No validation or recovery mechanisms
+- Missing monitoring and alerting
 
+#### Implementation Architecture:
+- External Monitoring: Uptime Kuma (Docker on port 3080)
+- Internal Recovery: Existing monitor-services.sh script
+- Strategy: Dual monitoring with Kuma for visibility, monitor-services.sh for quick recovery
+- Order: Set up monitoring first, then fix root causes, then enhance
+
+#### Sub-tasks:
+
+
+##### TODO-039b: Build Validation System (P1 - Critical)
 - **Status**: 🔴 TODO
-- **Parent**: TODO-039 (Server Health Monitoring)
-- **Issue**: Services lack health check endpoints for monitoring
+- **Issue**: Production builds missing API routes, causing 500 errors
+- **Context**: Investigation found `.next/server/app/api/` directory missing after builds
+- **Implementation Details**:
+  - Critical fix - addresses root cause of production crashes
+  - Monitor with Uptime Kuma to verify fix effectiveness
 - **Acceptance Criteria**:
-  - [ ] Add `/api/health/app` endpoint to Next.js app
-  - [ ] Add `/server/health` endpoint to sync server (port 3001)
-  - [ ] Add health check capability to cron service
-  - [ ] Each endpoint returns: status, uptime, version, last_activity
-  - [ ] Test endpoints respond within 1 second
-  - [ ] Add startup check that verifies all services start correctly after system reboot
-- **Implementation**:
-  - Extend existing `/api/health` route for app health
-  - Create new Express route in sync server
-  - Add process.send() health reporting for cron
-  - Include startup verification in monitor to catch post-reboot failures
+  - [ ] Create `scripts/validate-build.sh` to verify build completeness
+  - [ ] Check for existence of critical directories and files
+  - [ ] Verify all API routes are compiled
+  - [ ] Test critical endpoints before marking build as successful
+  - [ ] Integrate validation into PM2 startup sequence
+  - [ ] Prevent service start if validation fails
+  - [ ] Log validation results for debugging
+  - [ ] Validate that sync server health endpoint at http://localhost:3001/server/health is properly responding
+  - [ ] Ensure all health endpoints return accurate status (not just 200 OK when services are broken)
+  - [ ] Include validation that health endpoints properly reflect actual service state
+- **Additional Context from Uptime Kuma Monitoring**:
+  - Uptime Kuma monitoring revealed sync server monitor may not detect downtimes correctly
+  - Production health endpoint returns 500 even when app is accessible
+  - Dev health endpoint returns 200 even when app shows "No articles found" error
+  - Need to ensure health checks accurately reflect true service state
 
-### TODO-039b: Create Basic Health Monitor Script (P1 - Infrastructure)
+##### TODO-039d: Environment Variable Management (P1 - Critical)
+- **Status**: 🔴 TODO
+- **Issue**: Client-side code not receiving NEXT_PUBLIC_* variables
+- **Context**: PM2 runtime injection doesn't work for Next.js client builds
+- **Implementation Details**:
+  - Critical fix - ensures client-side code receives NEXT_PUBLIC_* variables
+  - Create build-time validation script
+- **Acceptance Criteria**:
+  - [ ] Create centralized environment configuration system
+  - [ ] Ensure build-time variable availability
+  - [ ] Validate all required variables before build
+  - [ ] Create `.env.example` with all variables documented
+  - [ ] Add pre-build script to check environment completeness
+  - [ ] Document variable loading order and precedence
+  - [ ] Test in both development and production modes
+
+##### TODO-039a: Create Health Check Endpoints (P1 - Prerequisite)
+- **Status**: 🔴 TODO
+- **Issue**: Need standardized health endpoints for all services
+- **Implementation Details**:
+  - Enhance after core stability achieved
+  - Keep simple endpoints for monitor-services.sh, rich data for Uptime Kuma
+- **Acceptance Criteria**:
+  - [ ] Create `/api/health/app` endpoint for main Next.js app
+  - [ ] Create `/server/health` endpoint for bi-directional sync server
+  - [ ] Create health check mechanism for sync cron service
+  - [ ] Health endpoints return: status, uptime, last activity, error count
+  - [ ] Include dependency checks (DB connection, OAuth tokens)
+  - [ ] Standardize response format across all endpoints
+
+##### TODO-039e: PM2 Configuration Improvements (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Issue**: Cluster mode causing crashes, low restart limits, missing health delays
+- **Context**: Investigation found PM2 misconfigured for Next.js and cron services
+- **Acceptance Criteria**:
+  - [ ] Change rss-sync-cron to fork mode
+  - [ ] Increase max_restarts to 50 for all services
+  - [ ] Add min_uptime: '10s' to prevent rapid restarts
+  - [ ] Add kill_timeout: 5000 for graceful shutdowns
+  - [ ] Configure exponential backoff for restart delays
+  - [ ] Add wait_ready: true for health check integration
+  - [ ] Set proper memory limits based on available resources
+  - [ ] Test configuration changes thoroughly
+
+##### TODO-039c: Uptime Kuma Webhook Handler for PM2 Auto-Recovery (P1 - Infrastructure)
 
 - **Status**: 🔴 TODO
 - **Parent**: TODO-039 (Server Health Monitoring)
 - **Depends On**: TODO-039a (Health endpoints must exist first)
-- **Issue**: Need automated health checking of all services
+- **Issue**: Webhook for critical failures only - when monitor-services.sh fails
+- **Context**: Uptime Kuma will detect failures and call this webhook to trigger PM2 restarts
+- **Implementation Details**:
+  - Let monitor-services.sh handle routine restarts
 - **Acceptance Criteria**:
-  - [ ] Create `/scripts/monitor-services.js` script
-  - [ ] Check health endpoints every 5 minutes
-  - [ ] Log results to `logs/health-monitoring.jsonl`
-  - [ ] Detect: HTTP errors, timeouts, process not running
-  - [ ] Simple console output for manual testing
-- **Implementation**:
-  - Use node-fetch for HTTP health checks
-  - Check PM2 process list for running status
-  - JSONL format: timestamp, service, status, response_time, error
-
-### TODO-039c: Integrate PM2 Auto-Recovery (P1 - Infrastructure)
-
-- **Status**: 🔴 TODO
-- **Parent**: TODO-039 (Server Health Monitoring)
-- **Depends On**: TODO-039b (Monitor must detect failures first)
-- **Issue**: Failed services need automatic restart
-- **Acceptance Criteria**:
-  - [ ] Monitor script can restart failed PM2 processes
-  - [ ] Implement retry limit (3 attempts per hour)
-  - [ ] Track restart history in monitoring log
+  - [ ] Create `/api/webhooks/uptime-kuma-recovery` endpoint
+  - [ ] Authenticate webhook requests (shared secret)
+  - [ ] Parse Uptime Kuma payload to identify failed service
+  - [ ] Use PM2 API to restart the specific failed process
+  - [ ] Implement retry limit (3 attempts per hour per service)
+  - [ ] Track restart history in `logs/auto-recovery.jsonl`
   - [ ] Add exponential backoff for repeated failures
-  - [ ] Test with intentional service crashes
+  - [ ] Return appropriate status to Uptime Kuma
 - **Implementation**:
-  - Use PM2 programmatic API
-  - Track restart attempts in memory/file
+  - Webhook receives: monitor name, status, error details
+  - Map monitor names to PM2 process names
+  - Use PM2 programmatic API for restarts
+  - Track restart attempts in memory/Redis
   - Wait 1min, 5min, 15min between retries
+  - Log all recovery attempts with outcomes
+- **Uptime Kuma Configuration**:
+  - Configure webhook URL in each monitor
+  - Set up webhook only for DOWN events
+  - Include monitor details in payload
+  - Test with manual trigger from Uptime Kuma
 
-### TODO-039d: Deploy Monitor as PM2 Service (P1 - Infrastructure)
-
+##### TODO-039g: Error Handling & Monitoring (P1 - Production Quality)
 - **Status**: 🔴 TODO
-- **Parent**: TODO-039 (Server Health Monitoring)
-- **Depends On**: TODO-039c (Monitor script must be complete)
-- **Issue**: Monitor needs to run continuously
+- **Issue**: Poor error visibility and handling (formerly TODO-017)
+- **Context**: Consolidated from TODO-017 into comprehensive monitoring
 - **Acceptance Criteria**:
-  - [ ] Add health-monitor to ecosystem.config.js
-  - [ ] Configure to start on system boot
-  - [ ] Set memory limit and restart policy
-  - [ ] Update deployment scripts to include monitor
-  - [ ] Test monitor survives PM2 reload
-- **Implementation**:
-  - Add as fourth app in PM2 ecosystem
-  - Use cron_restart for daily refresh
-  - Log rotation for monitoring logs
+  - [ ] Server API errors display clearly in UI
+  - [ ] Tailscale connection errors handled gracefully
+  - [ ] Supabase connection errors handled
+  - [ ] Rate limit warnings at 80% and 95%
+  - [ ] Create unified error logging system
+  - [ ] Add error tracking dashboard
+  - [ ] Implement user-friendly error messages
 
-### TODO-039e: Add Discord Webhook Notifications (P2 - Enhancement)
-
+##### TODO-039h: Database Monitoring (P2 - Monitoring)
 - **Status**: 🔴 TODO
-- **Parent**: TODO-039 (Server Health Monitoring)
-- **Depends On**: TODO-039d (Monitor must be running first)
-- **Issue**: Critical failures need external notifications
+- **Issue**: No database performance monitoring (formerly TODO-018)
+- **Context**: Consolidated from TODO-018 into comprehensive monitoring
 - **Acceptance Criteria**:
-  - [ ] Configure Discord webhook for server alerts
-  - [ ] Send notifications for: repeated failures, manual intervention needed
-  - [ ] Include service name, error details, timestamp, suggested actions
-  - [ ] Rate limit notifications (max 1 per service per hour)
-  - [ ] Format messages with Discord embeds for clarity
-  - [ ] Test with simulated failures
-- **Implementation**:
-  - Store Discord webhook URL in environment variable
-  - Use Discord webhook format with embeds
-  - Color code by severity (red=critical, yellow=warning)
-  - Queue notifications to prevent spam
-  - Include recovery suggestions in alerts
+  - [ ] Set up automated Supabase advisor reports
+  - [ ] Create alerts for slow queries (>100ms)
+  - [ ] Create alerts for failed RLS policy checks
+  - [ ] Document monitoring setup
+  - [ ] Add query performance tracking
+  - [ ] Monitor connection pool health
+  - [ ] Track database size and growth
 
+##### TODO-039f: Deployment Safety Mechanisms (P1 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Issue**: No safe deployment process, causing production outages
+- **Context**: Need blue-green deployment and rollback capabilities
+- **Acceptance Criteria**:
+  - [ ] Implement blue-green deployment strategy
+  - [ ] Build new version in separate directory
+  - [ ] Run validation tests before switching
+  - [ ] Keep previous version for instant rollback
+  - [ ] Create rollback script for emergencies
+  - [ ] Add deployment checklist and automation
+  - [ ] Document deployment procedures
+  - [ ] Test rollback mechanism regularly
 
+##### TODO-039j: Log Management and Rotation (P2 - Infrastructure)
+- **Status**: 🔴 TODO
+- **Issue**: Logs growing unbounded, causing disk space issues
+- **Context**: Investigation found stale monitoring data and unbounded log growth
+- **Acceptance Criteria**:
+  - [ ] Implement log rotation for all services
+  - [ ] Set maximum log file sizes
+  - [ ] Archive old logs automatically
+  - [ ] Clean up PM2 logs regularly
+  - [ ] Monitor disk space usage
+  - [ ] Create log retention policy
+  - [ ] Document log locations and formats
 
 ### TODO-043: Fix Favicon Not Loading on iPad in Production (P1 - Bug)
 

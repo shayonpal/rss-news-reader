@@ -2,6 +2,9 @@ const cron = require('node-cron');
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 
 class CronSyncService {
   constructor() {
@@ -30,6 +33,17 @@ class CronSyncService {
     });
 
     console.log(`[Cron] Automatic sync scheduled: ${this.schedule} (America/Toronto)`);
+  }
+
+  async sendUptimeKumaPush(status = 'up', message = '') {
+    try {
+      const scriptPath = path.join(__dirname, '../../scripts/uptime-kuma-push.sh');
+      const cmd = `${scriptPath} push cron ${status} "${message}"`;
+      await execAsync(cmd);
+      console.log('[Cron] Uptime Kuma push sent:', status);
+    } catch (error) {
+      console.error('[Cron] Failed to send Uptime Kuma push:', error);
+    }
   }
 
   async executeSyncWithLogging(trigger) {
@@ -78,6 +92,9 @@ class CronSyncService {
         last_sync_error: error.message,
         sync_failure_count: { increment: 1 }
       });
+      
+      // Send Uptime Kuma push notification for failure
+      await this.sendUptimeKumaPush('down', `Sync failed: ${error.message}`);
     }
   }
 
@@ -114,6 +131,9 @@ class CronSyncService {
             last_sync_error: null,
             sync_success_count: { increment: 1 }
           });
+          
+          // Send Uptime Kuma push notification
+          await this.sendUptimeKumaPush('up', `Sync completed: ${status.articlesCount} articles`);
           
           return;
         } else if (status.status === 'failed') {

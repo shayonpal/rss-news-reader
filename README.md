@@ -27,6 +27,77 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **Dark/Light Mode**: Manual theme control
 - **Supabase Backend**: All client data served from PostgreSQL
 
+## Server Architecture
+
+The RSS News Reader requires several services to be running for full functionality:
+
+### Services & Ports
+
+| Service Name | PM2 Process Name | Port | Environment | Purpose |
+|--------------|------------------|------|-------------|---------|
+| RSS Reader App | rss-reader-prod | 3147 | Production | Main web application server |
+| RSS Reader Dev | rss-reader-dev | 3000 | Development | Development server (when running) |
+| Sync Cron Service | rss-sync-cron | N/A | Both | Automated article syncing (2AM & 2PM) |
+| Supabase PostgreSQL | N/A | 5432 | Both | Database server (cloud-hosted) |
+| Tailscale | N/A | N/A | Both | VPN for secure network access |
+
+### Essential Startup Commands
+
+```bash
+# Start all production services
+pm2 start ecosystem.config.js
+
+# Check service status
+pm2 status
+
+# View service logs
+pm2 logs rss-reader-prod
+pm2 logs rss-sync-cron
+
+# Restart services
+pm2 restart rss-reader-prod
+pm2 restart rss-sync-cron
+
+# Stop services
+pm2 stop all
+```
+
+### Health Check Endpoints
+
+- **Application Health**: http://100.96.166.53:3147/api/health/app
+- **Database Health**: http://100.96.166.53:3147/api/health/db
+- **Sync Status**: Check via PM2 logs for `rss-sync-cron`
+
+### Monitoring
+
+The RSS News Reader includes comprehensive monitoring with dual strategy:
+
+- **Uptime Kuma**: External monitoring dashboard running on port 3080
+  - **Access URL**: http://localhost:3080
+  - **Services Monitored**: 6 monitors covering all RSS Reader services
+    - RSS Reader Production (port 3147)
+    - RSS Reader Development (port 3000)
+    - Bi-directional Sync Server (port 3001)
+    - Production Health Endpoint
+    - Development Health Endpoint
+    - Cron Service Health (file-based check)
+  - **Notifications**: Push notifications integrated with cron service
+  - **Docker Deployment**: Running on Colima Docker for isolation
+
+- **Internal Recovery**: monitor-services.sh script for automatic service recovery
+  - Checks service status and automatically restarts failed services
+  - Integrates with existing PM2 ecosystem
+  - Complements external monitoring with immediate recovery actions
+
+### Network Requirements
+
+**Important**: All access is controlled through Tailscale VPN. Ensure:
+- Tailscale is running and connected
+- You're connected to the same Tailscale network
+- Access URLs via Tailscale IP (100.96.166.53)
+
+The application is not accessible via public internet by design for security.
+
 ## Technology Stack
 
 ### Server

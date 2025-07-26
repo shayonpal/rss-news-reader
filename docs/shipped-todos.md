@@ -1,10 +1,32 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Friday, July 25, 2025 at 9:23 PM  
-**Total Completed:** 52 items (plus 1 partially completed)
+**Generated on:** Saturday, July 26, 2025 at 4:24 PM  
+**Total Completed:** 54 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
+
+### TODO-039i: Implement Uptime Kuma Monitoring Infrastructure (P1 - Infrastructure) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Uptime Kuma monitoring infrastructure deployed
+- **Issue**: No centralized monitoring system
+- **Implementation Strategy**: Followed `docs/tech/uptime-kuma-monitoring-strategy.md`
+- **Implementation Details**:
+  - Set up FIRST for immediate external monitoring while fixing root causes
+  - Used Colima for Docker deployment on port 3080
+  - Monitored existing endpoints to establish baseline before fixes
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Set up Uptime Kuma Docker container
+  - [x] Configure monitors for all health endpoints
+  - [x] Set up Discord notifications for failures
+  - [x] Configure webhook integration for auto-recovery
+  - [x] Create monitoring dashboard
+  - [x] Document access and configuration
+  - [x] Test alert notifications
+- **Completed**: Saturday, July 26, 2025 at 4:24 PM - Deployed on port 3080 with 6 monitors
+- **Access**: http://localhost:3080 for monitoring dashboard
+- **Integration**: Push notifications integrated with cron service for proactive monitoring
+- **Helper Scripts**: Created setup-uptime-kuma.sh and notify-uptime-kuma.sh
+- **Discovery**: Health endpoint accuracy issues identified requiring TODO-039b priority
 
 ### TODO-001: Enable Row Level Security (P0 - Critical) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Security vulnerability resolved
@@ -1111,4 +1133,18 @@ RSS_READER_TOKENS_PATH=~/.rss-reader/tokens.json
 PM2_MAX_MEMORY=1G
 TAILSCALE_HEALTH_CHECK_INTERVAL=300000
 ```
+
+### TODO-039a: Add Health Check Endpoints to All Services (P1 - Infrastructure) ✅ COMPLETED
+
+- **Status**: ✅ COMPLETED - Strategy documented
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Issue**: Services lack health check endpoints for monitoring
+- **Completed**: Strategy documented in `docs/tech/uptime-kuma-monitoring-strategy.md`
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Document health endpoint requirements for all services
+  - [x] Define endpoint response format (status, uptime, version, last_activity)
+  - [x] Create implementation strategy for Uptime Kuma integration
+  - [x] Document how Uptime Kuma will monitor these endpoints
+- **Result**: Comprehensive monitoring strategy created using Uptime Kuma as the monitoring solution
+- **Next Steps**: Implementation will continue in TODO-039b
 

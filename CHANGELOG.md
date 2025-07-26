@@ -1,11 +1,119 @@
 # Changelog
 
+## Saturday, July 26, 2025 at 4:24 PM
+
+### Completed Features
+- **Completed TODO-039i: Implemented Uptime Kuma Monitoring Infrastructure** - Saturday, July 26, 2025 at 4:24 PM
+  - Deployed Uptime Kuma on port 3080 using Colima Docker
+  - Created 6 monitors for all RSS Reader services:
+    - RSS Reader Production (port 3147)
+    - RSS Reader Development (port 3000)
+    - Bi-directional Sync Server (port 3001)
+    - Production Health Endpoint (/api/health/app)
+    - Development Health Endpoint (/api/health/app)
+    - Cron Service Health (file-based check)
+  - Integrated push notifications with cron service for proactive monitoring
+  - Created helper scripts: setup-uptime-kuma.sh and notify-uptime-kuma.sh
+  - Discovered health endpoint accuracy issues during testing requiring TODO-039b priority
+  - Documentation created: docs/tech/uptime-kuma-monitoring-strategy.md
+
+## Saturday, July 26, 2025 at 4:23 PM
+
+### Documentation Updates
+- **Enhanced TODO-039b Build Validation Requirements** - Saturday, July 26, 2025 at 4:23 PM
+  - Added validation requirements for sync server health endpoint at http://localhost:3001/server/health
+  - Added requirement to ensure all health endpoints return accurate status reflecting actual service state
+  - Added context from Uptime Kuma monitoring discoveries:
+    - Sync server monitor may not detect downtimes correctly
+    - Production health endpoint returns 500 even when app is accessible
+    - Dev health endpoint returns 200 even when app shows "No articles found" error
+  - Emphasized need for health checks to accurately reflect true service state, not just return status codes
+
+## Saturday, July 26, 2025 at 3:21 PM
+
+### Documentation Updates
+- **Reordered TODO-039 Sub-tasks by Priority** - Saturday, July 26, 2025 at 3:21 PM
+  - Reordered sub-tasks to reflect implementation priority:
+    1. TODO-039i (Uptime Kuma) - moved to FIRST position for immediate external monitoring
+    2. TODO-039b (Build Validation) - moved to SECOND as critical fix for root cause
+    3. TODO-039d (Environment Variables) - moved to THIRD as critical fix
+    4. TODO-039a (Health Check Endpoints) - moved to FOURTH after core stability
+    5. TODO-039e (PM2 Configuration) - moved to FIFTH
+    6. TODO-039c (Uptime Kuma Webhook) - moved to SIXTH for critical failures only
+  - Added "Implementation Architecture" section to TODO-039 describing dual monitoring strategy
+  - Enhanced implementation details for each sub-task with specific notes:
+    - TODO-039i: Added notes about using Colima for Docker and establishing baseline
+    - TODO-039b: Marked as critical fix addressing root cause of crashes
+    - TODO-039d: Added note about build-time validation script
+    - TODO-039a: Added note to keep simple for monitor-services.sh, rich for Kuma
+    - TODO-039c: Updated description to clarify it's for critical failures only
+  - Strategy: Set up monitoring first, then fix root causes, then enhance
+
+## Saturday, July 26, 2025 at 2:48 PM
+
+### Documentation Updates
+- Updated Next Session Instructions.md to prioritize TODO-039 (Server Stability & Monitoring)
+- Highlighted critical server stability issues from past 48 hours
+- Identified priority sub-tasks: TODO-039b (Build Validation), TODO-039d (Environment Variables), TODO-039e (PM2 Configuration)
+- Referenced investigation reports in docs/server-instability-issues/ for context
+- Added immediate action items and commands for next session
+- Emphasized this as highest priority work to prevent further crashes
+
 All notable changes to Shayon's News RSS Reader PWA will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Documentation
+- **Consolidated Server Stability TODOs** - Saturday, July 26, 2025 at 2:45 PM
+  - Reorganized docs/TODOs.md to consolidate all server stability and deployment pipeline tasks under TODO-039
+  - Expanded TODO-039 to be a comprehensive parent task titled "Server Stability, Monitoring, and Deployment Pipeline Improvements"
+  - Converted TODO-017 (Error Handling & Monitoring) and TODO-018 (Database Monitoring) into sub-tasks TODO-039g and TODO-039h
+  - Added new sub-tasks based on server instability investigation findings:
+    - TODO-039b: Build Validation System - to prevent incomplete production builds
+    - TODO-039d: Environment Variable Management - to fix client-side variable issues
+    - TODO-039e: PM2 Configuration Improvements - to address cluster mode problems
+    - TODO-039f: Deployment Safety Mechanisms - for blue-green deployment and rollback
+    - TODO-039j: Log Management and Rotation - to prevent unbounded log growth
+  - Updated TODO-039c (Uptime Kuma Webhook Handler) with more detailed implementation steps
+  - Added comprehensive context and acceptance criteria referencing investigation report findings
+  - Maintained P1 priority as infrastructure stability is critical
+
+### Investigation
+- **Production Article Loading Issue** - Saturday, July 26, 2025 at 2:09 PM
+  - Investigated why articles weren't loading from Supabase on page load in both production and development environments
+  - **Root Cause**: Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) not being properly passed to client-side bundle during Next.js build process
+  - **Investigation Steps**:
+    - Fixed ecosystem.config.js by adding `require('dotenv').config()` at the top to load environment variables before PM2 starts
+    - Rebuilt production app after fixing missing build files and error pages (missing _error.tsx was causing build failures)
+    - Created build script `/scripts/build-and-start-prod.sh` that exports environment variables before building
+    - Used supabase-dba agent to verify database has 69 feeds and 1,033 articles for user 'shayon' with correct RLS policies
+  - **Current Status**: Production URL (http://100.96.166.53:3147/reader) is now working after rebuild with environment variables. Development URL (http://100.96.166.53:3000/reader) still fails to load articles - client-side Supabase initialization issue persists
+  - **Issue**: Next.js requires NEXT_PUBLIC_* environment variables to be available at build time to include them in the client-side JavaScript bundle. PM2's runtime environment variable injection doesn't solve this problem
+  - **Files Modified**: ecosystem.config.js (added dotenv loading), tsconfig.json (excluded docs folder from build), created /scripts/build-and-start-prod.sh
+  - **Next Steps**: Infrastructure is working correctly - just need to get environment variables properly bundled into client-side code (may need .env.production file or verify Supabase initialization)
+
+### Documentation
+- **Created Comprehensive Investigation Report** - Saturday, July 26, 2025 at 2:19 PM
+  - Created detailed investigation report at `docs/server-instability-issues/investigation-report-2025-07-26_14-09-00.md`
+  - Documented complete investigation process for articles not loading from Supabase issue
+  - Included executive summary, problem description, investigation steps, and root cause analysis
+  - Detailed solutions implemented including ecosystem.config.js fixes and build script creation
+  - Documented current status: production fixed, development still affected
+  - Added proposed solutions for development environment and long-term improvements
+  - Listed all files modified during investigation
+  - Captured lessons learned about Next.js environment variable handling
+  - Provided clear next steps for fixing remaining development environment issues
+
+### Documentation
+- **Added Server Architecture section to README.md** - Saturday, July 26, 2025 at 1:23 PM
+  - Added comprehensive documentation of all servers, services, and ports required to run the RSS News Reader application
+  - Created clear table showing PM2 process names, ports, environments, and purposes for each service
+  - Documented essential startup commands, health check endpoints, and network requirements
+  - Emphasized Tailscale VPN access control for security
+  - Improves onboarding for users setting up the application by providing a single reference for all infrastructure components
 
 ### Fixed
 - **Restored Bidirectional Sync Authentication** - Saturday, July 26, 2025 at 1:16 PM
