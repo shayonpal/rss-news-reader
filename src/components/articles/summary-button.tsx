@@ -5,11 +5,13 @@ import { Loader2, Sparkles, RotateCcw } from 'lucide-react';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { cn } from '@/lib/utils';
 import { IOSButton } from '@/components/ui/ios-button';
+import { ArticleActionButton, type ArticleActionButtonSize } from '@/components/ui/article-action-button';
 
 interface SummaryButtonProps {
   articleId: string;
   hasSummary: boolean;
   variant?: 'icon' | 'full';
+  size?: ArticleActionButtonSize;
   className?: string;
   onSuccess?: () => void;
 }
@@ -18,6 +20,7 @@ export function SummaryButton({
   articleId,
   hasSummary,
   variant = 'full',
+  size = 'sm',
   className,
   onSuccess
 }: SummaryButtonProps) {
@@ -42,26 +45,17 @@ export function SummaryButton({
 
   if (variant === 'icon') {
     return (
-      <IOSButton
-        variant="ghost"
-        size="icon"
+      <ArticleActionButton
+        icon={hasSummary ? RotateCcw : Sparkles}
         onPress={handleGenerateSummary}
+        size={size}
+        active={false}
+        label={hasSummary ? "Regenerate summary" : "Generate AI summary"}
         disabled={isLoading}
-        className={cn(
-          "hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700",
-          className
-        )}
-        title={hasSummary ? "Regenerate summary" : "Generate AI summary"}
-        aria-label={hasSummary ? "Regenerate summary" : "Generate AI summary"}
-      >
-        {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : hasSummary ? (
-          <RotateCcw className="h-5 w-5" />
-        ) : (
-          <Sparkles className="h-5 w-5" />
-        )}
-      </IOSButton>
+        loading={isLoading}
+        loadingIcon={Loader2}
+        className={className}
+      />
     );
   }
 

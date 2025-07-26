@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Loader2, RefreshCw, Star } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { extractTextContent } from '@/lib/utils/data-cleanup';
 import { formatDistanceToNow } from 'date-fns';
 import { SummaryButton } from './summary-button';
+import { StarButton } from './star-button';
 import type { Article } from '@/types';
 
 interface ArticleListProps {
@@ -405,24 +406,14 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
                       articleId={article.id}
                       hasSummary={false}
                       variant="icon"
+                      size="sm"
                     />
                   )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleStar(article.id);
-                    }}
-                    className="p-1 hover:bg-muted rounded"
-                    aria-label={article.tags?.includes('starred') ? 'Unstar' : 'Star'}
-                  >
-                    <Star 
-                      className={`h-4 w-4 ${
-                        article.tags?.includes('starred') 
-                          ? 'fill-yellow-500 text-yellow-500' 
-                          : 'text-muted-foreground'
-                      }`} 
-                    />
-                  </button>
+                  <StarButton
+                    onToggleStar={() => toggleStar(article.id)}
+                    isStarred={article.tags?.includes('starred') || false}
+                    size="sm"
+                  />
                 </div>
               </div>
 

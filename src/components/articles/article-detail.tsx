@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import type { Article, Feed } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3, ArrowUp } from 'lucide-react';
+import { ArrowLeft, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3, ArrowUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import { SummaryButton } from './summary-button';
+import { StarButton } from './star-button';
 import { processArticleLinksSSR } from '@/lib/utils/link-processor';
 import { SummaryDisplay } from './summary-display';
 import { FetchContentButton } from './fetch-content-button';
@@ -261,23 +262,17 @@ export function ArticleDetail({
           </IOSButton>
           
           <div className="flex items-center gap-2">
-            <IOSButton
-              variant="ghost"
-              size="icon"
-              onPress={onToggleStar}
-              aria-label="Toggle star"
-              className={cn(
-                "hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700",
-                currentArticle.tags?.includes('starred') && "text-yellow-500"
-              )}
-            >
-              <Star className={cn("h-5 w-5", currentArticle.tags?.includes('starred') && "fill-current")} />
-            </IOSButton>
+            <StarButton
+              onToggleStar={onToggleStar}
+              isStarred={currentArticle.tags?.includes('starred') || false}
+              size="md"
+            />
             
             <SummaryButton
               articleId={currentArticle.id}
               hasSummary={!!currentArticle.summary}
               variant="icon"
+              size="md"
               onSuccess={handleSummarySuccess}
             />
             
@@ -285,6 +280,7 @@ export function ArticleDetail({
               articleId={currentArticle.id}
               hasFullContent={currentArticle.hasFullContent}
               variant="icon"
+              size="md"
               onSuccess={handleFetchContentSuccess}
               onRevert={handleRevertContent}
             />

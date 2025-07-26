@@ -54,7 +54,7 @@ export function processArticleLinksSSR(html: string): string {
         // Update existing rel to include our values
         newAttributes = newAttributes.replace(
           /rel\s*=\s*["']([^"']*)["']/i,
-          (relMatch, relValue) => {
+          (relMatch: string, relValue: string) => {
             const values = new Set(relValue.split(/\s+/));
             values.add('noopener');
             values.add('noreferrer');

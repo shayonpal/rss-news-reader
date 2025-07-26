@@ -19,6 +19,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents accidental marking of ALL articles across entire Inoreader account
 
 ### Documentation
+- **Button Architecture Documentation** - Friday, July 25, 2025 at 9:19 PM
+  - Created comprehensive documentation at `docs/tech/button-architecture.md`
+  - Documents three-tier button component hierarchy (IOSButton → ArticleActionButton → Specialized Buttons)
+  - Provides clear guidance on when to use each component
+  - Includes code examples for creating new action buttons
+  - Outlines best practices for consistent implementation
+  - Added migration guide for converting existing custom buttons
+  - Ensures future developers will use the established architecture instead of creating custom implementations
+
+### Fixed
+- **Unified Icon Styling Between Summarize and Star Buttons** (TODO-050) - Friday, July 25, 2025 at 9:23 PM
+  - Fixed inconsistent visual styling between summarize and star icons in article list
+  - Created modular button architecture with ArticleActionButton component
+  - Unified hover states, opacity, and transitions for all action buttons
+  - Fixed event bubbling issue where clicking buttons would open articles
+  - Improved visual consistency especially noticeable in dark mode
+  - All article action buttons now share consistent styling and behavior
+
 - **TODO-040 Documentation Update** - Friday, July 25, 2025 at 8:39 PM
   - Updated TODOs.md to mark TODO-040 as completed with implementation details
   - Moved TODO-040 to shipped-todos.md with full resolution details

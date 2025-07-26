@@ -1,8 +1,8 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Friday, July 25, 2025 at 8:39 PM  
-**Total Completed:** 49 items (plus 1 partially completed)
+**Generated on:** Friday, July 25, 2025 at 9:23 PM  
+**Total Completed:** 50 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
 
@@ -1025,6 +1025,36 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - Two-tap confirmation: first tap shows "Confirm?" with red background
   - Uses existing sync queue mechanism for reliable bidirectional sync
   - Avoids dangerous Inoreader API that marks ALL articles across entire account
+
+### TODO-050: Unify Summarize Icon Style with Star Icon in Article List (P3 - UI Consistency) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025 at 9:23 PM
+- **Issue**: Summarize icon in article list had different styling than star icon, especially noticeable in dark mode
+- **Context**:
+  - Star icon and summarize icon appeared next to each other in article list
+  - They had different visual styles/weights creating visual imbalance
+  - Inconsistency was more prominent in dark mode
+- **Solution Implemented**:
+  - Created ArticleActionButton component as base for all article action buttons
+  - Unified hover states, opacity (0.6 default, 1.0 on hover), and transitions
+  - Applied consistent styling to both summarize and star buttons
+  - Fixed event bubbling issue with proper stopPropagation
+  - All buttons now share identical visual behavior and styling
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Summarize icon matches star icon style (size, weight, color)
+  - [x] Both icons have same hover states
+  - [x] Both icons have same opacity when not active
+  - [x] Consistent styling in both light and dark modes
+  - [x] Icons align properly and have same spacing
+  - [x] Active/inactive states are visually consistent
+- **Technical Implementation**:
+  - Created `src/components/ui/article-action-button.tsx` as base component
+  - Refactored both star and summarize buttons to use ArticleActionButton
+  - Added proper event handling to prevent accidental article navigation
+  - Created comprehensive button architecture documentation
+- **Files Modified**:
+  - `src/components/ui/article-action-button.tsx` - New base component
+  - `src/components/articles/article-list.tsx` - Updated to use new components
+  - `docs/tech/button-architecture.md` - Documentation for button system
 
 ### Additional Server Configuration Variables
 
