@@ -93,7 +93,7 @@ module.exports = {
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         // Server URL for API calls
-        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+        NEXT_PUBLIC_BASE_URL: 'http://localhost:3147'
       },
       error_file: './logs/cron-error.log',
       out_file: './logs/cron-out.log',

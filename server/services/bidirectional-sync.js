@@ -21,6 +21,7 @@ class BiDirectionalSyncService {
     this.syncTimer = null;
     this.retryAttempts = new Map();
     this.isProcessing = false;
+    this.lastProcessedTime = null;
   }
 
   async startPeriodicSync() {
@@ -107,6 +108,9 @@ class BiDirectionalSyncService {
 
       const duration = Date.now() - startTime;
       console.log(`[BiDirectionalSync] Sync completed in ${duration}ms`);
+      
+      // Update last processed time
+      this.lastProcessedTime = new Date().toISOString();
 
     } catch (error) {
       console.error('[BiDirectionalSync] Error processing sync queue:', error);

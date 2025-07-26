@@ -1,5 +1,63 @@
 # Changelog
 
+## Saturday, July 26, 2025 at 7:28 PM
+
+### Documentation Verification
+- **Health Check Endpoints Documentation Audit (TODO-039a Follow-up)**
+  - Verified CHANGELOG.md has comprehensive entries for both initial implementation and QA fixes
+  - Confirmed docs/TODOs.md shows TODO-039a as COMPLETED with detailed implementation notes
+  - Validated docs/monitoring/ folder contains all required documentation files
+  - Confirmed README.md correctly references docs/monitoring/health-monitoring-overview.md
+  - Identified minor inconsistency: shipped-todos.md needs updating to reflect full implementation
+  - Found references to old docs/tech/uptime-kuma-monitoring-strategy.md that could be cleaned up
+  - Overall: Documentation is comprehensive and properly organized for health monitoring system
+
+## Saturday, July 26, 2025 at 7:18 PM
+
+### Fixed
+- **QA-Identified Improvements for Health Monitoring (TODO-039a Follow-up)**
+  - **Fixed monitor-services.sh Script**: Updated to read from `.jsonl` files instead of `.json` for health check logs
+  - **Implemented Log Rotation**: Added 7-day retention policy for JSONL health files to prevent unbounded log growth
+  - **Adjusted Performance Thresholds**: Updated database performance thresholds from 200/500ms to 300/1000ms based on actual observed metrics
+  - **Resolved Documentation Confusion**: Created unified health monitoring overview and renamed documentation files for clarity
+  - These fixes ensure the health monitoring system is production-ready with proper log management and realistic performance expectations
+
+## Saturday, July 26, 2025 at 7:02 PM
+
+### Documentation Updates
+- **Marked TODO-039a as COMPLETED in docs/TODOs.md**
+  - Updated status from TODO to COMPLETED with completion date of Sunday, July 27, 2025
+  - Added comprehensive completion notes documenting successful implementation of all health check endpoints
+  - Checked off all acceptance criteria items
+  - Updated parent task TODO-039 progress counter from 3 to 4 of 10 sub-tasks completed
+  - Context: TODO-039a implemented comprehensive health monitoring infrastructure with standardized endpoints for all services, performance tracking, and full Uptime Kuma integration
+
+## Saturday, July 26, 2025 at 6:24 PM
+
+### Documentation Updates
+- **Created/Updated README Files for All Documentation Subdirectories**
+  - Created comprehensive README files for 5 documentation subdirectories
+  - **api/README.md**: Created overview of API documentation with endpoint categories and quick reference
+  - **deployment/README.md**: Created deployment documentation guide with PM2 services overview and quick commands
+  - **product/README.md**: Updated existing README to include missing user-stories.md reference
+  - **server-instability-issues/README.md**: Created comprehensive overview of July 26 server crashes with timeline, root causes, and prevention measures
+  - **tech/README.md**: Created technical documentation overview with architecture diagram and development guidelines
+  - **ui-ux/README.md**: Created UI/UX documentation guide covering iOS 26 design research and liquid glass implementation
+  - Each README now provides:
+    - Clear overview of directory contents
+    - Document descriptions with current status indicators (✅ Current, 🔄 In Progress, 📋 Historical, etc.)
+    - Related documentation cross-references
+    - Quick reference sections where applicable
+  - Purpose: Improve documentation discoverability and help developers quickly understand available resources
+
+## Saturday, July 26, 2025 at 6:20 PM
+- Updated TODO-039a with comprehensive implementation strategy for health check endpoints
+- Added detailed design decisions including no authentication, JSONL logging, and standardized JSON response format
+- Specified implementation details for enhanced /api/health/app, /server/health, and new /api/health/cron endpoints
+- Included performance tracking requirements with rolling averages for key operations
+- Documented Uptime Kuma integration strategy with HTTP monitoring configuration
+- Added testing strategy to ensure proper status codes, JSON parsing, and performance impact
+
 ## Saturday, July 26, 2025 at 5:50 PM
 
 ### Fixed
@@ -155,6 +213,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- **Comprehensive Health Check Endpoints** (TODO-039a) - COMPLETED ✅ - Saturday, July 26, 2025 at 7:01 PM
+  - Implemented enhanced health check system across all RSS Reader services
+  - **Enhanced /api/health/app endpoint**:
+    - Returns standardized JSON response with status, timestamp, uptime, and component health
+    - Includes database connectivity check with connection status
+    - Shows system metrics including memory usage and process details
+    - Validates critical environment variables availability
+    - Added performance metrics tracking with 5-minute rolling averages
+  - **Enhanced /server/health endpoint**:
+    - Sync server health endpoint with JSON response format
+    - Tracks active connections, last sync time, and queue status
+    - Monitors token validity and refresh status
+    - Includes detailed error information when components fail
+  - **New /api/health/cron endpoint**:
+    - File-based health check for cron service monitoring
+    - Reads from /logs/cron-health.json for last execution status
+    - Returns structured data including last run time, next scheduled run, and failure count
+    - Designed for Uptime Kuma file monitoring integration
+  - **Performance tracking**:
+    - Tracks API response times with rolling 5-minute averages
+    - Monitors database query performance
+    - Logs all health check requests to health-checks.jsonl
+  - **Monitoring integration**:
+    - All endpoints return proper HTTP status codes (200 for healthy, 503 for unhealthy)
+    - Structured JSON responses compatible with Uptime Kuma parsing
+    - Supports both simple ping checks and detailed component monitoring
+  - **Implementation details**:
+    - No authentication required (protected by Tailscale network)
+    - JSONL logging for audit trail and debugging
+    - Graceful error handling with descriptive messages
+    - Consistent response format across all endpoints
 
 ### Documentation
 - **Consolidated Server Stability TODOs** - Saturday, July 26, 2025 at 2:45 PM

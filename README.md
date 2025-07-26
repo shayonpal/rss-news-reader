@@ -378,7 +378,7 @@ src/
 - **[Product Requirements](docs/product/PRD.md)**: Detailed product specifications
 - **[User Stories](docs/product/user-stories.md)**: All user stories with acceptance criteria
 - **[Technical Architecture](docs/tech/)**: Implementation decisions and architecture
-- **[Health Check System](docs/health-check-system.md)**: System monitoring and health checks
+- **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
 - **[Deployment Guide](docs/deployment/caddy-pm2-setup.md)**: Production deployment instructions
 

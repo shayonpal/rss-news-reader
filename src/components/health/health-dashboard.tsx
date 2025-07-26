@@ -80,7 +80,7 @@ export function HealthDashboard() {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">System Health</h1>
           <HealthStatusIndicator
-            status={currentHealth.overall}
+            status={currentHealth.status}
             size="lg"
             showLabel
           />

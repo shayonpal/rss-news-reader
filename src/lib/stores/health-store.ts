@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
-  SystemHealth,
+  UISystemHealth,
   HealthAlert,
   HealthCheckHistory,
   HealthStatus,
@@ -10,7 +10,7 @@ import { healthCheckService } from '@/lib/health/health-check-service';
 
 interface HealthState {
   // Current health status
-  currentHealth: SystemHealth | null;
+  currentHealth: UISystemHealth | null;
   isChecking: boolean;
   lastCheckError: string | null;
   
@@ -37,12 +37,12 @@ interface HealthState {
 }
 
 // Helper function to generate alerts from health status
-function generateAlerts(health: SystemHealth): HealthAlert[] {
+function generateAlerts(health: UISystemHealth): HealthAlert[] {
   const alerts: HealthAlert[] = [];
   const timestamp = new Date();
 
   // Check overall system health
-  if (health.overall === 'unhealthy') {
+  if (health.status === 'unhealthy') {
     alerts.push({
       id: `alert-${Date.now()}-system`,
       service: 'system',
@@ -52,7 +52,7 @@ function generateAlerts(health: SystemHealth): HealthAlert[] {
       acknowledged: false,
       autoResolve: true,
     });
-  } else if (health.overall === 'degraded') {
+  } else if (health.status === 'degraded') {
     alerts.push({
       id: `alert-${Date.now()}-system`,
       service: 'system',
@@ -151,7 +151,7 @@ export const useHealthStore = create<HealthState>()(
           const newEntry: HealthCheckHistory = {
             id: `check-${Date.now()}`,
             timestamp: health.timestamp,
-            overall: health.overall,
+            overall: health.status,
             services: health.services.map(s => ({
               name: s.name,
               status: s.status,

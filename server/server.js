@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const BiDirectionalSyncService = require('./services/bidirectional-sync');
+const SyncHealthCheck = require('./lib/sync-health-check');
 const markAllReadRouter = require('./routes/mark-all-read');
 
 const app = express();
@@ -9,6 +10,9 @@ const PORT = process.env.SERVER_PORT || 3000;
 
 // Initialize bi-directional sync service
 const syncService = new BiDirectionalSyncService();
+
+// Initialize health check service
+const healthCheck = new SyncHealthCheck();
 
 // Middleware
 app.use(cors());
@@ -49,12 +53,42 @@ app.post('/server/sync/clear-failed', async (req, res) => {
 });
 
 // Health check
-app.get('/server/health', (req, res) => {
-  res.json({ 
-    status: 'ok',
-    service: 'rss-reader-server',
-    biDirectionalSync: syncService.syncTimer ? 'active' : 'inactive'
-  });
+app.get('/server/health', async (req, res) => {
+  try {
+    const health = await healthCheck.checkHealth(syncService);
+    
+    // Determine HTTP status code based on health
+    let statusCode = 200;
+    if (health.status === 'unhealthy') {
+      statusCode = 503; // Service Unavailable
+    }
+    
+    res.status(statusCode).json(health);
+  } catch (error) {
+    console.error('Health check error:', error);
+    
+    // Log the error
+    SyncHealthCheck.logError(`Health check error: ${error.message}`);
+    
+    res.status(503).json({
+      status: 'unhealthy',
+      service: 'rss-sync-server',
+      uptime: 0,
+      lastActivity: new Date().toISOString(),
+      errorCount: 1,
+      dependencies: {
+        database: 'unknown',
+        oauth: 'unknown',
+        syncQueue: 'unknown',
+      },
+      performance: {
+        avgSyncTime: 0,
+        avgDbQueryTime: 0,
+        avgApiCallTime: 0,
+      },
+      error: error.message,
+    });
+  }
 });
 
 // Start server

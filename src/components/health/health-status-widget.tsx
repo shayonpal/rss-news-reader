@@ -25,7 +25,7 @@ export function HealthStatusWidget() {
     }
   }, [currentHealth, performHealthCheck]);
 
-  const status = currentHealth?.overall || 'unknown';
+  const status = currentHealth?.status || 'unknown';
 
   return (
     <DropdownMenu>
@@ -54,7 +54,7 @@ export function HealthStatusWidget() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Overall Status</span>
                 <HealthStatusIndicator
-                  status={currentHealth.overall}
+                  status={currentHealth.status}
                   size="sm"
                   showLabel
                 />

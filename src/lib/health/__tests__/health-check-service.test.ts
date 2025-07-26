@@ -62,7 +62,7 @@ describe('HealthCheckService', () => {
 
       const result = await service.checkHealth();
 
-      expect(result.overall).toBe('healthy');
+      expect(result.status).toBe('healthy');
       expect(result.services).toHaveLength(5); // database, api, cache, auth, network
       expect(result.metrics.totalChecks).toBeGreaterThan(0);
     });
@@ -77,7 +77,7 @@ describe('HealthCheckService', () => {
 
       const result = await service.checkHealth();
 
-      expect(result.overall).toBe('degraded');
+      expect(result.status).toBe('degraded');
       
       const databaseService = result.services.find(s => s.name === 'database');
       expect(databaseService?.status).toBe('degraded');
@@ -89,7 +89,7 @@ describe('HealthCheckService', () => {
 
       const result = await service.checkHealth();
 
-      expect(result.overall).toBe('unhealthy');
+      expect(result.status).toBe('unhealthy');
       
       const databaseService = result.services.find(s => s.name === 'database');
       expect(databaseService?.status).toBe('unhealthy');

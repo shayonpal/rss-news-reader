@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import type {
   HealthCheckResult,
   ServiceHealth,
-  SystemHealth,
+  UISystemHealth,
   HealthStatus,
   ComponentHealthCheck,
   HealthMetrics,
@@ -41,7 +41,7 @@ export class HealthCheckService {
     return HealthCheckService.instance;
   }
 
-  async checkHealth(): Promise<SystemHealth> {
+  async checkHealth(): Promise<UISystemHealth> {
     const start = Date.now();
     this.totalChecks++;
 
@@ -64,7 +64,7 @@ export class HealthCheckService {
       }
 
       return {
-        overall,
+        status: overall,
         timestamp: new Date(),
         services,
         metrics: this.getMetrics(),

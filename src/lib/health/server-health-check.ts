@@ -38,14 +38,20 @@ export class ServerHealthCheck {
     const overall = this.calculateOverallStatus(services);
     
     return {
-      overall,
-      timestamp: new Date(),
-      services,
-      metrics: {
-        uptime: 0, // Would need process tracking for real uptime
-        totalChecks: 1,
-        failedChecks: overall === 'unhealthy' ? 1 : 0,
-        avgResponseTime: 0,
+      status: overall,
+      service: 'rss-reader-server',
+      uptime: 0, // Would need process tracking for real uptime
+      lastActivity: new Date().toISOString(),
+      errorCount: overall === 'unhealthy' ? 1 : 0,
+      dependencies: {
+        api: services.find(s => s.name === 'api')?.status || 'unknown',
+        auth: services.find(s => s.name === 'auth')?.status || 'unknown',
+        network: services.find(s => s.name === 'network')?.status || 'unknown',
+      },
+      performance: {
+        avgSyncTime: 0,
+        avgDbQueryTime: 0,
+        avgApiCallTime: 0,
       },
     };
   }

@@ -211,7 +211,7 @@ check_sync_server() {
 
 # Check cron health (via JSON file)
 check_cron_health() {
-    local health_file="/Users/shayon/DevProjects/rss-news-reader/logs/cron-health.json"
+    local health_file="/Users/shayon/DevProjects/rss-news-reader/logs/cron-health.jsonl"
     
     if [ ! -f "$health_file" ]; then
         add_error_to_buffer "rss-sync-cron" "health_file_missing" "Health file not found"
@@ -226,8 +226,8 @@ check_cron_health() {
         return 1
     fi
     
-    # Parse health status
-    local status=$(jq -r '.status' "$health_file" 2>/dev/null || echo "unknown")
+    # Parse health status from last line of JSONL file
+    local status=$(tail -n 1 "$health_file" | jq -r '.status' 2>/dev/null || echo "unknown")
     
     local event=$(jq -c -n \
         --arg ts "$(get_timestamp)" \

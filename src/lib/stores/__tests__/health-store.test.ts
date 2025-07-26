@@ -29,7 +29,7 @@ describe('HealthStore', () => {
   describe('performHealthCheck', () => {
     it('should update current health on successful check', async () => {
       const mockHealth: SystemHealth = {
-        overall: 'healthy',
+        status: 'healthy',
         timestamp: new Date(),
         services: [],
         metrics: {
@@ -53,7 +53,7 @@ describe('HealthStore', () => {
 
     it('should add to check history', async () => {
       const mockHealth: SystemHealth = {
-        overall: 'healthy',
+        status: 'healthy',
         timestamp: new Date(),
         services: [
           {
@@ -80,13 +80,13 @@ describe('HealthStore', () => {
 
       const state = useHealthStore.getState();
       expect(state.checkHistory).toHaveLength(1);
-      expect(state.checkHistory[0].overall).toBe('healthy');
+      expect(state.checkHistory[0].status).toBe('healthy');
       expect(state.checkHistory[0].services).toHaveLength(1);
     });
 
     it('should limit check history to 100 entries', async () => {
       const mockHealth: SystemHealth = {
-        overall: 'healthy',
+        status: 'healthy',
         timestamp: new Date(),
         services: [],
         metrics: {
@@ -103,7 +103,7 @@ describe('HealthStore', () => {
       const initialHistory: HealthCheckHistory[] = Array(100).fill(null).map((_, i) => ({
         id: `check-${i}`,
         timestamp: new Date(),
-        overall: 'healthy' as const,
+        status: 'healthy' as const,
         services: [],
         alerts: [],
       }));
@@ -294,7 +294,7 @@ describe('HealthStore', () => {
       const history: HealthCheckHistory[] = Array(15).fill(null).map((_, i) => ({
         id: `check-${i}`,
         timestamp: new Date(),
-        overall: (i % 3 === 0 ? 'healthy' : i % 3 === 1 ? 'degraded' : 'unhealthy') as HealthStatus,
+        status: (i % 3 === 0 ? 'healthy' : i % 3 === 1 ? 'degraded' : 'unhealthy') as HealthStatus,
         services: [],
         alerts: [],
       }));
@@ -305,8 +305,8 @@ describe('HealthStore', () => {
       const trend = getHealthTrend();
 
       expect(trend).toHaveLength(10); // Last 10 items
-      expect(trend[0]).toBe(history[9].overall); // Reversed order
-      expect(trend[9]).toBe(history[0].overall);
+      expect(trend[0]).toBe(history[9].status); // Reversed order
+      expect(trend[9]).toBe(history[0].status);
     });
 
     it('should handle empty history', () => {
@@ -326,7 +326,7 @@ describe('HealthStore', () => {
         checkHistory: Array(30).fill(null).map((_, i) => ({
           id: `check-${i}`,
           timestamp: new Date(),
-          overall: 'healthy' as const,
+          status: 'healthy' as const,
           services: [],
           alerts: [],
         })),

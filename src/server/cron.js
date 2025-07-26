@@ -9,20 +9,31 @@ const execAsync = promisify(exec);
 class CronSyncService {
   constructor() {
     this.logPath = process.env.SYNC_LOG_PATH || './logs/sync-cron.jsonl';
+    this.healthLogPath = './logs/cron-health.jsonl';
     this.isEnabled = process.env.ENABLE_AUTO_SYNC === 'true';
     this.schedule = process.env.SYNC_CRON_SCHEDULE || '0 2,14 * * *'; // 2am, 2pm
     this.apiUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    this.serviceStartTime = Date.now();
+    this.successCount = 0;
+    this.failureCount = 0;
+    this.lastRunTime = null;
+    this.lastRunStatus = null;
+    this.lastError = null;
   }
 
   async start() {
     if (!this.isEnabled) {
       console.log('[Cron] Automatic sync is disabled');
+      await this.writeHealthStatus('disabled');
       return;
     }
 
     // Ensure log directory exists
     const logDir = path.dirname(this.logPath);
     await fs.mkdir(logDir, { recursive: true });
+
+    // Write initial health status
+    await this.writeHealthStatus('healthy');
 
     // Schedule cron job
     cron.schedule(this.schedule, async () => {
@@ -93,6 +104,15 @@ class CronSyncService {
         sync_failure_count: { increment: 1 }
       });
       
+      // Update internal state
+      this.lastRunTime = new Date().toISOString();
+      this.lastRunStatus = 'failed';
+      this.lastError = error.message;
+      this.failureCount++;
+      
+      // Write health status
+      await this.writeHealthStatus('degraded');
+      
       // Send Uptime Kuma push notification for failure
       await this.sendUptimeKumaPush('down', `Sync failed: ${error.message}`);
     }
@@ -131,6 +151,15 @@ class CronSyncService {
             last_sync_error: null,
             sync_success_count: { increment: 1 }
           });
+          
+          // Update internal state
+          this.lastRunTime = new Date().toISOString();
+          this.lastRunStatus = 'success';
+          this.lastError = null;
+          this.successCount++;
+          
+          // Write health status
+          await this.writeHealthStatus('healthy');
           
           // Send Uptime Kuma push notification
           await this.sendUptimeKumaPush('up', `Sync completed: ${status.articlesCount} articles`);
@@ -191,6 +220,68 @@ class CronSyncService {
   getTriggerName() {
     const hour = new Date().getHours();
     return hour < 12 ? 'cron-2am' : 'cron-2pm';
+  }
+
+  async writeHealthStatus(overallStatus = null) {
+    try {
+      const uptimeSeconds = Math.floor((Date.now() - this.serviceStartTime) / 1000);
+      const nextRunTime = this.getNextRunTime();
+      
+      const healthData = {
+        timestamp: new Date().toISOString(),
+        status: overallStatus || (this.lastRunStatus === 'failed' ? 'degraded' : 'healthy'),
+        service: 'rss-sync-cron',
+        enabled: this.isEnabled,
+        schedule: this.schedule,
+        uptime: uptimeSeconds,
+        lastRun: this.lastRunTime,
+        lastRunStatus: this.lastRunStatus,
+        nextRun: nextRunTime,
+        recentRuns: {
+          successful: this.successCount,
+          failed: this.failureCount,
+          lastFailure: this.lastError ? {
+            timestamp: this.lastRunTime,
+            error: this.lastError
+          } : null
+        },
+        performance: {
+          avgSyncTime: 0, // Would need to track this
+          totalSyncs: this.successCount + this.failureCount
+        }
+      };
+
+      await fs.appendFile(this.healthLogPath, JSON.stringify(healthData) + '\n');
+    } catch (error) {
+      console.error('[Cron] Failed to write health status:', error);
+    }
+  }
+
+  getNextRunTime() {
+    if (!this.isEnabled) return null;
+    
+    // Parse cron schedule to determine next run
+    const now = new Date();
+    const hour = now.getHours();
+    
+    // Schedule is '0 2,14 * * *' (2am and 2pm)
+    if (hour < 2) {
+      // Next run is 2am today
+      const next = new Date(now);
+      next.setHours(2, 0, 0, 0);
+      return next.toISOString();
+    } else if (hour < 14) {
+      // Next run is 2pm today
+      const next = new Date(now);
+      next.setHours(14, 0, 0, 0);
+      return next.toISOString();
+    } else {
+      // Next run is 2am tomorrow
+      const next = new Date(now);
+      next.setDate(next.getDate() + 1);
+      next.setHours(2, 0, 0, 0);
+      return next.toISOString();
+    }
   }
 }
 

@@ -2,6 +2,14 @@
 
 export type HealthStatus = 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
 
+// UI Health System Interface (combines old and new structures)
+export interface UISystemHealth {
+  status: HealthStatus;
+  timestamp: Date;
+  services: ServiceHealth[];
+  metrics: HealthMetrics;
+}
+
 export interface HealthCheckResult {
   status: HealthStatus;
   message: string;
@@ -30,10 +38,21 @@ export interface ComponentHealthCheck {
 }
 
 export interface SystemHealth {
-  overall: HealthStatus;
-  timestamp: Date;
-  services: ServiceHealth[];
-  metrics: HealthMetrics;
+  status: HealthStatus;
+  service: string;
+  uptime: number;
+  lastActivity: string;
+  errorCount: number;
+  dependencies: Record<string, HealthStatus>;
+  performance: {
+    avgSyncTime: number;
+    avgDbQueryTime: number;
+    avgApiCallTime: number;
+  };
+  details?: {
+    services?: ServiceHealth[];
+    [key: string]: any;
+  };
 }
 
 export interface HealthMetrics {

@@ -32,9 +32,15 @@ This directory contains the complete product documentation for Shayon's News RSS
    - Error handling flows
    - Edge case documentation
 
+4. **[User Stories](./user-stories.md)**
+   - Agile user stories with acceptance criteria
+   - Feature-based story groupings
+   - Priority levels and dependencies
+   - Implementation notes
+
 ### Design Specifications
 
-4. **[Wireframes](./wireframes.md)**
+5. **[Wireframes](./wireframes.md)**
    - Mobile-first design layouts
    - Responsive breakpoint specifications
    - Interaction patterns and touch targets
