@@ -277,7 +277,7 @@ The RSS News Reader is now successfully deployed to production:
 
 ### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt)
 
-- **Status**: 🔴 TODO
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025 at 8:39 PM
 - **Issue**: `/api/mark-all-read` route exists but is not integrated into the UI
 - **Context**:
   - Route was created but never connected to any frontend components
@@ -289,12 +289,12 @@ The RSS News Reader is now successfully deployed to production:
   1. **Fix the route**: Move Supabase client initialization inside the POST function (lazy loading)
   2. **Remove the route**: Delete if the feature isn't planned for implementation
   3. **Implement the feature**: Add UI buttons to mark all articles as read in a feed/folder
-- **Acceptance Criteria**:
-  - [ ] Decide whether to fix, remove, or implement the feature
-  - [ ] If fixing: Move `createClient()` call inside the POST handler
-  - [ ] If removing: Delete the route file entirely
-  - [ ] If implementing: Add "Mark all as read" buttons to feed/folder context menus
-  - [ ] Build completes without workarounds
+- **Resolution**: Implemented the feature with important safety changes:
+  - Added "Mark All Read" button to article header when viewing specific feeds with unread articles
+  - Changed from using Inoreader's dangerous mark-all-as-read API to only marking articles in local database
+  - Implemented two-tap confirmation pattern with red warning state instead of dialog
+  - Uses sync queue for bidirectional sync - each article is added to sync_queue with action_type 'read'
+  - Removed the dangerous API route that was calling Inoreader's mark-all-as-read API
 - **Implementation Notes**:
   - The route is designed to mark all articles in a feed or folder as read
   - Would be useful for users who want to clear unread counts quickly

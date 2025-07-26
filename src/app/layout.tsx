@@ -5,6 +5,7 @@ import { PWAProvider } from "@/components/pwa-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { RecoveryProvider } from "@/components/migration/RecoveryProvider";
 import { PWADetector } from "@/components/pwa-detector";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -60,6 +61,7 @@ export default function RootLayout({
         <RecoveryProvider>
           <div id="root">{children}</div>
         </RecoveryProvider>
+        <Toaster position="bottom-center" />
       </body>
     </html>
   );

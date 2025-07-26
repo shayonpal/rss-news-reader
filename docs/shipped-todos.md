@@ -1,8 +1,8 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Friday, July 25, 2025 at 9:31 AM  
-**Total Completed:** 48 items (plus 1 partially completed)
+**Generated on:** Friday, July 25, 2025 at 8:39 PM  
+**Total Completed:** 49 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
 
@@ -999,6 +999,32 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - Attempted fixes: CSS hover removal, inline styles, touch-action manipulation, JavaScript handlers
   - Issue appears to be a deeper iOS Safari behavior requiring further investigation
 - **Impact**: Improved user experience on desktop and Android, but iOS users still face double-tap requirement
+
+### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt) ✅ COMPLETED
+- **Status**: ✅ COMPLETED - Friday, July 25, 2025 at 8:39 PM
+- **Issue**: `/api/mark-all-read` route exists but is not integrated into the UI
+- **Context**:
+  - Route was created but never connected to any frontend components
+  - Causes build issues because it initializes Supabase client at module level
+  - Build fails when environment variables aren't available during static generation
+  - Currently worked around by temporarily renaming file during build
+- **Root Cause**: Supabase client is initialized outside the POST function, which runs during build time when env vars may not be available
+- **Resolution**: Implemented the feature with important safety changes:
+  - Added "Mark All Read" button to article header when viewing specific feeds with unread articles
+  - Changed from using Inoreader's dangerous mark-all-as-read API to only marking articles in local database
+  - Implemented two-tap confirmation pattern with red warning state instead of dialog
+  - Uses sync queue for bidirectional sync - each article is added to sync_queue with action_type 'read'
+  - Removed the dangerous API route that was calling Inoreader's mark-all-as-read API
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Decided to implement the feature rather than remove or just fix the route
+  - [x] Added "Mark All Read" button to article header for feed views
+  - [x] Implemented safety mechanism to only mark local articles as read
+  - [x] Build completes without workarounds (removed problematic API route)
+- **Technical Implementation**:
+  - Button only appears when viewing a specific feed with unread articles
+  - Two-tap confirmation: first tap shows "Confirm?" with red background
+  - Uses existing sync queue mechanism for reliable bidirectional sync
+  - Avoids dangerous Inoreader API that marks ALL articles across entire account
 
 ### Additional Server Configuration Variables
 

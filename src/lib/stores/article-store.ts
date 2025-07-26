@@ -653,74 +653,73 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     }
   },
 
-  // Mark all as read
+  // Mark all as read (only articles in local database)
   markAllAsRead: async (feedId?: string) => {
     try {
-      // Call the mark-all-read API endpoint to sync with Inoreader
-      const response = await fetch('/reader/api/mark-all-read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feedId })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to mark all as read');
-      }
-
-      const result = await response.json();
-      
-      // Update in store - the API has already updated the database
       const { articles: storeArticles } = get();
-      const updatedArticles = new Map(storeArticles);
+      const timestamp = new Date().toISOString();
       
+      // Find all unread articles for the feed
+      const articlesToMark: string[] = [];
       Array.from(storeArticles.entries()).forEach(([id, article]) => {
         if (!article.isRead && (!feedId || article.feedId === feedId)) {
-          updatedArticles.set(id, { ...article, isRead: true });
+          articlesToMark.push(id);
         }
       });
       
-      set({ articles: updatedArticles });
-      
-      // Invalidate article count cache for all affected feeds
-      if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
-        (window as any).__articleCountManager.invalidateCache(feedId);
+      if (articlesToMark.length === 0) {
+        console.log('No unread articles to mark');
+        return;
       }
       
-      console.log(`Marked ${result.articlesUpdated} articles as read`);
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-      
-      // Fallback to local-only update if API fails
-      const timestamp = new Date().toISOString();
-      let query = supabase
+      // Update in database
+      const { error } = await supabase
         .from('articles')
         .update({ 
           is_read: true,
           last_local_update: timestamp,
           updated_at: timestamp
         })
-        .eq('is_read', false);
-
-      if (feedId) {
-        query = query.eq('feed_id', feedId);
-      }
+        .in('id', articlesToMark);
       
-      const { error: dbError } = await query;
+      if (error) throw error;
       
-      if (!dbError) {
-        // Update in store
-        const { articles: storeArticles } = get();
-        const updatedArticles = new Map(storeArticles);
-        
-        Array.from(storeArticles.entries()).forEach(([id, article]) => {
-          if (!article.isRead && (!feedId || article.feedId === feedId)) {
-            updatedArticles.set(id, { ...article, isRead: true });
+      // Add each article to sync queue for bi-directional sync
+      for (const articleId of articlesToMark) {
+        const article = storeArticles.get(articleId);
+        if (article?.inoreaderItemId) {
+          const { error: rpcError } = await supabase.rpc('add_to_sync_queue', {
+            p_article_id: articleId,
+            p_inoreader_id: article.inoreaderItemId,
+            p_action_type: 'read'
+          });
+          
+          if (rpcError) {
+            console.error('Failed to add to sync queue:', rpcError);
           }
-        });
-        
-        set({ articles: updatedArticles });
+        }
       }
+      
+      // Update in store
+      const updatedArticles = new Map(storeArticles);
+      articlesToMark.forEach(id => {
+        const article = updatedArticles.get(id);
+        if (article) {
+          updatedArticles.set(id, { ...article, isRead: true });
+        }
+      });
+      
+      set({ articles: updatedArticles });
+      
+      // Invalidate article count cache
+      if (typeof window !== 'undefined' && (window as any).__articleCountManager) {
+        (window as any).__articleCountManager.invalidateCache(feedId);
+      }
+      
+      console.log(`Marked ${articlesToMark.length} articles as read in local database and queued for sync`);
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+      throw error;
     }
   },
 

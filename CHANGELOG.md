@@ -7,7 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Mark All Read Feature** (TODO-040) - Friday, July 25, 2025 at 8:39 PM
+  - Added "Mark All Read" button to article header when viewing specific feeds with unread articles
+  - Implemented two-tap confirmation pattern with muted red warning state instead of dialog
+  - Button shows number of unread articles that will be marked as read
+  - Only marks articles that exist in the local database (safety feature)
+  - Uses sync queue mechanism for reliable bidirectional sync with Inoreader
+  - Each article is individually added to sync_queue with action_type 'read'
+  - Removed dangerous API route that was calling Inoreader's mark-all-as-read API endpoint
+  - Prevents accidental marking of ALL articles across entire Inoreader account
+
 ### Documentation
+- **TODO-040 Documentation Update** - Friday, July 25, 2025 at 8:39 PM
+  - Updated TODOs.md to mark TODO-040 as completed with implementation details
+  - Moved TODO-040 to shipped-todos.md with full resolution details
+  - Updated shipped-todos.md header to reflect 49 completed items
+  - Added "Mark All Read" feature to README.md features section
+  - Updated PRD.md to reflect current implementation approach (client-side with sync queue)
+  - Documented safety mechanism that prevents marking ALL articles across entire account
+
 - **TODO-044 Documentation Update** - Friday, July 25, 2025 at 9:31 AM
   - Updated CHANGELOG.md to reflect TODO-044 as partially completed
   - Clarified that links do open in new tabs successfully (main requirement met)

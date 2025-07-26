@@ -19,6 +19,7 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
 - **Server-Side Sync**: Efficient sync with only 4-5 API calls
 - **Bi-directional Sync**: Changes sync back to Inoreader (read/unread, star/unstar)
+- **Mark All Read**: Quickly mark all articles in a feed as read with two-tap confirmation
 - **Clean Design**: Minimalist interface inspired by Reeder 5
 - **Inoreader Integration**: Server syncs with existing subscriptions
 - **Feed Hierarchy**: Collapsible folder structure with unread counts

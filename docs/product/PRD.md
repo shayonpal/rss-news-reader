@@ -1269,10 +1269,11 @@ Enable two-way synchronization of read/unread and starred status between the RSS
 - Supports both read/unread and starred/unstarred
 - Multiple article IDs in single request
 
-**Bulk Operations** (`/mark-all-as-read` endpoint):
-- Use for "Mark all as read" operations
-- Single API call per feed/folder
-- Much more efficient than individual marking
+**Bulk Operations** (Mark All Read):
+- Implemented as client-side feature with two-tap confirmation
+- Marks only articles currently in local database (safety feature)
+- Uses sync queue mechanism - each article added individually
+- Avoids dangerous Inoreader API that marks ALL articles account-wide
 
 **Auto-mark on Scroll** (TODO-029 integration):
 - Queue articles marked as read during scrolling
