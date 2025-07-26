@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-07-26
+
 ### Fixed
 - **Critical Production Server Issues** - Saturday, July 26, 2025 at 1:36 AM
   - **Fixed Production 500 Internal Server Error**: Homepage (`/reader`) and `/reader/fetch-stats` endpoint were returning 500 errors
