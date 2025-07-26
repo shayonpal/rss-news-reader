@@ -12,6 +12,7 @@ module.exports = {
       exec_mode: 'fork',
       max_memory_restart: '1G',
       env_file: '.env',
+      pre_start: './scripts/pm2-pre-start-validation.sh rss-reader-prod',
       env: {
         NODE_ENV: 'production',
         PORT: 3147,

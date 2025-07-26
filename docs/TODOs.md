@@ -50,8 +50,6 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] API usage display (X/100 calls today) - ALREADY IMPLEMENTED in sidebar
   - [ ] Enhanced success/error messages
 
-
-
 ### TODO-019: Feed Search Functionality
 
 - **GitHub Issue**: #32
@@ -148,7 +146,9 @@ The RSS News Reader is now successfully deployed to production:
 - **Reference**: See `docs/server-instability-issues/investigation-report-2025-07-26_14-30-20.md` for detailed findings
 
 #### Parent Task Overview:
+
 This is the main task for all server stability improvements. The investigation found multiple issues:
+
 - API routes not being compiled in production builds
 - PM2 restarting services excessively (16+ times in 30 minutes)
 - Environment variables not reaching client-side code
@@ -156,6 +156,7 @@ This is the main task for all server stability improvements. The investigation f
 - Missing monitoring and alerting
 
 #### Implementation Architecture:
+
 - External Monitoring: Uptime Kuma (Docker on port 3080)
 - Internal Recovery: Existing monitor-services.sh script
 - Strategy: Dual monitoring with Kuma for visibility, monitor-services.sh for quick recovery
@@ -164,36 +165,13 @@ This is the main task for all server stability improvements. The investigation f
 #### Sub-tasks:
 
 
-##### TODO-039b: Build Validation System (P1 - Critical)
-- **Status**: 🔴 TODO
-- **Issue**: Production builds missing API routes, causing 500 errors
-- **Context**: Investigation found `.next/server/app/api/` directory missing after builds
-- **Implementation Details**:
-  - Critical fix - addresses root cause of production crashes
-  - Monitor with Uptime Kuma to verify fix effectiveness
-- **Acceptance Criteria**:
-  - [ ] Create `scripts/validate-build.sh` to verify build completeness
-  - [ ] Check for existence of critical directories and files
-  - [ ] Verify all API routes are compiled
-  - [ ] Test critical endpoints before marking build as successful
-  - [ ] Integrate validation into PM2 startup sequence
-  - [ ] Prevent service start if validation fails
-  - [ ] Log validation results for debugging
-  - [ ] Validate that sync server health endpoint at http://localhost:3001/server/health is properly responding
-  - [ ] Ensure all health endpoints return accurate status (not just 200 OK when services are broken)
-  - [ ] Include validation that health endpoints properly reflect actual service state
-- **Additional Context from Uptime Kuma Monitoring**:
-  - Uptime Kuma monitoring revealed sync server monitor may not detect downtimes correctly
-  - Production health endpoint returns 500 even when app is accessible
-  - Dev health endpoint returns 200 even when app shows "No articles found" error
-  - Need to ensure health checks accurately reflect true service state
-
 ##### TODO-039d: Environment Variable Management (P1 - Critical)
+
 - **Status**: 🔴 TODO
-- **Issue**: Client-side code not receiving NEXT_PUBLIC_* variables
+- **Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables
 - **Context**: PM2 runtime injection doesn't work for Next.js client builds
 - **Implementation Details**:
-  - Critical fix - ensures client-side code receives NEXT_PUBLIC_* variables
+  - Critical fix - ensures client-side code receives NEXT*PUBLIC*\* variables
   - Create build-time validation script
 - **Acceptance Criteria**:
   - [ ] Create centralized environment configuration system
@@ -205,6 +183,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Test in both development and production modes
 
 ##### TODO-039a: Create Health Check Endpoints (P1 - Prerequisite)
+
 - **Status**: 🔴 TODO
 - **Issue**: Need standardized health endpoints for all services
 - **Implementation Details**:
@@ -219,6 +198,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Standardize response format across all endpoints
 
 ##### TODO-039e: PM2 Configuration Improvements (P1 - Infrastructure)
+
 - **Status**: 🔴 TODO
 - **Issue**: Cluster mode causing crashes, low restart limits, missing health delays
 - **Context**: Investigation found PM2 misconfigured for Next.js and cron services
@@ -264,6 +244,7 @@ This is the main task for all server stability improvements. The investigation f
   - Test with manual trigger from Uptime Kuma
 
 ##### TODO-039g: Error Handling & Monitoring (P1 - Production Quality)
+
 - **Status**: 🔴 TODO
 - **Issue**: Poor error visibility and handling (formerly TODO-017)
 - **Context**: Consolidated from TODO-017 into comprehensive monitoring
@@ -277,6 +258,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Implement user-friendly error messages
 
 ##### TODO-039h: Database Monitoring (P2 - Monitoring)
+
 - **Status**: 🔴 TODO
 - **Issue**: No database performance monitoring (formerly TODO-018)
 - **Context**: Consolidated from TODO-018 into comprehensive monitoring
@@ -290,6 +272,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Track database size and growth
 
 ##### TODO-039f: Deployment Safety Mechanisms (P1 - Infrastructure)
+
 - **Status**: 🔴 TODO
 - **Issue**: No safe deployment process, causing production outages
 - **Context**: Need blue-green deployment and rollback capabilities
@@ -304,6 +287,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Test rollback mechanism regularly
 
 ##### TODO-039j: Log Management and Rotation (P2 - Infrastructure)
+
 - **Status**: 🔴 TODO
 - **Issue**: Logs growing unbounded, causing disk space issues
 - **Context**: Investigation found stale monitoring data and unbounded log growth
@@ -342,7 +326,6 @@ This is the main task for all server stability improvements. The investigation f
   - Verify files exist in `public/` directory
   - May need iPad-specific icon sizes (152x152, 167x167, 180x180)
   - Consider using absolute URLs for production environment
-
 
 ### TODO-045: Enable Native Share Sheet on Apple Devices (P2 - Enhancement)
 
@@ -399,14 +382,13 @@ This is the main task for all server stability improvements. The investigation f
   - Test clipboard fallback on Chrome/Firefox
   - Ensure share data formats correctly for different apps
 
-
 ### TODO-050a: Fix iOS Safari Double-Tap Link Issue (P3 - Quality)
 
 - **Status**: 🔴 TODO
 - **Parent**: TODO-044 (partially completed)
 - **Issue**: iOS Safari/PWA users must tap links twice before they open in new tabs
 - **Context**:
-  - Links do successfully open in new tabs with proper target="_blank" attributes
+  - Links do successfully open in new tabs with proper target="\_blank" attributes
   - However, iOS requires two taps: first tap seems to "focus", second tap opens link
   - Issue specific to iOS Safari and PWA mode, not present on desktop or Android
   - Multiple attempted fixes have failed to resolve the issue
@@ -511,7 +493,6 @@ This is the main task for all server stability improvements. The investigation f
   - Verify cost calculations are accurate
   - Ensure page loads quickly with many logs
   - Test different time range filters
-
 
 ### TODO-053: Investigate Article Freshness Perception Issue (P2 - Investigation)
 

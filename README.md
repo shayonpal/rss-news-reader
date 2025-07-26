@@ -133,13 +133,32 @@ The RSS reader includes an automatic sync service that runs twice daily to keep 
 - Tracks success/failure metrics
 
 ### Production Deployment
+
+The RSS Reader includes a comprehensive build validation system to prevent deployment of broken builds:
+
 ```bash
-# Start both app and cron service
+# Build and deploy with validation (recommended)
+./scripts/build-and-start-prod.sh
+
+# Validate existing build before deployment
+./scripts/validate-build.sh --mode full
+
+# Emergency rollback to last working build
+./scripts/rollback-last-build.sh
+
+# Standard PM2 deployment (without validation)
 pm2 start ecosystem.config.js
 
 # Monitor sync logs
 tail -f logs/sync-cron.jsonl | jq .
 ```
+
+**Build Validation Features**:
+- **Pre-deployment Validation**: Ensures all API routes are compiled correctly
+- **Automatic Backup**: Creates backup before each deployment
+- **Rollback Capability**: Restore last known good build if deployment fails
+- **PM2 Integration**: Pre-start hooks prevent broken builds from starting
+- **Uptime Kuma Notifications**: Build status pushed to monitoring system
 
 For detailed automatic sync documentation, see [docs/deployment/automatic-sync.md](docs/deployment/automatic-sync.md).
 
@@ -264,6 +283,12 @@ npm run build           # Production build
 npm run start           # Start production server
 npm run analyze         # Bundle size analysis
 npm run clean           # Clean build artifacts
+
+# Build Validation & Safety
+./scripts/validate-build.sh --mode basic   # Quick validation
+./scripts/validate-build.sh --mode full    # Comprehensive validation
+./scripts/build-and-start-prod.sh          # Safe production deployment
+./scripts/rollback-last-build.sh           # Emergency rollback
 ```
 
 

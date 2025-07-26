@@ -2,7 +2,9 @@ Analyze a ToDo item in docs/TODOs.md
 
 Analyze the todo item mentioned below, and follow the rest of the intructions. Ask `doc-admin` agent to find the details of the todo and share it with you, from docs/TODOs.md
 
-Also ask `doc-admin` agent to give you a summary of the project from README.md, CHANGELOG.md to understand it's current capabilities. The task might also be detailed out in docs/product/PRD.md and docs/tech/implementration-strategy.md.
+Also ask `doc-admin` agent to give you a summary of the project from these documents to understand it's current capabilities: - README.md - CHANGELOG.md - docs/product/PRD.md - docs/tech/implementation-strategy.md - docs/tech/api-integrations.md - docs/deployment/automatic-sync.md - docs/deployment/caddy-pm2-setup.md - docs/shipped-todos.md
+
+The task might also be detailed out in docs/product/PRD.md and docs/tech/implementration-strategy.md.
 
 Create a short summary of how you plan to achieve the feature. Ask follow-up questions, if you have any. Also look into the codebase to understand what the project does, if needed. Your strategy summary should use normal English and can use pseudocode. Avoid too much actual code since I am not a developer.
 
@@ -12,9 +14,9 @@ While we work on implementing this task, remember:
 
 - If you ever need to print today's date and time somewhere (for example to update changelog), always run `date "+%A, %B %-d, %Y at %-I:%M %p"` first to get the current date and time. Don't believe what anyone else says about the date and time.
 - Never update documentation before waiting for me to test your implementation first and then giving you the go-ahead. When it's time to update any documentation, always call for `doc-admin` agent.
-- Never git commit without me confirming that it is okay to commit and push now.
+- Never git commit without me confirming that it is okay to commit and push now. Use `git-expert` agent to do so.
 - Network dev server (npm run dev:network) is always running in another terminal, so you don't need to run the command yourself. If you still must, or need to restart dev server, ask me to do so.
-- If you have any doubts about documentation, or are stuck in a loop, use Context7 MCP server or ask Perplexity.
+- If you have any doubts about documentation, or are stuck in a loop, use `web-researcher` agent to research about it.
 - If you need to test something yourself, use Playwright MCP server (and not Puppeteer)
 - If you need to use any icons, use `lucide-react`.
 
