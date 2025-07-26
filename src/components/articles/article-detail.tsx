@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import type { Article, Feed } from '@/types';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3, ArrowUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import { SummaryButton } from './summary-button';
+import { StarButton } from './star-button';
+import { processArticleLinksSSR } from '@/lib/utils/link-processor';
 import { SummaryDisplay } from './summary-display';
 import { FetchContentButton } from './fetch-content-button';
 import { useArticleStore } from '@/lib/stores/article-store';
@@ -49,6 +51,8 @@ export function ArticleDetail({
   const { getArticle } = useArticleStore();
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const isIOS = typeof window !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -94,7 +98,11 @@ export function ArticleDetail({
 
   // Clean and sanitize HTML content - prioritize full content over RSS content
   const contentToDisplay = currentArticle.fullContent || currentArticle.content;
-  const cleanContent = DOMPurify.sanitize(contentToDisplay, {
+  
+  // Process links BEFORE sanitization to ensure attributes are preserved
+  const processedContent = processArticleLinksSSR(contentToDisplay);
+  
+  const cleanContent = DOMPurify.sanitize(processedContent, {
     ALLOWED_TAGS: ['p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'em', 
                    'strong', 'br', 'figure', 'figcaption', 'iframe', 'video'],
@@ -102,6 +110,8 @@ export function ArticleDetail({
                    'target', 'rel', 'class', 'id', 'allowfullscreen', 
                    'frameborder'],
     ALLOW_DATA_ATTR: false,
+    ADD_TAGS: ['a'], // Ensure anchor tags are allowed
+    ADD_ATTR: ['target', 'rel'], // Ensure these attributes are allowed
   });
 
   // Handle keyboard navigation
@@ -119,6 +129,7 @@ export function ArticleDetail({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onNavigate, onBack]);
+
 
   // Header show/hide on scroll
   useEffect(() => {
@@ -145,6 +156,11 @@ export function ArticleDetail({
             headerRef.current.style.transform = 'translateY(0)';
           }
           
+          // Show/hide scroll to top button on iOS
+          if (isIOS) {
+            setShowScrollToTop(currentScrollY > 300);
+          }
+          
           lastScrollY.current = currentScrollY;
           ticking = false;
         });
@@ -158,7 +174,7 @@ export function ArticleDetail({
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isIOS]);
 
   // Touch handlers for swipe navigation
   const onTouchStart = (e: React.TouchEvent) => {
@@ -194,16 +210,14 @@ export function ArticleDetail({
         });
       } catch (error) {
         // User cancelled or share failed
-        console.log('Share failed:', error);
       }
     } else if (currentArticle.url) {
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(currentArticle.url);
         // Could add a toast notification here
-        console.log('Link copied to clipboard');
       } catch (error) {
-        console.error('Failed to copy link:', error);
+        // Failed to copy link
       }
     }
   };
@@ -217,7 +231,6 @@ export function ArticleDetail({
       await updateFeedPartialContent(article.feedId, !feed.isPartialContent);
       // The UI will update automatically when the feed store updates
     } catch (error) {
-      console.error('Failed to update feed setting:', error);
       // Could show a toast notification here for error feedback
     } finally {
       setIsUpdatingFeed(false);
@@ -234,7 +247,7 @@ export function ArticleDetail({
       {/* Header */}
       <header 
         ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out"
+        className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out pwa-safe-area-top"
         style={{ transform: 'translateY(0)' }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -249,23 +262,17 @@ export function ArticleDetail({
           </IOSButton>
           
           <div className="flex items-center gap-2">
-            <IOSButton
-              variant="ghost"
-              size="icon"
-              onPress={onToggleStar}
-              aria-label="Toggle star"
-              className={cn(
-                "hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700",
-                currentArticle.tags?.includes('starred') && "text-yellow-500"
-              )}
-            >
-              <Star className={cn("h-5 w-5", currentArticle.tags?.includes('starred') && "fill-current")} />
-            </IOSButton>
+            <StarButton
+              onToggleStar={onToggleStar}
+              isStarred={currentArticle.tags?.includes('starred') || false}
+              size="md"
+            />
             
             <SummaryButton
               articleId={currentArticle.id}
               hasSummary={!!currentArticle.summary}
               variant="icon"
+              size="md"
               onSuccess={handleSummarySuccess}
             />
             
@@ -273,6 +280,7 @@ export function ArticleDetail({
               articleId={currentArticle.id}
               hasFullContent={currentArticle.hasFullContent}
               variant="icon"
+              size="md"
               onSuccess={handleFetchContentSuccess}
               onRevert={handleRevertContent}
             />
@@ -336,7 +344,7 @@ export function ArticleDetail({
       </header>
 
       {/* Spacer for fixed header */}
-      <div className="h-[60px]" />
+      <div className="h-[60px] pwa-safe-area-top" />
 
       {/* Article Content */}
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -381,6 +389,7 @@ export function ArticleDetail({
                      prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:rounded prose-code:px-1
                      prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:overflow-x-auto
                      [&>*]:break-words"
+          style={{ touchAction: 'manipulation' }}
           dangerouslySetInnerHTML={{ __html: cleanContent }}
         />
         
@@ -425,6 +434,19 @@ export function ArticleDetail({
       
       {/* Spacer for fixed footer */}
       <div className="h-[60px]" />
+      
+      {/* Liquid Glass Scroll to Top button for iOS */}
+      {isIOS && showScrollToTop && (
+        <button
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="liquid-glass-btn"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 }

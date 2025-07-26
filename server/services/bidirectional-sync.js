@@ -79,10 +79,21 @@ class BiDirectionalSyncService {
 
       console.log(`[BiDirectionalSync] Found ${pendingChanges.length} pending changes`);
 
-      // Check if we have minimum changes (unless we have retries pending)
+      // Check if we should sync based on:
+      // 1. Having retries pending
+      // 2. Having minimum changes
+      // 3. Having old changes (older than 15 minutes)
       const hasRetries = pendingChanges.some(change => change.sync_attempts > 0);
-      if (!hasRetries && pendingChanges.length < this.MIN_CHANGES) {
-        console.log(`[BiDirectionalSync] Only ${pendingChanges.length} changes pending, waiting for minimum of ${this.MIN_CHANGES}`);
+      const oldestChange = pendingChanges[0]; // Already sorted by created_at ascending
+      const oldestChangeAge = oldestChange ? Date.now() - new Date(oldestChange.created_at).getTime() : 0;
+      const hasOldChanges = oldestChangeAge > 15 * 60 * 1000; // 15 minutes
+      
+      if (!hasRetries && pendingChanges.length < this.MIN_CHANGES && !hasOldChanges) {
+        const ageInMinutes = Math.floor(oldestChangeAge / 60000);
+        console.log(
+          `[BiDirectionalSync] Only ${pendingChanges.length} changes pending, waiting for minimum of ${this.MIN_CHANGES}. ` +
+          `Oldest change is ${ageInMinutes} minutes old.`
+        );
         return;
       }
 

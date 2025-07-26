@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { IOSButton } from '@/components/ui/ios-button';
 import { Download, Loader2, AlertCircle, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ArticleActionButton, type ArticleActionButtonSize } from '@/components/ui/article-action-button';
 
 interface FetchContentButtonProps {
   articleId: string;
   hasFullContent?: boolean;
   variant?: 'icon' | 'button';
+  size?: ArticleActionButtonSize;
   className?: string;
   onSuccess?: (content: string) => void;
   onRevert?: () => void;
@@ -18,6 +20,7 @@ export function FetchContentButton({
   articleId,
   hasFullContent = false,
   variant = 'icon',
+  size = 'sm',
   className,
   onSuccess,
   onRevert,
@@ -68,25 +71,17 @@ export function FetchContentButton({
 
   if (variant === 'icon') {
     return (
-      <IOSButton
-        variant="ghost"
-        size="icon"
+      <ArticleActionButton
+        icon={hasFullContent ? Undo2 : Download}
         onPress={handleAction}
+        size={size}
+        active={false}
+        label={hasFullContent ? "Revert to RSS content" : "Fetch full content"}
         disabled={isLoading}
-        aria-label={hasFullContent ? "Revert to RSS content" : "Fetch full content"}
-        className={cn(
-          "hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700",
-          className
-        )}
-      >
-        {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : hasFullContent ? (
-          <Undo2 className="h-5 w-5" />
-        ) : (
-          <Download className="h-5 w-5" />
-        )}
-      </IOSButton>
+        loading={isLoading}
+        loadingIcon={Loader2}
+        className={className}
+      />
     );
   }
 

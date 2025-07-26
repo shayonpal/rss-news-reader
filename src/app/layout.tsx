@@ -4,6 +4,8 @@ import "./globals.css";
 import { PWAProvider } from "@/components/pwa-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { RecoveryProvider } from "@/components/migration/RecoveryProvider";
+import { PWADetector } from "@/components/pwa-detector";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +25,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Shayon's News",
   },
   other: {
@@ -39,8 +41,8 @@ export function generateViewport() {
     userScalable: false,
     viewportFit: "cover",
     themeColor: [
-      { media: "(prefers-color-scheme: light)", color: "#FF6B35" },
-      { media: "(prefers-color-scheme: dark)", color: "#FF6B35" },
+      { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+      { media: "(prefers-color-scheme: dark)", color: "#000000" },
     ],
   };
 }
@@ -55,10 +57,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <PWAProvider />
         <ThemeProvider />
+        <PWADetector />
         <RecoveryProvider>
           <div id="root">{children}</div>
         </RecoveryProvider>
+        <Toaster position="bottom-center" />
       </body>
     </html>
   );
 }
+

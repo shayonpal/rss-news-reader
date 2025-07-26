@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFeedStore } from '@/lib/stores/feed-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
 import { useUIStore } from '@/lib/stores/ui-store';
+import { useArticleStore } from '@/lib/stores/article-store';
 import { Loader2, RefreshCw, Sun, Moon, Monitor, BarChart3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +19,9 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
   const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy } = useFeedStore();
   const { isSyncing, lastSyncTime, performFullSync, syncError, syncProgress, syncMessage, rateLimit } = useSyncStore();
   const { theme, setTheme } = useUIStore();
+  const { readStatusFilter } = useArticleStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrollPosition = useRef<number>(0);
   
   // Load feeds when component mounts
   useEffect(() => {
@@ -41,6 +45,20 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
     }
   }, []);
 
+  // Save and restore scroll position when filter changes
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Save current scroll position before filter change takes effect
+    lastScrollPosition.current = container.scrollTop;
+
+    // Restore scroll position after render
+    requestAnimationFrame(() => {
+      container.scrollTop = lastScrollPosition.current;
+    });
+  }, [readStatusFilter]);
+
   const getThemeIcon = () => {
     switch (theme) {
       case 'light': return <Sun className="h-4 w-4" />;
@@ -57,7 +75,7 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
   };
 
   return (
-    <div className="h-full border-r bg-background flex flex-col">
+    <div className="h-full border-r bg-background flex flex-col pt-[env(safe-area-inset-top)]">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">
@@ -102,7 +120,7 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
       </div>
 
       {/* Feed List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
         {/* Loading State for Initial Sync */}
         {isSyncing && feeds.size === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4">
@@ -157,14 +175,42 @@ export function SimpleFeedSidebar({ selectedFeedId, onFeedSelect }: SimpleFeedSi
             )}
 
             {/* Individual Feeds */}
-            {Array.from(feeds.values()).map((feed) => {
+            {Array.from(feeds.values())
+              .sort((a, b) => 
+                String(a.title || '').localeCompare(
+                  String(b.title || ''), 
+                  undefined, 
+                  { numeric: true, sensitivity: 'base' }
+                )
+              )
+              .filter((feed) => {
+                // Always show the currently selected feed
+                if (selectedFeedId === feed.id) return true;
+                
+                // Filter based on read status filter
+                if (readStatusFilter === 'unread') {
+                  const feedWithCount = feedsWithCounts.get(feed.id);
+                  const unreadCount = feedWithCount?.unreadCount || 0;
+                  return unreadCount > 0;
+                }
+                
+                // Show all feeds for 'read' or 'all' filters
+                return true;
+              })
+              .map((feed) => {
           const feedWithCount = feedsWithCounts.get(feed.id);
           const unreadCount = feedWithCount?.unreadCount || 0;
+          const isSelected = selectedFeedId === feed.id;
+          const hasUnread = unreadCount > 0;
           
           return (
             <div
               key={feed.id}
-              className={`p-3 cursor-pointer hover:bg-muted/50 ${selectedFeedId === feed.id ? 'bg-muted font-medium' : ''}`}
+              className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
+                isSelected ? 'bg-muted font-medium' : ''
+              } ${
+                !hasUnread && !isSelected ? 'opacity-35 hover:opacity-100' : ''
+              }`}
               onClick={() => onFeedSelect(feed.id)}
             >
               <div className="flex items-center justify-between">

@@ -44,13 +44,16 @@ export function FeedTreeItem({
     return <Rss className="h-4 w-4" />;
   };
 
+  const hasUnread = unreadCount > 0;
+  
   const content = (
     <div
       className={cn(
-        "group flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors",
+        "group flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-all",
         "hover:bg-muted/50",
         isSelected && "bg-muted font-medium",
-        type === 'feed' && "pl-8"
+        type === 'feed' && "pl-8",
+        !hasUnread && !isSelected && type !== 'all' && "opacity-35 hover:opacity-100"
       )}
       style={{ paddingLeft: `${paddingLeft}px` }}
       onClick={() => {

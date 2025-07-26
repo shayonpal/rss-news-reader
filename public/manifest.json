@@ -5,7 +5,7 @@
   "start_url": "/reader/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#FF6B35",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "scope": "/reader/",
   "icons": [

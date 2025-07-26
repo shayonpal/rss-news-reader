@@ -1,6 +1,6 @@
 {
   "name": "rss-news-reader",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -24,7 +24,8 @@
     "pre-commit": "npm run type-check && npm run lint && npm run format:check",
     "setup:oauth": "node server/scripts/setup-oauth.js",
     "server": "node server/server.js",
-    "server:dev": "nodemon server/server.js"
+    "server:dev": "nodemon server/server.js",
+    "backup:claude": "./scripts/backup-claude-to-dev.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
@@ -54,6 +55,7 @@
     "punycode": "^2.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sonner": "^2.0.6",
     "tailwind-merge": "^2.5.0",
     "uuid": "^11.1.0",
     "zustand": "^5.0.0"

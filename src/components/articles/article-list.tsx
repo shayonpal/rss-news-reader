@@ -1,23 +1,25 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Loader2, RefreshCw, Star } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { useArticleStore } from '@/lib/stores/article-store';
 import { extractTextContent } from '@/lib/utils/data-cleanup';
 import { formatDistanceToNow } from 'date-fns';
 import { SummaryButton } from './summary-button';
+import { StarButton } from './star-button';
 import type { Article } from '@/types';
 
 interface ArticleListProps {
   feedId?: string;
   folderId?: string;
   onArticleClick?: (articleId: string) => void;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListProps) {
+export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerRef }: ArticleListProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const ownScrollContainerRef = useRef<HTMLDivElement>(null);
   const lastPullY = useRef<number>(0);
   const isPulling = useRef<boolean>(false);
   const hasRestoredScroll = useRef<boolean>(false);
@@ -72,13 +74,36 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       clearTimeout(markAsReadTimer.current);
     }
 
-    // Track scroll direction
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+    // Detect iOS Safari for fallback behavior
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // Track scroll direction - now using nearest scroll container
+    const handleScroll = (e: Event) => {
+      const scrollContainer = e.currentTarget as HTMLElement;
+      const currentScrollY = scrollContainer.scrollTop;
       const isScrollingDown = currentScrollY > lastScrollY.current;
       lastScrollY.current = currentScrollY;
 
-      // Only process if scrolling down
+      // Fallback: manually check article positions on all platforms for reliability
+      if (isScrollingDown) {
+        const articleElements = scrollContainer.querySelectorAll('[data-article-id]');
+        articleElements.forEach((element) => {
+          const rect = element.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          
+          // Article has scrolled off the top of the container
+          if (rect.bottom < containerRect.top + 10) {
+            const articleId = element.getAttribute('data-article-id');
+            const isRead = element.getAttribute('data-is-read') === 'true';
+            
+            if (articleId && !isRead) {
+              pendingMarkAsRead.current.add(articleId);
+            }
+          }
+        });
+      }
+
+      // Process pending marks if scrolling down
       if (isScrollingDown && pendingMarkAsRead.current.size > 0) {
         // Clear existing timer
         if (markAsReadTimer.current) {
@@ -89,7 +114,11 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Use the passed scroll container
+    const scrollContainer = scrollContainerRef?.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
 
     // Create observer for articles leaving viewport
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
@@ -107,15 +136,21 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       });
     };
 
-    autoMarkObserverRef.current = new IntersectionObserver(observerCallback, {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0
-    });
+    // Create IntersectionObserver for all platforms
+    // We'll use both approaches for reliability
+    if (scrollContainer) {
+      autoMarkObserverRef.current = new IntersectionObserver(observerCallback, {
+        root: scrollContainer,
+        rootMargin: '0px 0px -90% 0px', // Only trigger when article is mostly scrolled out
+        threshold: 0 // Trigger as soon as article starts leaving
+      });
+    }
 
     // Clean up on unmount or when filter changes
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
       if (autoMarkObserverRef.current) {
         autoMarkObserverRef.current.disconnect();
       }
@@ -125,7 +160,7 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       // Process any pending marks before cleanup
       processPendingMarkAsRead();
     };
-  }, [readStatusFilter, processPendingMarkAsRead]);
+  }, [readStatusFilter, processPendingMarkAsRead, scrollContainerRef]);
 
 
   // Restore scroll position after articles load
@@ -138,7 +173,10 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
         // Small delay to ensure DOM is updated
         requestAnimationFrame(() => {
           const scrollPos = parseInt(savedScrollPos, 10);
-          window.scrollTo(0, scrollPos);
+          const scrollContainer = scrollContainerRef?.current;
+          if (scrollContainer) {
+            scrollContainer.scrollTop = scrollPos;
+          }
           // Clear the saved position after restoring
           sessionStorage.removeItem('articleListScroll');
         });
@@ -160,8 +198,9 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
       }
     };
 
+    // Use the passed scroll container as root for infinite scroll
     observerRef.current = new IntersectionObserver(callback, {
-      root: null,
+      root: scrollContainerRef?.current || null,
       rootMargin: '100px',
       threshold: 0.1
     });
@@ -185,31 +224,34 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const currentY = e.touches[0].clientY;
     const pullDistance = currentY - lastPullY.current;
+    const scrollContainer = scrollContainerRef?.current;
     
-    if (window.scrollY === 0 && pullDistance > 0) {
+    if (scrollContainer && scrollContainer.scrollTop === 0 && pullDistance > 0) {
       isPulling.current = true;
       // Visual feedback for pull-to-refresh could be added here
     }
-  }, []);
+  }, [scrollContainerRef]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (isPulling.current && window.scrollY === 0) {
+    const scrollContainer = scrollContainerRef?.current;
+    if (isPulling.current && scrollContainer && scrollContainer.scrollTop === 0) {
       await refreshArticles();
     }
     isPulling.current = false;
-  }, [refreshArticles]);
+  }, [refreshArticles, scrollContainerRef]);
 
   // Handle article click
   const handleArticleClick = useCallback(async (article: Article) => {
     // Save scroll position before navigating
-    const currentScroll = window.scrollY;
+    const scrollContainer = scrollContainerRef?.current;
+    const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
     sessionStorage.setItem('articleListScroll', currentScroll.toString());
     
     if (!article.isRead) {
       await markAsRead(article.id);
     }
     onArticleClick?.(article.id);
-  }, [markAsRead, onArticleClick]);
+  }, [markAsRead, onArticleClick, scrollContainerRef]);
 
   // Render article preview
   const renderPreview = (article: Article) => {
@@ -310,13 +352,13 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
 
   return (
     <div
-      ref={scrollContainerRef}
+      ref={ownScrollContainerRef}
       className="flex-1 overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="divide-y divide-border overflow-x-hidden">
+      <div className="divide-y divide-border overflow-x-hidden article-list-container">
         {Array.from(articles.values()).map((article) => (
           <article
             key={article.id}
@@ -364,24 +406,14 @@ export function ArticleList({ feedId, folderId, onArticleClick }: ArticleListPro
                       articleId={article.id}
                       hasSummary={false}
                       variant="icon"
+                      size="sm"
                     />
                   )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleStar(article.id);
-                    }}
-                    className="p-1 hover:bg-muted rounded"
-                    aria-label={article.tags?.includes('starred') ? 'Unstar' : 'Star'}
-                  >
-                    <Star 
-                      className={`h-4 w-4 ${
-                        article.tags?.includes('starred') 
-                          ? 'fill-yellow-500 text-yellow-500' 
-                          : 'text-muted-foreground'
-                      }`} 
-                    />
-                  </button>
+                  <StarButton
+                    onToggleStar={() => toggleStar(article.id)}
+                    isStarred={article.tags?.includes('starred') || false}
+                    size="sm"
+                  />
                 </div>
               </div>
 

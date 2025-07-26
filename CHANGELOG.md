@@ -7,6 +7,191 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-07-26
+
+### Fixed
+- **Critical Production Server Issues** - Saturday, July 26, 2025 at 1:36 AM
+  - **Fixed Production 500 Internal Server Error**: Homepage (`/reader`) and `/reader/fetch-stats` endpoint were returning 500 errors
+    - Root cause: Empty `src/pages/` directory was confusing Next.js (project uses App Router, not Pages Router)
+    - Solution: Removed empty `src/pages/` directory and rebuilt production
+    - Both production endpoints now working correctly
+  - **Fixed PM2 Service Restart Loops**: Production service was restarting 105+ times
+    - Root cause: PM2 cluster mode is incompatible with Next.js production builds
+    - Solution: Changed from cluster mode to fork mode in `ecosystem.config.js` (line 10)
+    - Service now stable with minimal restarts
+  - **Fixed Dev Server Failure**: Dev server was failing to start after pages directory removal
+    - Solution: Cleared `.next` cache and restarted
+    - Dev server now fully operational
+  - **Current Status**:
+    - Production server: Fully operational at http://100.96.166.53:3147/reader
+    - Dev server: Fully operational at http://100.96.166.53:3000/reader
+    - All endpoints working correctly
+
+### Documentation
+- **Uptime Kuma Monitoring Strategy** - Friday, July 25, 2025 at 10:35 PM
+  - Created comprehensive monitoring implementation guide at `docs/tech/uptime-kuma-monitoring-strategy.md`
+  - Detailed setup instructions for Uptime Kuma using Docker/Colima on macOS
+  - Discord webhook integration for multi-channel alert notifications
+  - Six monitor configurations: health checks, API limits, sync status, cron jobs, database, PM2
+  - Custom health endpoint specifications for enhanced monitoring capabilities
+  - Alert rules with critical/warning/status categories and escalation procedures
+  - Maintenance procedures including backup, log rotation, and troubleshooting guides
+  - Practical testing and validation steps to ensure monitoring effectiveness
+
+- **TODO Management Update** - Friday, July 25, 2025 at 9:46 PM
+  - Moved completed TODOs from docs/TODOs.md to docs/shipped-todos.md
+  - Moved TODO-042 (Fix Sync Overwriting Local Star/Read Status) - completed Friday, July 25, 2025
+  - Moved TODO-052 (Investigate Read Status Sync Issues) - completed as duplicate of TODO-042
+  - Updated shipped-todos.md count from 50 to 52 completed items
+  - Removed completed items from active TODOs.md to maintain clarity
+
+### Added
+- **Claude Project Configuration Updates** - Friday, July 25, 2025 at 9:39 PM
+  - Added `.claude/settings.local.json` to .gitignore to prevent committing local Claude settings
+  - Created `.claude/agents/git-expert.md` for specialized git operations agent configuration
+  - Added `.claude/commands/impactful-task.md` command template for high-value feature identification
+  - Renamed `.claude/commands/quick-win.md` to `.claude/commands/quick-win-task.md` for better clarity
+  - Ensures Claude project settings remain local and are not accidentally synced to repository
+
+### Added
+- **Mark All Read Feature** (TODO-040) - Friday, July 25, 2025 at 8:39 PM
+  - Added "Mark All Read" button to article header when viewing specific feeds with unread articles
+  - Implemented two-tap confirmation pattern with muted red warning state instead of dialog
+  - Button shows number of unread articles that will be marked as read
+  - Only marks articles that exist in the local database (safety feature)
+  - Uses sync queue mechanism for reliable bidirectional sync with Inoreader
+  - Each article is individually added to sync_queue with action_type 'read'
+  - Removed dangerous API route that was calling Inoreader's mark-all-as-read API endpoint
+  - Prevents accidental marking of ALL articles across entire Inoreader account
+
+### Documentation
+- **Button Architecture Documentation** - Friday, July 25, 2025 at 9:19 PM
+  - Created comprehensive documentation at `docs/tech/button-architecture.md`
+  - Documents three-tier button component hierarchy (IOSButton → ArticleActionButton → Specialized Buttons)
+  - Provides clear guidance on when to use each component
+  - Includes code examples for creating new action buttons
+  - Outlines best practices for consistent implementation
+  - Added migration guide for converting existing custom buttons
+  - Ensures future developers will use the established architecture instead of creating custom implementations
+
+### Fixed
+- **Unified Icon Styling Between Summarize and Star Buttons** (TODO-050) - Friday, July 25, 2025 at 9:23 PM
+  - Fixed inconsistent visual styling between summarize and star icons in article list
+  - Created modular button architecture with ArticleActionButton component
+  - Unified hover states, opacity, and transitions for all action buttons
+  - Fixed event bubbling issue where clicking buttons would open articles
+  - Improved visual consistency especially noticeable in dark mode
+  - All article action buttons now share consistent styling and behavior
+
+- **TODO-040 Documentation Update** - Friday, July 25, 2025 at 8:39 PM
+  - Updated TODOs.md to mark TODO-040 as completed with implementation details
+  - Moved TODO-040 to shipped-todos.md with full resolution details
+  - Updated shipped-todos.md header to reflect 49 completed items
+  - Added "Mark All Read" feature to README.md features section
+  - Updated PRD.md to reflect current implementation approach (client-side with sync queue)
+  - Documented safety mechanism that prevents marking ALL articles across entire account
+
+- **TODO-044 Documentation Update** - Friday, July 25, 2025 at 9:31 AM
+  - Updated CHANGELOG.md to reflect TODO-044 as partially completed
+  - Clarified that links do open in new tabs successfully (main requirement met)
+  - Documented iOS double-tap issue as known limitation with attempted fixes
+  - Created new TODO-050a specifically for iOS double-tap link issue
+  - Added technical documentation in `docs/tech/known-issues.md` for iOS Safari behavior
+  - Maintained TODO-044 in shipped-todos.md with partially completed status
+
+### Fixed
+- **Bidirectional Sync Overwriting Local Read States** - Friday, July 25, 2025 at 8:26 AM
+  - Fixed sync process unconditionally overwriting local article states with Inoreader data
+  - Added conflict resolution that compares last_local_update with last_sync_update timestamps
+  - Documented need to integrate bidirectional sync into main sync flow (requires triggering sync server after main sync)
+  - Fixed race condition in timestamp comparison by properly selecting last_sync_update in queries
+  - Preserves local changes made between syncs, preventing data loss
+  - Ensures read/unread states sync correctly in both directions
+
+- **Open All Article Links in External Tab** (TODO-044) - PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
+  - Fixed links within article content opening in the same tab, causing users to lose their reading position
+  - All links in article content now successfully open in new tabs with proper security attributes (target="_blank" and rel="noopener noreferrer")
+  - Created new link-processor utility for consistent link handling across RSS content, full fetched content, and AI summaries
+  - Improved user experience by ensuring external links don't navigate away from the RSS reader
+  - **Known Issue**: iOS Safari/PWA double-tap issue remains unresolved despite multiple approaches
+    - Attempted fixes: CSS hover state removal, inline styles, touch-action manipulation, JavaScript event handlers
+    - The issue appears to be a deeper iOS Safari behavior that requires further investigation
+    - Links do open in new tabs successfully, but iOS users still need to tap twice
+
+- **Database Performance and Security Improvements** - Friday, July 25, 2025 at 6:27 AM
+  - **Security Fixes**:
+    - Enabled Row Level Security on `fetch_logs` table (was exposing data without authorization)
+    - Fixed SECURITY DEFINER on `sync_queue_stats` view (was bypassing row-level security)
+    - Set explicit search_path for 5 functions to prevent security vulnerabilities
+  - **Performance Optimizations**:
+    - Added missing index on `sync_queue.article_id` foreign key for faster joins
+    - Removed duplicate indexes on `fetch_logs` table (saving storage and maintenance overhead)
+    - Consolidated multiple RLS policies on `system_config` table for better query performance
+    - Performed VACUUM ANALYZE on all tables to clean up dead rows (eliminated 179 dead rows from articles, 43 from sync_metadata, etc.)
+  - **Database Health**:
+    - Total database size: ~5.7MB (very lightweight)
+    - Autovacuum properly configured and running
+    - All critical security and performance issues resolved
+
+### Added
+- **Independent Scrolling for Sidebar and Article List** (TODO-055) - COMPLETED ✅
+  - Sidebar and article list now scroll independently, each maintaining their own position
+  - Fixed viewport layout with overflow containers prevents scroll position loss
+  - Header auto-hide is now controlled only by article list scrolling
+  - Implemented dual approach for auto-mark-as-read: IntersectionObserver for desktop + manual fallback for iOS
+  - Added Apple liquid glass scroll-to-top buttons as workaround for iOS gesture limitation
+  - Fixed PWA sidebar overlap with proper safe area padding
+  - Smooth scrolling experience with no scroll chaining between areas
+  - Completed on Thursday, July 24, 2025 at 10:45 AM
+
+### Changed
+- **Documentation Cleanup** - Moved completed TODOs to shipped-todos.md
+  - Moved TODO-046 (iOS PWA Status Bar) to shipped documentation
+  - Moved TODO-047 (Filter Feeds with No Unread) to shipped documentation
+  - Moved TODO-048 (Grey Out Feeds with No Unread) to shipped documentation
+  - Moved TODO-049 (Alphabetical Feed Sorting) to shipped documentation
+  - Moved TODO-055 (Independent Scrolling) to shipped documentation
+  - Updated TODO count in shipped-todos.md from 48 to 49 items
+
+### Added
+- **Filter Out Feeds with No Unread Articles in Sidebar** (TODO-047) - COMPLETED ✅
+  - When "Unread Only" filter is selected, feeds with zero unread articles are now hidden from sidebar
+  - Currently selected feed remains visible even if it has zero unread (until deselected)
+  - Filter applies only when "Unread Only" is active; all feeds visible for "Read Only" or "All Articles"
+  - Scroll position is preserved when switching between filters
+  - Smooth transitions when feeds appear/disappear
+  - "All Articles" feed always remains visible
+  - Improves focus on feeds with new content when filtering for unread articles
+  - Completed on Thursday, July 24, 2025 at 8:15 AM
+
+- **Sort Feed List Alphabetically in Sidebar** (TODO-049) - COMPLETED ✅
+  - All feeds are now sorted alphabetically (A-Z) for easier navigation
+  - Sorting is case-insensitive using `localeCompare()` for proper internationalization
+  - Numeric sorting properly handles feeds with numbers (e.g., "404 Media" before "Ars Technica")
+  - "All Articles" special feed remains at the top
+  - Sorting applies in both SimpleFeedSidebar component and feed store's getFeedsInFolder method
+  - New feeds will automatically appear in correct alphabetical position
+  - Consistent sorting across all views for predictable feed discovery
+
+- **Grey Out Feeds with No Unread Articles** (TODO-048) - COMPLETED ✅
+  - Feeds with zero unread articles now appear with 35% opacity
+  - Visual hierarchy helps users quickly identify feeds with new content
+  - Hover state temporarily restores full opacity
+  - Selected feeds maintain full opacity regardless of unread count
+  - Unread count badges removed for feeds with zero unread
+  - Applies to both SimpleFeedSidebar and FeedTreeItem components
+  - Works seamlessly in both light and dark themes
+
+### Fixed
+- **iOS PWA Status Bar Color and Safe Area Handling** (TODO-046) - COMPLETED ✅
+  - Fixed orange status bar appearing above app header when saved as PWA on iPhone
+  - Changed status bar style from "default" to "black-translucent" for seamless integration
+  - Updated theme colors: white for light mode, black for dark mode
+  - Added PWA standalone mode detection with PWADetector component
+  - CSS classes apply safe area padding only in PWA mode (not in regular browser)
+  - Fixed article title cutoff with conditional padding based on PWA mode
+  - Status bar now properly matches app header color in both themes
+
 ## [0.6.0] - 2025-07-24
 
 ### Added

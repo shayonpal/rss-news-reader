@@ -539,7 +539,15 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Get feeds in folder
   getFeedsInFolder: (folderId: string | null) => {
     const { feeds } = get();
-    return Array.from(feeds.values()).filter(feed => feed.folderId === folderId);
+    return Array.from(feeds.values())
+      .filter(feed => feed.folderId === folderId)
+      .sort((a, b) => 
+        String(a.title || '').localeCompare(
+          String(b.title || ''), 
+          undefined, 
+          { numeric: true, sensitivity: 'base' }
+        )
+      );
   },
 
   // Get subfolders

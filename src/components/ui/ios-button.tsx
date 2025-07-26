@@ -8,8 +8,18 @@ interface IOSButtonProps extends ButtonProps {
 }
 
 /**
- * Button component optimized for iOS Safari touch handling
+ * Base button component optimized for iOS Safari touch handling
  * Solves the issue where iOS requires double-tap due to hover states
+ * 
+ * @see docs/tech/button-architecture.md for complete button architecture guide
+ * 
+ * This is the foundation of our button hierarchy. For article actions,
+ * use ArticleActionButton instead of using this directly.
+ * 
+ * Features:
+ * - Prevents iOS double-tap requirement
+ * - Stops event propagation to prevent unintended parent clicks
+ * - Handles both touch and mouse events correctly
  */
 export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
   ({ onPress, onClick, children, ...props }, ref) => {
@@ -17,6 +27,7 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
 
     const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
       e.preventDefault();
+      e.stopPropagation();
       
       // Call the onPress or onClick handler
       if (onPress) {
@@ -34,6 +45,8 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
     };
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      
       // On iOS, ignore click events that come from touch
       // (they arrive after touchend and cause double-firing)
       if (touchedRef.current) {

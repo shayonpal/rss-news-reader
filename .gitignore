@@ -49,3 +49,9 @@ update-project-fields.js
 
 # Personal documentation
 docs/revised-priority.md
+
+# Claude settings
+.claude/settings.local.json
+
+# Token files
+~/.rss-reader/tokens.json
