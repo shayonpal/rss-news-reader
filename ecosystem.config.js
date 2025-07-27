@@ -10,7 +10,13 @@ module.exports = {
       cwd: '/Users/shayon/DevProjects/rss-news-reader',
       instances: 1,
       exec_mode: 'fork',
-      max_memory_restart: '1G',
+      min_uptime: 10000,  // 10 seconds - prevent rapid restart loops
+      kill_timeout: 12000,  // 12 seconds - graceful shutdown for HTTP requests
+      max_restarts: 50,  // Increased from default 15 for production resilience
+      exp_backoff_restart_delay: 100,  // Exponential backoff starting at 100ms
+      wait_ready: true,  // Wait for ready signal from health check
+      listen_timeout: 20000,  // Max 20 seconds to signal ready
+      max_memory_restart: '512M',  // Conservative memory limit (was 1G)
       env_file: '.env',
       pre_start: './scripts/pm2-pre-start-validation.sh rss-reader-prod',
       env: {
@@ -48,6 +54,13 @@ module.exports = {
       instances: 1,
       exec_mode: 'fork',
       watch: false,  // Disable in PM2, Next.js handles HMR
+      min_uptime: 10000,  // 10 seconds - prevent rapid restart loops
+      kill_timeout: 12000,  // 12 seconds - graceful shutdown for HTTP requests
+      max_restarts: 30,  // Lower for development - fail fast
+      exp_backoff_restart_delay: 100,  // Exponential backoff starting at 100ms
+      wait_ready: true,  // Wait for ready signal from health check
+      listen_timeout: 20000,  // Max 20 seconds to signal ready
+      max_memory_restart: '512M',  // Conservative memory limit
       env_file: '.env',
       env: {
         NODE_ENV: 'development',
@@ -82,7 +95,12 @@ module.exports = {
       instances: 1,
       exec_mode: 'fork',
       cron_restart: '0 0 * * *',  // Daily restart for stability
-      max_memory_restart: '256M',
+      min_uptime: 10000,  // 10 seconds - prevent rapid restart loops
+      kill_timeout: 30000,  // 30 seconds - longer for sync operations
+      max_restarts: 10,  // Conservative for cron jobs
+      restart_delay: 60000,  // Linear 60-second delay for cron (not exponential)
+      wait_ready: false,  // Cron doesn't need ready signal - no HTTP server
+      max_memory_restart: '256M',  // Conservative memory limit
       env: {
         NODE_ENV: 'production',
         ENABLE_AUTO_SYNC: 'true',
@@ -106,7 +124,12 @@ module.exports = {
       script: './server/server.js',
       instances: 1,
       exec_mode: 'fork',
-      max_memory_restart: '256M',
+      min_uptime: 10000,  // 10 seconds - prevent rapid restart loops
+      kill_timeout: 15000,  // 15 seconds - allow sync batches to complete
+      max_restarts: 30,  // Higher for sync server resilience
+      exp_backoff_restart_delay: 200,  // Slower backoff for data operations
+      wait_ready: false,  // Sync server doesn't need ready signal - no HTTP endpoint
+      max_memory_restart: '256M',  // Conservative memory limit
       env: {
         NODE_ENV: 'production',
         SERVER_PORT: 3001,

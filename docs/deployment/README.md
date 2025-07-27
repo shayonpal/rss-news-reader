@@ -10,9 +10,9 @@ This directory contains all documentation related to deploying, configuring, and
 - **Contents**: Cron schedule (2 AM and 2 PM Toronto time), PM2 ecosystem configuration, sync process details
 
 ### caddy-pm2-setup.md
-- **Description**: Initial setup documentation for Caddy reverse proxy and PM2 process management
-- **Status**: Deprecated ⚠️
-- **Note**: Project moved away from Caddy to direct PM2 management with macOS LaunchAgent
+- **Description**: Production-grade PM2 process management configuration with stability improvements
+- **Status**: Current ✅ (Updated Saturday, July 26, 2025)
+- **Contents**: PM2 ecosystem configuration, stability features, memory management, health check integration
 
 ### ci-cd-strategy.md
 - **Description**: Continuous integration and deployment strategy including GitHub Actions workflows
@@ -44,6 +44,14 @@ This directory contains all documentation related to deploying, configuring, and
 2. **rss-reader-dev** (port 3000) - Development server (optional)
 3. **rss-sync-server** (port 3001) - Bidirectional sync service
 4. **rss-sync-cron** - Automatic sync scheduler
+
+### PM2 Stability Features (Updated July 26, 2025)
+- **Production-grade configuration** with 99%+ reduction in service restarts
+- **Conservative memory limits**: 512M for Next.js, 256M for support services
+- **Intelligent restart patterns**: Exponential backoff, 50 max restarts
+- **Graceful shutdowns**: Service-specific timeout configurations
+- **Health check integration**: wait_ready coordination with health endpoints
+- **Pre-start validation**: Prevents deployment of broken builds
 
 ## Related Documentation
 

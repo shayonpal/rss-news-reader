@@ -4,8 +4,9 @@
 This document describes the production deployment setup using Caddy as a reverse proxy and PM2 as the process manager.
 
 ## Production URL
-- **Public URL**: http://100.96.166.53/reader
-- **Internal URL**: http://localhost:3000/reader
+- **Production URL**: http://100.96.166.53:3147/reader (Direct access, port 3147)
+- **Development URL**: http://100.96.166.53:3000/reader (Dev server, port 3000)
+- **Note**: Using port 3147 due to Obsidian Docker container on port 80
 
 ## Configuration Files
 
@@ -16,12 +17,24 @@ Located at `/Caddyfile` - Configures Caddy reverse proxy to:
 - Log access to `logs/caddy-access.log`
 
 ### 2. ecosystem.config.js
-Located at `/ecosystem.config.js` - Configures PM2 to:
-- Run the production build with `npm start`
-- Use **fork mode** (not cluster mode) - Next.js production builds are incompatible with PM2 cluster mode
-- Restart if memory usage exceeds 1GB
-- Log to `logs/pm2-*.log` files
-- Add timestamps to all log entries
+Located at `/ecosystem.config.js` - Configures PM2 with production-grade stability improvements:
+
+**Service Configuration**:
+- **4 Services**: rss-reader-prod (3147), rss-reader-dev (3000), rss-sync-cron, rss-sync-server (3001)
+- **Fork Mode**: All services use fork mode (not cluster) for optimal Next.js compatibility
+- **Conservative Memory Limits**: 512M for Next.js apps, 256M for support services
+
+**Stability Features**:
+- **Restart Protection**: min_uptime: 10s prevents rapid restart loops
+- **Graceful Shutdowns**: Service-specific kill_timeout (12s HTTP, 30s sync, 15s server)
+- **Smart Restart Strategy**: Exponential backoff delays, max_restarts: 50 for production resilience
+- **Health Check Integration**: wait_ready: true with 20s listen_timeout for HTTP services
+- **Pre-start Validation**: PM2 hooks prevent deployment of broken builds
+
+**Logging**:
+- Service-specific log files in `logs/` directory
+- Timestamped entries for all log outputs
+- JSONL format for structured logging
 
 ### 3. Next.js Configuration
 The `next.config.mjs` already has:
