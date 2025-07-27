@@ -33,21 +33,26 @@ This directory contains all technical documentation for the RSS News Reader appl
    - **Status**: Current ✅
    - **Contents**: Button variants, states, accessibility, usage guidelines
 
+6. **sync-progress-tracking-architecture.md**
+   - **Description**: Dual-write sync progress tracking system with file system and database storage
+   - **Status**: Current ✅
+   - **Contents**: Architecture patterns, implementation details, API endpoints, monitoring
+
 ### Monitoring & Infrastructure
 
-6. **uptime-kuma-setup.md**
+7. **uptime-kuma-setup.md**
    - **Description**: Setup guide for Uptime Kuma monitoring service
    - **Status**: Current ✅
    - **Contents**: Docker setup, monitor configuration, alert rules
 
-7. **uptime-kuma-monitoring-strategy.md**
+8. **uptime-kuma-monitoring-strategy.md**
    - **Description**: Comprehensive monitoring strategy using Uptime Kuma
    - **Status**: Current ✅
    - **Contents**: Monitoring objectives, metrics, alerting strategy, dashboards
 
 ### Issues & Maintenance
 
-8. **known-issues.md**
+9. **known-issues.md**
    - **Description**: Documentation of known issues, limitations, and workarounds
    - **Status**: Living Document 🔄
    - **Contents**: Current bugs, API limitations, performance considerations, planned fixes

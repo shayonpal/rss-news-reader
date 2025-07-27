@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { getAdminClient } from '@/lib/db/supabase-admin';
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
 import TokenManager from '../../../../server/lib/token-manager.js';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Use singleton Supabase admin client for better connection pooling
+const supabase = getAdminClient();
 
 // File-based sync status tracking for serverless compatibility
 interface SyncStatus {
@@ -59,25 +56,25 @@ async function writeSyncStatus(syncId: string, status: SyncStatus): Promise<void
   }
 }
 
-// Clean up old sync files (older than 1 hour)
+// Clean up old sync files (older than 24 hours - aligned with database retention)
 async function cleanupOldSyncFiles(): Promise<void> {
   try {
     const files = await fs.readdir('/tmp');
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000; // 24 hours
     
     for (const file of files) {
       if (file.startsWith('sync-status-') && file.endsWith('.json')) {
         const filePath = path.join('/tmp', file);
         const stats = await fs.stat(filePath);
         
-        if (stats.mtimeMs < oneHourAgo) {
+        if (stats.mtimeMs < twentyFourHoursAgo) {
           await fs.unlink(filePath);
-          console.log(`Cleaned up old sync file: ${file}`);
+          console.log(`[Sync] Cleaned up old sync file (>24h): ${file}`);
         }
       }
     }
   } catch (error) {
-    console.error('Error cleaning up sync files:', error);
+    console.error('[Sync] Error cleaning up sync files:', error);
   }
 }
 
@@ -495,11 +492,36 @@ async function performServerSync(syncId: string) {
     status.message = `Sync completed. Synced ${subscriptions.length} feeds and ${articles.length} articles.`;
     await writeSyncStatus(syncId, status);
 
+    // Schedule file cleanup after 60 seconds to ensure clients can read final status
+    setTimeout(async () => {
+      try {
+        const filePath = getSyncStatusPath(syncId);
+        await fs.unlink(filePath);
+        console.log(`[Sync] Cleaned up completed sync file after delay: ${syncId}`);
+      } catch (error) {
+        // File might already be cleaned up, which is fine
+        console.log(`[Sync] File cleanup skipped (already removed): ${syncId}`);
+      }
+    }, 60000); // 60 seconds delay
+
   } catch (error) {
     console.error('Sync error:', error);
     status.status = 'failed';
     status.error = error instanceof Error ? error.message : 'Unknown error';
     await writeSyncStatus(syncId, status);
+    
+    // Schedule file cleanup after 60 seconds for failed syncs too
+    setTimeout(async () => {
+      try {
+        const filePath = getSyncStatusPath(syncId);
+        await fs.unlink(filePath);
+        console.log(`[Sync] Cleaned up failed sync file after delay: ${syncId}`);
+      } catch (error) {
+        // File might already be cleaned up, which is fine
+        console.log(`[Sync] File cleanup skipped (already removed): ${syncId}`);
+      }
+    }, 60000); // 60 seconds delay
+    
     throw error;
   }
 }

@@ -22,6 +22,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3147,
+        NEXT_BUILD_DIR: '.next-prod',
         // Use existing database vars (same for both environments)
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

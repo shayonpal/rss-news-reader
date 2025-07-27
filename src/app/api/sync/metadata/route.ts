@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/db/supabase-admin';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Use singleton Supabase admin client for better connection pooling
+const supabase = getAdminClient();
 
 export async function POST(request: Request) {
   try {
