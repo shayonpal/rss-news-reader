@@ -29,10 +29,29 @@ function getSyncStatusPath(syncId: string): string {
   return path.join('/tmp', `sync-status-${syncId}.json`);
 }
 
-// Write sync status to file
+// Write sync status to file AND database (dual-write for reliability)
 async function writeSyncStatus(syncId: string, status: SyncStatus): Promise<void> {
+  // 1. Write to file (primary - fast)
   const filePath = getSyncStatusPath(syncId);
   await fs.writeFile(filePath, JSON.stringify(status), 'utf-8');
+  
+  // 2. Write to database (fallback - persistent)
+  try {
+    await supabase
+      .from('sync_status')
+      .upsert({
+        sync_id: syncId,
+        status: status.status,
+        progress_percentage: status.progress,
+        current_step: status.message || null,
+        error_message: status.error || null,
+        created_at: new Date(status.startTime).toISOString(),
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'sync_id' });
+  } catch (error) {
+    // Log but don't fail - file write is primary
+    console.error('[Sync] Failed to write status to database:', error);
+  }
 }
 
 // Clean up old sync files (older than 1 hour)
@@ -54,6 +73,24 @@ async function cleanupOldSyncFiles(): Promise<void> {
     }
   } catch (error) {
     console.error('Error cleaning up sync files:', error);
+  }
+}
+
+// Clean up old sync statuses from database (older than 24 hours)
+async function cleanupOldDatabaseSyncStatuses(): Promise<void> {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    const { error } = await supabase
+      .from('sync_status')
+      .delete()
+      .lt('created_at', twentyFourHoursAgo);
+    
+    if (error) {
+      console.error('Error cleaning up old sync statuses from database:', error);
+    }
+  } catch (error) {
+    console.error('Error in database cleanup:', error);
   }
 }
 
@@ -87,8 +124,9 @@ export async function POST() {
     };
     await writeSyncStatus(syncId, initialStatus);
     
-    // Clean up old sync files in background
+    // Clean up old sync files and database entries in background
     cleanupOldSyncFiles().catch(console.error);
+    cleanupOldDatabaseSyncStatuses().catch(console.error);
 
     // Start sync in background (non-blocking)
     performServerSync(syncId).catch(async error => {

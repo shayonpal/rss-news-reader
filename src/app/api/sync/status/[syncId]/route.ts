@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 // File-based sync status tracking for serverless compatibility
 interface SyncStatus {
@@ -24,7 +31,7 @@ export async function GET(
   const syncId = params.syncId;
   
   try {
-    // Read status from file
+    // 1. Try to read from file first (fast)
     const filePath = getSyncStatusPath(syncId);
     const fileContent = await fs.readFile(filePath, 'utf-8');
     const status: SyncStatus = JSON.parse(fileContent);
@@ -50,14 +57,46 @@ export async function GET(
       itemsProcessed: status.progress > 0 ? Math.floor(status.progress) : 0,
       totalItems: 100 // Approximate
     });
-  } catch (error) {
-    // File not found or parse error
-    return NextResponse.json(
-      {
-        error: 'sync_not_found',
-        message: 'Sync ID not found or expired'
-      },
-      { status: 404 }
-    );
+  } catch (fileError) {
+    // 2. File not found - try database fallback
+    try {
+      const { data, error } = await supabase
+        .from('sync_status')
+        .select('*')
+        .eq('sync_id', syncId)
+        .single();
+      
+      if (error || !data) {
+        throw new Error('Not found in database');
+      }
+      
+      // Clean up completed/failed syncs from database
+      if (data.status === 'completed' || data.status === 'failed') {
+        setTimeout(async () => {
+          await supabase
+            .from('sync_status')
+            .delete()
+            .eq('sync_id', syncId);
+        }, 5000);
+      }
+      
+      return NextResponse.json({
+        status: data.status,
+        progress: data.progress_percentage,
+        message: data.current_step,
+        error: data.error_message,
+        itemsProcessed: data.progress_percentage > 0 ? Math.floor(data.progress_percentage) : 0,
+        totalItems: 100
+      });
+    } catch (dbError) {
+      // Neither file nor database has the sync status
+      return NextResponse.json(
+        {
+          error: 'sync_not_found',
+          message: 'Sync ID not found or expired'
+        },
+        { status: 404 }
+      );
+    }
   }
 }

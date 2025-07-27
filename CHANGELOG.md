@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] - Sunday, July 27, 2025 at 3:34 AM
+
+### Fixed
+- Implemented dual-write sync progress tracking with database fallback
+  - Sync progress now persists across PM2 restarts and server crashes
+  - File-based tracking remains primary (fast) with database as fallback
+  - Auto-cleanup of old sync records after 24 hours
+  - Fixes issue where sync progress would show 404 after file cleanup
+
 ## Sunday, July 27, 2025 at 2:29 AM
 
 ### Fixed
