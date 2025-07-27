@@ -1,8 +1,8 @@
 # Shipped TODOs - RSS News Reader
 
 **Generated from:** TODOs.md  
-**Generated on:** Saturday, July 26, 2025 at 9:06 PM  
-**Total Completed:** 57 items (plus 1 partially completed)
+**Generated on:** Saturday, July 26, 2025 at 11:06 PM  
+**Total Completed:** 58 items (plus 1 partially completed)
 
 ## ✅ COMPLETED TODOS
 
@@ -85,6 +85,41 @@
 - **QA Verified**: Each phase individually tested and verified by QA engineer
 - **Foundation for Scaling**: Provides robust infrastructure foundation for future production scaling
 - **Completed**: Saturday, July 26, 2025 at 9:06 PM
+
+### TODO-039a: Create Health Check Endpoints (P1 - Prerequisite) ✅ COMPLETED
+- **Status**: ✅ COMPLETED Saturday, July 26, 2025 at 7:01 PM
+- **Parent**: TODO-039 (Server Health Monitoring)
+- **Issue**: Need standardized health endpoints for all services
+- **Implementation Strategy**: Comprehensive health monitoring with Uptime Kuma integration
+- **Completion Notes**: Successfully implemented comprehensive health check endpoints for all services:
+  - Enhanced `/api/health/app` endpoint with database checks, OAuth validation, performance metrics
+  - Enhanced `/server/health` endpoint for bi-directional sync server with queue stats
+  - Created `/api/health/cron` endpoint that reads cron health status from JSONL file
+  - Standardized JSON response format across all endpoints
+  - Configured Uptime Kuma monitors for all health endpoints
+  - Implemented performance tracking with rolling averages
+  - All endpoints properly return HTTP status codes (200 for healthy/degraded, 503 for unhealthy)
+  - Fully integrated with monitor-services.sh for automated recovery
+- **Key Design Decisions**:
+  1. **No Authentication**: Health endpoints are public (already protected by Tailscale network)
+  2. **JSONL Logging**: All log files use .jsonl format for consistency
+  3. **HTTP Monitoring Only**: Removed redundant TCP port monitors in Uptime Kuma
+  4. **Standardized Response Format**: All endpoints return consistent JSON structure
+  5. **Performance Tracking**: Track rolling averages for key operations
+- **Implementation Details**:
+  - **Enhanced /api/health/app endpoint**: Database connectivity check, OAuth validation, uptime tracking, error counts, performance metrics
+  - **Enhanced /server/health endpoint**: Database check, OAuth validity, sync queue stats, last sync time, service metrics
+  - **Health Check for Sync Cron Service**: Write to `/logs/cron-health.jsonl`, serve via `/api/health/cron` endpoint
+  - **Standardized Response Format**: JSON with status, service, uptime, lastActivity, errorCount, dependencies, performance
+  - **Logging Strategy**: Performance metrics, health check history, cron health status all in JSONL format
+  - **Uptime Kuma Integration**: HTTP(s) monitors for all endpoints with JSON response parsing
+- **Acceptance Criteria**: ALL COMPLETED ✅
+  - [x] Create `/api/health/app` endpoint for main Next.js app
+  - [x] Create `/server/health` endpoint for bi-directional sync server
+  - [x] Create health check mechanism for sync cron service
+  - [x] Health endpoints return: status, uptime, last activity, error count
+  - [x] Include dependency checks (DB connection, OAuth tokens)
+  - [x] Standardize response format across all endpoints
 
 ### TODO-039i: Implement Uptime Kuma Monitoring Infrastructure (P1 - Infrastructure) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Uptime Kuma monitoring infrastructure deployed
