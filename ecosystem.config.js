@@ -6,7 +6,7 @@ module.exports = {
     {
       name: 'rss-reader-prod',
       script: 'npm',
-      args: 'start',
+      args: 'run start:prod',
       cwd: '/Users/shayon/DevProjects/rss-news-reader',
       instances: 1,
       exec_mode: 'fork',

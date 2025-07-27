@@ -37,7 +37,7 @@ async function writeSyncStatus(syncId: string, status: SyncStatus): Promise<void
   
   // 2. Write to database (fallback - persistent)
   try {
-    await supabase
+    const { error: dbError } = await supabase
       .from('sync_status')
       .upsert({
         sync_id: syncId,
@@ -48,9 +48,14 @@ async function writeSyncStatus(syncId: string, status: SyncStatus): Promise<void
         created_at: new Date(status.startTime).toISOString(),
         updated_at: new Date().toISOString()
       }, { onConflict: 'sync_id' });
+    
+    if (dbError) {
+      console.error(`[Sync] Database write failed for ${syncId}:`, dbError);
+      // Consider tracking this failure for monitoring
+    }
   } catch (error) {
     // Log but don't fail - file write is primary
-    console.error('[Sync] Failed to write status to database:', error);
+    console.error(`[Sync] Exception during database write for ${syncId}:`, error);
   }
 }
 
@@ -79,15 +84,18 @@ async function cleanupOldSyncFiles(): Promise<void> {
 // Clean up old sync statuses from database (older than 24 hours)
 async function cleanupOldDatabaseSyncStatuses(): Promise<void> {
   try {
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // Use expires_at column which is automatically set to 24 hours from creation
+    const now = new Date().toISOString();
     
     const { error } = await supabase
       .from('sync_status')
       .delete()
-      .lt('created_at', twentyFourHoursAgo);
+      .lt('expires_at', now);
     
     if (error) {
       console.error('Error cleaning up old sync statuses from database:', error);
+    } else {
+      console.log(`[Sync] Database cleanup completed for expired sync statuses`);
     }
   } catch (error) {
     console.error('Error in database cleanup:', error);

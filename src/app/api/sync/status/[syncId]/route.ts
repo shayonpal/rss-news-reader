@@ -59,6 +59,8 @@ export async function GET(
     });
   } catch (fileError) {
     // 2. File not found - try database fallback
+    console.log(`[Sync Status] File not found for ${syncId}, falling back to database`);
+    
     try {
       const { data, error } = await supabase
         .from('sync_status')
@@ -67,6 +69,7 @@ export async function GET(
         .single();
       
       if (error || !data) {
+        console.error(`[Sync Status] Database lookup failed for ${syncId}:`, error);
         throw new Error('Not found in database');
       }
       
