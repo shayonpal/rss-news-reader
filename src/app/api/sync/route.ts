@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// Import token manager at top level to ensure it's bundled
+// @ts-ignore
+import TokenManager from '../../../../server/lib/token-manager.js';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -8,24 +14,48 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// In-memory sync status tracking (for MVP - should use Redis or DB in production)
-declare global {
-  // eslint-disable-next-line no-var
-  var syncStatus: Map<string, {
-    status: 'pending' | 'running' | 'completed' | 'failed';
-    progress: number;
-    message?: string;
-    error?: string;
-    startTime: number;
-  }>;
+// File-based sync status tracking for serverless compatibility
+interface SyncStatus {
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  message?: string;
+  error?: string;
+  startTime: number;
+  syncId: string;
 }
 
-// Initialize if not exists
-if (!global.syncStatus) {
-  global.syncStatus = new Map();
+// Get sync status file path
+function getSyncStatusPath(syncId: string): string {
+  return path.join('/tmp', `sync-status-${syncId}.json`);
 }
 
-const syncStatus = global.syncStatus;
+// Write sync status to file
+async function writeSyncStatus(syncId: string, status: SyncStatus): Promise<void> {
+  const filePath = getSyncStatusPath(syncId);
+  await fs.writeFile(filePath, JSON.stringify(status), 'utf-8');
+}
+
+// Clean up old sync files (older than 1 hour)
+async function cleanupOldSyncFiles(): Promise<void> {
+  try {
+    const files = await fs.readdir('/tmp');
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    
+    for (const file of files) {
+      if (file.startsWith('sync-status-') && file.endsWith('.json')) {
+        const filePath = path.join('/tmp', file);
+        const stats = await fs.stat(filePath);
+        
+        if (stats.mtimeMs < oneHourAgo) {
+          await fs.unlink(filePath);
+          console.log(`Cleaned up old sync file: ${file}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error cleaning up sync files:', error);
+  }
+}
 
 export async function POST() {
   try {
@@ -48,21 +78,28 @@ export async function POST() {
     // Generate sync ID
     const syncId = uuidv4();
     
-    // Initialize sync status
-    syncStatus.set(syncId, {
+    // Initialize sync status in file
+    const initialStatus: SyncStatus = {
+      syncId,
       status: 'pending',
       progress: 0,
       startTime: Date.now()
-    });
+    };
+    await writeSyncStatus(syncId, initialStatus);
+    
+    // Clean up old sync files in background
+    cleanupOldSyncFiles().catch(console.error);
 
     // Start sync in background (non-blocking)
-    performServerSync(syncId).catch(error => {
+    performServerSync(syncId).catch(async error => {
       console.error('Sync failed:', error);
-      const status = syncStatus.get(syncId);
-      if (status) {
-        status.status = 'failed';
-        status.error = error.message;
-      }
+      await writeSyncStatus(syncId, {
+        syncId,
+        status: 'failed',
+        progress: 0,
+        error: error.message,
+        startTime: Date.now()
+      });
     });
 
     return NextResponse.json({
@@ -89,18 +126,19 @@ export async function POST() {
 }
 
 async function performServerSync(syncId: string) {
-  const status = syncStatus.get(syncId);
-  if (!status) return;
-
+  const status: SyncStatus = {
+    syncId,
+    status: 'running',
+    progress: 10,
+    message: 'Loading server tokens...',
+    startTime: Date.now()
+  };
+  
   try {
     // Update status to running
-    status.status = 'running';
-    status.progress = 10;
-    status.message = 'Loading server tokens...';
+    await writeSyncStatus(syncId, status);
 
-    // Import the token manager (CommonJS module)
-    const path = require('path');
-    const TokenManager = require(path.join(process.cwd(), 'server/lib/token-manager.js'));
+    // Use the imported TokenManager
     const tokenManager = new TokenManager();
 
     // Get access token
@@ -108,6 +146,7 @@ async function performServerSync(syncId: string) {
     
     status.progress = 20;
     status.message = 'Fetching subscriptions...';
+    await writeSyncStatus(syncId, status);
 
     // Step 1: Fetch subscriptions
     const subsResponse = await tokenManager.makeAuthenticatedRequest(
@@ -123,6 +162,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 30;
     status.message = `Found ${subscriptions.length} feeds...`;
+    await writeSyncStatus(syncId, status);
 
     // Step 2: Fetch unread counts
     const countsResponse = await tokenManager.makeAuthenticatedRequest(
@@ -140,6 +180,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 40;
     status.message = 'Syncing feeds to Supabase...';
+    await writeSyncStatus(syncId, status);
 
     // Get or create the single user
     const SINGLE_USER_ID = 'shayon';
@@ -187,6 +228,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 50;
     status.message = 'Syncing feeds...';
+    await writeSyncStatus(syncId, status);
 
     // Process feeds
     const feedsToUpsert = subscriptions.map((sub: any) => ({
@@ -206,6 +248,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 60;
     status.message = 'Fetching recent articles...';
+    await writeSyncStatus(syncId, status);
 
     // Step 3: Fetch recent articles (single stream call)
     const maxArticles = process.env.SYNC_MAX_ARTICLES ? parseInt(process.env.SYNC_MAX_ARTICLES) : 100;
@@ -222,6 +265,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 70;
     status.message = `Processing ${articles.length} articles...`;
+    await writeSyncStatus(syncId, status);
 
     // Get feed IDs mapping
     const { data: feeds } = await supabase
@@ -322,12 +366,14 @@ async function performServerSync(syncId: string) {
             .upsert(chunk, { onConflict: 'inoreader_id' });
           
           status.progress = 70 + Math.floor((i / articlesWithConflictResolution.length) * 20);
+          await writeSyncStatus(syncId, status);
         }
       }
     }
 
     status.progress = 90;
     status.message = 'Refreshing feed statistics...';
+    await writeSyncStatus(syncId, status);
     console.log('[Sync] Refreshing feed statistics...');
 
     // Refresh the materialized view for accurate unread counts
@@ -347,6 +393,7 @@ async function performServerSync(syncId: string) {
     // Auto-fetch full content for partial feeds
     status.progress = 92;
     status.message = 'Checking for partial content feeds...';
+    await writeSyncStatus(syncId, status);
     console.log('[Sync] Starting auto-fetch for partial content feeds...');
     
     try {
@@ -358,6 +405,7 @@ async function performServerSync(syncId: string) {
 
     status.progress = 95;
     status.message = 'Updating sync metadata...';
+    await writeSyncStatus(syncId, status);
     console.log('[Sync] Updating sync metadata...');
 
     // Update sync metadata
@@ -374,6 +422,7 @@ async function performServerSync(syncId: string) {
     // Trigger bidirectional sync to push local changes to Inoreader
     status.progress = 98;
     status.message = 'Syncing local changes to Inoreader...';
+    await writeSyncStatus(syncId, status);
     console.log('[Sync] Triggering bidirectional sync...');
     
     try {
@@ -398,11 +447,13 @@ async function performServerSync(syncId: string) {
     status.status = 'completed';
     status.progress = 100;
     status.message = `Sync completed. Synced ${subscriptions.length} feeds and ${articles.length} articles.`;
+    await writeSyncStatus(syncId, status);
 
   } catch (error) {
     console.error('Sync error:', error);
     status.status = 'failed';
     status.error = error instanceof Error ? error.message : 'Unknown error';
+    await writeSyncStatus(syncId, status);
     throw error;
   }
 }

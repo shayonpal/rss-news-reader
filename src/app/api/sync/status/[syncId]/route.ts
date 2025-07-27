@@ -1,21 +1,20 @@
 import { NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-// Import the shared sync status map
-// In production, this should be stored in Redis or a database
-declare global {
-  // eslint-disable-next-line no-var
-  var syncStatus: Map<string, {
-    status: 'pending' | 'running' | 'completed' | 'failed';
-    progress: number;
-    message?: string;
-    error?: string;
-    startTime: number;
-  }>;
+// File-based sync status tracking for serverless compatibility
+interface SyncStatus {
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  message?: string;
+  error?: string;
+  startTime: number;
+  syncId: string;
 }
 
-// Initialize if not exists
-if (!global.syncStatus) {
-  global.syncStatus = new Map();
+// Get sync status file path
+function getSyncStatusPath(syncId: string): string {
+  return path.join('/tmp', `sync-status-${syncId}.json`);
 }
 
 export async function GET(
@@ -24,26 +23,41 @@ export async function GET(
 ) {
   const syncId = params.syncId;
   
-  // Get status from global map
-  const status = global.syncStatus?.get(syncId);
-  
-  if (!status) {
+  try {
+    // Read status from file
+    const filePath = getSyncStatusPath(syncId);
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    const status: SyncStatus = JSON.parse(fileContent);
+    
+    // Clean up completed/failed syncs after reading
+    if (status.status === 'completed' || status.status === 'failed') {
+      // Delete file after 5 seconds to allow final reads
+      setTimeout(async () => {
+        try {
+          await fs.unlink(filePath);
+        } catch (error) {
+          // File might already be deleted
+        }
+      }, 5000);
+    }
+    
+    return NextResponse.json({
+      status: status.status,
+      progress: status.progress,
+      message: status.message,
+      error: status.error,
+      // Calculate items processed based on progress
+      itemsProcessed: status.progress > 0 ? Math.floor(status.progress) : 0,
+      totalItems: 100 // Approximate
+    });
+  } catch (error) {
+    // File not found or parse error
     return NextResponse.json(
       {
         error: 'sync_not_found',
-        message: 'Sync ID not found'
+        message: 'Sync ID not found or expired'
       },
       { status: 404 }
     );
   }
-
-  return NextResponse.json({
-    status: status.status,
-    progress: status.progress,
-    message: status.message,
-    error: status.error,
-    // Calculate items processed based on progress
-    itemsProcessed: status.progress > 0 ? Math.floor(status.progress) : 0,
-    totalItems: 100 // Approximate
-  });
 }

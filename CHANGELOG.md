@@ -1,5 +1,17 @@
 # Changelog
 
+## Sunday, July 27, 2025 at 2:29 AM
+
+### Fixed
+- **Sync Progress Tracking Issue (Critical)**
+  - **Problem**: Manual sync button showed timeout error after 2 minutes despite sync completing in ~10 seconds
+  - **Root Cause**: Next.js serverless functions don't share memory between invocations, so status endpoint returned 404 for sync IDs stored in memory
+  - **Solution**: Implemented file-based sync status tracking using `/tmp/sync-status-{syncId}.json` files
+  - **Joint Technical Decision**: Devops, sync-reliability-monitor, and supabase-dba agents agreed file-based approach best fits single-user architecture vs database table or Redis
+  - **Benefits**: Real progress tracking with percentages, automatic cleanup, serverless-compatible, user's preferred approach
+  - **Implementation**: Status written to file on every progress update, status endpoint reads from file, automatic cleanup after completion
+  - **Result**: Manual sync now shows real-time progress (0-100%) and completes properly without timeouts
+
 ## Saturday, July 26, 2025 at 11:06 PM
 
 ### Documentation Updates
