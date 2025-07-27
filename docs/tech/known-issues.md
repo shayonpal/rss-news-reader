@@ -70,6 +70,35 @@ The PWA can be installed over HTTP (required for Tailscale network) but some fea
 
 ## Production Deployment Issues (Resolved)
 
+### Manual Sync Failure - Missing Build Manifests
+**Status:** 🟢 Resolved (July 26, 2025 at 10:56 PM)  
+**Severity:** Critical  
+
+#### Description
+Manual sync button returned 500 Internal Server Error with "Cannot find module '.next/prerender-manifest.json'" error. Server logs showed missing manifest files and corrupted vendor chunks.
+
+#### Root Cause
+- Production build was corrupted/incomplete
+- Critical manifest files (prerender-manifest.json, react-loadable-manifest.json) were missing
+- Vendor chunks containing Supabase dependencies were missing or corrupted
+- Build process completed without errors but produced invalid output
+
+#### Solution
+1. Stop PM2 services
+2. Clean build directory: `rm -rf .next`
+3. Rebuild application: `npm run build`
+4. Verify manifests exist in `.next/` directory
+5. Restart PM2 services
+
+#### Prevention
+Enhanced build validation system now checks for:
+- Presence of critical manifest files
+- Integrity of vendor chunks
+- Supabase dependency availability
+- Validation runs as PM2 pre-start hook to prevent corrupted builds from starting
+
+## Production Deployment Issues (Resolved)
+
 ### Next.js App Router vs Pages Router Confusion
 **Status:** 🟢 Resolved (July 26, 2025)  
 **Severity:** High  

@@ -53,6 +53,14 @@ This directory contains all documentation related to deploying, configuring, and
 - **Health check integration**: wait_ready coordination with health endpoints
 - **Pre-start validation**: Prevents deployment of broken builds
 
+### Build Validation System (Updated July 26, 2025)
+- **Automatic validation** before production startup via PM2 hooks
+- **Critical manifest checks**: prerender-manifest.json, react-loadable-manifest.json
+- **Vendor chunk validation**: Ensures Supabase dependencies are properly bundled
+- **Recovery guidance**: Clear instructions when validation fails
+- **Manual validation**: Run `./scripts/validate-build.sh` to check build integrity
+- **Clean rebuild**: If validation fails, run `rm -rf .next && npm run build`
+
 ## Related Documentation
 
 - **Health Monitoring**: See `/docs/tech/uptime-kuma-setup.md` for monitoring configuration

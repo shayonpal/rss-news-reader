@@ -99,7 +99,8 @@ async function performServerSync(syncId: string) {
     status.message = 'Loading server tokens...';
 
     // Import the token manager (CommonJS module)
-    const TokenManager = require('../../../../server/lib/token-manager.js');
+    const path = require('path');
+    const TokenManager = require(path.join(process.cwd(), 'server/lib/token-manager.js'));
     const tokenManager = new TokenManager();
 
     // Get access token

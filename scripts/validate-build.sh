@@ -69,7 +69,6 @@ validate_build_directories() {
         ".next"
         ".next/server"
         ".next/server/app"
-        ".next/server/app/api"
         ".next/static"
     )
     
@@ -107,9 +106,16 @@ validate_api_routes() {
             print_status "PASS" "API route compiled: /api/$route"
             compiled_count=$((compiled_count + 1))
         else
-            print_status "FAIL" "Missing compiled API route: /api/$route"
-            missing_routes+=("$route")
-            log "ERROR" "Missing compiled route: $compiled_route"
+            # Check if it exists in a different location (Next.js 14 structure)
+            local alt_compiled_route="$BUILD_DIR/server/app/(api)/api/$route/route.js"
+            if [[ -f "$alt_compiled_route" ]]; then
+                print_status "PASS" "API route compiled (alt location): /api/$route"
+                compiled_count=$((compiled_count + 1))
+            else
+                print_status "FAIL" "Missing compiled API route: /api/$route"
+                missing_routes+=("$route")
+                log "ERROR" "Missing compiled route: $compiled_route (also checked: $alt_compiled_route)"
+            fi
         fi
     done
     
@@ -171,6 +177,8 @@ validate_build_artifacts() {
     local critical_files=(
         ".next/BUILD_ID"
         ".next/package.json"
+        ".next/prerender-manifest.json"
+        ".next/react-loadable-manifest.json"
         ".next/server/server-reference-manifest.json"
         ".next/server/middleware-manifest.json"
     )
@@ -199,6 +207,82 @@ validate_build_artifacts() {
         print_status "PASS" "Build size reasonable: ${build_size}MB"
     else
         print_status "WARN" "Build size suspiciously small: ${build_size}MB"
+    fi
+    
+    # Phase 1e: Validate critical vendor chunks exist
+    validate_vendor_chunks
+}
+
+# Phase 1e: Validate critical vendor chunks and dependencies exist
+validate_vendor_chunks() {
+    log "INFO" "Phase 1e: Validating critical vendor chunks and dependencies"
+    
+    # Check for vendor chunks directory
+    local vendor_dir="$BUILD_DIR/static/chunks"
+    if [[ -d "$vendor_dir" ]]; then
+        print_status "PASS" "Vendor chunks directory exists"
+        
+        # Count vendor chunks
+        local chunk_count=$(find "$vendor_dir" -name "*.js" | wc -l)
+        if [[ "$chunk_count" -gt 5 ]]; then
+            print_status "PASS" "Adequate number of vendor chunks: $chunk_count"
+        else
+            print_status "WARN" "Low number of vendor chunks: $chunk_count"
+        fi
+    else
+        print_status "FAIL" "Vendor chunks directory missing"
+    fi
+    
+    # Check for critical dependency chunks (Supabase)
+    if [[ -f "$BUILD_DIR/react-loadable-manifest.json" ]]; then
+        local loadable_manifest_content
+        loadable_manifest_content=$(cat "$BUILD_DIR/react-loadable-manifest.json" 2>/dev/null || echo "{}")
+        
+        # Check for Supabase entries in manifest
+        if echo "$loadable_manifest_content" | grep -q "@supabase" 2>/dev/null; then
+            print_status "PASS" "Supabase dependencies found in loadable manifest"
+        else
+            print_status "FAIL" "Missing Supabase dependencies in loadable manifest"
+            log "ERROR" "Supabase vendor chunks missing - this can cause module not found errors"
+        fi
+        
+        # Check for dynamic import entries
+        if echo "$loadable_manifest_content" | grep -q '"id"' 2>/dev/null; then
+            print_status "PASS" "Dynamic import mappings present in loadable manifest"
+        else
+            print_status "WARN" "Dynamic import mappings may be incomplete"
+        fi
+    else
+        print_status "FAIL" "React loadable manifest missing"
+    fi
+    
+    # Check prerender manifest structure
+    if [[ -f "$BUILD_DIR/prerender-manifest.json" ]]; then
+        local prerender_content
+        prerender_content=$(cat "$BUILD_DIR/prerender-manifest.json" 2>/dev/null || echo "{}")
+        
+        # Validate JSON structure
+        if echo "$prerender_content" | jq . >/dev/null 2>&1; then
+            print_status "PASS" "Prerender manifest has valid JSON structure"
+            
+            # Check for required fields
+            if echo "$prerender_content" | jq -e '.version' >/dev/null 2>&1; then
+                print_status "PASS" "Prerender manifest has version field"
+            else
+                print_status "FAIL" "Prerender manifest missing version field"
+            fi
+            
+            if echo "$prerender_content" | jq -e '.routes' >/dev/null 2>&1; then
+                print_status "PASS" "Prerender manifest has routes field"
+            else
+                print_status "FAIL" "Prerender manifest missing routes field"
+            fi
+        else
+            print_status "FAIL" "Prerender manifest has invalid JSON structure"
+            log "ERROR" "Invalid prerender manifest can cause server startup failures"
+        fi
+    else
+        print_status "FAIL" "Prerender manifest missing"
     fi
 }
 
@@ -611,6 +695,32 @@ EOF
         if grep -q "Database errors" "$VALIDATION_LOG" 2>/dev/null; then
             echo "• Database connectivity problems"
         fi
+        if grep -q "prerender-manifest.json" "$VALIDATION_LOG" 2>/dev/null; then
+            echo "• Missing Next.js prerender manifest file"
+        fi
+        if grep -q "Supabase vendor chunks missing" "$VALIDATION_LOG" 2>/dev/null; then
+            echo "• Missing Supabase vendor chunks - build corruption"
+        fi
+        
+        echo ""
+        echo "Build Recovery Recommendations:"
+        echo "==============================="
+        if grep -q "prerender-manifest.json\|Supabase vendor chunks missing" "$VALIDATION_LOG" 2>/dev/null; then
+            echo "1. Clean rebuild required:"
+            echo "   rm -rf .next && npm run build"
+            echo ""
+            echo "2. If issues persist, clear node_modules:"
+            echo "   rm -rf node_modules .next && npm install && npm run build"
+        fi
+        if grep -q "Missing compiled route" "$VALIDATION_LOG" 2>/dev/null; then
+            echo "3. Check TypeScript compilation errors:"
+            echo "   npm run type-check"
+        fi
+        if grep -q "Database errors\|Status code mismatch" "$VALIDATION_LOG" 2>/dev/null; then
+            echo "4. Verify services are running:"
+            echo "   pm2 list"
+            echo "   curl http://localhost:3147/reader/api/health"
+        fi
         
         return 1
     fi
@@ -639,6 +749,7 @@ main() {
     validate_api_routes
     validate_environment_variables
     validate_build_artifacts
+    # Note: validate_vendor_chunks is called from validate_build_artifacts
     
     # Phase 2: Health Checks (full mode only)
     validate_health_endpoints

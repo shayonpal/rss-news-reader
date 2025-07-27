@@ -187,6 +187,127 @@ Content-Type: application/json
 
 ---
 
+### 5. Application Health Check
+
+**Endpoint:** `GET /api/health/app`
+
+**Description:** Comprehensive health check for the main Next.js application
+
+**Request:**
+```
+GET /api/health/app
+```
+
+**Response (Healthy):**
+```json
+{
+  "status": "healthy",
+  "service": "rss-reader-app",
+  "uptime": 3456,
+  "lastActivity": "2025-07-26T22:30:00Z",
+  "errorCount": 0,
+  "dependencies": {
+    "database": "healthy",
+    "oauth": "healthy"
+  },
+  "performance": {
+    "avgResponseTime": 45
+  },
+  "details": {
+    "version": "0.7.0",
+    "nodeVersion": "20.11.0",
+    "syncStatus": "idle",
+    "memoryUsage": 56789012,
+    "tokenExpiry": "2025-07-27T10:00:00Z"
+  }
+}
+```
+
+**Status Codes:**
+- 200: Healthy or degraded
+- 503: Unhealthy
+
+---
+
+### 6. Database Health Check
+
+**Endpoint:** `GET /api/health/db`
+
+**Description:** Tests database connectivity and query performance
+
+**Request:**
+```
+GET /api/health/db
+```
+
+**Response (Healthy):**
+```json
+{
+  "status": "healthy",
+  "service": "database",
+  "timestamp": "2025-07-26T22:30:00Z",
+  "performance": {
+    "queryTime": 12,
+    "connectionTime": 5
+  },
+  "details": {
+    "host": "db.rgfxyraamghqnechkppg.supabase.co",
+    "database": "postgres",
+    "ssl": true,
+    "rowCount": 1
+  }
+}
+```
+
+**Response (Unhealthy):**
+```json
+{
+  "status": "unhealthy",
+  "service": "database",
+  "timestamp": "2025-07-26T22:30:00Z",
+  "error": "Connection timeout",
+  "details": {
+    "message": "Unable to connect to database"
+  }
+}
+```
+
+**Status Codes:**
+- 200: Healthy
+- 503: Database connection error
+
+---
+
+### 7. Cron Service Health Check
+
+**Endpoint:** `GET /api/health/cron`
+
+**Description:** Returns the health status of the sync cron service by reading health file
+
+**Request:**
+```
+GET /api/health/cron
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "rss-sync-cron",
+  "lastRun": "2025-07-26T14:00:00Z",
+  "nextRun": "2025-07-27T02:00:00Z",
+  "lastRunSuccess": true,
+  "consecutiveFailures": 0,
+  "details": {
+    "articlesSync": 69,
+    "feedsSync": 45,
+    "duration": 4500
+  }
+}
+```
+
+---
+
 ## Rate Limiting
 
 ### Inoreader API
@@ -261,6 +382,38 @@ ALTER TABLE articles ADD COLUMN author VARCHAR(255);
 ## Testing
 
 Visit `/test-server-api` to interactively test all endpoints with a user-friendly interface.
+
+### Curl Examples
+
+#### Health Checks
+```bash
+# Application health
+curl http://100.96.166.53:3147/reader/api/health/app
+
+# Database health
+curl http://100.96.166.53:3147/reader/api/health/db
+
+# Cron health
+curl http://100.96.166.53:3147/reader/api/health/cron
+```
+
+#### Manual Sync
+```bash
+# Trigger manual sync
+curl -X POST http://100.96.166.53:3147/reader/api/sync \
+  -H "Content-Type: application/json"
+```
+
+#### Article Operations
+```bash
+# Fetch full article content
+curl -X POST http://100.96.166.53:3147/reader/api/articles/ARTICLE_ID/fetch-content \
+  -H "Content-Type: application/json"
+
+# Generate AI summary
+curl -X POST http://100.96.166.53:3147/reader/api/articles/ARTICLE_ID/summarize \
+  -H "Content-Type: application/json"
+```
 
 ---
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## Saturday, July 26, 2025 at 10:56 PM
+
+### Fixed
+- **Manual Sync Issue Resolution**
+  - **Root Cause**: Missing prerender-manifest.json and corrupted vendor chunks in production build
+  - **Solution**: Performed clean rebuild with `rm -rf .next && npm run build`
+  - **Result**: Manual sync endpoint (POST /reader/api/sync) now working correctly
+  - **Additional**: Re-enabled PM2 validation hooks after confirming fix
+  - This resolves the critical issue where manual sync button was failing with 500 errors
+
+### Enhanced
+- **Build Validation System**
+  - **Added Critical Manifest Validation**: Now validates prerender-manifest.json and react-loadable-manifest.json
+  - **Vendor Chunk Validation**: Detects missing Supabase dependencies in vendor chunks
+  - **Enhanced Error Reporting**: Provides specific recovery recommendations for each validation failure
+  - **PM2 Integration**: Validation runs as pre-start hook to prevent corrupted builds from starting
+  - **Recovery Commands**: Clear instructions provided when issues detected (e.g., clean rebuild steps)
+  - This prevents server startup failures and provides early detection of build corruption
+
+### Created
+- **Database Health Endpoint (/api/health/db)**
+  - **Purpose**: Tests database connectivity and query performance
+  - **Response**: JSON with status, connection info, and query time
+  - **HTTP Status**: 200 for healthy, 503 for errors
+  - **URL**: http://100.96.166.53:3147/reader/api/health/db
+  - **Integration**: Works with existing health monitoring infrastructure
+  - This completes the health endpoint suite for comprehensive monitoring
+
 ## Saturday, July 26, 2025 at 9:06 PM
 
 ### Completed Features
