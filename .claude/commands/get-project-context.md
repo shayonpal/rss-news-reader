@@ -10,8 +10,6 @@ Use `doc-admin` to read the following documents and get context of this project:
 - other latest modified files in docs/tech/ directory
 - docs/deployment/automatic-sync.md
 - docs/deployment/caddy-pm2-setup.md
-- docs/shipped-todos.md
-- docs/TODOs.md
 - Next Session Instructions.md
 
 Use `git-expert` to get an understanding of past commits' details.

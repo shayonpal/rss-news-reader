@@ -1,6 +1,653 @@
 # Changelog
 
-## [Unreleased] - Monday, July 28, 2025 at 5:36 AM
+## [Unreleased] - Monday, July 28, 2025 at 7:24 AM
+
+### Commands - Monday, July 28, 2025 at 11:01 AM
+- **Updated next-task Command to Exclude Personal Tracker Issues**
+  - Added exclusion criteria for "Quick Ideas" project (project ID: quick-ideas-5e31ea73e559) in Task Selection Criteria section
+  - Added clarification note in Recommendation Format section that Quick Ideas is filtered out as personal tracker
+  - Ensures next-task command only suggests actual development work, not personal ideas or notes
+  - Prevents accidental assignment of non-development tasks from personal tracking projects
+
+### Documentation - Monday, July 28, 2025 at 10:56 AM
+- **Fixed doc-admin Agent Service Model and CHANGELOG Format**
+  - Updated CHANGELOG entry format to use user's preferred date format:
+    - Changed from "YYYY-MM-DD" to "Day, Month Date, Year at Time"
+    - Added example: "Monday, July 28, 2025 at 10:45 AM"
+  - Corrected Service Boundaries section to reflect proper service model:
+    - Changed "When Agents Should Use" to "When Agents Must Use Doc-Admin"
+    - Clarified that ALL file write operations must go through doc-admin
+    - Updated direct action permissions to read-only operations
+    - Added important note: Domain experts own content but request doc-admin services for writes
+  - Ensures consistency and prevents file operation conflicts
+
+### Documentation - Monday, July 28, 2025 at 10:52 AM
+- **Refactored doc-admin Agent to Clarify Service Boundaries and CHANGELOG Standards**
+  - Removed "Domain Expert Support Services" section (API docs now belong to devops-expert)
+  - Replaced "Documentation Service Scope" with clearer "Domain Documentation Ownership Map" table
+  - Added comprehensive "CHANGELOG Management Standards" section defining:
+    - What deserves CHANGELOG entry (features, bugs, breaking changes) vs what doesn't (docs-only, refactoring)
+    - Proper entry format with Version, Date, and categorized changes
+    - Rotation strategy for archiving when exceeding 500 lines
+  - Added "Service Boundaries" section clarifying when to use doc-admin vs direct agent action
+  - Updated "Service Guidelines" with specific operational focus on file operations
+  - Removed redundant "Remember" section
+  - Established clear ownership model: doc-admin provides services, domain experts own content
+
+### Documentation - Monday, July 28, 2025 at 10:45 AM
+- **Added Release Workflow Error Handling to program-manager Agent**
+  - Added new section "Release Workflow Error Handling" (section 12) after Proactive Actions
+  - Documented common release blockers to monitor:
+    - Failing tests or type checks
+    - Uncommitted changes on dev branch
+    - Unresolved "In Review" issues
+    - Missing documentation updates
+    - API usage approaching daily limit (100 calls)
+  - Created comprehensive error recovery procedures:
+    - Pre-Release Check Failures: Test failures, type check issues, uncommitted changes, outdated docs
+    - Mid-Release Failures: Build failures, deployment timeouts, health check failures, database migration issues
+    - Post-Release Issues: First 30-minute monitoring, Uptime Kuma alerts, rollback procedures
+  - Established Release Abort Protocol with 6-step process
+  - Ensures program-manager can effectively handle and coordinate error recovery during releases
+  - Addresses specific RSS Reader constraints (memory limits, PM2 service sizes)
+
+### Documentation - Monday, July 28, 2025 at 10:42 AM
+- **Enhanced program-manager Agent with Pre-Review & Bug Documentation Process**
+  - Added new section "Pre-Review & Bug Documentation" after Issue Lifecycle Management
+  - Established requirements before moving issues to "In Review" status:
+    - All implementation details must be documented in comments
+    - Code changes must be summarized with file paths
+    - Edge cases and limitations must be noted
+    - Implementation summary comment required before status change
+  - Defined "In Review" stage coordination requirements:
+    - Coordinate with qa-engineer for testing
+    - Notify relevant agents based on change type (devops, database, sync)
+    - Monitor for feedback and required changes
+  - Created Bug Resolution Documentation template for "Done" status:
+    - Root cause analysis
+    - Specific fix details
+    - Prevention strategies
+    - Test coverage added
+    - Related issue tracking
+  - Updated Daily Operations to include documentation completeness checks
+  - Ensures proper documentation at both review and completion stages
+  - Builds knowledge base of common bug patterns for future prevention
+
+### Documentation - Monday, July 28, 2025 at 10:30 AM
+- **Added Documentation Ownership to Domain Expert Agents**
+  - Updated supabase-dba with "Database Documentation Ownership" section
+  - Added ownership of database schema docs, performance guides, migration docs
+  - Updated sync-reliability-monitor with "Sync Pipeline Documentation Ownership" section
+  - Added ownership of sync architecture docs, error handling guides, recovery procedures
+  - Updated qa-engineer with "Test Documentation Ownership" section
+  - Added ownership of test strategy docs, test reports, coverage reports
+  - All agents now coordinate with doc-admin for file operations while owning content
+  - Completes the documentation ownership model across all domain experts
+  - Ensures clear separation between content expertise and file management
+
+### Documentation - Monday, July 28, 2025 at 10:28 AM
+- **Updated devops-expert Agent with Port Restrictions and Log File Paths**
+  - Added "Development Server Port Management" subsection under Service Management
+  - Documented CRITICAL requirement that dev server must ALWAYS run on port 3000
+  - Added instructions for checking port conflicts with lsof command
+  - Specified to only kill processes if NOT the RSS Reader dev server
+  - Emphasized never automatically changing to a different port
+  - Expanded "Key File Locations" with comprehensive PM2 log file paths
+  - Added all rotated log files: prod-error-*.log, prod-out-*.log, sync-server-*.log, dev-*.log
+  - Included other important logs: sync-cron.jsonl and inoreader-api-calls.jsonl
+  - Updated Troubleshooting section to reference specific log files instead of generic logs directory
+  - Ensures devops-expert knows exact port requirements and all available log file locations
+
+### Documentation - Monday, July 28, 2025 at 10:19 AM
+- **Enhanced devops-expert Agent with Documentation Ownership and Memory Management**
+  - Added new "Infrastructure Documentation Ownership" section defining ownership of infrastructure docs
+  - Listed specific documentation paths owned by devops-expert (deployment guides, monitoring docs, etc.)
+  - Clarified coordination model with doc-admin (content ownership vs file operations)
+  - Added critical "Critical Memory Management" section with server constraints
+  - Documented severe memory constraints: <100MB free RAM typical, 11GB+ compressed memory
+  - Added specific memory optimization requirements and monitoring commands
+  - Updated PM2 memory limits from 1GB to 800MB MAX per service
+  - Added Node.js heap size recommendation (--max-old-space-size=768)
+  - Updated Important Constraints to emphasize shared dev/prod environment and memory pressure
+  - Ensures devops-expert understands both documentation responsibilities and critical resource constraints
+
+### Documentation - Monday, July 28, 2025 at 10:05 AM
+- **Updated devops-expert Agent with Correct Uptime Kuma Status**
+  - Changed Uptime Kuma section from "Planned" to "Fully implemented (RR-19 completed)"
+  - Added comprehensive details about active implementation including 6 active monitors
+  - Documented Discord webhook notifications and monitoring intervals
+  - Listed all helper scripts for deployment and configuration
+  - Added details about Docker container deployment via Colima
+  - Included planned enhancement (RR-12) for automated PM2 recovery
+  - Updated Infrastructure Tasks section to reflect Uptime Kuma as fully implemented
+  - Ensures devops-expert has accurate current state of monitoring infrastructure
+
+### Documentation - Monday, July 28, 2025 at 10:02 AM
+- **Added Network & Access Context to supabase-dba Agent**
+  - Added new "Network & Access Context" section after initial paragraph
+  - Documented Tailscale VPN-only application access (100.96.166.53)
+  - Clarified database is Supabase cloud-hosted (publicly accessible with RLS)
+  - Noted app-to-database connection uses service role key
+  - Emphasized RLS policies restrict data to user 'shayon' only
+  - Added guidance for database debugging access methods
+  - Ensures DBA understands network architecture distinction between app and database hosting
+
+### Documentation - Monday, July 28, 2025 at 10:01 AM
+- **Enhanced devops-expert Agent with Infrastructure Documentation**
+  - Updated Project Context with comprehensive Tailscale network details
+  - Added explicit documentation about Tailscale VPN requirement and no public internet exposure
+  - Created new "Server Dependencies & Ownership" section documenting all server dependencies
+  - Added service ownership mapping between agents (devops-expert, supabase-dba, sync-reliability-monitor, doc-admin)
+  - Created "Uptime Kuma Monitoring (Planned)" section with detailed configuration
+  - Updated port allocation for Uptime Kuma from 3001 to 3080 (avoiding conflict)
+  - Added specific monitor targets for production app, database, and sync server health endpoints
+  - Updated Important Constraints to emphasize network security and single-user environment
+  - Ensures devops-expert has clear ownership of infrastructure monitoring and dependencies
+
+### Documentation - Monday, July 28, 2025 at 9:57 AM
+- **Fixed Git Hooks Context in git-expert Agent**
+  - Corrected incorrect reference to ".claude directory" for git hooks configuration
+  - Updated to accurately describe git hooks as being in .git/hooks/ or managed by tools like husky
+  - Clarified that git hooks are separate from Claude Code hooks
+  - Added note that project "may use" git hooks rather than assuming they are configured
+  - Added common examples of git hooks (pre-commit for linting/formatting, pre-push for tests)
+  - Ensures git-expert agent has accurate understanding of git hooks vs Claude Code configuration
+
+### Documentation - Monday, July 28, 2025 at 9:54 AM
+- **Added Git Hooks & Branch Protection Section to git-expert Agent**
+  - Created new section after "Permission Handling" covering git hooks and main branch protection
+  - Added "Git Hooks Context" explaining project's use of pre-commit hooks in .claude directory
+  - Added "Main Branch Protection" guidelines requiring merges from dev only with --no-ff flag
+  - Added "Hook Enforcement" procedures for handling hook failures and auto-formatting
+  - Added "Merge to Main Process" ensuring hooks pass and release readiness verification
+  - Ensures git-expert properly handles automated quality checks and production branch safety
+  - Reinforces that main branch represents production-ready code
+  - Prevents bypassing of quality checks without explicit user permission
+
+### Documentation - Monday, July 28, 2025 at 9:51 AM
+- **Enhanced doc-admin Agent with API Documentation Management**
+  - Added API documentation ownership to core responsibilities
+  - Created new "Documentation Types" section listing all documentation categories
+  - Added comprehensive "API Documentation Management" section with three subsections:
+    - API Documentation Ownership: Defines ownership of docs/api/ directory and responsibilities
+    - API Documentation Process: Details workflows for new endpoints and changes
+    - API Documentation Standards: Establishes formatting and content requirements
+  - Ensures API documentation stays current with code changes
+  - Integrates API documentation updates into git commit monitoring workflow
+  - Coordinates with git-expert for tracking API changes
+  - Maintains consistency with docs/api/server-endpoints.md as primary API reference
+
+### Internal Tooling - Monday, July 28, 2025 at 9:45 AM
+- **Rewrote health-check Command as User Directive**
+  - Transformed health-check.md from Claude's perspective to user's imperative instructions
+  - Changed "I'll perform" language to "Perform" and other commanding directives
+  - Restructured sections with imperative titles: "What to Check", "Required Checks", "How to Report"
+  - Used active voice commands: "Test", "Verify", "Monitor", "Work with", "Collaborate"
+  - Aligned tone with other command files that give instructions TO agents
+  - Maintains all original functionality while making it clear these are user's orders to execute
+  - Better consistency across all command documentation in the .claude/commands directory
+
+### Internal Tooling - Monday, July 28, 2025 at 9:43 AM
+- **Created health-check Slash Command**
+  - Added comprehensive health check command at `.claude/commands/health-check.md`
+  - Supports component-specific checks: api, db, sync, services, or all
+  - Checks PM2 service status, API endpoints, database health, sync pipeline
+  - Includes network connectivity, system resources, and error log analysis
+  - Provides color-coded health report (🟢 Healthy, 🟡 Warning, 🔴 Critical)
+  - Integrates with specialized agents for deep diagnostics
+  - Enables proactive monitoring and quick troubleshooting of RSS News Reader system
+
+### Internal Tooling - Monday, July 28, 2025 at 9:40 AM
+- **Compacted program-manager Agent Documentation by 40%**
+  - Consolidated redundant sections while preserving all functionality
+  - Merged ADHD-friendly features into relevant operational sections
+  - Converted verbose paragraphs to concise bullet points
+  - Combined overlapping concepts (e.g., issue creation, epic management)
+  - Removed repetitive examples that illustrated the same concepts
+  - Streamlined communication protocols and daily operations
+  - File reduced from 410 lines to 246 lines while maintaining all capabilities
+  - Key preserved functionality: spec change protocol, epic/project management, Linear operations, agent integration
+  - Documentation is now more scannable and action-oriented for quick reference
+
+### Internal Tooling - Monday, July 28, 2025 at 9:34 AM
+- **Enhanced program-manager Agent with Specification Change Protocol**
+  - Added new section "Specification Change Protocol" documenting that Linear comments form the evolving spec
+  - Added core responsibilities for monitoring spec changes and maintaining version awareness
+  - Created decision tree for handling mid-flight specification changes (clarification vs minor vs major)
+  - Added operational guidelines for retrieving complete specs including all comments chronologically
+  - Enhanced daily operations to check for new comments on active issues that might change specifications
+  - Added communication protocol for notifying implementers and qa-engineer when specs change
+  - This ensures specifications can evolve naturally through Linear comments while maintaining control and coordination
+  - All team members now understand that issue comments are contractual and must be considered in implementation
+
+### Internal Tooling - Monday, July 28, 2025 at 9:27 AM
+- **Updated next-task Command to Remove TODO File Reference**
+  - Changed "Suggest creating new issues from TODOs" to "Suggest creating new issues from identified gaps or requirements"
+  - This aligns with Linear being the single source of truth for task management
+  - No longer references TODO files which have been migrated to Linear issue tracking
+  - Command now properly directs task creation through Linear rather than file-based tracking
+
+### Internal Tooling - Monday, July 28, 2025 at 9:26 AM
+- **Updated get-project-context Command to Remove TODO File References**
+  - Removed references to "docs/shipped-todos.md" and "docs/TODOs.md" from the list of documentation files
+  - The command now only references actual project documentation files, not TODO tracking files
+  - Task tracking is now handled through Linear by the program-manager agent
+  - This completes the migration away from file-based TODO tracking across all commands and agents
+
+### Internal Tooling - Monday, July 28, 2025 at 9:25 AM
+- **Updated investigate-server-crashes Command to Remove TODO File Reference**
+  - Removed reference to "docs/shipped-todos.md" from the list of documentation files to check
+  - The command now only references actual technical documentation files for investigation
+  - This aligns with the migration away from file-based TODO tracking to Linear-based project management
+  - Command now focuses purely on technical documentation: CHANGELOG.md, README.md, health-check-system.md, implementation-strategy.md, known-issues.md, caddy-pm2-setup.md, tailscale-monitoring.md, and server-endpoints.md
+
+### Internal Tooling - Monday, July 28, 2025 at 9:23 AM
+- **Updated release-manager Agent to Remove TODO File References**
+  - Removed reference to "Verify TODOs are properly moved to shipped-todos.md" from documentation coordination section
+  - Removed TodoWrite tool from the agent's tool list
+  - Task tracking is now exclusively handled by the program-manager agent through Linear
+  - Release manager now focuses purely on technical release processes without TODO file management
+  - This completes the migration away from file-based TODO tracking to Linear-based project management
+
+### Internal Tooling - Monday, July 28, 2025 at 9:22 AM
+- **Updated doc-admin Agent to Remove TODO File References**
+  - Removed all references to TODO.md, TODOs.md, and shipped-todos.md from the agent description and responsibilities
+  - Updated to reflect that task tracking is now handled by the program-manager agent through Linear issue tracking
+  - Changed "TODOs Management" section to "Task Coordination" focusing on collaboration with program-manager
+  - Updated operational guidelines to remove TODO file organization, replacing with coordination with program-manager
+  - This change aligns doc-admin with the new task management workflow where Linear is the single source of truth
+  - Documentation now focuses exclusively on CHANGELOG.md, README.md, and technical documentation files
+
+### Internal Tooling - Monday, July 28, 2025 at 9:20 AM
+- **Cleaned Up Remaining Agent Tool Access**
+  - **git-expert.md**: Removed NotebookRead, NotebookEdit (not needed for git operations), and ExitPlanMode (not needed)
+  - **doc-admin.md**: Removed ExitPlanMode (not needed for documentation operations); kept NotebookRead/Edit as they might be useful for .ipynb documentation files
+  - **sync-reliability-monitor.md**: Removed ExitPlanMode and NotebookRead (not needed for sync monitoring operations)
+  - These final cleanups ensure each agent has only the tools necessary for their specific responsibilities
+  - Completes the agent tool optimization started earlier today
+
+### Internal Tooling - Monday, July 28, 2025 at 9:18 AM
+- **Cleaned Up ux-engineer Agent Tool Access**
+  - Removed all mcp__playwright__* tools (30+ automated testing tools not needed for UX design)
+  - Removed all mcp__server-filesystem__* tools (redundant with built-in Read tool)
+  - Removed ExitPlanMode (not needed for UX operations)
+  - Removed NotebookRead (not applicable to this project)
+  - Kept only essential UX tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch
+  - Retained MCP resource tools: ListMcpResourcesTool, ReadMcpResourceTool
+  - Retained research tools: mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search
+  - This change focuses the agent on design and implementation guidance rather than automated testing
+  - UX engineer should coordinate with QA engineer for testing needs
+
+### Internal Tooling - Monday, July 28, 2025 at 9:17 AM
+- **Cleaned Up qa-engineer Agent Tool Access**
+  - Removed all mcp__playwright__* tools (30+ Playwright MCP tools) - agent already prefers direct Playwright npm package
+  - Removed all mcp__server-filesystem__* tools (redundant with built-in Read tool)
+  - Removed ExitPlanMode (not needed for QA operations)
+  - Removed NotebookRead (not applicable to this project)
+  - Kept only essential QA tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch
+  - Retained MCP resource tools: ListMcpResourcesTool, ReadMcpResourceTool
+  - Retained research tools: mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search
+  - This change aligns with the agent's documented preference for using direct Playwright over MCP tools
+
+### Internal Tooling - Monday, July 28, 2025 at 9:16 AM
+- **Cleaned Up devops-expert Agent Tool Access**
+  - Removed all mcp__playwright__* tools (32+ UI testing tools not needed for DevOps operations)
+  - Removed all mcp__server-filesystem__* tools (redundant with built-in Read/Write tools)
+  - Kept only essential DevOps tools: Task, Bash, Glob, Grep, LS, Read, Edit, MultiEdit, Write, TodoWrite, WebFetch
+  - Retained research tools: mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search
+  - This focused tool set aligns with the agent's responsibilities for deployments, infrastructure, and monitoring
+  - Reduces tool loading overhead and prevents misuse of inappropriate tools for DevOps tasks
+
+### Internal Tooling - Monday, July 28, 2025 at 9:08 AM
+- **Enhanced /execute Command with Linear Validation Requirements**
+  - Added new Step 0: Linear Validation as the first step:
+    - Checks if Linear issue ID is provided as argument
+    - Identifies minor fixes (docs, formatting, configs) that don't require Linear backing
+    - Stops execution for non-minor work without Linear ID and asks for it
+    - Coordinates with program-manager to verify issue exists, is assigned, and in "In Progress" status
+    - Stores full Linear specification (description + comments) for QA reference
+  - Updated Step 1 (Write Tests FIRST) to:
+    - Pass Linear specification to qa-engineer
+    - Ensure tests are written against Linear spec only
+  - Added comprehensive "What Constitutes Minor Work" section listing:
+    - Documentation updates
+    - Configuration changes
+    - Formatting/linting fixes
+    - Dependency updates
+    - Emergency hotfixes (create issue after)
+  - Updated command description to mention Linear issue ID acceptance and minor work exemption
+  - Changed argument hint to: `[linear-issue-id] [additional-context]`
+  - This ensures Linear serves as the contract for all significant work and enforces proper tracking
+
+### Internal Tooling - Monday, July 28, 2025 at 9:02 AM
+- **Enhanced program-manager Agent with Linear Projects as Epics Functionality**
+  - Added comprehensive Epic & Project Management section as new section 1:
+    - Linear projects now serve as epics for organizing larger features across multiple issues/releases
+    - Clear guidelines for when to create projects vs individual issues
+    - Project creation workflow and naming conventions
+    - Project association workflow for grouping related work
+  - Updated Core Responsibilities to include project/epic creation and management:
+    - Project milestone tracking capabilities
+    - Cross-project dependency management
+    - Epic delivery timeline monitoring
+  - Enhanced issue creation process:
+    - Added project association evaluation during issue creation
+    - Epic potential analysis for new issues
+    - Project-aware duplicate checking
+  - Updated task breakdown to consider project/epic implications:
+    - Automatic project creation for 3+ related issues
+    - Project-wide issue association management
+  - Enhanced daily and weekly operations:
+    - Project progress monitoring and milestone tracking
+    - Project-aware priority queue management
+    - Epic completion percentage calculations
+  - Added Linear MCP commands: create_project, update_project, get_project
+  - Updated all operational guidelines to consider project/epic context
+  - This enhancement provides better organization for multi-issue initiatives and improves project tracking capabilities
+
+### Internal Tooling - Monday, July 28, 2025 at 8:58 AM
+- **Streamlined release-manager Agent to Focus on Technical Release Process**
+  - Removed milestone management responsibilities (sections 2.5 and 5.5) and transferred them to program-manager
+  - Updated core responsibilities to focus on:
+    - Release preparation and version management
+    - Documentation coordination (technical aspects only)
+    - Git workflow execution
+    - Deployment readiness
+  - Added clear scope note: "This agent handles the technical release process only. All Linear project management, milestone coordination, issue tracking, and project planning are handled by the program-manager agent."
+  - Simplified Linear coordination to basic release notes requests from program-manager
+  - Removed Linear-specific operations like milestone creation, issue status management, and project tracking
+  - This separation of concerns improves agent focus and reduces overlap between release-manager and program-manager
+
+### Internal Tooling - Monday, July 28, 2025 at 8:32 AM
+- **Updated release-manager Agent to Integrate with program-manager for Linear Issue Coordination**
+  - Added new section "2.5 Linear Issue Coordination" to coordinate with program-manager before version bumps:
+    - Get all completed issues since last release
+    - Categorize changes for proper semantic versioning (Features → Minor, Fixes → Patch, Breaking → Major)
+    - Ensure all completed issues are in "Done" status
+    - Prepare release notes from Linear issue titles
+  - Updated "Documentation Coordination" section to include Linear-based release notes:
+    - Request completed issues list with titles and IDs from program-manager
+    - Group by type (Features, Fixes, etc.)
+    - Include any breaking changes or migration notes
+  - Added new section "5.5 Linear Release Tracking" for post-release activities:
+    - Add release version to all completed issues in Linear
+    - Create release milestones if needed
+    - Move incomplete issues to next release
+    - Generate release summary for Linear
+    - Ensure full traceability: Release → Linear issues → Commits
+  - This integration ensures releases are fully coordinated with Linear issue tracking system
+
+### Internal Tooling - Monday, July 28, 2025 at 8:26 AM
+- **Updated qa-engineer Agent to Prefer Direct Playwright Testing Over MCP**
+  - Added new section "Testing Tool Preference: Direct Playwright" after Test Writing Responsibilities
+  - Established direct Playwright npm package as primary testing approach:
+    - Tests written in `src/__tests__/e2e/` directory
+    - Run headless by default to avoid screenshot overflow issues
+    - Use data-testid attributes for reliable element selection
+    - Integrate with existing Vitest infrastructure
+  - Provided example test structure for writing Playwright tests
+  - Clarified when to use Playwright MCP (only for visual debugging, not automated suites)
+  - Added "Test Execution Commands" section with:
+    - Preferred commands for direct Playwright testing
+    - Legacy commands for existing unit tests
+  - Benefits include: no screenshot context overflow, faster execution, better error messages, CI/CD compatibility
+
+### Internal Tooling - Monday, July 28, 2025 at 8:17 AM
+- **Clarified QA Engineer Linear Access Protocol**
+  - Updated Pre-Testing section to explicitly state QA must ask program-manager to provide:
+    - Full issue description and all comments chronologically
+    - Current status, assignee, acceptance criteria, linked issues
+  - Added "Important" note: QA has no direct Linear access
+  - Updated During Testing section to clarify:
+    - Request PM to create new Linear issues for significant bugs
+    - Ask PM to update test progress in Linear comments
+    - Route all clarifications through PM who checks Linear
+  - Ensures single source of truth principle with program-manager as Linear interface
+
+### Internal Tooling - Monday, July 28, 2025 at 8:13 AM
+- **Updated qa-engineer Testing Scope to Include Comments and Regression Testing**
+  - Clarified that Linear comments are part of the testing contract
+  - Expanded "What to Test" to include:
+    - Feature scope from Linear issue description
+    - Clarifications from Linear comments
+    - Regression testing for existing functionality
+    - Basic sanity checks (login, navigation, core features)
+    - Security basics (no exposed secrets, error handling)
+    - Unit test verification
+  - Added testing hierarchy: Primary (Linear specs), Secondary (related), Always (core health)
+  - Reinforced that issue + comments = complete specification
+  - Maintains principle of not testing verbal requests or scope creep
+
+### Internal Tooling - Monday, July 28, 2025 at 8:10 AM
+- **Integrated qa-engineer Agent with program-manager and Linear-as-Contract Testing**
+  - Added "Core Testing Principle: Linear as Contract" section establishing:
+    - Linear issue is the single source of truth for testing
+    - Test ONLY what's documented in the Linear issue description
+    - Ignore verbal changes or "quick additions" during testing
+    - Any scope creep requires new issue, not expanded testing
+    - Comments can clarify but cannot expand scope
+  - Added "Program Manager Integration" section defining:
+    - Pre-testing: Request Linear ID, fetch issue details, extract acceptance criteria
+    - During testing: Report bugs to PM for new Linear issues
+    - Post-testing: Summary to Linear with pass/fail per specs
+  - Updated RSS Reader test checklist with note that it's a reference list
+  - Only test items relevant to the Linear issue scope should be tested
+  - Enforces "test the contract, not the conversation" principle
+
+### Internal Tooling - Monday, July 28, 2025 at 8:07 AM
+- **Made Linear Issue Requirements More Pragmatic in git-expert Agent**
+  - Replaced rigid "all commits need Linear issues" with contextual requirements
+  - Linear references now REQUIRED for:
+    - New features, user-facing bug fixes, behavior-changing refactors
+    - Database schema changes, API changes, sync logic changes
+  - Linear references now OPTIONAL for:
+    - Documentation updates, environment variables, configuration files
+    - Dependency updates, formatting/linting, emergency hotfixes
+  - Updated process to use good judgment rather than bureaucracy
+  - Changed final reminder from "No exceptions" to focus on accountability for significant work
+  - Maintains traceability where it matters without hindering quick fixes
+
+### Internal Tooling - Monday, July 28, 2025 at 8:03 AM
+- **Integrated git-expert Agent with program-manager Agent**
+  - Added new section 1.5 "Linear Issue Detection & PM Integration" requiring:
+    - All commits must reference Linear issues (RR-XXX pattern)
+    - Automatic notification to program-manager for status updates
+    - Refusal to commit without valid Linear issue reference
+  - Enhanced commit workflow to verify Linear references and notify PM
+  - Added "Program Manager Coordination" section establishing:
+    - Pre-commit verification of Linear issue in "In Progress" status
+    - Post-commit updates to Linear via program-manager
+    - Push details added to Linear issues
+    - Release coordination for bulk issue updates
+  - Enforces Linear-first workflow with no exceptions
+  - Ensures full traceability between code changes and project management
+
+### Internal Tooling - Monday, July 28, 2025 at 7:59 AM
+- **Added Pragmatic Analysis Approach to analyze.md Command**
+  - Inserted new section 3.5 "Pragmatic Analysis Approach" after Technical Analysis
+  - Emphasizes peer discussion mindset rather than order-taking:
+    - Challenge assumptions and question if ideas solve the stated problem
+    - Consider alternatives and suggest improvements
+    - Identify risks and be direct about potential issues
+    - Evaluate effort vs value trade-offs
+  - Positions AI as technical advisor, not yes-person
+  - Encourages rejection of bad ideas with clear reasoning
+  - Focuses on user impact as ultimate measure
+  - Added Linear contract note to Final Summary section:
+    - Once documented in Linear, it becomes the implementation contract
+    - No implementation without Linear backing
+    - No spec changes without updating Linear first
+  - Establishes collaborative tone for more effective analysis discussions
+
+### Internal Tooling - Monday, July 28, 2025 at 7:53 AM
+- **Enhanced analyze.md Command Documentation Sources**
+  - Updated Technical Analysis section to include comprehensive documentation gathering
+  - Added four documentation categories for thorough context:
+    - **Core Documentation**: README, CHANGELOG, technical architecture
+    - **Product & Feature Context**: Requirements, specifications, UI/UX guidelines
+    - **Operational Context**: Deployment, API, monitoring, known issues
+    - **Pattern Analysis**: Similar features, coding patterns, performance, security
+  - Ensures analysis considers all relevant documentation sources
+  - Makes recommendations more informed and context-aware
+  - Focuses on sections most relevant to the specific issue or idea being analyzed
+
+### Internal Tooling - Monday, July 28, 2025 at 7:50 AM
+- **Enhanced analyze.md Command to Support Both Linear Issues and Idea Exploration**
+  - Extended command to accept either Linear issue IDs or free-form idea descriptions
+  - Updated frontmatter description and argument hint to reflect dual functionality
+  - Replaced single input validation with intelligent input parsing:
+    - Detects "RR-" prefix for Linear issue analysis workflow
+    - Treats any other text as idea exploration request
+    - Provides clear error for empty arguments
+  - Split workflow into two paths after input parsing:
+    - **Linear Issue Analysis (2A)**: Full existing workflow with status updates
+    - **Idea Exploration (2B)**: New read-only analysis for untracked ideas
+  - Added "Idea Evaluation" section for non-issue analysis:
+    - Prompts user to create Linear issue if idea looks promising
+    - Invokes program-manager to create issue with analysis findings
+    - Returns new issue ID for tracking
+  - Maintains read-only constraint for idea exploration until user approval
+  - Renamed and renumbered final Linear update section to clarify it's issue-specific
+  - Enables flexible brainstorming and analysis without forcing Linear issue creation
+
+### Internal Tooling - Monday, July 28, 2025 at 7:48 AM
+- **Rewrote execute.md Claude Slash Command with Test-First Workflow**
+  - Complete rewrite to integrate program-manager agent throughout execution process
+  - Enforces test-first development methodology:
+    - Tests must be written BEFORE implementation (red phase)
+    - Implementation follows to make tests pass (green phase)
+    - Refactoring while keeping tests green
+  - Added pre-implementation setup with program-manager verification
+  - Structured specialist review process based on implementation type:
+    - Database changes reviewed by supabase-dba
+    - Sync changes reviewed by sync-reliability-monitor
+    - UI changes reviewed by ux-engineer
+    - All code reviewed by qa-engineer
+  - Iterative review/fix cycle until all agents approve
+  - Final verification includes full test suite, type checking, and linting
+  - Updates Linear issue status to "In Review" with comprehensive summary
+  - Explicit wait for user approval before any commits or next steps
+  - Emphasizes quality through continuous testing and multi-agent review
+
+### Internal Tooling - Monday, July 28, 2025 at 7:46 AM
+- **Updated Program Manager Agent to Emphasize Issue Comment Analysis**
+  - Added new subsection "When Analyzing Issues" in Communication Style section
+  - Requires reading ALL comments on Linear issues before analysis
+  - Comments often contain critical information missed in issue descriptions:
+    - Additional context from user reports
+    - Clarifications from previous implementation attempts
+    - Technical discoveries or blockers encountered
+    - Updated requirements or scope changes
+    - Links to related issues or documentation
+  - Agent must now include relevant comment insights in analysis
+  - Should reference important comments by timestamp/author
+  - Prevents missing crucial information that evolves during issue lifecycle
+
+### Internal Tooling - Monday, July 28, 2025 at 7:44 AM
+- **Created analyze.md Claude Slash Command**
+  - New command to analyze Linear issues and create detailed implementation plans
+  - Requires Linear issue ID as argument (e.g., /analyze RR-123)
+  - Integrates with program-manager agent to fetch full issue context and relationships
+  - Performs technical analysis by coordinating with doc-admin agent for project context
+  - Provides type-specific planning for bugs, features, and enhancements
+  - Identifies dependencies and flags relevant specialist agents for review
+  - Works with qa-engineer to draft comprehensive test strategies
+  - Presents findings in PM-friendly format with clear steps, considerations, and estimates
+  - Automatically updates Linear issue status to "In Progress" and adds implementation plan
+  - Designed for thorough pre-implementation analysis without starting actual coding
+
+### Internal Tooling - Monday, July 28, 2025 at 7:39 AM
+- **Enhanced next-task.md Command with Filter Support**
+  - Added argument-hint in frontmatter to support optional filter parameter
+  - New filter options: 'quick'/'quick-win' for quick wins, 'impact'/'impactful' for high-impact tasks, 'bug'/'bugs' for bug fixes, 'feature' for features
+  - Added comprehensive Decision Framework section with:
+    - Quick Win criteria checklist (time ≤ 1 hour, no dependencies, clear path, low risk, immediate testing)
+    - High Impact scoring system (1-5 scale across 5 dimensions, 15+ = high impact)
+    - Time-of-Day matching recommendations for optimal task selection based on energy levels
+  - Updated recommendation format to respect filters and show filtered task lists
+  - Enables mood/energy-based task selection for better productivity alignment
+
+### Internal Tooling - Monday, July 28, 2025 at 7:35 AM
+- **Created next-task.md Claude Slash Command**
+  - New command to get intelligent task recommendations based on context and priorities
+  - Integrates with program-manager agent to analyze Linear project state
+  - Considers current "In Progress" items (enforces 3-item maximum limit)
+  - Factors in time of day, day of week, recent activity, and API limits
+  - Categorizes tasks into Quick Wins, Bug Fixes, Features, Tech Debt, and Documentation
+  - Presents top 3 recommendations with clear rationale, time estimates, and impact
+  - Handles special cases like no available tasks or blocked items
+  - Designed for ADHD patterns - balances variety with focus limits
+  - Automates status updates and adds timestamps when tasks are selected
+
+### Internal Tooling - Monday, July 28, 2025 at 7:31 AM
+- **Enhanced capture-idea.md Command with Early Exit Capability**
+  - Added ability to quit the interactive interview at any question by typing 'done', 'skip', or 'quit'
+  - Program manager agent now makes intelligent assumptions for missing data when interview is exited early
+  - Improves user experience by allowing quick capture without completing all questions
+  - Particularly helpful for quick bug reports or when capturing ideas on the go
+  - Maintains all existing functionality while adding flexibility to the workflow
+
+### Internal Tooling - Monday, July 28, 2025 at 7:24 AM
+- **Created capture-idea.md Claude Slash Command**
+  - New command to quickly capture bugs, features, ideas, and enhancements
+  - Implements guided interactive interview process with type-specific questions
+  - Includes automatic duplicate checking against existing Linear issues
+  - Integrates with program-manager agent for proper Linear issue creation
+  - Follows established project conventions for issue titles and labels
+  - Designed for ADHD-friendly workflow with one question at a time
+  - Supports both quick capture (with arguments) and detailed interview modes
+  - Ensures all captured ideas are properly tracked in Linear with appropriate context
+
+### Documentation - Monday, July 28, 2025 at 7:22 AM
+- **Updated Program Manager Agent with Linear Issue Format Patterns**
+  - Enhanced issue creation requirements in Section 1 with specific field formatting
+  - Added title format rules: Start with action verbs (Fix, Implement, Deploy, Create, Enable)
+  - Specified 4-8 word titles without prefixes like "feat:" or "fix:"
+  - Introduced standardized description template with Overview, Issue, Expected Outcome, and Technical Considerations sections
+  - Defined primary and secondary label categories based on actual Linear usage patterns
+  - Added post-implementation documentation template with Completed date, Implementation details, and Results checklist
+  - Based on analysis of Shayon's actual Linear issue patterns for consistency
+  - Ensures all future Linear issues follow established project conventions
+
+### Documentation - Monday, July 28, 2025 at 7:19 AM
+- **Updated Program Manager Agent for Multi-Issue Workflow**
+  - Added development URL (http://100.96.166.53:3000/reader) to Project Context section
+  - Changed workflow rules from "Only ONE issue" to "Maximum 3 issues" in progress simultaneously
+  - Introduced concept of primary issue (main focus) vs secondary issues (quick wins when blocked)
+  - Updated Daily Operations to reflect monitoring up to 3 active issues
+  - Modified Proactive Actions to track multiple in-progress items and suggest issue switching
+  - Aligns with real developer workflow where quick wins can be tackled when blocked on main task
+  - Improves project velocity by utilizing wait times productively
+
+### Internal Tooling - Monday, July 28, 2025 at 6:01 AM
+- **Enhanced QA Engineer Agent with RSS Reader-Specific Testing Methodology**
+  - Replaced generic QA instructions with comprehensive RSS News Reader testing framework
+  - Added prioritized critical test paths focusing on sync pipeline reliability
+  - Introduced quick smoke tests for PM2 services, API health, and recent syncs
+  - Documented test writing responsibilities with proper organization structure
+  - Specified RSS Reader-specific test scenarios including:
+    - Inoreader API integration (token refresh, rate limiting, subscription sync)
+    - Supabase operations (RLS policies, materialized views, transactions)
+    - PWA functionality (service worker, offline mode, iOS behaviors)
+    - Performance benchmarks (render times, sync duration, memory usage)
+  - Added known issues checklist for regression testing
+  - Updated test report format with deployment readiness indicators
+  - Emphasized critical path testing: "Can users read articles and will their read status sync?"
+  - Ensures comprehensive quality assurance aligned with RSS Reader architecture
+
+### Internal Tooling - Monday, July 28, 2025 at 5:55 AM
+- **Optimized Git Expert Agent Workflow**
+  - Updated git-expert.md with smarter pre-commit analysis that categorizes commits
+  - Implemented intelligent documentation requirements based on commit type:
+    - Features/Breaking Changes: MUST update CHANGELOG
+    - Bug Fixes: SHOULD update CHANGELOG if user-facing
+    - Minor/Chore/Docs: Skip CHANGELOG unless significant
+  - Added comprehensive conventional commit format documentation
+  - Introduced permission-aware push operations (e.g., "c&p" = commit & push immediately)
+  - Enhanced smart staging patterns for related files and dependency warnings
+  - Updated coordination protocol to invoke doc-admin ONLY when needed
+  - Reduces unnecessary documentation updates for minor changes
+  - Improves developer workflow efficiency while maintaining quality standards
 
 ### Documentation - Monday, July 28, 2025 at 5:36 AM
 - **Added Code Quality Enforcer Hook Documentation**

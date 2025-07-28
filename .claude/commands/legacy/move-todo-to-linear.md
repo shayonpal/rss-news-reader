@@ -1,6 +1,4 @@
----
-name: Move tasks from codebase to Linear as Issues
----
+# Move tasks from codebase to Linear as Issues
 
 I am looking to move my task tracker from docs/TODOs.md & docs/shipped-todos.md to Linear.
 
@@ -20,7 +18,7 @@ Search for the TODO mentioned below in either docs/TODOs.md (if it's incomplete)
 
 Next:
 
-- Query the MCP server and look for existing issues (any status) and confirm the task has not been added to Linear already. Move on to the next step only when you've confirmed it's not added yet. Else, just mark it as moved to Linear using the format below and  respond with the Linear issue that, you think, duplicates this task.
+- Query the MCP server and look for existing issues (any status) and confirm the task has not been added to Linear already. Move on to the next step only when you've confirmed it's not added yet. Else, just mark it as moved to Linear using the format below and respond with the Linear issue that, you think, duplicates this task.
 - Query the MCP server for issue labels set up for the organisation. Out of those, choose appropriate labels for this issue.
 - Copy the task (mentioned below) as an issue to the Linear app using the Linear MCP server.
 - In the todo doc, mark it as moved to Linear using this format - "- **Linear Issue**: [RR-6](https://linear.app/agilecode-studio/issue/RR-6/fix-favicon-not-loading-on-ipad-in-production)"
