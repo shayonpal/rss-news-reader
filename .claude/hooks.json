@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "name": "Smart File Protection & Agent Router",
+        "description": "Routes operations to specialized agents and protects critical files",
+        "matcher": "Edit|Write|MultiEdit|Bash|mcp__supabase__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/shayon/DevProjects/rss-news-reader/.claude/hooks/file-protection-router.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
