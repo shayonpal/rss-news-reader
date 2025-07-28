@@ -1,6 +1,6 @@
 # Master TODO List - RSS News Reader
 
-**Last Updated:** Saturday, July 26, 2025 at 9:06 PM
+**Last Updated:** Sunday, July 27, 2025 at 5:29 AM
 
 ## 🎉 PRODUCTION DEPLOYMENT COMPLETE
 
@@ -15,6 +15,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-014c: Tag Filtering (P3 - Post-Production)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-8](https://linear.app/agilecode-studio/issue/RR-8/tag-filtering)
 - **Current**: No tag filtering capability
 - **Missing**:
   - [ ] Tags tab in sidebar
@@ -37,6 +38,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-016: Sync Status Display (P1 - UX)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-5](https://linear.app/agilecode-studio/issue/RR-5/sync-status-display)
 - **Current**: Basic progress display exists
 - **Note**: As of July 22, 2025 5pm check, some sync status info is already displayed in the sidebar:
   - ✅ Last sync timestamp shown below feed list (but spec wants it "in settings")
@@ -53,6 +55,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-019: Feed Search Functionality
 
 - **GitHub Issue**: #32
+- **Linear Issue**: [RR-20](https://linear.app/agilecode-studio/issue/RR-20/feed-search-functionality)
 - **Status**: 🔵 Future
 - **Acceptance Criteria**:
   - [ ] Search input at top of feed sidebar
@@ -62,6 +65,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-021: Performance Optimization (P2 - Quality)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-21](https://linear.app/agilecode-studio/issue/RR-21/performance-optimization)
 - **Acceptance Criteria**:
   - [ ] Initial load < 2 seconds
   - [ ] Article list renders < 1 second
@@ -73,6 +77,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-022: PWA Polish (P3 - Quality)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-23](https://linear.app/agilecode-studio/issue/RR-23/pwa-polish)
 - **Acceptance Criteria**:
   - [ ] Install prompt at right time
   - [ ] App icons for all platforms
@@ -84,6 +89,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-024: Multi-Provider LLM Support (P2 - Flexibility)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-24](https://linear.app/agilecode-studio/issue/RR-24/multi-provider-llm-support)
 - **Acceptance Criteria**:
   - [ ] Support Anthropic (Claude models)
   - [ ] Support OpenAI (GPT models)
@@ -106,6 +112,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-025: Incremental Sync Evaluation (P4 - Future Optimization)
 
 - **Status**: 🔵 Future Consideration
+- **Linear Issue**: [RR-34](https://linear.app/agilecode-studio/issue/RR-34/incremental-sync-evaluation)
 - **Context**: Evaluate if date parameters would improve sync efficiency
 - **Acceptance Criteria**:
   - [ ] Monitor current sync performance patterns
@@ -116,6 +123,7 @@ The RSS News Reader is now successfully deployed to production:
 ### TODO-031: Document Internal APIs (P2 - Documentation)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-9](https://linear.app/agilecode-studio/issue/RR-9/document-internal-apis)
 - **Issue**: Internal API endpoints need better documentation
 - **Current State**: Basic documentation exists in `docs/api/server-endpoints.md` but needs enhancement
 - **Expected Result**: Complete API reference in `docs/api/server-endpoints.md`
@@ -167,14 +175,17 @@ This is the main task for all server stability improvements. The investigation f
 **Implementation Priority:** The sub-tasks below are ordered by implementation priority and impact:
 
 **Immediate Impact (Week 1):**
+
 - TODO-039e: PM2 Configuration Improvements - Should immediately reduce restarts from 18-20 to <5
 - TODO-039c: Uptime Kuma Webhook Handler for PM2 Auto-Recovery - Provides automated recovery safety net
 
 **Production Quality (Week 2):**
+
 - TODO-039g: Error Handling & Monitoring - Improves error handling and user experience
 - TODO-039h: Database Monitoring - Adds database performance monitoring
 
 **Long-term Stability (Week 3):**
+
 - TODO-039f: Deployment Safety Mechanisms - Safe deployment process
 - TODO-039j: Log Management and Rotation - Log management and cleanup
 
@@ -210,6 +221,7 @@ This is the main task for all server stability improvements. The investigation f
 ##### TODO-039c: Uptime Kuma Webhook Handler for PM2 Auto-Recovery (P1 - Infrastructure)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-12](https://linear.app/agilecode-studio/issue/RR-12/uptime-kuma-webhook-handler-for-pm2-auto-recovery)
 - **Parent**: TODO-039 (Server Health Monitoring)
 - **Depends On**: TODO-039a (Health endpoints must exist first)
 - **Issue**: Webhook for critical failures only - when monitor-services.sh fails
@@ -243,6 +255,7 @@ This is the main task for all server stability improvements. The investigation f
 - **Status**: 🔴 TODO
 - **Issue**: Poor error visibility and handling (formerly TODO-017)
 - **Context**: Consolidated from TODO-017 into comprehensive monitoring
+- **Linear Issue**: [RR-17](https://linear.app/agilecode-studio/issue/RR-17/error-handling-and-monitoring)
 - **Acceptance Criteria**:
   - [ ] Server API errors display clearly in UI
   - [ ] Tailscale connection errors handled gracefully
@@ -257,6 +270,7 @@ This is the main task for all server stability improvements. The investigation f
 - **Status**: 🔴 TODO
 - **Issue**: No database performance monitoring (formerly TODO-018)
 - **Context**: Consolidated from TODO-018 into comprehensive monitoring
+- **Linear Issue**: [RR-18](https://linear.app/agilecode-studio/issue/RR-18/database-monitoring)
 - **Acceptance Criteria**:
   - [ ] Set up automated Supabase advisor reports
   - [ ] Create alerts for slow queries (>100ms)
@@ -271,6 +285,7 @@ This is the main task for all server stability improvements. The investigation f
 - **Status**: 🔴 TODO
 - **Issue**: No safe deployment process, causing production outages
 - **Context**: Need blue-green deployment and rollback capabilities
+- **Linear Issue**: [RR-16](https://linear.app/agilecode-studio/issue/RR-16/deployment-safety-mechanisms)
 - **Acceptance Criteria**:
   - [ ] Implement blue-green deployment strategy
   - [ ] Build new version in separate directory
@@ -284,6 +299,7 @@ This is the main task for all server stability improvements. The investigation f
 ##### TODO-039j: Log Management and Rotation (P2 - Infrastructure)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-36](https://linear.app/agilecode-studio/issue/RR-36/log-management-and-rotation)
 - **Issue**: Logs growing unbounded, causing disk space issues
 - **Context**: Investigation found stale monitoring data and unbounded log growth
 - **Acceptance Criteria**:
@@ -301,7 +317,7 @@ This is the main task for all server stability improvements. The investigation f
 - **Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables
 - **Context**: PM2 runtime injection doesn't work for Next.js client builds
 - **Implementation Details**:
-  - Critical fix - ensures client-side code receives NEXT_PUBLIC_* variables at build time
+  - Critical fix - ensures client-side code receives NEXT*PUBLIC*\* variables at build time
   - Create centralized environment validation system
   - Keep single .env file with clear sections (not separate files)
   - All variables are critical - any missing variable should fail the build
@@ -312,15 +328,15 @@ This is the main task for all server stability improvements. The investigation f
   - [x] Validation script fails build if ANY variable is missing (all are critical)
   - [x] Add missing NEXT_PUBLIC_BASE_URL and NEXT_PUBLIC_APP_URL to .env
   - [x] Update .env.example with all variables documented (marking all as required)
-  - [x] Modify build-and-start-prod.sh to export all NEXT_PUBLIC_* variables before build
+  - [x] Modify build-and-start-prod.sh to export all NEXT*PUBLIC*\* variables before build
   - [x] Fix SUPABASE_SERVICE_KEY naming inconsistency in codebase
   - [x] Add pre-build validation to ensure variables are available at build time
   - [x] Document variable loading order, build-time vs runtime requirements
   - [x] Test validation works in both development and production modes
-  - [x] Ensure client-side code receives all NEXT_PUBLIC_* variables correctly
+  - [x] Ensure client-side code receives all NEXT*PUBLIC*\* variables correctly
 - **Resolution**:
   - Created comprehensive scripts/validate-env.sh that validates ALL 30+ environment variables
-  - Modified scripts/build-and-start-prod.sh to export NEXT_PUBLIC_* vars before build
+  - Modified scripts/build-and-start-prod.sh to export NEXT*PUBLIC*\* vars before build
   - Added "prebuild" script to package.json for automatic validation
   - Fixed SUPABASE_SERVICE_KEY → SUPABASE_SERVICE_ROLE_KEY naming across 7 files
   - Deleted redundant .env.server.example and .env.test files
@@ -328,10 +344,10 @@ This is the main task for all server stability improvements. The investigation f
   - Created docs/deployment/environment-variables.md with complete documentation
   - Result: Environment variable issues resolved, critical issues reduced from 5 to 3
 
-
 ### TODO-043: Fix Favicon Not Loading on iPad in Production (P1 - Bug)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-6](https://linear.app/agilecode-studio/issue/RR-6/fix-favicon-not-loading-on-ipad-in-production)
 - **Issue**: Favicon not loading in production app on iPad
 - **Context**:
   - Production URL: http://100.96.166.53:3147/reader
@@ -359,6 +375,7 @@ This is the main task for all server stability improvements. The investigation f
 ### TODO-045: Enable Native Share Sheet on Apple Devices (P2 - Enhancement)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-25](https://linear.app/agilecode-studio/issue/RR-25/enable-native-share-sheet-on-apple-devices)
 - **Issue**: Share button doesn't use native share functionality on Apple devices
 - **Context**:
   - Share button currently exists in the article dropdown menu
@@ -414,6 +431,8 @@ This is the main task for all server stability improvements. The investigation f
 ### TODO-050a: Fix iOS Safari Double-Tap Link Issue (P3 - Quality)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue)
+- **Linear Issue**: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue)
 - **Parent**: TODO-044 (partially completed)
 - **Issue**: iOS Safari/PWA users must tap links twice before they open in new tabs
 - **Context**:
@@ -458,6 +477,7 @@ This is the main task for all server stability improvements. The investigation f
 ### TODO-051: Create AI Summarization Logging and Analytics Page (P2 - Analytics)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-7](https://linear.app/agilecode-studio/issue/RR-7/create-ai-summarization-logging-and-analytics-page)
 - **Issue**: No visibility into AI summarization usage, costs, or patterns
 - **Context**:
   - Currently no logging for which articles get summarized
@@ -526,6 +546,7 @@ This is the main task for all server stability improvements. The investigation f
 ### TODO-053: Investigate Article Freshness Perception Issue (P2 - Investigation)
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-26](https://linear.app/agilecode-studio/issue/RR-26/investigate-article-freshness-perception-issue)
 - **Issue**: User perceives articles as being 5 hours old when latest is actually 3 hours old
 - **Context**:
   - Investigation on July 24, 2025 at 4:07 AM EDT showed:
@@ -561,6 +582,7 @@ This is the main task for all server stability improvements. The investigation f
 ### TODO-054: Implement Comprehensive Sync Logging and Analytics (P0 - Debugging)
 
 - **Status**: 🔴 TODO
+- **Linear Project**: [Comprehensive Sync Logging and Analytics](https://linear.app/agilecode-studio/project/comprehensive-sync-logging-and-analytics-341afd9c4943)
 - **Issue**: Need detailed logging to investigate sync issues (TODO-052 & TODO-053)
 - **Context**:
   - Currently no visibility into how many articles are synced
@@ -578,6 +600,7 @@ This is the main task for all server stability improvements. The investigation f
 #### TODO-054a: Add Sync Metrics to Sync Process
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-28](https://linear.app/agilecode-studio/issue/RR-28/add-sync-metrics-to-sync-process)
 - **User Story**: As a developer, I want to see how many articles were synced in each operation
 - **Tasks**:
   - [ ] Add article counting logic to sync process
@@ -595,6 +618,7 @@ This is the main task for all server stability improvements. The investigation f
 #### TODO-054b: Create Status Change Tracking System
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-29](https://linear.app/agilecode-studio/issue/RR-29/create-status-change-tracking-system)
 - **User Story**: As a developer, I want to track every read/starred status change with timestamps
 - **Tasks**:
   - [ ] Create status-changes.jsonl log file
@@ -613,6 +637,7 @@ This is the main task for all server stability improvements. The investigation f
 #### TODO-054c: Implement Sync Conflict Detection
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-30](https://linear.app/agilecode-studio/issue/RR-30/implement-sync-conflict-detection)
 - **User Story**: As a developer, I want to know when sync overwrites local changes
 - **Tasks**:
   - [ ] Create sync-conflicts.jsonl log file
@@ -620,6 +645,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Log conflicts with local and remote values
   - [ ] Track resolution (which value won)
   - [ ] Count conflicts per sync operation
+  - [ ] Consider if and how it can be integrated with Uptime Kuma
 - **Acceptance Criteria**:
   - [ ] Conflicts logged with full details
   - [ ] Can identify patterns of data loss
@@ -630,6 +656,7 @@ This is the main task for all server stability improvements. The investigation f
 #### TODO-054d: Create Sync Analytics Dashboard
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-31](https://linear.app/agilecode-studio/issue/RR-31/create-sync-analytics-dashboard)
 - **User Story**: As a user, I want to see sync statistics and history
 - **Tasks**:
   - [ ] Create `/api/analytics/sync-stats` endpoint
@@ -638,6 +665,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Display conflict frequency by sync type
   - [ ] Show read/starred status change patterns
   - [ ] Add navigation link in header
+  - [ ] Consider if and how it can be integrated with Uptime Kuma
 - **Acceptance Criteria**:
   - [ ] Dashboard shows sync history with metrics
   - [ ] Can filter by auto vs manual syncs
@@ -649,6 +677,7 @@ This is the main task for all server stability improvements. The investigation f
 #### TODO-054e: Add Bi-directional Sync Queue Monitoring
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-32](https://linear.app/agilecode-studio/issue/RR-32/add-bi-directional-sync-queue-monitoring)
 - **User Story**: As a developer, I want to see if status changes are reaching Inoreader
 - **Tasks**:
   - [ ] Enhance bidirectional-sync.js logging
@@ -656,6 +685,7 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Track Inoreader API responses
   - [ ] Log failed sync attempts with reasons
   - [ ] Add queue depth monitoring
+  - [ ] Consider if and how it can be integrated with Uptime Kuma
 - **Acceptance Criteria**:
   - [ ] Can see what's being sent to Inoreader
   - [ ] API failures are logged with details
@@ -666,6 +696,7 @@ This is the main task for all server stability improvements. The investigation f
 #### TODO-054f: Create Sync Health Summary API
 
 - **Status**: 🔴 TODO
+- **Linear Issue**: [RR-33](https://linear.app/agilecode-studio/issue/RR-33/create-sync-health-summary-api)
 - **User Story**: As a developer, I want a quick health check endpoint for sync status
 - **Tasks**:
   - [ ] Create `/api/sync/health` endpoint
@@ -673,12 +704,163 @@ This is the main task for all server stability improvements. The investigation f
   - [ ] Include queue depth and processing delays
   - [ ] Show if bi-directional sync is running
   - [ ] Return current starred/read article counts
+  - [ ] Consider if and how it can be integrated with Uptime Kuma
 - **Acceptance Criteria**:
   - [ ] Single endpoint shows sync system health
   - [ ] Identifies common issues automatically
   - [ ] Returns actionable information
   - [ ] Can be used for monitoring/alerts
 - **Testing**: Call endpoint and verify all metrics returned
+
+### TODO-055: Fix PWA Body Content Getting Cut Off (P1 - Bug)
+
+- **Status**: 🟡 IN PROGRESS
+- **Linear Issue**: [RR-35](https://linear.app/agilecode-studio/issue/RR-35/fix-pwa-body-content-getting-cut-off)
+- **Issue**: Article body content is getting cut off when viewed in PWA mode
+- **Context**:
+  - Content displays correctly in browser but gets cut off at the header in PWA
+  - Affects readability on mobile devices where PWA is primary access method
+  - Likely related to viewport sizing or safe area insets in PWA mode
+- **User Story**: As a PWA user, I want to see the full article content without any part being cut off
+
+## Implementation Plan - PWA Header Fix
+
+Based on analysis of the issue where content works correctly in Safari browser but gets cut off in PWA mode, the root cause is that iOS handles safe areas differently in PWA standalone mode vs browser mode. The current implementation doesn't differentiate between these modes properly.
+
+### Proposed Solution:
+
+1. **Update globals.css** - Add PWA-specific CSS rules that properly handle safe areas without double-applying them:
+   - Use `.pwa-standalone` class (already detected by PWADetector component)
+   - Create CSS custom properties for dynamic height calculations
+   - Separate calculations for browser vs PWA mode
+   - Remove conflicting safe area applications
+
+2. **Update page.tsx** - Fix the header positioning and article list container:
+   - Remove inline style `top: 'env(safe-area-inset-top)'` from header
+   - Update paddingTop calculation for article list container
+   - Ensure consistent spacing across both modes
+
+3. **Update article-detail.tsx** - Fix the article detail view:
+   - Remove inline style `top: 'env(safe-area-inset-top)'` from header
+   - Update the spacer div height calculation
+   - Ensure proper content flow in PWA mode
+
+### Key Changes:
+- Browser mode: Apply safe areas normally
+- PWA mode: Account for iOS status bar overlay without double-padding
+- Use CSS variables for all dynamic calculations
+- Maintain visual consistency across both modes
+
+This approach follows Apple's design guidelines and accounts for iOS-specific PWA quirks.
+
+## Attempted Fixes (July 27, 2025)
+
+Multiple approaches were tried to fix the PWA content cutoff issue:
+
+### Attempt 1: Dynamic CSS Variables
+- Added CSS variables for header/footer heights including safe areas
+- Used `--header-height: calc(60px + env(safe-area-inset-top))`
+- Result: Partially fixed but content still cut off in PWA mode
+
+### Attempt 2: -webkit-fill-available
+- Applied `-webkit-fill-available` to html/body based on Perplexity's recommendation
+- Changed container to use flex layout with scrollable content area
+- Result: Made the issue worse with extra spacing at bottom
+
+### Attempt 3: Simplified Safe Area Classes
+- Created `.ios-safe-container`, `.ios-safe-header`, `.ios-safe-footer` classes
+- Reverted to fixed positioning with calculated spacers
+- Positioned headers with `top: env(safe-area-inset-top)`
+- Result: Fixed Safari browser but PWA still has issues with double padding
+
+### Current State
+- Safari browser: Working correctly
+- PWA mode: Still has content cutoff and spacing issues
+- The safe area handling is being applied inconsistently between browser and PWA modes
+
+### Next Steps
+- Consider using a different approach entirely
+- May need device-specific testing with actual iOS devices
+- Could explore using viewport units differently or JavaScript-based solution
+
+- **Acceptance Criteria**:
+  - [ ] Investigate PWA viewport configuration and safe area handling
+  - [ ] Check CSS for any PWA-specific viewport issues
+  - [ ] Ensure content is fully visible with proper padding/margins
+  - [ ] Test on various devices (iPhone, iPad, different screen sizes)
+  - [ ] Fix applies to both article list and article detail views
+  - [ ] No horizontal scrolling introduced by the fix
+  - [ ] CSS variables properly calculate header/footer heights with safe areas
+  - [ ] Spacer divs use dynamic heights instead of hard-coded 60px
+  - [ ] Content container height properly calculated for available viewport
+  - [ ] Footer respects safe area insets in PWA mode
+- **Technical Notes**:
+  - May need to adjust viewport meta tag for PWA
+  - Check for CSS env() variables for safe areas
+  - Consider iOS-specific PWA constraints
+  - Use CSS custom properties for dynamic height calculations
+  - Ensure both header and footer handle safe areas properly
+- **Files to Investigate**:
+  - `src/app/layout.tsx` - viewport configuration
+  - Global CSS files for PWA-specific styles
+  - Article component containers
+  - `src/app/globals.css` - add CSS variables
+  - `src/components/articles/article-detail.tsx` - update spacers and container
+
+### TODO-056: Fix Article List State Preservation on Back Navigation (P1 - UX)
+
+- **Status**: 🔴 TODO
+- **Linear Issue**: [RR-27](https://linear.app/agilecode-studio/issue/RR-27/fix-article-list-state-preservation-on-back-navigation)
+- **Issue**: Article list refreshes and loses state when navigating back from article detail
+- **Context**:
+  - When "Unread Only" filter is active, going back from article causes:
+    - Read articles disappear immediately
+    - Page appears to refresh/jump
+    - Scroll position is maintained but context is lost
+    - User sees 10-12 unscanned articles at top if they had scrolled down
+  - This breaks the natural reading flow and forces users to re-scan articles
+  - When users navigate between articles using prev/next buttons in article view, these navigation events should be tracked
+  - The article list should reflect which articles were read via prev/next navigation
+  - Back button should return to the last article that was being read, not necessarily the one initially clicked
+- **User Story**: As a user, I want the article list to maintain its exact state when I navigate back from reading an article
+- **Current Behavior**:
+  - User scrolls to 15th article → clicks to read → goes back
+  - All previously visible read articles vanish
+  - Unread articles shift up to fill the space
+  - User is at same scroll position but with different articles
+- **Expected Behavior**:
+  - Article list should NOT refresh on back navigation
+  - Read articles should remain visible until manual refresh
+  - Exact scroll position and visible articles preserved
+  - Only refresh when: manual refresh, feed selection, or filter change
+- **Acceptance Criteria**:
+  - [ ] Preserve article list state during navigation
+  - [ ] Keep read articles visible in "Unread Only" mode until refresh
+  - [ ] Maintain exact scroll position and visible articles
+  - [ ] No visual jumps or content shifts on back navigation
+  - [ ] State preservation works across all filter modes
+  - [ ] Consider implementing view transition API for smooth navigation
+  - [ ] Track article navigation via prev/next buttons in article view
+  - [ ] Update read status for articles navigated via prev/next buttons
+  - [ ] When returning to list, position should be at the last read article
+  - [ ] All articles read during the session (including via prev/next) show as read
+- **Implementation Approach**:
+  - Use browser history state or session storage to preserve list state
+  - Implement proper back button handling without full re-render
+  - Consider keeping read articles in DOM with visual indication
+  - May need to adjust how filters work (visual vs data filtering)
+  - Track navigation history including prev/next button usage
+  - Update article read status in real-time as user navigates
+  - Store the last viewed article ID to return to correct position
+- **Files to Modify**:
+  - Article list component - state management
+  - Navigation/routing logic
+  - Filter implementation
+- **Edge Cases to Handle**:
+  - Multiple back/forward navigations
+  - Filter changes while in article view
+  - Manual refresh vs back button
+  - Deep linking to articles
 
 ## ✅ COMPLETED TODOS
 

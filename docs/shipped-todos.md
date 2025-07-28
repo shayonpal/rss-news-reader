@@ -8,6 +8,7 @@
 
 ### TODO-039b: Build Validation System (P1 - Critical) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Build validation system fully implemented and operational
+- **Linear Issue**: [RR-38](https://linear.app/agilecode-studio/issue/RR-38/build-validation-system)
 - **Issue**: Production builds missing API routes, causing 500 errors
 - **Root Cause**: Production builds missing API routes, health endpoints giving false positives
 - **Dramatic Success**: Fixed root cause - API routes compilation improved from 1/27 to 27/27 (100%)
@@ -88,6 +89,7 @@
 
 ### TODO-039a: Create Health Check Endpoints (P1 - Prerequisite) ✅ COMPLETED
 - **Status**: ✅ COMPLETED Saturday, July 26, 2025 at 7:01 PM
+- **Linear Issue**: [RR-37](https://linear.app/agilecode-studio/issue/RR-37/create-health-check-endpoints)
 - **Parent**: TODO-039 (Server Health Monitoring)
 - **Issue**: Need standardized health endpoints for all services
 - **Implementation Strategy**: Comprehensive health monitoring with Uptime Kuma integration
@@ -124,6 +126,7 @@
 ### TODO-039i: Implement Uptime Kuma Monitoring Infrastructure (P1 - Infrastructure) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Uptime Kuma monitoring infrastructure deployed
 - **Issue**: No centralized monitoring system
+- **Linear Issue**: [RR-19](https://linear.app/agilecode-studio/issue/RR-19/implement-uptime-kuma-monitoring-infrastructure)
 - **Implementation Strategy**: Followed `docs/tech/uptime-kuma-monitoring-strategy.md`
 - **Implementation Details**:
   - Set up FIRST for immediate external monitoring while fixing root causes
@@ -879,6 +882,7 @@
 
 ### TODO-046: Fix Orange Status Bar in PWA on iPhone (P1 - UI Bug) ✅ COMPLETED
 - **Status**: ✅ COMPLETED
+- **Linear Issue**: [RR-39](https://linear.app/agilecode-studio/issue/RR-39/fix-orange-status-bar-in-pwa-on-iphone)
 - **Issue**: Orange header/status bar appears above app header when saved as PWA on iPhone
 - **Context**:
   - When RSS reader is saved as a web app on iPhone, an orange bar appears above the app header
@@ -908,6 +912,7 @@
 
 ### TODO-047: Filter Out Feeds with No Unread Articles in Sidebar (P2 - Enhancement) ✅ COMPLETED
 - **Status**: ✅ COMPLETED
+- **Linear Issue**: [RR-42](https://linear.app/agilecode-studio/issue/RR-42/filter-out-feeds-with-no-unread-articles-in-sidebar)
 - **Issue**: When "Unread Only" filter is selected, feeds with zero unread articles still appear in sidebar
 - **Context**:
   - Currently, the "Unread Only" filter only affects the article list
@@ -939,6 +944,7 @@
 
 ### TODO-048: Grey Out Feeds with No Unread Articles in Sidebar (P3 - UI Enhancement) ✅ COMPLETED
 - **Status**: ✅ COMPLETED
+- **Linear Issue**: [RR-40](https://linear.app/agilecode-studio/issue/RR-40/grey-out-feeds-with-no-unread-articles-in-sidebar)
 - **Issue**: Feeds with zero unread articles have the same visual prominence as feeds with new content
 - **Context**:
   - Currently all feeds appear with the same opacity/color regardless of unread count
@@ -967,6 +973,7 @@
 
 ### TODO-049: Sort Feed List Alphabetically in Sidebar (P2 - Enhancement) ✅ COMPLETED
 - **Status**: ✅ COMPLETED
+- **Linear Issue**: [RR-41](https://linear.app/agilecode-studio/issue/RR-41/sort-feed-list-alphabetically-in-sidebar)
 - **Issue**: Feeds in sidebar are not consistently sorted, making it difficult to find specific feeds
 - **Context**:
   - Currently feeds appear to be sorted by their Inoreader order or creation time
@@ -1165,6 +1172,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
 
 ### TODO-050: Unify Summarize Icon Style with Star Icon in Article List (P3 - UI Consistency) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025 at 9:23 PM
+- **Linear Issue**: [RR-43](https://linear.app/agilecode-studio/issue/RR-43/unify-summarize-icon-style-with-star-icon-in-article-list)
 - **Issue**: Summarize icon in article list had different styling than star icon, especially noticeable in dark mode
 - **Context**:
   - Star icon and summarize icon appeared next to each other in article list
@@ -1220,6 +1228,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
 
 ### TODO-052: Investigate Read Status Sync Issues with Inoreader (P0 - Critical Bug) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025 (Duplicate of TODO-042)
+- **Linear Issue**: [RR-44](https://linear.app/agilecode-studio/issue/RR-44/investigate-read-status-sync-issues-with-inoreader)
 - **Issue**: Read status appears to be lost after sync, articles marked as read become unread again
 - **Context**:
   - User reports losing read status of articles after every sync

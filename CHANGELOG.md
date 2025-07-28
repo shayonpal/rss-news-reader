@@ -1,6 +1,190 @@
 # Changelog
 
-## [Unreleased] - Sunday, July 27, 2025 at 4:43 AM
+## [Unreleased] - Sunday, July 27, 2025 at 9:01 PM
+
+### Documentation - Sunday, July 27, 2025 at 9:01 PM
+- **Updated Linear Issue References for TODOs 052, 053, and 045**
+  - Updated shipped-todos.md to add Linear issue reference for completed TODO-052:
+    - TODO-052: [RR-44](https://linear.app/agilecode-studio/issue/RR-44/investigate-read-status-sync-issues-with-inoreader) - Investigate Read Status Sync Issues with Inoreader
+  - Verified that TODO-053 and TODO-045 already had correct Linear issue references in TODOs.md:
+    - TODO-053: [RR-26](https://linear.app/agilecode-studio/issue/RR-26/investigate-article-freshness-perception-issue) - Investigate Article Freshness Perception Issue
+    - TODO-045: [RR-25](https://linear.app/agilecode-studio/issue/RR-25/enable-native-share-sheet-on-apple-devices) - Enable Native Share Sheet on Apple Devices
+  - Maintains complete tracking between project TODOs and Linear issue management system
+  - These issues cover critical sync debugging and Apple device enhancements
+
+### Documentation - Sunday, July 27, 2025 at 8:55 PM
+- **Added Linear Issue References to TODO-047, TODO-050, and TODO-051**
+  - Updated shipped-todos.md to include Linear issue references for completed TODOs:
+    - TODO-047: [RR-42](https://linear.app/agilecode-studio/issue/RR-42/filter-out-feeds-with-no-unread-articles-in-sidebar) - Filter Out Feeds with No Unread Articles in Sidebar
+    - TODO-050: [RR-43](https://linear.app/agilecode-studio/issue/RR-43/unify-summarize-icon-style-with-star-icon-in-article-list) - Unify Summarize Icon Style with Star Icon in Article List
+  - TODO-051 already had the correct Linear issue reference: [RR-7](https://linear.app/agilecode-studio/issue/RR-7/create-ai-summarization-logging-and-analytics-page)
+  - Maintains proper tracking between completed TODOs and Linear issue management
+  - These TODOs cover important UI/UX improvements for sidebar filtering and icon consistency
+
+### Documentation - Sunday, July 27, 2025 at 8:37 PM
+- **Added Linear Issue References to Shipped TODOs-039a and TODO-039b**
+  - Updated shipped-todos.md to include Linear issue references for completed infrastructure TODOs
+  - Added TODO-039a reference: [RR-37](https://linear.app/agilecode-studio/issue/RR-37/create-health-check-endpoints)
+  - Added TODO-039b reference: [RR-38](https://linear.app/agilecode-studio/issue/RR-38/build-validation-system)
+  - Maintains proper tracking between completed TODOs and Linear issue management
+  - These infrastructure TODOs were critical for implementing comprehensive health monitoring and build validation systems
+
+### Documentation - Sunday, July 27, 2025 at 7:30 PM
+- **Added Linear Project and Issue References to TODO-054**
+  - Updated TODO-054 (Implement Comprehensive Sync Logging and Analytics) to include Linear project link
+  - Added Linear Project: [Comprehensive Sync Logging and Analytics](https://linear.app/agilecode-studio/project/comprehensive-sync-logging-and-analytics-341afd9c4943)
+  - Added Linear Issue references for all sub-tasks:
+    - TODO-054a: [RR-28](https://linear.app/agilecode-studio/issue/RR-28/add-sync-metrics-to-sync-process) - Add Sync Metrics to Sync Process
+    - TODO-054b: [RR-29](https://linear.app/agilecode-studio/issue/RR-29/create-status-change-tracking-system) - Create Status Change Tracking System
+    - TODO-054c: [RR-30](https://linear.app/agilecode-studio/issue/RR-30/implement-sync-conflict-detection) - Implement Sync Conflict Detection
+    - TODO-054d: [RR-31](https://linear.app/agilecode-studio/issue/RR-31/create-sync-analytics-dashboard) - Create Sync Analytics Dashboard
+    - TODO-054e: [RR-32](https://linear.app/agilecode-studio/issue/RR-32/add-bi-directional-sync-queue-monitoring) - Add Bi-directional Sync Queue Monitoring
+    - TODO-054f: [RR-33](https://linear.app/agilecode-studio/issue/RR-33/create-sync-health-summary-api) - Create Sync Health Summary API
+  - This comprehensive logging system will help debug sync issues and provide visibility into sync operations
+
+### Documentation - Sunday, July 27, 2025 at 7:17 PM
+- **Added Linear Issue Reference to TODO-056** 
+  - Updated TODO-056 (Fix Article List State Preservation on Back Navigation) to include Linear issue link
+  - Added reference: [RR-27](https://linear.app/agilecode-studio/issue/RR-27/fix-article-list-state-preservation-on-back-navigation)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This issue addresses the UX problem where article list state is lost when navigating back from article detail view
+
+### Documentation - Sunday, July 27, 2025 at 7:15 PM
+- **Added Linear Issue Reference to TODO-053** 
+  - Updated TODO-053 (Investigate Article Freshness Perception Issue) to include Linear issue link
+  - Added reference: [RR-26](https://linear.app/agilecode-studio/issue/RR-26/investigate-article-freshness-perception-issue)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This investigation will look into why users perceive articles as older than they actually are (5 hours vs actual 3 hours)
+
+### Documentation - Sunday, July 27, 2025 at 7:04 PM
+- **Added Linear Issue Reference to TODO-045** 
+  - Updated TODO-045 (Enable Native Share Sheet on Apple Devices) to include Linear issue link
+  - Added reference: [RR-25](https://linear.app/agilecode-studio/issue/RR-25/enable-native-share-sheet-on-apple-devices)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This feature will implement native share sheet functionality on Apple devices using the Web Share API
+
+### Documentation - Sunday, July 27, 2025 at 7:02 PM
+- **Added Linear Issue Reference to TODO-024** 
+  - Updated TODO-024 (Multi-Provider LLM Support) to include Linear issue link
+  - Added reference: [RR-24](https://linear.app/agilecode-studio/issue/RR-24/multi-provider-llm-support)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This TODO covers supporting multiple LLM providers (Anthropic, OpenAI, Perplexity) with automatic fallback
+
+### Documentation - Sunday, July 27, 2025 at 7:00 PM
+- **Added Linear Issue Reference to TODO-022** 
+  - Updated TODO-022 (PWA Polish) to include Linear issue link
+  - Added reference: [RR-23](https://linear.app/agilecode-studio/issue/RR-23/pwa-polish)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This TODO covers PWA enhancements including install prompts, app icons, splash screens, and offline handling
+
+### Documentation - Sunday, July 27, 2025 at 6:55 PM
+- **Added Linear Issue Reference to TODO-050a** 
+  - Updated TODO-050a (Fix iOS Safari Double-Tap Link Issue) to include Linear issue link
+  - Added reference: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This issue addresses the iOS-specific bug where users must tap links twice to open them
+
+### Documentation - Sunday, July 27, 2025 at 6:44 PM
+- **Added Linear Issue Reference to TODO-021** 
+  - Updated TODO-021 (Performance Optimization) to include Linear issue link
+  - Added reference: [RR-21](https://linear.app/agilecode-studio/issue/RR-21/performance-optimization)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This TODO covers performance goals including sub-2s initial load, 60fps scrolling, and lazy loading
+
+### Documentation - Sunday, July 27, 2025 at 6:37 PM
+- **Added Linear Issue Reference to TODO-019** 
+  - Updated TODO-019 (Feed Search Functionality) to include Linear issue link
+  - Added reference: [RR-20](https://linear.app/agilecode-studio/issue/RR-20/feed-search-functionality)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - This feature is marked as Future status for implementing feed search with real-time filtering
+
+### Changed - Sunday, July 27, 2025 at 6:10 PM
+- Implemented UX expert recommendations for iOS PWA safe area handling
+- Converted from fixed to sticky header for better iOS compatibility  
+- Updated viewport units from 100vh to 100dvh/100svh for proper PWA height
+- Added bottom safe area padding to scrollable content areas
+- Fixed article detail navigation footer positioning with safe areas
+- Created debug pages (/debug and /minimal) for troubleshooting PWA layout issues
+- Ongoing: Debugging persistent bottom gap in PWA standalone mode (TODO-055)
+
+### Documentation
+- **Added Linear Issue Reference to TODO-039i** (Sunday, July 27, 2025 at 6:10 PM)
+  - Updated TODO-039i (Uptime Kuma Monitoring Infrastructure) in shipped-todos.md
+  - Added reference: [RR-19](https://linear.app/agilecode-studio/issue/RR-19/implement-uptime-kuma-monitoring-infrastructure)
+  - This completed task implemented the monitoring infrastructure on port 3080
+  - Part of the server stability parent task TODO-039 focusing on external monitoring
+
+- **Added Linear Issue Reference to TODO-039h** (Sunday, July 27, 2025 at 6:01 PM)
+  - Updated TODO-039h (Database Monitoring) to include Linear issue link
+  - Added reference: [RR-18](https://linear.app/agilecode-studio/issue/RR-18/database-monitoring)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - Part of the server stability parent task TODO-039 focusing on database performance monitoring
+
+- **Added Linear Issue Reference to TODO-039g** (Sunday, July 27, 2025 at 5:47 PM)
+  - Updated TODO-039g (Error Handling & Monitoring) to include Linear issue link
+  - Added reference: [RR-17](https://linear.app/agilecode-studio/issue/RR-17/error-handling-and-monitoring)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - Part of the server stability parent task TODO-039 focusing on error visibility and handling
+
+- **Added Linear Issue Reference to TODO-039f** (Sunday, July 27, 2025 at 5:42 PM)
+  - Updated TODO-039f (Deployment Safety Mechanisms) to include Linear issue link
+  - Added reference: [RR-16](https://linear.app/agilecode-studio/issue/RR-16/deployment-safety-mechanisms)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - Part of the server stability parent task TODO-039
+
+### Documentation
+- **Added Linear Issue Reference to TODO-039d** (Sunday, July 27, 2025 at 5:32 PM)
+  - Updated shipped-todos.md to include Linear issue link for TODO-039d
+  - Added reference: [RR-14](https://linear.app/agilecode-studio/issue/RR-14/environment-variable-management)
+  - Maintains proper tracking between project TODOs and Linear issue management
+  - Helps with cross-referencing project management and technical implementation
+
+### Documentation
+- **Updated TODO-055 with New Implementation Plan** (Sunday, July 27, 2025 at 1:39 PM)
+  - Replaced previous implementation plan with more comprehensive PWA-specific approach
+  - Identified root cause: iOS handles safe areas differently in PWA standalone vs browser mode
+  - Proposed solution focuses on differentiating between browser and PWA modes
+  - Key changes include using `.pwa-standalone` class already detected by PWADetector
+  - Plan addresses double-padding issue by separating safe area calculations per mode
+  - Includes specific steps for updating globals.css, page.tsx, and article-detail.tsx
+  - Approach follows Apple's design guidelines for PWA safe area handling
+
+### Documentation
+- **Updated TODO-055 Status and Documented Attempted Fixes** (Sunday, July 27, 2025 at 12:57 PM)
+  - Changed status from TODO to IN PROGRESS
+  - Documented three attempted fix approaches with detailed results
+  - Attempt 1: Dynamic CSS Variables - partially fixed but content still cut off in PWA
+  - Attempt 2: -webkit-fill-available - made the issue worse with extra spacing
+  - Attempt 3: Simplified Safe Area Classes - fixed Safari browser but PWA still has issues
+  - Added current state assessment: Safari working correctly, PWA still has double padding issues
+  - Outlined next steps including device-specific testing and alternative approaches
+
+- **Updated TODO-055 with Comprehensive Implementation Plan** (Sunday, July 27, 2025 at 5:53 AM)
+  - Added detailed problem analysis identifying fixed header/footer safe area issues
+  - Provided three-part solution strategy using CSS variables for dynamic heights
+  - Included specific implementation steps for fixing PWA content cutoff
+  - Enhanced acceptance criteria with technical implementation details
+  - Added CSS custom properties approach for calculating header/footer with safe areas
+
+- **Enhanced TODO-056 with Additional Requirements** (Sunday, July 27, 2025 at 5:34 AM)
+  - Added requirements for tracking article navigation via prev/next buttons
+  - Specified that articles navigated via prev/next should update read status
+  - Clarified that back button should return to last read article (not necessarily initially clicked)
+  - Added implementation details for tracking navigation history
+  - Ensures comprehensive state preservation across all navigation patterns
+
+- **Added Two New P1 TODO Items** (Sunday, July 27, 2025 at 5:29 AM)
+  - **TODO-055**: Fix PWA Body Content Getting Cut Off (P1 - Bug)
+    - Addresses issue where article body content is cut off in PWA mode
+    - Affects mobile readability where PWA is primary access method
+    - Likely related to viewport sizing or safe area insets
+  - **TODO-056**: Fix Article List State Preservation on Back Navigation (P1 - UX)
+    - Addresses issue where article list refreshes and loses state on back navigation
+    - Read articles disappear when navigating back in "Unread Only" mode
+    - Breaks natural reading flow by forcing users to re-scan articles
+  - Both are high-priority user experience issues affecting daily usage
+
+## [Previous Updates] - Sunday, July 27, 2025 at 4:43 AM
 
 ### Fixed
 - **Dual-Write Sync Progress Tracking Implementation** (Critical Fix)
