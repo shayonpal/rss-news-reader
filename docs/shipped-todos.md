@@ -35,6 +35,7 @@
 
 ### TODO-039d: Environment Variable Management (P1 - Critical) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Environment variable management system fully implemented
+- **Linear Issue**: [RR-13](https://linear.app/agilecode-studio/issue/RR-13/environment-variable-management)
 - **Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables
 - **Context**: PM2 runtime injection doesn't work for Next.js client builds
 - **Root Cause**: Next.js requires NEXT_PUBLIC_* variables available during build, not just runtime
@@ -63,6 +64,7 @@
 
 ### TODO-039e: PM2 Configuration Improvements (P1 - Infrastructure) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Comprehensive PM2 stability improvements implemented and operational
+- **Linear Issue**: [RR-15](https://linear.app/agilecode-studio/issue/RR-15/pm2-configuration-improvements)
 - **Issue**: Cluster mode causing crashes, low restart limits, missing health delays
 - **Context**: Investigation found PM2 misconfigured for Next.js and cron services
 - **Dramatic Success**: Achieved 99%+ reduction in service restarts through comprehensive 5-phase implementation
@@ -148,6 +150,7 @@
 
 ### TODO-001: Enable Row Level Security (P0 - Critical) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Security vulnerability resolved
+- **Linear Issue**: [RR-48](https://linear.app/agilecode-studio/issue/RR-48/enable-row-level-security)
 - **Issue**: RLS disabled on ALL public tables, anyone with anon key can access all data
 - **Migration**: `/supabase/migrations/20240123_enable_rls_security.sql`
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -161,6 +164,7 @@
 
 ### TODO-002: Fix Function Security Vulnerability (P0 - Security) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Function security vulnerability resolved
+- **Linear Issue**: [RR-49](https://linear.app/agilecode-studio/issue/RR-49/fix-function-security-vulnerability)
 - **Issue**: `update_updated_at_column` has mutable search_path
 - **Migration**: `/supabase/migrations/20240124_fix_function_security.sql`
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -171,6 +175,7 @@
 
 ### TODO-003: Apply Unread Counts Function Migration (P1 - Performance) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Performance optimization applied
+- **Linear Issue**: [RR-50](https://linear.app/agilecode-studio/issue/RR-50/apply-unread-counts-function-migration)
 - **Issue**: Feed loading takes 6.4s due to N+1 query problem
 - **Migration**: `/supabase/migrations/20240122_create_unread_counts_function.sql`
 - **Expected Result**: 10x speed improvement (6.4s → <1s)
@@ -184,6 +189,7 @@
 
 ### TODO-004: Database Performance Analysis (P1 - Performance) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Performance optimization migration created
+- **Linear Issue**: [RR-51](https://linear.app/agilecode-studio/issue/RR-51/database-performance-analysis)
 - **Issues Identified**:
   - Timezone queries consuming 45.4% of execution time
   - Schema introspection taking 10.2%
@@ -201,6 +207,7 @@
 
 ### TODO-005: Refresh Materialized View After Sync (P1 - Performance) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Materialized view refresh integrated into sync process
+- **Linear Issue**: [RR-52](https://linear.app/agilecode-studio/issue/RR-52/refresh-materialized-view-after-sync)
 - **Issue**: The `feed_stats` materialized view needs to be refreshed after each sync to show accurate unread counts
 - **Acceptance Criteria**: ALL COMPLETED ✅
   - [x] Add `refresh_feed_stats()` call after successful sync in server code
@@ -216,6 +223,7 @@
 
 ### TODO-006: Complete Automatic Daily Sync (P1 - Core) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Automatic daily sync fully implemented
+- **Linear Issue**: [RR-53](https://linear.app/agilecode-studio/issue/RR-53/complete-automatic-daily-sync)
 - **Completed**: ✅ Manual sync, API endpoints, progress polling, rate limiting, automatic sync
 - **Implementation**:
   - [x] Installed node-cron dependency
@@ -785,6 +793,7 @@
 
 ### TODO-037: Implement Bi-directional Sync to Inoreader (P1 - Core Feature)
 - **Status**: ✅ COMPLETED (July 23, 2025)
+- **Linear Issue**: [RR-45](https://linear.app/agilecode-studio/issue/RR-45/implement-bi-directional-sync-to-inoreader)
 - **Issue**: Read/unread status changes made in the app are not synced back to Inoreader
 - **Current Behavior**: Sync is one-way only (Inoreader → Server → Supabase → Client)
 - **Expected Behavior**: Changes made in the app should sync back to Inoreader
@@ -1039,6 +1048,7 @@
 
 ### TODO-008: Deploy to Production (P0 - Critical) ✅ COMPLETED
 - **Status**: ✅ COMPLETED  
+- **Linear Issue**: [RR-46](https://linear.app/agilecode-studio/issue/RR-46/deploy-to-production)
 - **Description**: Deploy RSS reader to production environment
 - **Evidence**: Production deployment completed with PM2 process management
 
@@ -1142,6 +1152,8 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - iOS users still need to tap links twice before they open
   - Attempted fixes: CSS hover removal, inline styles, touch-action manipulation, JavaScript handlers
   - Issue appears to be a deeper iOS Safari behavior requiring further investigation
+- **Related Issues**: TODO-050a (iOS double-tap issue)
+- **Linear Issue**: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue) (for remaining iOS issue)
 - **Impact**: Improved user experience on desktop and Android, but iOS users still face double-tap requirement
 
 ### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt) ✅ COMPLETED
@@ -1203,6 +1215,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
 
 ### TODO-042: Fix Sync Overwriting Local Star/Read Status (P0 - Critical Bug) ✅ COMPLETED
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025
+- **Linear Issue**: [RR-47](https://linear.app/agilecode-studio/issue/RR-47/fix-sync-overwriting-local-starread-status)
 - **Issue**: Sync from Inoreader overwrites local star/read status changes
 - **Root Cause**:
   - User stars/marks articles as read locally → Updates `is_starred`/`is_read` in DB

@@ -1,6 +1,135 @@
 # Changelog
 
-## [Unreleased] - Sunday, July 27, 2025 at 9:01 PM
+## [Unreleased] - Monday, July 28, 2025 at 2:39 AM
+
+### Documentation - Monday, July 28, 2025 at 2:39 AM
+- **Added Missing Linear Issue References to TODO-039d and TODO-039e**
+  - Updated TODO-039d (Environment Variable Management) in shipped-todos.md
+  - Added Linear issue reference: [RR-13](https://linear.app/agilecode-studio/issue/RR-13/environment-variable-management)
+  - Updated TODO-039e (PM2 Configuration Improvements) in shipped-todos.md  
+  - Added Linear issue reference: [RR-15](https://linear.app/agilecode-studio/issue/RR-15/pm2-configuration-improvements)
+  - Both were P1 infrastructure TODOs completed on Saturday, July 26, 2025
+  - TODO-039d addressed critical environment variable issues with Next.js and PM2
+  - TODO-039e achieved 99%+ reduction in service restarts through comprehensive PM2 configuration improvements
+  - Ensures proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 2:00 AM
+- **Added Linear Issue Reference to TODO-006**
+  - Updated TODO-006 (Complete Automatic Daily Sync) in shipped-todos.md
+  - Added Linear issue reference: [RR-53](https://linear.app/agilecode-studio/issue/RR-53/complete-automatic-daily-sync)
+  - This P1 Core TODO was completed on January 22, 2025
+  - The issue tracked the implementation of automatic daily sync functionality
+  - Implementation details:
+    - Installed node-cron dependency
+    - Created /src/server/cron.js service with JSONL logging
+    - Added cron process to PM2 ecosystem configuration
+    - Created sync metadata endpoint for database updates
+    - Added test scripts for verification
+    - Documented in README and deployment docs
+  - Cron service runs at 2am/2pm America/Toronto timezone
+  - Critical feature for hands-free RSS reader operation
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:54 AM
+- **Added Linear Issue Reference to TODO-005**
+  - Updated TODO-005 (Refresh Materialized View After Sync) in shipped-todos.md
+  - Added Linear issue reference: [RR-52](https://linear.app/agilecode-studio/issue/RR-52/refresh-materialized-view-after-sync)
+  - This P1 Performance TODO was completed on January 22, 2025
+  - The issue addressed the need to refresh the `feed_stats` materialized view after each sync
+  - Implementation added `refresh_feed_stats()` call in `/src/app/api/sync/route.ts` at line 278
+  - Ensures accurate unread counts are displayed after sync operations
+  - Errors are logged but don't fail the sync process
+  - Created test endpoint `/api/test-refresh-stats` for verification
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:49 AM
+- **Added Linear Issue Reference to TODO-004**
+  - Updated TODO-004 (Database Performance Analysis) in shipped-todos.md
+  - Added Linear issue reference: [RR-51](https://linear.app/agilecode-studio/issue/RR-51/database-performance-analysis)
+  - This P1 Performance TODO was completed on January 22, 2025
+  - The issue addressed database performance problems:
+    - Timezone queries consuming 45.4% of execution time
+    - Schema introspection taking 10.2%
+    - Upsert operations 28-52ms per article
+  - Created migration file `/supabase/migrations/20240125_performance_optimizations_v2.sql`
+  - Created comprehensive documentation in `/docs/tech/performance-analysis-2025-01-22.md`
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:40 AM
+- **Added Linear Issue Reference to TODO-003**
+  - Updated TODO-003 (Apply Unread Counts Function Migration) in shipped-todos.md
+  - Added Linear issue reference: [RR-50](https://linear.app/agilecode-studio/issue/RR-50/apply-unread-counts-function-migration)
+  - This P1 Performance TODO was completed on January 22, 2025
+  - The issue tracked the application of the unread counts function migration
+  - Migration file `/supabase/migrations/20240122_create_unread_counts_function.sql` was applied
+  - Achieved 92.4% reduction in data transfer (290 rows → 22 rows)
+  - Fixed N+1 query problem that was causing 6.4s feed loading times
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:35 AM
+- **Added Linear Issue Reference to TODO-002**
+  - Updated TODO-002 (Fix Function Security Vulnerability) in shipped-todos.md
+  - Added Linear issue reference: [RR-49](https://linear.app/agilecode-studio/issue/RR-49/fix-function-security-vulnerability)
+  - This P0 Security TODO was completed on July 21, 2025
+  - The issue tracked the fix for `update_updated_at_column` function with mutable search_path
+  - Migration file `/supabase/migrations/20240124_fix_function_security.sql` was applied
+  - Resolved security vulnerability by recreating function with explicit search_path
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:33 AM
+- **Added Linear Issue Reference to TODO-001**
+  - Updated TODO-001 (Enable Row Level Security) in shipped-todos.md
+  - Added Linear issue reference: [RR-48](https://linear.app/agilecode-studio/issue/RR-48/enable-row-level-security)
+  - This P0 Critical security TODO was completed on July 21, 2025
+  - The issue tracked the enablement of Row Level Security on all Supabase public tables
+  - Fixed critical security vulnerability where anyone with anon key could access all data
+  - Migration file `/supabase/migrations/20240123_enable_rls_security.sql` was applied
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:18 AM
+- **Added Linear Issue Reference to TODO-042**
+  - Updated TODO-042 (Fix Sync Overwriting Local Star/Read Status) in shipped-todos.md
+  - Added Linear issue reference: [RR-47](https://linear.app/agilecode-studio/issue/RR-47/fix-sync-overwriting-local-starread-status)
+  - This P0 Critical Bug was completed on Friday, July 25, 2025
+  - The issue tracked the fix for sync operations overwriting local star/read status changes
+  - Implemented conflict resolution using timestamp comparison to preserve local changes during sync
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 1:12 AM
+- **Added Linear Issue Reference to TODO-008**
+  - Updated TODO-008 (Deploy to Production) in shipped-todos.md
+  - Added Linear issue reference: [RR-46](https://linear.app/agilecode-studio/issue/RR-46/deploy-to-production)
+  - This P0 Critical TODO was completed and documents the successful production deployment
+  - The deployment was completed with PM2 process management
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Monday, July 28, 2025 at 12:46 AM
+- **Added Linear Issue Reference to TODO-037**
+  - Updated TODO-037 (Implement Bi-directional Sync to Inoreader) in shipped-todos.md
+  - Added Linear issue reference: [RR-45](https://linear.app/agilecode-studio/issue/RR-45/implement-bi-directional-sync-to-inoreader)
+  - This P1 Core Feature was completed on July 23, 2025
+  - The issue tracked the implementation of bi-directional sync functionality allowing read/unread status changes to sync back to Inoreader
+  - Maintains proper tracking between completed TODOs and Linear issue management system
+
+### Documentation - Sunday, July 27, 2025 at 11:29 PM
+- **Added Linear Issue Reference to TODO-044**
+  - Updated TODO-044 (Open All Article Links in External Tab) in shipped-todos.md
+  - Added Linear issue reference: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue)
+  - This Linear issue specifically tracks the remaining iOS Safari double-tap link issue
+  - The main functionality of TODO-044 was completed (links open in new tabs with proper security attributes)
+  - However, the iOS double-tap issue remains unresolved and is tracked in Linear for future investigation
+  - Also added reference to related TODO-050a which tracks the same iOS double-tap issue
+
+### Documentation - Sunday, July 27, 2025 at 11:26 PM
+- **TODO-044 Information Requested**
+  - Located TODO-044 (Open All Article Links in External Tab) in shipped-todos.md
+  - Status: ⚠️ PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
+  - This P2 enhancement was implemented to make all article links open in new tabs
+  - Main functionality completed: link-processor utility adds target="_blank" and rel="noopener noreferrer" to all external links
+  - Applied to RSS content, full fetched content, and AI summaries
+  - Outstanding issue: iOS Safari/PWA users still need to double-tap links before they open
+  - Multiple attempted fixes for iOS issue have failed (CSS hover removal, inline styles, touch-action manipulation, JavaScript handlers)
+  - The remaining iOS double-tap issue has been split into separate TODO-050a for future resolution
 
 ### Documentation - Sunday, July 27, 2025 at 9:01 PM
 - **Updated Linear Issue References for TODOs 052, 053, and 045**
