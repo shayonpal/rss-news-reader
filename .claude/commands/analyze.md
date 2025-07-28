@@ -7,6 +7,8 @@ argument-hint: <issue-id or idea-description>
 
 Analyze the Linear issue or idea provided in $ARGUMENTS and prepare an implementation plan or feasibility assessment.
 
+This is a `read-only` mode discussion session. You will not write any files until we've finalized the plan and decided on implement it.
+
 ## 1. Parse Input
 
 Check $ARGUMENTS:

@@ -29,5 +29,15 @@ echo ""
 echo "Running startup health check..."
 /Users/shayon/DevProjects/rss-news-reader/scripts/startup-health-check.sh --start-monitor
 
+# 6. Start sync health monitor (if not already running)
+echo ""
+echo "Starting sync health monitor..."
+if ! pgrep -f "sync-health-monitor.sh daemon" > /dev/null; then
+    nohup /Users/shayon/DevProjects/rss-news-reader/scripts/sync-health-monitor.sh daemon > /Users/shayon/DevProjects/rss-news-reader/logs/sync-health-monitor.out 2>&1 &
+    echo "✅ Sync health monitor started"
+else
+    echo "ℹ️  Sync health monitor already running"
+fi
+
 # Exit with health check status
 exit $?

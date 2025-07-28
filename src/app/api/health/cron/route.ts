@@ -1,111 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
+import { NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
 import path from 'path';
 
-// Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Path to the cron health log file
-    const healthLogPath = path.join(process.cwd(), 'logs', 'cron-health.jsonl');
+    const healthFilePath = path.join(process.cwd(), 'logs', 'cron-health.jsonl');
     
-    // Check if the file exists
-    const fileExists = await fs.access(healthLogPath).then(() => true).catch(() => false);
-    
-    if (!fileExists) {
-      // Return unknown status if no health file exists
+    // Check if health file exists
+    try {
+      await fs.access(healthFilePath);
+    } catch {
       return NextResponse.json({
         status: 'unknown',
-        service: 'rss-sync-cron',
-        uptime: 0,
-        lastActivity: new Date().toISOString(),
-        errorCount: 0,
-        dependencies: {},
-        performance: {
-          avgSyncTime: 0,
-          avgDbQueryTime: 0,
-          avgApiCallTime: 0,
-        },
-        details: {
-          message: 'No health status file found. Cron service may not have started yet.',
-        },
-      });
+        message: 'Health file not found',
+        lastCheck: null
+      }, { status: 503 });
     }
     
-    // Read the file
-    const fileContent = await fs.readFile(healthLogPath, 'utf-8');
-    const lines = fileContent.trim().split('\n').filter(line => line.length > 0);
+    // Read the last line of the health file
+    const content = await fs.readFile(healthFilePath, 'utf-8');
+    const lines = content.trim().split('\n').filter(line => line);
     
     if (lines.length === 0) {
       return NextResponse.json({
         status: 'unknown',
-        service: 'rss-sync-cron',
-        uptime: 0,
-        lastActivity: new Date().toISOString(),
-        errorCount: 0,
-        dependencies: {},
-        performance: {
-          avgSyncTime: 0,
-          avgDbQueryTime: 0,
-          avgApiCallTime: 0,
-        },
-        details: {
-          message: 'Health status file is empty.',
-        },
-      });
+        message: 'No health data available',
+        lastCheck: null
+      }, { status: 503 });
     }
     
-    // Get the latest health status (last line)
-    const latestHealthData = JSON.parse(lines[lines.length - 1]);
+    const lastHealthData = JSON.parse(lines[lines.length - 1]);
+    const lastCheckTime = new Date(lastHealthData.timestamp);
+    const ageMinutes = (Date.now() - lastCheckTime.getTime()) / (1000 * 60);
     
-    // Transform to standardized format
-    const standardizedHealth = {
-      status: latestHealthData.status || 'unknown',
-      service: 'rss-sync-cron',
-      uptime: latestHealthData.uptime || 0,
-      lastActivity: latestHealthData.lastRun || latestHealthData.timestamp,
-      errorCount: latestHealthData.recentRuns?.failed || 0,
-      dependencies: {}, // Cron doesn't have external dependencies like DB
-      performance: {
-        avgSyncTime: latestHealthData.performance?.avgSyncTime || 0,
-        avgDbQueryTime: 0, // Not tracked by cron
-        avgApiCallTime: 0, // Not tracked by cron
-      },
-      details: {
-        enabled: latestHealthData.enabled,
-        schedule: latestHealthData.schedule,
-        nextRun: latestHealthData.nextRun,
-        lastRunStatus: latestHealthData.lastRunStatus,
-        recentRuns: latestHealthData.recentRuns,
-        lastCheck: latestHealthData.timestamp,
-      },
-    };
+    // Consider unhealthy if:
+    // 1. Status is not 'healthy'
+    // 2. Last check is older than 60 minutes
+    // 3. Multiple recent failures
+    const isHealthy = lastHealthData.status === 'healthy' && ageMinutes < 60;
     
-    // Determine HTTP status code
-    const statusCode = standardizedHealth.status === 'unhealthy' ? 503 : 200;
-    
-    return NextResponse.json(standardizedHealth, { status: statusCode });
-    
+    return NextResponse.json({
+      status: lastHealthData.status,
+      lastCheck: lastHealthData.timestamp,
+      ageMinutes: Math.round(ageMinutes),
+      lastRun: lastHealthData.lastRun,
+      lastRunStatus: lastHealthData.lastRunStatus,
+      recentRuns: lastHealthData.recentRuns,
+      uptime: lastHealthData.uptime,
+      nextRun: lastHealthData.nextRun
+    }, { 
+      status: isHealthy ? 200 : 503,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0'
+      }
+    });
   } catch (error) {
     console.error('Cron health check error:', error);
-    
     return NextResponse.json(
-      {
-        status: 'unhealthy',
-        service: 'rss-sync-cron',
-        uptime: 0,
-        lastActivity: new Date().toISOString(),
-        errorCount: 1,
-        dependencies: {},
-        performance: {
-          avgSyncTime: 0,
-          avgDbQueryTime: 0,
-          avgApiCallTime: 0,
-        },
-        error: error instanceof Error ? error.message : 'Failed to read health status',
+      { 
+        status: 'error',
+        error: 'Failed to check cron health',
+        message: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 503 }
+      { status: 500 }
     );
   }
 }
+EOF < /dev/null

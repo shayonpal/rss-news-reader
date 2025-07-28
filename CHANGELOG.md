@@ -1,6 +1,55 @@
 # Changelog
 
-## [Unreleased] - Monday, July 28, 2025 at 7:24 AM
+## [Unreleased] - Monday, July 28, 2025 at 1:05 PM
+
+### Fixed - Monday, July 28, 2025 at 1:05 PM
+- **Resolved 2-Day Sync Service Failure (RR-26)**
+  - Fixed sync service failures caused by incorrect API paths missing `/reader` prefix
+  - Corrected `NEXT_PUBLIC_BASE_URL` configuration in ecosystem.config.js to include proper path
+  - Updated cron service error handling with immediate Discord alerts for 404/500 errors
+  - Added Uptime Kuma push notifications for sync success/failure tracking
+  - Enhanced error logging with detailed failure analysis in JSONL format
+
+### Added - Monday, July 28, 2025 at 1:05 PM
+- **Comprehensive Monitoring and Alerting System**
+  - Added multi-layered monitoring approach to prevent undetected sync failures
+  - Created `/scripts/monitor-dashboard.sh` for comprehensive service status overview
+  - Implemented `/scripts/sync-health-monitor.sh` for dedicated sync failure detection
+  - Added monitoring service auto-restart with rate limiting via `/scripts/monitor-services.sh`
+  - Created `/scripts/setup-sync-monitors.js` for Uptime Kuma integration setup
+  - Enhanced startup sequence with monitoring service initialization
+  
+- **New Health Check Endpoints**
+  - Added `/api/health/freshness` endpoint to check article data freshness
+  - Added `/api/health/cron` endpoint to monitor cron service status
+  - Enhanced existing health checks with sync-specific monitoring
+
+- **Enhanced Cron Service Monitoring**
+  - Added health file generation for external monitoring
+  - Implemented immediate Discord webhook alerts for critical sync failures
+  - Added Uptime Kuma push monitor integration for heartbeat tracking
+  - Enhanced error reporting with actionable recovery information
+
+- **Article Freshness Analysis (RR-26)**
+  - Created comprehensive analysis of timestamp display and user perception issues
+  - Documented timezone handling, relative time display, and freshness indicators
+  - Identified recommendations for enhanced time display and visual freshness cues
+  - Added technical implementation notes for future UI improvements
+
+### Changed - Monday, July 28, 2025 at 1:05 PM
+- **Enhanced Sync Error Handling**
+  - Improved error categorization (404 endpoint errors vs 500 server errors)
+  - Added Discord @everyone mentions for critical sync failures requiring immediate attention
+  - Enhanced log formatting with structured error data for better troubleshooting
+  - Updated startup sequence to include monitoring service initialization
+
+### Documentation - Monday, July 28, 2025 at 1:05 PM
+- **Added Comprehensive Monitoring Documentation**
+  - Created `docs/tech/monitoring-and-alerting.md` with complete monitoring system overview
+  - Documented all monitoring layers: Uptime Kuma, internal monitors, sync health tracking
+  - Added troubleshooting guides for common sync failure scenarios
+  - Included recovery procedures and prevention strategies
+  - Created `docs/issues/RR-26-freshness-perception-analysis.md` with detailed freshness analysis
 
 ### Commands - Monday, July 28, 2025 at 11:01 AM
 - **Updated next-task Command to Exclude Personal Tracker Issues**

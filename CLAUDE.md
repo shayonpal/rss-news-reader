@@ -204,10 +204,26 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 
 ## Monitoring
 
-- Health endpoints: `/api/health/app` and `/api/health/db`
-- Uptime Kuma on port 3080 for external monitoring
-- PM2 logs for service monitoring
+### Health Endpoints
+- `/api/health/app` and `/api/health/db` - Basic application health
+- `/api/health/freshness` - Article data freshness check
+- `/api/health/cron` - Cron service status monitoring
+
+### Monitoring Tools
+- **Uptime Kuma**: External monitoring on port 3080 with Discord alerts
+- **Monitor Dashboard**: `./scripts/monitor-dashboard.sh` for quick status overview
+- **Sync Health Monitor**: `./scripts/sync-health-monitor.sh` for dedicated sync monitoring
+- **Service Monitor**: `./scripts/monitor-services.sh` for auto-restart with rate limiting
+
+### Log Files
+- PM2 logs for service monitoring via `pm2 logs`
 - Sync logs in JSONL format at `logs/sync-cron.jsonl`
+- Cron health logs at `logs/cron-health.jsonl`
+
+### Troubleshooting
+- Use `monitor-dashboard.sh` for quick service status overview
+- Check `docs/tech/monitoring-and-alerting.md` for detailed troubleshooting guides
+- Discord webhook provides immediate alerts for critical failures
 
 ## Sub-Agent Interaction Principles
 

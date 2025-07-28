@@ -57,39 +57,6 @@ class CronSyncService {
     }
   }
 
-  async sendDiscordAlert(title, message, trigger) {
-    try {
-      const webhook = 'https://discord.com/api/webhooks/1398487627765649498/n6mIouChkYqBCL67vj5Jbn0XL67vj5Jbn0X0XP3uU_rFXhSRcRmQdE2yiJBcvPL7sF9VphClpie5ObE';
-      
-      const payload = {
-        embeds: [{
-          title: `🚨 RSS Sync ${title}`,
-          description: message,
-          color: 16711680, // Red
-          fields: [
-            { name: 'Trigger', value: trigger, inline: true },
-            { name: 'Time', value: new Date().toLocaleString('en-US', { timeZone: 'America/Toronto' }), inline: true },
-            { name: 'API URL', value: this.apiUrl, inline: true },
-            { name: 'Action Required', value: 'Check API endpoints and server logs immediately', inline: false }
-          ],
-          timestamp: new Date().toISOString()
-        }]
-      };
-
-      const response = await fetch(webhook, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Discord webhook failed: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('[Cron] Failed to send Discord alert:', error);
-    }
-  }
-
   async executeSyncWithLogging(trigger) {
     const syncId = uuidv4();
     const startTime = Date.now();
@@ -104,7 +71,7 @@ class CronSyncService {
 
     try {
       // Call the sync API endpoint
-      const response = await fetch(`${this.apiUrl}/reader/api/sync`, {
+      const response = await fetch(`${this.apiUrl}/api/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -130,20 +97,6 @@ class CronSyncService {
         duration
       });
 
-      // Update health status and send alerts
-      this.failureCount++;
-      this.lastRunStatus = 'failed';
-      this.lastError = error.message;
-      this.lastRunTime = new Date().toISOString();
-      
-      await this.writeHealthStatus('unhealthy', error.message);
-      await this.sendUptimeKumaPush('down', error.message);
-      
-      // Send immediate Discord alert for API errors
-      if (error.message.includes('404') || error.message.includes('500')) {
-        await this.sendDiscordAlert('API Error', error.message, trigger);
-      }
-      
       // Update sync metadata in Supabase
       await this.updateSyncMetadata({
         last_sync_status: 'failed',
@@ -171,7 +124,7 @@ class CronSyncService {
 
     while (attempts < maxAttempts) {
       try {
-        const response = await fetch(`${this.apiUrl}/reader/api/sync/status/${syncId}`);
+        const response = await fetch(`${this.apiUrl}/api/sync/status/${syncId}`);
         if (!response.ok) {
           throw new Error(`Status check failed: ${response.status}`);
         }
@@ -250,7 +203,7 @@ class CronSyncService {
   async updateSyncMetadata(updates) {
     try {
       // We need to update this via the API since we can't directly access Supabase from here
-      const response = await fetch(`${this.apiUrl}/reader/api/sync/metadata`, {
+      const response = await fetch(`${this.apiUrl}/api/sync/metadata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)

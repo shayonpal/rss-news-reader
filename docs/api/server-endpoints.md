@@ -306,6 +306,50 @@ GET /api/health/cron
 }
 ```
 
+### 8. Article Freshness Health Check
+
+**Endpoint:** `GET /api/health/freshness`
+
+**Description:** Checks if articles are fresh by analyzing recent article timestamps and sync activity
+
+**Request:**
+```
+GET /api/health/freshness
+```
+
+**Response (Fresh Articles):**
+```json
+{
+  "status": "healthy",
+  "lastSyncAt": "2025-07-28T12:00:00Z",
+  "newestArticleAt": "2025-07-28T11:45:00Z",
+  "articlesInLast12Hours": 42,
+  "totalArticles": 1847,
+  "details": {
+    "hoursSinceLastSync": 1.1,
+    "hoursSinceNewestArticle": 1.25,
+    "stalenessStatus": "fresh"
+  }
+}
+```
+
+**Response (Stale Articles):**
+```json
+{
+  "status": "warning",
+  "lastSyncAt": "2025-07-26T14:00:00Z",
+  "newestArticleAt": "2025-07-26T13:45:00Z",
+  "articlesInLast12Hours": 0,
+  "totalArticles": 1805,
+  "details": {
+    "hoursSinceLastSync": 46.1,
+    "hoursSinceNewestArticle": 46.25,
+    "stalenessStatus": "stale",
+    "warning": "No new articles in 12+ hours"
+  }
+}
+```
+
 ---
 
 ## Rate Limiting
@@ -395,6 +439,9 @@ curl http://100.96.166.53:3147/reader/api/health/db
 
 # Cron health
 curl http://100.96.166.53:3147/reader/api/health/cron
+
+# Article freshness
+curl http://100.96.166.53:3147/reader/api/health/freshness
 ```
 
 #### Manual Sync

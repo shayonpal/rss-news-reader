@@ -66,28 +66,56 @@ pm2 stop all
 
 - **Application Health**: http://100.96.166.53:3147/api/health/app
 - **Database Health**: http://100.96.166.53:3147/api/health/db
+- **Article Freshness**: http://100.96.166.53:3147/api/health/freshness
+- **Cron Service Status**: http://100.96.166.53:3147/api/health/cron
 - **Sync Status**: Check via PM2 logs for `rss-sync-cron`
 
 ### Monitoring
 
-The RSS News Reader includes comprehensive monitoring with dual strategy:
+The RSS News Reader includes comprehensive multi-layered monitoring implemented after RR-26 sync failure resolution:
 
-- **Uptime Kuma**: External monitoring dashboard running on port 3080
-  - **Access URL**: http://localhost:3080
-  - **Services Monitored**: 6 monitors covering all RSS Reader services
-    - RSS Reader Production (port 3147)
-    - RSS Reader Development (port 3000)
-    - Bi-directional Sync Server (port 3001)
-    - Production Health Endpoint
-    - Development Health Endpoint
-    - Cron Service Health (file-based check)
-  - **Notifications**: Push notifications integrated with cron service
-  - **Docker Deployment**: Running on Colima Docker for isolation
+#### External Monitoring (Uptime Kuma)
+- **Access URL**: http://100.96.166.53:3080 (within Tailscale network)
+- **Services Monitored**: Complete coverage of all RSS Reader services
+  - RSS Reader Production (port 3147)
+  - RSS Reader Development (port 3000) 
+  - Bi-directional Sync Server (port 3001)
+  - Production Health Endpoint
+  - Development Health Endpoint
+  - Cron Service Health (file-based check)
+  - Sync API Endpoint monitoring
+  - Article freshness checks
+- **Push Notifications**: Integrated with cron service for sync success/failure tracking
+- **Docker Deployment**: Running on Colima Docker for isolation
 
-- **Internal Recovery**: monitor-services.sh script for automatic service recovery
-  - Checks service status and automatically restarts failed services
-  - Integrates with existing PM2 ecosystem
-  - Complements external monitoring with immediate recovery actions
+#### Internal Monitoring Scripts
+
+**Quick Status Dashboard**:
+```bash
+./scripts/monitor-dashboard.sh
+```
+Provides comprehensive overview of all services, PM2 processes, sync health, and recent alerts.
+
+**Sync Health Monitor**:
+```bash
+# Check sync status
+./scripts/sync-health-monitor.sh check
+
+# Run as daemon (auto-starts with system)
+./scripts/sync-health-monitor.sh daemon
+```
+Dedicated sync monitoring with alerts for consecutive failures, stale content, and service issues.
+
+**Service Recovery Monitor**:
+```bash
+./scripts/monitor-services.sh start
+```
+Auto-restarts failed services with rate limiting and Discord alert integration.
+
+#### Alert Channels
+- **Discord Webhook**: Immediate alerts for critical failures with @everyone mentions
+- **Uptime Kuma Dashboard**: Visual monitoring with historical data and response times
+- **Batched Alerts**: Prevents notification spam during temporary issues
 
 ### Network Requirements
 
@@ -378,9 +406,11 @@ src/
 - **[Product Requirements](docs/product/PRD.md)**: Detailed product specifications
 - **[User Stories](docs/product/user-stories.md)**: All user stories with acceptance criteria
 - **[Technical Architecture](docs/tech/)**: Implementation decisions and architecture
+- **[Monitoring and Alerting](docs/tech/monitoring-and-alerting.md)**: Multi-layered monitoring system with Discord alerts
 - **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
 - **[Deployment Guide](docs/deployment/caddy-pm2-setup.md)**: Production deployment instructions
+- **[RR-26 Analysis](docs/issues/RR-26-freshness-perception-analysis.md)**: Article freshness perception issue analysis
 
 ## API Integration
 

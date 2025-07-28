@@ -36,17 +36,17 @@
             "command": "/Users/shayon/DevProjects/rss-news-reader/.claude/hooks/feature-completion-detector.sh"
           }
         ]
-      },
-      {
-        "name": "Commit & Push Detector",
-        "description": "Detects commit & push requests and routes to git-expert with permission",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/shayon/DevProjects/rss-news-reader/.claude/hooks/commit-push-detector.sh"
-          }
-        ]
       }
+      // {
+      //   "name": "Commit & Push Detector",
+      //   "description": "Detects commit & push requests and routes to git-expert with permission",
+      //   "hooks": [
+      //     {
+      //       "type": "command",
+      //       "command": "/Users/shayon/DevProjects/rss-news-reader/.claude/hooks/commit-push-detector.sh"
+      //     }
+      //   ]
+      // }
     ]
   }
 }
