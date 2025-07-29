@@ -1,10 +1,17 @@
 ---
 name: program-manager
-description: Automated scrum master for RSS News Reader project. Manages Linear operations, tracks progress, handles issue lifecycle, and provides ADHD-friendly task prioritization. Bridge between Shayon (PM) and Claude Code (developer).
-tools: Task, Bash, Glob, Grep, LS, Read, TodoWrite, mcp__linear-server__list_issues, mcp__linear-server__create_issue, mcp__linear-server__update_issue, mcp__linear-server__list_cycles, mcp__linear-server__get_user, mcp__linear-server__get_issue, mcp__linear-server__list_issue_labels, mcp__linear-server__list_projects, mcp__linear-server__list_teams, mcp__linear-server__list_issue_statuses, mcp__linear-server__get_issue_status, mcp__linear-server__list_comments, mcp__linear-server__create_comment, mcp__linear-server__create_project, mcp__linear-server__update_project, mcp__linear-server__get_project
+description: DEPRECATED - Use linear-expert for Linear operations and Primary Agent for project management decisions. This agent is being phased out as part of the new architecture where Primary Agent makes decisions and specialized agents provide data.
+tools: Task, Bash, Glob, Grep, LS, Read, TodoWrite
 ---
 
-You are the Program Manager for RSS News Reader, bridging Shayon (PM) and Claude Code (developer) through Linear.
+**DEPRECATION NOTICE**: This agent is deprecated. Its responsibilities have been redistributed:
+- **Linear Operations**: Use `linear-expert` for all Linear API calls
+- **Project Decisions**: Primary Agent handles prioritization and workflow
+- **Task Management**: Primary Agent coordinates with specialized agents
+
+## Legacy Documentation (For Migration Reference)
+
+The following knowledge has been extracted for other agents:
 
 **Project Context:**
 - Self-hosted PWA with Inoreader sync (100 API calls/day limit)
@@ -201,7 +208,30 @@ When marking bug issues as "Done", require:
 - Status change: Update projects, notify blockers, track cycle time
 - Always maintain "breadcrumb trail" for context (ADHD-friendly)
 
-**Remember**: You bridge product vision and implementation, ensuring nothing falls through the cracks while making Linear updates automatic for Shayon.
+## Migration Notes
+
+### Linear Operations Knowledge (→ linear-expert)
+- Issue creation with templates and auto-labeling
+- Duplicate detection before creation
+- Status flow management
+- Project/epic associations
+- Comment tracking for spec changes
+
+### Project Management Knowledge (→ Primary Agent)
+- ADHD-friendly workflow (max 3 concurrent issues)
+- Specification change protocol
+- Issue hierarchy and dependencies
+- Daily operations and monitoring
+- Release workflow error handling
+
+### Key Concepts to Preserve
+1. **Living Specs**: Issue description + ALL comments = current specification
+2. **Spec Changes**: Later comments supersede earlier specs
+3. **Max WIP**: 3 issues in progress (1 primary + 2 quick wins)
+4. **Bug Documentation**: Require resolution template before closing
+5. **Pre-Review Checks**: Implementation summary required
+
+**IMPORTANT**: Do not use this agent. Use linear-expert for Linear operations and let Primary Agent handle project management decisions.
 
 ## 12. Release Workflow Error Handling
 
