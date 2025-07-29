@@ -238,14 +238,50 @@ class BiDirectionalSyncService {
   async trackApiUsage() {
     const today = new Date().toISOString().split('T')[0];
     
-    const { error } = await this.supabase.rpc('increment_api_usage', {
-      p_service: 'inoreader',
-      p_date: today,
-      p_increment: 1
-    });
+    // Temporary fix: Use direct table update instead of RPC function
+    // TODO: Create proper RPC function or update schema
+    try {
+      // First, try to update existing record
+      const { data: existing, error: selectError } = await this.supabase
+        .from('api_usage')
+        .select('*')
+        .eq('service', 'inoreader')
+        .eq('date', today)
+        .single();
 
-    if (error) {
-      console.error('[BiDirectionalSync] Error tracking API usage:', error);
+      if (selectError && selectError.code !== 'PGRST116') {
+        // PGRST116 = no rows found, which is expected for new days
+        console.error('[BiDirectionalSync] Error checking API usage:', selectError);
+        return;
+      }
+
+      if (existing) {
+        // Update existing record
+        const { error: updateError } = await this.supabase
+          .from('api_usage')
+          .update({ count: existing.count + 1 })
+          .eq('id', existing.id);
+
+        if (updateError) {
+          console.error('[BiDirectionalSync] Error updating API usage:', updateError);
+        }
+      } else {
+        // Insert new record
+        const { error: insertError } = await this.supabase
+          .from('api_usage')
+          .insert({
+            service: 'inoreader',
+            date: today,
+            count: 1,
+            created_at: new Date().toISOString()
+          });
+
+        if (insertError) {
+          console.error('[BiDirectionalSync] Error inserting API usage:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('[BiDirectionalSync] Unexpected error tracking API usage:', error);
     }
   }
 
