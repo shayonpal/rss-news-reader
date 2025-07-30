@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/db/supabase';
 import type { Feed, Folder, FeedWithUnreadCount } from '@/types';
 import type { Database } from '@/lib/db/types';
+import { debugLog, debugTiming } from '@/lib/utils/debug';
 
 interface FeedStoreState {
   // Feed data
@@ -60,7 +61,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Load feed hierarchy
   loadFeedHierarchy: async () => {
     const startTime = performance.now();
-    console.log('[FeedStore] Starting loadFeedHierarchy...');
+    debugLog('[FeedStore] Starting loadFeedHierarchy...');
     
     set({ loadingFeeds: true, feedsError: null });
     
@@ -73,7 +74,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         .select('id')
         .eq('inoreader_id', SINGLE_USER_ID)
         .single();
-      console.log(`[FeedStore] User query took ${(performance.now() - userStartTime).toFixed(2)}ms`);
+      debugTiming('[FeedStore] User query', userStartTime);
 
       if (!user) {
         throw new Error('User not found');
@@ -92,8 +93,8 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           .eq('user_id', user.id)
           .order('name')
       ]);
-      console.log(`[FeedStore] Feeds/folders query took ${(performance.now() - feedsStartTime).toFixed(2)}ms`);
-      console.log(`[FeedStore] Loaded ${feedsResult.data?.length || 0} feeds and ${foldersResult.data?.length || 0} folders`);
+      debugTiming('[FeedStore] Feeds/folders query', feedsStartTime);
+      debugLog(`[FeedStore] Loaded ${feedsResult.data?.length || 0} feeds and ${foldersResult.data?.length || 0} folders`);
       
       if (feedsResult.error) throw feedsResult.error;
       if (foldersResult.error) throw foldersResult.error;
@@ -135,8 +136,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         });
       });
       
-      const transformStartTime = performance.now();
-      console.log(`[FeedStore] Data transformation took ${(performance.now() - transformStartTime).toFixed(2)}ms`);
+      // Data transformation timing removed - was instantaneous
       
       set({
         feeds: feedsMap,
@@ -145,13 +145,11 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       });
       
       // Load unread counts
-      const unreadStartTime = performance.now();
       await get().updateUnreadCounts();
-      console.log(`[FeedStore] Unread counts update took ${(performance.now() - unreadStartTime).toFixed(2)}ms`);
-      console.log(`[FeedStore] Total loadFeedHierarchy took ${(performance.now() - startTime).toFixed(2)}ms`);
+      debugTiming('[FeedStore] Total loadFeedHierarchy', startTime);
     } catch (error) {
       console.error('Failed to load feeds:', error);
-      console.log(`[FeedStore] Failed after ${(performance.now() - startTime).toFixed(2)}ms`);
+      debugTiming('[FeedStore] Failed after', startTime);
       set({
         loadingFeeds: false,
         feedsError: `Failed to load feeds: ${error}`
@@ -388,7 +386,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Update unread counts
   updateUnreadCounts: async () => {
     const startTime = performance.now();
-    console.log('[FeedStore] Starting updateUnreadCounts...');
+    debugLog('[FeedStore] Starting updateUnreadCounts...');
     
     try {
       const { feeds, folders } = get();
@@ -396,7 +394,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       const folderCounts = new Map<string, number>();
       let totalUnread = 0;
       
-      console.log(`[FeedStore] Calculating unread counts for ${feeds.size} feeds...`);
+      debugLog(`[FeedStore] Calculating unread counts for ${feeds.size} feeds...`);
       
       // Get all unread counts in a single query
       const countStartTime = performance.now();
@@ -425,7 +423,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         error = result.error;
       } catch (e) {
         // Fallback if function doesn't exist
-        console.log('[FeedStore] Database function not found, using fallback method');
+        debugLog('[FeedStore] Database function not found, using fallback method');
         const result = await supabase
           .from('articles')
           .select('feed_id')
@@ -455,7 +453,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         }
       }
       
-      console.log(`[FeedStore] Unread count query took ${(performance.now() - countStartTime).toFixed(2)}ms`);
+      debugTiming('[FeedStore] Unread count query', countStartTime);
       
       // Apply counts to feeds
       for (const [feedId, feed] of Array.from(feeds.entries())) {
@@ -471,7 +469,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         }
       }
       
-      console.log(`[FeedStore] Total unread articles: ${totalUnread}`);
+      debugLog(`[FeedStore] Total unread articles: ${totalUnread}`);
       
       // Propagate folder counts up the hierarchy
       const propagateCount = (folderId: string, count: number) => {
@@ -496,10 +494,10 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         totalUnreadCount: totalUnread
       });
       
-      console.log(`[FeedStore] updateUnreadCounts completed in ${(performance.now() - startTime).toFixed(2)}ms`);
+      debugTiming('[FeedStore] updateUnreadCounts completed', startTime);
     } catch (error) {
       console.error('Failed to update unread counts:', error);
-      console.log(`[FeedStore] updateUnreadCounts failed after ${(performance.now() - startTime).toFixed(2)}ms`);
+      debugTiming('[FeedStore] updateUnreadCounts failed', startTime);
     }
   },
 
