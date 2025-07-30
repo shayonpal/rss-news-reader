@@ -425,7 +425,7 @@ ALTER TABLE articles ADD COLUMN author VARCHAR(255);
 
 ## Testing
 
-Visit `/test-server-api` to interactively test all endpoints with a user-friendly interface.
+Use curl commands or tools like Postman to test endpoints directly. All test/debug endpoints have been removed for security reasons.
 
 ### Curl Examples
 

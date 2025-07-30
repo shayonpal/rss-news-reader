@@ -1,6 +1,18 @@
 # Changelog
 
-## [Unreleased] - Monday, July 28, 2025 at 1:05 PM
+## [Unreleased] - Wednesday, July 30, 2025 at 1:06 AM
+
+### Fixed - Wednesday, July 30, 2025 at 1:06 AM
+- **Critical Security Fix (RR-69): Removed Test/Debug Endpoints**
+  - Removed 9 test/debug endpoints that exposed sensitive system information
+  - Deleted test pages: `/test-supabase`, `/test-server-api`, `/test-performance`, `/test-article-controls`
+  - Deleted debug APIs: `/api/test-supabase`, `/api/test-prompt-config`, `/api/test-api-endpoints`, `/api/test-refresh-stats`, `/api/debug/data-cleanup`
+  - Updated `validate-build.sh` to use production health endpoint instead of test endpoint
+  - Fixed 2 bugs discovered during testing: cron endpoint syntax error and freshness import issue
+  - All production functionality preserved, no breaking changes for users
+  - Comprehensive test suite created to prevent regression of removed endpoints
+
+## [0.8.0] - Monday, July 28, 2025 at 1:05 PM
 
 ### Fixed - Monday, July 28, 2025 at 1:05 PM
 - **Resolved 2-Day Sync Service Failure (RR-26)**

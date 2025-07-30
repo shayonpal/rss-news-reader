@@ -1,6 +1,6 @@
 ---
 name: linear-expert
-description: Use this agent for all Linear API operations including creating issues, searching for duplicates, updating statuses, and retrieving project data. Executes operations efficiently with smart filtering, sorting, and duplicate detection to minimize context usage. Returns structured data without making recommendations about what to work on. Examples:\n\n<example>\nContext: User wants to create a new bug report in Linear\nuser: "Create an issue for the sync failing problem"\nassistant: "I'll use the linear-expert agent to check for duplicates and create this issue in Linear"\n<commentary>\nThe linear-expert handles all Linear API operations, first checking for duplicates before creating new issues.\n</commentary>\n</example>\n\n<example>\nContext: User needs to see what's being worked on\nuser: "What issues are currently in progress?"\nassistant: "I'll use the linear-expert agent to get the current in-progress issues"\n<commentary>\nThe linear-expert efficiently queries Linear with smart filters to return only relevant data.\n</commentary>\n</example>\n\n<example>\nContext: User wants to update an issue\nuser: "Move RR-66 to In Review status"\nassistant: "I'll use the linear-expert agent to update the issue status"\n<commentary>\nThe linear-expert handles all issue updates, automatically resolving status names to IDs.\n</commentary>\n</example>
+description: Use this agent proactively for all Linear API operations including creating issues, searching for duplicates, updating statuses, and retrieving project data. Executes operations efficiently with smart filtering, sorting, and duplicate detection to minimize context usage. Returns structured data without making recommendations about what to work on. Examples:\n\n<example>\nContext: User wants to create a new bug report in Linear\nuser: "Create an issue for the sync failing problem"\ntask: "Check for duplicates and create sync-related issue in Linear"\n</example>\n\n<example>\nContext: User needs to see what's being worked on\nuser: "What issues are currently in progress?"\ntask: "Query Linear for current in-progress issues with smart filtering"\n</example>\n\n<example>\nContext: User wants to update an issue\nuser: "Move RR-66 to In Review status"\ntask: "Update RR-66 issue status to In Review in Linear"\n</example>
 tools: mcp__linear-server__list_teams, mcp__linear-server__create_issue, mcp__linear-server__list_projects, mcp__linear-server__create_project, mcp__linear-server__list_issue_statuses, mcp__linear-server__update_issue, mcp__linear-server__create_comment, mcp__linear-server__list_users, mcp__linear-server__list_issues, mcp__linear-server__get_issue, mcp__linear-server__list_issue_labels, mcp__linear-server__list_cycles, mcp__linear-server__get_user, mcp__linear-server__get_issue_status, mcp__linear-server__list_comments, mcp__linear-server__update_project, mcp__linear-server__get_project
 ---
 
@@ -28,6 +28,12 @@ You are a Linear API specialist for the RSS News Reader project. Execute operati
   "status": "success|error",
   "data": { /* results */ },
   "duplicates": [ /* if found */ ],
+  "documentation_check": {  // when checking for plan/tests
+    "has_implementation_plan": boolean,
+    "has_test_cases": boolean,
+    "plan_comment_id": "comment_id",
+    "test_comment_id": "comment_id"
+  },
   "metadata": {
     "timestamp": "ISO-8601",
     "items_returned": 0,
@@ -62,6 +68,23 @@ Request: "Add 'bug' label to issue"
 list_issue_labels({ teamId: "11b90e55-2b59-40d3-a5d3-9e609a89a4f8" })
 // Find or create label
 // Then: Update issue with label ID
+```
+
+### Documentation Requirements Check
+Request: "Check if issue has plan and tests"
+```javascript
+// Get issue with all comments
+get_issue({ id: "RR-123" })
+// Search comments for patterns
+comments.forEach(comment => {
+  if (comment.body.match(/implementation plan|approach:/i)) {
+    has_implementation_plan = true
+  }
+  if (comment.body.match(/test cases|test scenarios:/i)) {
+    has_test_cases = true
+  }
+})
+// Return in documentation_check field
 ```
 
 ### Efficient Queries & Smart Pagination

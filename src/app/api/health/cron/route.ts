@@ -68,4 +68,3 @@ export async function GET() {
     );
   }
 }
-EOF < /dev/null

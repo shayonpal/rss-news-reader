@@ -124,7 +124,7 @@ npm run setup:oauth
 - Created content extraction using Mozilla Readability
 - Integrated Claude 4 Sonnet for AI summaries
 - Added `api_usage` and `sync_metadata` tables
-- Created test page at `/test-server-api`
+- Created test page at `/test-server-api` [REMOVED in RR-69 for security]
 - All endpoints cache results to minimize API calls
 
 **Priority:** P0 - Core Feature  

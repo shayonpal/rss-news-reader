@@ -218,7 +218,7 @@
   - Added refresh_feed_stats() call in `/src/app/api/sync/route.ts` at line 278
   - Refresh happens after all articles are upserted but before sync metadata update
   - Errors are logged but don't fail the sync process
-  - Created test endpoint `/api/test-refresh-stats` for verification
+  - Created test endpoint `/api/test-refresh-stats` for verification [REMOVED in RR-69 for security]
 - **Completed**: January 22, 2025 - Refresh integrated with error handling
 
 ### TODO-006: Complete Automatic Daily Sync (P1 - Core) ✅ COMPLETED
@@ -545,7 +545,7 @@
   - Added environment variables to `.env` and `.env.example`
   - Updated PM2 ecosystem configuration with defaults
   - Created comprehensive documentation in `/src/lib/ai/README.md`
-  - Added test endpoint `/api/test-prompt-config` for verification
+  - Added test endpoint `/api/test-prompt-config` for verification [REMOVED in RR-69 for security]
 - **Environment Variables**:
   ```env
   SUMMARY_WORD_COUNT=150-175              # Target summary length (configurable)

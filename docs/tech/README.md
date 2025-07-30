@@ -57,6 +57,11 @@ This directory contains all technical documentation for the RSS News Reader appl
    - **Status**: Living Document 🔄
    - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
+10. **security.md**
+    - **Description**: Security measures, policies, and incident documentation
+    - **Status**: Current ✅
+    - **Contents**: Network security, authentication, security fixes (RR-69), best practices
+
 ## Architecture Overview
 
 ### System Architecture

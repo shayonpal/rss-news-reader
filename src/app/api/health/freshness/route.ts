@@ -1,11 +1,10 @@
-import { createClient } from '@/lib/supabase/server-write';
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/db/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const supabase = createClient();
     
     // Check the age of the most recent article
     const { data, error } = await supabase

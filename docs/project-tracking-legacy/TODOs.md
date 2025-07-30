@@ -135,8 +135,8 @@ The RSS News Reader is now successfully deployed to production:
   - [ ] Include troubleshooting section
   - [ ] Add examples of error scenarios
 - **Additional Endpoints to Document**:
-  - `GET /api/test-supabase` - Database connection test
-  - `GET /api/test-refresh-stats` - Refresh materialized view test
+  - `GET /api/test-supabase` - Database connection test [REMOVED in RR-69 for security]
+  - `GET /api/test-refresh-stats` - Refresh materialized view test [REMOVED in RR-69 for security]
   - `POST /api/sync/metadata` - Update sync metadata
   - Any other endpoints not currently in the docs
 - **Enhancement Areas**:

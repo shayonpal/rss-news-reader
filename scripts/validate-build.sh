@@ -505,17 +505,17 @@ validate_actual_service_functionality() {
         print_status "FAIL" "Auth status API endpoint not responding"
     fi
     
-    # Test Supabase connection with actual query
-    local supabase_test_response
-    if supabase_test_response=$(curl -s --max-time "$timeout" "$base_url/api/test-supabase" 2>/dev/null); then
-        if echo "$supabase_test_response" | grep -q '"success".*true\|"status".*"ok"' 2>/dev/null; then
-            print_status "PASS" "Supabase connection test successful"
+    # Test database connection via health check
+    local db_health_response
+    if db_health_response=$(curl -s --max-time "$timeout" "$base_url/api/health/db" 2>/dev/null); then
+        if echo "$db_health_response" | grep -q '"status".*"healthy"\|"status".*"ok"' 2>/dev/null; then
+            print_status "PASS" "Database connection healthy"
         else
-            print_status "FAIL" "Supabase connection test failed"
-            log "ERROR" "Supabase test response: $supabase_test_response"
+            print_status "FAIL" "Database connection unhealthy"
+            log "ERROR" "Database health response: $db_health_response"
         fi
     else
-        print_status "FAIL" "Supabase test endpoint not responding"
+        print_status "FAIL" "Database health endpoint not responding"
     fi
     
     # Test 3: Comprehensive health check with detailed validation
