@@ -1,9 +1,13 @@
 # Changelog
 
-## [Unreleased] - Wednesday, July 30, 2025 at 3:25 AM
+## [0.9.0] - Wednesday, July 30, 2025 at 8:07 AM
 
-### Changed - Wednesday, July 30, 2025 at 3:25 AM
+### Added
+- **Debug Utilities for Development**
+  - Added development-only debug logging utilities
+  - Helps diagnose issues during development without affecting production
 
+### Changed
 - **Removed Unused Authentication Components (RR-71)**
   - Deleted 13 unused authentication-related files (921 lines of code removed)
   - Removed components: `auth-status.tsx`, `login-button.tsx`, `logout-button.tsx`, `user-profile.tsx`, `auth-guard.tsx`
@@ -17,8 +21,18 @@
   - No user-facing changes - auth UI was already not visible
   - Comprehensive test suite added (46 tests) to prevent regression
 
-### Technical - Wednesday, July 30, 2025 at 1:51 AM
+### Fixed
+- **Critical Security Fix (RR-69): Removed Test/Debug Endpoints**
+  - Removed 9 test/debug endpoints that exposed sensitive system information
+  - Deleted test pages: `/test-supabase`, `/test-server-api`, `/test-performance`, `/test-article-controls`
+  - Deleted debug APIs: `/api/test-supabase`, `/api/test-prompt-config`, `/api/test-api-endpoints`, `/api/test-refresh-stats`, `/api/debug/data-cleanup`
+  - Updated `validate-build.sh` to use production health endpoint instead of test endpoint
+  - Fixed 2 bugs discovered during testing: cron endpoint syntax error and freshness import issue
+  - All production functionality preserved, no breaking changes for users
+  - Comprehensive test suite created to prevent regression of removed endpoints
+- **Service Worker formatting and broken file cleanup**
 
+### Technical
 - **Log Management System Implementation (RR-75): Clean Up Log Files (30MB)**
   - Reduced log directory from 30MB to 1.8MB (94% reduction)
   - Implemented PM2 auto-rotation: 1MB max size, 3 file retention, compression enabled
@@ -28,17 +42,6 @@
   - Enhanced `rotate-health-logs.sh` to handle both .log and .jsonl files
   - All services remain stable with automated log management
 - **Agent Architecture Reorganization**: Moved unused agent definitions to `.claude/disabled-agents/` for cleaner project structure
-
-### Fixed - Wednesday, July 30, 2025 at 1:06 AM
-
-- **Critical Security Fix (RR-69): Removed Test/Debug Endpoints**
-  - Removed 9 test/debug endpoints that exposed sensitive system information
-  - Deleted test pages: `/test-supabase`, `/test-server-api`, `/test-performance`, `/test-article-controls`
-  - Deleted debug APIs: `/api/test-supabase`, `/api/test-prompt-config`, `/api/test-api-endpoints`, `/api/test-refresh-stats`, `/api/debug/data-cleanup`
-  - Updated `validate-build.sh` to use production health endpoint instead of test endpoint
-  - Fixed 2 bugs discovered during testing: cron endpoint syntax error and freshness import issue
-  - All production functionality preserved, no breaking changes for users
-  - Comprehensive test suite created to prevent regression of removed endpoints
 
 ## [0.8.0] - Monday, July 28, 2025 at 1:05 PM
 
