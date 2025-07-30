@@ -1,6 +1,20 @@
 # Changelog
 
-## [Unreleased] - Wednesday, July 30, 2025 at 1:51 AM
+## [Unreleased] - Wednesday, July 30, 2025 at 3:25 AM
+
+### Changed - Wednesday, July 30, 2025 at 3:25 AM
+- **Removed Unused Authentication Components (RR-71)**
+  - Deleted 13 unused authentication-related files (921 lines of code removed)
+  - Removed components: `auth-status.tsx`, `login-button.tsx`, `logout-button.tsx`, `user-profile.tsx`, `auth-guard.tsx`
+  - Removed neutered auth store: `auth-store.ts`
+  - Removed unused OAuth routes: `/api/auth/inoreader/*` endpoints (5 routes)
+  - Removed OAuth utilities: `oauth-config.ts`, `oauth-utils.ts`
+  - Removed unused `feed-sidebar.tsx` component
+  - Updated `header.tsx` to show clean "RSS Reader" branding
+  - Updated API client to remove auth refresh interceptor
+  - All server-side OAuth functionality preserved
+  - No user-facing changes - auth UI was already not visible
+  - Comprehensive test suite added (46 tests) to prevent regression
 
 ### Technical - Wednesday, July 30, 2025 at 1:51 AM
 - **Log Management System Implementation (RR-75): Clean Up Log Files (30MB)**
@@ -11,6 +25,7 @@
   - Added cleanup utilities: `cleanup-large-logs.sh`, `cleanup-old-numbered-logs.sh`
   - Enhanced `rotate-health-logs.sh` to handle both .log and .jsonl files
   - All services remain stable with automated log management
+- **Agent Architecture Reorganization**: Moved unused agent definitions to `.claude/disabled-agents/` for cleaner project structure
 
 ### Fixed - Wednesday, July 30, 2025 at 1:06 AM
 - **Critical Security Fix (RR-69): Removed Test/Debug Endpoints**
