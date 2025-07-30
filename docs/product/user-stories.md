@@ -11,6 +11,7 @@ This document contains user stories for completing the RSS Reader PWA based on t
 The document includes 21 user stories organized into 7 epics, with the existing 2 open GitHub issues (#31, #32) incorporated as future enhancements.
 
 **Key Architecture Principles:**
+
 - Server handles ALL Inoreader API communication (4-5 calls per sync)
 - Client has NO authentication - access controlled by Tailscale network
 - Data flows: Inoreader → Server → Supabase → Client
@@ -19,6 +20,7 @@ The document includes 21 user stories organized into 7 epics, with the existing 
 ## Primary Persona
 
 ### Shayon
+
 - **Role**: Tech-savvy Product Manager with ADHD
 - **Context**: Single user of a self-hosted RSS reader
 - **Goals**: Efficient news consumption with AI summaries
@@ -38,6 +40,7 @@ The document includes 21 user stories organized into 7 epics, with the existing 
 **So that** I never need to authenticate in the client
 
 **Acceptance Criteria:**
+
 - [x] One-time OAuth setup script using Playwright automation
 - [x] Uses test credentials from `.env` file
 - [x] Runs on Mac Mini with localhost:8080 callback
@@ -47,6 +50,7 @@ The document includes 21 user stories organized into 7 epics, with the existing 
 - [x] Clear success/error messages during setup
 
 **Implementation Notes:**
+
 ```bash
 npm run setup:oauth
 # Automated flow:
@@ -71,6 +75,7 @@ npm run setup:oauth
 **So that** fresh content is always available without manual intervention
 
 **Acceptance Criteria:**
+
 - [ ] Cron job runs daily sync at midnight (future)
 - [x] Efficient API usage: 4-5 calls per sync
 - [x] Single stream endpoint fetches ALL articles (max 100)
@@ -81,16 +86,18 @@ npm run setup:oauth
 - [ ] Read state changes synced to Inoreader using batch updates (future)
 
 **API Efficiency:**
+
 ```typescript
 // 4-5 API calls total:
-1. /subscription/list     // Get feeds
-2. /tag/list             // Get tags  
-3. /stream/contents      // Get ALL articles
-4. /unread-count         // Get counts
-5. /edit-tag             // Update read states (if needed)
+1 / subscription / list; // Get feeds
+2 / tag / list; // Get tags
+3 / stream / contents; // Get ALL articles
+4 / unread - count; // Get counts
+5 / edit - tag; // Update read states (if needed)
 ```
 
 **Implementation Notes:**
+
 - Created `/api/sync` endpoint for manual sync
 - Created `/api/sync/status/:id` for polling sync progress
 - Uses server-side OAuth tokens from `~/.rss-reader/tokens.json`
@@ -111,6 +118,7 @@ npm run setup:oauth
 **So that** the client can trigger server-side actions
 
 **Acceptance Criteria:**
+
 - [x] `POST /api/sync` - Trigger manual sync
 - [x] `GET /api/sync/status/:id` - Check sync progress
 - [x] `POST /api/articles/:id/fetch-content` - Extract full content
@@ -120,11 +128,12 @@ npm run setup:oauth
 - [x] Response format consistent across endpoints
 
 **Implementation Notes:**
+
 - Enhanced `/api/sync` with rate limiting and usage tracking
 - Created content extraction using Mozilla Readability
 - Integrated Claude 4 Sonnet for AI summaries
 - Added `api_usage` and `sync_metadata` tables
-- Created test page at `/test-server-api`
+- Created test page at `/test-server-api` [REMOVED in RR-69 for security]
 - All endpoints cache results to minimize API calls
 
 **Priority:** P0 - Core Feature  
@@ -140,6 +149,7 @@ npm run setup:oauth
 **So that** I can read full articles without ads or clutter
 
 **Acceptance Criteria:**
+
 - [ ] Mozilla Readability integration
 - [ ] Extracts clean, readable content
 - [ ] Preserves essential media (images, videos, tweets)
@@ -162,6 +172,7 @@ npm run setup:oauth
 **So that** the service remains accessible
 
 **Acceptance Criteria:**
+
 - [ ] Health check every 5 minutes
 - [ ] Auto-restart with `sudo tailscale up` if down. This might need to be set up passwordless.
 - [ ] Sudo configured in `/etc/sudoers.d/tailscale`:
@@ -189,6 +200,7 @@ npm run setup:oauth
 **So that** I don't need any authentication in the client
 
 **Acceptance Criteria:**
+
 - [x] Remove all OAuth code from client
 - [x] Remove authentication guards
 - [x] Remove token management
@@ -197,6 +209,7 @@ npm run setup:oauth
 - [x] Access controlled by Tailscale network only
 
 **Implementation Notes:**
+
 - Removed AuthGuard from all pages
 - Updated sync store to use fixed single-user ID
 - Removed logout button from feed sidebar
@@ -215,6 +228,7 @@ npm run setup:oauth
 **So that** all data operations are simplified
 
 **Acceptance Criteria:**
+
 - [x] Remove all Inoreader API calls
 - [x] Convert stores to Supabase queries only
 - [x] Load feeds, articles, tags from Supabase
@@ -223,6 +237,7 @@ npm run setup:oauth
 - [x] Handle Supabase connection errors gracefully
 
 **Implementation Notes:**
+
 - Updated feed-store.ts to use Supabase queries instead of IndexedDB
 - Updated article-store.ts to use Supabase for all article operations
 - Removed inoreaderService dependencies from sync store
@@ -242,6 +257,7 @@ npm run setup:oauth
 **So that** complex logic stays on the server
 
 **Acceptance Criteria:**
+
 - [x] Sync button calls `POST /api/sync` - Working perfectly
 - [x] Poll sync status with `GET /api/sync/status/:id` - Tested and functional
 - [ ] "Fetch Full Content" calls server API (endpoint ready, UI integration pending)
@@ -250,6 +266,7 @@ npm run setup:oauth
 - [x] Error handling for server API failures - Includes rate limit warnings
 
 **Implementation Notes:**
+
 - Fixed API endpoint paths to include `/reader` prefix from Next.js basePath
 - Successfully syncs 168 articles across multiple feeds in ~11 seconds
 - Rate limit information displayed in sidebar (with yellow/red warnings)
@@ -273,6 +290,7 @@ npm run setup:oauth
 **So that** I can quickly grasp key points without reading full articles
 
 **Acceptance Criteria:**
+
 - [x] Server-side Anthropic Claude 4 Sonnet integration
 - [x] 150-175 word summaries
 - [x] Summaries stored in `ai_summary` field
@@ -281,6 +299,7 @@ npm run setup:oauth
 - [x] Error handling for API failures
 
 **Implementation Notes:**
+
 - Server endpoint at `/api/articles/:id/summarize` is fully functional
 - Uses Claude 4 Sonnet model: `claude-sonnet-4-20250514`
 - Summaries are being successfully stored in database
@@ -290,6 +309,7 @@ npm run setup:oauth
 - **Future Consideration**: Once US-104 (Content Extraction) is complete, consider requiring full_content for all summaries to ensure accuracy, as RSS content may be truncated
 
 **Prompt Template:**
+
 ```
 You are a news summarization assistant. Create a concise summary
 of the following article in 150-175 words. Focus on the key facts,
@@ -322,6 +342,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I can benefit from the summarization feature
 
 **Acceptance Criteria:**
+
 - [x] "Summarize" button on articles without summaries
 - [x] "Re-summarize" button for existing summaries
 - [x] Loading state during generation (shimmer animation)
@@ -331,6 +352,7 @@ Write a clear, informative summary that captures the essence of this article wit
 - [x] Paragraph formatting preserved in summaries
 
 **Implementation Notes:**
+
 - Created SummaryButton component with icon and full variants
 - Created SummaryDisplay component with collapsible UI
 - Article list shows full summary replacing content snippet
@@ -356,6 +378,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I can focus on unread content or review previously read articles
 
 **Acceptance Criteria:**
+
 - [x] Dropdown filter with three options:
   - "Unread only" (default) - Focus on new content
   - "Read only" - Review previously read articles
@@ -369,6 +392,7 @@ Write a clear, informative summary that captures the essence of this article wit
 - [x] Enhanced UI with filter descriptions in dropdown
 
 **Implementation Details:**
+
 - Created ArticleCountManager for database count caching
 - Enhanced ArticleHeader component with real-time count updates
 - Fixed Next.js hydration error on iOS Safari
@@ -387,6 +411,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I can focus on specific content
 
 **Acceptance Criteria:**
+
 - [ ] Two-tab interface: "Feeds" and "Tags"
 - [ ] Feeds tab shows hierarchical structure
 - [ ] Tags tab shows flat list
@@ -407,6 +432,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I can choose my preferred reading mode
 
 **Acceptance Criteria:**
+
 - [ ] Theme toggle in settings
 - [ ] Options: Light, Dark, System
 - [ ] Smooth theme transitions
@@ -426,6 +452,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I know when content was last updated
 
 **Acceptance Criteria:**
+
 - [ ] Last sync timestamp in settings
 - [ ] Sync progress indicator
 - [ ] Success/error messages
@@ -449,6 +476,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** it fits my server organization
 
 **Acceptance Criteria:**
+
 - [ ] Caddy reverse proxy configured
 - [ ] Routes `/reader` to Next.js port 3000
 - [ ] Next.js basePath set to `/reader`
@@ -472,6 +500,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** there's no legacy data inconsistency
 
 **Acceptance Criteria:**
+
 - [ ] Clear all existing article data
 - [ ] Keep Supabase schema unchanged
 - [ ] First server sync populates clean data
@@ -491,6 +520,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I can troubleshoot issues
 
 **Acceptance Criteria:**
+
 - [ ] Server API errors display clearly
 - [ ] Tailscale connection errors handled
 - [ ] Supabase connection errors handled
@@ -514,6 +544,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** the app feels native
 
 **Acceptance Criteria:**
+
 - [ ] Initial load < 2 seconds
 - [ ] Article list renders < 1 second
 - [ ] Article opens < 0.5 seconds
@@ -533,6 +564,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** the app works like a native app
 
 **Acceptance Criteria:**
+
 - [ ] Install prompt at right time
 - [ ] App icons for all platforms
 - [ ] Splash screens configured
@@ -556,9 +588,10 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I can navigate to specific feeds without scrolling
 
 **Acceptance Criteria:**
+
 - [ ] Search input at top of feed sidebar
 - [ ] Real-time filtering as user types
-- [ ] Searches in feed and folder names  
+- [ ] Searches in feed and folder names
 - [ ] Case-insensitive partial matching
 - [ ] Parent folders auto-expand to show matches
 - [ ] Clear button to reset search
@@ -566,6 +599,7 @@ Write a clear, informative summary that captures the essence of this article wit
 - [ ] Keyboard shortcut (Cmd/Ctrl + K)
 
 **Implementation Notes:**
+
 - Client-side only feature
 - Works with existing Supabase feeds data
 - Use fuzzy matching for better results
@@ -583,6 +617,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **So that** I don't have to re-expand folders every session
 
 **Acceptance Criteria:**
+
 - [ ] Folder states save on expand/collapse
 - [ ] States persist across sessions
 - [ ] Handle folder structure changes gracefully
@@ -591,6 +626,7 @@ Write a clear, informative summary that captures the essence of this article wit
 - [ ] Use localStorage for persistence
 
 **Implementation Notes:**
+
 - Store state keyed by folder Inoreader ID
 - Clean up state for deleted folders
 - No server interaction required
@@ -608,24 +644,28 @@ Write a clear, informative summary that captures the essence of this article wit
 
 **Context:**
 The current sync implementation fetches the latest N articles (configured via `SYNC_MAX_ARTICLES`, default 200) and uses database-level deduplication via upsert operations with `onConflict: 'inoreader_id'`. This approach:
+
 - Ensures no duplicates (database unique constraint)
 - Updates existing articles with latest read/starred status
 - Handles overlapping time ranges elegantly
 - Maintains data integrity without complex state management
 
 **Potential Benefits of Date Parameters (`ot`/`nt`):**
+
 - Reduced API payload size (fetch only new articles)
 - Lower Supabase write operations
 - Faster sync completion times
 - More frequent sync capability within rate limits
 
 **Current Approach Advantages:**
+
 - Simplicity (no timestamp tracking needed)
 - Always updates read/starred status for recent articles
 - No risk of missing articles due to time gaps
 - Robust error recovery (no partial state)
 
 **Acceptance Criteria:**
+
 - [ ] Monitor current sync performance and API usage patterns
 - [ ] Track scenarios where >200 new articles accumulate between syncs
 - [ ] Evaluate if users experience delays with current approach
@@ -636,6 +676,7 @@ The current sync implementation fetches the latest N articles (configured via `S
   - Supabase costs become significant
 
 **Implementation Considerations:**
+
 - Would require tracking last successful sync timestamp
 - Need to handle edge cases (long gaps, time zone issues)
 - Continuation tokens for fetching >1000 new articles
@@ -655,6 +696,7 @@ The current sync implementation fetches the latest N articles (configured via `S
 **So that** I can adjust summary style, length, and focus without code changes
 
 **Acceptance Criteria:**
+
 - [ ] Default prompt template remains in code as fallback
 - [ ] Environment variables override default settings:
   - [ ] `CLAUDE_SUMMARY_WORD_COUNT` - Target word count (default: "150-175")
@@ -670,12 +712,14 @@ The current sync implementation fetches the latest N articles (configured via `S
 - [ ] Document prompt engineering best practices
 
 **Implementation Notes:**
+
 - Store in `.env` file on server
 - Hot-reload not required (restart acceptable)
 - Consider prompt versioning for A/B testing
 - Log which prompt version was used per summary
 
 **Example Configuration:**
+
 ```env
 CLAUDE_SUMMARY_WORD_COUNT=200-250
 CLAUDE_SUMMARY_FOCUS=key facts, main arguments, implications, and author's perspective
@@ -694,6 +738,7 @@ CLAUDE_SUMMARY_PROMPT=Summarize this article in {WORD_COUNT} words focusing on {
 **So that** I can optimize for cost, quality, or availability without code changes
 
 **Acceptance Criteria:**
+
 - [ ] Support for multiple LLM providers:
   - [ ] Anthropic (Claude models)
   - [ ] OpenAI (GPT models)
@@ -713,6 +758,7 @@ CLAUDE_SUMMARY_PROMPT=Summarize this article in {WORD_COUNT} words focusing on {
 - [ ] Usage tracking per provider/model
 
 **Supported Models:**
+
 ```env
 # Anthropic
 - claude-3-opus-20240229
@@ -733,6 +779,7 @@ CLAUDE_SUMMARY_PROMPT=Summarize this article in {WORD_COUNT} words focusing on {
 ```
 
 **Implementation Notes:**
+
 - Create provider abstraction layer
 - Standardize prompt format across providers
 - Handle provider-specific token limits
@@ -740,6 +787,7 @@ CLAUDE_SUMMARY_PROMPT=Summarize this article in {WORD_COUNT} words focusing on {
 - Consider cost tracking per provider
 
 **Example Configuration:**
+
 ```env
 # Primary provider
 LLM_PROVIDER=anthropic
@@ -763,18 +811,21 @@ PERPLEXITY_API_KEY=pplx-...
 ## Success Metrics
 
 ### Core Functionality
+
 - [ ] Server sync completes in < 10 seconds
 - [ ] API usage stays under 50 calls/day average
 - [ ] Zero authentication required in client
 - [ ] All data flows through Supabase
 
 ### Performance
+
 - [ ] Page loads under 2 seconds
 - [ ] 99% sync success rate
 - [ ] Smooth offline/online transitions
 - [ ] No data loss during operations
 
 ### User Experience
+
 - [ ] Can read 50+ articles without friction
 - [ ] 80% of AI summaries are helpful
 - [ ] Clear error recovery paths
@@ -783,28 +834,33 @@ PERPLEXITY_API_KEY=pplx-...
 ## Implementation Priority
 
 ### Phase 0: CRITICAL SECURITY (Immediate)
+
 1. **US-801**: Enable Row Level Security (P0 - Critical)
 2. **US-802**: Fix Function Security (P0 - Security)
 3. **US-803**: Database Performance Optimization (P1)
 
 ### Phase 1: Server Foundation (Week 1)
+
 1. US-101: OAuth Setup ✅
 2. US-102: Sync Service (Partial)
 3. US-103: API Endpoints ✅
 4. US-105: Tailscale Monitoring
 
 ### Phase 2: Client Simplification (Week 2)
+
 1. US-201: Remove Authentication ✅
 2. US-202: Supabase-Only Data ✅
 3. US-203: Server API Integration (Partial)
 
 ### Phase 3: Core Features (Week 3)
+
 1. US-104: Content Extraction
 2. US-301: Claude Integration
 3. US-302: Summary UI
 4. US-401: Feed/Tag Filtering
 
 ### Phase 4: Production (Week 4)
+
 1. US-501: Caddy Configuration
 2. US-502: Clean Migration
 3. US-503: Error Handling
@@ -812,11 +868,13 @@ PERPLEXITY_API_KEY=pplx-...
 5. US-804: Database Monitoring
 
 ### Phase 5: Polish (Week 5)
+
 1. US-402: Theme Toggle
 2. US-601: Performance
 3. US-602: PWA Polish
 
 ### Phase 6: Future Enhancements
+
 1. US-701: Feed Search
 2. US-702: Folder State Persistence
 3. US-703: Incremental Sync Evaluation
@@ -826,6 +884,7 @@ PERPLEXITY_API_KEY=pplx-...
 ## Technical Notes
 
 ### No Client-Side Complexity
+
 - No OAuth flows
 - No API rate limiting
 - No token management
@@ -833,6 +892,7 @@ PERPLEXITY_API_KEY=pplx-...
 - No offline sync logic
 
 ### Server Handles Everything
+
 - OAuth tokens
 - Inoreader API calls
 - Content extraction
@@ -841,6 +901,7 @@ PERPLEXITY_API_KEY=pplx-...
 - Error recovery
 
 ### Clean Architecture
+
 - Server: Node.js + Express + Playwright
 - Client: Next.js + Tailwind + Zustand
 - Data: Supabase (PostgreSQL)
@@ -865,6 +926,7 @@ This simplified architecture dramatically reduces complexity while maintaining a
 Supabase advisory (2025-07-21) identified that RLS is disabled on all public tables, creating a major security vulnerability where anyone with the anon key could read/modify data.
 
 **Acceptance Criteria:**
+
 - [ ] Enable RLS on all public tables:
   - [ ] `public.users` table
   - [ ] `public.feeds` table
@@ -881,6 +943,7 @@ Supabase advisory (2025-07-21) identified that RLS is disabled on all public tab
 - [ ] Document the RLS policies in migration file
 
 **Implementation Notes:**
+
 ```sql
 -- Example RLS policy for single-user setup
 ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
@@ -906,12 +969,14 @@ CREATE POLICY "Single user can read articles" ON public.articles
 **So that** it cannot be exploited for SQL injection attacks
 
 **Acceptance Criteria:**
+
 - [ ] Update `public.update_updated_at_column` function with explicit search_path
 - [ ] Set search_path to 'public' only
 - [ ] Test that the function still works correctly
 - [ ] Create migration to update existing function
 
 **Implementation Notes:**
+
 ```sql
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER
@@ -940,6 +1005,7 @@ $$;
 Performance analysis shows timezone queries consuming 45.4% of execution time, schema introspection taking 10.2%, and slow upsert operations.
 
 **Acceptance Criteria:**
+
 - [ ] **Timezone Optimization**:
   - [ ] Investigate why timezone queries are so frequent
   - [ ] Implement caching or alternative approach
@@ -959,6 +1025,7 @@ Performance analysis shows timezone queries consuming 45.4% of execution time, s
   - [ ] Consider materialized views for complex aggregations
 
 **Performance Targets:**
+
 - [ ] Average query response time < 20ms
 - [ ] No single query type consuming > 20% of total time
 - [ ] Feed load time < 500ms (down from 6.4s)
@@ -975,6 +1042,7 @@ Performance analysis shows timezone queries consuming 45.4% of execution time, s
 **So that** I can proactively identify and fix issues
 
 **Acceptance Criteria:**
+
 - [ ] Set up automated Supabase advisor reports
 - [ ] Create alerts for:
   - [ ] Slow queries (> 100ms)
@@ -1002,6 +1070,7 @@ Performance analysis shows timezone queries consuming 45.4% of execution time, s
 The article view interface buttons are currently non-functional, preventing users from using key features like starring articles, navigating between articles, and accessing the summarize functionality.
 
 **Acceptance Criteria:**
+
 - [ ] "Back to list view" button returns to article list
 - [ ] Star/unstar button toggles article starred state
 - [ ] "Open original article" link opens in new tab
@@ -1012,6 +1081,7 @@ The article view interface buttons are currently non-functional, preventing user
 - [ ] Loading states display during async operations
 
 **Implementation Notes:**
+
 - Check ArticleView component event handlers
 - Verify router navigation setup
 - Ensure Supabase updates are triggered correctly
@@ -1033,6 +1103,7 @@ The article view interface buttons are currently non-functional, preventing user
 Server logs show multiple 404 errors for missing favicon and app icon files during development, indicating missing PWA assets that should be present.
 
 **Acceptance Criteria:**
+
 - [ ] Create or fix missing favicon files:
   - [ ] `/icons/favicon-16x16.png`
   - [ ] `/icons/favicon-32x32.png`
@@ -1045,6 +1116,7 @@ Server logs show multiple 404 errors for missing favicon and app icon files duri
 - [ ] Clean server logs with no 404 errors for assets
 
 **Implementation Notes:**
+
 - Check `public/` directory for missing files
 - Verify `manifest.json` icon references
 - Generate missing icon sizes if needed
@@ -1059,18 +1131,21 @@ Server logs show multiple 404 errors for missing favicon and app icon files duri
 ## Updated Success Metrics
 
 ### Security
+
 - [ ] All tables have RLS enabled
 - [ ] No security warnings in Supabase advisor
 - [ ] All functions have explicit search_path
 - [ ] Zero unauthorized data access attempts
 
-### Performance  
+### Performance
+
 - [ ] Feed sidebar loads in < 500ms
 - [ ] No query consuming > 20% of total execution time
 - [ ] Average query response < 20ms
 - [ ] Timezone queries reduced by > 80%
 
 ### User Experience
+
 - [ ] All UI controls function properly
 - [ ] No broken navigation flows
 - [ ] Consistent interaction feedback

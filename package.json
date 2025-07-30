@@ -1,6 +1,6 @@
 {
   "name": "rss-news-reader",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,8 +8,11 @@
     "dev:https": "node server.js",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "dev:turbo": "next dev --turbo",
+    "prebuild": "./scripts/validate-env.sh",
     "build": "next build",
+    "build:prod": "NEXT_BUILD_DIR=.next-prod next build",
     "start": "next start",
+    "start:prod": "NEXT_BUILD_DIR=.next-prod next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "vitest",
@@ -62,6 +65,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^14.2.15",
+    "@playwright/test": "^1.54.1",
     "@tailwindcss/typography": "^0.5.14",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",

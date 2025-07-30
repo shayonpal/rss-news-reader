@@ -1,5 +1,5 @@
-import { db } from './database';
-import type { Article } from '@/types';
+import { db } from "./database";
+import type { Article } from "@/types";
 
 export interface StorageStats {
   totalBytes: number;
@@ -33,34 +33,34 @@ export class StorageManager {
         availableBytes,
         quotaPercentage,
         isNearLimit: quotaPercentage >= this.QUOTA_WARNING_THRESHOLD,
-        isCritical: quotaPercentage >= this.QUOTA_CRITICAL_THRESHOLD
+        isCritical: quotaPercentage >= this.QUOTA_CRITICAL_THRESHOLD,
       };
     } catch (error) {
-      console.error('Failed to get storage estimate:', error);
+      console.error("Failed to get storage estimate:", error);
       return null;
     }
   }
 
   async requestPersistentStorage(): Promise<boolean> {
     try {
-      if ('storage' in navigator && 'persist' in navigator.storage) {
+      if ("storage" in navigator && "persist" in navigator.storage) {
         return await navigator.storage.persist();
       }
       return false;
     } catch (error) {
-      console.error('Failed to request persistent storage:', error);
+      console.error("Failed to request persistent storage:", error);
       return false;
     }
   }
 
   async isPersistentStorageGranted(): Promise<boolean> {
     try {
-      if ('storage' in navigator && 'persisted' in navigator.storage) {
+      if ("storage" in navigator && "persisted" in navigator.storage) {
         return await navigator.storage.persisted();
       }
       return false;
     } catch (error) {
-      console.error('Failed to check persistent storage status:', error);
+      console.error("Failed to check persistent storage status:", error);
       return false;
     }
   }
@@ -68,7 +68,7 @@ export class StorageManager {
   async pruneOldArticles(): Promise<number> {
     try {
       const count = await db.articles.count();
-      
+
       if (count <= this.MAX_ARTICLES) {
         return 0;
       }
@@ -77,36 +77,40 @@ export class StorageManager {
 
       // Get articles to keep (recent, unread, or favorited)
       const articlesToKeep = await db.articles
-        .orderBy('publishedAt')
+        .orderBy("publishedAt")
         .reverse()
         .limit(this.MAX_ARTICLES)
         .primaryKeys();
 
       // Delete excess articles that are not favorites
-      const deleted = await db.transaction('rw', [db.articles, db.summaries], async () => {
-        const toDelete = await db.articles
-          .where('id')
-          .noneOf(articlesToKeep)
-          .and(article => !article.tags?.includes('favorite'))
-          .primaryKeys();
+      const deleted = await db.transaction(
+        "rw",
+        [db.articles, db.summaries],
+        async () => {
+          const toDelete = await db.articles
+            .where("id")
+            .noneOf(articlesToKeep)
+            .and((article) => !article.tags?.includes("favorite"))
+            .primaryKeys();
 
-        if (toDelete.length === 0) {
-          return 0;
+          if (toDelete.length === 0) {
+            return 0;
+          }
+
+          // Delete articles and their summaries
+          await Promise.all([
+            db.articles.bulkDelete(toDelete),
+            db.summaries.where("articleId").anyOf(toDelete).delete(),
+          ]);
+
+          return toDelete.length;
         }
-
-        // Delete articles and their summaries
-        await Promise.all([
-          db.articles.bulkDelete(toDelete),
-          db.summaries.where('articleId').anyOf(toDelete).delete()
-        ]);
-
-        return toDelete.length;
-      });
+      );
 
       console.log(`Pruned ${deleted} old articles`);
       return deleted;
     } catch (error) {
-      console.error('Failed to prune old articles:', error);
+      console.error("Failed to prune old articles:", error);
       return 0;
     }
   }
@@ -116,10 +120,10 @@ export class StorageManager {
       // Keep only last 30 days of API usage
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - 30);
-      const cutoffString = cutoffDate.toISOString().split('T')[0];
+      const cutoffString = cutoffDate.toISOString().split("T")[0];
 
       const deleted = await db.apiUsage
-        .where('date')
+        .where("date")
         .below(cutoffString)
         .delete();
 
@@ -129,7 +133,7 @@ export class StorageManager {
 
       return deleted;
     } catch (error) {
-      console.error('Failed to prune old API usage:', error);
+      console.error("Failed to prune old API usage:", error);
       return 0;
     }
   }
@@ -137,9 +141,9 @@ export class StorageManager {
   async cleanupOrphanedData(): Promise<void> {
     try {
       await db.vacuum();
-      console.log('Cleanup completed');
+      console.log("Cleanup completed");
     } catch (error) {
-      console.error('Failed to cleanup orphaned data:', error);
+      console.error("Failed to cleanup orphaned data:", error);
     }
   }
 
@@ -149,21 +153,21 @@ export class StorageManager {
     stats: StorageStats | null;
   }> {
     const stats = await this.getStorageStats();
-    
+
     // If we're near the quota limit, be more aggressive with cleanup
     const shouldCleanup = stats?.isNearLimit || false;
-    
+
     if (!shouldCleanup) {
       return {
         articlesDeleted: 0,
         apiRecordsDeleted: 0,
-        stats
+        stats,
       };
     }
 
     const [articlesDeleted, apiRecordsDeleted] = await Promise.all([
       this.pruneOldArticles(),
-      this.pruneOldApiUsage()
+      this.pruneOldApiUsage(),
     ]);
 
     await this.cleanupOrphanedData();
@@ -173,42 +177,42 @@ export class StorageManager {
     return {
       articlesDeleted,
       apiRecordsDeleted,
-      stats: newStats
+      stats: newStats,
     };
   }
 
   async handleQuotaExceeded(): Promise<boolean> {
-    console.warn('Storage quota exceeded, attempting cleanup...');
-    
+    console.warn("Storage quota exceeded, attempting cleanup...");
+
     try {
       const result = await this.performMaintenanceCleanup();
-      
+
       if (result.articlesDeleted === 0 && result.apiRecordsDeleted === 0) {
         // If no cleanup was possible, try a more aggressive approach
         const currentCount = await db.articles.count();
         const targetCount = Math.floor(this.MAX_ARTICLES * 0.7); // Keep only 70%
-        
+
         if (currentCount > targetCount) {
           const toDelete = currentCount - targetCount;
           const deletedIds = await db.articles
-            .orderBy('publishedAt')
+            .orderBy("publishedAt")
             .limit(toDelete)
             .primaryKeys();
-          
-          await db.transaction('rw', [db.articles, db.summaries], async () => {
+
+          await db.transaction("rw", [db.articles, db.summaries], async () => {
             await Promise.all([
               db.articles.bulkDelete(deletedIds),
-              db.summaries.where('articleId').anyOf(deletedIds).delete()
+              db.summaries.where("articleId").anyOf(deletedIds).delete(),
             ]);
           });
-          
+
           console.log(`Emergency cleanup: deleted ${toDelete} articles`);
         }
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Failed to handle quota exceeded:', error);
+      console.error("Failed to handle quota exceeded:", error);
       return false;
     }
   }
@@ -220,12 +224,12 @@ export class StorageManager {
     stats: StorageStats | null;
   }> {
     const stats = await this.getStorageStats();
-    
+
     if (!stats) {
       return {
         isHealthy: false,
-        warning: 'Unable to check storage status',
-        stats: null
+        warning: "Unable to check storage status",
+        stats: null,
       };
     }
 
@@ -233,7 +237,7 @@ export class StorageManager {
       return {
         isHealthy: false,
         warning: `Storage is critically full (${Math.round(stats.quotaPercentage * 100)}%). Some data may be automatically cleaned up.`,
-        stats
+        stats,
       };
     }
 
@@ -241,13 +245,13 @@ export class StorageManager {
       return {
         isHealthy: false,
         warning: `Storage is getting full (${Math.round(stats.quotaPercentage * 100)}%). Consider clearing old data.`,
-        stats
+        stats,
       };
     }
 
     return {
       isHealthy: true,
-      stats
+      stats,
     };
   }
 }

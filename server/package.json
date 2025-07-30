@@ -1,0 +1,16 @@
+{
+  "name": "rss-reader-server",
+  "version": "1.0.0",
+  "description": "RSS Reader Server Components",
+  "scripts": {
+    "test": "vitest",
+    "test:unit": "vitest run --reporter=verbose",
+    "test:integration": "vitest run --reporter=verbose **/*.integration.test.js",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.5",
+    "@vitest/coverage-v8": "^2.0.5"
+  }
+}

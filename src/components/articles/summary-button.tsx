@@ -1,16 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Loader2, Sparkles, RotateCcw } from 'lucide-react';
-import { useArticleStore } from '@/lib/stores/article-store';
-import { cn } from '@/lib/utils';
-import { IOSButton } from '@/components/ui/ios-button';
-import { ArticleActionButton, type ArticleActionButtonSize } from '@/components/ui/article-action-button';
+import { useState } from "react";
+import { Loader2, Sparkles, RotateCcw } from "lucide-react";
+import { useArticleStore } from "@/lib/stores/article-store";
+import { cn } from "@/lib/utils";
+import { IOSButton } from "@/components/ui/ios-button";
+import {
+  ArticleActionButton,
+  type ArticleActionButtonSize,
+} from "@/components/ui/article-action-button";
 
 interface SummaryButtonProps {
   articleId: string;
   hasSummary: boolean;
-  variant?: 'icon' | 'full';
+  variant?: "icon" | "full";
   size?: ArticleActionButtonSize;
   className?: string;
   onSuccess?: () => void;
@@ -19,10 +22,10 @@ interface SummaryButtonProps {
 export function SummaryButton({
   articleId,
   hasSummary,
-  variant = 'full',
-  size = 'sm',
+  variant = "full",
+  size = "sm",
   className,
-  onSuccess
+  onSuccess,
 }: SummaryButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,14 +39,16 @@ export function SummaryButton({
       await generateSummary(articleId, hasSummary);
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate summary');
-      console.error('Summary generation error:', err);
+      setError(
+        err instanceof Error ? err.message : "Failed to generate summary"
+      );
+      console.error("Summary generation error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (variant === 'icon') {
+  if (variant === "icon") {
     return (
       <ArticleActionButton
         icon={hasSummary ? RotateCcw : Sparkles}

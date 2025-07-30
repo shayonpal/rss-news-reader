@@ -51,7 +51,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         style={{
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",
-          ...props.style
+          ...props.style,
         }}
       />
     );

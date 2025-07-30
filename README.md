@@ -27,15 +27,125 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **Dark/Light Mode**: Manual theme control
 - **Supabase Backend**: All client data served from PostgreSQL
 
+## Server Architecture
+
+The RSS News Reader requires several services to be running for full functionality:
+
+### Services & Ports
+
+| Service Name        | PM2 Process Name | Port | Environment | Purpose                               |
+| ------------------- | ---------------- | ---- | ----------- | ------------------------------------- |
+| RSS Reader App      | rss-reader-prod  | 3147 | Production  | Main web application server           |
+| RSS Reader Dev      | rss-reader-dev   | 3000 | Development | Development server (when running)     |
+| Sync Cron Service   | rss-sync-cron    | N/A  | Both        | Automated article syncing (2AM & 2PM) |
+| Supabase PostgreSQL | N/A              | 5432 | Both        | Database server (cloud-hosted)        |
+| Tailscale           | N/A              | N/A  | Both        | VPN for secure network access         |
+
+### Essential Startup Commands
+
+```bash
+# Start all production services
+pm2 start ecosystem.config.js
+
+# Check service status
+pm2 status
+
+# View service logs
+pm2 logs rss-reader-prod
+pm2 logs rss-sync-cron
+
+# Restart services
+pm2 restart rss-reader-prod
+pm2 restart rss-sync-cron
+
+# Stop services
+pm2 stop all
+```
+
+### Health Check Endpoints
+
+- **Application Health**: http://100.96.166.53:3147/api/health/app
+- **Database Health**: http://100.96.166.53:3147/api/health/db
+- **Article Freshness**: http://100.96.166.53:3147/api/health/freshness
+- **Cron Service Status**: http://100.96.166.53:3147/api/health/cron
+- **Sync Status**: Check via PM2 logs for `rss-sync-cron`
+
+### Monitoring
+
+The RSS News Reader includes comprehensive multi-layered monitoring implemented after RR-26 sync failure resolution:
+
+#### External Monitoring (Uptime Kuma)
+
+- **Access URL**: http://100.96.166.53:3080 (within Tailscale network)
+- **Services Monitored**: Complete coverage of all RSS Reader services
+  - RSS Reader Production (port 3147)
+  - RSS Reader Development (port 3000)
+  - Bi-directional Sync Server (port 3001)
+  - Production Health Endpoint
+  - Development Health Endpoint
+  - Cron Service Health (file-based check)
+  - Sync API Endpoint monitoring
+  - Article freshness checks
+- **Push Notifications**: Integrated with cron service for sync success/failure tracking
+- **Docker Deployment**: Running on Colima Docker for isolation
+
+#### Internal Monitoring Scripts
+
+**Quick Status Dashboard**:
+
+```bash
+./scripts/monitor-dashboard.sh
+```
+
+Provides comprehensive overview of all services, PM2 processes, sync health, and recent alerts.
+
+**Sync Health Monitor**:
+
+```bash
+# Check sync status
+./scripts/sync-health-monitor.sh check
+
+# Run as daemon (auto-starts with system)
+./scripts/sync-health-monitor.sh daemon
+```
+
+Dedicated sync monitoring with alerts for consecutive failures, stale content, and service issues.
+
+**Service Recovery Monitor**:
+
+```bash
+./scripts/monitor-services.sh start
+```
+
+Auto-restarts failed services with rate limiting and Discord alert integration.
+
+#### Alert Channels
+
+- **Discord Webhook**: Immediate alerts for critical failures with @everyone mentions
+- **Uptime Kuma Dashboard**: Visual monitoring with historical data and response times
+- **Batched Alerts**: Prevents notification spam during temporary issues
+
+### Network Requirements
+
+**Important**: All access is controlled through Tailscale VPN. Ensure:
+
+- Tailscale is running and connected
+- You're connected to the same Tailscale network
+- Access URLs via Tailscale IP (100.96.166.53)
+
+The application is not accessible via public internet by design for security.
+
 ## Technology Stack
 
 ### Server
+
 - **Runtime**: Node.js with Express
 - **Authentication**: OAuth 2.0 with encrypted token storage
 - **Automation**: Playwright for OAuth setup
 - **Data Sync**: Inoreader API → Supabase
 
 ### Client
+
 - **Framework**: Next.js 14+ with App Router
 - **Language**: TypeScript 5+
 - **Styling**: Tailwind CSS v3+ with Typography plugin
@@ -55,6 +165,7 @@ The RSS reader includes an automatic sync service that runs twice daily to keep 
 - **Error Handling**: Automatic retry with exponential backoff
 
 ### Sync Features
+
 - Fetches up to 100 new articles per sync
 - Round-robin distribution across feeds (max 20 per feed)
 - Updates read/unread counts
@@ -62,13 +173,33 @@ The RSS reader includes an automatic sync service that runs twice daily to keep 
 - Tracks success/failure metrics
 
 ### Production Deployment
+
+The RSS Reader includes a comprehensive build validation system to prevent deployment of broken builds:
+
 ```bash
-# Start both app and cron service
+# Build and deploy with validation (recommended)
+./scripts/build-and-start-prod.sh
+
+# Validate existing build before deployment
+./scripts/validate-build.sh --mode full
+
+# Emergency rollback to last working build
+./scripts/rollback-last-build.sh
+
+# Standard PM2 deployment (without validation)
 pm2 start ecosystem.config.js
 
 # Monitor sync logs
 tail -f logs/sync-cron.jsonl | jq .
 ```
+
+**Build Validation Features**:
+
+- **Pre-deployment Validation**: Ensures all API routes are compiled correctly
+- **Automatic Backup**: Creates backup before each deployment
+- **Rollback Capability**: Restore last known good build if deployment fails
+- **PM2 Integration**: Pre-start hooks prevent broken builds from starting
+- **Uptime Kuma Notifications**: Build status pushed to monitoring system
 
 For detailed automatic sync documentation, see [docs/deployment/automatic-sync.md](docs/deployment/automatic-sync.md).
 
@@ -84,6 +215,7 @@ The RSS reader includes bi-directional sync that pushes your reading activity ba
 - **Sync Queue**: Local changes queued until successfully synced
 
 ### How It Works
+
 1. User actions (marking read, starring) are tracked locally
 2. Changes are added to a sync queue with timestamps
 3. Every 5 minutes, the sync service processes the queue
@@ -124,6 +256,14 @@ This ensures your reading progress stays synchronized across all Inoreader clien
 
    Edit `.env` with your API credentials (see .env.example for all required values)
 
+   **Important**: All environment variables are REQUIRED. Use the validation script to verify:
+
+   ```bash
+   ./scripts/validate-env.sh
+   ```
+
+   The build process will automatically validate environment variables before building.
+
 4. **Set up server OAuth (one-time)**
 
    ```bash
@@ -131,6 +271,7 @@ This ensures your reading progress stays synchronized across all Inoreader clien
    ```
 
    This runs a Playwright script that:
+
    - Starts a local OAuth server on port 8080
    - Opens Inoreader login page
    - Uses test credentials from .env
@@ -138,28 +279,32 @@ This ensures your reading progress stays synchronized across all Inoreader clien
    - Stores them in `~/.rss-reader/tokens.json`
 
 5. **Start development server**
+
    ```bash
    npm run dev:network
    ```
-   
+
    **Access the app**: http://100.96.166.53:3000/reader (via Tailscale)
-   
+
    **Note**: No authentication required in the client. Access is controlled by Tailscale network.
 
 ### Important: Server-Client Architecture
 
 **New Architecture (January 2025):**
+
 - **Server**: Handles all Inoreader API communication
 - **Client**: No authentication - reads from Supabase only
 - **Access**: Controlled by Tailscale network
 
 **Data Flow:**
+
 1. Server syncs from Inoreader API (4-5 calls)
 2. Server stores data in Supabase
 3. Client reads from Supabase
 4. No direct Inoreader API calls from client
 
 **URLs:**
+
 - Development: http://100.96.166.53:3000/reader
 - Production: http://100.96.166.53/reader (requires Caddy setup)
 
@@ -193,8 +338,13 @@ npm run build           # Production build
 npm run start           # Start production server
 npm run analyze         # Bundle size analysis
 npm run clean           # Clean build artifacts
-```
 
+# Build Validation & Safety
+./scripts/validate-build.sh --mode basic   # Quick validation
+./scripts/validate-build.sh --mode full    # Comprehensive validation
+./scripts/build-and-start-prod.sh          # Safe production deployment
+./scripts/rollback-last-build.sh           # Emergency rollback
+```
 
 ## Project Structure
 
@@ -241,7 +391,7 @@ src/
 ### Key Milestones Achieved
 
 - **Server-Client Architecture** - Complete separation of concerns
-- **No Client Authentication** - Access controlled by Tailscale network  
+- **No Client Authentication** - Access controlled by Tailscale network
 - **Automatic Daily Sync** - Cron service runs at 2 AM and 2 PM Toronto time
 - **Database-Driven Filtering** - Real-time counts with 5-minute cache
 - **PWA Installable** - Works on mobile and desktop devices
@@ -275,9 +425,11 @@ src/
 - **[Product Requirements](docs/product/PRD.md)**: Detailed product specifications
 - **[User Stories](docs/product/user-stories.md)**: All user stories with acceptance criteria
 - **[Technical Architecture](docs/tech/)**: Implementation decisions and architecture
-- **[Health Check System](docs/health-check-system.md)**: System monitoring and health checks
+- **[Monitoring and Alerting](docs/tech/monitoring-and-alerting.md)**: Multi-layered monitoring system with Discord alerts
+- **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
 - **[Deployment Guide](docs/deployment/caddy-pm2-setup.md)**: Production deployment instructions
+- **[RR-26 Analysis](docs/issues/RR-26-freshness-perception-analysis.md)**: Article freshness perception issue analysis
 
 ## API Integration
 
@@ -300,11 +452,13 @@ src/
 Key configuration options:
 
 - **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per sync (default: 100)
+
   - Controls how many articles are retrieved from Inoreader in each sync operation
   - Lower values reduce API usage and sync time
   - Higher values ensure more complete article history
 
 - **`ARTICLES_RETENTION_LIMIT`**: Number of articles to keep during auto-cleanup (default: 1000)
+
   - Sets the maximum number of articles to retain in the database
   - Auto-cleanup feature to be implemented in future updates
   - Helps manage storage space and database performance
@@ -350,6 +504,7 @@ Inoreader API → Server (Node.js) → Supabase → Client (Next.js)
 ### API Efficiency
 
 Server sync uses only 4-5 API calls:
+
 1. `/subscription/list` - Get all feeds
 2. `/tag/list` - Get tags (if needed)
 3. `/stream/contents` - Get ALL articles (max 100)
@@ -370,69 +525,75 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 ### Core Tables
 
 #### 1. Users Table
+
 **Purpose**: Store user accounts (currently single-user application)
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique user identifier |
-| inoreader_id | text | UNIQUE, NOT NULL | Inoreader account ID |
-| username | text | | Inoreader username |
-| email | text | | User email address |
-| preferences | jsonb | DEFAULT '{}' | User preferences storage |
-| created_at | timestamptz | DEFAULT now() | Account creation timestamp |
-| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+| Column       | Type        | Constraints                             | Description                |
+| ------------ | ----------- | --------------------------------------- | -------------------------- |
+| id           | uuid        | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique user identifier     |
+| inoreader_id | text        | UNIQUE, NOT NULL                        | Inoreader account ID       |
+| username     | text        |                                         | Inoreader username         |
+| email        | text        |                                         | User email address         |
+| preferences  | jsonb       | DEFAULT '{}'                            | User preferences storage   |
+| created_at   | timestamptz | DEFAULT now()                           | Account creation timestamp |
+| updated_at   | timestamptz | DEFAULT now()                           | Last update timestamp      |
 
-**Indexes**: 
+**Indexes**:
+
 - Primary key on `id`
 - Unique index on `inoreader_id`
 
 #### 2. Feeds Table
+
 **Purpose**: Store RSS feed subscriptions
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique feed identifier |
-| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
-| inoreader_id | text | UNIQUE, NOT NULL | Inoreader feed ID |
-| title | text | NOT NULL | Feed display name |
-| url | text | | Feed URL |
-| site_url | text | | Website URL |
-| icon_url | text | | Feed icon/favicon URL |
-| folder_id | uuid | REFERENCES folders(id) ON DELETE SET NULL | Parent folder |
-| is_partial_content | boolean | DEFAULT false | Requires full content extraction |
-| created_at | timestamptz | DEFAULT now() | Subscription timestamp |
-| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+| Column             | Type        | Constraints                               | Description                      |
+| ------------------ | ----------- | ----------------------------------------- | -------------------------------- |
+| id                 | uuid        | PRIMARY KEY, DEFAULT uuid_generate_v4()   | Unique feed identifier           |
+| user_id            | uuid        | REFERENCES users(id) ON DELETE CASCADE    | Associated user                  |
+| inoreader_id       | text        | UNIQUE, NOT NULL                          | Inoreader feed ID                |
+| title              | text        | NOT NULL                                  | Feed display name                |
+| url                | text        |                                           | Feed URL                         |
+| site_url           | text        |                                           | Website URL                      |
+| icon_url           | text        |                                           | Feed icon/favicon URL            |
+| folder_id          | uuid        | REFERENCES folders(id) ON DELETE SET NULL | Parent folder                    |
+| is_partial_content | boolean     | DEFAULT false                             | Requires full content extraction |
+| created_at         | timestamptz | DEFAULT now()                             | Subscription timestamp           |
+| updated_at         | timestamptz | DEFAULT now()                             | Last update timestamp            |
 
 **Indexes**:
+
 - Primary key on `id`
 - Foreign key index on `user_id`
 - Unique index on `inoreader_id`
 - Index on `folder_id`
 
 #### 3. Articles Table
+
 **Purpose**: Store individual articles from feeds
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique article identifier |
-| feed_id | uuid | REFERENCES feeds(id) ON DELETE CASCADE | Parent feed |
-| inoreader_id | text | UNIQUE, NOT NULL | Inoreader article ID |
-| title | text | NOT NULL | Article title |
-| url | text | | Article URL |
-| content | text | | RSS content/summary |
-| full_content | text | | Extracted full content |
-| has_full_content | boolean | DEFAULT false | Full content availability |
-| ai_summary | text | | Claude-generated summary |
-| author | text | | Article author |
-| published | timestamptz | | Publication date |
-| is_read | boolean | DEFAULT false | Read status |
-| is_starred | boolean | DEFAULT false | Starred status |
-| last_local_update | timestamptz | | Last local change timestamp |
-| last_sync_update | timestamptz | | Last sync from Inoreader |
-| created_at | timestamptz | DEFAULT now() | Import timestamp |
-| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+| Column            | Type        | Constraints                             | Description                 |
+| ----------------- | ----------- | --------------------------------------- | --------------------------- |
+| id                | uuid        | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique article identifier   |
+| feed_id           | uuid        | REFERENCES feeds(id) ON DELETE CASCADE  | Parent feed                 |
+| inoreader_id      | text        | UNIQUE, NOT NULL                        | Inoreader article ID        |
+| title             | text        | NOT NULL                                | Article title               |
+| url               | text        |                                         | Article URL                 |
+| content           | text        |                                         | RSS content/summary         |
+| full_content      | text        |                                         | Extracted full content      |
+| has_full_content  | boolean     | DEFAULT false                           | Full content availability   |
+| ai_summary        | text        |                                         | Claude-generated summary    |
+| author            | text        |                                         | Article author              |
+| published         | timestamptz |                                         | Publication date            |
+| is_read           | boolean     | DEFAULT false                           | Read status                 |
+| is_starred        | boolean     | DEFAULT false                           | Starred status              |
+| last_local_update | timestamptz |                                         | Last local change timestamp |
+| last_sync_update  | timestamptz |                                         | Last sync from Inoreader    |
+| created_at        | timestamptz | DEFAULT now()                           | Import timestamp            |
+| updated_at        | timestamptz | DEFAULT now()                           | Last update timestamp       |
 
 **Indexes**:
+
 - Primary key on `id`
 - Foreign key index on `feed_id`
 - Unique index on `inoreader_id`
@@ -442,111 +603,122 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 - Index on `is_starred` for filtering
 
 #### 4. Folders Table
+
 **Purpose**: Feed organization hierarchy
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique folder identifier |
-| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
-| inoreader_id | text | UNIQUE | Inoreader folder ID |
-| title | text | NOT NULL | Folder name |
-| parent_id | uuid | REFERENCES folders(id) ON DELETE CASCADE | Parent folder (nested) |
-| created_at | timestamptz | DEFAULT now() | Creation timestamp |
-| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+| Column       | Type        | Constraints                              | Description              |
+| ------------ | ----------- | ---------------------------------------- | ------------------------ |
+| id           | uuid        | PRIMARY KEY, DEFAULT uuid_generate_v4()  | Unique folder identifier |
+| user_id      | uuid        | REFERENCES users(id) ON DELETE CASCADE   | Associated user          |
+| inoreader_id | text        | UNIQUE                                   | Inoreader folder ID      |
+| title        | text        | NOT NULL                                 | Folder name              |
+| parent_id    | uuid        | REFERENCES folders(id) ON DELETE CASCADE | Parent folder (nested)   |
+| created_at   | timestamptz | DEFAULT now()                            | Creation timestamp       |
+| updated_at   | timestamptz | DEFAULT now()                            | Last update timestamp    |
 
 **Indexes**:
+
 - Primary key on `id`
 - Foreign key index on `user_id`
 - Unique index on `inoreader_id`
 - Index on `parent_id`
 
 #### 5. Sync Metadata Table
+
 **Purpose**: Track sync operation statistics
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique sync identifier |
-| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
-| last_sync | timestamptz | | Last successful sync time |
-| last_sync_status | text | | Status (success/error) |
-| sync_count | integer | DEFAULT 0 | Total sync operations |
-| success_count | integer | DEFAULT 0 | Successful syncs |
-| error_count | integer | DEFAULT 0 | Failed syncs |
-| last_error | text | | Last error message |
-| created_at | timestamptz | DEFAULT now() | First sync timestamp |
-| updated_at | timestamptz | DEFAULT now() | Last update timestamp |
+| Column           | Type        | Constraints                             | Description               |
+| ---------------- | ----------- | --------------------------------------- | ------------------------- |
+| id               | uuid        | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique sync identifier    |
+| user_id          | uuid        | REFERENCES users(id) ON DELETE CASCADE  | Associated user           |
+| last_sync        | timestamptz |                                         | Last successful sync time |
+| last_sync_status | text        |                                         | Status (success/error)    |
+| sync_count       | integer     | DEFAULT 0                               | Total sync operations     |
+| success_count    | integer     | DEFAULT 0                               | Successful syncs          |
+| error_count      | integer     | DEFAULT 0                               | Failed syncs              |
+| last_error       | text        |                                         | Last error message        |
+| created_at       | timestamptz | DEFAULT now()                           | First sync timestamp      |
+| updated_at       | timestamptz | DEFAULT now()                           | Last update timestamp     |
 
 **Indexes**:
+
 - Primary key on `id`
 - Foreign key index on `user_id`
 
 #### 6. API Usage Table
+
 **Purpose**: Track API rate limits and usage
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique usage record |
-| user_id | uuid | REFERENCES users(id) ON DELETE CASCADE | Associated user |
-| date | date | NOT NULL | Usage date |
-| inoreader_calls | integer | DEFAULT 0 | Inoreader API calls |
-| claude_calls | integer | DEFAULT 0 | Claude API calls |
-| created_at | timestamptz | DEFAULT now() | Record creation |
-| updated_at | timestamptz | DEFAULT now() | Last update |
+| Column          | Type        | Constraints                             | Description         |
+| --------------- | ----------- | --------------------------------------- | ------------------- |
+| id              | uuid        | PRIMARY KEY, DEFAULT uuid_generate_v4() | Unique usage record |
+| user_id         | uuid        | REFERENCES users(id) ON DELETE CASCADE  | Associated user     |
+| date            | date        | NOT NULL                                | Usage date          |
+| inoreader_calls | integer     | DEFAULT 0                               | Inoreader API calls |
+| claude_calls    | integer     | DEFAULT 0                               | Claude API calls    |
+| created_at      | timestamptz | DEFAULT now()                           | Record creation     |
+| updated_at      | timestamptz | DEFAULT now()                           | Last update         |
 
 **Indexes**:
+
 - Primary key on `id`
 - Compound unique index on `(user_id, date)`
 - Index on `date` for cleanup
 
 #### 7. System Config Table
+
 **Purpose**: Cache system configuration to reduce repeated queries
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| key | text | PRIMARY KEY | Configuration key |
-| value | jsonb | NOT NULL | Configuration value |
-| created_at | timestamptz | DEFAULT now() | Creation timestamp |
+| Column     | Type        | Constraints   | Description           |
+| ---------- | ----------- | ------------- | --------------------- |
+| key        | text        | PRIMARY KEY   | Configuration key     |
+| value      | jsonb       | NOT NULL      | Configuration value   |
+| created_at | timestamptz | DEFAULT now() | Creation timestamp    |
 | updated_at | timestamptz | DEFAULT now() | Last update timestamp |
 
 **Usage**: Caches timezone settings and other system configurations to reduce database overhead
 
 #### 8. Sync Queue Table
+
 **Purpose**: Track local changes for bi-directional sync to Inoreader
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique queue entry |
-| article_id | uuid | REFERENCES articles(id) ON DELETE CASCADE | Article being synced |
-| inoreader_id | text | NOT NULL | Inoreader article ID |
-| action_type | text | NOT NULL, CHECK IN ('read','unread','star','unstar') | Action to sync |
-| action_timestamp | timestamptz | NOT NULL | When action occurred |
-| sync_attempts | integer | DEFAULT 0 | Number of sync attempts |
-| last_attempt_at | timestamptz | | Last sync attempt time |
-| created_at | timestamptz | DEFAULT now() | Queue entry creation |
+| Column           | Type        | Constraints                                          | Description             |
+| ---------------- | ----------- | ---------------------------------------------------- | ----------------------- |
+| id               | uuid        | PRIMARY KEY, DEFAULT gen_random_uuid()               | Unique queue entry      |
+| article_id       | uuid        | REFERENCES articles(id) ON DELETE CASCADE            | Article being synced    |
+| inoreader_id     | text        | NOT NULL                                             | Inoreader article ID    |
+| action_type      | text        | NOT NULL, CHECK IN ('read','unread','star','unstar') | Action to sync          |
+| action_timestamp | timestamptz | NOT NULL                                             | When action occurred    |
+| sync_attempts    | integer     | DEFAULT 0                                            | Number of sync attempts |
+| last_attempt_at  | timestamptz |                                                      | Last sync attempt time  |
+| created_at       | timestamptz | DEFAULT now()                                        | Queue entry creation    |
 
 **Indexes**:
+
 - Primary key on `id`
 - Foreign key index on `article_id`
 - Index on `sync_attempts` for retry queries
 - Index on `created_at` for batch processing
 
 #### 9. Fetch Logs Table
+
 **Purpose**: Track full content extraction attempts
 
-| Column | Type | Constraints | Description |
-|--------|------|------------|-------------|
-| id | uuid | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique log entry |
-| article_id | uuid | REFERENCES articles(id) ON DELETE CASCADE | Article being fetched |
-| feed_id | uuid | REFERENCES feeds(id) ON DELETE CASCADE | Parent feed |
-| fetch_type | text | NOT NULL, CHECK IN ('manual','auto') | Fetch trigger type |
-| success | boolean | NOT NULL | Extraction success status |
-| error_reason | text | | Error message if failed |
-| response_time_ms | integer | | API response time |
-| content_length | integer | | Extracted content size |
-| extraction_method | text | | Method used (readability, etc) |
-| created_at | timestamptz | DEFAULT now() | Fetch timestamp |
+| Column            | Type        | Constraints                               | Description                    |
+| ----------------- | ----------- | ----------------------------------------- | ------------------------------ |
+| id                | uuid        | PRIMARY KEY, DEFAULT gen_random_uuid()    | Unique log entry               |
+| article_id        | uuid        | REFERENCES articles(id) ON DELETE CASCADE | Article being fetched          |
+| feed_id           | uuid        | REFERENCES feeds(id) ON DELETE CASCADE    | Parent feed                    |
+| fetch_type        | text        | NOT NULL, CHECK IN ('manual','auto')      | Fetch trigger type             |
+| success           | boolean     | NOT NULL                                  | Extraction success status      |
+| error_reason      | text        |                                           | Error message if failed        |
+| response_time_ms  | integer     |                                           | API response time              |
+| content_length    | integer     |                                           | Extracted content size         |
+| extraction_method | text        |                                           | Method used (readability, etc) |
+| created_at        | timestamptz | DEFAULT now()                             | Fetch timestamp                |
 
 **Indexes**:
+
 - Primary key on `id`
 - Foreign key index on `article_id`
 - Foreign key index on `feed_id`
@@ -554,6 +726,7 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 - Index on `fetch_type` for analytics
 
 **Security**:
+
 - Row Level Security (RLS) enabled
 - Authenticated users can view and insert fetch logs
 - No public access allowed
@@ -561,11 +734,12 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 ### Performance Optimizations
 
 #### Materialized View: feed_stats
+
 **Purpose**: Pre-calculate unread counts for performance
 
 ```sql
 CREATE MATERIALIZED VIEW feed_stats AS
-SELECT 
+SELECT
   f.id as feed_id,
   f.user_id,
   COUNT(a.id) FILTER (WHERE NOT a.is_read) as unread_count,
@@ -577,6 +751,7 @@ GROUP BY f.id, f.user_id;
 ```
 
 **Indexes**:
+
 - Unique index on `feed_id` for concurrent refresh
 - Index on `user_id`
 
@@ -591,10 +766,12 @@ GROUP BY f.id, f.user_id;
 #### Database Functions
 
 1. **get_unread_counts_by_feed(p_user_id uuid)**
+
    - Returns aggregated unread counts per feed
    - Reduces data transfer by 92.4% (290 rows → 22 rows)
 
 2. **refresh_feed_stats()**
+
    - Refreshes the materialized view
    - Called automatically after each sync
 
@@ -614,18 +791,21 @@ GROUP BY f.id, f.user_id;
 All tables have RLS enabled with the following policies:
 
 1. **Users Table**:
+
    - SELECT: Only user 'shayon' can read
    - INSERT: Only user 'shayon' can insert
    - UPDATE: Only user 'shayon' can update own record
    - DELETE: No deletes allowed
 
 2. **Feeds, Articles, Folders Tables**:
+
    - SELECT: Only user 'shayon' can read own data
    - INSERT: Only service role (server) can insert
    - UPDATE: Client can update specific fields (is_read, is_starred)
    - DELETE: Only service role can delete
 
 3. **Sync Metadata, API Usage Tables**:
+
    - All operations restricted to service role (server only)
 
 4. **Fetch Logs Table**:
@@ -651,7 +831,7 @@ feeds (1) ────── (n) articles
 
 ```sql
 -- Get all feeds with unread counts
-SELECT 
+SELECT
   f.*,
   fs.unread_count,
   fs.total_count
@@ -662,13 +842,13 @@ ORDER BY f.title;
 
 -- Get unread articles for a feed
 SELECT * FROM articles
-WHERE feed_id = $1 
+WHERE feed_id = $1
   AND is_read = false
 ORDER BY published DESC
 LIMIT 50;
 
 -- Mark article as read
-UPDATE articles 
+UPDATE articles
 SET is_read = true, updated_at = now()
 WHERE id = $1;
 

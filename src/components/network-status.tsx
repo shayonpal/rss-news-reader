@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { WifiOff, Wifi } from 'lucide-react';
-import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { cn } from '@/lib/utils';
+import { WifiOff, Wifi } from "lucide-react";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { cn } from "@/lib/utils";
 
 export function NetworkStatus() {
   const { isOnline, isSlowConnection } = useNetworkStatus();
@@ -12,10 +12,14 @@ export function NetworkStatus() {
   }
 
   return (
-    <div className={cn(
-      "fixed bottom-4 left-4 z-50 flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-medium shadow-lg",
-      !isOnline ? "bg-destructive text-destructive-foreground" : "bg-yellow-500 text-yellow-900"
-    )}>
+    <div
+      className={cn(
+        "fixed bottom-4 left-4 z-50 flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-medium shadow-lg",
+        !isOnline
+          ? "bg-destructive text-destructive-foreground"
+          : "bg-yellow-500 text-yellow-900"
+      )}
+    >
       {!isOnline ? (
         <>
           <WifiOff className="h-4 w-4" />

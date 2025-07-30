@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useRef } from 'react';
-import { Button, type ButtonProps } from './button';
+import React, { useRef } from "react";
+import { Button, type ButtonProps } from "./button";
 
 interface IOSButtonProps extends ButtonProps {
   onPress?: () => void;
@@ -10,12 +10,12 @@ interface IOSButtonProps extends ButtonProps {
 /**
  * Base button component optimized for iOS Safari touch handling
  * Solves the issue where iOS requires double-tap due to hover states
- * 
+ *
  * @see docs/tech/button-architecture.md for complete button architecture guide
- * 
+ *
  * This is the foundation of our button hierarchy. For article actions,
  * use ArticleActionButton instead of using this directly.
- * 
+ *
  * Features:
  * - Prevents iOS double-tap requirement
  * - Stops event propagation to prevent unintended parent clicks
@@ -28,14 +28,14 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
     const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       // Call the onPress or onClick handler
       if (onPress) {
         onPress();
       } else if (onClick) {
         onClick(e as any);
       }
-      
+
       // Reset touch state
       touchedRef.current = false;
     };
@@ -46,7 +46,7 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      
+
       // On iOS, ignore click events that come from touch
       // (they arrive after touchend and cause double-firing)
       if (touchedRef.current) {
@@ -54,7 +54,7 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
         touchedRef.current = false;
         return;
       }
-      
+
       // For non-touch clicks (desktop), call the handler normally
       if (onClick) {
         onClick(e);
@@ -72,9 +72,9 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
         onTouchEnd={handleTouchEnd}
         style={{
           ...props.style,
-          WebkitTouchCallout: 'none',
-          WebkitUserSelect: 'none',
-          touchAction: 'manipulation',
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
+          touchAction: "manipulation",
         }}
       >
         {children}
@@ -83,4 +83,4 @@ export const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(
   }
 );
 
-IOSButton.displayName = 'IOSButton';
+IOSButton.displayName = "IOSButton";

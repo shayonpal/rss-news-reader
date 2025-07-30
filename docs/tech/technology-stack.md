@@ -5,6 +5,7 @@
 ### Server-Client Architecture
 
 The RSS Reader uses a clean separation of concerns:
+
 - **Server (Mac Mini)**: Handles ALL Inoreader API communication, OAuth, and processing
 - **Client (PWA)**: Reads from Supabase and calls server API endpoints
 - **Access**: Via Tailscale network only (http://100.96.166.53/reader)
@@ -26,7 +27,7 @@ The RSS Reader uses a clean separation of concerns:
 
 - App Router for modern routing patterns
 - Built-in PWA capabilities with `next-pwa` plugin
-- API routes for server endpoints (/api/sync, /api/articles/*, etc.)
+- API routes for server endpoints (/api/sync, /api/articles/\*, etc.)
 - Static generation for improved performance
 - Built-in image optimization for article media
 - basePath configuration for /reader path
@@ -144,6 +145,7 @@ For theme preference only.
 ### Client HTTP: **Native Fetch API**
 
 **Rationale:**
+
 - Minimal client-side API calls (server endpoints only)
 - No need for complex auth handling
 - Built into modern browsers
@@ -162,6 +164,7 @@ For theme preference only.
 ### Server HTTP: **Axios**
 
 **Features:**
+
 - Token management for Inoreader OAuth
 - Automatic token refresh
 - Request retries with exponential backoff
@@ -496,16 +499,16 @@ class SyncService {
     // 1. Get feed structure
     const feeds = await this.inoreader.getSubscriptions();
     const tags = await this.inoreader.getTags();
-    
+
     // 2. Fetch articles (single stream endpoint)
     const articles = await this.inoreader.getStream({
       n: 100,
-      ot: lastSyncTimestamp
+      ot: lastSyncTimestamp,
     });
-    
+
     // 3. Get unread counts
     const counts = await this.inoreader.getUnreadCounts();
-    
+
     // 4. Write to Supabase
     await this.supabase.upsertAll(feeds, tags, articles, counts);
   }
@@ -519,20 +522,20 @@ class SyncService {
 const setupOAuth = async () => {
   // Start local Express server for callback
   const server = express();
-  server.get('/auth/callback', captureTokens);
-  
+  server.get("/auth/callback", captureTokens);
+
   // Launch Playwright browser
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  
+
   // Navigate to Inoreader OAuth
   await page.goto(oauthUrl);
-  
+
   // Auto-fill credentials from .env
-  await page.fill('#email', process.env.TEST_INOREADER_EMAIL);
-  await page.fill('#password', process.env.TEST_INOREADER_PASSWORD);
-  await page.click('#authorize');
-  
+  await page.fill("#email", process.env.TEST_INOREADER_EMAIL);
+  await page.fill("#password", process.env.TEST_INOREADER_PASSWORD);
+  await page.click("#authorize");
+
   // Store encrypted tokens
   await storeTokens(tokens);
 };

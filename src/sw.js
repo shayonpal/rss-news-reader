@@ -1,9 +1,13 @@
 /* eslint-disable */
-import { clientsClaim } from 'workbox-core';
-import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
+import { clientsClaim } from "workbox-core";
+import { ExpirationPlugin } from "workbox-expiration";
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
+import { registerRoute } from "workbox-routing";
+import {
+  StaleWhileRevalidate,
+  CacheFirst,
+  NetworkFirst,
+} from "workbox-strategies";
 
 // Allow service worker to take control immediately
 clientsClaim();
@@ -16,9 +20,9 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Cache strategy for static assets (images, fonts, etc.)
 registerRoute(
-  ({ request }) => request.destination === 'image',
+  ({ request }) => request.destination === "image",
   new CacheFirst({
-    cacheName: 'images',
+    cacheName: "images",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 60,
@@ -30,9 +34,9 @@ registerRoute(
 
 // Cache strategy for API calls - Network First for fresh data
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+  ({ url }) => url.pathname.startsWith("/api/"),
   new NetworkFirst({
-    cacheName: 'api-cache',
+    cacheName: "api-cache",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 50,
@@ -44,9 +48,9 @@ registerRoute(
 
 // Cache strategy for external API calls (Inoreader)
 registerRoute(
-  ({ url }) => url.hostname === 'www.inoreader.com',
+  ({ url }) => url.hostname === "www.inoreader.com",
   new NetworkFirst({
-    cacheName: 'inoreader-api',
+    cacheName: "inoreader-api",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100,
@@ -58,10 +62,11 @@ registerRoute(
 
 // Cache strategy for web fonts
 registerRoute(
-  ({ url }) => url.origin === 'https://fonts.googleapis.com' || 
-              url.origin === 'https://fonts.gstatic.com',
+  ({ url }) =>
+    url.origin === "https://fonts.googleapis.com" ||
+    url.origin === "https://fonts.gstatic.com",
   new StaleWhileRevalidate({
-    cacheName: 'google-fonts',
+    cacheName: "google-fonts",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 30,
@@ -72,14 +77,14 @@ registerRoute(
 );
 
 // Fallback for offline navigation
-const FALLBACK_HTML = '/offline';
+const FALLBACK_HTML = "/offline";
 
 registerRoute(
-  ({ request }) => request.mode === 'navigate',
+  ({ request }) => request.mode === "navigate",
   async (args) => {
     try {
       return await new NetworkFirst({
-        cacheName: 'pages',
+        cacheName: "pages",
         plugins: [
           new ExpirationPlugin({
             maxEntries: 50,
@@ -94,20 +99,20 @@ registerRoute(
 );
 
 // Background sync for read/unread actions (future feature)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-read-state') {
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-read-state") {
     event.waitUntil(syncReadState());
   }
 });
 
 async function syncReadState() {
   // This will be implemented when we add the sync store
-  console.log('Background sync for read state changes');
+  console.log("Background sync for read state changes");
 }
 
 // Handle service worker updates
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });

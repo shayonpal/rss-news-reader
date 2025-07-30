@@ -11,6 +11,7 @@ The summarization prompt can be customized through environment variables to adap
 ## Configuration Examples
 
 ### Default News Summarization
+
 ```env
 SUMMARY_WORD_COUNT=150-175
 SUMMARY_FOCUS=key facts, main arguments, and important conclusions
@@ -18,6 +19,7 @@ SUMMARY_STYLE=objective
 ```
 
 ### Technical Blog Posts
+
 ```env
 SUMMARY_WORD_COUNT=200-250
 SUMMARY_FOCUS=technical details, implementation steps, and code concepts
@@ -25,6 +27,7 @@ SUMMARY_STYLE=technical and detailed
 ```
 
 ### Executive Summaries
+
 ```env
 SUMMARY_WORD_COUNT=100-125
 SUMMARY_FOCUS=business impact, key decisions, and action items
@@ -32,6 +35,7 @@ SUMMARY_STYLE=concise and actionable
 ```
 
 ### Academic Papers
+
 ```env
 SUMMARY_WORD_COUNT=250-300
 SUMMARY_FOCUS=research methodology, findings, and implications
@@ -39,6 +43,7 @@ SUMMARY_STYLE=academic and analytical
 ```
 
 ### Quick News Digest
+
 ```env
 SUMMARY_WORD_COUNT=75-100
 SUMMARY_FOCUS=who, what, when, where, why
@@ -47,13 +52,15 @@ SUMMARY_STYLE=journalistic
 
 ## Prompt Engineering Best Practices
 
-1. **Word Count**: 
+1. **Word Count**:
+
    - Use ranges (e.g., "150-175") for flexibility
    - Consider the typical length of your content sources
    - Shorter summaries (75-125 words) for quick scanning
    - Longer summaries (200-300 words) for detailed analysis
 
 2. **Focus Areas**:
+
    - Be specific about what information to extract
    - List multiple aspects separated by commas
    - Consider your audience's information needs
@@ -76,6 +83,7 @@ SUMMARY_STYLE=journalistic
 ## Default Values
 
 If no environment variables are set, the system uses these defaults:
+
 - Word Count: `150-175`
 - Focus: `key facts, main arguments, and important conclusions`
 - Style: `objective`

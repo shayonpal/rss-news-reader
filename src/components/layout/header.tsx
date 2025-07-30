@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import { Menu, RefreshCw } from 'lucide-react';
-import { useUIStore } from '@/lib/stores/ui-store';
-import { useSyncStore } from '@/lib/stores/sync-store';
-import { Button } from '@/components/ui/button';
-import { AuthStatus } from '@/components/auth/auth-status';
-import { HealthStatusWidget } from '@/components/health/health-status-widget';
+import { Menu, RefreshCw } from "lucide-react";
+import { useUIStore } from "@/lib/stores/ui-store";
+import { useSyncStore } from "@/lib/stores/sync-store";
+import { Button } from "@/components/ui/button";
+import { HealthStatusWidget } from "@/components/health/health-status-widget";
 
 export function Header() {
   const { toggleSidebar } = useUIStore();
@@ -27,17 +26,13 @@ export function Header() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        
+
         <div className="flex flex-1 items-center justify-between space-x-2">
           <div className="flex items-center space-x-2">
-            <h1 className="text-lg font-semibold">
-              All Articles
-            </h1>
-            <span className="text-sm text-muted-foreground">
-              (152)
-            </span>
+            <h1 className="text-lg font-semibold">All Articles</h1>
+            <span className="text-sm text-muted-foreground">(152)</span>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {actionQueue.length > 0 && (
               <span className="rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white">
@@ -52,10 +47,14 @@ export function Header() {
               className="h-9 w-9"
               aria-label="Sync articles"
             >
-              <RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-5 w-5 ${isSyncing ? "animate-spin" : ""}`}
+              />
             </Button>
             <HealthStatusWidget />
-            <AuthStatus />
+            <div className="text-sm font-medium text-muted-foreground">
+              RSS Reader
+            </div>
           </div>
         </div>
       </div>

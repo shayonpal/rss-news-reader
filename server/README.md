@@ -12,6 +12,7 @@ This server handles all Inoreader API communication for the RSS Reader PWA.
 ## Initial Setup
 
 1. Ensure your `.env` file contains all required variables:
+
    ```env
    INOREADER_CLIENT_ID=your_client_id
    INOREADER_CLIENT_SECRET=your_client_secret
@@ -22,11 +23,13 @@ This server handles all Inoreader API communication for the RSS Reader PWA.
    ```
 
 2. Run the OAuth setup:
+
    ```bash
    npm run setup:oauth
    ```
 
    This will:
+
    - Start a local Express server on port 8080
    - Open a browser window with Playwright
    - Automatically log in to Inoreader
@@ -60,6 +63,7 @@ server/
 ## Next Steps
 
 After OAuth setup, implement:
+
 1. Sync service (US-102)
 2. API endpoints (US-103)
 3. Content extraction (US-104)

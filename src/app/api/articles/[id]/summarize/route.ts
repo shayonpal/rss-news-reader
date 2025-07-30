@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
-import { SummaryPromptBuilder } from '@/lib/ai/summary-prompt';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import Anthropic from "@anthropic-ai/sdk";
+import { SummaryPromptBuilder } from "@/lib/ai/summary-prompt";
 
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 // Initialize Anthropic client
-const anthropic = process.env.ANTHROPIC_API_KEY 
+const anthropic = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     })
@@ -27,8 +28,8 @@ export async function POST(
     if (!anthropic) {
       return NextResponse.json(
         {
-          error: 'api_not_configured',
-          message: 'Claude API key not configured on server'
+          error: "api_not_configured",
+          message: "Claude API key not configured on server",
         },
         { status: 503 }
       );
@@ -36,17 +37,17 @@ export async function POST(
 
     // Get article from database
     const { data: article, error: fetchError } = await supabase
-      .from('articles')
-      .select('*')
-      .eq('id', id)
+      .from("articles")
+      .select("*")
+      .eq("id", id)
       .single();
 
     if (fetchError || !article) {
       return NextResponse.json(
         {
-          error: 'article_not_found',
-          message: 'Article not found',
-          details: fetchError?.message
+          error: "article_not_found",
+          message: "Article not found",
+          details: fetchError?.message,
         },
         { status: 404 }
       );
@@ -60,7 +61,7 @@ export async function POST(
       return NextResponse.json({
         success: true,
         summary: article.ai_summary,
-        cached: true
+        cached: true,
       });
     }
 
@@ -69,12 +70,12 @@ export async function POST(
     // consider requiring full_content for all summarizations to ensure
     // complete and accurate summaries. RSS content may be truncated.
     const contentToSummarize = article.full_content || article.content;
-    
+
     if (!contentToSummarize) {
       return NextResponse.json(
         {
-          error: 'no_content',
-          message: 'Article has no content to summarize'
+          error: "no_content",
+          message: "Article has no content to summarize",
         },
         { status: 400 }
       );
@@ -82,53 +83,59 @@ export async function POST(
 
     // Strip HTML tags for cleaner summarization
     const textContent = contentToSummarize
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
 
     // Generate summary using Claude with configurable prompt
     const prompt = SummaryPromptBuilder.buildPrompt({
       title: article.title,
       author: article.author,
-      publishedDate: article.published_at ? new Date(article.published_at).toLocaleDateString() : undefined,
-      content: textContent.substring(0, 10000) + (textContent.length > 10000 ? '...[truncated]' : '')
+      publishedDate: article.published_at
+        ? new Date(article.published_at).toLocaleDateString()
+        : undefined,
+      content:
+        textContent.substring(0, 10000) +
+        (textContent.length > 10000 ? "...[truncated]" : ""),
     });
 
     // Get model from environment variable with fallback
-    const claudeModel = process.env.CLAUDE_SUMMARIZATION_MODEL || 'claude-sonnet-4-20250514';
-    
+    const claudeModel =
+      process.env.CLAUDE_SUMMARIZATION_MODEL || "claude-sonnet-4-20250514";
+
     const completion = await anthropic.messages.create({
       model: claudeModel,
       max_tokens: 300,
       temperature: 0.3,
       messages: [
         {
-          role: 'user',
-          content: prompt
-        }
-      ]
+          role: "user",
+          content: prompt,
+        },
+      ],
     });
 
-    const summary = completion.content[0].type === 'text' 
-      ? completion.content[0].text 
-      : 'Failed to generate summary';
+    const summary =
+      completion.content[0].type === "text"
+        ? completion.content[0].text
+        : "Failed to generate summary";
 
     // Update the article with AI summary
     const { error: updateError } = await supabase
-      .from('articles')
+      .from("articles")
       .update({
         ai_summary: summary,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id);
+      .eq("id", id);
 
     if (updateError) {
-      console.error('Failed to update article with summary:', updateError);
+      console.error("Failed to update article with summary:", updateError);
       // Don't fail the request, just log the error
     }
 
     // Track API usage
-    await trackApiUsage('claude', 1);
+    await trackApiUsage("claude", 1);
 
     return NextResponse.json({
       success: true,
@@ -137,29 +144,28 @@ export async function POST(
       regenerated: forceRegenerate,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens,
-      config: SummaryPromptBuilder.getConfig()
+      config: SummaryPromptBuilder.getConfig(),
     });
-
   } catch (error) {
-    console.error('Summarization error:', error);
-    
+    console.error("Summarization error:", error);
+
     // Check for specific Anthropic errors
     if (error instanceof Anthropic.APIError) {
       if (error.status === 429) {
         return NextResponse.json(
           {
-            error: 'rate_limit',
-            message: 'Claude API rate limit exceeded. Please try again later.'
+            error: "rate_limit",
+            message: "Claude API rate limit exceeded. Please try again later.",
           },
           { status: 429 }
         );
       }
-      
+
       if (error.status === 401) {
         return NextResponse.json(
           {
-            error: 'invalid_api_key',
-            message: 'Invalid Claude API key'
+            error: "invalid_api_key",
+            message: "Invalid Claude API key",
           },
           { status: 401 }
         );
@@ -168,9 +174,9 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error: 'summarization_failed',
-        message: 'Failed to generate article summary',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: "summarization_failed",
+        message: "Failed to generate article summary",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -179,34 +185,32 @@ export async function POST(
 
 // Track API usage for rate limiting
 async function trackApiUsage(service: string, count: number = 1) {
-  const today = new Date().toISOString().split('T')[0];
-  
+  const today = new Date().toISOString().split("T")[0];
+
   try {
     // Try to update existing record
     const { data: existing } = await supabase
-      .from('api_usage')
-      .select('count')
-      .eq('service', service)
-      .eq('date', today)
+      .from("api_usage")
+      .select("count")
+      .eq("service", service)
+      .eq("date", today)
       .single();
 
     if (existing) {
       await supabase
-        .from('api_usage')
+        .from("api_usage")
         .update({ count: existing.count + count })
-        .eq('service', service)
-        .eq('date', today);
+        .eq("service", service)
+        .eq("date", today);
     } else {
       // Create new record
-      await supabase
-        .from('api_usage')
-        .insert({
-          service,
-          date: today,
-          count
-        });
+      await supabase.from("api_usage").insert({
+        service,
+        date: today,
+        count,
+      });
     }
   } catch (error) {
-    console.error('Failed to track API usage:', error);
+    console.error("Failed to track API usage:", error);
   }
 }

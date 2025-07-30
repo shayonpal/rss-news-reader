@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
-import type { HealthStatus } from '@/types/health';
+import { cn } from "@/lib/utils";
+import type { HealthStatus } from "@/types/health";
 
 interface HealthStatusIndicatorProps {
   status: HealthStatus;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   label?: string;
   pulse?: boolean;
@@ -13,36 +13,36 @@ interface HealthStatusIndicatorProps {
 
 export function HealthStatusIndicator({
   status,
-  size = 'md',
+  size = "md",
   showLabel = false,
   label,
   pulse = true,
 }: HealthStatusIndicatorProps) {
   const sizeClasses = {
-    sm: 'h-2 w-2',
-    md: 'h-3 w-3',
-    lg: 'h-4 w-4',
+    sm: "h-2 w-2",
+    md: "h-3 w-3",
+    lg: "h-4 w-4",
   };
 
   const statusColors = {
-    healthy: 'bg-green-500',
-    degraded: 'bg-yellow-500',
-    unhealthy: 'bg-red-500',
-    unknown: 'bg-gray-400',
+    healthy: "bg-green-500",
+    degraded: "bg-yellow-500",
+    unhealthy: "bg-red-500",
+    unknown: "bg-gray-400",
   };
 
   const pulseColors = {
-    healthy: 'bg-green-400',
-    degraded: 'bg-yellow-400',
-    unhealthy: 'bg-red-400',
-    unknown: 'bg-gray-300',
+    healthy: "bg-green-400",
+    degraded: "bg-yellow-400",
+    unhealthy: "bg-red-400",
+    unknown: "bg-gray-300",
   };
 
   const statusLabels = {
-    healthy: 'Healthy',
-    degraded: 'Degraded',
-    unhealthy: 'Unhealthy',
-    unknown: 'Unknown',
+    healthy: "Healthy",
+    degraded: "Degraded",
+    unhealthy: "Unhealthy",
+    unknown: "Unknown",
   };
 
   return (
@@ -50,18 +50,18 @@ export function HealthStatusIndicator({
       <div className="relative flex items-center justify-center">
         <div
           className={cn(
-            'rounded-full',
+            "rounded-full",
             sizeClasses[size],
             statusColors[status]
           )}
         />
-        {pulse && status !== 'unknown' && (
+        {pulse && status !== "unknown" && (
           <div
             className={cn(
-              'absolute rounded-full animate-ping',
+              "absolute animate-ping rounded-full",
               sizeClasses[size],
               pulseColors[status],
-              'opacity-75'
+              "opacity-75"
             )}
           />
         )}

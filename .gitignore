@@ -5,12 +5,13 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+.next*
 
 # testing
 /coverage
 
 # next.js
-/.next/
+/.next*
 /out/
 
 # production
@@ -28,6 +29,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.backup
 
 # vercel
 .vercel
@@ -55,3 +57,5 @@ docs/revised-priority.md
 
 # Token files
 ~/.rss-reader/tokens.json
+*.claude/
+documentation-analysis-report.json

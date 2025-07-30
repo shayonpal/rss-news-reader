@@ -1,34 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { 
+import { useState, useEffect } from "react";
+import {
   createRecoverySystem,
   LegacyDatabaseInfo,
   RecoveryProgress,
-  RecoveryResult 
-} from '@/lib/db/legacy-recovery';
-import { Button } from '@/components/ui/button';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { 
-  AlertCircle, 
-  CheckCircle, 
-  Database, 
-  Download, 
-  Upload, 
-  Search, 
-  Shield, 
+  RecoveryResult,
+} from "@/lib/db/legacy-recovery";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertCircle,
+  CheckCircle,
+  Database,
+  Download,
+  Upload,
+  Search,
+  Shield,
   Trash2,
   Clock,
-  HardDrive
-} from 'lucide-react';
+  HardDrive,
+} from "lucide-react";
 
 interface RecoveryDialogProps {
   open: boolean;
@@ -36,10 +36,20 @@ interface RecoveryDialogProps {
   onSuccess: (result: RecoveryResult) => void;
 }
 
-export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps) {
-  const [step, setStep] = useState<'discovery' | 'confirm' | 'migrate' | 'complete'>('discovery');
-  const [discoveredDatabases, setDiscoveredDatabases] = useState<LegacyDatabaseInfo[]>([]);
-  const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(new Set());
+export function RecoveryDialog({
+  open,
+  onClose,
+  onSuccess,
+}: RecoveryDialogProps) {
+  const [step, setStep] = useState<
+    "discovery" | "confirm" | "migrate" | "complete"
+  >("discovery");
+  const [discoveredDatabases, setDiscoveredDatabases] = useState<
+    LegacyDatabaseInfo[]
+  >([]);
+  const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
+    new Set()
+  );
   const [progress, setProgress] = useState<RecoveryProgress | null>(null);
   const [result, setResult] = useState<RecoveryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +57,7 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
 
   // Start discovery when dialog opens
   useEffect(() => {
-    if (open && step === 'discovery') {
+    if (open && step === "discovery") {
       discoverDatabases();
     }
   }, [open, step]);
@@ -55,30 +65,32 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
   const discoverDatabases = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const recoverySystem = createRecoverySystem((progress) => {
         setProgress(progress);
       });
-      
+
       const databases = await recoverySystem.discoverLegacyDatabases();
       setDiscoveredDatabases(databases);
-      
+
       if (databases.length > 0) {
         // Auto-select all discovered databases
-        setSelectedDatabases(new Set(databases.map(db => db.name)));
-        setStep('confirm');
+        setSelectedDatabases(new Set(databases.map((db) => db.name)));
+        setStep("confirm");
       } else {
-        setStep('complete');
+        setStep("complete");
         setResult({
           success: true,
           migratedData: { users: 0, feeds: 0, articles: 0, folders: 0 },
           errors: [],
-          duration: 0
+          duration: 0,
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to discover databases');
+      setError(
+        err instanceof Error ? err.message : "Failed to discover databases"
+      );
     } finally {
       setLoading(false);
     }
@@ -96,48 +108,49 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
 
   const startMigration = async () => {
     if (selectedDatabases.size === 0) return;
-    
+
     setLoading(true);
     setError(null);
-    setStep('migrate');
-    
+    setStep("migrate");
+
     try {
       const recoverySystem = createRecoverySystem((progress) => {
         setProgress(progress);
       });
-      
-      const selectedDbInfos = discoveredDatabases.filter(db => 
+
+      const selectedDbInfos = discoveredDatabases.filter((db) =>
         selectedDatabases.has(db.name)
       );
-      
-      const migrationResult = await recoverySystem.performMigration(selectedDbInfos);
+
+      const migrationResult =
+        await recoverySystem.performMigration(selectedDbInfos);
       setResult(migrationResult);
-      
+
       if (migrationResult.success) {
         onSuccess(migrationResult);
       }
-      
-      setStep('complete');
+
+      setStep("complete");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Migration failed');
+      setError(err instanceof Error ? err.message : "Migration failed");
     } finally {
       setLoading(false);
     }
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const formatDuration = (ms: number): string => {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
@@ -147,20 +160,20 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
     }
   };
 
-  const getPhaseIcon = (phase: RecoveryProgress['phase']) => {
+  const getPhaseIcon = (phase: RecoveryProgress["phase"]) => {
     switch (phase) {
-      case 'discovery':
-        return <Search className="w-4 h-4" />;
-      case 'extraction':
-        return <Download className="w-4 h-4" />;
-      case 'upload':
-        return <Upload className="w-4 h-4" />;
-      case 'verification':
-        return <Shield className="w-4 h-4" />;
-      case 'cleanup':
-        return <Trash2 className="w-4 h-4" />;
+      case "discovery":
+        return <Search className="h-4 w-4" />;
+      case "extraction":
+        return <Download className="h-4 w-4" />;
+      case "upload":
+        return <Upload className="h-4 w-4" />;
+      case "verification":
+        return <Shield className="h-4 w-4" />;
+      case "cleanup":
+        return <Trash2 className="h-4 w-4" />;
       default:
-        return <Database className="w-4 h-4" />;
+        return <Database className="h-4 w-4" />;
     }
   };
 
@@ -169,7 +182,7 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Database className="w-5 h-5" />
+            <Database className="h-5 w-5" />
             Data Recovery
           </DialogTitle>
           <DialogDescription>
@@ -178,11 +191,13 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
         </DialogHeader>
 
         {/* Discovery Step */}
-        {step === 'discovery' && (
+        {step === "discovery" && (
           <div className="space-y-4">
-            <div className="text-center py-8">
-              <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
-              <h3 className="text-lg font-semibold mb-2">Scanning for Legacy Data</h3>
+            <div className="py-8 text-center">
+              <Search className="mx-auto mb-4 h-12 w-12 animate-pulse text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">
+                Scanning for Legacy Data
+              </h3>
               <p className="text-muted-foreground">
                 Looking for existing RSS reader data in your browser...
               </p>
@@ -200,7 +215,7 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
         )}
 
         {/* Confirmation Step */}
-        {step === 'confirm' && (
+        {step === "confirm" && (
           <div className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Found Legacy Data</h3>
@@ -209,39 +224,39 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
               </p>
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="max-h-96 space-y-3 overflow-y-auto">
               {discoveredDatabases.map((db) => (
                 <div
                   key={db.name}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  className={`cursor-pointer rounded-lg border p-4 transition-colors ${
                     selectedDatabases.has(db.name)
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
                   }`}
                   onClick={() => toggleDatabaseSelection(db.name)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Database className="w-4 h-4" />
+                      <div className="mb-2 flex items-center gap-2">
+                        <Database className="h-4 w-4" />
                         <span className="font-medium">{db.name}</span>
                         <Badge variant="secondary" className="text-xs">
                           v{db.version}
                         </Badge>
                       </div>
-                      
-                      <div className="text-sm text-muted-foreground space-y-1">
+
+                      <div className="space-y-1 text-sm text-muted-foreground">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1">
-                            <HardDrive className="w-3 h-3" />
+                            <HardDrive className="h-3 w-3" />
                             <span>{formatFileSize(db.estimatedSize)}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
+                            <Clock className="h-3 w-3" />
                             <span>{db.lastModified.toLocaleDateString()}</span>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-4 text-xs">
                           {db.recordCounts.articles && (
                             <span>{db.recordCounts.articles} articles</span>
@@ -255,15 +270,17 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="ml-4">
-                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                        selectedDatabases.has(db.name)
-                          ? 'bg-primary border-primary'
-                          : 'border-border'
-                      }`}>
+                      <div
+                        className={`flex h-4 w-4 items-center justify-center rounded border-2 ${
+                          selectedDatabases.has(db.name)
+                            ? "border-primary bg-primary"
+                            : "border-border"
+                        }`}
+                      >
                         {selectedDatabases.has(db.name) && (
-                          <CheckCircle className="w-3 h-3 text-primary-foreground" />
+                          <CheckCircle className="h-3 w-3 text-primary-foreground" />
                         )}
                       </div>
                     </div>
@@ -276,24 +293,25 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={startMigration}
                 disabled={selectedDatabases.size === 0}
               >
-                Recover Data ({selectedDatabases.size} database{selectedDatabases.size !== 1 ? 's' : ''})
+                Recover Data ({selectedDatabases.size} database
+                {selectedDatabases.size !== 1 ? "s" : ""})
               </Button>
             </div>
           </div>
         )}
 
         {/* Migration Step */}
-        {step === 'migrate' && (
+        {step === "migrate" && (
           <div className="space-y-4">
-            <div className="text-center py-4">
-              <div className="w-12 h-12 mx-auto mb-4 border-2 border-primary rounded-full flex items-center justify-center">
+            <div className="py-4 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border-2 border-primary">
                 {progress && getPhaseIcon(progress.phase)}
               </div>
-              <h3 className="text-lg font-semibold mb-2">Migrating Data</h3>
+              <h3 className="mb-2 text-lg font-semibold">Migrating Data</h3>
               <p className="text-muted-foreground">
                 This may take a few minutes...
               </p>
@@ -309,18 +327,21 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
                     {Math.round(progress.progress)}%
                   </span>
                 </div>
-                
+
                 <Progress value={progress.progress} className="w-full" />
-                
-                <div className="text-sm text-muted-foreground text-center">
+
+                <div className="text-center text-sm text-muted-foreground">
                   {progress.currentStep}
                 </div>
-                
+
                 {progress.errors.length > 0 && (
                   <div className="space-y-1">
                     {progress.errors.map((error, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm text-destructive">
-                        <AlertCircle className="w-3 h-3" />
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm text-destructive"
+                      >
+                        <AlertCircle className="h-3 w-3" />
                         {error}
                       </div>
                     ))}
@@ -332,50 +353,57 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
         )}
 
         {/* Complete Step */}
-        {step === 'complete' && (
+        {step === "complete" && (
           <div className="space-y-4">
-            <div className="text-center py-4">
-              <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                result?.success 
-                  ? 'bg-green-100 text-green-600' 
-                  : 'bg-red-100 text-red-600'
-              }`}>
+            <div className="py-4 text-center">
+              <div
+                className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${
+                  result?.success
+                    ? "bg-green-100 text-green-600"
+                    : "bg-red-100 text-red-600"
+                }`}
+              >
                 {result?.success ? (
-                  <CheckCircle className="w-6 h-6" />
+                  <CheckCircle className="h-6 w-6" />
                 ) : (
-                  <AlertCircle className="w-6 h-6" />
+                  <AlertCircle className="h-6 w-6" />
                 )}
               </div>
-              
-              <h3 className="text-lg font-semibold mb-2">
-                {result?.success ? 'Migration Complete!' : 'Migration Failed'}
+
+              <h3 className="mb-2 text-lg font-semibold">
+                {result?.success ? "Migration Complete!" : "Migration Failed"}
               </h3>
-              
+
               <p className="text-muted-foreground">
-                {result?.success 
-                  ? 'Your data has been successfully recovered and migrated.'
-                  : 'There was an error during the migration process.'
-                }
+                {result?.success
+                  ? "Your data has been successfully recovered and migrated."
+                  : "There was an error during the migration process."}
               </p>
             </div>
 
             {result && (
               <div className="space-y-3">
                 {result.success && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-800 mb-2">Migration Summary</h4>
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                    <h4 className="mb-2 font-semibold text-green-800">
+                      Migration Summary
+                    </h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-green-600">Users:</span> {result.migratedData.users}
+                        <span className="text-green-600">Users:</span>{" "}
+                        {result.migratedData.users}
                       </div>
                       <div>
-                        <span className="text-green-600">Feeds:</span> {result.migratedData.feeds}
+                        <span className="text-green-600">Feeds:</span>{" "}
+                        {result.migratedData.feeds}
                       </div>
                       <div>
-                        <span className="text-green-600">Articles:</span> {result.migratedData.articles}
+                        <span className="text-green-600">Articles:</span>{" "}
+                        {result.migratedData.articles}
                       </div>
                       <div>
-                        <span className="text-green-600">Folders:</span> {result.migratedData.folders}
+                        <span className="text-green-600">Folders:</span>{" "}
+                        {result.migratedData.folders}
                       </div>
                     </div>
                     <div className="mt-2 text-sm text-green-600">
@@ -383,10 +411,10 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
                     </div>
                   </div>
                 )}
-                
+
                 {result.errors.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-red-800 mb-2">Errors</h4>
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <h4 className="mb-2 font-semibold text-red-800">Errors</h4>
                     <div className="space-y-1">
                       {result.errors.map((error, index) => (
                         <div key={index} className="text-sm text-red-600">
@@ -400,23 +428,23 @@ export function RecoveryDialog({ open, onClose, onSuccess }: RecoveryDialogProps
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <div className="flex items-center gap-2 text-red-800">
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="h-4 w-4" />
                   <span className="font-semibold">Error</span>
                 </div>
-                <p className="text-red-600 text-sm mt-1">{error}</p>
+                <p className="mt-1 text-sm text-red-600">{error}</p>
               </div>
             )}
 
             <div className="flex justify-between">
               {!result?.success && (
-                <Button variant="outline" onClick={() => setStep('discovery')}>
+                <Button variant="outline" onClick={() => setStep("discovery")}>
                   Try Again
                 </Button>
               )}
               <Button onClick={onClose} className="ml-auto">
-                {result?.success ? 'Continue' : 'Close'}
+                {result?.success ? "Continue" : "Close"}
               </Button>
             </div>
           </div>

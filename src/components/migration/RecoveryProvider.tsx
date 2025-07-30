@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { RecoveryDialog } from './RecoveryDialog';
-import { useLegacyRecovery } from '@/lib/hooks/use-legacy-recovery';
+import { RecoveryDialog } from "./RecoveryDialog";
+import { useLegacyRecovery } from "@/lib/hooks/use-legacy-recovery";
 
 export function RecoveryProvider({ children }: { children: React.ReactNode }) {
   const {
     shouldShowRecovery,
     isChecking,
     handleRecoverySuccess,
-    handleRecoveryClose
+    handleRecoveryClose,
   } = useLegacyRecovery();
 
   return (

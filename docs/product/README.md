@@ -26,15 +26,22 @@ This directory contains the complete product documentation for Shayon's News RSS
    - Success metrics from user perspective
 
 3. **[User Flow Diagrams](./user-flow-diagrams.md)**
+
    - Technical flowcharts for all major features
    - 9 primary user flows with decision points
    - State diagrams for key components
    - Error handling flows
    - Edge case documentation
 
+4. **[User Stories](./user-stories.md)**
+   - Agile user stories with acceptance criteria
+   - Feature-based story groupings
+   - Priority levels and dependencies
+   - Implementation notes
+
 ### Design Specifications
 
-4. **[Wireframes](./wireframes.md)**
+5. **[Wireframes](./wireframes.md)**
    - Mobile-first design layouts
    - Responsive breakpoint specifications
    - Interaction patterns and touch targets

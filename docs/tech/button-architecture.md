@@ -23,22 +23,21 @@ Specialized Buttons (Feature Layer)
 **Purpose:** Solves the iOS Safari double-tap issue by properly handling touch events.
 
 **Key Features:**
+
 - Extends the standard Button component with iOS-specific touch handling
 - Prevents the need for double-tapping on iOS devices
 - Manages touch state to avoid duplicate event firing
 - Applies iOS-specific CSS properties for better mobile experience
 
-**When to use:** 
+**When to use:**
+
 - As the foundation for ALL buttons in the application that need iOS compatibility
 - Directly when you need a button that doesn't follow the article action pattern
 
 **Example:**
+
 ```tsx
-<IOSButton
-  onPress={handleAction}
-  variant="default"
-  size="sm"
->
+<IOSButton onPress={handleAction} variant="default" size="sm">
   Click Me
 </IOSButton>
 ```
@@ -50,6 +49,7 @@ Specialized Buttons (Feature Layer)
 **Purpose:** Provides consistent styling and behavior for article-related action buttons.
 
 **Key Features:**
+
 - Built on top of IOSButton
 - Standardized icon-based button with consistent sizing
 - Support for active states with customizable styling
@@ -57,6 +57,7 @@ Specialized Buttons (Feature Layer)
 - Three size variants: 'sm' (16x16), 'md' (20x20), 'lg' (24x24)
 
 **Props:**
+
 - `icon`: LucideIcon - The icon to display
 - `onPress`: Function - Handler for button press
 - `size`: 'sm' | 'md' | 'lg' - Icon size (default: 'sm')
@@ -70,10 +71,12 @@ Specialized Buttons (Feature Layer)
 - `className`: string - Additional CSS classes
 
 **When to use:**
+
 - For any icon-based action button in article contexts
 - When you need consistent styling across different article actions
 
 **Example:**
+
 ```tsx
 <ArticleActionButton
   icon={BookmarkIcon}
@@ -96,11 +99,13 @@ These are purpose-built components that use ArticleActionButton for specific fea
 **Purpose:** Handles article starring functionality with consistent styling.
 
 **Features:**
+
 - Uses yellow color for active (starred) state
 - Simplified props focused on star functionality
 - Consistent star/unstar labeling
 
 **Example:**
+
 ```tsx
 <StarButton
   onToggleStar={handleToggleStar}
@@ -116,12 +121,14 @@ These are purpose-built components that use ArticleActionButton for specific fea
 **Purpose:** Handles AI summary generation with two display variants.
 
 **Features:**
+
 - Icon variant: Uses ArticleActionButton for compact display
 - Full variant: Uses IOSButton directly for button with text
 - Loading state with spinner animation
 - Different icons for initial generation vs regeneration
 
 **Example:**
+
 ```tsx
 // Icon variant
 <SummaryButton
@@ -150,10 +157,13 @@ Create a new file in `src/components/articles/` or appropriate directory:
 
 ```tsx
 // src/components/articles/share-button.tsx
-'use client';
+"use client";
 
-import { Share2 } from 'lucide-react';
-import { ArticleActionButton, type ArticleActionButtonSize } from '@/components/ui/article-action-button';
+import { Share2 } from "lucide-react";
+import {
+  ArticleActionButton,
+  type ArticleActionButtonSize,
+} from "@/components/ui/article-action-button";
 
 interface ShareButtonProps {
   onShare: () => void;
@@ -161,10 +171,10 @@ interface ShareButtonProps {
   disabled?: boolean;
 }
 
-export function ShareButton({ 
-  onShare, 
-  size = 'sm',
-  disabled = false 
+export function ShareButton({
+  onShare,
+  size = "sm",
+  disabled = false,
 }: ShareButtonProps) {
   return (
     <ArticleActionButton
@@ -192,11 +202,11 @@ interface BookmarkButtonProps {
   size?: ArticleActionButtonSize;
 }
 
-export function BookmarkButton({ 
+export function BookmarkButton({
   articleId,
-  isBookmarked, 
+  isBookmarked,
   onToggleBookmark,
-  size = 'sm' 
+  size = "sm",
 }: BookmarkButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -216,7 +226,7 @@ export function BookmarkButton({
       size={size}
       active={isBookmarked}
       activeClassName="fill-current"
-      label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+      label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
       disabled={isLoading}
       loading={isLoading}
       loadingIcon={Loader2}
@@ -235,10 +245,7 @@ export function BookmarkButton({
     isStarred={article.starred}
     size="sm"
   />
-  <ShareButton
-    onShare={() => handleShare(article)}
-    size="sm"
-  />
+  <ShareButton onShare={() => handleShare(article)} size="sm" />
   <SummaryButton
     articleId={article.id}
     hasSummary={!!article.summary}
@@ -253,6 +260,7 @@ export function BookmarkButton({
 ### 1. Always Use the Architecture
 
 ❌ **Don't** create custom button implementations:
+
 ```tsx
 // Bad - Creates iOS touch issues
 <button onClick={handleStar}>
@@ -261,17 +269,16 @@ export function BookmarkButton({
 ```
 
 ✅ **Do** use the established components:
+
 ```tsx
 // Good - Handles iOS properly
-<StarButton
-  onToggleStar={handleStar}
-  isStarred={isStarred}
-/>
+<StarButton onToggleStar={handleStar} isStarred={isStarred} />
 ```
 
 ### 2. Consistent Sizing
 
 Use the predefined size variants to maintain visual consistency:
+
 - `sm` (16x16) - Default for article lists
 - `md` (20x20) - For article detail headers
 - `lg` (24x24) - For emphasis or larger touch targets
@@ -279,36 +286,39 @@ Use the predefined size variants to maintain visual consistency:
 ### 3. Accessibility
 
 Always provide meaningful labels:
+
 ```tsx
 <ArticleActionButton
   icon={Download}
   onPress={handleDownload}
-  label="Download article for offline reading"  // Descriptive label
-  title="Download"  // Short tooltip
+  label="Download article for offline reading" // Descriptive label
+  title="Download" // Short tooltip
 />
 ```
 
 ### 4. Active State Styling
 
 Use `activeClassName` for custom active state colors:
+
 ```tsx
 // Star button with yellow active state
-activeClassName="fill-yellow-500 text-yellow-500"
+activeClassName = "fill-yellow-500 text-yellow-500";
 
 // Bookmark with blue active state
-activeClassName="fill-blue-500 text-blue-500"
+activeClassName = "fill-blue-500 text-blue-500";
 ```
 
 ### 5. Loading States
 
 Always handle loading states for async operations:
+
 ```tsx
 <ArticleActionButton
   icon={Save}
   onPress={handleSave}
   disabled={isLoading}
   loading={isLoading}
-  loadingIcon={Loader2}  // Shows spinning loader
+  loadingIcon={Loader2} // Shows spinning loader
   label="Save article"
 />
 ```
@@ -316,6 +326,7 @@ Always handle loading states for async operations:
 ### 6. Variant Selection
 
 For specialized buttons that need both icon and text variants:
+
 - Create an icon variant using ArticleActionButton
 - Create a full variant using IOSButton directly
 - Use a `variant` prop to switch between them
@@ -337,11 +348,13 @@ For specialized buttons that need both icon and text variants:
 
 ```tsx
 // Show different buttons based on state
-{article.canEdit ? (
-  <EditButton onEdit={handleEdit} size="sm" />
-) : (
-  <ViewButton onView={handleView} size="sm" />
-)}
+{
+  article.canEdit ? (
+    <EditButton onEdit={handleEdit} size="sm" />
+  ) : (
+    <ViewButton onView={handleView} size="sm" />
+  );
+}
 ```
 
 ### Custom Active Behavior
@@ -379,6 +392,7 @@ If you have existing custom button implementations:
 ## Summary
 
 This button architecture ensures:
+
 - ✅ Consistent iOS Safari touch handling
 - ✅ Uniform styling across the application
 - ✅ Reusable patterns for common actions
