@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { useAuthStore } from '@/lib/stores/auth-store';
 
 // Create axios instance
 const client: AxiosInstance = axios.create({
@@ -25,7 +24,7 @@ client.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling and token refresh
+// Response interceptor for error handling
 client.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful requests in development
@@ -36,31 +35,6 @@ client.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-
-    // Handle 401 errors (unauthorized)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // Attempt to refresh token
-        const refreshResponse = await fetch('/api/auth/inoreader/refresh', {
-          method: 'POST',
-        });
-
-        if (refreshResponse.ok) {
-          // Retry the original request
-          return client(originalRequest);
-        } else {
-          // Refresh failed, redirect to login
-          useAuthStore.getState().logout();
-          return Promise.reject(error);
-        }
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        useAuthStore.getState().logout();
-        return Promise.reject(error);
-      }
-    }
 
     // Handle rate limiting (429)
     if (error.response?.status === 429) {

@@ -11,6 +11,7 @@
   - Added cleanup utilities: `cleanup-large-logs.sh`, `cleanup-old-numbered-logs.sh`
   - Enhanced `rotate-health-logs.sh` to handle both .log and .jsonl files
   - All services remain stable with automated log management
+- **Agent Architecture Reorganization**: Moved unused agent definitions to `.claude/disabled-agents/` for cleaner project structure
 
 ### Fixed - Wednesday, July 30, 2025 at 1:06 AM
 - **Critical Security Fix (RR-69): Removed Test/Debug Endpoints**

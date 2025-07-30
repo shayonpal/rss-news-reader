@@ -4,7 +4,6 @@ import { Menu, RefreshCw } from 'lucide-react';
 import { useUIStore } from '@/lib/stores/ui-store';
 import { useSyncStore } from '@/lib/stores/sync-store';
 import { Button } from '@/components/ui/button';
-import { AuthStatus } from '@/components/auth/auth-status';
 import { HealthStatusWidget } from '@/components/health/health-status-widget';
 
 export function Header() {
@@ -55,7 +54,9 @@ export function Header() {
               <RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
             </Button>
             <HealthStatusWidget />
-            <AuthStatus />
+            <div className="text-sm font-medium text-muted-foreground">
+              RSS Reader
+            </div>
           </div>
         </div>
       </div>
