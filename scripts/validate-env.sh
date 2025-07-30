@@ -33,8 +33,13 @@ if [[ -f "$PROJECT_ROOT/.env" ]]; then
     set +a
     echo -e "${GREEN}✓${NC} Environment file loaded: .env"
 else
-    echo -e "${RED}✗${NC} .env file not found!"
-    exit 1
+    # Check if we're in a CI/Vercel environment
+    if [[ -n "${VERCEL:-}" ]] || [[ -n "${CI:-}" ]]; then
+        echo -e "${BLUE}ℹ${NC} Running in CI/Vercel environment - using system environment variables"
+    else
+        echo -e "${RED}✗${NC} .env file not found!"
+        exit 1
+    fi
 fi
 
 echo ""
