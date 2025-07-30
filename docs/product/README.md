@@ -26,6 +26,7 @@ This directory contains the complete product documentation for Shayon's News RSS
    - Success metrics from user perspective
 
 3. **[User Flow Diagrams](./user-flow-diagrams.md)**
+
    - Technical flowcharts for all major features
    - 9 primary user flows with decision points
    - State diagrams for key components

@@ -1,35 +1,44 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import type { Article, Feed } from '@/types';
-import { IOSButton } from '@/components/ui/ios-button';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Share2, ExternalLink, ChevronLeft, ChevronRight, MoreVertical, BarChart3, ArrowUp } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
-import DOMPurify from 'isomorphic-dompurify';
-import { SummaryButton } from './summary-button';
-import { StarButton } from './star-button';
-import { processArticleLinksSSR } from '@/lib/utils/link-processor';
-import { SummaryDisplay } from './summary-display';
-import { FetchContentButton } from './fetch-content-button';
-import { useArticleStore } from '@/lib/stores/article-store';
-import { useFeedStore } from '@/lib/stores/feed-store';
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Article, Feed } from "@/types";
+import { IOSButton } from "@/components/ui/ios-button";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  Share2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  BarChart3,
+  ArrowUp,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import DOMPurify from "isomorphic-dompurify";
+import { SummaryButton } from "./summary-button";
+import { StarButton } from "./star-button";
+import { processArticleLinksSSR } from "@/lib/utils/link-processor";
+import { SummaryDisplay } from "./summary-display";
+import { FetchContentButton } from "./fetch-content-button";
+import { useArticleStore } from "@/lib/stores/article-store";
+import { useFeedStore } from "@/lib/stores/feed-store";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 interface ArticleDetailProps {
   article: Article;
   feed?: Feed;
   feedTitle: string;
   onToggleStar: () => void;
-  onNavigate: (direction: 'prev' | 'next') => void;
+  onNavigate: (direction: "prev" | "next") => void;
   onBack: () => void;
 }
 
@@ -52,7 +61,9 @@ export function ArticleDetail({
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const isIOS = typeof window !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isIOS =
+    typeof window !== "undefined" &&
+    /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -77,7 +88,7 @@ export function ArticleDetail({
     setCurrentArticle({
       ...currentArticle,
       fullContent: content,
-      hasFullContent: true
+      hasFullContent: true,
     });
     // Also refresh from store to ensure consistency
     const updatedArticle = await getArticle(article.id);
@@ -92,87 +103,118 @@ export function ArticleDetail({
     setCurrentArticle({
       ...currentArticle,
       fullContent: undefined,
-      hasFullContent: false
+      hasFullContent: false,
     });
   };
 
   // Clean and sanitize HTML content - prioritize full content over RSS content
   const contentToDisplay = currentArticle.fullContent || currentArticle.content;
-  
+
   // Process links BEFORE sanitization to ensure attributes are preserved
   const processedContent = processArticleLinksSSR(contentToDisplay);
-  
+
   const cleanContent = DOMPurify.sanitize(processedContent, {
-    ALLOWED_TAGS: ['p', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
-                   'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'em', 
-                   'strong', 'br', 'figure', 'figcaption', 'iframe', 'video'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 
-                   'target', 'rel', 'class', 'id', 'allowfullscreen', 
-                   'frameborder'],
+    ALLOWED_TAGS: [
+      "p",
+      "a",
+      "img",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "ul",
+      "ol",
+      "li",
+      "blockquote",
+      "pre",
+      "code",
+      "em",
+      "strong",
+      "br",
+      "figure",
+      "figcaption",
+      "iframe",
+      "video",
+    ],
+    ALLOWED_ATTR: [
+      "href",
+      "src",
+      "alt",
+      "title",
+      "width",
+      "height",
+      "target",
+      "rel",
+      "class",
+      "id",
+      "allowfullscreen",
+      "frameborder",
+    ],
     ALLOW_DATA_ATTR: false,
-    ADD_TAGS: ['a'], // Ensure anchor tags are allowed
-    ADD_ATTR: ['target', 'rel'], // Ensure these attributes are allowed
+    ADD_TAGS: ["a"], // Ensure anchor tags are allowed
+    ADD_ATTR: ["target", "rel"], // Ensure these attributes are allowed
   });
 
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        onNavigate('prev');
-      } else if (e.key === 'ArrowRight') {
-        onNavigate('next');
-      } else if (e.key === 'Escape') {
+      if (e.key === "ArrowLeft") {
+        onNavigate("prev");
+      } else if (e.key === "ArrowRight") {
+        onNavigate("next");
+      } else if (e.key === "Escape") {
         onBack();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNavigate, onBack]);
-
 
   // Header show/hide on scroll
   useEffect(() => {
     let ticking = false;
-    
+
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const scrollDelta = currentScrollY - lastScrollY.current;
-          
+
           if (!headerRef.current) return;
-          
+
           // Scrolling down - hide header after scrolling 50px down
           if (scrollDelta > 0 && currentScrollY > 50) {
-            headerRef.current.style.transform = 'translateY(-100%)';
+            headerRef.current.style.transform = "translateY(-100%)";
           }
           // Scrolling up - show header immediately (even 1px scroll up)
           else if (scrollDelta < 0) {
-            headerRef.current.style.transform = 'translateY(0)';
+            headerRef.current.style.transform = "translateY(0)";
           }
           // At very top - ensure header is visible
           else if (currentScrollY < 5) {
-            headerRef.current.style.transform = 'translateY(0)';
+            headerRef.current.style.transform = "translateY(0)";
           }
-          
+
           // Show/hide scroll to top button on iOS
           if (isIOS) {
             setShowScrollToTop(currentScrollY > 300);
           }
-          
+
           lastScrollY.current = currentScrollY;
           ticking = false;
         });
-        
+
         ticking = true;
       }
     };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [isIOS]);
 
@@ -188,15 +230,15 @@ export function ArticleDetail({
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
     if (isLeftSwipe) {
-      onNavigate('next');
+      onNavigate("next");
     } else if (isRightSwipe) {
-      onNavigate('prev');
+      onNavigate("prev");
     }
   };
 
@@ -205,7 +247,7 @@ export function ArticleDetail({
       try {
         await navigator.share({
           title: currentArticle.title,
-          text: currentArticle.summary || '',
+          text: currentArticle.summary || "",
           url: currentArticle.url,
         });
       } catch (error) {
@@ -224,7 +266,7 @@ export function ArticleDetail({
 
   const handleToggleFeedPartialContent = async () => {
     if (!feed || !article.feedId) return;
-    
+
     setIsUpdatingFeed(true);
     try {
       // Toggle the partial content setting
@@ -238,36 +280,36 @@ export function ArticleDetail({
   };
 
   return (
-    <div 
-      className="min-h-screen bg-white dark:bg-gray-900 w-full overflow-x-hidden"
+    <div
+      className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {/* Header */}
-      <header 
+      <header
         ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out pwa-safe-area-top"
-        style={{ transform: 'translateY(0)' }}
+        className="pwa-safe-area-top fixed left-0 right-0 top-0 z-10 border-b border-gray-200 bg-white transition-transform duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900"
+        style={{ transform: "translateY(0)" }}
       >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <IOSButton
             variant="ghost"
             size="icon"
             onPress={onBack}
             aria-label="Back to list"
-            className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
+            className="hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
           >
             <ArrowLeft className="h-5 w-5" />
           </IOSButton>
-          
+
           <div className="flex items-center gap-2">
             <StarButton
               onToggleStar={onToggleStar}
-              isStarred={currentArticle.tags?.includes('starred') || false}
+              isStarred={currentArticle.tags?.includes("starred") || false}
               size="md"
             />
-            
+
             <SummaryButton
               articleId={currentArticle.id}
               hasSummary={!!currentArticle.summary}
@@ -275,7 +317,7 @@ export function ArticleDetail({
               size="md"
               onSuccess={handleSummarySuccess}
             />
-            
+
             <FetchContentButton
               articleId={currentArticle.id}
               hasFullContent={currentArticle.hasFullContent}
@@ -284,40 +326,44 @@ export function ArticleDetail({
               onSuccess={handleFetchContentSuccess}
               onRevert={handleRevertContent}
             />
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <IOSButton
                   variant="ghost"
                   size="icon"
                   aria-label="More options"
-                  className="hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
+                  className="hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
                 >
                   <MoreVertical className="h-5 w-5" />
                 </IOSButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 {feed && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onSelect={handleToggleFeedPartialContent}
                     disabled={isUpdatingFeed}
                     className="relative"
                   >
-                    <span className={cn(
-                      "mr-2 text-base transition-opacity duration-200",
-                      isUpdatingFeed && "opacity-50"
-                    )}>
-                      {feed.isPartialContent ? '☑' : '☐'}
+                    <span
+                      className={cn(
+                        "mr-2 text-base transition-opacity duration-200",
+                        isUpdatingFeed && "opacity-50"
+                      )}
+                    >
+                      {feed.isPartialContent ? "☑" : "☐"}
                     </span>
-                    <span className={cn(
-                      "transition-opacity duration-200",
-                      isUpdatingFeed && "opacity-50"
-                    )}>
+                    <span
+                      className={cn(
+                        "transition-opacity duration-200",
+                        isUpdatingFeed && "opacity-50"
+                      )}
+                    >
                       Partial Feed
                     </span>
                     {isUpdatingFeed && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
                       </div>
                     )}
                   </DropdownMenuItem>
@@ -327,13 +373,21 @@ export function ArticleDetail({
                   Share
                 </DropdownMenuItem>
                 {currentArticle.url && (
-                  <DropdownMenuItem onSelect={() => window.open(currentArticle.url, '_blank', 'noopener,noreferrer')}>
+                  <DropdownMenuItem
+                    onSelect={() =>
+                      window.open(
+                        currentArticle.url,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Open Original
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => router.push('/fetch-stats')}>
+                <DropdownMenuItem onSelect={() => router.push("/fetch-stats")}>
                   <BarChart3 className="mr-2 h-4 w-4" />
                   Fetch Stats
                 </DropdownMenuItem>
@@ -344,16 +398,16 @@ export function ArticleDetail({
       </header>
 
       {/* Spacer for fixed header */}
-      <div className="h-[60px] pwa-safe-area-top" />
+      <div className="pwa-safe-area-top h-[60px]" />
 
       {/* Article Content */}
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <article className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {/* Metadata */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 leading-tight">
+          <h1 className="mb-3 text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100 sm:mb-4 sm:text-3xl md:text-4xl">
             {currentArticle.title}
           </h1>
-          
+
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <span className="font-medium">{feedTitle}</span>
             <span>•</span>
@@ -364,7 +418,9 @@ export function ArticleDetail({
               </>
             )}
             <time dateTime={currentArticle.publishedAt.toISOString()}>
-              {formatDistanceToNow(currentArticle.publishedAt, { addSuffix: true })}
+              {formatDistanceToNow(currentArticle.publishedAt, {
+                addSuffix: true,
+              })}
             </time>
           </div>
         </div>
@@ -379,22 +435,15 @@ export function ArticleDetail({
         )}
 
         {/* Article Body */}
-        <div 
+        <div
           ref={contentRef}
-          className="prose prose-base sm:prose-lg dark:prose-invert max-w-none
-                     prose-headings:font-bold
-                     prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:underline
-                     prose-img:rounded-lg prose-img:shadow-md prose-img:max-w-full prose-img:h-auto
-                     prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-700
-                     prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:rounded prose-code:px-1
-                     prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-pre:overflow-x-auto
-                     [&>*]:break-words"
-          style={{ touchAction: 'manipulation' }}
+          className="prose prose-base max-w-none dark:prose-invert sm:prose-lg prose-headings:font-bold prose-a:text-blue-600 prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-code:rounded prose-code:bg-gray-100 prose-code:px-1 prose-pre:overflow-x-auto prose-pre:bg-gray-100 prose-img:h-auto prose-img:max-w-full prose-img:rounded-lg prose-img:shadow-md dark:prose-a:text-blue-400 dark:prose-blockquote:border-gray-700 dark:prose-code:bg-gray-800 dark:prose-pre:bg-gray-800 [&>*]:break-words"
+          style={{ touchAction: "manipulation" }}
           dangerouslySetInnerHTML={{ __html: cleanContent }}
         />
-        
+
         {/* Fetch/Revert Full Content button at bottom */}
-        <div className="mt-8 mb-8 flex justify-center">
+        <div className="mb-8 mt-8 flex justify-center">
           <FetchContentButton
             articleId={currentArticle.id}
             hasFullContent={currentArticle.hasFullContent}
@@ -406,40 +455,40 @@ export function ArticleDetail({
       </article>
 
       {/* Navigation Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <footer className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <IOSButton
             variant="ghost"
             size="sm"
-            onPress={() => onNavigate('prev')}
+            onPress={() => onNavigate("prev")}
             aria-label="Previous article"
-            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
+            className="flex items-center gap-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
           </IOSButton>
-          
+
           <IOSButton
             variant="ghost"
             size="sm"
-            onPress={() => onNavigate('next')}
+            onPress={() => onNavigate("next")}
             aria-label="Next article"
-            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700"
+            className="flex items-center gap-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
           >
             Next
             <ChevronRight className="h-4 w-4" />
           </IOSButton>
         </div>
       </footer>
-      
+
       {/* Spacer for fixed footer */}
       <div className="h-[60px]" />
-      
+
       {/* Liquid Glass Scroll to Top button for iOS */}
       {isIOS && showScrollToTop && (
         <button
           onClick={() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           className="liquid-glass-btn"
           aria-label="Scroll to top"

@@ -1,43 +1,48 @@
 # Floating Read Status Filter Pill
 
 ## Overview
+
 A glass-morphic floating filter pill that appears when scrolling the article list, providing quick access to read status filtering (All/Unread/Read) without cluttering the header.
 
 ## Design Inspiration
+
 Based on iOS 26 Photos app's floating selection bar - appears on scroll, heavily blurred glass effect, auto-hides when scrolling up.
 
 ## Component Structure
 
 ### Filter Pill Component
+
 ```tsx
 interface FloatingFilterPillProps {
-  currentFilter: 'all' | 'unread' | 'read';
-  onFilterChange: (filter: 'all' | 'unread' | 'read') => void;
+  currentFilter: "all" | "unread" | "read";
+  onFilterChange: (filter: "all" | "unread" | "read") => void;
   isVisible: boolean;
 }
 
-export function FloatingFilterPill({ 
-  currentFilter, 
+export function FloatingFilterPill({
+  currentFilter,
   onFilterChange,
-  isVisible 
+  isVisible,
 }: FloatingFilterPillProps) {
   const filters = [
-    { id: 'all', label: 'All' },
-    { id: 'unread', label: 'Unread' },
-    { id: 'read', label: 'Read' }
+    { id: "all", label: "All" },
+    { id: "unread", label: "Unread" },
+    { id: "read", label: "Read" },
   ];
 
   return (
-    <div className={cn(
-      "fixed top-20 left-1/2 -translate-x-1/2 z-40",
-      "transition-all duration-300 ease-out",
-      isVisible 
-        ? "translate-y-0 opacity-100 scale-100" 
-        : "-translate-y-full opacity-0 scale-95"
-    )}>
+    <div
+      className={cn(
+        "fixed left-1/2 top-20 z-40 -translate-x-1/2",
+        "transition-all duration-300 ease-out",
+        isVisible
+          ? "translate-y-0 scale-100 opacity-100"
+          : "-translate-y-full scale-95 opacity-0"
+      )}
+    >
       {/* Glass pill container */}
       <div className="glass-filter-pill">
-        <div className="flex items-center p-1 gap-1">
+        <div className="flex items-center gap-1 p-1">
           {filters.map((filter) => (
             <button
               key={filter.id}
@@ -51,12 +56,12 @@ export function FloatingFilterPill({
             </button>
           ))}
         </div>
-        
+
         {/* Active indicator */}
-        <div 
+        <div
           className="filter-indicator"
           style={{
-            transform: `translateX(${filters.findIndex(f => f.id === currentFilter) * 100}%)`
+            transform: `translateX(${filters.findIndex((f) => f.id === currentFilter) * 100}%)`,
           }}
         />
       </div>
@@ -68,17 +73,18 @@ export function FloatingFilterPill({
 ## CSS Implementation
 
 ### Glass Pill Styles
+
 ```css
 /* Floating filter pill */
 .glass-filter-pill {
   position: relative;
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
-  background: rgba(255, 255, 255, 0.70);
-  border: 1px solid rgba(255, 255, 255, 0.40);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 20px;
   padding: 3px;
-  box-shadow: 
+  box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.15),
     0 2px 8px rgba(0, 0, 0, 0.05),
     inset 0 1px 1px rgba(255, 255, 255, 0.35);
@@ -86,12 +92,12 @@ export function FloatingFilterPill({
 }
 
 .dark .glass-filter-pill {
-  background: rgba(30, 30, 30, 0.70);
+  background: rgba(30, 30, 30, 0.7);
   border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.40),
-    0 2px 8px rgba(0, 0, 0, 0.10),
-    inset 0 1px 1px rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Filter options */
@@ -102,21 +108,21 @@ export function FloatingFilterPill({
   border-radius: 16px;
   font-size: 14px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.60);
+  color: rgba(0, 0, 0, 0.6);
   transition: all 200ms ease-out;
   min-width: 80px;
 }
 
 .dark .filter-option {
-  color: rgba(255, 255, 255, 0.60);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .filter-option:hover {
-  color: rgba(0, 0, 0, 0.80);
+  color: rgba(0, 0, 0, 0.8);
 }
 
 .dark .filter-option:hover {
-  color: rgba(255, 255, 255, 0.80);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Active option */
@@ -136,19 +142,19 @@ export function FloatingFilterPill({
   left: 3px;
   width: calc(33.33% - 2px);
   height: calc(100% - 6px);
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 16px;
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 1px rgba(255, 255, 255, 0.50);
+    inset 0 1px 1px rgba(255, 255, 255, 0.5);
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1;
 }
 
 .dark .filter-indicator {
-  background: rgba(60, 60, 60, 0.90);
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.20),
+  background: rgba(60, 60, 60, 0.9);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 ```
@@ -156,20 +162,21 @@ export function FloatingFilterPill({
 ## Scroll Behavior Integration
 
 ### Visibility Logic
+
 ```typescript
 export function useFloatingFilter() {
   const [isVisible, setIsVisible] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const scrollThreshold = 100; // Show after scrolling 100px
-  
+
   useEffect(() => {
     let ticking = false;
-    
+
     const updateVisibility = () => {
       const currentScrollY = window.scrollY;
       const scrollingDown = currentScrollY > lastScrollY;
       const pastThreshold = currentScrollY > scrollThreshold;
-      
+
       // Show when scrolling down past threshold
       // Hide when scrolling up or at top
       if (scrollingDown && pastThreshold && !isVisible) {
@@ -177,47 +184,48 @@ export function useFloatingFilter() {
       } else if ((!scrollingDown || currentScrollY < 50) && isVisible) {
         setIsVisible(false);
       }
-      
+
       setLastScrollY(currentScrollY);
       ticking = false;
     };
-    
+
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(updateVisibility);
         ticking = true;
       }
     };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [isVisible, lastScrollY]);
-  
+
   return isVisible;
 }
 ```
 
 ### Integration with Article List
+
 ```tsx
 export function ArticleList({ currentFilter, onFilterChange }) {
   const isFilterVisible = useFloatingFilter();
-  
+
   return (
     <>
       {/* Floating filter - renders at top level */}
       <FloatingFilterPill
         currentFilter={currentFilter.readStatus}
-        onFilterChange={(status) => onFilterChange({ 
-          ...currentFilter, 
-          readStatus: status 
-        })}
+        onFilterChange={(status) =>
+          onFilterChange({
+            ...currentFilter,
+            readStatus: status,
+          })
+        }
         isVisible={isFilterVisible}
       />
-      
+
       {/* Article list content */}
-      <div className="article-list">
-        {/* ... */}
-      </div>
+      <div className="article-list">{/* ... */}</div>
     </>
   );
 }
@@ -226,6 +234,7 @@ export function ArticleList({ currentFilter, onFilterChange }) {
 ## Animation Details
 
 ### Entrance Animation
+
 ```css
 /* Smooth slide and fade */
 @keyframes filter-pill-enter {
@@ -245,18 +254,19 @@ export function ArticleList({ currentFilter, onFilterChange }) {
 ```
 
 ### Interaction Feedback
+
 ```typescript
 // Add haptic feedback on filter change
 const handleFilterChange = (filter: FilterType) => {
   // Haptic feedback
-  if ('vibrate' in navigator) {
+  if ("vibrate" in navigator) {
     navigator.vibrate(10);
   }
-  
+
   // Visual feedback - brief scale
   setPressing(true);
   setTimeout(() => setPressing(false), 100);
-  
+
   onFilterChange(filter);
 };
 ```
@@ -264,8 +274,8 @@ const handleFilterChange = (filter: FilterType) => {
 ## Accessibility
 
 ```tsx
-<div 
-  role="radiogroup" 
+<div
+  role="radiogroup"
   aria-label="Filter articles by read status"
   className="glass-filter-pill"
 >

@@ -7,6 +7,7 @@
 ## ✅ COMPLETED TODOS
 
 ### TODO-039b: Build Validation System (P1 - Critical) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Build validation system fully implemented and operational
 - **Linear Issue**: [RR-38](https://linear.app/agilecode-studio/issue/RR-38/build-validation-system)
 - **Issue**: Production builds missing API routes, causing 500 errors
@@ -34,11 +35,12 @@
 - **Completed**: Saturday, July 26, 2025 at 5:10 PM
 
 ### TODO-039d: Environment Variable Management (P1 - Critical) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Environment variable management system fully implemented
 - **Linear Issue**: [RR-13](https://linear.app/agilecode-studio/issue/RR-13/environment-variable-management)
 - **Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables
 - **Context**: PM2 runtime injection doesn't work for Next.js client builds
-- **Root Cause**: Next.js requires NEXT_PUBLIC_* variables available during build, not just runtime
+- **Root Cause**: Next.js requires NEXT*PUBLIC*\* variables available during build, not just runtime
 - **Implementation Details**:
   - Created centralized environment validation system
   - Kept single .env file with clear sections (not separate files)
@@ -47,7 +49,7 @@
   - Standardized naming: use SUPABASE_SERVICE_ROLE_KEY consistently
 - **Solution Implemented**:
   - Created `scripts/validate-env.sh` that validates ALL 30+ environment variables
-  - Modified `scripts/build-and-start-prod.sh` to export NEXT_PUBLIC_* vars before build
+  - Modified `scripts/build-and-start-prod.sh` to export NEXT*PUBLIC*\* vars before build
   - Added "prebuild" script to package.json for automatic validation
   - Fixed SUPABASE_SERVICE_KEY → SUPABASE_SERVICE_ROLE_KEY naming across 7 files
   - Deleted redundant .env.server.example and .env.test files
@@ -63,6 +65,7 @@
 - **Completed**: Saturday, July 26, 2025 at 5:50 PM
 
 ### TODO-039e: PM2 Configuration Improvements (P1 - Infrastructure) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Comprehensive PM2 stability improvements implemented and operational
 - **Linear Issue**: [RR-15](https://linear.app/agilecode-studio/issue/RR-15/pm2-configuration-improvements)
 - **Issue**: Cluster mode causing crashes, low restart limits, missing health delays
@@ -90,6 +93,7 @@
 - **Completed**: Saturday, July 26, 2025 at 9:06 PM
 
 ### TODO-039a: Create Health Check Endpoints (P1 - Prerequisite) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED Saturday, July 26, 2025 at 7:01 PM
 - **Linear Issue**: [RR-37](https://linear.app/agilecode-studio/issue/RR-37/create-health-check-endpoints)
 - **Parent**: TODO-039 (Server Health Monitoring)
@@ -126,6 +130,7 @@
   - [x] Standardize response format across all endpoints
 
 ### TODO-039i: Implement Uptime Kuma Monitoring Infrastructure (P1 - Infrastructure) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Uptime Kuma monitoring infrastructure deployed
 - **Issue**: No centralized monitoring system
 - **Linear Issue**: [RR-19](https://linear.app/agilecode-studio/issue/RR-19/implement-uptime-kuma-monitoring-infrastructure)
@@ -149,6 +154,7 @@
 - **Discovery**: Health endpoint accuracy issues identified requiring TODO-039b priority
 
 ### TODO-001: Enable Row Level Security (P0 - Critical) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Security vulnerability resolved
 - **Linear Issue**: [RR-48](https://linear.app/agilecode-studio/issue/RR-48/enable-row-level-security)
 - **Issue**: RLS disabled on ALL public tables, anyone with anon key can access all data
@@ -163,6 +169,7 @@
 - **Completed**: July 21, 2025 - RLS enabled on all 6 tables with proper policies
 
 ### TODO-002: Fix Function Security Vulnerability (P0 - Security) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Function security vulnerability resolved
 - **Linear Issue**: [RR-49](https://linear.app/agilecode-studio/issue/RR-49/fix-function-security-vulnerability)
 - **Issue**: `update_updated_at_column` has mutable search_path
@@ -174,6 +181,7 @@
 - **Completed**: July 21, 2025 - Function recreated with explicit search_path
 
 ### TODO-003: Apply Unread Counts Function Migration (P1 - Performance) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Performance optimization applied
 - **Linear Issue**: [RR-50](https://linear.app/agilecode-studio/issue/RR-50/apply-unread-counts-function-migration)
 - **Issue**: Feed loading takes 6.4s due to N+1 query problem
@@ -188,6 +196,7 @@
 - **Completed**: January 22, 2025 - Database function and index created
 
 ### TODO-004: Database Performance Analysis (P1 - Performance) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Performance optimization migration created
 - **Linear Issue**: [RR-51](https://linear.app/agilecode-studio/issue/RR-51/database-performance-analysis)
 - **Issues Identified**:
@@ -206,6 +215,7 @@
 - **Completed**: January 22, 2025 - Comprehensive performance optimization
 
 ### TODO-005: Refresh Materialized View After Sync (P1 - Performance) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Materialized view refresh integrated into sync process
 - **Linear Issue**: [RR-52](https://linear.app/agilecode-studio/issue/RR-52/refresh-materialized-view-after-sync)
 - **Issue**: The `feed_stats` materialized view needs to be refreshed after each sync to show accurate unread counts
@@ -222,6 +232,7 @@
 - **Completed**: January 22, 2025 - Refresh integrated with error handling
 
 ### TODO-006: Complete Automatic Daily Sync (P1 - Core) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Automatic daily sync fully implemented
 - **Linear Issue**: [RR-53](https://linear.app/agilecode-studio/issue/RR-53/complete-automatic-daily-sync)
 - **Completed**: ✅ Manual sync, API endpoints, progress polling, rate limiting, automatic sync
@@ -246,6 +257,7 @@
   - `/docs/deployment/automatic-sync.md` - Complete documentation
 
 ### TODO-007: Complete Full Content Extraction Feature (P1 - Core)
+
 - **Status**: ✅ COMPLETED (2025-07-24) - All sub-tasks finished
 - **Context**: Feature allows users to fetch full article content beyond RSS snippets
 - **Specifications**:
@@ -260,6 +272,7 @@
 - **User Stories** (implement in order):
 
 #### TODO-007a: Database Schema Updates
+
 - **Status**: ✅ COMPLETED (2025-07-23)
 - **Tasks**:
   - [x] Add `is_partial_content` boolean column to feeds table
@@ -274,6 +287,7 @@
   - All constraints and foreign keys properly configured
 
 #### TODO-007b: Article Detail Header Reorganization
+
 - **Status**: ✅ COMPLETED (2025-07-23)
 - **Tasks**:
   - [x] Move Share & External Link buttons to More (⋮) dropdown menu
@@ -289,6 +303,7 @@
   - Ready for Fetch Full Content button integration
 
 #### TODO-007c: Manual Fetch Content Implementation
+
 - **Status**: ✅ COMPLETED (2025-07-23)
 - **Tasks**:
   - [x] Add "Fetch Full Content" button at article bottom and header
@@ -306,6 +321,7 @@
   - Revert functionality allows users to toggle between full and RSS content
 
 #### TODO-007d: Feed Partial Content Toggle
+
 - **Status**: ✅ COMPLETED
 - **Tasks**:
   - [x] Add "Partial Feed" toggle in More (⋮) dropdown menu
@@ -328,6 +344,7 @@
   - All fetch attempts logged to fetch_logs table with proper error handling
 
 #### TODO-007e: Article List Content Priority Display
+
 - **Status**: ✅ COMPLETED
 - **Tasks**:
   - [x] Update article list item to check content availability
@@ -336,12 +353,13 @@
   - [x] Maintain scroll performance
 - **Files**: `src/components/articles/article-list.tsx`
 - **Acceptance Criteria**: List shows appropriate content based on availability
-- **Implementation Notes**: 
+- **Implementation Notes**:
   - Modified `renderPreview` function to check for `fullContent` after AI summary
   - Uses existing `extractTextContent` utility for consistent text extraction
   - Maintains 4-line preview for both full content and RSS content
 
 #### TODO-007f: Auto-Fetch Service Integration
+
 - **Status**: ✅ COMPLETED (Merged into TODO-007d)
 - **Tasks**:
   - [x] Create auto-fetch service with configurable rate limiting
@@ -351,12 +369,13 @@
   - [x] Log all attempts to `fetch_logs` table
 - **Files**: `src/app/api/sync/route.ts` (performAutoFetch function)
 - **Acceptance Criteria**: Auto-fetch runs during sync, respects rate limits
-- **Implementation Notes**: 
+- **Implementation Notes**:
   - Functionality was integrated directly into sync route rather than separate service
   - Successfully fetches content with 100% success rate
   - Properly respects rate limits and logs all attempts
 
 #### TODO-007g: Fetch Logging & Monitoring
+
 - **Status**: ✅ COMPLETED (2025-01-24)
 - **Tasks**:
   - [x] Implement comprehensive logging for all fetch attempts (manual & auto) ✅
@@ -366,6 +385,7 @@
 - **Files**: Created /api/analytics/fetch-stats, /fetch-stats page
 - **Acceptance Criteria**: Can query fetch history and see success metrics ✅
 - **Implementation Notes**:
+
   - Logging infrastructure was already in place (fetch_logs table)
   - Created comprehensive statistics dashboard showing time-based aggregation
   - Added navigation links from article dropdown and homepage header
@@ -379,6 +399,7 @@
   - Monitor API rate limits during testing
 
 ### TODO-009: Fix Article View Interface Controls (P0 - Critical Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - iOS Safari button controls fixed
 - **Issue**: Article view buttons not working (required double-tap on iOS)
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -390,6 +411,7 @@
 - **Completed**: January 21, 2025 - All buttons work on first tap on iOS devices
 
 ### TODO-009a: Fix Scroll Position Loss on Navigation Back (P1 - UX Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Hybrid scroll position preservation implemented
 - **Issue**: When navigating back from article detail view (using back button or browser back), the article list scroll position is lost and resets to top
 - **Root Cause**: The app uses client-side navigation with `router.push('/')` which creates a new page instance instead of preserving the previous state
@@ -414,6 +436,7 @@
 - **Completed**: January 22, 2025 - Scroll position and filter state now preserved across navigation
 
 ### TODO-010: Fix 404 Errors for Missing Assets (P1 - Quality Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Issue**: Missing favicon and PWA icons causing 404s
 - **Solution**: Fixed by adding /reader basePath prefix to all icon URLs in metadata
@@ -426,6 +449,7 @@
   - [x] Test icons display in browser/PWA - URLs now resolve correctly
 
 ### TODO-011: Caddy Configuration (P0 - Deployment) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Caddy and PM2 configuration ready
 - **Completed**: July 21, 2025 - All configuration files created
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -443,6 +467,7 @@
   - `/docs/deployment/caddy-pm2-setup.md` - Documentation
 
 ### TODO-012: Tailscale Monitoring (P0 - Infrastructure) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Monitoring service installed and running
 - **Completed**: July 21, 2025 - All monitoring components implemented
 - **Critical**: Without Tailscale, clients cannot access service
@@ -465,6 +490,7 @@
   - Service starts automatically on boot
 
 ### TODO-013: Clean Data Migration (P1 - Deployment) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Clean sync performed successfully
 - **Approach**: Clean slate migration (no data preservation needed)
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -475,6 +501,7 @@
 - **Completed**: July 22, 2025 - Manual sync populated all data
 
 ### TODO-014a: Read Status Filtering (P1 - Pre-Production) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Read status filtering implemented
 - **Completed**: January 22, 2025 - All acceptance criteria met
 - **Implementation**:
@@ -498,6 +525,7 @@
   - [x] Works correctly with existing feed selection
 
 ### TODO-014b: Feed Filtering Enhancement (P2 - Post-Production)
+
 - **Status**: ✅ MOSTLY COMPLETE (July 22, 2025)
 - **Current**: Feed filtering fully functional
 - **Completed**:
@@ -512,6 +540,7 @@
 - **Note**: Upon review on July 22, 2025, discovered that all core features were already implemented. Only optional feed search remains.
 
 ### TODO-015: Theme Toggle (P2 - UX) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Theme toggle implemented
 - **Completed**: July 22, 2025
 - **Implementation**: Icon-based theme toggle in feed sidebar header
@@ -532,6 +561,7 @@
   - Removed unused `src/components/layout/navigation.tsx`
 
 ### TODO-023: Configurable AI Summarization Prompt (P2 - Configuration) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Configurable AI summarization prompts implemented
 - **Completed**: January 23, 2025
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -565,6 +595,7 @@
   - **Related Feature**: [[TODO-024]] - Multi-Provider LLM Support
 
 ### TODO-026: Replace Deprecated Punycode Module (P2 - Technical Debt) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Userland punycode package installed
 - **Issue**: Node.js built-in `punycode` module was deprecated since v21.0.0
 - **Solution**: Installed userland `punycode` package to override built-in module
@@ -585,6 +616,7 @@
 - **Completed**: July 22, 2025 - Technical debt resolved (re-applied with legacy-peer-deps)
 
 ### TODO-028: Enhance Back Button Navigation Logic (P2 - UX Enhancement) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Issue**: Back button should always return to listing page instead of previous article
 - **Current Behavior**: Back button uses browser history which may go to previous article when user has navigated through multiple articles using Previous/Next buttons
@@ -607,6 +639,7 @@
 - **Completed**: January 23, 2025 - Back button now consistently returns to listing page
 
 ### TODO-029: Auto-Mark Articles as Read on Scroll (P2 - UX Enhancement) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Issue**: Articles should automatically be marked as read when they scroll out of viewport
 - **Implementation**: Articles now automatically marked as read when scrolling down past them
@@ -637,6 +670,7 @@
 - **Completed**: July 22, 2025 - Feature working smoothly across all views with enhanced UI
 
 ### TODO-030: iOS Scroll-to-Top Gesture Support (P1 - Platform UX) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - July 22, 2025
 - **Issue**: iOS native scroll-to-top gesture (tap status bar) and Safari URL bar collapse didn't work
 - **Root Cause**: Safari requires document body to scroll, not inner containers
@@ -671,6 +705,7 @@
   - Solution follows Safari's expected behavior patterns
 
 ### TODO-032: Document Database Schema in README (P2 - Documentation) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Database schema fully documented
 - **Issue**: Supabase database schema was not documented in README.md
 - **Completed**: January 22, 2025
@@ -691,17 +726,19 @@
   - Included common SQL query examples
 
 ### TODO-033: Create Development Branch and Environment Setup (P0 - Pre-Deployment) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Dev branch created and environment configured
 - **Context**: Required setup before first production deployment
 - **Acceptance Criteria**: ALL COMPLETED ✅
   - [x] Create `dev` branch from current `main`
   - [x] Push `dev` branch to GitHub
   - [x] Switch to `dev` branch for continued development
-  - [x] Update .env file with PROD_ and DEV_ prefixed variables
+  - [x] Update .env file with PROD* and DEV* prefixed variables
   - [x] Create separate Supabase project for development database - Used single DB approach
   - [x] Document dev database connection strings in .env
 - **Completed**: July 22, 2025 - Simplified to single database approach
 - **Environment Variables Configuration**:
+
   ```env
   # ========================================
   # SHARED CONFIGURATION
@@ -710,11 +747,11 @@
   INOREADER_CLIENT_ID=your_client_id
   INOREADER_CLIENT_SECRET=your_client_secret
   INOREADER_REDIRECT_URI=http://localhost:8080/callback
-  
+
   # Claude API (shared)
   ANTHROPIC_API_KEY=your_anthropic_key
   CLAUDE_SUMMARIZATION_MODEL=claude-sonnet-4-20250514
-  
+
   # ========================================
   # PRODUCTION CONFIGURATION
   # ========================================
@@ -722,12 +759,12 @@
   PROD_NEXT_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
   PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-prod-anon-key
   PROD_SUPABASE_SERVICE_ROLE_KEY=your-prod-service-key
-  
+
   # Production Settings
   PROD_PORT=3147
   PROD_NODE_ENV=production
   PROD_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
-  
+
   # ========================================
   # DEVELOPMENT CONFIGURATION
   # ========================================
@@ -735,18 +772,19 @@
   DEV_NEXT_PUBLIC_SUPABASE_URL=https://your-dev-project.supabase.co
   DEV_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-dev-anon-key
   DEV_SUPABASE_SERVICE_ROLE_KEY=your-dev-service-key
-  
+
   # Development Settings
   DEV_PORT=3000
   DEV_NODE_ENV=development
   DEV_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
-  
+
   # Sync Configuration
   SYNC_MAX_ARTICLES=100
   ARTICLES_RETENTION_LIMIT=1000
   ```
 
 ### TODO-034: Update PM2 Ecosystem Configuration (P0 - Pre-Deployment) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Multi-app PM2 configuration deployed
 - **Context**: Update ecosystem.config.js to support multi-app deployment
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -754,13 +792,14 @@
     - rss-reader-prod (port 3147) ✅
     - rss-reader-dev (port 3000) ✅
     - rss-sync-cron (existing) ✅
-  - [x] Configure environment variables to use PROD_/DEV_ prefixes
+  - [x] Configure environment variables to use PROD*/DEV* prefixes
   - [x] Set proper log file paths for each app
   - [x] Update cron app to use production database
   - [x] Test configuration syntax with `pm2 start ecosystem.config.js --dry-run`
 - **Completed**: July 22, 2025 - All apps running successfully
 
 ### TODO-035: Create Deployment Scripts (P0 - Pre-Deployment) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Deployment scripts created and tested
 - **Context**: Automate deployment process for consistency
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -779,6 +818,7 @@
 - **Completed**: July 22, 2025 - Scripts successfully used for deployment
 
 ### TODO-036: Prepare Production Database (P0 - Pre-Deployment) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Production database fully prepared
 - **Context**: Ensure production database is ready for deployment
 - **Acceptance Criteria**: ALL COMPLETED ✅
@@ -792,6 +832,7 @@
 - **Completed**: July 22, 2025 - Database ready with 250 articles synced
 
 ### TODO-037: Implement Bi-directional Sync to Inoreader (P1 - Core Feature)
+
 - **Status**: ✅ COMPLETED (July 23, 2025)
 - **Linear Issue**: [RR-45](https://linear.app/agilecode-studio/issue/RR-45/implement-bi-directional-sync-to-inoreader)
 - **Issue**: Read/unread status changes made in the app are not synced back to Inoreader
@@ -834,6 +875,7 @@
 - **Completed**: July 23, 2025 - Feature fully implemented and verified working. The only issue was the sync server wasn't running in production. Once started, all functionality worked as designed with efficient batching and proper error handling.
 
 ### TODO-038: Fix Client-Side Sync Queue RPC Calls (P2 - Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - SQL function syntax error fixed
 - **Issue**: Client-side article store failed to add entries to sync_queue via RPC
 - **Root Cause**: SQL syntax error in add_to_sync_queue function - CASE statement with arrays
@@ -845,21 +887,23 @@
 - **Verification**: Tested with Playwright - sync queue now properly records read/star actions
 
 ### TODO-041: Fix Cron Sync URL Missing /reader Prefix (P0 - Critical Bug)
+
 - **Status**: ✅ COMPLETED
 - **Issue**: Automatic sync has been failing since deployment because cron service calls wrong URL
 - **Root Cause**: Cron service configured to call `http://localhost:3147/api/sync` but app uses `/reader` basePath
-- **Evidence**: 
+- **Evidence**:
   - All automatic syncs failing with "fetch failed" or "404" errors since July 22
   - Manual test confirms `/api/sync` returns 404, but `/reader/api/sync` works correctly
   - Logs show consistent failures at 2:00 AM and 2:00 PM daily
 - **Current Configuration**:
   ```javascript
   // ecosystem.config.js line 91
-  NEXT_PUBLIC_BASE_URL: 'http://localhost:3147'  // Missing /reader prefix
+  NEXT_PUBLIC_BASE_URL: "http://localhost:3147"; // Missing /reader prefix
   ```
 - **Fix Applied**: Updated ecosystem.config.js to use environment variable with correct default:
   ```javascript
-  NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+  NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL ||
+    "http://localhost:3147/reader";
   ```
 - **Acceptance Criteria**:
   - [x] Update ecosystem.config.js to use correct URL with /reader prefix
@@ -874,22 +918,26 @@
 ## 📊 SUCCESS METRICS
 
 ### Security
+
 - [x] All tables have RLS enabled
 - [x] No security warnings in Supabase advisor
 - [x] Zero unauthorized data access attempts
 
 ### Performance
+
 - [x] Feed sidebar loads in < 500ms (down from 6.4s) ✅ 92.4% data reduction achieved
 - [x] No query consuming > 20% of total execution time ✅ Migration created to address timezone queries
 - [x] Average query response < 20ms ✅ Expected after applying performance migration
 
 ### User Experience
+
 - [x] All UI controls function properly ✅ iOS Safari buttons fixed (TODO-009)
 - [x] No broken navigation flows ✅ Scroll position preserved (TODO-009a)
 - [x] Consistent interaction feedback ✅ Touch events working properly
 - [ ] Can read 50+ articles without friction
 
 ### TODO-046: Fix Orange Status Bar in PWA on iPhone (P1 - UI Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Linear Issue**: [RR-39](https://linear.app/agilecode-studio/issue/RR-39/fix-orange-status-bar-in-pwa-on-iphone)
 - **Issue**: Orange header/status bar appears above app header when saved as PWA on iPhone
@@ -920,6 +968,7 @@
 - **Completed**: July 24, 2025
 
 ### TODO-047: Filter Out Feeds with No Unread Articles in Sidebar (P2 - Enhancement) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Linear Issue**: [RR-42](https://linear.app/agilecode-studio/issue/RR-42/filter-out-feeds-with-no-unread-articles-in-sidebar)
 - **Issue**: When "Unread Only" filter is selected, feeds with zero unread articles still appear in sidebar
@@ -952,6 +1001,7 @@
 - **Completed**: Thursday, July 24, 2025 at 8:15 AM
 
 ### TODO-048: Grey Out Feeds with No Unread Articles in Sidebar (P3 - UI Enhancement) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Linear Issue**: [RR-40](https://linear.app/agilecode-studio/issue/RR-40/grey-out-feeds-with-no-unread-articles-in-sidebar)
 - **Issue**: Feeds with zero unread articles have the same visual prominence as feeds with new content
@@ -981,6 +1031,7 @@
 - **Completed**: July 24, 2025 - Visual hierarchy implemented
 
 ### TODO-049: Sort Feed List Alphabetically in Sidebar (P2 - Enhancement) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Linear Issue**: [RR-41](https://linear.app/agilecode-studio/issue/RR-41/sort-feed-list-alphabetically-in-sidebar)
 - **Issue**: Feeds in sidebar are not consistently sorted, making it difficult to find specific feeds
@@ -1004,6 +1055,7 @@
   - Applied sorting in SimpleFeedSidebar component and getFeedsInFolder method
 
 ### TODO-055: Implement Independent Scrolling for Sidebar and Article List (P2 - UX) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Issue**: Sidebar and article list scroll together as one page instead of independently
 - **Context**:
@@ -1047,47 +1099,56 @@
 - **Completed**: July 24, 2025 - Feeds now appear in alphabetical order
 
 ### TODO-008: Deploy to Production (P0 - Critical) ✅ COMPLETED
-- **Status**: ✅ COMPLETED  
+
+- **Status**: ✅ COMPLETED
 - **Linear Issue**: [RR-46](https://linear.app/agilecode-studio/issue/RR-46/deploy-to-production)
 - **Description**: Deploy RSS reader to production environment
 - **Evidence**: Production deployment completed with PM2 process management
 
 ### TODO-016: Add Folder Management (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Implement folder/category management for organizing feeds
 - **Evidence**: Folder structure implemented with Inoreader integration
 
 ### TODO-017: Add Keyboard Navigation (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Implement keyboard shortcuts for navigation
 - **Evidence**: Basic keyboard navigation implemented
 
 ### TODO-018: Add Search Within Articles (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Enable searching within article content
 - **Evidence**: Search functionality implemented
 
 ### TODO-019: Add Tags/Labels Support (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Support for article tags and labels
 - **Evidence**: Tags support implemented via Inoreader API
 
 ### TODO-020: Add Saved/Starred Articles View (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Dedicated view for saved/starred articles
 - **Evidence**: Starred articles view implemented
 
 ### TODO-021: Add Archive Support (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Support for archiving articles
 - **Evidence**: Archive functionality implemented
 
 ### TODO-022: Add OPML Import (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Support importing OPML feed lists
 - **Evidence**: OPML import functionality added
 
 ### TODO-024: Support Multi-Provider LLM Fallback (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Implement fallback between different LLM providers
 - **Evidence**: Multi-provider support with Anthropic/OpenAI/Perplexity
@@ -1104,26 +1165,31 @@
   ```
 
 ### TODO-025: Add Feed Statistics (P3) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Show feed statistics and analytics
 - **Evidence**: Basic feed statistics implemented
 
 ### TODO-027: AI-Powered Similar Articles (P3) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Find similar articles using AI
 - **Evidence**: Basic similarity features via LLM integration
 
 ### TODO-031: Add Accessibility Features (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Improve accessibility with ARIA labels and keyboard support
 - **Evidence**: Basic accessibility features implemented
 
 ### TODO-039: Integration Tests (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Add integration tests for critical paths
 - **Evidence**: Basic integration tests added
 
 ### TODO-040: Add Monitoring/Logging (P2) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED
 - **Description**: Implement comprehensive logging and monitoring
 - **Evidence**: API call logging and monitoring implemented
@@ -1139,12 +1205,13 @@ This document contains all completed TODOs from the RSS News Reader project. The
 - **Infrastructure**: Production deployment with PM2, Caddy, and Tailscale monitoring
 
 ### TODO-044: Open All Article Links in External Tab (P2 - Enhancement) ⚠️ PARTIALLY COMPLETED
+
 - **Status**: ⚠️ PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
 - **Issue**: Links within article content open in the same tab, causing users to lose their place
-- **Resolution**: Created link-processor utility that processes all article content to add target="_blank" and rel="noopener noreferrer" to external links. Main functionality working but iOS double-tap issue remains.
+- **Resolution**: Created link-processor utility that processes all article content to add target="\_blank" and rel="noopener noreferrer" to external links. Main functionality working but iOS double-tap issue remains.
 - **Implementation**:
   - ✅ All links in article content now open in new tabs
-  - ✅ Added proper security attributes (target="_blank" and rel="noopener noreferrer")
+  - ✅ Added proper security attributes (target="\_blank" and rel="noopener noreferrer")
   - ✅ Applied to RSS content, full fetched content, and AI summaries
   - ✅ Created consistent link processing utility
   - ❌ iOS Safari/PWA double-tap issue remains unresolved
@@ -1157,6 +1224,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
 - **Impact**: Improved user experience on desktop and Android, but iOS users still face double-tap requirement
 
 ### TODO-040: Fix or Remove Unused Mark-All-Read Route (P2 - Technical Debt) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025 at 8:39 PM
 - **Issue**: `/api/mark-all-read` route exists but is not integrated into the UI
 - **Context**:
@@ -1183,6 +1251,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - Avoids dangerous Inoreader API that marks ALL articles across entire account
 
 ### TODO-050: Unify Summarize Icon Style with Star Icon in Article List (P3 - UI Consistency) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025 at 9:23 PM
 - **Linear Issue**: [RR-43](https://linear.app/agilecode-studio/issue/RR-43/unify-summarize-icon-style-with-star-icon-in-article-list)
 - **Issue**: Summarize icon in article list had different styling than star icon, especially noticeable in dark mode
@@ -1214,6 +1283,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - `docs/tech/button-architecture.md` - Documentation for button system
 
 ### TODO-042: Fix Sync Overwriting Local Star/Read Status (P0 - Critical Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025
 - **Linear Issue**: [RR-47](https://linear.app/agilecode-studio/issue/RR-47/fix-sync-overwriting-local-starread-status)
 - **Issue**: Sync from Inoreader overwrites local star/read status changes
@@ -1240,6 +1310,7 @@ This document contains all completed TODOs from the RSS News Reader project. The
   - Tested with real user actions to verify preservation of local states
 
 ### TODO-052: Investigate Read Status Sync Issues with Inoreader (P0 - Critical Bug) ✅ COMPLETED
+
 - **Status**: ✅ COMPLETED - Friday, July 25, 2025 (Duplicate of TODO-042)
 - **Linear Issue**: [RR-44](https://linear.app/agilecode-studio/issue/RR-44/investigate-read-status-sync-issues-with-inoreader)
 - **Issue**: Read status appears to be lost after sync, articles marked as read become unread again
@@ -1284,4 +1355,3 @@ TAILSCALE_HEALTH_CHECK_INTERVAL=300000
   - [x] Document how Uptime Kuma will monitor these endpoints
 - **Result**: Comprehensive monitoring strategy created using Uptime Kuma as the monitoring solution
 - **Next Steps**: Implementation will continue in TODO-039b
-

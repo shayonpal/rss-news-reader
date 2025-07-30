@@ -1,11 +1,13 @@
 # Animation System for iOS 26 Liquid Glass Design
 
 ## Overview
+
 This document defines the animation patterns and interactions for the iOS 26 Liquid Glass redesign, focusing on smooth, performant animations that enhance the user experience.
 
 ## Core Animation Principles
 
 ### Timing Functions
+
 ```css
 :root {
   /* Easing curves */
@@ -13,7 +15,7 @@ This document defines the animation patterns and interactions for the iOS 26 Liq
   --ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
   --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
-  
+
   /* Durations */
   --duration-instant: 100ms;
   --duration-quick: 200ms;
@@ -26,10 +28,11 @@ This document defines the animation patterns and interactions for the iOS 26 Liq
 ## Tab Navigation Animations
 
 ### Tab Switch Animation
+
 ```css
 /* Base tab icon animation */
 .tab-icon {
-  transition: 
+  transition:
     transform var(--duration-normal) var(--ease-spring),
     color var(--duration-quick) var(--ease-out);
   transform-origin: center;
@@ -63,7 +66,7 @@ This document defines the animation patterns and interactions for the iOS 26 Liq
 .icon-solid {
   position: absolute;
   inset: 0;
-  transition: 
+  transition:
     opacity var(--duration-quick) var(--ease-out),
     transform var(--duration-normal) var(--ease-spring);
 }
@@ -90,23 +93,25 @@ This document defines the animation patterns and interactions for the iOS 26 Liq
 ```
 
 ### Tab Press Feedback
+
 ```typescript
 // Haptic feedback + visual response
 function handleTabPress(tabId: string) {
   // Visual feedback
   setPressed(tabId);
-  
+
   // Haptic feedback (iOS)
-  if ('vibrate' in navigator) {
+  if ("vibrate" in navigator) {
     navigator.vibrate(10);
   }
-  
+
   // Reset after animation
   setTimeout(() => setPressed(null), 100);
 }
 ```
 
 ### Badge Animation
+
 ```css
 /* Badge appearance */
 .tab-badge {
@@ -133,7 +138,8 @@ function handleTabPress(tabId: string) {
 }
 
 @keyframes badge-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -146,6 +152,7 @@ function handleTabPress(tabId: string) {
 ## Glass Effect Animations
 
 ### Glass Hover States
+
 ```css
 /* Button hover with lift effect */
 .glass-button {
@@ -155,7 +162,7 @@ function handleTabPress(tabId: string) {
 
 .glass-button:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 1px rgba(255, 255, 255, 0.35);
 }
@@ -167,7 +174,7 @@ function handleTabPress(tabId: string) {
 
 /* Glass shimmer effect */
 .glass-shimmer::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -50%;
   background: linear-gradient(
@@ -186,6 +193,7 @@ function handleTabPress(tabId: string) {
 ```
 
 ### Loading States
+
 ```css
 /* Skeleton shimmer for glass cards */
 .glass-skeleton {
@@ -195,7 +203,7 @@ function handleTabPress(tabId: string) {
 }
 
 .glass-skeleton::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -220,6 +228,7 @@ function handleTabPress(tabId: string) {
 ## Content Animations
 
 ### Article List Transitions
+
 ```css
 /* Stagger animation for list items */
 .article-list-item {
@@ -241,7 +250,7 @@ function handleTabPress(tabId: string) {
 
 /* Read state transition */
 .article-card {
-  transition: 
+  transition:
     opacity var(--duration-normal) var(--ease-out),
     transform var(--duration-quick) var(--ease-out);
 }
@@ -252,23 +261,24 @@ function handleTabPress(tabId: string) {
 ```
 
 ### Summary Generation Animation
+
 ```typescript
 // Summary expand animation with auto-scroll
 function handleSummaryGenerated(summaryElement: HTMLElement) {
   // Apply expand animation
-  summaryElement.classList.add('summary-expand');
-  
+  summaryElement.classList.add("summary-expand");
+
   // Calculate scroll position
   const rect = summaryElement.getBoundingClientRect();
   const scrollTop = window.scrollY;
   const elementTop = rect.top + scrollTop;
   const headerHeight = 64;
-  
+
   // Only scroll if summary is below viewport or too high
   if (rect.top < headerHeight || rect.bottom > window.innerHeight) {
     window.scrollTo({
       top: elementTop - headerHeight - 20,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   }
 }
@@ -279,7 +289,7 @@ function handleSummaryGenerated(summaryElement: HTMLElement) {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: 
+  transition:
     max-height var(--duration-slow) var(--ease-out),
     opacity var(--duration-normal) var(--ease-out);
 }
@@ -293,7 +303,7 @@ function handleSummaryGenerated(summaryElement: HTMLElement) {
 .summary-content {
   transform: scale(0.95);
   filter: blur(4px);
-  transition: 
+  transition:
     transform var(--duration-normal) var(--ease-spring),
     filter var(--duration-normal) var(--ease-out);
 }
@@ -307,27 +317,30 @@ function handleSummaryGenerated(summaryElement: HTMLElement) {
 ## Gesture Animations
 
 ### Swipe Navigation
+
 ```typescript
 // Swipe gesture handler with visual feedback
 export function useSwipeNavigation() {
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
+    null
+  );
   const threshold = 50;
-  
+
   const handlers = useSwipeable({
     onSwipedLeft: () => {
-      setSwipeDirection('left');
+      setSwipeDirection("left");
       navigateToNextArticle();
       setTimeout(() => setSwipeDirection(null), 300);
     },
     onSwipedRight: () => {
-      setSwipeDirection('right');
+      setSwipeDirection("right");
       navigateToPreviousArticle();
       setTimeout(() => setSwipeDirection(null), 300);
     },
     trackMouse: false,
-    threshold
+    threshold,
   });
-  
+
   return { handlers, swipeDirection };
 }
 ```
@@ -378,6 +391,7 @@ export function useSwipeNavigation() {
 ## Interactive Elements
 
 ### Filter Toggle Animation
+
 ```css
 /* iOS-style filter toggle */
 .filter-toggle {
@@ -414,13 +428,14 @@ export function useSwipeNavigation() {
 ```
 
 ### More Menu Animation
+
 ```css
 /* Expanding more menu */
 .more-menu {
   transform-origin: top right;
   opacity: 0;
   transform: scale(0.8);
-  transition: 
+  transition:
     opacity var(--duration-quick) var(--ease-out),
     transform var(--duration-normal) var(--ease-spring);
 }
@@ -449,6 +464,7 @@ export function useSwipeNavigation() {
 ## Performance Optimization
 
 ### GPU Acceleration
+
 ```css
 /* Force GPU acceleration for smooth animations */
 .gpu-accelerated {
@@ -465,6 +481,7 @@ export function useSwipeNavigation() {
 ```
 
 ### Reduced Motion Support
+
 ```css
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -474,12 +491,12 @@ export function useSwipeNavigation() {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   /* Keep essential feedback */
   .tab-icon-active {
     transform: scale(1.1);
   }
-  
+
   .glass-button:active {
     transform: scale(0.98);
   }
@@ -487,16 +504,17 @@ export function useSwipeNavigation() {
 ```
 
 ### Animation Frame Management
+
 ```typescript
 // Debounced animations for performance
 export function useAnimationFrame(callback: () => void) {
   const requestRef = useRef<number>();
-  
+
   const animate = useCallback(() => {
     callback();
     requestRef.current = requestAnimationFrame(animate);
   }, [callback]);
-  
+
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate);
     return () => {
@@ -511,25 +529,26 @@ export function useAnimationFrame(callback: () => void) {
 ## Animation Sequences
 
 ### Page Transitions
+
 ```typescript
 // Coordinated page transition
 export function usePageTransition() {
   const [isTransitioning, setIsTransitioning] = useState(false);
-  
+
   const transitionTo = async (route: string) => {
     setIsTransitioning(true);
-    
+
     // Fade out current content
     await sleep(200);
-    
+
     // Navigate
     router.push(route);
-    
+
     // Fade in new content
     await sleep(200);
     setIsTransitioning(false);
   };
-  
+
   return { isTransitioning, transitionTo };
 }
 ```
@@ -537,12 +556,14 @@ export function usePageTransition() {
 ## Testing Animations
 
 ### Performance Metrics
+
 - All animations should run at 60fps
 - Use Chrome DevTools Performance tab
 - Check for layout thrashing
 - Monitor paint and composite times
 
 ### Device Testing
+
 - Test on real iOS devices
 - Verify haptic feedback works
 - Check battery impact

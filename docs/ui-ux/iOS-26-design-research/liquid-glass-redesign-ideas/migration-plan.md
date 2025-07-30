@@ -1,11 +1,13 @@
 # Migration Plan: Hamburger Menu to Tab Navigation
 
 ## Overview
+
 This document outlines the step-by-step plan to migrate from the current hamburger menu + sidebar pattern to the iOS 26-style bottom tab navigation.
 
 ## Components to Remove
 
 ### 1. Sidebar Components
+
 ```
 src/components/feeds/feed-sidebar.tsx       → DELETE
 src/components/feeds/simple-feed-sidebar.tsx → DELETE
@@ -13,6 +15,7 @@ src/lib/stores/ui-store.ts (sidebar logic)  → MODIFY
 ```
 
 ### 2. Menu Button
+
 ```typescript
 // In src/components/layout/header.tsx
 // REMOVE:
@@ -31,13 +34,14 @@ import { Menu } from 'lucide-react';
 ```
 
 ### 3. UI Store Sidebar Logic
+
 ```typescript
 // In src/lib/stores/ui-store.ts
 // REMOVE these properties and methods:
 interface UIStore {
-  isSidebarOpen: boolean;        // DELETE
-  toggleSidebar: () => void;      // DELETE
-  setSidebarOpen: () => void;     // DELETE
+  isSidebarOpen: boolean; // DELETE
+  toggleSidebar: () => void; // DELETE
+  setSidebarOpen: () => void; // DELETE
   // Keep other UI state
 }
 ```
@@ -45,6 +49,7 @@ interface UIStore {
 ## Code Modifications
 
 ### 1. Update Layout Structure
+
 ```tsx
 // src/app/layout.tsx
 // BEFORE:
@@ -53,7 +58,7 @@ export default function RootLayout({ children }) {
     <html>
       <body>
         <div className="flex h-screen">
-          <FeedSidebar />  {/* DELETE THIS */}
+          <FeedSidebar /> {/* DELETE THIS */}
           <div className="flex-1">
             <Header />
             <main>{children}</main>
@@ -69,11 +74,9 @@ export default function RootLayout({ children }) {
   return (
     <html>
       <body>
-        <div className="min-h-screen flex flex-col">
+        <div className="flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1 pb-[76px]">
-            {children}
-          </main>
+          <main className="flex-1 pb-[76px]">{children}</main>
           <TabNavigation /> {/* NEW */}
         </div>
       </body>
@@ -83,28 +86,27 @@ export default function RootLayout({ children }) {
 ```
 
 ### 2. Simplify Header Component
+
 ```tsx
 // src/components/layout/header.tsx
 // AFTER:
 export function Header() {
   const { isSyncing, performFullSync } = useSyncStore();
   const pathname = usePathname();
-  
+
   // Dynamic title based on route
   const getTitle = () => {
-    if (pathname.includes('unread')) return 'Unread Articles';
-    if (pathname.includes('feeds')) return 'Feeds & Folders';
-    if (pathname.includes('stats')) return 'Statistics';
-    return 'All Articles';
+    if (pathname.includes("unread")) return "Unread Articles";
+    if (pathname.includes("feeds")) return "Feeds & Folders";
+    if (pathname.includes("stats")) return "Statistics";
+    return "All Articles";
   };
 
   return (
     <header className="glass-header sticky top-0 z-40">
       <div className="container flex h-14 items-center justify-between">
-        <h1 className="text-lg font-semibold">
-          {getTitle()}
-        </h1>
-        
+        <h1 className="text-lg font-semibold">{getTitle()}</h1>
+
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -113,10 +115,7 @@ export function Header() {
             disabled={isSyncing}
             className="glass-minimal shape-capsule"
           >
-            <RefreshCw className={cn(
-              "h-5 w-5",
-              isSyncing && "animate-spin"
-            )} />
+            <RefreshCw className={cn("h-5 w-5", isSyncing && "animate-spin")} />
           </Button>
           <ThemeToggle />
         </div>
@@ -129,22 +128,25 @@ export function Header() {
 ### 3. Create New Routes
 
 #### Feeds List Page with Drill-Down Navigation
+
 ```tsx
 // src/app/reader/feeds/page.tsx (NEW)
 export default function FeedsPage() {
   const { feeds, folders } = useFeedStore();
   const { handleFolderSelect, handleFeedSelect } = useFeedNavigation();
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(
+    new Set()
+  );
 
   return (
     <div className="container py-4">
       <div className="space-y-2">
-        {folders.map(folder => (
+        {folders.map((folder) => (
           <div key={folder.id}>
             {/* Folder row - clickable for navigation */}
             <button
               onClick={() => handleFolderSelect(folder.id, folder.name)}
-              className="w-full glass-card-minimal"
+              className="glass-card-minimal w-full"
             >
               <div className="flex items-center gap-3 p-3">
                 {/* Expand/collapse button */}
@@ -157,21 +159,21 @@ export default function FeedsPage() {
                 >
                   <ChevronIcon expanded={expandedFolders.has(folder.id)} />
                 </button>
-                
+
                 <FolderIcon />
                 <span className="flex-1">{folder.name}</span>
                 <Badge count={folder.unread_count} />
               </div>
             </button>
-            
+
             {/* Expanded feeds */}
             {expandedFolders.has(folder.id) && (
               <div className="ml-6 space-y-1">
                 {feeds
-                  .filter(f => f.folder_id === folder.id)
-                  .map(feed => (
-                    <FeedListItem 
-                      key={feed.id} 
+                  .filter((f) => f.folder_id === folder.id)
+                  .map((feed) => (
+                    <FeedListItem
+                      key={feed.id}
                       feed={feed}
                       onClick={() => handleFeedSelect(feed.id, feed.title)}
                     />
@@ -187,6 +189,7 @@ export default function FeedsPage() {
 ```
 
 #### Stats & Settings Pages
+
 ```tsx
 // src/app/reader/stats/page.tsx (NEW)
 export default function StatsPage() {
@@ -215,15 +218,16 @@ export default function SettingsPage() {
 ```
 
 ### 4. Update Article List with Dual Filtering
+
 ```tsx
 // src/app/reader/page.tsx
 export default function ReaderPage() {
   const { articleFilter } = useNavigationStore();
   const { articles } = useArticleStore();
   const isFilterVisible = useFloatingFilter();
-  
+
   const filteredArticles = filterArticles(articles, articleFilter);
-  
+
   return (
     <div className="container">
       {/* Floating read status filter */}
@@ -232,7 +236,7 @@ export default function ReaderPage() {
         onFilterChange={handleReadStatusChange}
         isVisible={isFilterVisible}
       />
-      
+
       <ArticleList articles={filteredArticles} />
     </div>
   );
@@ -242,6 +246,7 @@ export default function ReaderPage() {
 ## CSS Cleanup
 
 ### Remove Sidebar Styles
+
 ```css
 /* DELETE from globals.css */
 .sidebar-container { ... }
@@ -262,24 +267,28 @@ export default function ReaderPage() {
 ## Migration Steps
 
 ### Phase 1: Preparation (Day 1)
+
 1. Create new tab navigation component
 2. Add new route files for feeds and stats pages
 3. Update navigation store
 4. Test tab navigation in isolation
 
 ### Phase 2: Integration (Day 2)
+
 1. Update app layout to include tab navigation
 2. Modify header component (remove menu button)
 3. Wire up route navigation
 4. Test navigation flow
 
 ### Phase 3: Cleanup (Day 3)
+
 1. Remove sidebar components
 2. Clean up UI store
 3. Remove unused CSS
 4. Update imports
 
 ### Phase 4: Polish (Day 4)
+
 1. Add glass morphism styles
 2. Implement badge updates
 3. Add animations
@@ -288,6 +297,7 @@ export default function ReaderPage() {
 ## Rollback Plan
 
 If issues arise, revert by:
+
 1. Git revert to previous commit
 2. Re-enable sidebar components
 3. Hide tab navigation with feature flag
@@ -309,6 +319,7 @@ export default function Layout() {
 ## Testing Checklist
 
 ### Functionality
+
 - [ ] All navigation routes work
 - [ ] Badge counts update correctly
 - [ ] Active states display properly
@@ -316,6 +327,7 @@ export default function Layout() {
 - [ ] Deep links function correctly
 
 ### Visual
+
 - [ ] Glass effects render properly
 - [ ] Dark mode looks correct
 - [ ] Animations are smooth (60fps)
@@ -323,6 +335,7 @@ export default function Layout() {
 - [ ] Proper safe area handling
 
 ### Accessibility
+
 - [ ] Keyboard navigation works
 - [ ] Screen readers announce correctly
 - [ ] Touch targets are 44x44pt minimum
@@ -330,6 +343,7 @@ export default function Layout() {
 - [ ] Reduced motion respected
 
 ### Performance
+
 - [ ] No increase in bundle size > 10KB
 - [ ] Navigation feels instant
 - [ ] No memory leaks
@@ -338,6 +352,7 @@ export default function Layout() {
 ## Files Summary
 
 ### To Create
+
 ```
 src/components/navigation/tab-navigation.tsx
 src/components/filters/floating-filter-pill.tsx
@@ -350,6 +365,7 @@ src/hooks/useFeedNavigation.ts
 ```
 
 ### To Modify
+
 ```
 src/app/layout.tsx
 src/components/layout/header.tsx
@@ -359,6 +375,7 @@ src/components/filters/filter-dropdown.tsx
 ```
 
 ### To Delete
+
 ```
 src/components/feeds/feed-sidebar.tsx
 src/components/feeds/simple-feed-sidebar.tsx

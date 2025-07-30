@@ -1,6 +1,6 @@
 // Health check types for monitoring system status
 
-export type HealthStatus = 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
+export type HealthStatus = "healthy" | "degraded" | "unhealthy" | "unknown";
 
 // UI Health System Interface (combines old and new structures)
 export interface UISystemHealth {
@@ -129,7 +129,7 @@ export interface HealthAlert {
   id: string;
   service: string;
   component?: string;
-  severity: 'info' | 'warning' | 'error' | 'critical';
+  severity: "info" | "warning" | "error" | "critical";
   message: string;
   timestamp: Date;
   acknowledged: boolean;

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback } from 'react';
-import { Loader2, RefreshCw } from 'lucide-react';
-import { useArticleStore } from '@/lib/stores/article-store';
-import { extractTextContent } from '@/lib/utils/data-cleanup';
-import { formatDistanceToNow } from 'date-fns';
-import { SummaryButton } from './summary-button';
-import { StarButton } from './star-button';
-import type { Article } from '@/types';
+import { useEffect, useRef, useCallback } from "react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { useArticleStore } from "@/lib/stores/article-store";
+import { extractTextContent } from "@/lib/utils/data-cleanup";
+import { formatDistanceToNow } from "date-fns";
+import { SummaryButton } from "./summary-button";
+import { StarButton } from "./star-button";
+import type { Article } from "@/types";
 
 interface ArticleListProps {
   feedId?: string;
@@ -16,20 +16,25 @@ interface ArticleListProps {
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerRef }: ArticleListProps) {
+export function ArticleList({
+  feedId,
+  folderId,
+  onArticleClick,
+  scrollContainerRef,
+}: ArticleListProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const ownScrollContainerRef = useRef<HTMLDivElement>(null);
   const lastPullY = useRef<number>(0);
   const isPulling = useRef<boolean>(false);
   const hasRestoredScroll = useRef<boolean>(false);
-  
+
   // Auto-mark as read refs
   const autoMarkObserverRef = useRef<IntersectionObserver | null>(null);
   const lastScrollY = useRef<number>(0);
   const pendingMarkAsRead = useRef<Set<string>>(new Set());
   const markAsReadTimer = useRef<NodeJS.Timeout | null>(null);
-  
+
   const {
     articles,
     loadingArticles,
@@ -44,7 +49,7 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
     toggleStar,
     refreshArticles,
     clearError,
-    readStatusFilter
+    readStatusFilter,
   } = useArticleStore();
 
   // Load articles on mount or when feed/folder changes
@@ -86,16 +91,17 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
 
       // Fallback: manually check article positions on all platforms for reliability
       if (isScrollingDown) {
-        const articleElements = scrollContainer.querySelectorAll('[data-article-id]');
+        const articleElements =
+          scrollContainer.querySelectorAll("[data-article-id]");
         articleElements.forEach((element) => {
           const rect = element.getBoundingClientRect();
           const containerRect = scrollContainer.getBoundingClientRect();
-          
+
           // Article has scrolled off the top of the container
           if (rect.bottom < containerRect.top + 10) {
-            const articleId = element.getAttribute('data-article-id');
-            const isRead = element.getAttribute('data-is-read') === 'true';
-            
+            const articleId = element.getAttribute("data-article-id");
+            const isRead = element.getAttribute("data-is-read") === "true";
+
             if (articleId && !isRead) {
               pendingMarkAsRead.current.add(articleId);
             }
@@ -117,18 +123,20 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
     // Use the passed scroll container
     const scrollContainer = scrollContainerRef?.current;
     if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+      scrollContainer.addEventListener("scroll", handleScroll, {
+        passive: true,
+      });
     }
 
     // Create observer for articles leaving viewport
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         // Article is leaving the viewport from the top
         if (!entry.isIntersecting && entry.boundingClientRect.bottom < 0) {
           const articleElement = entry.target as HTMLElement;
-          const articleId = articleElement.getAttribute('data-article-id');
-          const isRead = articleElement.getAttribute('data-is-read') === 'true';
-          
+          const articleId = articleElement.getAttribute("data-article-id");
+          const isRead = articleElement.getAttribute("data-is-read") === "true";
+
           if (articleId && !isRead) {
             pendingMarkAsRead.current.add(articleId);
           }
@@ -141,15 +149,15 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
     if (scrollContainer) {
       autoMarkObserverRef.current = new IntersectionObserver(observerCallback, {
         root: scrollContainer,
-        rootMargin: '0px 0px -90% 0px', // Only trigger when article is mostly scrolled out
-        threshold: 0 // Trigger as soon as article starts leaving
+        rootMargin: "0px 0px -90% 0px", // Only trigger when article is mostly scrolled out
+        threshold: 0, // Trigger as soon as article starts leaving
       });
     }
 
     // Clean up on unmount or when filter changes
     return () => {
       if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+        scrollContainer.removeEventListener("scroll", handleScroll);
       }
       if (autoMarkObserverRef.current) {
         autoMarkObserverRef.current.disconnect();
@@ -162,12 +170,11 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
     };
   }, [readStatusFilter, processPendingMarkAsRead, scrollContainerRef]);
 
-
   // Restore scroll position after articles load
   useEffect(() => {
     if (!loadingArticles && articles.size > 0 && !hasRestoredScroll.current) {
-      const savedScrollPos = sessionStorage.getItem('articleListScroll');
-      
+      const savedScrollPos = sessionStorage.getItem("articleListScroll");
+
       if (savedScrollPos) {
         hasRestoredScroll.current = true;
         // Small delay to ensure DOM is updated
@@ -178,7 +185,7 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
             scrollContainer.scrollTop = scrollPos;
           }
           // Clear the saved position after restoring
-          sessionStorage.removeItem('articleListScroll');
+          sessionStorage.removeItem("articleListScroll");
         });
       }
     }
@@ -201,8 +208,8 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
     // Use the passed scroll container as root for infinite scroll
     observerRef.current = new IntersectionObserver(callback, {
       root: scrollContainerRef?.current || null,
-      rootMargin: '100px',
-      threshold: 0.1
+      rootMargin: "100px",
+      threshold: 0.1,
     });
 
     if (loadMoreRef.current && observerRef.current) {
@@ -221,88 +228,108 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
     lastPullY.current = e.touches[0].clientY;
   }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const currentY = e.touches[0].clientY;
-    const pullDistance = currentY - lastPullY.current;
-    const scrollContainer = scrollContainerRef?.current;
-    
-    if (scrollContainer && scrollContainer.scrollTop === 0 && pullDistance > 0) {
-      isPulling.current = true;
-      // Visual feedback for pull-to-refresh could be added here
-    }
-  }, [scrollContainerRef]);
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      const pullDistance = currentY - lastPullY.current;
+      const scrollContainer = scrollContainerRef?.current;
+
+      if (
+        scrollContainer &&
+        scrollContainer.scrollTop === 0 &&
+        pullDistance > 0
+      ) {
+        isPulling.current = true;
+        // Visual feedback for pull-to-refresh could be added here
+      }
+    },
+    [scrollContainerRef]
+  );
 
   const handleTouchEnd = useCallback(async () => {
     const scrollContainer = scrollContainerRef?.current;
-    if (isPulling.current && scrollContainer && scrollContainer.scrollTop === 0) {
+    if (
+      isPulling.current &&
+      scrollContainer &&
+      scrollContainer.scrollTop === 0
+    ) {
       await refreshArticles();
     }
     isPulling.current = false;
   }, [refreshArticles, scrollContainerRef]);
 
   // Handle article click
-  const handleArticleClick = useCallback(async (article: Article) => {
-    // Save scroll position before navigating
-    const scrollContainer = scrollContainerRef?.current;
-    const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
-    sessionStorage.setItem('articleListScroll', currentScroll.toString());
-    
-    if (!article.isRead) {
-      await markAsRead(article.id);
-    }
-    onArticleClick?.(article.id);
-  }, [markAsRead, onArticleClick, scrollContainerRef]);
+  const handleArticleClick = useCallback(
+    async (article: Article) => {
+      // Save scroll position before navigating
+      const scrollContainer = scrollContainerRef?.current;
+      const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
+      sessionStorage.setItem("articleListScroll", currentScroll.toString());
+
+      if (!article.isRead) {
+        await markAsRead(article.id);
+      }
+      onArticleClick?.(article.id);
+    },
+    [markAsRead, onArticleClick, scrollContainerRef]
+  );
 
   // Render article preview
   const renderPreview = (article: Article) => {
     // If article is being summarized, show loading shimmer
     if (summarizingArticles.has(article.id)) {
       return (
-        <div className="mt-2 space-y-2 animate-pulse">
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+        <div className="mt-2 animate-pulse space-y-2">
+          <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+          <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
         </div>
       );
     }
-    
+
     // Priority 1: If we have an AI summary, show it in full
     if (article.summary) {
       return (
         <div className="mt-2 space-y-2">
-          {article.summary.split(/\n+/).filter(para => para.trim()).map((paragraph, index) => (
-            <p key={index} className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {paragraph.trim()}
-            </p>
-          ))}
+          {article.summary
+            .split(/\n+/)
+            .filter((para) => para.trim())
+            .map((paragraph, index) => (
+              <p
+                key={index}
+                className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
+              >
+                {paragraph.trim()}
+              </p>
+            ))}
         </div>
       );
     }
-    
+
     // Priority 2: If we have full content (extracted), show 4-line preview
     if (article.fullContent) {
       const fullContentText = extractTextContent(article.fullContent);
       if (fullContentText) {
         return (
-          <p className="text-sm text-muted-foreground line-clamp-4 mt-2 break-words">
+          <p className="mt-2 line-clamp-4 break-words text-sm text-muted-foreground">
             {fullContentText}
           </p>
         );
       }
     }
-    
+
     // Priority 3: Show RSS content as 4-line preview
     const contentText = extractTextContent(article.content);
     if (contentText) {
       return (
-        <p className="text-sm text-muted-foreground line-clamp-4 mt-2 break-words">
+        <p className="mt-2 line-clamp-4 break-words text-sm text-muted-foreground">
           {contentText}
         </p>
       );
     }
-    
+
     return (
-      <p className="text-sm text-muted-foreground italic mt-2">
+      <p className="mt-2 text-sm italic text-muted-foreground">
         No preview available
       </p>
     );
@@ -323,8 +350,8 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
 
   if (articlesError) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8">
-        <p className="text-muted-foreground mb-4">{articlesError}</p>
+      <div className="flex h-full flex-col items-center justify-center p-8">
+        <p className="mb-4 text-muted-foreground">{articlesError}</p>
         <button
           onClick={clearError}
           className="text-sm text-primary hover:underline"
@@ -337,7 +364,7 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
 
   if (articles.size === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8">
+      <div className="flex h-full flex-col items-center justify-center p-8">
         <p className="text-muted-foreground">No articles found</p>
         <button
           onClick={refreshArticles}
@@ -358,7 +385,7 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="divide-y divide-border overflow-x-hidden article-list-container">
+      <div className="article-list-container divide-y divide-border overflow-x-hidden">
         {Array.from(articles.values()).map((article) => (
           <article
             key={article.id}
@@ -369,14 +396,14 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
                 autoMarkObserverRef.current.observe(el);
               }
             }}
-            className={`relative p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:bg-muted/50 overflow-hidden ${
-              article.isRead ? 'opacity-70' : ''
+            className={`relative cursor-pointer overflow-hidden p-4 transition-all duration-300 hover:bg-muted/50 sm:p-6 ${
+              article.isRead ? "opacity-70" : ""
             }`}
             onClick={() => handleArticleClick(article)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 handleArticleClick(article);
               }
@@ -384,20 +411,25 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
           >
             {/* Touch target helper for mobile - ensures 44x44px minimum */}
             <div className="absolute inset-0 sm:hidden" aria-hidden="true" />
-            
+
             <div className="relative space-y-2">
               {/* Title with star indicator */}
               <div className="flex items-start gap-2">
-                <h2 className={`text-base sm:text-lg flex-1 ${
-                  article.isRead 
-                    ? 'font-normal text-muted-foreground' 
-                    : 'font-semibold text-foreground'
-                }`}>
+                <h2
+                  className={`flex-1 text-base sm:text-lg ${
+                    article.isRead
+                      ? "font-normal text-muted-foreground"
+                      : "font-semibold text-foreground"
+                  }`}
+                >
                   {article.title}
                 </h2>
                 <div className="flex items-center gap-1">
                   {article.summary && (
-                    <span className="text-yellow-500 text-sm" title="AI Summary Available">
+                    <span
+                      className="text-sm text-yellow-500"
+                      title="AI Summary Available"
+                    >
                       ⚡
                     </span>
                   )}
@@ -411,29 +443,34 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
                   )}
                   <StarButton
                     onToggleStar={() => toggleStar(article.id)}
-                    isStarred={article.tags?.includes('starred') || false}
+                    isStarred={article.tags?.includes("starred") || false}
                     size="sm"
                   />
                 </div>
               </div>
 
               {/* Metadata */}
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                 <span className="font-medium">{article.feedTitle}</span>
                 <span className="hidden sm:inline">•</span>
-                <time dateTime={article.publishedAt.toISOString()} suppressHydrationWarning>
+                <time
+                  dateTime={article.publishedAt.toISOString()}
+                  suppressHydrationWarning
+                >
                   {formatTimestamp(article.publishedAt)}
                 </time>
                 {article.author && (
                   <>
                     <span className="hidden sm:inline">•</span>
-                    <span className="truncate max-w-[150px]">{article.author}</span>
+                    <span className="max-w-[150px] truncate">
+                      {article.author}
+                    </span>
                   </>
                 )}
               </div>
 
               {/* Content Preview */}
-              <div className="text-sm overflow-hidden">
+              <div className="overflow-hidden text-sm">
                 {renderPreview(article)}
               </div>
             </div>
@@ -442,12 +479,9 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
 
         {/* Infinite scroll trigger */}
         {hasMore && (
-          <div 
-            ref={loadMoreRef} 
-            className="p-8 text-center"
-          >
+          <div ref={loadMoreRef} className="p-8 text-center">
             {loadingMore && (
-              <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+              <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
             )}
           </div>
         )}
@@ -459,21 +493,21 @@ export function ArticleList({ feedId, folderId, onArticleClick, scrollContainerR
 // Skeleton loading component
 function ArticleListSkeleton() {
   return (
-    <div className="divide-y divide-border animate-pulse">
+    <div className="animate-pulse divide-y divide-border">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="p-4 sm:p-6 space-y-3">
+        <div key={i} className="space-y-3 p-4 sm:p-6">
           <div className="flex items-start gap-2">
-            <div className="h-5 bg-muted rounded w-3/4" />
-            <div className="h-4 w-4 bg-muted rounded" />
+            <div className="h-5 w-3/4 rounded bg-muted" />
+            <div className="h-4 w-4 rounded bg-muted" />
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 bg-muted rounded w-24" />
-            <div className="h-3 bg-muted rounded w-20" />
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-3 w-20 rounded bg-muted" />
           </div>
           <div className="space-y-2">
-            <div className="h-3 bg-muted rounded w-full" />
-            <div className="h-3 bg-muted rounded w-full" />
-            <div className="h-3 bg-muted rounded w-3/4" />
+            <div className="h-3 w-full rounded bg-muted" />
+            <div className="h-3 w-full rounded bg-muted" />
+            <div className="h-3 w-3/4 rounded bg-muted" />
           </div>
         </div>
       ))}

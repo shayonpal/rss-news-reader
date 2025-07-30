@@ -1,4 +1,5 @@
 # Server Instability Investigation Report
+
 **Date**: July 26, 2025 at 2:16 PM  
 **Investigator**: Claude Code with devops-expert and doc-admin agents  
 **Duration**: Past 2 days of server failures
@@ -13,12 +14,14 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 
 **Issue**: Production server (`rss-reader-prod`) experiencing rapid restart loops (16 restarts in recent logs)
 
-**Root Cause**: 
+**Root Cause**:
+
 - Webpack runtime cannot locate vendor chunk files
 - Looking for: `./vendor-chunks/dexie.js` and `./chunks/vendor-chunks/next.js`
 - Files exist in `.next/server/vendor-chunks/` but webpack expects different paths
 
-**Impact**: 
+**Impact**:
+
 - Production server crashes immediately on startup
 - Prevents all dependent services from functioning properly
 - Users cannot access the application
@@ -28,11 +31,13 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 **Issue**: Supabase client-side initialization failing despite correct server-side configuration
 
 **Root Cause**:
+
 - Next.js requires `NEXT_PUBLIC_*` environment variables at **build time**
 - PM2's runtime environment injection only provides variables at **runtime**
 - Variables not being bundled into client-side JavaScript
 
 **Impact**:
+
 - UI displays "No feeds yet" despite database containing 1,033 articles
 - Client cannot connect to Supabase
 - All data fetching operations fail
@@ -44,12 +49,14 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 **Issue**: Multiple services failing due to interdependencies
 
 **Observed Pattern**:
+
 1. Production app crashes → returns 500 errors
 2. Sync cron cannot update metadata → ECONNREFUSED errors
 3. Sync server experiences failures → 18 restarts
 4. Health checks fail → monitoring alerts triggered
 
 **Impact**:
+
 - Sync operations become unreliable
 - Monitoring provides false positives
 - Difficult to identify root cause due to noise
@@ -59,6 +66,7 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 **Issue**: Missing OAuth tokens caused sync failures
 
 **Timeline**:
+
 - Tokens went missing (unknown cause)
 - ~12 hours of failed syncs
 - 177 items queued for sync
@@ -71,11 +79,13 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ### Primary Factors
 
 1. **Incomplete Build Understanding**
+
    - Changes made to configuration without full rebuilds
    - Misunderstanding of Next.js build vs runtime requirements
    - Partial fixes addressing symptoms not causes
 
 2. **Configuration Management Issues**
+
    - Recent changes to `ecosystem.config.js`
    - Missing `_error.tsx` causing build failures
    - Incorrect assumptions about PM2 environment handling
@@ -97,6 +107,7 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ### Immediate Actions (Do First)
 
 1. **Clean Rebuild Production**
+
    ```bash
    cd /Users/shayon/DevProjects/rss-news-reader
    pm2 stop rss-reader-prod
@@ -106,6 +117,7 @@ The RSS News Reader PWA has experienced critical server instability over the pas
    ```
 
 2. **Verify Environment Variables**
+
    ```bash
    # Ensure .env file contains all NEXT_PUBLIC_* variables
    # Build script must export these before running next build
@@ -120,16 +132,17 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ### Short-term Fixes (Within 24 Hours)
 
 1. **Create Build Validation Script**
+
    ```bash
    #!/bin/bash
    # scripts/validate-build.sh
-   
+
    # Check for vendor chunks
    if [ ! -d ".next/server/vendor-chunks" ]; then
      echo "ERROR: Vendor chunks missing"
      exit 1
    fi
-   
+
    # Verify environment variables in build
    if ! grep -q "NEXT_PUBLIC_SUPABASE_URL" .next/static/chunks/*.js; then
      echo "ERROR: Environment variables not bundled"
@@ -138,26 +151,28 @@ The RSS News Reader PWA has experienced critical server instability over the pas
    ```
 
 2. **Update PM2 Configuration**
+
    - Remove cluster mode permanently
    - Add proper error handling
    - Set up restart limits to prevent loops
 
 3. **Implement Proper Build Script**
+
    ```bash
    #!/bin/bash
    # scripts/production-build.sh
-   
+
    # Load environment
    source ~/.rss-reader/.env.production
-   
+
    # Clean build
    rm -rf .next
-   
+
    # Build with environment
    NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
    npm run build
-   
+
    # Validate build
    ./scripts/validate-build.sh
    ```
@@ -165,18 +180,21 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ### Long-term Improvements (Within 1 Week)
 
 1. **Automated Build Pipeline**
+
    - Pre-build validation checks
    - Environment variable verification
    - Post-build testing
    - Automated rollback on failure
 
 2. **Enhanced Monitoring**
+
    - Monitor vendor chunk availability
    - Track environment variable presence
    - Alert on build failures
    - PM2 restart count monitoring
 
 3. **Documentation Updates**
+
    - Document build requirements clearly
    - Create deployment checklist
    - Add troubleshooting guide
@@ -191,11 +209,13 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ## Lessons Learned
 
 1. **Next.js Build Requirements**
+
    - `NEXT_PUBLIC_*` variables MUST be available at build time
    - PM2 runtime injection is insufficient for client-side code
    - Always verify builds complete successfully
 
 2. **Configuration Changes**
+
    - Test configuration changes in isolation
    - Always perform full rebuild after config changes
    - Verify all dependent services after changes
@@ -208,12 +228,14 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ## Recommended Process Changes
 
 1. **Before Any Deployment**
+
    - Run build validation script
    - Test all health endpoints
    - Verify environment variables
    - Check PM2 logs for errors
 
 2. **During Configuration Changes**
+
    - Make one change at a time
    - Test thoroughly before proceeding
    - Document what was changed and why
@@ -230,6 +252,7 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 The server instability was caused by a combination of build configuration issues and misunderstanding of Next.js requirements. The immediate fix is a clean rebuild with proper environment variable handling. Long-term stability requires better build validation, monitoring, and deployment procedures.
 
 The past 2 days of instability could have been avoided with:
+
 - Proper build validation before deployment
 - Understanding of build-time vs runtime requirements
 - Testing of configuration changes in isolation

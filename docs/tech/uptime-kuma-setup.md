@@ -42,16 +42,19 @@ Uptime Kuma has been deployed as an external monitoring solution for the RSS New
 ### HTTP Monitors
 
 1. **RSS Reader - Production App**
+
    - URL: `http://100.96.166.53:3147/reader/api/health/app?ping=true`
    - Interval: 60 seconds
    - Retry: 3 times with 20s interval
 
 2. **RSS Reader - Sync Server**
+
    - URL: `http://localhost:3001/server/health`
    - Interval: 60 seconds
    - Retry: 3 times with 20s interval
 
 3. **RSS Reader - Dev App**
+
    - URL: `http://100.96.166.53:3000/reader/api/health/app?ping=true`
    - Interval: 300 seconds (less critical)
    - Retry: 2 times with 60s interval
@@ -64,6 +67,7 @@ Uptime Kuma has been deployed as an external monitoring solution for the RSS New
 ### Port Monitors
 
 5. **RSS Reader - Production Port**
+
    - Host: 100.96.166.53
    - Port: 3147
    - Interval: 300 seconds
@@ -85,6 +89,7 @@ Uptime Kuma has been deployed as an external monitoring solution for the RSS New
 ### Initial Setup (Completed)
 
 1. Deploy Uptime Kuma:
+
    ```bash
    ./scripts/setup-uptime-kuma.sh
    ```
@@ -114,6 +119,7 @@ For the cron service:
 1. Create a Push monitor in Uptime Kuma
 2. Copy the push URL (contains unique key)
 3. Update `/Users/shayon/.rss-reader/uptime-kuma-push-keys.json`:
+
    ```json
    {
      "cron": "YOUR_PUSH_KEY_HERE"
@@ -128,25 +134,30 @@ For the cron service:
 ## Helper Scripts
 
 ### Setup Script
+
 - **Path**: `/scripts/setup-uptime-kuma.sh`
 - **Purpose**: Deploy or restart Uptime Kuma container
 
 ### Push Helper
+
 - **Path**: `/scripts/uptime-kuma-push.sh`
 - **Usage**:
+
   ```bash
   # Send push notification
   ./scripts/uptime-kuma-push.sh push cron up
-  
+
   # Wrap command with monitoring
   ./scripts/uptime-kuma-push.sh wrap cron npm run sync
   ```
 
 ### Status Check
+
 - **Path**: `/scripts/uptime-kuma-status.sh`
 - **Purpose**: Quick health check of all services
 
 ### Monitor Configuration
+
 - **Path**: `/scripts/configure-uptime-kuma-monitors.js`
 - **Purpose**: Display monitor configuration for manual setup
 
@@ -173,11 +184,13 @@ docker volume rm uptime-kuma-data
 ## Monitoring Strategy
 
 1. **Uptime Kuma**: External monitoring and alerting
+
    - Tracks service availability
    - Sends Discord notifications
    - Provides uptime statistics
 
 2. **monitor-services.sh**: Internal recovery
+
    - Faster response time (checks every 2 min)
    - Automatic restart attempts
    - Rate-limited recovery
@@ -198,6 +211,7 @@ docker volume rm uptime-kuma-data
 ## Troubleshooting
 
 ### Container Won't Start
+
 ```bash
 # Check if port is in use
 lsof -i :3080
@@ -210,11 +224,13 @@ colima restart
 ```
 
 ### Monitors Show Down
+
 - Verify service is actually running: `./scripts/uptime-kuma-status.sh`
 - Check network connectivity to Tailscale IP
 - Verify health endpoints are responding
 
 ### Push Monitor Not Working
+
 - Check push key in `/Users/shayon/.rss-reader/uptime-kuma-push-keys.json`
 - Verify cron job includes push command
 - Check Uptime Kuma logs for push receipts

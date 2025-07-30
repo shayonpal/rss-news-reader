@@ -1,12 +1,12 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./types";
 
 let adminClient: SupabaseClient<Database> | null = null;
 
 /**
  * Get or create a singleton Supabase admin client for server-side operations.
  * This uses the service role key and bypasses Row Level Security.
- * 
+ *
  * Benefits:
  * - Connection pooling: Reuses the same client instance
  * - Better performance: Avoids creating new connections per request
@@ -18,30 +18,32 @@ export function getAdminClient(): SupabaseClient<Database> {
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceRoleKey) {
-      throw new Error('Missing Supabase environment variables');
+      throw new Error("Missing Supabase environment variables");
     }
 
-    console.log('[Supabase Admin] Creating singleton admin client...');
+    console.log("[Supabase Admin] Creating singleton admin client...");
     const startTime = performance.now();
 
     adminClient = createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
-        detectSessionInUrl: false
+        detectSessionInUrl: false,
       },
       db: {
-        schema: 'public'
+        schema: "public",
       },
       global: {
         headers: {
-          'x-connection-source': 'admin-singleton'
-        }
-      }
+          "x-connection-source": "admin-singleton",
+        },
+      },
     });
 
     const duration = performance.now() - startTime;
-    console.log(`[Supabase Admin] Admin client created in ${duration.toFixed(2)}ms`);
+    console.log(
+      `[Supabase Admin] Admin client created in ${duration.toFixed(2)}ms`
+    );
   }
 
   return adminClient;
@@ -52,5 +54,5 @@ export function getAdminClient(): SupabaseClient<Database> {
  */
 export function resetAdminClient(): void {
   adminClient = null;
-  console.log('[Supabase Admin] Admin client reset');
+  console.log("[Supabase Admin] Admin client reset");
 }

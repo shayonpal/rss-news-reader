@@ -97,11 +97,7 @@ export function ArticleCard({
 
   const handleSummarizeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (
-      onSummarize &&
-      !article.is_summarized &&
-      !isSummarizing
-    ) {
+    if (onSummarize && !article.is_summarized && !isSummarizing) {
       onSummarize(article.id);
     }
   };
@@ -120,32 +116,32 @@ export function ArticleCard({
   return (
     <article
       className={`group cursor-pointer transition-all duration-500 ease-out ${
-        isVisible 
-          ? 'opacity-100 translate-y-0 scale-100' 
-          : 'opacity-0 translate-y-8 scale-95'
+        isVisible
+          ? "translate-y-0 scale-100 opacity-100"
+          : "translate-y-8 scale-95 opacity-0"
       }`}
       onClick={handleCardClick}
     >
       <div
-        className={`relative backdrop-blur-2xl transition-all duration-500 rounded-2xl border overflow-hidden transform hover:scale-[1.005] active:scale-[0.995] ${
+        className={`relative transform overflow-hidden rounded-2xl border backdrop-blur-2xl transition-all duration-500 hover:scale-[1.005] active:scale-[0.995] ${
           isRead
-            ? "bg-white/25 dark:bg-slate-800/25 hover:bg-white/35 dark:hover:bg-slate-800/35 border-white/20 dark:border-slate-600/20 shadow-md shadow-black/5 dark:shadow-black/15 opacity-70"
-            : "bg-white/50 dark:bg-slate-800/50 hover:bg-white/65 dark:hover:bg-slate-800/65 border-white/35 dark:border-slate-600/35 shadow-lg shadow-black/10 dark:shadow-black/25"
+            ? "border-white/20 bg-white/25 opacity-70 shadow-md shadow-black/5 hover:bg-white/35 dark:border-slate-600/20 dark:bg-slate-800/25 dark:shadow-black/15 dark:hover:bg-slate-800/35"
+            : "border-white/35 bg-white/50 shadow-lg shadow-black/10 hover:bg-white/65 dark:border-slate-600/35 dark:bg-slate-800/50 dark:shadow-black/25 dark:hover:bg-slate-800/65"
         }`}
       >
         {/* Glass background layers */}
         <div
           className={`absolute inset-0 ${
             isRead
-              ? "bg-gradient-to-br from-white/8 via-transparent to-white/4 dark:from-slate-700/8 dark:via-transparent dark:to-slate-800/4"
-              : "bg-gradient-to-br from-white/15 via-transparent to-white/8 dark:from-slate-700/15 dark:via-transparent dark:to-slate-800/8"
+              ? "from-white/8 to-white/4 dark:from-slate-700/8 dark:to-slate-800/4 bg-gradient-to-br via-transparent dark:via-transparent"
+              : "to-white/8 dark:to-slate-800/8 bg-gradient-to-br from-white/15 via-transparent dark:from-slate-700/15 dark:via-transparent"
           }`}
         />
 
         {/* New article badge */}
         {showNewBadge && article.isNew && (
-          <div className="absolute top-2 right-2 z-10">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-bounce font-medium">
+          <div className="absolute right-2 top-2 z-10">
+            <div className="animate-bounce rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-2 py-1 text-xs font-medium text-white shadow-lg">
               New
             </div>
           </div>
@@ -153,14 +149,14 @@ export function ArticleCard({
 
         {/* Entrance animation glow for new articles */}
         {article.isNew && isVisible && (
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 animate-pulse opacity-50 pointer-events-none" />
+          <div className="pointer-events-none absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 opacity-50" />
         )}
 
         <div className="relative p-3">
           {/* Header: Category and Action Icons */}
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <span
-              className={`px-2 py-1 rounded-lg text-xs backdrop-blur-xl border font-medium ${getCategoryColor(article.category)}`}
+              className={`rounded-lg border px-2 py-1 text-xs font-medium backdrop-blur-xl ${getCategoryColor(article.category)}`}
             >
               {article.category}
             </span>
@@ -170,15 +166,13 @@ export function ArticleCard({
               {/* Sparkles AI Summarize Button */}
               <button
                 onClick={handleSummarizeClick}
-                disabled={
-                  article.is_summarized || isSummarizing
-                }
-                className={`p-1.5 rounded-lg transition-all duration-200 ${
+                disabled={article.is_summarized || isSummarizing}
+                className={`rounded-lg p-1.5 transition-all duration-200 ${
                   article.is_summarized
-                    ? "text-purple-600 dark:text-purple-400 cursor-default"
+                    ? "cursor-default text-purple-600 dark:text-purple-400"
                     : isSummarizing
-                      ? "text-blue-600 dark:text-blue-400 cursor-wait"
-                      : "text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:scale-110 active:scale-95"
+                      ? "cursor-wait text-blue-600 dark:text-blue-400"
+                      : "text-slate-500 hover:scale-110 hover:text-purple-600 active:scale-95 dark:text-slate-400 dark:hover:text-purple-400"
                 }`}
                 title={
                   article.is_summarized
@@ -187,15 +181,11 @@ export function ArticleCard({
                 }
               >
                 {isSummarizing ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
                   <Sparkles
-                    className="w-4 h-4"
-                    fill={
-                      article.is_summarized
-                        ? "currentColor"
-                        : "none"
-                    }
+                    className="h-4 w-4"
+                    fill={article.is_summarized ? "currentColor" : "none"}
                   />
                 )}
               </button>
@@ -203,24 +193,18 @@ export function ArticleCard({
               {/* Star Bookmark Button */}
               <button
                 onClick={handleBookmarkClick}
-                className={`p-1.5 rounded-lg transition-all duration-200 ${
+                className={`rounded-lg p-1.5 transition-all duration-200 ${
                   article.is_bookmarked
                     ? "text-yellow-600 dark:text-yellow-400"
-                    : "text-slate-500 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400"
+                    : "text-slate-500 hover:text-yellow-600 dark:text-slate-400 dark:hover:text-yellow-400"
                 } hover:scale-110 active:scale-95`}
                 title={
-                  article.is_bookmarked
-                    ? "Remove bookmark"
-                    : "Add bookmark"
+                  article.is_bookmarked ? "Remove bookmark" : "Add bookmark"
                 }
               >
                 <Star
-                  className="w-4 h-4"
-                  fill={
-                    article.is_bookmarked
-                      ? "currentColor"
-                      : "none"
-                  }
+                  className="h-4 w-4"
+                  fill={article.is_bookmarked ? "currentColor" : "none"}
                 />
               </button>
             </div>
@@ -228,10 +212,10 @@ export function ArticleCard({
 
           {/* Title */}
           <h2
-            className={`text-base font-semibold mb-2 transition-colors duration-300 line-clamp-2 leading-tight ${
+            className={`mb-2 line-clamp-2 text-base font-semibold leading-tight transition-colors duration-300 ${
               isRead
-                ? "text-slate-600 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300"
-                : "text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                ? "text-slate-600 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300"
+                : "text-slate-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400"
             }`}
           >
             {article.title}
@@ -240,7 +224,7 @@ export function ArticleCard({
           {/* Content: AI Summary or Original Excerpt */}
           <div className="mb-3">
             <p
-              className={`text-sm leading-relaxed line-clamp-4 ${
+              className={`line-clamp-4 text-sm leading-relaxed ${
                 isRead
                   ? "text-slate-500 dark:text-slate-500"
                   : "text-slate-600 dark:text-slate-300"
@@ -277,7 +261,7 @@ export function ArticleCard({
 
         {/* Enhanced hover overlay for unread articles */}
         {!isRead && (
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/3 via-purple-500/3 to-blue-500/3 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+          <div className="from-blue-500/3 via-purple-500/3 to-blue-500/3 pointer-events-none absolute inset-0 bg-gradient-to-r opacity-0 transition-all duration-500 group-hover:opacity-100" />
         )}
       </div>
     </article>

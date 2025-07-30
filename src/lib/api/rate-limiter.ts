@@ -1,8 +1,8 @@
 // Rate limiter for Inoreader API (100 calls per day)
 export class RateLimiter {
   private readonly DAILY_LIMIT = 100;
-  private readonly STORAGE_KEY = 'inoreader_api_usage';
-  
+  private readonly STORAGE_KEY = "inoreader_api_usage";
+
   private usage: {
     date: string;
     calls: number;
@@ -15,8 +15,9 @@ export class RateLimiter {
   }
 
   private loadUsage() {
-    if (typeof window === 'undefined') return { date: '', calls: 0, resetTime: 0 };
-    
+    if (typeof window === "undefined")
+      return { date: "", calls: 0, resetTime: 0 };
+
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (stored) {
       try {
@@ -25,7 +26,7 @@ export class RateLimiter {
         // Invalid JSON, reset
       }
     }
-    
+
     return {
       date: new Date().toDateString(),
       calls: 0,
@@ -34,8 +35,8 @@ export class RateLimiter {
   }
 
   private saveUsage() {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.usage));
   }
 
@@ -49,7 +50,7 @@ export class RateLimiter {
 
   private checkReset() {
     const today = new Date().toDateString();
-    
+
     if (this.usage.date !== today || Date.now() >= this.usage.resetTime) {
       this.usage = {
         date: today,
@@ -76,10 +77,10 @@ export class RateLimiter {
   // Get usage statistics
   getUsageStats() {
     this.checkReset();
-    
+
     const remaining = Math.max(0, this.DAILY_LIMIT - this.usage.calls);
     const usagePercentage = (this.usage.calls / this.DAILY_LIMIT) * 100;
-    
+
     return {
       used: this.usage.calls,
       remaining,
@@ -103,7 +104,7 @@ export class RateLimiter {
     const ms = this.getTimeUntilReset();
     const hours = Math.floor(ms / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -127,14 +128,14 @@ export const rateLimiter = new RateLimiter();
 // Decorator for API calls
 export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
   fn: T,
-  errorMessage = 'API rate limit exceeded. Please try again later.'
+  errorMessage = "API rate limit exceeded. Please try again later."
 ): T {
   return (async (...args: Parameters<T>) => {
     if (!rateLimiter.canMakeCall()) {
       const timeUntilReset = rateLimiter.getFormattedTimeUntilReset();
       throw new Error(`${errorMessage} Resets in ${timeUntilReset}.`);
     }
-    
+
     rateLimiter.recordCall();
     return fn(...args);
   }) as T;

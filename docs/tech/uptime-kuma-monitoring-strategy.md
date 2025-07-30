@@ -4,13 +4,14 @@
 
 **Deployed:** Saturday, July 26, 2025 at 4:24 PM  
 **Status:** Fully operational monitoring infrastructure  
-**Access:** http://localhost:3080  
+**Access:** http://localhost:3080
 
 ## Overview
 
 This document outlines the implementation strategy for monitoring the RSS News Reader application using Uptime Kuma as the monitoring solution with Discord notifications. The monitoring system tracks application health, API rate limits, sync status, cron job execution, and database connectivity to ensure reliable operation of the RSS reader service.
 
 ### Architecture Summary
+
 - **Monitoring Tool**: Uptime Kuma (self-hosted, Docker-based) ✅ **DEPLOYED**
 - **Port**: 3080 (deployed on this port instead of planned 3001)
 - **Notification Channel**: Discord webhooks ✅ **CONFIGURED**
@@ -20,17 +21,21 @@ This document outlines the implementation strategy for monitoring the RSS News R
 ## Prerequisites
 
 ### Required Components
+
 1. **Colima** (Docker runtime for macOS)
+
    ```bash
    brew install colima
    colima start --cpu 2 --memory 4
    ```
 
 2. **Discord Server & Webhook**
+
    - Discord account with server creation permissions
    - Ability to create webhooks in channels
 
 3. **Network Access**
+
    - Tailscale connection to access monitoring dashboard
    - Ports available: 3001 (suggested for Uptime Kuma)
 
@@ -42,6 +47,7 @@ This document outlines the implementation strategy for monitoring the RSS News R
 ## Uptime Kuma Setup
 
 ### Step 1: Start Colima
+
 ```bash
 # Start Colima with adequate resources
 colima start --cpu 2 --memory 4 --disk 10
@@ -51,12 +57,14 @@ docker version
 ```
 
 ### Step 2: Create Uptime Kuma Directory
+
 ```bash
 # Create directory for Uptime Kuma data
 mkdir -p ~/uptime-kuma-data
 ```
 
 ### Step 3: Deploy Uptime Kuma
+
 ```bash
 # Run Uptime Kuma container
 docker run -d \
@@ -68,6 +76,7 @@ docker run -d \
 ```
 
 ### Step 4: Access Uptime Kuma
+
 - Open browser to: `http://100.96.166.53:3001`
 - Create admin account on first access
 - Save credentials securely
@@ -75,6 +84,7 @@ docker run -d \
 ## Discord Integration
 
 ### Step 1: Create Discord Server Structure
+
 1. Create new Discord server or use existing
 2. Create channels:
    ```
@@ -86,6 +96,7 @@ docker run -d \
    ```
 
 ### Step 2: Create Webhooks
+
 For each channel, create a webhook:
 
 1. Right-click channel → Edit Channel → Integrations → Webhooks
@@ -98,6 +109,7 @@ For each channel, create a webhook:
 4. Copy webhook URLs for later use
 
 ### Step 3: Configure Webhook in Uptime Kuma
+
 1. Go to Settings → Notifications
 2. Add Notification → Discord Webhook
 3. Configure:
@@ -113,6 +125,7 @@ For each channel, create a webhook:
 ### Deployed Monitors (6 Active)
 
 ### 1. RSS Reader Production Monitor ✅ ACTIVE
+
 ```
 Monitor Type: HTTP(s)
 Friendly Name: RSS Reader Production
@@ -126,7 +139,8 @@ Notification: Discord Critical Alerts
 Status: ✅ UP
 ```
 
-### 2. RSS Reader Development Monitor ✅ ACTIVE  
+### 2. RSS Reader Development Monitor ✅ ACTIVE
+
 ```
 Monitor Type: HTTP(s)
 Friendly Name: RSS Reader Development
@@ -139,6 +153,7 @@ Status: ⚠️ DOWN (expected when dev server not running)
 ```
 
 ### 3. Bi-directional Sync Server Monitor ✅ ACTIVE
+
 ```
 Monitor Type: HTTP(s)
 Friendly Name: Bi-directional Sync Server
@@ -151,6 +166,7 @@ Status: ✅ UP
 ```
 
 ### 4. Production Health Endpoint Monitor ✅ ACTIVE
+
 ```
 Monitor Type: HTTP(s)
 Friendly Name: Production Health Endpoint
@@ -163,6 +179,7 @@ Status: ⚠️ ISSUE DISCOVERED - Returns 500 even when app accessible
 ```
 
 ### 5. Development Health Endpoint Monitor ✅ ACTIVE
+
 ```
 Monitor Type: HTTP(s)
 Friendly Name: Development Health Endpoint
@@ -175,6 +192,7 @@ Status: ⚠️ ISSUE DISCOVERED - Returns false positives
 ```
 
 ### 6. Cron Service Health Monitor ✅ ACTIVE
+
 ```
 Monitor Type: Push
 Friendly Name: Cron Service Health
@@ -188,30 +206,35 @@ Status: ✅ UP with push notifications integrated
 ## Implementation Integration ✅ COMPLETED
 
 ### Dual Monitoring Strategy
+
 The implementation integrates with existing infrastructure through a dual monitoring approach:
 
-1. **External Monitoring (Uptime Kuma)**: 
+1. **External Monitoring (Uptime Kuma)**:
+
    - Visual dashboard for status overview
    - Proactive notifications via Discord
    - Historical data and trends
    - 6 active monitors covering all services
 
 2. **Internal Recovery (monitor-services.sh)**:
-   - Existing script for automatic service recovery  
+   - Existing script for automatic service recovery
    - Immediate restart of failed services
    - PM2 ecosystem integration
    - Complements external monitoring
 
 ### Helper Scripts Created
+
 - **setup-uptime-kuma.sh**: Automated deployment script
 - **notify-uptime-kuma.sh**: Integration script for cron notifications
 
 ### Key Discoveries During Implementation
+
 - **Health Endpoint Issues**: Both production and development health endpoints return inaccurate status
 - **Priority Shift**: TODO-039b (Build Validation) is now immediate priority to fix discovered issues
 - **Network Access**: Successfully deployed on port 3080 with proper Tailscale integration
 
 ### 2. API Rate Limit Monitor
+
 ```
 Monitor Type: HTTP(s) - Keyword
 Friendly Name: API Rate Limit Check
@@ -224,6 +247,7 @@ Notification: Discord Warning (if < 20 calls remaining)
 ```
 
 ### 3. Sync Status Monitor
+
 ```
 Monitor Type: HTTP(s) - JSON Query
 Friendly Name: Sync Status Check
@@ -236,6 +260,7 @@ Notification: Discord Warning
 ```
 
 ### 4. Cron Job Monitor (Push Monitor)
+
 ```
 Monitor Type: Push
 Friendly Name: RSS Sync Cron Job
@@ -245,12 +270,14 @@ Grace Period: 3600 seconds (1 hour)
 ```
 
 Add to cron script:
+
 ```bash
 # At the end of sync script
 curl -X GET "[PUSH_URL_FROM_UPTIME_KUMA]"
 ```
 
 ### 5. Database Connectivity Monitor
+
 ```
 Monitor Type: HTTP(s) - JSON Query
 Friendly Name: Supabase Connection
@@ -263,6 +290,7 @@ Notification: Discord Critical Alerts
 ```
 
 ### 6. PM2 Process Monitor
+
 ```
 Monitor Type: HTTP(s) - Keyword
 Friendly Name: PM2 RSS Reader Process
@@ -276,7 +304,9 @@ Notification: Discord Critical Alerts
 ## Custom Health Endpoints
 
 ### Enhanced Health Endpoint (/api/health)
+
 Current endpoint should return:
+
 ```json
 {
   "status": "healthy",
@@ -298,7 +328,9 @@ Current endpoint should return:
 ```
 
 ### Sync Status Endpoint (/api/sync-status)
+
 New endpoint to implement:
+
 ```json
 {
   "lastSyncTime": "2025-01-26T02:00:00Z",
@@ -312,7 +344,9 @@ New endpoint to implement:
 ```
 
 ### API Usage Endpoint (/api/usage)
+
 New endpoint to implement:
+
 ```json
 {
   "dailyLimit": 100,
@@ -327,6 +361,7 @@ New endpoint to implement:
 ## Alert Rules
 
 ### Critical Alerts (Immediate Action Required)
+
 - **Trigger**: Main app down for > 3 minutes
 - **Trigger**: Database connection lost
 - **Trigger**: PM2 process not running
@@ -334,6 +369,7 @@ New endpoint to implement:
 - **Action**: Restart services, check logs
 
 ### Warnings (Monitor Closely)
+
 - **Trigger**: API calls remaining < 20
 - **Trigger**: Sync failed but app running
 - **Trigger**: Response time > 5 seconds
@@ -342,6 +378,7 @@ New endpoint to implement:
 - **Action**: Monitor trend, prepare intervention
 
 ### Status Updates (Informational)
+
 - **Trigger**: Successful sync completion
 - **Trigger**: Daily API usage summary
 - **Trigger**: Uptime percentage reports
@@ -349,6 +386,7 @@ New endpoint to implement:
 - **Action**: Review for patterns
 
 ### Escalation Rules
+
 ```
 1st failure: Log only
 2nd failure: Discord warning
@@ -359,6 +397,7 @@ After resolution: Discord status update
 ## Testing & Validation
 
 ### Step 1: Test Each Monitor
+
 ```bash
 # Test health endpoint
 curl http://100.96.166.53:3147/api/health
@@ -370,12 +409,14 @@ pm2 start rss-reader-prod
 ```
 
 ### Step 2: Test Notifications
+
 1. Create test monitor with 1-minute interval
 2. Point to non-existent endpoint
 3. Verify Discord notification arrives
 4. Fix endpoint and verify recovery notification
 
 ### Step 3: Load Testing
+
 ```bash
 # Simple load test
 for i in {1..50}; do
@@ -385,6 +426,7 @@ wait
 ```
 
 ### Step 4: Validate Cron Integration
+
 1. Manually trigger cron job
 2. Verify push notification received
 3. Check next expected time is set correctly
@@ -392,22 +434,26 @@ wait
 ## Maintenance
 
 ### Daily Tasks
+
 - Review Discord notifications
 - Check API usage trends
 - Verify all monitors green
 
 ### Weekly Tasks
+
 - Review response time graphs
 - Check disk usage for Uptime Kuma data
 - Analyze patterns in warnings
 
 ### Monthly Tasks
+
 - Update Uptime Kuma container
 - Archive old Discord messages
 - Review and adjust thresholds
 - Backup Uptime Kuma configuration
 
 ### Backup Uptime Kuma
+
 ```bash
 # Backup data
 tar -czf uptime-kuma-backup-$(date +%Y%m%d).tar.gz ~/uptime-kuma-data/
@@ -417,6 +463,7 @@ tar -xzf uptime-kuma-backup-20250126.tar.gz -C ~/
 ```
 
 ### Log Rotation
+
 ```bash
 # Add to crontab
 0 0 * * 0 find ~/uptime-kuma-data/logs -name "*.log" -mtime +30 -delete
@@ -427,6 +474,7 @@ tar -xzf uptime-kuma-backup-20250126.tar.gz -C ~/
 ### Common Issues
 
 #### 1. Uptime Kuma Container Won't Start
+
 ```bash
 # Check logs
 docker logs uptime-kuma
@@ -436,6 +484,7 @@ chmod -R 755 ~/uptime-kuma-data
 ```
 
 #### 2. Monitors Show as Down but App is Running
+
 - Check Tailscale connection
 - Verify firewall rules
 - Test from Uptime Kuma container:
@@ -444,6 +493,7 @@ chmod -R 755 ~/uptime-kuma-data
   ```
 
 #### 3. Discord Notifications Not Arriving
+
 - Verify webhook URL is correct
 - Check Discord server notification settings
 - Test webhook manually:
@@ -454,6 +504,7 @@ chmod -R 755 ~/uptime-kuma-data
   ```
 
 #### 4. High Memory Usage
+
 ```bash
 # Restart container with memory limit
 docker run -d \
@@ -466,11 +517,13 @@ docker run -d \
 ```
 
 #### 5. API Rate Limit Monitoring Inaccurate
+
 - Ensure health endpoint returns real-time data
 - Consider caching API call count for 1 minute max
 - Add endpoint specifically for API usage
 
 ### Debug Commands
+
 ```bash
 # Check container status
 docker ps -a | grep uptime-kuma
@@ -493,6 +546,7 @@ docker rm uptime-kuma
 ### Recovery Procedures
 
 #### If Monitoring System Fails:
+
 1. Check Docker/Colima status
 2. Restart Uptime Kuma container
 3. Verify network connectivity
@@ -500,6 +554,7 @@ docker rm uptime-kuma
 5. Review container logs for errors
 
 #### If Alerts Stop Working:
+
 1. Test Discord webhooks manually
 2. Check Uptime Kuma notification settings
 3. Verify monitor configurations

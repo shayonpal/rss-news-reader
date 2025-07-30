@@ -17,24 +17,28 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ## Timeline of Recent Issues
 
 ### July 26, 2025 - Environment Variable Crisis
+
 - **Issue**: Supabase environment variables not passed to client-side bundle
 - **Cause**: PM2 runtime injection doesn't work for Next.js client builds
 - **Attempted Fix**: Added `require('dotenv').config()` to ecosystem.config.js
 - **Result**: Production fixed temporarily, development still affected
 
 ### July 26, 2025 - OAuth Token Failure
+
 - **Issue**: Bidirectional sync server failed for ~12 hours
 - **Cause**: Missing `~/.rss-reader/tokens.json` file
 - **Attempted Fix**: Regenerated OAuth tokens
 - **Result**: 177 failed sync queue items had to be cleared
 
 ### July 26, 2025 - Routing Confusion
+
 - **Issue**: 500 Internal Server Errors on all endpoints
 - **Cause**: Empty `src/pages/` directory confused Next.js router
 - **Attempted Fix**: Removed empty directory
 - **Result**: Temporary resolution, but builds remain unstable
 
 ### July 26, 2025 - PM2 Cluster Mode Disaster
+
 - **Issue**: PM2 restarting 105+ times
 - **Cause**: Cluster mode incompatible with Next.js production builds
 - **Attempted Fix**: Changed to fork mode
@@ -45,6 +49,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### 1. Build Process Failures
 
 **Current State**:
+
 ```
 .next/server/app/
 ├── page.js (exists)
@@ -52,6 +57,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ```
 
 **Evidence**:
+
 - Health check endpoint returns: "Cannot find module '.next/server/app/api/health/app/route.js'"
 - API routes directory doesn't exist in production build
 - Vendor chunks incomplete
@@ -61,13 +67,15 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### 2. Environment Variable Loading Chain
 
 **The Problem Chain**:
+
 1. PM2 starts process with environment variables
 2. Next.js build happens AFTER PM2 starts
-3. Client-side build doesn't see NEXT_PUBLIC_* variables
+3. Client-side build doesn't see NEXT*PUBLIC*\* variables
 4. Supabase client initialization fails
 5. Articles don't load from database
 
-**Current Workaround**: 
+**Current Workaround**:
+
 - Exporting variables in build script
 - Loading dotenv in ecosystem.config.js
 - Still unreliable in development mode
@@ -75,6 +83,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### 3. PM2 Configuration Issues
 
 **Problematic Configuration**:
+
 ```javascript
 {
   name: 'rss-sync-cron',
@@ -86,6 +95,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ```
 
 **Issues Identified**:
+
 - Cron service using cluster mode (should be fork)
 - Low restart limits causing services to give up
 - No health check delays before marking "online"
@@ -94,6 +104,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### 4. Lack of Monitoring & Recovery
 
 **What's Missing**:
+
 - No build validation before starting services
 - No health check verification before traffic
 - No automated rollback on failures
@@ -104,6 +115,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### 5. Cascading Failure Pattern
 
 **The Failure Cascade**:
+
 1. Build partially completes (missing API routes)
 2. PM2 starts the incomplete build
 3. Health checks fail with 500 errors
@@ -116,12 +128,14 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ## Critical Findings
 
 ### System Resource Status
+
 - **Memory Usage**: Within limits but approaching thresholds
 - **Port Conflicts**: None detected (3000, 3001, 3147 properly separated)
 - **Disk Space**: Adequate but logs growing unbounded
 - **CPU**: Normal usage between crashes
 
 ### Service Health Status
+
 ```
 ┌─────────────────────┬─────────┬─────────┬──────────┐
 │ Service             │ Status  │ Restart │ Health   │
@@ -138,6 +152,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### Immediate Actions (Critical)
 
 1. **Stop Everything and Rebuild**
+
    ```bash
    pm2 stop all
    rm -rf .next
@@ -148,6 +163,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
    ```
 
 2. **Fix PM2 Configuration**
+
    - Change rss-sync-cron to fork mode
    - Increase max_restarts to 50
    - Add min_uptime: '10s'
@@ -166,11 +182,13 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### Short-term Fixes (This Week)
 
 1. **Implement Startup Health Checks**
+
    - Wait for services to be truly ready
    - Verify all endpoints respond correctly
    - Only then allow traffic
 
 2. **Add Monitoring Alerts**
+
    - Alert after 3 restarts in 5 minutes
    - Alert when memory > 80% of limit
    - Alert when health endpoints fail
@@ -183,16 +201,19 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### Long-term Solutions (This Month)
 
 1. **Blue-Green Deployment**
+
    - Build new version in separate directory
    - Test thoroughly before switching
    - Keep previous version for rollback
 
 2. **Proper CI/CD Pipeline**
+
    - Automated tests before deployment
    - Build validation as part of pipeline
    - Automated rollback on failures
 
 3. **Centralized Monitoring**
+
    - Implement Uptime Kuma (already planned)
    - Add application performance monitoring
    - Create unified dashboard
@@ -207,6 +228,7 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 The RSS News Reader is suffering from a combination of build process failures, configuration issues, and lack of proper monitoring. The most critical issue is the incomplete production builds causing API routes to be missing. This creates a cascade of failures that PM2's restart mechanism makes worse rather than better.
 
 The system needs immediate intervention to:
+
 1. Ensure complete builds before deployment
 2. Fix configuration issues preventing stability
 3. Implement proper health checks and monitoring
@@ -217,6 +239,7 @@ Without these fixes, the application will continue to experience frequent crashe
 ## Appendix: Evidence Collected
 
 ### PM2 Status Output
+
 ```
 ┌─────┬─────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id  │ name                │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
@@ -228,17 +251,20 @@ Without these fixes, the application will continue to experience frequent crashe
 ```
 
 ### Health Check Responses
+
 - `/api/health/app?ping=true`: 500 Internal Server Error
-- `/api/health/db`: 500 Internal Server Error  
+- `/api/health/db`: 500 Internal Server Error
 - `http://localhost:3001/server/health`: 200 OK (sync server working)
 
 ### Build Output Analysis
+
 - Total build size: ~2MB (suspiciously small)
 - Missing directories: `.next/server/app/api/`
 - Incomplete vendor chunks
 - No trace files for debugging
 
 ### Log Patterns
+
 - "Cannot find module" errors repeated
 - "ECONNREFUSED" during startup
 - Memory usage stable until crash

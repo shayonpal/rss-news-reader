@@ -42,6 +42,7 @@ interface TokenStorage {
 - Clear error handling for authentication failures
 
 **Key Changes (Issue #36 - July 16, 2025):**
+
 - Extended token lifetime from 1 hour to 365 days
 - Eliminated daily login requirement for users
 - Reduced API calls from ~10 per app startup to 0 calls
@@ -293,11 +294,14 @@ const contentToSummarize = article.full_content || article.content;
 
 // Recommended future implementation:
 if (!article.full_content && !article.has_full_content) {
-  return NextResponse.json({
-    error: 'full_content_required',
-    message: 'Please fetch full article content before generating summary',
-    requiresAction: 'fetch_content'
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      error: "full_content_required",
+      message: "Please fetch full article content before generating summary",
+      requiresAction: "fetch_content",
+    },
+    { status: 400 }
+  );
 }
 ```
 

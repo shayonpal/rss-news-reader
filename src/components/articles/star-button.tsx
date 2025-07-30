@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { Star } from 'lucide-react';
-import { ArticleActionButton, type ArticleActionButtonSize } from '@/components/ui/article-action-button';
+import { Star } from "lucide-react";
+import {
+  ArticleActionButton,
+  type ArticleActionButtonSize,
+} from "@/components/ui/article-action-button";
 
 /**
  * Specialized button for star/unstar functionality
- * 
+ *
  * This is an example of how to create specialized action buttons
  * following our button architecture. Use this as a template when
  * creating new action buttons.
- * 
+ *
  * @see docs/tech/button-architecture.md for complete guide
  */
 interface StarButtonProps {
@@ -19,11 +22,11 @@ interface StarButtonProps {
   disabled?: boolean;
 }
 
-export function StarButton({ 
-  onToggleStar, 
-  isStarred, 
-  size = 'sm',
-  disabled = false 
+export function StarButton({
+  onToggleStar,
+  isStarred,
+  size = "sm",
+  disabled = false,
 }: StarButtonProps) {
   return (
     <ArticleActionButton
@@ -32,7 +35,7 @@ export function StarButton({
       size={size}
       active={isStarred}
       activeClassName="fill-yellow-500 text-yellow-500"
-      label={isStarred ? 'Unstar' : 'Star'}
+      label={isStarred ? "Unstar" : "Star"}
       disabled={disabled}
     />
   );

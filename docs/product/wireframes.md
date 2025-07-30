@@ -360,6 +360,7 @@ Currently, the app uses responsive design but doesn't have tablet-specific layou
 ### Color System (Implemented)
 
 Using Tailwind CSS with dark mode support:
+
 - Background: bg-background (white/dark)
 - Text: text-foreground/text-muted-foreground
 - Borders: border/divide-border
@@ -402,12 +403,14 @@ Loading Summary:
 ## Performance Optimizations (Implemented)
 
 ### Progressive Loading
+
 1. ✅ Skeleton screens while loading
 2. ✅ Infinite scroll for articles
 3. ✅ On-demand summary generation
 4. ✅ Scroll position preservation
 
 ### UI Optimizations
+
 1. ✅ Optimistic UI for read/star actions
 2. ✅ Debounced search/filter operations
 3. ✅ Efficient re-renders with Zustand
@@ -416,11 +419,13 @@ Loading Summary:
 ## Error Handling (Implemented)
 
 ### Summary Generation Errors
+
 - Network offline: Button disabled
 - Rate limit: Clear error message
 - Generation failed: Retry option available
 
-### Sync Errors  
+### Sync Errors
+
 - Rate limit warnings at 80% and 95%
 - Failed sync with retry button
 - Clear error messages
@@ -436,11 +441,13 @@ Loading Summary:
 ## PWA Features (Partial)
 
 ### Implemented
+
 - ✅ Service worker registration
 - ✅ Basic offline detection
 - ✅ Web app manifest
 
 ### Not Yet Implemented
+
 - ❌ Install prompts
 - ❌ App icons for all platforms
 - ❌ Splash screens
@@ -449,6 +456,7 @@ Loading Summary:
 ## Production Deployment Status
 
 Currently running in development mode. Production deployment (TODO-011) will include:
+
 - Caddy reverse proxy at /reader path
 - PM2 process management
 - Tailscale network security

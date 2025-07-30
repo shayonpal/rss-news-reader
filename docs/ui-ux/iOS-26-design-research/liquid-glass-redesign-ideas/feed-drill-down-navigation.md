@@ -1,6 +1,7 @@
 # Feed Drill-Down Navigation Pattern
 
 ## Overview
+
 The feed drill-down navigation allows users to navigate from the Feeds tab to filtered article views by tapping on folders or individual feeds, while maintaining expand/collapse functionality for organizing the feed list.
 
 ## Interaction Model
@@ -26,6 +27,7 @@ Feeds List
 ## Implementation
 
 ### Feed List Component
+
 ```tsx
 interface FeedListProps {
   onFeedSelect: (feedId: number, feedTitle: string) => void;
@@ -33,11 +35,13 @@ interface FeedListProps {
 }
 
 export function FeedsList({ onFeedSelect, onFolderSelect }: FeedListProps) {
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(
+    new Set()
+  );
 
   const toggleFolder = (folderId: number, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent folder navigation
-    setExpandedFolders(prev => {
+    setExpandedFolders((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(folderId)) {
         newSet.delete(folderId);
@@ -59,30 +63,32 @@ export function FeedsList({ onFeedSelect, onFolderSelect }: FeedListProps) {
 
   return (
     <div className="space-y-2">
-      {folders.map(folder => (
+      {folders.map((folder) => (
         <div key={folder.id}>
           {/* Folder Header - Clickable for navigation */}
           <button
             onClick={() => handleFolderClick(folder)}
-            className="w-full group cursor-pointer"
+            className="group w-full cursor-pointer"
           >
             <div className="glass-card-minimal hover:glass-card p-3">
               <div className="flex items-center gap-3">
                 {/* Expand/Collapse Button */}
                 <button
                   onClick={(e) => toggleFolder(folder.id, e)}
-                  className="p-1 rounded-lg hover:bg-white/30"
-                  aria-label={expandedFolders.has(folder.id) ? 'Collapse' : 'Expand'}
+                  className="rounded-lg p-1 hover:bg-white/30"
+                  aria-label={
+                    expandedFolders.has(folder.id) ? "Collapse" : "Expand"
+                  }
                 >
                   {expandedFolders.has(folder.id) ? (
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="h-4 w-4" />
                   ) : (
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="h-4 w-4" />
                   )}
                 </button>
-                
+
                 {/* Folder Info */}
-                <FolderIcon className="w-5 h-5" />
+                <FolderIcon className="h-5 w-5" />
                 <span className="flex-1 font-semibold">{folder.name}</span>
                 <Badge count={folder.unread_count} />
               </div>
@@ -91,16 +97,16 @@ export function FeedsList({ onFeedSelect, onFolderSelect }: FeedListProps) {
 
           {/* Expanded Feeds */}
           {expandedFolders.has(folder.id) && (
-            <div className="ml-6 space-y-1 mt-1">
-              {folder.feeds.map(feed => (
+            <div className="ml-6 mt-1 space-y-1">
+              {folder.feeds.map((feed) => (
                 <button
                   key={feed.id}
                   onClick={(e) => handleFeedClick(feed, e)}
-                  className="w-full group"
+                  className="group w-full"
                 >
                   <div className="glass-card-minimal hover:glass-card p-3">
                     <div className="flex items-center gap-3">
-                      <RssIcon className="w-4 h-4" />
+                      <RssIcon className="h-4 w-4" />
                       <span className="flex-1 text-sm">{feed.title}</span>
                       <Badge count={feed.unread_count} size="sm" />
                     </div>
@@ -117,6 +123,7 @@ export function FeedsList({ onFeedSelect, onFolderSelect }: FeedListProps) {
 ```
 
 ### Navigation Hook
+
 ```typescript
 export function useFeedNavigation() {
   const { setActiveTab, setArticleFilter } = useNavigationStore();
@@ -124,33 +131,33 @@ export function useFeedNavigation() {
 
   const navigateToArticles = (filter: Partial<FilterState>) => {
     // Update filter state
-    setArticleFilter(prev => ({
+    setArticleFilter((prev) => ({
       ...prev,
-      ...filter
+      ...filter,
     }));
-    
+
     // Switch to Articles tab
-    setActiveTab('articles');
-    
+    setActiveTab("articles");
+
     // Smooth transition
     requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   };
 
   const handleFolderSelect = (folderId: number, folderTitle: string) => {
     navigateToArticles({
-      sourceType: 'folder',
+      sourceType: "folder",
       sourceId: folderId,
-      sourceTitle: folderTitle
+      sourceTitle: folderTitle,
     });
   };
 
   const handleFeedSelect = (feedId: number, feedTitle: string) => {
     navigateToArticles({
-      sourceType: 'feed',
+      sourceType: "feed",
       sourceId: feedId,
-      sourceTitle: feedTitle
+      sourceTitle: feedTitle,
     });
   };
 
@@ -159,10 +166,11 @@ export function useFeedNavigation() {
 ```
 
 ### Filter State Management
+
 ```typescript
 interface FilterState {
-  readStatus: 'all' | 'unread' | 'read';
-  sourceType: 'all' | 'folder' | 'feed';
+  readStatus: "all" | "unread" | "read";
+  sourceType: "all" | "folder" | "feed";
   sourceId: number | null;
   sourceTitle: string;
 }
@@ -170,43 +178,44 @@ interface FilterState {
 // Navigation store maintains filter state
 const useNavigationStore = create((set) => ({
   articleFilter: {
-    readStatus: 'unread', // Default to unread
-    sourceType: 'all',
+    readStatus: "unread", // Default to unread
+    sourceType: "all",
     sourceId: null,
-    sourceTitle: ''
+    sourceTitle: "",
   },
-  
+
   setArticleFilter: (filter: FilterState) => set({ articleFilter: filter }),
-  
+
   // Preserve read status when changing source
-  updateSource: (source: Partial<FilterState>) => 
-    set(state => ({
+  updateSource: (source: Partial<FilterState>) =>
+    set((state) => ({
       articleFilter: {
         ...state.articleFilter,
-        ...source
-      }
-    }))
+        ...source,
+      },
+    })),
 }));
 ```
 
 ### Article Filtering Logic
+
 ```typescript
 function filterArticles(articles: Article[], filter: FilterState): Article[] {
   let filtered = articles;
 
   // Apply source filter
-  if (filter.sourceType === 'folder' && filter.sourceId) {
+  if (filter.sourceType === "folder" && filter.sourceId) {
     const feedIds = getFeedIdsByFolder(filter.sourceId);
-    filtered = filtered.filter(a => feedIds.includes(a.feed_id));
-  } else if (filter.sourceType === 'feed' && filter.sourceId) {
-    filtered = filtered.filter(a => a.feed_id === filter.sourceId);
+    filtered = filtered.filter((a) => feedIds.includes(a.feed_id));
+  } else if (filter.sourceType === "feed" && filter.sourceId) {
+    filtered = filtered.filter((a) => a.feed_id === filter.sourceId);
   }
 
   // Apply read status filter
-  if (filter.readStatus === 'unread') {
-    filtered = filtered.filter(a => !a.is_read);
-  } else if (filter.readStatus === 'read') {
-    filtered = filtered.filter(a => a.is_read);
+  if (filter.readStatus === "unread") {
+    filtered = filtered.filter((a) => !a.is_read);
+  } else if (filter.readStatus === "read") {
+    filtered = filtered.filter((a) => a.is_read);
   }
 
   return filtered;
@@ -216,6 +225,7 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
 ## Visual Feedback
 
 ### Hover States
+
 ```css
 /* Folder row hover */
 .folder-row:hover {
@@ -231,12 +241,13 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
 
 /* Chevron button hover */
 .chevron-button:hover {
-  background: rgba(255, 255, 255, 0.30);
+  background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
 ```
 
 ### Active States
+
 ```css
 /* Pressed state */
 .folder-row:active,
@@ -254,17 +265,20 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
 ## User Experience Flow
 
 1. **User taps folder row**
+
    - Navigate to Articles tab
    - Show all articles from that folder's feeds
    - Header shows folder name
    - Read status filter persists
 
 2. **User taps chevron**
+
    - Folder expands/collapses
    - Stay on Feeds tab
    - Smooth height animation
 
 3. **User taps feed row**
+
    - Navigate to Articles tab
    - Show only that feed's articles
    - Header shows feed name
@@ -278,6 +292,7 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
 ## Animation Details
 
 ### Expand/Collapse Animation
+
 ```css
 @keyframes expand-folder {
   from {
@@ -297,21 +312,22 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
 ```
 
 ### Navigation Transition
+
 ```typescript
 // Smooth transition when navigating
 const handleNavigation = async (filter: FilterState) => {
   // Start transition
   setTransitioning(true);
-  
+
   // Update filter
   setArticleFilter(filter);
-  
+
   // Wait for tab animation
   await sleep(200);
-  
+
   // Switch tab
-  setActiveTab('articles');
-  
+  setActiveTab("articles");
+
   // Complete transition
   setTransitioning(false);
 };
@@ -320,11 +336,13 @@ const handleNavigation = async (filter: FilterState) => {
 ## Accessibility
 
 1. **Keyboard Navigation**
+
    - Tab through folders and feeds
    - Space/Enter to select
    - Arrow keys for expand/collapse
 
 2. **Screen Readers**
+
    - Announce folder/feed names
    - State changes (expanded/collapsed)
    - Navigation announcements
@@ -337,11 +355,13 @@ const handleNavigation = async (filter: FilterState) => {
 ## Best Practices
 
 1. **Performance**
+
    - Virtualize long feed lists
    - Debounce rapid clicks
    - Preload article data
 
 2. **State Persistence**
+
    - Remember expansion state
    - Preserve filter selections
    - Cache navigation history

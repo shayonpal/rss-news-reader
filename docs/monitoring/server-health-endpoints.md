@@ -5,6 +5,7 @@ This guide provides the configuration details for setting up Uptime Kuma monitor
 ## Health Endpoints Overview
 
 All health endpoints return standardized JSON responses with the following structure:
+
 ```json
 {
   "status": "healthy|degraded|unhealthy|unknown",
@@ -27,6 +28,7 @@ All health endpoints return standardized JSON responses with the following struc
 ## Monitor Configuration
 
 ### 1. Production App Health
+
 - **Monitor Type**: HTTP(s)
 - **Friendly Name**: RSS Reader Production
 - **URL**: `http://localhost:3147/reader/api/health/app`
@@ -38,10 +40,12 @@ All health endpoints return standardized JSON responses with the following struc
 - **Tags**: production, app
 
 **Advanced Settings**:
+
 - Enable "Parse Response (JSON)"
 - Success condition: `json.status === "healthy" || json.status === "degraded"`
 
 ### 2. Development App Health
+
 - **Monitor Type**: HTTP(s)
 - **Friendly Name**: RSS Reader Development
 - **URL**: `http://localhost:3000/reader/api/health/app`
@@ -53,10 +57,12 @@ All health endpoints return standardized JSON responses with the following struc
 - **Tags**: development, app
 
 **Advanced Settings**:
+
 - Enable "Parse Response (JSON)"
 - Success condition: `json.status === "healthy" || json.status === "degraded"`
 
 ### 3. Bi-directional Sync Server Health
+
 - **Monitor Type**: HTTP(s)
 - **Friendly Name**: RSS Sync Server
 - **URL**: `http://localhost:3001/server/health`
@@ -68,10 +74,12 @@ All health endpoints return standardized JSON responses with the following struc
 - **Tags**: sync, server
 
 **Advanced Settings**:
+
 - Enable "Parse Response (JSON)"
 - Success condition: `json.status === "healthy" || json.status === "degraded"`
 
 ### 4. Cron Service Health
+
 - **Monitor Type**: HTTP(s)
 - **Friendly Name**: RSS Sync Cron
 - **URL**: `http://localhost:3147/reader/api/health/cron`
@@ -83,6 +91,7 @@ All health endpoints return standardized JSON responses with the following struc
 - **Tags**: cron, sync
 
 **Advanced Settings**:
+
 - Enable "Parse Response (JSON)"
 - Success condition: `json.status === "healthy" || json.status === "degraded"`
 
@@ -100,10 +109,12 @@ Based on our implementation, the following monitors should be removed as they're
 For critical failures that the monitor-services.sh script can't handle:
 
 1. Create a webhook notification:
+
    - **Webhook URL**: `http://localhost:3147/reader/api/webhooks/uptime-kuma-recovery`
    - **Request Method**: POST
    - **Content Type**: application/json
    - **Request Body**:
+
    ```json
    {
      "monitor": "{monitorJSON}",
@@ -131,10 +142,12 @@ The cron service already sends push notifications to Uptime Kuma. Ensure the pus
 Create a status page with the following groups:
 
 1. **Core Services**
+
    - RSS Reader Production
    - RSS Sync Server
 
 2. **Development**
+
    - RSS Reader Development
 
 3. **Background Jobs**
@@ -143,11 +156,13 @@ Create a status page with the following groups:
 ## Monitoring Best Practices
 
 1. **Response Time Alerts**: Set up notifications if response time exceeds:
+
    - App endpoints: > 1000ms
    - Sync server: > 500ms
    - Cron endpoint: > 200ms
 
 2. **Error Count Monitoring**: Use JSON parsing to alert when:
+
    - `json.errorCount > 10` (last hour)
    - `json.dependencies.database === "unhealthy"`
    - `json.performance.avgDbQueryTime > 500`

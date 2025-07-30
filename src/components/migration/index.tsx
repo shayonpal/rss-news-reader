@@ -1,1 +1,1 @@
-export { RecoveryDialog } from './RecoveryDialog';
+export { RecoveryDialog } from "./RecoveryDialog";

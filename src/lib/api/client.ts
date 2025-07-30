@@ -1,10 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Create axios instance
 const client: AxiosInstance = axios.create({
   timeout: 30000, // 30 seconds
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -12,14 +12,14 @@ const client: AxiosInstance = axios.create({
 client.interceptors.request.use(
   async (config) => {
     // Add timestamp to all requests
-    config.headers['X-Request-Time'] = Date.now().toString();
-    
+    config.headers["X-Request-Time"] = Date.now().toString();
+
     // For Inoreader API requests, we don't add auth headers here
     // since tokens are stored in httpOnly cookies
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -28,8 +28,10 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful requests in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✓ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `✓ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`
+      );
     }
     return response;
   },
@@ -38,23 +40,25 @@ client.interceptors.response.use(
 
     // Handle rate limiting (429)
     if (error.response?.status === 429) {
-      const retryAfter = error.response.headers['retry-after'];
+      const retryAfter = error.response.headers["retry-after"];
       const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000; // Default 5 seconds
-      
+
       console.warn(`Rate limited. Retrying after ${delay}ms`);
-      
+
       // Wait and retry once
       if (!originalRequest._retryAfterRateLimit) {
         originalRequest._retryAfterRateLimit = true;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return client(originalRequest);
       }
     }
 
     // Log errors in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error(`✗ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'NETWORK_ERROR'}`);
-      console.error('Error details:', error.response?.data || error.message);
+    if (process.env.NODE_ENV === "development") {
+      console.error(
+        `✗ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || "NETWORK_ERROR"}`
+      );
+      console.error("Error details:", error.response?.data || error.message);
     }
 
     return Promise.reject(error);
@@ -71,10 +75,11 @@ export async function apiRequest<T = any>(
   } catch (error) {
     // Transform axios errors to more user-friendly format
     if (axios.isAxiosError(error)) {
-      const message = error.response?.data?.error || 
-                    error.response?.data?.message || 
-                    error.message;
-      
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message;
+
       throw new Error(message);
     }
     throw error;
@@ -84,19 +89,28 @@ export async function apiRequest<T = any>(
 // Convenience methods
 export const api = {
   get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> =>
-    apiRequest<T>({ ...config, method: 'GET', url }),
-  
-  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
-    apiRequest<T>({ ...config, method: 'POST', url, data }),
-  
-  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
-    apiRequest<T>({ ...config, method: 'PUT', url, data }),
-  
+    apiRequest<T>({ ...config, method: "GET", url }),
+
+  post: <T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> => apiRequest<T>({ ...config, method: "POST", url, data }),
+
+  put: <T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> => apiRequest<T>({ ...config, method: "PUT", url, data }),
+
   delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> =>
-    apiRequest<T>({ ...config, method: 'DELETE', url }),
-  
-  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> =>
-    apiRequest<T>({ ...config, method: 'PATCH', url, data }),
+    apiRequest<T>({ ...config, method: "DELETE", url }),
+
+  patch: <T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> => apiRequest<T>({ ...config, method: "PATCH", url, data }),
 };
 
 export default client;

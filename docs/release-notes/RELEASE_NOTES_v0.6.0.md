@@ -10,18 +10,21 @@ This release introduces a comprehensive **Full Content Extraction** system that 
 ### Key Highlights
 
 #### 📖 Extract Full Articles
+
 - **Manual Fetch Button**: Click "Fetch Full Content" in any article to extract the complete text
 - **Automatic Fetching**: Mark feeds as "partial content" to automatically fetch full articles during sync
 - **Smart Fallback**: If extraction fails, the app gracefully falls back to RSS content
 - **Offline Access**: Extracted content is stored locally for reading without internet
 
 #### 📊 Fetch Statistics Dashboard
+
 - **Comprehensive Analytics**: New dashboard at `/reader/fetch-stats` shows detailed extraction metrics
 - **Success Rates**: Monitor which feeds extract successfully vs those with issues
 - **Performance Tracking**: See average fetch times and identify slow feeds
 - **Usage Insights**: Track manual vs automatic fetch patterns
 
 #### 🎯 Smart Content Display
+
 - **Priority System**: Articles now display the best available content:
   1. AI summaries (shown in full)
   2. Full extracted content (4-line preview)
@@ -45,7 +48,7 @@ This release introduces a comprehensive **Full Content Extraction** system that 
 ### How to Use
 
 1. **Manual Extraction**: Click "Fetch Full Content" button in any article
-2. **Automatic Extraction**: 
+2. **Automatic Extraction**:
    - Click More (⋮) menu in article view
    - Toggle "This feed has partial content"
    - Future syncs will automatically fetch full content
@@ -54,6 +57,7 @@ This release introduces a comprehensive **Full Content Extraction** system that 
 ### Tested Feeds
 
 The following feeds have been verified to work with automatic extraction:
+
 - BBC News
 - Forbes Technology
 - Wawa News

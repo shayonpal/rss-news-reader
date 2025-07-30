@@ -3,15 +3,15 @@
  * Ensures health monitoring still works after removing test endpoints (RR-69)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createServer } from 'http';
-import { parse } from 'url';
-import next from 'next';
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { createServer } from "http";
+import { parse } from "url";
+import next from "next";
 
-const dev = process.env.NODE_ENV !== 'production';
+const dev = process.env.NODE_ENV !== "production";
 const port = 3148; // Use different port for testing
 
-describe('Health Endpoints - Post RR-69 Verification', () => {
+describe("Health Endpoints - Post RR-69 Verification", () => {
   let server: any;
   let app: any;
 
@@ -38,144 +38,156 @@ describe('Health Endpoints - Post RR-69 Verification', () => {
     await new Promise((resolve) => server.close(resolve));
   });
 
-  describe('Production Health Endpoints', () => {
-    it('should return 200 for /api/health/app', async () => {
+  describe("Production Health Endpoints", () => {
+    it("should return 200 for /api/health/app", async () => {
       const response = await fetch(`http://localhost:${port}/api/health/app`);
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
-      expect(data).toHaveProperty('status');
-      expect(data).toHaveProperty('timestamp');
-      expect(data).toHaveProperty('version');
+      expect(data).toHaveProperty("status");
+      expect(data).toHaveProperty("timestamp");
+      expect(data).toHaveProperty("version");
     });
 
-    it('should support ping parameter for /api/health/app', async () => {
-      const response = await fetch(`http://localhost:${port}/api/health/app?ping=true`);
+    it("should support ping parameter for /api/health/app", async () => {
+      const response = await fetch(
+        `http://localhost:${port}/api/health/app?ping=true`
+      );
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
-      expect(data).toHaveProperty('status', 'ok');
-      expect(data).toHaveProperty('ping', true);
+      expect(data).toHaveProperty("status", "ok");
+      expect(data).toHaveProperty("ping", true);
     });
 
-    it('should return 200 for /api/health/db', async () => {
+    it("should return 200 for /api/health/db", async () => {
       const response = await fetch(`http://localhost:${port}/api/health/db`);
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
-      expect(data).toHaveProperty('database');
-      expect(data).toHaveProperty('timestamp');
+      expect(data).toHaveProperty("database");
+      expect(data).toHaveProperty("timestamp");
     });
 
-    it('should return 200 for /api/health/freshness', async () => {
-      const response = await fetch(`http://localhost:${port}/api/health/freshness`);
+    it("should return 200 for /api/health/freshness", async () => {
+      const response = await fetch(
+        `http://localhost:${port}/api/health/freshness`
+      );
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
-      expect(data).toHaveProperty('timestamp');
+      expect(data).toHaveProperty("timestamp");
       // Should have freshness metrics
-      expect(data).toHaveProperty('articles');
+      expect(data).toHaveProperty("articles");
     });
 
-    it('should return 200 for /api/health/cron', async () => {
+    it("should return 200 for /api/health/cron", async () => {
       const response = await fetch(`http://localhost:${port}/api/health/cron`);
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
-      expect(data).toHaveProperty('status');
-      expect(data).toHaveProperty('lastRun');
+      expect(data).toHaveProperty("status");
+      expect(data).toHaveProperty("lastRun");
     });
   });
 
-  describe('Removed Test Endpoints', () => {
+  describe("Removed Test Endpoints", () => {
     const removedEndpoints = [
-      '/api/test-supabase',
-      '/api/test-prompt-config',
-      '/api/test-api-endpoints',
-      '/api/test-refresh-stats',
-      '/api/debug/data-cleanup'
+      "/api/test-supabase",
+      "/api/test-prompt-config",
+      "/api/test-api-endpoints",
+      "/api/test-refresh-stats",
+      "/api/debug/data-cleanup",
     ];
 
-    removedEndpoints.forEach(endpoint => {
+    removedEndpoints.forEach((endpoint) => {
       it(`should return 404 for ${endpoint}`, async () => {
         const response = await fetch(`http://localhost:${port}${endpoint}`);
         expect(response.status).toBe(404);
-        
+
         // Should not return any sensitive data
         const text = await response.text();
-        expect(text).not.toContain('supabase');
-        expect(text).not.toContain('config');
-        expect(text).not.toContain('debug');
+        expect(text).not.toContain("supabase");
+        expect(text).not.toContain("config");
+        expect(text).not.toContain("debug");
       });
 
       it(`should return 404 for POST ${endpoint}`, async () => {
         const response = await fetch(`http://localhost:${port}${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ test: true })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ test: true }),
         });
         expect(response.status).toBe(404);
       });
     });
   });
 
-  describe('Core API Functionality', () => {
-    it('should still serve authentication status endpoint', async () => {
-      const response = await fetch(`http://localhost:${port}/api/auth/inoreader/status`);
+  describe("Core API Functionality", () => {
+    it("should still serve authentication status endpoint", async () => {
+      const response = await fetch(
+        `http://localhost:${port}/api/auth/inoreader/status`
+      );
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
-      expect(data).toHaveProperty('authenticated');
+      expect(data).toHaveProperty("authenticated");
     });
 
-    it('should still serve feeds endpoint', async () => {
+    it("should still serve feeds endpoint", async () => {
       const response = await fetch(`http://localhost:${port}/api/feeds`);
       // Might be 401 if not authenticated, but should not be 404
       expect([200, 401]).toContain(response.status);
     });
 
-    it('should still serve articles endpoint', async () => {
+    it("should still serve articles endpoint", async () => {
       const response = await fetch(`http://localhost:${port}/api/articles`);
       // Might be 401 if not authenticated, but should not be 404
       expect([200, 401]).toContain(response.status);
     });
   });
 
-  describe('Error Response Consistency', () => {
-    it('should return consistent 404 error format', async () => {
-      const response1 = await fetch(`http://localhost:${port}/api/test-supabase`);
-      const response2 = await fetch(`http://localhost:${port}/api/non-existent-endpoint`);
-      
+  describe("Error Response Consistency", () => {
+    it("should return consistent 404 error format", async () => {
+      const response1 = await fetch(
+        `http://localhost:${port}/api/test-supabase`
+      );
+      const response2 = await fetch(
+        `http://localhost:${port}/api/non-existent-endpoint`
+      );
+
       expect(response1.status).toBe(404);
       expect(response2.status).toBe(404);
-      
+
       // Both should have similar error responses
       const text1 = await response1.text();
       const text2 = await response2.text();
-      
+
       // Should have similar structure (both Next.js 404s)
       expect(text1.length).toBeGreaterThan(0);
       expect(text2.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Health Endpoint Response Times', () => {
-    it('should respond quickly to health checks', async () => {
+  describe("Health Endpoint Response Times", () => {
+    it("should respond quickly to health checks", async () => {
       const start = Date.now();
-      const response = await fetch(`http://localhost:${port}/api/health/app?ping=true`);
+      const response = await fetch(
+        `http://localhost:${port}/api/health/app?ping=true`
+      );
       const duration = Date.now() - start;
-      
+
       expect(response.status).toBe(200);
       expect(duration).toBeLessThan(1000); // Should respond within 1 second
     });
 
-    it('should handle concurrent health checks', async () => {
-      const promises = Array(10).fill(null).map(() => 
-        fetch(`http://localhost:${port}/api/health/app`)
-      );
-      
+    it("should handle concurrent health checks", async () => {
+      const promises = Array(10)
+        .fill(null)
+        .map(() => fetch(`http://localhost:${port}/api/health/app`));
+
       const responses = await Promise.all(promises);
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect(response.status).toBe(200);
       });
     });

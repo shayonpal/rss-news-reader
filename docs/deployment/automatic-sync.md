@@ -7,6 +7,7 @@ The RSS Reader includes an automatic sync service that runs twice daily to fetch
 ## Schedule
 
 The sync runs automatically at:
+
 - **2:00 AM** America/Toronto (EST/EDT)
 - **2:00 PM** America/Toronto (EST/EDT)
 
@@ -15,18 +16,21 @@ This schedule ensures fresh content is available for morning and evening reading
 ## Components
 
 ### 1. Cron Service (`/src/server/cron.js`)
+
 - Manages the scheduled sync tasks
 - Logs all sync operations to JSONL format
 - Handles sync orchestration and error recovery
 - Updates sync metadata in Supabase
 
 ### 2. Sync API Endpoint (`/api/sync`)
+
 - Handles the actual sync logic
 - Fetches data from Inoreader API
 - Updates Supabase with new articles
 - Tracks API usage and rate limits
 
 ### 3. Metadata Endpoint (`/api/sync/metadata`)
+
 - Updates sync statistics in Supabase
 - Tracks success/failure counts
 - Stores last sync timestamp and status
@@ -145,17 +149,18 @@ cat logs/sync-cron.jsonl | jq 'select(.duration > 60000)'
 
 The service tracks sync statistics in the `sync_metadata` table:
 
-| Key | Description |
-|-----|-------------|
-| `last_sync_time` | Timestamp of last sync attempt |
-| `last_sync_status` | Either 'success' or 'failed' |
-| `last_sync_error` | Error message if failed |
-| `sync_success_count` | Total successful syncs |
-| `sync_failure_count` | Total failed syncs |
+| Key                  | Description                    |
+| -------------------- | ------------------------------ |
+| `last_sync_time`     | Timestamp of last sync attempt |
+| `last_sync_status`   | Either 'success' or 'failed'   |
+| `last_sync_error`    | Error message if failed        |
+| `sync_success_count` | Total successful syncs         |
+| `sync_failure_count` | Total failed syncs             |
 
 ## API Rate Limits
 
 The sync service respects Inoreader's API limits:
+
 - Maximum 100 API calls per day
 - Each sync uses approximately 4-5 API calls
 - Automatic syncs (2 per day) use ~10 calls

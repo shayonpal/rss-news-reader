@@ -7,7 +7,7 @@
  * Check if running in debug/development mode
  */
 export function isDebugMode(): boolean {
-  return process.env.NODE_ENV === 'development';
+  return process.env.NODE_ENV === "development";
 }
 
 /**
@@ -15,7 +15,7 @@ export function isDebugMode(): boolean {
  */
 export function debugLog(...args: any[]): void {
   if (isDebugMode()) {
-    console.log('[DEBUG]', ...args);
+    console.log("[DEBUG]", ...args);
   }
 }
 

@@ -11,12 +11,14 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 **Access**: http://100.96.166.53:3080 (within Tailscale network)
 
 #### Existing Monitors
+
 - **Production App**: HTTP check every 60s on health endpoint
 - **Sync Server**: HTTP check every 60s on port 3001
 - **Database**: Health check every 300s
 - **Cron Service**: Push monitor expecting heartbeat every 15 hours
 
 #### New Sync-Specific Monitors (To Configure)
+
 1. **Sync API Endpoint** - Verify `/reader/api/sync` availability
 2. **Article Freshness** - Check if articles are being updated
 3. **Sync Success Rate** - Push monitor for successful syncs
@@ -25,6 +27,7 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 ### 2. Internal Service Monitor
 
 **Script**: `/scripts/monitor-services.sh`
+
 - Runs every 2 minutes
 - Auto-restarts failed services (with rate limiting)
 - Sends batched Discord alerts
@@ -33,6 +36,7 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 ### 3. Sync Health Monitor
 
 **Script**: `/scripts/sync-health-monitor.sh`
+
 - Dedicated sync monitoring
 - Tracks:
   - Consecutive sync failures
@@ -48,6 +52,7 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 ### 4. Enhanced Cron Service
 
 **Updates to** `src/server/cron.js`:
+
 - Immediate Discord alerts for 404/500 errors
 - Uptime Kuma push notifications
 - Detailed error logging
@@ -56,21 +61,25 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 ## Health Check Endpoints
 
 ### Existing
+
 - `/api/health/app` - Application health
 - `/api/health/db` - Database connectivity
 
 ### New
+
 - `/api/health/freshness` - Article freshness check
 - `/api/health/cron` - Cron service status
 
 ## Alert Channels
 
 ### Discord Webhook
+
 - Immediate alerts for critical failures
 - Batched alerts for service issues
 - @everyone mentions for critical situations
 
 ### Uptime Kuma Dashboard
+
 - Visual monitoring interface
 - Historical uptime data
 - Response time graphs
@@ -78,10 +87,13 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 ## Monitoring Scripts
 
 ### Quick Status Check
+
 ```bash
 ./scripts/monitor-dashboard.sh
 ```
+
 Shows comprehensive status of:
+
 - All services
 - PM2 processes
 - Sync health
@@ -89,6 +101,7 @@ Shows comprehensive status of:
 - Recent alerts
 
 ### Start Monitoring
+
 ```bash
 # Start internal monitor
 ./scripts/monitor-services.sh start
@@ -100,6 +113,7 @@ Shows comprehensive status of:
 ```
 
 ### Manual Sync Check
+
 ```bash
 # Check sync status
 ./scripts/sync-health-monitor.sh check
@@ -113,11 +127,13 @@ tail -20 logs/sync-cron.jsonl | jq .
 ### Common Issues
 
 1. **404 Errors** - API endpoint mismatch
+
    - Check `NEXT_PUBLIC_BASE_URL` in ecosystem.config.js
    - Verify production app is on port 3147
    - Check API route handlers exist
 
 2. **500 Errors** - Server errors
+
    - Check OAuth tokens: `~/.rss-reader/tokens.json`
    - Verify Inoreader API limits (100/day)
    - Check server logs: `pm2 logs rss-sync-cron`
@@ -130,31 +146,34 @@ tail -20 logs/sync-cron.jsonl | jq .
 ### Recovery Steps
 
 1. **Immediate Actions**
+
    ```bash
    # Check all services
    ./scripts/monitor-dashboard.sh
-   
+
    # Restart sync services
    pm2 restart rss-sync-cron rss-sync-server
-   
+
    # Manual sync
    curl -X POST http://localhost:3147/reader/api/sync
    ```
 
 2. **Verify OAuth Tokens**
+
    ```bash
    # Check token file exists
    ls -la ~/.rss-reader/tokens.json
-   
+
    # Test OAuth (if needed)
    npm run setup:oauth
    ```
 
 3. **Check API Endpoints**
+
    ```bash
    # Test sync endpoint
    curl -I http://localhost:3147/reader/api/sync
-   
+
    # Should return 405 (Method Not Allowed) for GET
    ```
 

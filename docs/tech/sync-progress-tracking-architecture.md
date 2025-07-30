@@ -7,12 +7,14 @@ This document describes the dual-write sync progress tracking system implemented
 ## Problem Statement
 
 ### The Issue
+
 - **User Experience**: Manual sync operations showed timeout errors after 2 minutes
 - **False Negatives**: Syncs actually completed in ~10 seconds but appeared to fail
 - **Root Cause**: Next.js serverless functions don't share memory between invocations
 - **Impact**: Status endpoint returned 404 for sync IDs stored only in memory
 
 ### Technical Challenges
+
 1. **Serverless Architecture**: Each API invocation runs in isolation
 2. **PM2 Process Management**: Server restarts would lose all in-memory state
 3. **Client Expectations**: Progress bars required real-time updates (polling every 2 seconds)
@@ -78,6 +80,7 @@ The implementation uses a dual-write pattern with automatic fallback:
 **Location**: `/tmp/sync-status-{syncId}.json`
 
 **Structure**:
+
 ```json
 {
   "syncId": "sync_1234567890",
@@ -94,12 +97,14 @@ The implementation uses a dual-write pattern with automatic fallback:
 ```
 
 **Benefits**:
+
 - Fast read/write operations (no network latency)
 - No connection pooling overhead
 - Survives across serverless invocations
 - Simple JSON serialization
 
 **Limitations**:
+
 - Lost on server restart (PM2 restart, crash, reboot)
 - Not accessible across multiple servers
 - Limited to server's file system
@@ -109,6 +114,7 @@ The implementation uses a dual-write pattern with automatic fallback:
 **Table**: `sync_status`
 
 **Schema**:
+
 ```sql
 CREATE TABLE sync_status (
     sync_id TEXT PRIMARY KEY,
@@ -137,12 +143,14 @@ CREATE POLICY "Authenticated and anon users can read sync_status"
 ```
 
 **Benefits**:
+
 - Survives server restarts and crashes
 - Accessible from any server instance
 - Built-in retention with timestamp tracking
 - Queryable for analytics and debugging
 
 **Trade-offs**:
+
 - Network latency for each operation
 - Database connection overhead
 - Requires connection pooling management
@@ -150,29 +158,32 @@ CREATE POLICY "Authenticated and anon users can read sync_status"
 ### 3. Cleanup Strategy
 
 **Timing**:
+
 - 60-second delay after completion (success or failure)
 - Prevents premature 404s for clients still polling
 - 24-hour retention for both storage layers
 
 **Implementation**:
+
 ```typescript
 // Delayed cleanup after completion
 setTimeout(async () => {
-    // Clean up file
-    try {
-        await fs.unlink(statusFilePath);
-    } catch (error) {
-        // File might already be deleted
-    }
-    
-    // Database cleanup handled by scheduled job
+  // Clean up file
+  try {
+    await fs.unlink(statusFilePath);
+  } catch (error) {
+    // File might already be deleted
+  }
+
+  // Database cleanup handled by scheduled job
 }, 60000); // 60 seconds
 ```
 
 **Database Cleanup**:
+
 ```sql
 -- Scheduled cleanup of old records
-DELETE FROM sync_status 
+DELETE FROM sync_status
 WHERE created_at < now() - interval '24 hours';
 ```
 
@@ -181,6 +192,7 @@ WHERE created_at < now() - interval '24 hours';
 ### 1. Start Sync - POST `/api/sync`
 
 **Request**:
+
 ```json
 {
   "type": "full" | "incremental",
@@ -191,6 +203,7 @@ WHERE created_at < now() - interval '24 hours';
 ```
 
 **Response**:
+
 ```json
 {
   "syncId": "sync_1234567890",
@@ -200,6 +213,7 @@ WHERE created_at < now() - interval '24 hours';
 ```
 
 **Process**:
+
 1. Generate unique sync ID
 2. Create initial status in both file and database
 3. Start async sync operation
@@ -208,6 +222,7 @@ WHERE created_at < now() - interval '24 hours';
 ### 2. Check Status - GET `/api/sync/status/[syncId]`
 
 **Response**:
+
 ```json
 {
   "syncId": "sync_1234567890",
@@ -223,6 +238,7 @@ WHERE created_at < now() - interval '24 hours';
 ```
 
 **Read Strategy**:
+
 1. First check file system (fast path)
 2. If not found, check database (fallback)
 3. If not found in either, return 404
@@ -234,7 +250,7 @@ WHERE created_at < now() - interval '24 hours';
 **File**: `src/lib/db/supabase-admin.ts`
 
 ```typescript
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 let supabaseAdmin: ReturnType<typeof createClient> | null = null;
 
@@ -246,8 +262,8 @@ export function getSupabaseAdmin() {
       {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
-        }
+          persistSession: false,
+        },
       }
     );
   }
@@ -256,6 +272,7 @@ export function getSupabaseAdmin() {
 ```
 
 **Benefits**:
+
 - Single connection instance per process
 - Reduced connection overhead
 - Proper connection reuse
@@ -266,6 +283,7 @@ export function getSupabaseAdmin() {
 ### Health Checks
 
 **Sync Health Endpoint**: `/api/health/sync`
+
 ```json
 {
   "status": "healthy",
@@ -284,11 +302,13 @@ export function getSupabaseAdmin() {
 ### Logging
 
 **Log Locations**:
+
 - Sync operations: `logs/sync-cron.jsonl`
 - API calls: `logs/inoreader-api-calls.jsonl`
 - Health checks: `logs/sync-health.jsonl`
 
 **Log Analysis Commands**:
+
 ```bash
 # Monitor active syncs
 tail -f logs/sync-cron.jsonl | jq 'select(.status == "in_progress")'
@@ -305,11 +325,13 @@ cat logs/sync-cron.jsonl | jq 'select(.status == "failed")'
 **Common Issues**:
 
 1. **Status returns 404 immediately**
+
    - Check if file system is writable
    - Verify database connection
    - Check for permission issues
 
 2. **Progress stuck at certain percentage**
+
    - Check API rate limits
    - Review error logs for specific stage
    - Verify network connectivity
@@ -320,6 +342,7 @@ cat logs/sync-cron.jsonl | jq 'select(.status == "failed")'
    - Monitor file system and database
 
 **Debug Commands**:
+
 ```bash
 # Check active sync files
 ls -la /tmp/sync-status-*.json
@@ -353,16 +376,19 @@ psql -c "SELECT count(*) FROM sync_status WHERE created_at < now() - interval '2
 ### Potential Improvements
 
 1. **Redis Integration** (if multi-server deployment needed)
+
    - Faster than database
    - Built-in TTL support
    - Pub/sub for real-time updates
 
 2. **WebSocket Support** (for true real-time updates)
+
    - Eliminate polling overhead
    - Instant progress updates
    - Better user experience
 
 3. **Sync Queue Management**
+
    - Prevent concurrent syncs
    - Queue multiple sync requests
    - Priority-based processing
@@ -383,6 +409,7 @@ psql -c "SELECT count(*) FROM sync_status WHERE created_at < now() - interval '2
 **Decision**: Dual-write pattern with file system (primary) and database (fallback)
 
 **Consequences**:
+
 - ✅ Reliable progress tracking across all scenarios
 - ✅ Fast performance for normal operations
 - ✅ Survives server restarts with database fallback
@@ -391,6 +418,7 @@ psql -c "SELECT count(*) FROM sync_status WHERE created_at < now() - interval '2
 - ⚠️ Requires cleanup management for both layers
 
 **Alternatives Considered**:
+
 1. **Database-only**: Too slow for frequent updates
 2. **Redis**: Overkill for single-user application
 3. **In-memory only**: Lost on serverless function cycling

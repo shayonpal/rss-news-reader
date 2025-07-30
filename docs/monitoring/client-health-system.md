@@ -9,18 +9,21 @@ The RSS News Reader includes a comprehensive health check system that monitors t
 ### Core Components
 
 1. **Health Check Service** (`/src/lib/health/health-check-service.ts`)
+
    - Singleton service that performs health checks
    - Monitors database, APIs, cache, authentication, and network
    - Tracks metrics and response times
    - Calculates overall system health status
 
 2. **Health Store** (`/src/lib/stores/health-store.ts`)
+
    - Zustand store for health state management
    - Manages check history, alerts, and settings
    - Persists configuration and critical data
    - Provides health trend analysis
 
 3. **Health Scheduler** (`/src/lib/health/health-scheduler.ts`)
+
    - Automated health check scheduling
    - Respects app visibility and network status
    - Configurable check intervals
@@ -35,26 +38,31 @@ The RSS News Reader includes a comprehensive health check system that monitors t
 ## Health Check Categories
 
 ### 1. Database Health
+
 - **Connection Check**: Verifies IndexedDB connectivity
 - **Storage Check**: Monitors storage usage and quota
 - **Integrity Check**: Detects orphaned records
 
 ### 2. API Health
+
 - **Inoreader API**: Checks authentication and rate limits
 - **Claude API**: Verifies AI service availability
 - **Response Times**: Tracks API performance
 
 ### 3. Cache Health
+
 - **Service Worker Cache**: Monitors cache status
 - **LocalStorage**: Checks availability and usage
 - **Cache Statistics**: Hit/miss rates and size
 
 ### 4. Authentication Health
+
 - **Auth Status**: Verifies user authentication
 - **Token Validity**: Checks token expiration
 - **Refresh Capability**: Ensures token refresh works
 
 ### 5. Network Health
+
 - **Connectivity**: Basic online/offline status
 - **External Access**: Verifies internet connectivity
 - **Connection Quality**: Network type and speed
@@ -69,9 +77,11 @@ The RSS News Reader includes a comprehensive health check system that monitors t
 ## API Endpoints
 
 ### GET /api/health
+
 Main health check endpoint that returns comprehensive system status.
 
 **Response:**
+
 ```json
 {
   "overall": "healthy",
@@ -96,9 +106,11 @@ Main health check endpoint that returns comprehensive system status.
 ```
 
 ### GET /api/health?ping=true
+
 Simple ping endpoint for basic availability check.
 
 ### GET /api/health/claude
+
 Claude API specific health check endpoint.
 
 ## Configuration
@@ -118,12 +130,14 @@ setCheckInterval(5);
 The system generates alerts based on health status:
 
 ### Alert Severities
+
 - **Info**: Informational messages
 - **Warning**: Non-critical issues requiring attention
 - **Error**: Significant problems affecting functionality
 - **Critical**: System-wide failures requiring immediate action
 
 ### Alert Management
+
 - Alerts can be acknowledged to mark as read
 - Alerts can be dismissed to remove from view
 - Auto-resolve alerts clear automatically when issues are fixed
@@ -132,20 +146,22 @@ The system generates alerts based on health status:
 ## Usage Examples
 
 ### Basic Health Check
+
 ```typescript
-import { healthCheckService } from '@/lib/health/health-check-service';
+import { healthCheckService } from "@/lib/health/health-check-service";
 
 const health = await healthCheckService.checkHealth();
-console.log('System status:', health.overall);
+console.log("System status:", health.overall);
 ```
 
 ### Using Health Store
+
 ```typescript
 import { useHealthStore } from '@/lib/stores/health-store';
 
 function HealthStatus() {
   const { currentHealth, performHealthCheck } = useHealthStore();
-  
+
   return (
     <div>
       Status: {currentHealth?.overall || 'checking...'}
@@ -156,11 +172,12 @@ function HealthStatus() {
 ```
 
 ### Health Status Widget
+
 ```tsx
-import { HealthStatusWidget } from '@/components/health/health-status-widget';
+import { HealthStatusWidget } from "@/components/health/health-status-widget";
 
 // Add to your layout
-<HealthStatusWidget />
+<HealthStatusWidget />;
 ```
 
 ## Monitoring Best Practices
@@ -176,16 +193,19 @@ import { HealthStatusWidget } from '@/components/health/health-status-widget';
 ### Common Issues
 
 1. **High Storage Usage**
+
    - Run database vacuum to clean orphaned data
    - Reduce article retention period
    - Clear old API usage records
 
 2. **API Rate Limits**
+
    - Reduce sync frequency
    - Batch API operations
    - Monitor usage patterns
 
 3. **Authentication Failures**
+
    - Check token expiration
    - Verify OAuth configuration
    - Re-authenticate if needed

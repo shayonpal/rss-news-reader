@@ -375,15 +375,18 @@ The OAuth tokens file (`~/.rss-reader/tokens.json`) was missing from the server,
 ### Investigation Steps
 
 1. **PM2 Process Status Check**:
+
    - Confirmed the sync server was running (`rss-sync-server`)
    - Process showed healthy status but logs revealed authentication failures
 
 2. **Log Analysis**:
+
    - Reviewed sync server logs: `pm2 logs rss-sync-server`
    - Found repeated errors: "No tokens found" every 5 minutes
    - Errors had been occurring since approximately 1:00 AM
 
 3. **Database Queue Status**:
+
    - Checked `sync_queue` table in Supabase
    - Found 147 pending items with increasing retry attempts
    - All items were read/unread actions waiting to sync
@@ -395,17 +398,20 @@ The OAuth tokens file (`~/.rss-reader/tokens.json`) was missing from the server,
 ### Solution Implemented
 
 1. **Created Manual OAuth Setup Script**:
+
    - Developed `server/scripts/manual-oauth.js` to handle OAuth flow
    - Script handles the full OAuth authorization process
    - Includes token encryption and proper file storage
 
 2. **OAuth Re-authorization Process**:
+
    - Used Playwright MCP to navigate to Inoreader OAuth page
    - Successfully authorized the RSS Reader application
    - Obtained new authorization code from redirect URL
    - Exchanged authorization code for access/refresh tokens
 
 3. **Environment Configuration Updates**:
+
    - Updated `ecosystem.config.js` to include missing environment variables:
      ```javascript
      INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
@@ -423,11 +429,13 @@ The OAuth tokens file (`~/.rss-reader/tokens.json`) was missing from the server,
 ### Outcome
 
 1. **Authentication Restored**:
+
    - OAuth tokens successfully saved to `~/.rss-reader/tokens.json`
    - Tokens properly encrypted using existing encryption key
    - Sync server can now authenticate with Inoreader API
 
 2. **Queue Processing**:
+
    - 177 failed items (increased from initial 147) were successfully synced
    - All pending read/unread actions propagated to Inoreader
    - Queue cleared completely after successful sync
@@ -450,4 +458,4 @@ The OAuth tokens file (`~/.rss-reader/tokens.json`) was missing from the server,
 2. Monitor sync server logs for authentication errors
 3. Create automated alerts for sync queue buildup
 4. Consider token backup strategy for disaster recovery
-  EOF < /dev/null
+   EOF < /dev/null

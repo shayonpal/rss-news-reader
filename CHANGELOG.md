@@ -3,6 +3,7 @@
 ## [Unreleased] - Wednesday, July 30, 2025 at 3:25 AM
 
 ### Changed - Wednesday, July 30, 2025 at 3:25 AM
+
 - **Removed Unused Authentication Components (RR-71)**
   - Deleted 13 unused authentication-related files (921 lines of code removed)
   - Removed components: `auth-status.tsx`, `login-button.tsx`, `logout-button.tsx`, `user-profile.tsx`, `auth-guard.tsx`
@@ -17,6 +18,7 @@
   - Comprehensive test suite added (46 tests) to prevent regression
 
 ### Technical - Wednesday, July 30, 2025 at 1:51 AM
+
 - **Log Management System Implementation (RR-75): Clean Up Log Files (30MB)**
   - Reduced log directory from 30MB to 1.8MB (94% reduction)
   - Implemented PM2 auto-rotation: 1MB max size, 3 file retention, compression enabled
@@ -28,6 +30,7 @@
 - **Agent Architecture Reorganization**: Moved unused agent definitions to `.claude/disabled-agents/` for cleaner project structure
 
 ### Fixed - Wednesday, July 30, 2025 at 1:06 AM
+
 - **Critical Security Fix (RR-69): Removed Test/Debug Endpoints**
   - Removed 9 test/debug endpoints that exposed sensitive system information
   - Deleted test pages: `/test-supabase`, `/test-server-api`, `/test-performance`, `/test-article-controls`
@@ -40,6 +43,7 @@
 ## [0.8.0] - Monday, July 28, 2025 at 1:05 PM
 
 ### Fixed - Monday, July 28, 2025 at 1:05 PM
+
 - **Resolved 2-Day Sync Service Failure (RR-26)**
   - Fixed sync service failures caused by incorrect API paths missing `/reader` prefix
   - Corrected `NEXT_PUBLIC_BASE_URL` configuration in ecosystem.config.js to include proper path
@@ -48,6 +52,7 @@
   - Enhanced error logging with detailed failure analysis in JSONL format
 
 ### Added - Monday, July 28, 2025 at 1:05 PM
+
 - **Comprehensive Monitoring and Alerting System**
   - Added multi-layered monitoring approach to prevent undetected sync failures
   - Created `/scripts/monitor-dashboard.sh` for comprehensive service status overview
@@ -55,13 +60,14 @@
   - Added monitoring service auto-restart with rate limiting via `/scripts/monitor-services.sh`
   - Created `/scripts/setup-sync-monitors.js` for Uptime Kuma integration setup
   - Enhanced startup sequence with monitoring service initialization
-  
 - **New Health Check Endpoints**
+
   - Added `/api/health/freshness` endpoint to check article data freshness
   - Added `/api/health/cron` endpoint to monitor cron service status
   - Enhanced existing health checks with sync-specific monitoring
 
 - **Enhanced Cron Service Monitoring**
+
   - Added health file generation for external monitoring
   - Implemented immediate Discord webhook alerts for critical sync failures
   - Added Uptime Kuma push monitor integration for heartbeat tracking
@@ -74,6 +80,7 @@
   - Added technical implementation notes for future UI improvements
 
 ### Changed - Monday, July 28, 2025 at 1:05 PM
+
 - **Enhanced Sync Error Handling**
   - Improved error categorization (404 endpoint errors vs 500 server errors)
   - Added Discord @everyone mentions for critical sync failures requiring immediate attention
@@ -81,6 +88,7 @@
   - Updated startup sequence to include monitoring service initialization
 
 ### Documentation - Monday, July 28, 2025 at 1:05 PM
+
 - **Added Comprehensive Monitoring Documentation**
   - Created `docs/tech/monitoring-and-alerting.md` with complete monitoring system overview
   - Documented all monitoring layers: Uptime Kuma, internal monitors, sync health tracking
@@ -89,6 +97,7 @@
   - Created `docs/issues/RR-26-freshness-perception-analysis.md` with detailed freshness analysis
 
 ### Commands - Monday, July 28, 2025 at 11:01 AM
+
 - **Updated next-task Command to Exclude Personal Tracker Issues**
   - Added exclusion criteria for "Quick Ideas" project (project ID: quick-ideas-5e31ea73e559) in Task Selection Criteria section
   - Added clarification note in Recommendation Format section that Quick Ideas is filtered out as personal tracker
@@ -96,6 +105,7 @@
   - Prevents accidental assignment of non-development tasks from personal tracking projects
 
 ### Documentation - Monday, July 28, 2025 at 10:56 AM
+
 - **Fixed doc-admin Agent Service Model and CHANGELOG Format**
   - Updated CHANGELOG entry format to use user's preferred date format:
     - Changed from "YYYY-MM-DD" to "Day, Month Date, Year at Time"
@@ -108,6 +118,7 @@
   - Ensures consistency and prevents file operation conflicts
 
 ### Documentation - Monday, July 28, 2025 at 10:52 AM
+
 - **Refactored doc-admin Agent to Clarify Service Boundaries and CHANGELOG Standards**
   - Removed "Domain Expert Support Services" section (API docs now belong to devops-expert)
   - Replaced "Documentation Service Scope" with clearer "Domain Documentation Ownership Map" table
@@ -121,6 +132,7 @@
   - Established clear ownership model: doc-admin provides services, domain experts own content
 
 ### Documentation - Monday, July 28, 2025 at 10:45 AM
+
 - **Added Release Workflow Error Handling to program-manager Agent**
   - Added new section "Release Workflow Error Handling" (section 12) after Proactive Actions
   - Documented common release blockers to monitor:
@@ -138,6 +150,7 @@
   - Addresses specific RSS Reader constraints (memory limits, PM2 service sizes)
 
 ### Documentation - Monday, July 28, 2025 at 10:42 AM
+
 - **Enhanced program-manager Agent with Pre-Review & Bug Documentation Process**
   - Added new section "Pre-Review & Bug Documentation" after Issue Lifecycle Management
   - Established requirements before moving issues to "In Review" status:
@@ -160,6 +173,7 @@
   - Builds knowledge base of common bug patterns for future prevention
 
 ### Documentation - Monday, July 28, 2025 at 10:30 AM
+
 - **Added Documentation Ownership to Domain Expert Agents**
   - Updated supabase-dba with "Database Documentation Ownership" section
   - Added ownership of database schema docs, performance guides, migration docs
@@ -172,6 +186,7 @@
   - Ensures clear separation between content expertise and file management
 
 ### Documentation - Monday, July 28, 2025 at 10:28 AM
+
 - **Updated devops-expert Agent with Port Restrictions and Log File Paths**
   - Added "Development Server Port Management" subsection under Service Management
   - Documented CRITICAL requirement that dev server must ALWAYS run on port 3000
@@ -179,12 +194,13 @@
   - Specified to only kill processes if NOT the RSS Reader dev server
   - Emphasized never automatically changing to a different port
   - Expanded "Key File Locations" with comprehensive PM2 log file paths
-  - Added all rotated log files: prod-error-*.log, prod-out-*.log, sync-server-*.log, dev-*.log
+  - Added all rotated log files: prod-error-_.log, prod-out-_.log, sync-server-_.log, dev-_.log
   - Included other important logs: sync-cron.jsonl and inoreader-api-calls.jsonl
   - Updated Troubleshooting section to reference specific log files instead of generic logs directory
   - Ensures devops-expert knows exact port requirements and all available log file locations
 
 ### Documentation - Monday, July 28, 2025 at 10:19 AM
+
 - **Enhanced devops-expert Agent with Documentation Ownership and Memory Management**
   - Added new "Infrastructure Documentation Ownership" section defining ownership of infrastructure docs
   - Listed specific documentation paths owned by devops-expert (deployment guides, monitoring docs, etc.)
@@ -198,6 +214,7 @@
   - Ensures devops-expert understands both documentation responsibilities and critical resource constraints
 
 ### Documentation - Monday, July 28, 2025 at 10:05 AM
+
 - **Updated devops-expert Agent with Correct Uptime Kuma Status**
   - Changed Uptime Kuma section from "Planned" to "Fully implemented (RR-19 completed)"
   - Added comprehensive details about active implementation including 6 active monitors
@@ -209,6 +226,7 @@
   - Ensures devops-expert has accurate current state of monitoring infrastructure
 
 ### Documentation - Monday, July 28, 2025 at 10:02 AM
+
 - **Added Network & Access Context to supabase-dba Agent**
   - Added new "Network & Access Context" section after initial paragraph
   - Documented Tailscale VPN-only application access (100.96.166.53)
@@ -219,6 +237,7 @@
   - Ensures DBA understands network architecture distinction between app and database hosting
 
 ### Documentation - Monday, July 28, 2025 at 10:01 AM
+
 - **Enhanced devops-expert Agent with Infrastructure Documentation**
   - Updated Project Context with comprehensive Tailscale network details
   - Added explicit documentation about Tailscale VPN requirement and no public internet exposure
@@ -231,6 +250,7 @@
   - Ensures devops-expert has clear ownership of infrastructure monitoring and dependencies
 
 ### Documentation - Monday, July 28, 2025 at 9:57 AM
+
 - **Fixed Git Hooks Context in git-expert Agent**
   - Corrected incorrect reference to ".claude directory" for git hooks configuration
   - Updated to accurately describe git hooks as being in .git/hooks/ or managed by tools like husky
@@ -240,6 +260,7 @@
   - Ensures git-expert agent has accurate understanding of git hooks vs Claude Code configuration
 
 ### Documentation - Monday, July 28, 2025 at 9:54 AM
+
 - **Added Git Hooks & Branch Protection Section to git-expert Agent**
   - Created new section after "Permission Handling" covering git hooks and main branch protection
   - Added "Git Hooks Context" explaining project's use of pre-commit hooks in .claude directory
@@ -251,6 +272,7 @@
   - Prevents bypassing of quality checks without explicit user permission
 
 ### Documentation - Monday, July 28, 2025 at 9:51 AM
+
 - **Enhanced doc-admin Agent with API Documentation Management**
   - Added API documentation ownership to core responsibilities
   - Created new "Documentation Types" section listing all documentation categories
@@ -264,6 +286,7 @@
   - Maintains consistency with docs/api/server-endpoints.md as primary API reference
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:45 AM
+
 - **Rewrote health-check Command as User Directive**
   - Transformed health-check.md from Claude's perspective to user's imperative instructions
   - Changed "I'll perform" language to "Perform" and other commanding directives
@@ -274,6 +297,7 @@
   - Better consistency across all command documentation in the .claude/commands directory
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:43 AM
+
 - **Created health-check Slash Command**
   - Added comprehensive health check command at `.claude/commands/health-check.md`
   - Supports component-specific checks: api, db, sync, services, or all
@@ -284,6 +308,7 @@
   - Enables proactive monitoring and quick troubleshooting of RSS News Reader system
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:40 AM
+
 - **Compacted program-manager Agent Documentation by 40%**
   - Consolidated redundant sections while preserving all functionality
   - Merged ADHD-friendly features into relevant operational sections
@@ -296,6 +321,7 @@
   - Documentation is now more scannable and action-oriented for quick reference
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:34 AM
+
 - **Enhanced program-manager Agent with Specification Change Protocol**
   - Added new section "Specification Change Protocol" documenting that Linear comments form the evolving spec
   - Added core responsibilities for monitoring spec changes and maintaining version awareness
@@ -307,6 +333,7 @@
   - All team members now understand that issue comments are contractual and must be considered in implementation
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:27 AM
+
 - **Updated next-task Command to Remove TODO File Reference**
   - Changed "Suggest creating new issues from TODOs" to "Suggest creating new issues from identified gaps or requirements"
   - This aligns with Linear being the single source of truth for task management
@@ -314,6 +341,7 @@
   - Command now properly directs task creation through Linear rather than file-based tracking
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:26 AM
+
 - **Updated get-project-context Command to Remove TODO File References**
   - Removed references to "docs/shipped-todos.md" and "docs/TODOs.md" from the list of documentation files
   - The command now only references actual project documentation files, not TODO tracking files
@@ -321,6 +349,7 @@
   - This completes the migration away from file-based TODO tracking across all commands and agents
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:25 AM
+
 - **Updated investigate-server-crashes Command to Remove TODO File Reference**
   - Removed reference to "docs/shipped-todos.md" from the list of documentation files to check
   - The command now only references actual technical documentation files for investigation
@@ -328,6 +357,7 @@
   - Command now focuses purely on technical documentation: CHANGELOG.md, README.md, health-check-system.md, implementation-strategy.md, known-issues.md, caddy-pm2-setup.md, tailscale-monitoring.md, and server-endpoints.md
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:23 AM
+
 - **Updated release-manager Agent to Remove TODO File References**
   - Removed reference to "Verify TODOs are properly moved to shipped-todos.md" from documentation coordination section
   - Removed TodoWrite tool from the agent's tool list
@@ -336,6 +366,7 @@
   - This completes the migration away from file-based TODO tracking to Linear-based project management
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:22 AM
+
 - **Updated doc-admin Agent to Remove TODO File References**
   - Removed all references to TODO.md, TODOs.md, and shipped-todos.md from the agent description and responsibilities
   - Updated to reflect that task tracking is now handled by the program-manager agent through Linear issue tracking
@@ -345,6 +376,7 @@
   - Documentation now focuses exclusively on CHANGELOG.md, README.md, and technical documentation files
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:20 AM
+
 - **Cleaned Up Remaining Agent Tool Access**
   - **git-expert.md**: Removed NotebookRead, NotebookEdit (not needed for git operations), and ExitPlanMode (not needed)
   - **doc-admin.md**: Removed ExitPlanMode (not needed for documentation operations); kept NotebookRead/Edit as they might be useful for .ipynb documentation files
@@ -353,38 +385,42 @@
   - Completes the agent tool optimization started earlier today
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:18 AM
+
 - **Cleaned Up ux-engineer Agent Tool Access**
-  - Removed all mcp__playwright__* tools (30+ automated testing tools not needed for UX design)
-  - Removed all mcp__server-filesystem__* tools (redundant with built-in Read tool)
+  - Removed all mcp**playwright**\* tools (30+ automated testing tools not needed for UX design)
+  - Removed all mcp**server-filesystem**\* tools (redundant with built-in Read tool)
   - Removed ExitPlanMode (not needed for UX operations)
   - Removed NotebookRead (not applicable to this project)
   - Kept only essential UX tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch
   - Retained MCP resource tools: ListMcpResourcesTool, ReadMcpResourceTool
-  - Retained research tools: mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search
+  - Retained research tools: mcp**perplexity**perplexity_ask, mcp**server-brave-search**brave_web_search, mcp**server-brave-search**brave_local_search
   - This change focuses the agent on design and implementation guidance rather than automated testing
   - UX engineer should coordinate with QA engineer for testing needs
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:17 AM
+
 - **Cleaned Up qa-engineer Agent Tool Access**
-  - Removed all mcp__playwright__* tools (30+ Playwright MCP tools) - agent already prefers direct Playwright npm package
-  - Removed all mcp__server-filesystem__* tools (redundant with built-in Read tool)
+  - Removed all mcp**playwright**\* tools (30+ Playwright MCP tools) - agent already prefers direct Playwright npm package
+  - Removed all mcp**server-filesystem**\* tools (redundant with built-in Read tool)
   - Removed ExitPlanMode (not needed for QA operations)
   - Removed NotebookRead (not applicable to this project)
   - Kept only essential QA tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch
   - Retained MCP resource tools: ListMcpResourcesTool, ReadMcpResourceTool
-  - Retained research tools: mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search
+  - Retained research tools: mcp**perplexity**perplexity_ask, mcp**server-brave-search**brave_web_search, mcp**server-brave-search**brave_local_search
   - This change aligns with the agent's documented preference for using direct Playwright over MCP tools
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:16 AM
+
 - **Cleaned Up devops-expert Agent Tool Access**
-  - Removed all mcp__playwright__* tools (32+ UI testing tools not needed for DevOps operations)
-  - Removed all mcp__server-filesystem__* tools (redundant with built-in Read/Write tools)
+  - Removed all mcp**playwright**\* tools (32+ UI testing tools not needed for DevOps operations)
+  - Removed all mcp**server-filesystem**\* tools (redundant with built-in Read/Write tools)
   - Kept only essential DevOps tools: Task, Bash, Glob, Grep, LS, Read, Edit, MultiEdit, Write, TodoWrite, WebFetch
-  - Retained research tools: mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search
+  - Retained research tools: mcp**perplexity**perplexity_ask, mcp**server-brave-search**brave_web_search, mcp**server-brave-search**brave_local_search
   - This focused tool set aligns with the agent's responsibilities for deployments, infrastructure, and monitoring
   - Reduces tool loading overhead and prevents misuse of inappropriate tools for DevOps tasks
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:08 AM
+
 - **Enhanced /execute Command with Linear Validation Requirements**
   - Added new Step 0: Linear Validation as the first step:
     - Checks if Linear issue ID is provided as argument
@@ -406,6 +442,7 @@
   - This ensures Linear serves as the contract for all significant work and enforces proper tracking
 
 ### Internal Tooling - Monday, July 28, 2025 at 9:02 AM
+
 - **Enhanced program-manager Agent with Linear Projects as Epics Functionality**
   - Added comprehensive Epic & Project Management section as new section 1:
     - Linear projects now serve as epics for organizing larger features across multiple issues/releases
@@ -432,6 +469,7 @@
   - This enhancement provides better organization for multi-issue initiatives and improves project tracking capabilities
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:58 AM
+
 - **Streamlined release-manager Agent to Focus on Technical Release Process**
   - Removed milestone management responsibilities (sections 2.5 and 5.5) and transferred them to program-manager
   - Updated core responsibilities to focus on:
@@ -445,6 +483,7 @@
   - This separation of concerns improves agent focus and reduces overlap between release-manager and program-manager
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:32 AM
+
 - **Updated release-manager Agent to Integrate with program-manager for Linear Issue Coordination**
   - Added new section "2.5 Linear Issue Coordination" to coordinate with program-manager before version bumps:
     - Get all completed issues since last release
@@ -464,6 +503,7 @@
   - This integration ensures releases are fully coordinated with Linear issue tracking system
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:26 AM
+
 - **Updated qa-engineer Agent to Prefer Direct Playwright Testing Over MCP**
   - Added new section "Testing Tool Preference: Direct Playwright" after Test Writing Responsibilities
   - Established direct Playwright npm package as primary testing approach:
@@ -479,6 +519,7 @@
   - Benefits include: no screenshot context overflow, faster execution, better error messages, CI/CD compatibility
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:17 AM
+
 - **Clarified QA Engineer Linear Access Protocol**
   - Updated Pre-Testing section to explicitly state QA must ask program-manager to provide:
     - Full issue description and all comments chronologically
@@ -491,6 +532,7 @@
   - Ensures single source of truth principle with program-manager as Linear interface
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:13 AM
+
 - **Updated qa-engineer Testing Scope to Include Comments and Regression Testing**
   - Clarified that Linear comments are part of the testing contract
   - Expanded "What to Test" to include:
@@ -505,6 +547,7 @@
   - Maintains principle of not testing verbal requests or scope creep
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:10 AM
+
 - **Integrated qa-engineer Agent with program-manager and Linear-as-Contract Testing**
   - Added "Core Testing Principle: Linear as Contract" section establishing:
     - Linear issue is the single source of truth for testing
@@ -521,6 +564,7 @@
   - Enforces "test the contract, not the conversation" principle
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:07 AM
+
 - **Made Linear Issue Requirements More Pragmatic in git-expert Agent**
   - Replaced rigid "all commits need Linear issues" with contextual requirements
   - Linear references now REQUIRED for:
@@ -534,6 +578,7 @@
   - Maintains traceability where it matters without hindering quick fixes
 
 ### Internal Tooling - Monday, July 28, 2025 at 8:03 AM
+
 - **Integrated git-expert Agent with program-manager Agent**
   - Added new section 1.5 "Linear Issue Detection & PM Integration" requiring:
     - All commits must reference Linear issues (RR-XXX pattern)
@@ -549,6 +594,7 @@
   - Ensures full traceability between code changes and project management
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:59 AM
+
 - **Added Pragmatic Analysis Approach to analyze.md Command**
   - Inserted new section 3.5 "Pragmatic Analysis Approach" after Technical Analysis
   - Emphasizes peer discussion mindset rather than order-taking:
@@ -566,6 +612,7 @@
   - Establishes collaborative tone for more effective analysis discussions
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:53 AM
+
 - **Enhanced analyze.md Command Documentation Sources**
   - Updated Technical Analysis section to include comprehensive documentation gathering
   - Added four documentation categories for thorough context:
@@ -578,6 +625,7 @@
   - Focuses on sections most relevant to the specific issue or idea being analyzed
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:50 AM
+
 - **Enhanced analyze.md Command to Support Both Linear Issues and Idea Exploration**
   - Extended command to accept either Linear issue IDs or free-form idea descriptions
   - Updated frontmatter description and argument hint to reflect dual functionality
@@ -597,6 +645,7 @@
   - Enables flexible brainstorming and analysis without forcing Linear issue creation
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:48 AM
+
 - **Rewrote execute.md Claude Slash Command with Test-First Workflow**
   - Complete rewrite to integrate program-manager agent throughout execution process
   - Enforces test-first development methodology:
@@ -616,6 +665,7 @@
   - Emphasizes quality through continuous testing and multi-agent review
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:46 AM
+
 - **Updated Program Manager Agent to Emphasize Issue Comment Analysis**
   - Added new subsection "When Analyzing Issues" in Communication Style section
   - Requires reading ALL comments on Linear issues before analysis
@@ -630,6 +680,7 @@
   - Prevents missing crucial information that evolves during issue lifecycle
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:44 AM
+
 - **Created analyze.md Claude Slash Command**
   - New command to analyze Linear issues and create detailed implementation plans
   - Requires Linear issue ID as argument (e.g., /analyze RR-123)
@@ -643,6 +694,7 @@
   - Designed for thorough pre-implementation analysis without starting actual coding
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:39 AM
+
 - **Enhanced next-task.md Command with Filter Support**
   - Added argument-hint in frontmatter to support optional filter parameter
   - New filter options: 'quick'/'quick-win' for quick wins, 'impact'/'impactful' for high-impact tasks, 'bug'/'bugs' for bug fixes, 'feature' for features
@@ -654,6 +706,7 @@
   - Enables mood/energy-based task selection for better productivity alignment
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:35 AM
+
 - **Created next-task.md Claude Slash Command**
   - New command to get intelligent task recommendations based on context and priorities
   - Integrates with program-manager agent to analyze Linear project state
@@ -666,6 +719,7 @@
   - Automates status updates and adds timestamps when tasks are selected
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:31 AM
+
 - **Enhanced capture-idea.md Command with Early Exit Capability**
   - Added ability to quit the interactive interview at any question by typing 'done', 'skip', or 'quit'
   - Program manager agent now makes intelligent assumptions for missing data when interview is exited early
@@ -674,6 +728,7 @@
   - Maintains all existing functionality while adding flexibility to the workflow
 
 ### Internal Tooling - Monday, July 28, 2025 at 7:24 AM
+
 - **Created capture-idea.md Claude Slash Command**
   - New command to quickly capture bugs, features, ideas, and enhancements
   - Implements guided interactive interview process with type-specific questions
@@ -685,6 +740,7 @@
   - Ensures all captured ideas are properly tracked in Linear with appropriate context
 
 ### Documentation - Monday, July 28, 2025 at 7:22 AM
+
 - **Updated Program Manager Agent with Linear Issue Format Patterns**
   - Enhanced issue creation requirements in Section 1 with specific field formatting
   - Added title format rules: Start with action verbs (Fix, Implement, Deploy, Create, Enable)
@@ -696,6 +752,7 @@
   - Ensures all future Linear issues follow established project conventions
 
 ### Documentation - Monday, July 28, 2025 at 7:19 AM
+
 - **Updated Program Manager Agent for Multi-Issue Workflow**
   - Added development URL (http://100.96.166.53:3000/reader) to Project Context section
   - Changed workflow rules from "Only ONE issue" to "Maximum 3 issues" in progress simultaneously
@@ -706,6 +763,7 @@
   - Improves project velocity by utilizing wait times productively
 
 ### Internal Tooling - Monday, July 28, 2025 at 6:01 AM
+
 - **Enhanced QA Engineer Agent with RSS Reader-Specific Testing Methodology**
   - Replaced generic QA instructions with comprehensive RSS News Reader testing framework
   - Added prioritized critical test paths focusing on sync pipeline reliability
@@ -722,6 +780,7 @@
   - Ensures comprehensive quality assurance aligned with RSS Reader architecture
 
 ### Internal Tooling - Monday, July 28, 2025 at 5:55 AM
+
 - **Optimized Git Expert Agent Workflow**
   - Updated git-expert.md with smarter pre-commit analysis that categorizes commits
   - Implemented intelligent documentation requirements based on commit type:
@@ -736,6 +795,7 @@
   - Improves developer workflow efficiency while maintaining quality standards
 
 ### Documentation - Monday, July 28, 2025 at 5:36 AM
+
 - **Added Code Quality Enforcer Hook Documentation**
   - Updated .claude/hooks/README.md with comprehensive documentation for the new hook
   - Added new section explaining the Code Quality Enforcer Hook functionality
@@ -748,10 +808,11 @@
   - Ensures consistent code quality standards across all code modifications
 
 ### Documentation - Monday, July 28, 2025 at 2:39 AM
+
 - **Added Missing Linear Issue References to TODO-039d and TODO-039e**
   - Updated TODO-039d (Environment Variable Management) in shipped-todos.md
   - Added Linear issue reference: [RR-13](https://linear.app/agilecode-studio/issue/RR-13/environment-variable-management)
-  - Updated TODO-039e (PM2 Configuration Improvements) in shipped-todos.md  
+  - Updated TODO-039e (PM2 Configuration Improvements) in shipped-todos.md
   - Added Linear issue reference: [RR-15](https://linear.app/agilecode-studio/issue/RR-15/pm2-configuration-improvements)
   - Both were P1 infrastructure TODOs completed on Saturday, July 26, 2025
   - TODO-039d addressed critical environment variable issues with Next.js and PM2
@@ -759,6 +820,7 @@
   - Ensures proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 2:00 AM
+
 - **Added Linear Issue Reference to TODO-006**
   - Updated TODO-006 (Complete Automatic Daily Sync) in shipped-todos.md
   - Added Linear issue reference: [RR-53](https://linear.app/agilecode-studio/issue/RR-53/complete-automatic-daily-sync)
@@ -776,6 +838,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:54 AM
+
 - **Added Linear Issue Reference to TODO-005**
   - Updated TODO-005 (Refresh Materialized View After Sync) in shipped-todos.md
   - Added Linear issue reference: [RR-52](https://linear.app/agilecode-studio/issue/RR-52/refresh-materialized-view-after-sync)
@@ -788,6 +851,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:49 AM
+
 - **Added Linear Issue Reference to TODO-004**
   - Updated TODO-004 (Database Performance Analysis) in shipped-todos.md
   - Added Linear issue reference: [RR-51](https://linear.app/agilecode-studio/issue/RR-51/database-performance-analysis)
@@ -801,6 +865,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:40 AM
+
 - **Added Linear Issue Reference to TODO-003**
   - Updated TODO-003 (Apply Unread Counts Function Migration) in shipped-todos.md
   - Added Linear issue reference: [RR-50](https://linear.app/agilecode-studio/issue/RR-50/apply-unread-counts-function-migration)
@@ -812,6 +877,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:35 AM
+
 - **Added Linear Issue Reference to TODO-002**
   - Updated TODO-002 (Fix Function Security Vulnerability) in shipped-todos.md
   - Added Linear issue reference: [RR-49](https://linear.app/agilecode-studio/issue/RR-49/fix-function-security-vulnerability)
@@ -822,6 +888,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:33 AM
+
 - **Added Linear Issue Reference to TODO-001**
   - Updated TODO-001 (Enable Row Level Security) in shipped-todos.md
   - Added Linear issue reference: [RR-48](https://linear.app/agilecode-studio/issue/RR-48/enable-row-level-security)
@@ -832,6 +899,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:18 AM
+
 - **Added Linear Issue Reference to TODO-042**
   - Updated TODO-042 (Fix Sync Overwriting Local Star/Read Status) in shipped-todos.md
   - Added Linear issue reference: [RR-47](https://linear.app/agilecode-studio/issue/RR-47/fix-sync-overwriting-local-starread-status)
@@ -841,6 +909,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 1:12 AM
+
 - **Added Linear Issue Reference to TODO-008**
   - Updated TODO-008 (Deploy to Production) in shipped-todos.md
   - Added Linear issue reference: [RR-46](https://linear.app/agilecode-studio/issue/RR-46/deploy-to-production)
@@ -849,6 +918,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Monday, July 28, 2025 at 12:46 AM
+
 - **Added Linear Issue Reference to TODO-037**
   - Updated TODO-037 (Implement Bi-directional Sync to Inoreader) in shipped-todos.md
   - Added Linear issue reference: [RR-45](https://linear.app/agilecode-studio/issue/RR-45/implement-bi-directional-sync-to-inoreader)
@@ -857,6 +927,7 @@
   - Maintains proper tracking between completed TODOs and Linear issue management system
 
 ### Documentation - Sunday, July 27, 2025 at 11:29 PM
+
 - **Added Linear Issue Reference to TODO-044**
   - Updated TODO-044 (Open All Article Links in External Tab) in shipped-todos.md
   - Added Linear issue reference: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue)
@@ -866,17 +937,19 @@
   - Also added reference to related TODO-050a which tracks the same iOS double-tap issue
 
 ### Documentation - Sunday, July 27, 2025 at 11:26 PM
+
 - **TODO-044 Information Requested**
   - Located TODO-044 (Open All Article Links in External Tab) in shipped-todos.md
   - Status: ⚠️ PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
   - This P2 enhancement was implemented to make all article links open in new tabs
-  - Main functionality completed: link-processor utility adds target="_blank" and rel="noopener noreferrer" to all external links
+  - Main functionality completed: link-processor utility adds target="\_blank" and rel="noopener noreferrer" to all external links
   - Applied to RSS content, full fetched content, and AI summaries
   - Outstanding issue: iOS Safari/PWA users still need to double-tap links before they open
   - Multiple attempted fixes for iOS issue have failed (CSS hover removal, inline styles, touch-action manipulation, JavaScript handlers)
   - The remaining iOS double-tap issue has been split into separate TODO-050a for future resolution
 
 ### Documentation - Sunday, July 27, 2025 at 9:01 PM
+
 - **Updated Linear Issue References for TODOs 052, 053, and 045**
   - Updated shipped-todos.md to add Linear issue reference for completed TODO-052:
     - TODO-052: [RR-44](https://linear.app/agilecode-studio/issue/RR-44/investigate-read-status-sync-issues-with-inoreader) - Investigate Read Status Sync Issues with Inoreader
@@ -887,6 +960,7 @@
   - These issues cover critical sync debugging and Apple device enhancements
 
 ### Documentation - Sunday, July 27, 2025 at 8:55 PM
+
 - **Added Linear Issue References to TODO-047, TODO-050, and TODO-051**
   - Updated shipped-todos.md to include Linear issue references for completed TODOs:
     - TODO-047: [RR-42](https://linear.app/agilecode-studio/issue/RR-42/filter-out-feeds-with-no-unread-articles-in-sidebar) - Filter Out Feeds with No Unread Articles in Sidebar
@@ -896,6 +970,7 @@
   - These TODOs cover important UI/UX improvements for sidebar filtering and icon consistency
 
 ### Documentation - Sunday, July 27, 2025 at 8:37 PM
+
 - **Added Linear Issue References to Shipped TODOs-039a and TODO-039b**
   - Updated shipped-todos.md to include Linear issue references for completed infrastructure TODOs
   - Added TODO-039a reference: [RR-37](https://linear.app/agilecode-studio/issue/RR-37/create-health-check-endpoints)
@@ -904,6 +979,7 @@
   - These infrastructure TODOs were critical for implementing comprehensive health monitoring and build validation systems
 
 ### Documentation - Sunday, July 27, 2025 at 7:30 PM
+
 - **Added Linear Project and Issue References to TODO-054**
   - Updated TODO-054 (Implement Comprehensive Sync Logging and Analytics) to include Linear project link
   - Added Linear Project: [Comprehensive Sync Logging and Analytics](https://linear.app/agilecode-studio/project/comprehensive-sync-logging-and-analytics-341afd9c4943)
@@ -917,64 +993,73 @@
   - This comprehensive logging system will help debug sync issues and provide visibility into sync operations
 
 ### Documentation - Sunday, July 27, 2025 at 7:17 PM
-- **Added Linear Issue Reference to TODO-056** 
+
+- **Added Linear Issue Reference to TODO-056**
   - Updated TODO-056 (Fix Article List State Preservation on Back Navigation) to include Linear issue link
   - Added reference: [RR-27](https://linear.app/agilecode-studio/issue/RR-27/fix-article-list-state-preservation-on-back-navigation)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This issue addresses the UX problem where article list state is lost when navigating back from article detail view
 
 ### Documentation - Sunday, July 27, 2025 at 7:15 PM
-- **Added Linear Issue Reference to TODO-053** 
+
+- **Added Linear Issue Reference to TODO-053**
   - Updated TODO-053 (Investigate Article Freshness Perception Issue) to include Linear issue link
   - Added reference: [RR-26](https://linear.app/agilecode-studio/issue/RR-26/investigate-article-freshness-perception-issue)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This investigation will look into why users perceive articles as older than they actually are (5 hours vs actual 3 hours)
 
 ### Documentation - Sunday, July 27, 2025 at 7:04 PM
-- **Added Linear Issue Reference to TODO-045** 
+
+- **Added Linear Issue Reference to TODO-045**
   - Updated TODO-045 (Enable Native Share Sheet on Apple Devices) to include Linear issue link
   - Added reference: [RR-25](https://linear.app/agilecode-studio/issue/RR-25/enable-native-share-sheet-on-apple-devices)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This feature will implement native share sheet functionality on Apple devices using the Web Share API
 
 ### Documentation - Sunday, July 27, 2025 at 7:02 PM
-- **Added Linear Issue Reference to TODO-024** 
+
+- **Added Linear Issue Reference to TODO-024**
   - Updated TODO-024 (Multi-Provider LLM Support) to include Linear issue link
   - Added reference: [RR-24](https://linear.app/agilecode-studio/issue/RR-24/multi-provider-llm-support)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This TODO covers supporting multiple LLM providers (Anthropic, OpenAI, Perplexity) with automatic fallback
 
 ### Documentation - Sunday, July 27, 2025 at 7:00 PM
-- **Added Linear Issue Reference to TODO-022** 
+
+- **Added Linear Issue Reference to TODO-022**
   - Updated TODO-022 (PWA Polish) to include Linear issue link
   - Added reference: [RR-23](https://linear.app/agilecode-studio/issue/RR-23/pwa-polish)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This TODO covers PWA enhancements including install prompts, app icons, splash screens, and offline handling
 
 ### Documentation - Sunday, July 27, 2025 at 6:55 PM
-- **Added Linear Issue Reference to TODO-050a** 
+
+- **Added Linear Issue Reference to TODO-050a**
   - Updated TODO-050a (Fix iOS Safari Double-Tap Link Issue) to include Linear issue link
   - Added reference: [RR-22](https://linear.app/agilecode-studio/issue/RR-22/fix-ios-safari-double-tap-link-issue)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This issue addresses the iOS-specific bug where users must tap links twice to open them
 
 ### Documentation - Sunday, July 27, 2025 at 6:44 PM
-- **Added Linear Issue Reference to TODO-021** 
+
+- **Added Linear Issue Reference to TODO-021**
   - Updated TODO-021 (Performance Optimization) to include Linear issue link
   - Added reference: [RR-21](https://linear.app/agilecode-studio/issue/RR-21/performance-optimization)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This TODO covers performance goals including sub-2s initial load, 60fps scrolling, and lazy loading
 
 ### Documentation - Sunday, July 27, 2025 at 6:37 PM
-- **Added Linear Issue Reference to TODO-019** 
+
+- **Added Linear Issue Reference to TODO-019**
   - Updated TODO-019 (Feed Search Functionality) to include Linear issue link
   - Added reference: [RR-20](https://linear.app/agilecode-studio/issue/RR-20/feed-search-functionality)
   - Maintains proper tracking between project TODOs and Linear issue management
   - This feature is marked as Future status for implementing feed search with real-time filtering
 
 ### Changed - Sunday, July 27, 2025 at 6:10 PM
+
 - Implemented UX expert recommendations for iOS PWA safe area handling
-- Converted from fixed to sticky header for better iOS compatibility  
+- Converted from fixed to sticky header for better iOS compatibility
 - Updated viewport units from 100vh to 100dvh/100svh for proper PWA height
 - Added bottom safe area padding to scrollable content areas
 - Fixed article detail navigation footer positioning with safe areas
@@ -982,19 +1067,23 @@
 - Ongoing: Debugging persistent bottom gap in PWA standalone mode (TODO-055)
 
 ### Documentation
+
 - **Added Linear Issue Reference to TODO-039i** (Sunday, July 27, 2025 at 6:10 PM)
+
   - Updated TODO-039i (Uptime Kuma Monitoring Infrastructure) in shipped-todos.md
   - Added reference: [RR-19](https://linear.app/agilecode-studio/issue/RR-19/implement-uptime-kuma-monitoring-infrastructure)
   - This completed task implemented the monitoring infrastructure on port 3080
   - Part of the server stability parent task TODO-039 focusing on external monitoring
 
 - **Added Linear Issue Reference to TODO-039h** (Sunday, July 27, 2025 at 6:01 PM)
+
   - Updated TODO-039h (Database Monitoring) to include Linear issue link
   - Added reference: [RR-18](https://linear.app/agilecode-studio/issue/RR-18/database-monitoring)
   - Maintains proper tracking between project TODOs and Linear issue management
   - Part of the server stability parent task TODO-039 focusing on database performance monitoring
 
 - **Added Linear Issue Reference to TODO-039g** (Sunday, July 27, 2025 at 5:47 PM)
+
   - Updated TODO-039g (Error Handling & Monitoring) to include Linear issue link
   - Added reference: [RR-17](https://linear.app/agilecode-studio/issue/RR-17/error-handling-and-monitoring)
   - Maintains proper tracking between project TODOs and Linear issue management
@@ -1007,6 +1096,7 @@
   - Part of the server stability parent task TODO-039
 
 ### Documentation
+
 - **Added Linear Issue Reference to TODO-039d** (Sunday, July 27, 2025 at 5:32 PM)
   - Updated shipped-todos.md to include Linear issue link for TODO-039d
   - Added reference: [RR-14](https://linear.app/agilecode-studio/issue/RR-14/environment-variable-management)
@@ -1014,6 +1104,7 @@
   - Helps with cross-referencing project management and technical implementation
 
 ### Documentation
+
 - **Updated TODO-055 with New Implementation Plan** (Sunday, July 27, 2025 at 1:39 PM)
   - Replaced previous implementation plan with more comprehensive PWA-specific approach
   - Identified root cause: iOS handles safe areas differently in PWA standalone vs browser mode
@@ -1024,7 +1115,9 @@
   - Approach follows Apple's design guidelines for PWA safe area handling
 
 ### Documentation
+
 - **Updated TODO-055 Status and Documented Attempted Fixes** (Sunday, July 27, 2025 at 12:57 PM)
+
   - Changed status from TODO to IN PROGRESS
   - Documented three attempted fix approaches with detailed results
   - Attempt 1: Dynamic CSS Variables - partially fixed but content still cut off in PWA
@@ -1034,6 +1127,7 @@
   - Outlined next steps including device-specific testing and alternative approaches
 
 - **Updated TODO-055 with Comprehensive Implementation Plan** (Sunday, July 27, 2025 at 5:53 AM)
+
   - Added detailed problem analysis identifying fixed header/footer safe area issues
   - Provided three-part solution strategy using CSS variables for dynamic heights
   - Included specific implementation steps for fixing PWA content cutoff
@@ -1041,6 +1135,7 @@
   - Added CSS custom properties approach for calculating header/footer with safe areas
 
 - **Enhanced TODO-056 with Additional Requirements** (Sunday, July 27, 2025 at 5:34 AM)
+
   - Added requirements for tracking article navigation via prev/next buttons
   - Specified that articles navigated via prev/next should update read status
   - Clarified that back button should return to last read article (not necessarily initially clicked)
@@ -1061,6 +1156,7 @@
 ## [Previous Updates] - Sunday, July 27, 2025 at 4:43 AM
 
 ### Fixed
+
 - **Dual-Write Sync Progress Tracking Implementation** (Critical Fix)
   - **Problem**: Manual sync showed timeout errors after 2 minutes despite completing in ~10 seconds
   - **Root Cause**: Next.js serverless functions don't share memory between invocations
@@ -1083,6 +1179,7 @@
   - **Result**: Production now correctly uses `.next-prod` directory, preventing conflicts with dev server
 
 ### Documentation - Sunday, July 27, 2025 at 4:44 AM
+
 - **Created Comprehensive Sync Progress Tracking Documentation**
   - Added `docs/tech/sync-progress-tracking-architecture.md`
   - Includes problem statement, solution architecture, and implementation details
@@ -1092,6 +1189,7 @@
   - Added to tech documentation index for easy discovery
 
 ### Enhanced - Sunday, July 27, 2025 at 4:27 AM
+
 - **Sync Progress Tracking Security & Performance Improvements**
   1. **Row Level Security (RLS)** enabled on `sync_status` table
      - Service role has full access for backend operations
@@ -1113,6 +1211,7 @@
 ## Sunday, July 27, 2025 at 2:29 AM
 
 ### Fixed
+
 - **Sync Progress Tracking Issue (Critical)**
   - **Problem**: Manual sync button showed timeout error after 2 minutes despite sync completing in ~10 seconds
   - **Root Cause**: Next.js serverless functions don't share memory between invocations, so status endpoint returned 404 for sync IDs stored in memory
@@ -1125,6 +1224,7 @@
 ## Saturday, July 26, 2025 at 11:06 PM
 
 ### Documentation Updates
+
 - **Cleaned Up Completed TODOs**
   - Moved TODO-039a (Create Health Check Endpoints) from docs/TODOs.md to docs/shipped-todos.md
   - Updated parent task TODO-039 progress counter from 5 to 6 of 10 sub-tasks completed
@@ -1134,6 +1234,7 @@
 ## Saturday, July 26, 2025 at 10:56 PM
 
 ### Fixed
+
 - **Manual Sync Issue Resolution**
   - **Root Cause**: Missing prerender-manifest.json and corrupted vendor chunks in production build
   - **Solution**: Performed clean rebuild with `rm -rf .next && npm run build`
@@ -1142,6 +1243,7 @@
   - This resolves the critical issue where manual sync button was failing with 500 errors
 
 ### Enhanced
+
 - **Build Validation System**
   - **Added Critical Manifest Validation**: Now validates prerender-manifest.json and react-loadable-manifest.json
   - **Vendor Chunk Validation**: Detects missing Supabase dependencies in vendor chunks
@@ -1151,6 +1253,7 @@
   - This prevents server startup failures and provides early detection of build corruption
 
 ### Created
+
 - **Database Health Endpoint (/api/health/db)**
   - **Purpose**: Tests database connectivity and query performance
   - **Response**: JSON with status, connection info, and query time
@@ -1162,6 +1265,7 @@
 ## Saturday, July 26, 2025 at 9:06 PM
 
 ### Completed Features
+
 - **PM2 Configuration Improvements (TODO-039e)** - Saturday, July 26, 2025 at 9:06 PM
   - **Dramatic Success**: Implemented comprehensive 5-phase PM2 stability improvements with 99%+ reduction in service restarts
   - **All 5 Phases Completed**:
@@ -1179,6 +1283,7 @@
   - **Foundation for Scaling**: Provides robust infrastructure foundation for future production scaling
 
 ### Enhanced
+
 - **PM2 Configuration Architecture**
   - Service-specific configurations optimized for different workload types
   - Conservative memory limits prevent resource exhaustion while providing ample headroom
@@ -1187,6 +1292,7 @@
   - Production-grade resilience with exponential backoff and increased restart limits
 
 ### Documentation Updates
+
 - **PM2 Configuration Documentation Updates** - Saturday, July 26, 2025 at 9:06 PM
   - Updated docs/TODOs.md to mark TODO-039e as COMPLETED with comprehensive implementation summary
   - Moved TODO-039e to docs/shipped-todos.md with full technical details and measurable results
@@ -1198,6 +1304,7 @@
 ## Saturday, July 26, 2025 at 8:01 PM
 
 ### Documentation Updates
+
 - **Enhanced TODO-039e PM2 Configuration with Comprehensive Implementation Strategy**
   - Added detailed implementation strategy to TODO-039e: PM2 Configuration Improvements in docs/TODOs.md
   - Strategy includes incremental 5-phase approach with QA verification after each phase
@@ -1214,6 +1321,7 @@
 ## Saturday, July 26, 2025 at 7:52 PM
 
 ### Documentation Updates
+
 - **TODO-039 Sub-Task Reordering by Implementation Priority**
   - Reordered TODO-039 sub-tasks in docs/TODOs.md based on implementation priority and impact
   - Added implementation priority rationale section explaining the sequencing strategy
@@ -1226,6 +1334,7 @@
 ## Saturday, July 26, 2025 at 7:28 PM
 
 ### Documentation Verification
+
 - **Health Check Endpoints Documentation Audit (TODO-039a Follow-up)**
   - Verified CHANGELOG.md has comprehensive entries for both initial implementation and QA fixes
   - Confirmed docs/TODOs.md shows TODO-039a as COMPLETED with detailed implementation notes
@@ -1238,6 +1347,7 @@
 ## Saturday, July 26, 2025 at 7:18 PM
 
 ### Fixed
+
 - **QA-Identified Improvements for Health Monitoring (TODO-039a Follow-up)**
   - **Fixed monitor-services.sh Script**: Updated to read from `.jsonl` files instead of `.json` for health check logs
   - **Implemented Log Rotation**: Added 7-day retention policy for JSONL health files to prevent unbounded log growth
@@ -1248,6 +1358,7 @@
 ## Saturday, July 26, 2025 at 7:02 PM
 
 ### Documentation Updates
+
 - **Marked TODO-039a as COMPLETED in docs/TODOs.md**
   - Updated status from TODO to COMPLETED with completion date of Sunday, July 27, 2025
   - Added comprehensive completion notes documenting successful implementation of all health check endpoints
@@ -1258,6 +1369,7 @@
 ## Saturday, July 26, 2025 at 6:24 PM
 
 ### Documentation Updates
+
 - **Created/Updated README Files for All Documentation Subdirectories**
   - Created comprehensive README files for 5 documentation subdirectories
   - **api/README.md**: Created overview of API documentation with endpoint categories and quick reference
@@ -1274,6 +1386,7 @@
   - Purpose: Improve documentation discoverability and help developers quickly understand available resources
 
 ## Saturday, July 26, 2025 at 6:20 PM
+
 - Updated TODO-039a with comprehensive implementation strategy for health check endpoints
 - Added detailed design decisions including no authentication, JSONL logging, and standardized JSON response format
 - Specified implementation details for enhanced /api/health/app, /server/health, and new /api/health/cron endpoints
@@ -1284,12 +1397,13 @@
 ## Saturday, July 26, 2025 at 5:50 PM
 
 ### Fixed
+
 - **Completed TODO-039d: Environment Variable Management** - Saturday, July 26, 2025 at 5:50 PM
-  - **Fixed Critical Issue**: Client-side code not receiving NEXT_PUBLIC_* variables at build time
-  - **Root Cause**: Next.js requires NEXT_PUBLIC_* variables available during build, not just runtime
+  - **Fixed Critical Issue**: Client-side code not receiving NEXT*PUBLIC*\* variables at build time
+  - **Root Cause**: Next.js requires NEXT*PUBLIC*\* variables available during build, not just runtime
   - **Comprehensive Solution Implemented**:
     - Created `scripts/validate-env.sh` - validates ALL 30+ environment variables before builds
-    - Modified `scripts/build-and-start-prod.sh` to export NEXT_PUBLIC_* vars before building
+    - Modified `scripts/build-and-start-prod.sh` to export NEXT*PUBLIC*\* vars before building
     - Added "prebuild" script to package.json for automatic validation
     - Fixed naming inconsistency: SUPABASE_SERVICE_KEY → SUPABASE_SERVICE_ROLE_KEY across 7 files
   - **Critical Changes**:
@@ -1307,15 +1421,16 @@
 ## Saturday, July 26, 2025 at 5:29 PM
 
 ### Documentation Updates
+
 - **Updated TODO-039d with Comprehensive Implementation Plan** - Saturday, July 26, 2025 at 5:29 PM
-  - Clarified that this is a critical fix for client-side code not receiving NEXT_PUBLIC_* variables at build time
+  - Clarified that this is a critical fix for client-side code not receiving NEXT*PUBLIC*\* variables at build time
   - Added implementation details emphasizing centralized validation system with single .env file
   - Specified that ALL variables are critical - any missing variable should fail the build
   - Identified missing variables: NEXT_PUBLIC_BASE_URL and NEXT_PUBLIC_APP_URL need to be added
   - Noted naming inconsistency: SUPABASE_SERVICE_KEY vs SUPABASE_SERVICE_ROLE_KEY needs standardization
   - Expanded acceptance criteria to include:
     - Creation of scripts/validate-env.sh for comprehensive validation
-    - Modification of build-and-start-prod.sh to export NEXT_PUBLIC_* variables before build
+    - Modification of build-and-start-prod.sh to export NEXT*PUBLIC*\* variables before build
     - Pre-build validation to ensure variables are available at build time
     - Documentation of build-time vs runtime variable requirements
     - Testing in both development and production modes
@@ -1324,6 +1439,7 @@
 ## Saturday, July 26, 2025 at 5:10 PM
 
 ### Completed Features
+
 - **Completed TODO-039b: Build Validation System Implementation** - Saturday, July 26, 2025 at 5:10 PM
   - **Dramatic Success**: Fixed root cause - API routes compilation improved from 1/27 to 27/27 (100%)
   - **Problem Solved**: Production builds were missing critical API routes, causing health endpoints to give false positives
@@ -1350,6 +1466,7 @@
 ## Saturday, July 26, 2025 at 4:43 PM
 
 ### Documentation Updates
+
 - **Fixed Markdown Header Indentation in TODO-039b** - Saturday, July 26, 2025 at 4:43 PM
   - Fixed 6 header indentation issues in TODO-039b section of docs/TODOs.md
   - Changed all level 2 headers (##) to level 3 headers (###) for proper hierarchy
@@ -1359,6 +1476,7 @@
 ## Saturday, July 26, 2025 at 4:42 PM
 
 ### Documentation Updates
+
 - **Enhanced TODO-039b with Comprehensive Implementation Strategy** - Saturday, July 26, 2025 at 4:42 PM
   - Added detailed implementation strategy based on comprehensive analysis and recommendations
   - Documented root issue analysis: Production builds missing API routes, health endpoints giving false positives
@@ -1374,6 +1492,7 @@
 ## Saturday, July 26, 2025 at 4:24 PM
 
 ### Completed Features
+
 - **Completed TODO-039i: Implemented Uptime Kuma Monitoring Infrastructure** - Saturday, July 26, 2025 at 4:24 PM
   - Deployed Uptime Kuma on port 3080 using Colima Docker
   - Created 6 monitors for all RSS Reader services:
@@ -1391,6 +1510,7 @@
 ## Saturday, July 26, 2025 at 4:23 PM
 
 ### Documentation Updates
+
 - **Enhanced TODO-039b Build Validation Requirements** - Saturday, July 26, 2025 at 4:23 PM
   - Added validation requirements for sync server health endpoint at http://localhost:3001/server/health
   - Added requirement to ensure all health endpoints return accurate status reflecting actual service state
@@ -1403,6 +1523,7 @@
 ## Saturday, July 26, 2025 at 3:21 PM
 
 ### Documentation Updates
+
 - **Reordered TODO-039 Sub-tasks by Priority** - Saturday, July 26, 2025 at 3:21 PM
   - Reordered sub-tasks to reflect implementation priority:
     1. TODO-039i (Uptime Kuma) - moved to FIRST position for immediate external monitoring
@@ -1423,6 +1544,7 @@
 ## Saturday, July 26, 2025 at 2:48 PM
 
 ### Documentation Updates
+
 - Updated Next Session Instructions.md to prioritize TODO-039 (Server Stability & Monitoring)
 - Highlighted critical server stability issues from past 48 hours
 - Identified priority sub-tasks: TODO-039b (Build Validation), TODO-039d (Environment Variables), TODO-039e (PM2 Configuration)
@@ -1438,6 +1560,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - **Comprehensive Health Check Endpoints** (TODO-039a) - COMPLETED ✅ - Saturday, July 26, 2025 at 7:01 PM
   - Implemented enhanced health check system across all RSS Reader services
   - **Enhanced /api/health/app endpoint**:
@@ -1471,6 +1594,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Consistent response format across all endpoints
 
 ### Documentation
+
 - **Consolidated Server Stability TODOs** - Saturday, July 26, 2025 at 2:45 PM
   - Reorganized docs/TODOs.md to consolidate all server stability and deployment pipeline tasks under TODO-039
   - Expanded TODO-039 to be a comprehensive parent task titled "Server Stability, Monitoring, and Deployment Pipeline Improvements"
@@ -1486,20 +1610,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained P1 priority as infrastructure stability is critical
 
 ### Investigation
+
 - **Production Article Loading Issue** - Saturday, July 26, 2025 at 2:09 PM
   - Investigated why articles weren't loading from Supabase on page load in both production and development environments
   - **Root Cause**: Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) not being properly passed to client-side bundle during Next.js build process
   - **Investigation Steps**:
     - Fixed ecosystem.config.js by adding `require('dotenv').config()` at the top to load environment variables before PM2 starts
-    - Rebuilt production app after fixing missing build files and error pages (missing _error.tsx was causing build failures)
+    - Rebuilt production app after fixing missing build files and error pages (missing \_error.tsx was causing build failures)
     - Created build script `/scripts/build-and-start-prod.sh` that exports environment variables before building
     - Used supabase-dba agent to verify database has 69 feeds and 1,033 articles for user 'shayon' with correct RLS policies
   - **Current Status**: Production URL (http://100.96.166.53:3147/reader) is now working after rebuild with environment variables. Development URL (http://100.96.166.53:3000/reader) still fails to load articles - client-side Supabase initialization issue persists
-  - **Issue**: Next.js requires NEXT_PUBLIC_* environment variables to be available at build time to include them in the client-side JavaScript bundle. PM2's runtime environment variable injection doesn't solve this problem
+  - **Issue**: Next.js requires NEXT*PUBLIC*\* environment variables to be available at build time to include them in the client-side JavaScript bundle. PM2's runtime environment variable injection doesn't solve this problem
   - **Files Modified**: ecosystem.config.js (added dotenv loading), tsconfig.json (excluded docs folder from build), created /scripts/build-and-start-prod.sh
   - **Next Steps**: Infrastructure is working correctly - just need to get environment variables properly bundled into client-side code (may need .env.production file or verify Supabase initialization)
 
 ### Documentation
+
 - **Created Comprehensive Investigation Report** - Saturday, July 26, 2025 at 2:19 PM
   - Created detailed investigation report at `docs/server-instability-issues/investigation-report-2025-07-26_14-09-00.md`
   - Documented complete investigation process for articles not loading from Supabase issue
@@ -1512,6 +1638,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Provided clear next steps for fixing remaining development environment issues
 
 ### Documentation
+
 - **Added Server Architecture section to README.md** - Saturday, July 26, 2025 at 1:23 PM
   - Added comprehensive documentation of all servers, services, and ports required to run the RSS News Reader application
   - Created clear table showing PM2 process names, ports, environments, and purposes for each service
@@ -1520,6 +1647,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improves onboarding for users setting up the application by providing a single reference for all infrastructure components
 
 ### Fixed
+
 - **Restored Bidirectional Sync Authentication** - Saturday, July 26, 2025 at 1:16 PM
   - Fixed sync server authentication failure that had been ongoing for ~12 hours
   - Regenerated missing OAuth tokens file (`~/.rss-reader/tokens.json`) using manual OAuth flow
@@ -1528,11 +1656,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Bidirectional sync is now fully operational with 5-minute sync intervals
 
 ### Known Issues
+
 - **Production Server Down** - Saturday, July 26, 2025 at 1:16 PM
   - Production server is currently experiencing issues and needs to be fixed
   - Will be addressed after this commit
 
 ### Documentation
+
 - **OAuth Authentication Recovery Investigation** - Saturday, July 26, 2025 at 1:14 PM
   - Added comprehensive documentation of OAuth token recovery to `docs/tech/bidirectional-sync-investigation.md`
   - Documented issue where sync server failed for ~12 hours with missing tokens file
@@ -1544,6 +1674,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] - 2025-07-26
 
 ### Documentation
+
 - **TODO-039 Cleanup: Removed Unnecessary Monitoring Subtasks** - Saturday, July 26, 2025 at 2:49 AM
   - Removed TODO-039b (Create Basic Health Monitor Script) - Uptime Kuma handles all health checking
   - Removed TODO-039d (Deploy Monitor as PM2 Service) - Uptime Kuma runs as Docker container
@@ -1554,6 +1685,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Streamlined implementation approach to leverage Uptime Kuma's built-in capabilities
 
 ### Documentation
+
 - **TODO-039 Update: Uptime Kuma Integration** - Saturday, July 26, 2025 at 2:43 AM
   - Updated TODO-039 (Server Health Monitoring) to reference Uptime Kuma monitoring strategy document
   - Added implementation strategy section pointing to `docs/tech/uptime-kuma-monitoring-strategy.md`
@@ -1563,6 +1695,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated total completed items count to 53 (52 + TODO-039a)
 
 ### Fixed
+
 - **Critical Production Server Issues** - Saturday, July 26, 2025 at 1:36 AM
   - **Fixed Production 500 Internal Server Error**: Homepage (`/reader`) and `/reader/fetch-stats` endpoint were returning 500 errors
     - Root cause: Empty `src/pages/` directory was confusing Next.js (project uses App Router, not Pages Router)
@@ -1581,7 +1714,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - All endpoints working correctly
 
 ### Documentation
+
 - **Uptime Kuma Monitoring Strategy** - Friday, July 25, 2025 at 10:35 PM
+
   - Created comprehensive monitoring implementation guide at `docs/tech/uptime-kuma-monitoring-strategy.md`
   - Detailed setup instructions for Uptime Kuma using Docker/Colima on macOS
   - Discord webhook integration for multi-channel alert notifications
@@ -1599,6 +1734,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed completed items from active TODOs.md to maintain clarity
 
 ### Added
+
 - **Claude Project Configuration Updates** - Friday, July 25, 2025 at 9:39 PM
   - Added `.claude/settings.local.json` to .gitignore to prevent committing local Claude settings
   - Created `.claude/agents/git-expert.md` for specialized git operations agent configuration
@@ -1607,6 +1743,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ensures Claude project settings remain local and are not accidentally synced to repository
 
 ### Added
+
 - **Mark All Read Feature** (TODO-040) - Friday, July 25, 2025 at 8:39 PM
   - Added "Mark All Read" button to article header when viewing specific feeds with unread articles
   - Implemented two-tap confirmation pattern with muted red warning state instead of dialog
@@ -1618,6 +1755,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents accidental marking of ALL articles across entire Inoreader account
 
 ### Documentation
+
 - **Button Architecture Documentation** - Friday, July 25, 2025 at 9:19 PM
   - Created comprehensive documentation at `docs/tech/button-architecture.md`
   - Documents three-tier button component hierarchy (IOSButton → ArticleActionButton → Specialized Buttons)
@@ -1628,7 +1766,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ensures future developers will use the established architecture instead of creating custom implementations
 
 ### Fixed
+
 - **Unified Icon Styling Between Summarize and Star Buttons** (TODO-050) - Friday, July 25, 2025 at 9:23 PM
+
   - Fixed inconsistent visual styling between summarize and star icons in article list
   - Created modular button architecture with ArticleActionButton component
   - Unified hover states, opacity, and transitions for all action buttons
@@ -1637,6 +1777,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All article action buttons now share consistent styling and behavior
 
 - **TODO-040 Documentation Update** - Friday, July 25, 2025 at 8:39 PM
+
   - Updated TODOs.md to mark TODO-040 as completed with implementation details
   - Moved TODO-040 to shipped-todos.md with full resolution details
   - Updated shipped-todos.md header to reflect 49 completed items
@@ -1653,7 +1794,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained TODO-044 in shipped-todos.md with partially completed status
 
 ### Fixed
+
 - **Bidirectional Sync Overwriting Local Read States** - Friday, July 25, 2025 at 8:26 AM
+
   - Fixed sync process unconditionally overwriting local article states with Inoreader data
   - Added conflict resolution that compares last_local_update with last_sync_update timestamps
   - Documented need to integrate bidirectional sync into main sync flow (requires triggering sync server after main sync)
@@ -1662,8 +1805,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ensures read/unread states sync correctly in both directions
 
 - **Open All Article Links in External Tab** (TODO-044) - PARTIALLY COMPLETED - Friday, July 25, 2025 at 9:31 AM
+
   - Fixed links within article content opening in the same tab, causing users to lose their reading position
-  - All links in article content now successfully open in new tabs with proper security attributes (target="_blank" and rel="noopener noreferrer")
+  - All links in article content now successfully open in new tabs with proper security attributes (target="\_blank" and rel="noopener noreferrer")
   - Created new link-processor utility for consistent link handling across RSS content, full fetched content, and AI summaries
   - Improved user experience by ensuring external links don't navigate away from the RSS reader
   - **Known Issue**: iOS Safari/PWA double-tap issue remains unresolved despite multiple approaches
@@ -1687,6 +1831,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - All critical security and performance issues resolved
 
 ### Added
+
 - **Independent Scrolling for Sidebar and Article List** (TODO-055) - COMPLETED ✅
   - Sidebar and article list now scroll independently, each maintaining their own position
   - Fixed viewport layout with overflow containers prevents scroll position loss
@@ -1698,6 +1843,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Completed on Thursday, July 24, 2025 at 10:45 AM
 
 ### Changed
+
 - **Documentation Cleanup** - Moved completed TODOs to shipped-todos.md
   - Moved TODO-046 (iOS PWA Status Bar) to shipped documentation
   - Moved TODO-047 (Filter Feeds with No Unread) to shipped documentation
@@ -1707,7 +1853,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated TODO count in shipped-todos.md from 48 to 49 items
 
 ### Added
+
 - **Filter Out Feeds with No Unread Articles in Sidebar** (TODO-047) - COMPLETED ✅
+
   - When "Unread Only" filter is selected, feeds with zero unread articles are now hidden from sidebar
   - Currently selected feed remains visible even if it has zero unread (until deselected)
   - Filter applies only when "Unread Only" is active; all feeds visible for "Read Only" or "All Articles"
@@ -1718,6 +1866,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Completed on Thursday, July 24, 2025 at 8:15 AM
 
 - **Sort Feed List Alphabetically in Sidebar** (TODO-049) - COMPLETED ✅
+
   - All feeds are now sorted alphabetically (A-Z) for easier navigation
   - Sorting is case-insensitive using `localeCompare()` for proper internationalization
   - Numeric sorting properly handles feeds with numbers (e.g., "404 Media" before "Ars Technica")
@@ -1736,6 +1885,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works seamlessly in both light and dark themes
 
 ### Fixed
+
 - **iOS PWA Status Bar Color and Safe Area Handling** (TODO-046) - COMPLETED ✅
   - Fixed orange status bar appearing above app header when saved as PWA on iPhone
   - Changed status bar style from "default" to "black-translucent" for seamless integration
@@ -1748,7 +1898,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] - 2025-07-24
 
 ### Added
+
 - **Full Content Extraction Feature (TODO-007)** - COMPLETED ✅
+
   - Comprehensive system for extracting full article content beyond RSS snippets
   - All 7 sub-tasks successfully implemented
   - Automatic and manual fetch capabilities with rate limiting
@@ -1757,6 +1909,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Production-ready with proper error handling and logging
 
 - **Fetch Statistics Dashboard (TODO-007g)** - COMPLETED ✅
+
   - Comprehensive analytics at `/reader/fetch-stats`
   - Real-time statistics for today, this month, and lifetime
   - Per-feed performance metrics with success rates
@@ -1765,6 +1918,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Mobile-responsive design with theme support
 
 - **Content Priority Display (TODO-007e)** - COMPLETED ✅
+
   - Smart article list display by content priority
   - Priority 1: AI summary (shown in full)
   - Priority 2: Full extracted content (4-line preview)
@@ -1772,6 +1926,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Smooth rendering without layout shifts
 
 - **Auto-Fetch Integration (TODO-007d)** - COMPLETED ✅
+
   - Automatic full content fetching for partial content feeds
   - Toggle to mark feeds as "partial content"
   - Rate limiting: 50 articles per 30 minutes
@@ -1779,6 +1934,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tested with BBC, Forbes Tech, and Wawa News feeds
 
 - **Manual Fetch Button (TODO-007c)** - COMPLETED ✅
+
   - "Fetch Full Content" button in article view
   - Loading states with spinner feedback
   - Mozilla Readability integration
@@ -1786,6 +1942,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Revert capability to RSS content
 
 - **Database Schema for Full Content (TODO-007a)** - COMPLETED ✅
+
   - `is_partial_content` flag for feeds
   - `fetch_logs` table for tracking attempts
   - Proper indexing for performance
@@ -1798,6 +1955,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained responsive design
 
 ### Changed
+
 - **Codebase Cleanup** - Removed duplicate and obsolete files
   - Removed duplicate icons and service workers
   - Removed obsolete SQL scripts and test files
@@ -1805,6 +1963,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cleaned up outdated technical documentation
 
 ### Fixed
+
 - **Navigation Footer Positioning** - Fixed footer to stay visible at bottom like header
 - **Fetch Logs Schema** - Added missing columns for proper metrics tracking
 - **Cron Sync URL** - Fixed automatic sync URL missing /reader prefix (TODO-041)
@@ -1812,19 +1971,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.1] - 2025-07-23
 
 ### Fixed - July 23, 2025 Session (Critical Bug Fix)
+
 - **Cron Sync URL Missing /reader Prefix** (TODO-041) - COMPLETED ✅
   - Fixed automatic sync failing since deployment due to missing basePath
   - Root cause: Cron service calling `http://localhost:3147/api/sync` instead of `/reader/api/sync`
   - All automatic syncs had been failing with 404 errors since July 22 deployment
   - Solution: Updated ecosystem.config.js to use environment variable with correct default:
     ```javascript
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3147/reader'
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL ||
+      "http://localhost:3147/reader";
     ```
   - Tested with ad-hoc 2:35 AM sync - completed successfully in 4.4 seconds
   - Automatic syncs now working at 2:00 AM and 2:00 PM daily
   - High impact fix - restored critical background sync functionality
 
 ### Added - July 22, 2025 Session (Auto-Mark as Read)
+
 - **Auto-Mark Articles as Read on Scroll** (TODO-029) - COMPLETED ✅
   - Implemented Intersection Observer to detect articles leaving viewport
   - Articles automatically marked as read when scrolling down past them
@@ -1837,13 +1999,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents jarring UI changes by keeping marked articles visible
 
 ### Enhanced - July 22, 2025 Session (Header Improvements)
+
 - **Simplified Article Header Titles**
+
   - Removed redundant filter prefixes from headers
   - Shows just "Articles" for main list instead of "All/Unread/Read Articles"
   - Displays folder/feed name directly when viewing specific collections
   - Cleaner, more intuitive navigation experience
 
 - **Mobile-Responsive Header Text**
+
   - Fixed folder name truncation on mobile devices
   - Changed from `truncate` to `break-words` for proper text wrapping
   - Added responsive font sizing: `text-lg` (mobile) → `text-xl` (tablet) → `text-2xl` (desktop)
@@ -1861,6 +2026,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0] - 2025-07-22 - Production Deployment
 
 ### Added - July 22, 2025 Session (AI Summarization)
+
 - **Configurable AI Summarization Prompt** (TODO-023, US-704) - COMPLETED ✅
   - Implemented modular prompt configuration through environment variables
   - Created SummaryPromptBuilder service for dynamic prompt generation
@@ -1879,6 +2045,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prepared system for future multi-provider LLM support (TODO-024)
 
 ### Fixed - July 22, 2025 Session (iOS Safari Improvements)
+
 - **iOS Scroll-to-Top Gesture Support** (TODO-030) - COMPLETED ✅
   - Fixed Safari URL bar not collapsing when scrolling in article list
   - Fixed native iOS scroll-to-top gesture (tap status bar) not working
@@ -1901,6 +2068,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Preserved original article preview logic (line-clamp-4 for content, full for summaries)
 
 ### Added - July 22, 2025 Session (Theme Toggle)
+
 - **Theme Toggle** (TODO-015, US-402) - COMPLETED ✅
   - Implemented icon-based theme toggle in feed sidebar header
   - Added to the left of sync button for easy access
@@ -1913,6 +2081,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed unused settings dialog components in favor of simpler icon approach
 
 ### Fixed - July 22, 2025 Session (Back Button Navigation)
+
 - **Enhanced Back Button Navigation Logic** (TODO-028) - COMPLETED ✅
   - Back button in article view now always returns to the article listing page
   - Previous behavior would sometimes navigate to previous article when using Previous/Next buttons
@@ -1923,6 +2092,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improves navigation consistency when browsing through multiple articles
 
 ### Added - July 22, 2025 Session (Bi-directional Sync Implementation)
+
 - **Bi-directional Sync to Inoreader** (TODO-037) - COMPLETED ✅
   - Implemented sync queue pattern for tracking local changes
   - Created database migration with sync_queue table and helper functions
@@ -1935,6 +2105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Successfully tested with real user actions
 
 ### Fixed - July 22, 2025 Session (Bi-directional Sync Bug Fix)
+
 - **Client-Side Sync Queue RPC Calls** (TODO-038) - COMPLETED ✅
   - Fixed SQL syntax error in add_to_sync_queue function
   - Changed from invalid CASE statement with arrays to IF/ELSIF logic
@@ -1943,6 +2114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tested with Playwright browser automation
 
 ### Added - July 22, 2025 Session (First Production Deployment)
+
 - **Blue-Green Deployment Infrastructure** (TODO-033 to TODO-036) - COMPLETED ✅
   - Created development branch and multi-environment configuration
   - Updated PM2 ecosystem.config.js for production (port 3147) and development (port 3000)
@@ -1952,6 +2124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Note: Port conflict with Obsidian Docker container on port 80, using port 3147 directly
 
 ### Added - July 21, 2025 Session (Automatic Daily Sync)
+
 - **Automatic Daily Sync** (TODO-006, US-102) - COMPLETED ✅
   - Implemented node-cron based automatic sync service
   - Syncs run at 2:00 AM and 2:00 PM (America/Toronto timezone)
@@ -1966,6 +2139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Complete documentation at `/docs/deployment/automatic-sync.md`
 
 ### Added - July 21, 2025 Session (Production Deployment Infrastructure)
+
 - **Caddy Configuration** (TODO-011, US-501) - COMPLETED ✅
   - Created Caddyfile for reverse proxy configuration routing `/reader/*` to Next.js
   - Created PM2 ecosystem.config.js with 1GB memory limit
@@ -1973,7 +2147,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added service status checking and monitoring scripts
   - Comprehensive documentation for Caddy and PM2 setup
   - Ready for production deployment at http://100.96.166.53/reader
-  
 - **Tailscale Monitoring** (TODO-012, US-105) - COMPLETED ✅
   - Automated monitoring script checks Tailscale connection every 5 minutes
   - Auto-restart functionality with `sudo tailscale up` if disconnected
@@ -1984,6 +2157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Critical infrastructure to ensure clients can always access the service
 
 ### Enhanced - July 21, 2025 Session (Database-Driven Read Status Filtering)
+
 - **Enhanced Read Status Filtering** (TODO-014a Re-implementation) - COMPLETED ✅
   - Re-implemented following PRD specifications for database-driven counts
   - **Database-Driven Counts**: Replaced in-memory counts with actual database queries
@@ -2004,6 +2178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works seamlessly with existing feed/folder selection
 
 ### Added - July 21, 2025 Session (Read Status Filtering)
+
 - **Read Status Filtering** (TODO-014a, US-401a) - COMPLETED ✅
   - Added dropdown filter to toggle between Unread only/Read only/All articles
   - Default view shows only unread articles for better focus
@@ -2015,6 +2190,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improves reading workflow by hiding already-read articles by default
 
 ### Fixed - July 21, 2025 Session (PWA Asset 404 Errors)
+
 - **PWA Asset 404 Errors** (TODO-010, US-902) - COMPLETED ✅
   - Fixed 404 errors for favicon and apple-touch-icon files
   - All assets already existed in correct locations
@@ -2026,6 +2202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Icons work correctly in production with proper basePath handling
 
 ### Fixed - July 21, 2025 Session (Scroll Position Preservation)
+
 - **Scroll Position Loss on Navigation Back** (TODO-009a, US-903) - COMPLETED ✅
   - Fixed scroll position resetting to top when returning from article detail view
   - Fixed feed filter not being preserved when navigating back
@@ -2040,6 +2217,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tested successfully on iPhone and iPad Safari browsers
 
 ### Fixed - July 21, 2025 Session (iOS Safari Button Controls)
+
 - **Article View Interface Controls** (TODO-009, US-901) - COMPLETED ✅
   - Fixed iOS Safari button click issues requiring double-tap
   - Created IOSButton component with proper touch event handling
@@ -2051,7 +2229,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained full compatibility with desktop browsers
 
 ### Fixed - July 21, 2025 Session (Critical Security Vulnerabilities) ✅ COMPLETED
+
 - **Row Level Security Implementation** (TODO-001, US-801) - COMPLETED ✅
+
   - Enabled RLS on all 6 public tables (users, feeds, folders, articles, api_usage, sync_metadata)
   - Created comprehensive RLS policies restricting access to 'shayon' user only
   - Client (anon key) can read feeds/articles and update article read/starred status
@@ -2062,6 +2242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Security advisor shows no warnings - critical vulnerability resolved
 
 - **Function Security Vulnerability Fix** (TODO-002, US-802) - COMPLETED ✅
+
   - Fixed `update_updated_at_column` function with mutable search_path vulnerability
   - Recreated function with explicit `SET search_path = public` directive
   - Recreated all associated triggers for updated_at columns
@@ -2075,6 +2256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Database now production-ready with proper security policies
 
 ### Added - July 21, 2025 Session (Summary UI Integration)
+
 - **Summary UI Integration** (US-302) - COMPLETED ✅
   - Created SummaryButton component with icon and full button variants
   - Implemented loading states with shimmer animation in article list
@@ -2087,7 +2269,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Event propagation properly handled to prevent unwanted navigation
 
 ### Added - July 21, 2025 Session (Claude API Integration)
+
 - **Claude API Integration** (US-301) - COMPLETED ✅
+
   - Updated to Claude 4 Sonnet model (`claude-sonnet-4-20250514`)
   - 150-175 word AI-powered article summaries
   - Summaries successfully stored in `ai_summary` database field
@@ -2098,6 +2282,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tested and verified with real article data
 
 - **Configurable Claude Model** - Enhancement
+
   - Added `CLAUDE_SUMMARIZATION_MODEL` environment variable
   - Allows easy switching between Claude models without code changes
   - Defaults to `claude-sonnet-4-20250514` if not specified
@@ -2110,6 +2295,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Summaries now start directly with content
 
 ### In Progress - July 20, 2025 Session (Server API Integration)
+
 - **Server API Integration** (US-203) - Sync functionality working, UI integration pending
   - ✅ Sync button successfully calls `POST /api/sync` endpoint
   - ✅ Progress polling with `GET /api/sync/status/:id` works perfectly
@@ -2130,6 +2316,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ❌ "Generate Summary" UI integration pending (server endpoint ready)
 
 ### Added - July 20, 2025 Session (Server API Endpoints)
+
 - **Server API Endpoints** (US-103) - Complete server-side API implementation
   - Created `POST /api/articles/:id/fetch-content` for content extraction
     - Integrates Mozilla Readability for clean article extraction
@@ -2153,6 +2340,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added comprehensive API documentation
 
 ### Database - July 20, 2025 Session (Server API Endpoints)
+
 - **New Tables** for API functionality
   - Created `api_usage` table for tracking API rate limits
   - Created `sync_metadata` table for storing sync state
@@ -2166,6 +2354,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Successfully ran migration in Supabase
 
 ### Technical Notes - July 20, 2025 Session
+
 - **Dependencies Added**:
   - `@mozilla/readability` - For content extraction
   - `@anthropic-ai/sdk` - For Claude API integration
@@ -2173,7 +2362,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Important**: US-103 creates the server endpoints only. Client integration (US-203) is still needed for users to access these features through the UI.
 
 ### Added - July 20, 2025 Session (Server-Client Architecture)
+
 - **Server OAuth Setup** (US-101) - Server handles all Inoreader authentication
+
   - Created one-time OAuth setup script using Playwright automation
   - Uses test credentials from `.env` file
   - Runs on Mac Mini with localhost:8080 callback
@@ -2183,6 +2374,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear success/error messages during setup
 
 - **Server Sync Service** (US-102 - Partially Complete) - Server-side data sync
+
   - Created `/api/sync` endpoint for manual sync
   - Created `/api/sync/status/:id` for polling sync progress
   - Efficient API usage: 4-5 calls per sync (subscriptions, counts, articles)
@@ -2193,6 +2385,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Manual sync working - automatic cron job deferred to later
 
 - **Remove Client Authentication** (US-201) - Client has no auth
+
   - Removed all OAuth code from client
   - Removed authentication guards
   - Removed token management
@@ -2210,18 +2403,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Synced data now visible in UI without authentication
 
 ### Changed - July 20, 2025 Session
+
 - **Architecture**: Migrated from client-side OAuth to server-client model
 - **Data Flow**: Server handles all external APIs, client is presentation only
 - **Authentication**: Removed from client, controlled by Tailscale network
 - **Storage**: Moved from IndexedDB to Supabase for all client data
 
 ### Technical - July 20, 2025 Session
+
 - **Server**: Node.js with encrypted token storage
 - **Client**: Next.js reading from Supabase only
 - **Security**: Server-side OAuth, encrypted tokens, Tailscale network control
 - **Performance**: ~5 second sync for 69 feeds and 100 articles
 
 ### Added - July 16, 2025 Session (Issue #35 - COMPLETED ✅)
+
 - **API Logging Service** - Track and monitor Inoreader API calls
   - Created `/api/logs/inoreader` endpoint for centralized logging
   - Logs all API calls to `logs/inoreader-api-calls.jsonl` file
@@ -2234,6 +2430,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Simple analysis with standard Unix tools (jq, grep, sort)
 
 ### Added - July 16, 2025 Session (Issue #43 - COMPLETED ✅)
+
 - **Supabase Sync Integration** - Cross-domain data persistence
   - Modified sync-store.ts to sync data to both IndexedDB and Supabase
   - Implemented automatic user creation/retrieval based on Inoreader ID
@@ -2245,6 +2442,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintains backward compatibility with existing IndexedDB-only functionality
 
 ### Added - July 16, 2025 Session (Issue #39 - COMPLETED ✅)
+
 - **Legacy IndexedDB Data Recovery** - Recover data from previous sessions
   - Implemented comprehensive legacy database detection across domains
   - Created recovery dialog with database selection UI
@@ -2255,11 +2453,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing sync and storage systems
 
 ### Fixed - July 16, 2025 Session (Issue #39)
+
 - **Supabase Schema** - Added missing 'preferences' column to users table
   - Fixed migration blocker by adding jsonb preferences column with default '{}'
   - Enabled successful testing of legacy data recovery feature
 
 ### Added - July 16, 2025 Session (Issue #38 - COMPLETED ✅)
+
 - **Supabase Database Schema & Client Setup** - Foundation for hybrid architecture
   - Created 4-table PostgreSQL schema (users, feeds, articles, folders)
   - Implemented complete Supabase client with connection helpers
@@ -2271,6 +2471,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Established foundation for hybrid IndexedDB + Supabase architecture
 
 ### Technical - July 16, 2025 Session (Issue #38 - COMPLETED ✅)
+
 - **Database Architecture** - Production-ready PostgreSQL schema with proper relationships
 - **Performance Optimization** - Indexes on all foreign keys and common query fields
 - **Code Quality** - 100% TypeScript coverage, ESLint compliance, comprehensive testing
@@ -2278,6 +2479,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Issue Management** - Broke down Issue #37 into 5 child issues for phased implementation
 
 ### Added - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+
 - **365-Day Token Persistence** - Users stay logged in for a full year
   - Changed access token expiration from 1 hour to 365 days
   - Updated token refresh endpoint to maintain 365-day expiration
@@ -2286,6 +2488,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Eliminates daily login requirement for users
 
 ### Fixed - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+
 - **Removed Auto-Sync Behaviors** - App now loads instantly from cache
   - Removed ?sync=true parameter from OAuth callback redirect
   - Eliminated auto-sync logic from SimpleFeedSidebar and FeedList components
@@ -2294,6 +2497,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added URL parameter cleanup for backward compatibility
 
 ### Added - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+
 - **Manual Sync Control** - Users have full control over when to sync
   - Enhanced sync button in feed sidebar with progress indicators
   - Added prominent empty state UI with "No feeds yet" message
@@ -2302,11 +2506,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved user experience with manual sync workflow
 
 ### Technical - July 16, 2025 Session (Issue #36 - COMPLETED ✅)
+
 - **API Optimization** - Reduced API consumption from ~10 calls per app open to 0 calls
 - **Development Environment** - Updated to use reserved ngrok domain (strong-stunning-worm.ngrok-free.app)
 - **Documentation** - Updated README.md and CLAUDE.local.md with ngrok configuration
 
 ### Added - July 16, 2025 Session (Issue #34)
+
 - **Theme Toggle Control** - Added UI control for switching between light/dark/system themes
   - Theme toggle button added to feed sidebar header
   - Cycles through light (sun icon), dark (moon icon), and system (monitor icon) modes
@@ -2316,6 +2522,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [UPDATE July 22, 2025: Moved from sync button area to dedicated icon in header]
 
 ### Fixed - July 16, 2025 Session
+
 - **Sync Race Condition** - Fixed unnecessary API calls on login
   - Added loading state check before sync evaluation
   - Prevents sync when existing feeds are still loading from database
@@ -2323,6 +2530,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Helps preserve the 100 calls/day rate limit
 
 ### Added - July 15, 2025 Session (Issue #26)
+
 - **Auto-sync on Authentication** - Feeds now sync automatically after login
   - OAuth callback redirects to `/reader?sync=true` instead of home page
   - Empty feed state triggers automatic sync on first load
@@ -2332,6 +2540,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Respects existing sync timestamps to avoid unnecessary API calls
 
 ### Added - July 15, 2025 Session (Issue #21)
+
 - **Article List Component** - Comprehensive article browsing implementation
   - Created dedicated ArticleList component with all required features
   - Implemented infinite scroll with IntersectionObserver for performance
@@ -2345,6 +2554,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - AI summary indicator (⚡) for articles with generated summaries
 
 ### Fixed - July 15, 2025 Session
+
 - **React Rendering Error** - Fixed "Objects are not valid as a React child" error by properly extracting content from InoreaderContent objects
 - **Data Corruption** - Cleaned up corrupted article data where content/summary were stored as objects instead of strings
 - **Hydration Mismatches** - Fixed server/client rendering differences with dates and browser APIs
@@ -2352,18 +2562,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Console Errors** - Resolved all major console errors and warnings
 
 ### Added
+
 - **Data Cleanup Utilities** - Created comprehensive data cleanup functions for corrupted articles
 - **Debug Endpoint** - Added /api/debug/data-cleanup for corruption detection and cleanup
 - **Error Prevention** - Article store now auto-cleans corrupted data on load
 - **Test Page Tools** - Added corruption check and cleanup buttons to test page
 
 ### Changed
+
 - **Documentation** - Updated README.md and CLAUDE.local.md to specify ngrok URL (https://d2c0493e4ec2.ngrok-free.app) for all testing
 - **Sync Store** - Enhanced to properly extract .content from Inoreader API responses
 - **Network Status Hook** - Made SSR-safe with proper window/navigator checks
 - **Headers** - Added Permissions-Policy header to suppress browsing-topics warning
 
 ### Previous Session Work (July 15, 2025 - Early Morning)
+
 - **Authentication System** - Resolved Next.js 15+ cookie handling in API routes
 - **API Integration** - All Inoreader API endpoints now return 200 status codes
 - **Data Sync** - Successfully syncing 69 feeds + 100 articles in 1.6 seconds
@@ -2372,6 +2585,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2025-07-15
 
 ### Major Breakthrough
+
 - **Issue #25 Backend Complete** - Authentication and sync functionality working
 - **Real Data Integration** - Successfully connected to live Inoreader account
 - **Production Ready Sync** - Efficient batched API calls with error handling
@@ -2379,6 +2593,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Feed Hierarchy Display Component** (2025-07-14) - Issue #20
+
   - Created FeedList component with hierarchical folder structure display
   - Implemented collapsible folders using Radix UI Collapsible with smooth animations
   - Added unread count badges for feeds and folders with real-time updates
@@ -2391,6 +2606,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All acceptance criteria from US-004 successfully implemented
 
 - **Network Access and Authentication Improvements** (2025-07-14)
+
   - Fixed authentication loading loop that prevented login screen display
   - Added ngrok integration for secure HTTPS access from any device
   - Updated OAuth callback handling to support proxied requests
@@ -2398,7 +2614,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created SSL certificates with mkcert for local HTTPS development
   - Fixed redirect URL handling in authentication callback route
 
-- **Complete IndexedDB Data Storage System** 
+- **Complete IndexedDB Data Storage System**
   - **Article Store**: Full CRUD operations with pagination, filtering, and offline sync queue
   - **Feed Store**: Hierarchical feed management with real-time unread count tracking
   - **Enhanced Sync Store**: Offline action queuing with Inoreader API integration
@@ -2410,6 +2626,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Production Ready**: 2,000+ lines of robust, tested data management code
 
 ### Completed
+
 - **Epic 1: Foundation & Authentication** - All user stories complete (US-001, US-002, US-003)
 - **Issue #7**: US-003 Initial Data Storage - Implementation verified and tested
 - **Data Layer**: Production-ready foundation for Epic 2 (Core Reading Experience)

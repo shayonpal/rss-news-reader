@@ -9,24 +9,28 @@ This directory contains investigation reports and analysis of server instability
 A series of detailed investigation reports documenting server crashes and recovery attempts:
 
 1. **investigation-report-2025-07-26.md**
+
    - **Time**: Initial report
    - **Status**: Historical 📋
    - **Issue**: First documentation of server crashes affecting PM2 services
    - **Findings**: Initial crash patterns and recovery attempts
 
 2. **investigation-report-2025-07-26_14-09-00.md**
+
    - **Time**: 2:09 PM
    - **Status**: Historical 📋
    - **Issue**: Continued analysis of PM2 service failures
    - **Findings**: Identified memory pressure and process management issues
 
 3. **investigation-report-2025-07-26_14-16-10.md**
+
    - **Time**: 2:16 PM
    - **Status**: Historical 📋
    - **Issue**: Deep dive into root causes
    - **Findings**: Database connection pool exhaustion, memory leaks
 
 4. **investigation-report-2025-07-26_14-30-00.md**
+
    - **Time**: 2:30 PM
    - **Status**: Historical 📋
    - **Issue**: Comprehensive analysis and recovery plan
@@ -41,6 +45,7 @@ A series of detailed investigation reports documenting server crashes and recove
 ## Key Issues Identified
 
 ### Root Causes
+
 1. **Memory Pressure**: Services consuming excessive memory
 2. **Database Connections**: Connection pool exhaustion
 3. **PM2 Configuration**: Suboptimal restart strategies
@@ -48,6 +53,7 @@ A series of detailed investigation reports documenting server crashes and recove
 5. **Monitoring Gaps**: Lack of proactive monitoring
 
 ### Symptoms
+
 - PM2 services showing "errored" status
 - High memory usage (>90%)
 - Database connection timeouts
@@ -57,12 +63,14 @@ A series of detailed investigation reports documenting server crashes and recove
 ## Resolution Actions Taken
 
 1. **Immediate Recovery**:
+
    - Killed all Node.js processes
    - Cleared PM2 logs
    - Restarted services with proper sequencing
    - Implemented health checks
 
 2. **Configuration Improvements**:
+
    - Added memory limits to PM2 ecosystem
    - Configured proper restart strategies
    - Implemented connection pooling limits
@@ -92,6 +100,7 @@ A series of detailed investigation reports documenting server crashes and recove
 ## Prevention Measures
 
 ### Implemented
+
 - ✅ PM2 memory limits
 - ✅ Database connection pooling
 - ✅ Health check endpoints
@@ -99,6 +108,7 @@ A series of detailed investigation reports documenting server crashes and recove
 - ✅ Uptime Kuma monitoring
 
 ### Planned
+
 - 🔄 Implement circuit breakers
 - 🔄 Add performance profiling
 - 🔄 Set up automated alerts
@@ -107,17 +117,20 @@ A series of detailed investigation reports documenting server crashes and recove
 ## Quick Reference
 
 ### Check Service Health
+
 ```bash
 pm2 list
 pm2 monit
 ```
 
 ### View Recent Logs
+
 ```bash
 pm2 logs --lines 100
 ```
 
 ### Emergency Recovery
+
 ```bash
 # Kill all Node processes
 pkill -f node

@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 import type {
   HealthCheckResult,
   ServiceHealth,
@@ -12,7 +12,7 @@ import type {
   AuthHealth,
   NetworkHealth,
   HealthCheckConfig,
-} from '@/types/health';
+} from "@/types/health";
 
 export class HealthCheckService {
   private static instance: HealthCheckService;
@@ -59,7 +59,7 @@ export class HealthCheckService {
       const overall = this.calculateOverallStatus(services);
 
       // Track failed checks
-      if (overall === 'unhealthy' || overall === 'degraded') {
+      if (overall === "unhealthy" || overall === "degraded") {
         this.failedChecks++;
       }
 
@@ -72,8 +72,8 @@ export class HealthCheckService {
     } catch (error) {
       this.failedChecks++;
       this.lastError = {
-        service: 'system',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        service: "system",
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date(),
       };
       throw error;
@@ -82,35 +82,35 @@ export class HealthCheckService {
 
   private async checkDatabase(): Promise<ServiceHealth> {
     const checks: ComponentHealthCheck[] = [];
-    let overallStatus: HealthStatus = 'healthy';
+    let overallStatus: HealthStatus = "healthy";
 
     // Check database connection
     const connectionCheck = await this.checkDatabaseConnection();
     checks.push(connectionCheck);
-    if (connectionCheck.status !== 'healthy') {
-      overallStatus = 'unhealthy';
+    if (connectionCheck.status !== "healthy") {
+      overallStatus = "unhealthy";
     }
 
     // Check storage usage
     const storageCheck = await this.checkDatabaseStorage();
     checks.push(storageCheck);
-    if (storageCheck.status === 'degraded' && overallStatus === 'healthy') {
-      overallStatus = 'degraded';
+    if (storageCheck.status === "degraded" && overallStatus === "healthy") {
+      overallStatus = "degraded";
     }
 
     // Check data integrity
     const integrityCheck = await this.checkDatabaseIntegrity();
     checks.push(integrityCheck);
-    if (integrityCheck.status !== 'healthy' && overallStatus === 'healthy') {
-      overallStatus = 'degraded';
+    if (integrityCheck.status !== "healthy" && overallStatus === "healthy") {
+      overallStatus = "degraded";
     }
 
     return {
-      name: 'database',
-      displayName: 'IndexedDB Database',
+      name: "database",
+      displayName: "IndexedDB Database",
       status: overallStatus,
       lastCheck: new Date(),
-      message: this.getServiceMessage('database', overallStatus),
+      message: this.getServiceMessage("database", overallStatus),
       checks,
     };
   }
@@ -119,15 +119,15 @@ export class HealthCheckService {
     const start = Date.now();
     try {
       // Check if we're in a browser environment
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         return {
-          name: 'connection',
-          status: 'unknown',
-          message: 'Database check not available server-side',
+          name: "connection",
+          status: "unknown",
+          message: "Database check not available server-side",
           duration: Date.now() - start,
         };
       }
-      
+
       // Test database connection by performing a simple query
       const count = await db.articles.count();
       const duration = Date.now() - start;
@@ -135,9 +135,9 @@ export class HealthCheckService {
       const storageInfo = await db.getStorageInfo();
 
       return {
-        name: 'connection',
-        status: 'healthy',
-        message: 'Database connection is active',
+        name: "connection",
+        status: "healthy",
+        message: "Database connection is active",
         duration,
         details: {
           connected: true,
@@ -149,67 +149,67 @@ export class HealthCheckService {
       };
     } catch (error) {
       return {
-        name: 'connection',
-        status: 'unhealthy',
-        message: 'Database connection failed',
+        name: "connection",
+        status: "unhealthy",
+        message: "Database connection failed",
         duration: Date.now() - start,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async checkDatabaseStorage(): Promise<ComponentHealthCheck> {
     try {
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         return {
-          name: 'storage',
-          status: 'unknown',
-          message: 'Storage check not available server-side',
+          name: "storage",
+          status: "unknown",
+          message: "Storage check not available server-side",
         };
       }
-      
+
       const storageInfo = await db.getStorageInfo();
       if (!storageInfo) {
         return {
-          name: 'storage',
-          status: 'unknown',
-          message: 'Unable to determine storage usage',
+          name: "storage",
+          status: "unknown",
+          message: "Unable to determine storage usage",
         };
       }
 
       const usagePercent = (storageInfo.usage / storageInfo.quota) * 100;
-      let status: HealthStatus = 'healthy';
+      let status: HealthStatus = "healthy";
       let message = `Storage usage: ${usagePercent.toFixed(1)}%`;
 
       if (usagePercent > 90) {
-        status = 'unhealthy';
+        status = "unhealthy";
         message = `Critical: Storage almost full (${usagePercent.toFixed(1)}%)`;
       } else if (usagePercent > 75) {
-        status = 'degraded';
+        status = "degraded";
         message = `Warning: High storage usage (${usagePercent.toFixed(1)}%)`;
       }
 
-      return { name: 'storage', status, message };
+      return { name: "storage", status, message };
     } catch (error) {
       return {
-        name: 'storage',
-        status: 'unknown',
-        message: 'Failed to check storage',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        name: "storage",
+        status: "unknown",
+        message: "Failed to check storage",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async checkDatabaseIntegrity(): Promise<ComponentHealthCheck> {
     try {
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         return {
-          name: 'integrity',
-          status: 'unknown',
-          message: 'Integrity check not available server-side',
+          name: "integrity",
+          status: "unknown",
+          message: "Integrity check not available server-side",
         };
       }
-      
+
       // Check for orphaned records
       const articles = await db.articles.toArray();
       const feedIds = new Set((await db.feeds.toArray()).map((f) => f.id));
@@ -217,24 +217,24 @@ export class HealthCheckService {
 
       if (orphanedArticles.length > 0) {
         return {
-          name: 'integrity',
-          status: 'degraded',
+          name: "integrity",
+          status: "degraded",
           message: `Found ${orphanedArticles.length} orphaned articles`,
           details: { orphanedCount: orphanedArticles.length },
         };
       }
 
       return {
-        name: 'integrity',
-        status: 'healthy',
-        message: 'No data integrity issues found',
+        name: "integrity",
+        status: "healthy",
+        message: "No data integrity issues found",
       };
     } catch (error) {
       return {
-        name: 'integrity',
-        status: 'unknown',
-        message: 'Failed to check data integrity',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        name: "integrity",
+        status: "unknown",
+        message: "Failed to check data integrity",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -252,20 +252,20 @@ export class HealthCheckService {
 
     // Calculate overall API status
     const statuses = checks.map((c) => c.status);
-    let overallStatus: HealthStatus = 'healthy';
-    
-    if (statuses.includes('unhealthy')) {
-      overallStatus = 'unhealthy';
-    } else if (statuses.includes('degraded')) {
-      overallStatus = 'degraded';
+    let overallStatus: HealthStatus = "healthy";
+
+    if (statuses.includes("unhealthy")) {
+      overallStatus = "unhealthy";
+    } else if (statuses.includes("degraded")) {
+      overallStatus = "degraded";
     }
 
     return {
-      name: 'api',
-      displayName: 'External APIs',
+      name: "api",
+      displayName: "External APIs",
       status: overallStatus,
       lastCheck: new Date(),
-      message: this.getServiceMessage('api', overallStatus),
+      message: this.getServiceMessage("api", overallStatus),
       checks,
     };
   }
@@ -274,12 +274,12 @@ export class HealthCheckService {
     // DISABLED: Authentication is now handled server-side only
     // No client-side auth endpoints exist in the new architecture
     return {
-      name: 'inoreader',
-      status: 'unknown',
-      message: 'Inoreader API check disabled (server-side auth only)',
+      name: "inoreader",
+      status: "unknown",
+      message: "Inoreader API check disabled (server-side auth only)",
       duration: 0,
       details: {
-        endpoint: 'N/A - Server-side only',
+        endpoint: "N/A - Server-side only",
         responseTime: 0,
         statusCode: 0,
       },
@@ -290,12 +290,12 @@ export class HealthCheckService {
     // DISABLED: Claude API is now accessed server-side only
     // No client-side Claude endpoints exist in the new architecture
     return {
-      name: 'claude',
-      status: 'unknown',
-      message: 'Claude API check disabled (server-side only)',
+      name: "claude",
+      status: "unknown",
+      message: "Claude API check disabled (server-side only)",
       duration: 0,
       details: {
-        endpoint: 'N/A - Server-side only',
+        endpoint: "N/A - Server-side only",
         responseTime: 0,
         statusCode: 0,
       },
@@ -316,30 +316,30 @@ export class HealthCheckService {
     const overallStatus = this.calculateComponentStatus(checks);
 
     return {
-      name: 'cache',
-      displayName: 'Caching System',
+      name: "cache",
+      displayName: "Caching System",
       status: overallStatus,
       lastCheck: new Date(),
-      message: this.getServiceMessage('cache', overallStatus),
+      message: this.getServiceMessage("cache", overallStatus),
       checks,
     };
   }
 
   private async checkServiceWorkerCache(): Promise<CacheHealth> {
     try {
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         return {
-          name: 'service-worker',
-          status: 'unknown',
-          message: 'Service Worker check not available server-side',
+          name: "service-worker",
+          status: "unknown",
+          message: "Service Worker check not available server-side",
         };
       }
-      
-      if (!('caches' in window)) {
+
+      if (!("caches" in window)) {
         return {
-          name: 'service-worker',
-          status: 'unhealthy',
-          message: 'Service Worker caches not available',
+          name: "service-worker",
+          status: "unhealthy",
+          message: "Service Worker caches not available",
         };
       }
 
@@ -347,8 +347,8 @@ export class HealthCheckService {
       const cacheStats = await this.getCacheStats();
 
       return {
-        name: 'service-worker',
-        status: 'healthy',
+        name: "service-worker",
+        status: "healthy",
         message: `${cacheNames.length} caches active`,
         details: {
           hitRate: cacheStats.hitRate,
@@ -360,25 +360,25 @@ export class HealthCheckService {
       };
     } catch (error) {
       return {
-        name: 'service-worker',
-        status: 'unknown',
-        message: 'Failed to check service worker cache',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        name: "service-worker",
+        status: "unknown",
+        message: "Failed to check service worker cache",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private checkLocalStorage(): ComponentHealthCheck {
     try {
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         return {
-          name: 'local-storage',
-          status: 'unknown',
-          message: 'LocalStorage check not available server-side',
+          name: "local-storage",
+          status: "unknown",
+          message: "LocalStorage check not available server-side",
         };
       }
-      
-      const test = '__health_check__';
+
+      const test = "__health_check__";
       localStorage.setItem(test, test);
       localStorage.removeItem(test);
 
@@ -387,21 +387,21 @@ export class HealthCheckService {
       const maxSize = 10 * 1024 * 1024; // 10MB estimate
       const usagePercent = (usage / maxSize) * 100;
 
-      let status: HealthStatus = 'healthy';
+      let status: HealthStatus = "healthy";
       let message = `LocalStorage usage: ${(usage / 1024).toFixed(1)}KB`;
 
       if (usagePercent > 90) {
-        status = 'degraded';
+        status = "degraded";
         message = `High LocalStorage usage: ${(usage / 1024).toFixed(1)}KB`;
       }
 
-      return { name: 'local-storage', status, message };
+      return { name: "local-storage", status, message };
     } catch (error) {
       return {
-        name: 'local-storage',
-        status: 'unhealthy',
-        message: 'LocalStorage is not accessible',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        name: "local-storage",
+        status: "unhealthy",
+        message: "LocalStorage is not accessible",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -412,9 +412,9 @@ export class HealthCheckService {
     // DISABLED: Authentication is now handled server-side only
     // No client authentication in the new architecture
     const authCheck: AuthHealth = {
-      name: 'authentication',
-      status: 'unknown',
-      message: 'Auth check disabled (server-side only)',
+      name: "authentication",
+      status: "unknown",
+      message: "Auth check disabled (server-side only)",
       details: {
         authenticated: false,
         tokenValid: false,
@@ -427,11 +427,11 @@ export class HealthCheckService {
     const overallStatus = this.calculateComponentStatus(checks);
 
     return {
-      name: 'auth',
-      displayName: 'Authentication',
+      name: "auth",
+      displayName: "Authentication",
       status: overallStatus,
       lastCheck: new Date(),
-      message: this.getServiceMessage('auth', overallStatus),
+      message: this.getServiceMessage("auth", overallStatus),
       checks,
     };
   }
@@ -441,22 +441,33 @@ export class HealthCheckService {
 
     // Basic connectivity check
     const connectivityCheck: NetworkHealth = {
-      name: 'connectivity',
-      status: typeof navigator !== 'undefined' ? (navigator.onLine ? 'healthy' : 'unhealthy') : 'unknown',
-      message: typeof navigator !== 'undefined' 
-        ? (navigator.onLine ? 'Network is online' : 'Network is offline')
-        : 'Network check not available server-side',
-      details: typeof navigator !== 'undefined' ? {
-        online: navigator.onLine,
-        connectionType: (navigator as any).connection?.effectiveType,
-        downlink: (navigator as any).connection?.downlink,
-        rtt: (navigator as any).connection?.rtt,
-      } : undefined,
+      name: "connectivity",
+      status:
+        typeof navigator !== "undefined"
+          ? navigator.onLine
+            ? "healthy"
+            : "unhealthy"
+          : "unknown",
+      message:
+        typeof navigator !== "undefined"
+          ? navigator.onLine
+            ? "Network is online"
+            : "Network is offline"
+          : "Network check not available server-side",
+      details:
+        typeof navigator !== "undefined"
+          ? {
+              online: navigator.onLine,
+              connectionType: (navigator as any).connection?.effectiveType,
+              downlink: (navigator as any).connection?.downlink,
+              rtt: (navigator as any).connection?.rtt,
+            }
+          : undefined,
     };
     checks.push(connectivityCheck);
 
     // Check external connectivity
-    if (typeof navigator !== 'undefined' && navigator.onLine) {
+    if (typeof navigator !== "undefined" && navigator.onLine) {
       const externalCheck = await this.checkExternalConnectivity();
       checks.push(externalCheck);
     }
@@ -464,11 +475,11 @@ export class HealthCheckService {
     const overallStatus = this.calculateComponentStatus(checks);
 
     return {
-      name: 'network',
-      displayName: 'Network Connectivity',
+      name: "network",
+      displayName: "Network Connectivity",
       status: overallStatus,
       lastCheck: new Date(),
-      message: this.getServiceMessage('network', overallStatus),
+      message: this.getServiceMessage("network", overallStatus),
       checks,
     };
   }
@@ -477,24 +488,24 @@ export class HealthCheckService {
     const start = Date.now();
     try {
       // Try to reach a reliable external endpoint
-      const response = await fetch('https://www.google.com/favicon.ico', {
-        mode: 'no-cors',
+      const response = await fetch("https://www.google.com/favicon.ico", {
+        mode: "no-cors",
         signal: AbortSignal.timeout(5000),
       });
-      
+
       return {
-        name: 'external',
-        status: 'healthy',
-        message: 'External connectivity verified',
+        name: "external",
+        status: "healthy",
+        message: "External connectivity verified",
         duration: Date.now() - start,
       };
     } catch (error) {
       return {
-        name: 'external',
-        status: 'degraded',
-        message: 'External connectivity issues',
+        name: "external",
+        status: "degraded",
+        message: "External connectivity issues",
         duration: Date.now() - start,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -502,28 +513,30 @@ export class HealthCheckService {
   // Helper methods
   private calculateOverallStatus(services: ServiceHealth[]): HealthStatus {
     const statuses = services.map((s) => s.status);
-    
-    if (statuses.includes('unhealthy')) {
-      return 'unhealthy';
-    } else if (statuses.includes('degraded')) {
-      return 'degraded';
-    } else if (statuses.includes('unknown')) {
-      return 'unknown';
+
+    if (statuses.includes("unhealthy")) {
+      return "unhealthy";
+    } else if (statuses.includes("degraded")) {
+      return "degraded";
+    } else if (statuses.includes("unknown")) {
+      return "unknown";
     }
-    return 'healthy';
+    return "healthy";
   }
 
-  private calculateComponentStatus(checks: ComponentHealthCheck[]): HealthStatus {
+  private calculateComponentStatus(
+    checks: ComponentHealthCheck[]
+  ): HealthStatus {
     const statuses = checks.map((c) => c.status);
-    
-    if (statuses.every((s) => s === 'healthy')) {
-      return 'healthy';
-    } else if (statuses.includes('unhealthy')) {
-      return 'unhealthy';
-    } else if (statuses.includes('degraded')) {
-      return 'degraded';
+
+    if (statuses.every((s) => s === "healthy")) {
+      return "healthy";
+    } else if (statuses.includes("unhealthy")) {
+      return "unhealthy";
+    } else if (statuses.includes("degraded")) {
+      return "degraded";
     }
-    return 'unknown';
+    return "unknown";
   }
 
   private getServiceMessage(service: string, status: HealthStatus): string {
@@ -540,10 +553,10 @@ export class HealthCheckService {
     if (!this.checkHistory.has(service)) {
       this.checkHistory.set(service, []);
     }
-    
+
     const history = this.checkHistory.get(service)!;
     history.push(duration);
-    
+
     // Keep only last 100 measurements
     if (history.length > 100) {
       history.shift();
@@ -552,19 +565,20 @@ export class HealthCheckService {
 
   private getMetrics(): HealthMetrics {
     const uptime = Math.floor((Date.now() - this.startTime.getTime()) / 1000);
-    
+
     // Calculate average response time from all tracked services
     let totalResponseTime = 0;
     let responseCount = 0;
-    
+
     this.checkHistory.forEach((times) => {
       times.forEach((time) => {
         totalResponseTime += time;
         responseCount++;
       });
     });
-    
-    const avgResponseTime = responseCount > 0 ? totalResponseTime / responseCount : 0;
+
+    const avgResponseTime =
+      responseCount > 0 ? totalResponseTime / responseCount : 0;
 
     return {
       uptime,

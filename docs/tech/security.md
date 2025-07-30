@@ -5,17 +5,20 @@ This document outlines the security measures and policies implemented in the RSS
 ## Security Architecture
 
 ### Network Security
+
 - **Tailscale VPN Required**: All access to the application requires connection to the Tailscale network (100.96.166.53)
 - **No Public Exposure**: The application does not accept connections from the public internet
 - **Network-Level Access Control**: Authentication handled at the network layer rather than application layer
 
 ### Authentication & Authorization
+
 - **Server-Side OAuth**: All Inoreader authentication is handled server-side
 - **Encrypted Token Storage**: OAuth tokens stored in `~/.rss-reader/tokens.json` using AES-256-GCM encryption
 - **No Client-Side Authentication**: The client application requires no user authentication
 - **Database RLS**: Row Level Security enabled on all Supabase tables with user-specific policies
 
 ### API Security
+
 - **Rate Limiting**: Inoreader API calls limited to 100 per day
 - **Service Role Protection**: Database service role key only used server-side
 - **Input Validation**: All API endpoints validate input parameters
@@ -28,6 +31,7 @@ This document outlines the security measures and policies implemented in the RSS
 **Issue**: Test and debug endpoints were exposing sensitive system information without proper access controls.
 
 **Endpoints Removed**:
+
 - `/test-supabase` (page) - Exposed database schema and connection details
 - `/test-server-api` (page) - Listed all API endpoints with examples
 - `/test-performance` (page) - Revealed system performance metrics
@@ -38,7 +42,8 @@ This document outlines the security measures and policies implemented in the RSS
 - `/api/test-refresh-stats` - Unauthorized database operations
 - `/api/debug/data-cleanup` - Data manipulation capabilities
 
-**Impact**: 
+**Impact**:
+
 - Removed potential attack vectors
 - Eliminated information disclosure vulnerabilities
 - Maintained all production functionality
@@ -49,18 +54,21 @@ This document outlines the security measures and policies implemented in the RSS
 ## Security Best Practices
 
 ### Development
+
 1. **Environment Variables**: All sensitive configuration stored in environment variables
 2. **No Hardcoded Secrets**: API keys and credentials never committed to version control
 3. **Build Validation**: Production builds validated to ensure no test endpoints included
 4. **Code Review**: Security-sensitive changes require thorough review
 
 ### Deployment
+
 1. **Process Management**: PM2 used for reliable service management with auto-restart
 2. **Log Management**: Sensitive information excluded from logs
 3. **File Permissions**: Restricted access to configuration and token files
 4. **Service Isolation**: Different PM2 apps for different services
 
 ### Monitoring
+
 1. **Health Checks**: Production health endpoints for monitoring without exposing internals
 2. **Error Tracking**: Structured error logging without sensitive data
 3. **Performance Monitoring**: System metrics tracking without user data exposure
@@ -69,6 +77,7 @@ This document outlines the security measures and policies implemented in the RSS
 ## Security Headers
 
 The application implements security headers:
+
 - Content Security Policy (CSP)
 - HTTP Strict Transport Security (HSTS)
 - X-Frame-Options: DENY
@@ -77,16 +86,19 @@ The application implements security headers:
 ## Data Protection
 
 ### Data Encryption
+
 - **In Transit**: All connections use HTTPS/TLS
 - **At Rest**: Supabase provides encryption at rest
 - **Tokens**: OAuth tokens encrypted with AES-256-GCM
 
 ### Data Minimization
+
 - Only necessary data stored locally
 - Periodic cleanup of old articles and logs
 - No user tracking or analytics
 
 ### Privacy
+
 - No personal data collection beyond RSS feed preferences
 - No third-party analytics or tracking
 - User data stays within Tailscale network
@@ -94,6 +106,7 @@ The application implements security headers:
 ## Incident Response
 
 ### Security Issue Reporting
+
 1. Document the issue with full technical details
 2. Assess impact and create Linear issue with "security" label
 3. Implement fix with comprehensive testing
@@ -101,6 +114,7 @@ The application implements security headers:
 5. Deploy fix immediately if critical
 
 ### Post-Incident Actions
+
 1. Root cause analysis
 2. Update security measures to prevent recurrence
 3. Review and update documentation
@@ -109,6 +123,7 @@ The application implements security headers:
 ## Security Checklist
 
 ### Pre-Deployment
+
 - [ ] All test/debug endpoints removed
 - [ ] Environment variables validated
 - [ ] No hardcoded credentials in code
@@ -116,6 +131,7 @@ The application implements security headers:
 - [ ] Security tests pass
 
 ### Regular Security Reviews
+
 - [ ] Review API endpoints for information disclosure
 - [ ] Check for hardcoded credentials
 - [ ] Validate access controls

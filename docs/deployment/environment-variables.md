@@ -8,7 +8,7 @@ The RSS News Reader uses environment variables for configuration, with ALL varia
 
 ## Variable Categories
 
-### 1. Client-Side Variables (NEXT_PUBLIC_*)
+### 1. Client-Side Variables (NEXT*PUBLIC*\*)
 
 These variables MUST be available at **build time** as they are embedded into the client-side JavaScript bundle:
 
@@ -55,29 +55,33 @@ These allow different configurations for production vs development:
 ## Loading Order and Precedence
 
 1. **Development Server (`npm run dev`)**:
+
    - Loads from `.env` file
-   - Next.js automatically handles NEXT_PUBLIC_* variables
+   - Next.js automatically handles NEXT*PUBLIC*\* variables
    - Server-side variables available via `process.env`
 
 2. **Production Build (`npm run build`)**:
+
    - Pre-build validation runs via `prebuild` script
    - Environment variables must be loaded before build starts
-   - NEXT_PUBLIC_* variables are embedded during build
+   - NEXT*PUBLIC*\* variables are embedded during build
    - Build script exports all required variables
 
 3. **PM2 Production (`pm2 start`)**:
    - Loads from `.env` file via ecosystem.config.js
    - Runtime variables injected into process
-   - Note: NEXT_PUBLIC_* must already be in the build
+   - Note: NEXT*PUBLIC*\* must already be in the build
 
 ## Build-Time vs Runtime Requirements
 
 ### Build-Time (Required for `npm run build`)
+
 - All `NEXT_PUBLIC_*` variables
 - `NODE_ENV`
 - Build process will fail if any are missing
 
 ### Runtime (Required when server starts)
+
 - All server-side variables
 - Database credentials
 - API keys
@@ -87,12 +91,14 @@ These allow different configurations for production vs development:
 
 ### Automatic Validation
 
-1. **Pre-build Validation**: 
+1. **Pre-build Validation**:
+
    ```bash
    npm run build  # Automatically runs ./scripts/validate-env.sh
    ```
 
 2. **Manual Validation**:
+
    ```bash
    ./scripts/validate-env.sh
    ```
@@ -114,18 +120,20 @@ These allow different configurations for production vs development:
 ## Setting Up Environment Variables
 
 1. **Initial Setup**:
+
    ```bash
    cp .env.example .env
    # Edit .env with your values
    ```
 
 2. **Verify Setup**:
+
    ```bash
    ./scripts/validate-env.sh
    ```
 
 3. **Production Deployment**:
-   - Ensure all NEXT_PUBLIC_* variables are set
+   - Ensure all NEXT*PUBLIC*\* variables are set
    - Run validation before building
    - Use production URLs and ports
 
@@ -133,18 +141,20 @@ These allow different configurations for production vs development:
 
 ### Common Issues
 
-1. **"Missing NEXT_PUBLIC_* variable" during build**:
+1. **"Missing NEXT*PUBLIC*\* variable" during build**:
+
    - Variable not exported before build
    - Check `.env` file has the variable
    - Run validation script to verify
 
 2. **"Internal Server Error" in production**:
+
    - Database credentials missing or incorrect
    - Run validation on production server
    - Check PM2 logs for specific errors
 
 3. **Client features not working**:
-   - NEXT_PUBLIC_* variables not in build
+   - NEXT*PUBLIC*\* variables not in build
    - Rebuild with proper environment
    - Verify build-time exports
 
@@ -175,6 +185,7 @@ pm2 env 0
 ## PM2 Integration
 
 The `ecosystem.config.js` file:
+
 - Loads `.env` at the top with `require('dotenv').config()`
 - Maps variables to each PM2 app's env section
 - Handles both development and production configs
@@ -182,13 +193,15 @@ The `ecosystem.config.js` file:
 
 ## Next.js Integration
 
-Next.js handles NEXT_PUBLIC_* variables specially:
+Next.js handles NEXT*PUBLIC*\* variables specially:
+
 - Must be available at build time
 - Embedded into client JavaScript
 - Cannot be changed at runtime
 - Accessible in browser code
 
 Regular variables:
+
 - Only available server-side
 - Can be changed at runtime
 - Not exposed to client code

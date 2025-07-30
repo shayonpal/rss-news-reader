@@ -5,6 +5,7 @@ This document describes the server API endpoints implemented as part of US-103.
 ## Overview
 
 All server API endpoints are designed to handle complex operations that should not run on the client:
+
 - External API communication (Inoreader)
 - Content extraction (Mozilla Readability)
 - AI summarization (Claude API)
@@ -19,12 +20,14 @@ All server API endpoints are designed to handle complex operations that should n
 **Description:** Triggers a server-side sync with Inoreader API
 
 **Request:**
+
 ```json
 POST /api/sync
 Content-Type: application/json
 ```
 
 **Response (Success):**
+
 ```json
 {
   "success": true,
@@ -39,6 +42,7 @@ Content-Type: application/json
 ```
 
 **Response (Rate Limited):**
+
 ```json
 {
   "error": "rate_limit_exceeded",
@@ -50,6 +54,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 429: Rate limit exceeded
 - 500: Server error
@@ -63,11 +68,13 @@ Content-Type: application/json
 **Description:** Polls the status of an ongoing sync operation
 
 **Request:**
+
 ```
 GET /api/sync/status/123e4567-e89b-12d3-a456-426614174000
 ```
 
 **Response:**
+
 ```json
 {
   "syncId": "123e4567-e89b-12d3-a456-426614174000",
@@ -79,6 +86,7 @@ GET /api/sync/status/123e4567-e89b-12d3-a456-426614174000
 ```
 
 **Status Values:**
+
 - `pending`: Sync queued but not started
 - `running`: Sync in progress
 - `completed`: Sync finished successfully
@@ -93,12 +101,14 @@ GET /api/sync/status/123e4567-e89b-12d3-a456-426614174000
 **Description:** Extracts clean, readable content from article URL using Mozilla Readability
 
 **Request:**
+
 ```json
 POST /api/articles/550e8400-e29b-41d4-a716-446655440000/fetch-content
 Content-Type: application/json
 ```
 
 **Response (Success):**
+
 ```json
 {
   "success": true,
@@ -113,6 +123,7 @@ Content-Type: application/json
 ```
 
 **Response (Cached):**
+
 ```json
 {
   "success": true,
@@ -122,6 +133,7 @@ Content-Type: application/json
 ```
 
 **Response (Fallback):**
+
 ```json
 {
   "success": true,
@@ -131,6 +143,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 400: No URL available
 - 404: Article not found
@@ -146,6 +159,7 @@ Content-Type: application/json
 **Description:** Generates a 150-175 word summary using Claude 4 Sonnet
 
 **Request:**
+
 ```json
 POST /api/articles/550e8400-e29b-41d4-a716-446655440000/summarize
 Content-Type: application/json
@@ -156,6 +170,7 @@ Content-Type: application/json
 ```
 
 **Response (Success):**
+
 ```json
 {
   "success": true,
@@ -168,6 +183,7 @@ Content-Type: application/json
 ```
 
 **Response (Cached):**
+
 ```json
 {
   "success": true,
@@ -177,6 +193,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
+
 - 200: Success
 - 400: No content to summarize
 - 401: Invalid API key
@@ -194,11 +211,13 @@ Content-Type: application/json
 **Description:** Comprehensive health check for the main Next.js application
 
 **Request:**
+
 ```
 GET /api/health/app
 ```
 
 **Response (Healthy):**
+
 ```json
 {
   "status": "healthy",
@@ -224,6 +243,7 @@ GET /api/health/app
 ```
 
 **Status Codes:**
+
 - 200: Healthy or degraded
 - 503: Unhealthy
 
@@ -236,11 +256,13 @@ GET /api/health/app
 **Description:** Tests database connectivity and query performance
 
 **Request:**
+
 ```
 GET /api/health/db
 ```
 
 **Response (Healthy):**
+
 ```json
 {
   "status": "healthy",
@@ -260,6 +282,7 @@ GET /api/health/db
 ```
 
 **Response (Unhealthy):**
+
 ```json
 {
   "status": "unhealthy",
@@ -273,6 +296,7 @@ GET /api/health/db
 ```
 
 **Status Codes:**
+
 - 200: Healthy
 - 503: Database connection error
 
@@ -285,11 +309,13 @@ GET /api/health/db
 **Description:** Returns the health status of the sync cron service by reading health file
 
 **Request:**
+
 ```
 GET /api/health/cron
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -313,11 +339,13 @@ GET /api/health/cron
 **Description:** Checks if articles are fresh by analyzing recent article timestamps and sync activity
 
 **Request:**
+
 ```
 GET /api/health/freshness
 ```
 
 **Response (Fresh Articles):**
+
 ```json
 {
   "status": "healthy",
@@ -334,6 +362,7 @@ GET /api/health/freshness
 ```
 
 **Response (Stale Articles):**
+
 ```json
 {
   "status": "warning",
@@ -355,12 +384,14 @@ GET /api/health/freshness
 ## Rate Limiting
 
 ### Inoreader API
+
 - **Limit:** 100 calls per day
 - **Reset:** Midnight UTC
 - **Tracking:** Stored in `api_usage` table
 - **Sync Usage:** ~4-5 calls per sync
 
 ### Claude API
+
 - **Limit:** Based on Anthropic account tier
 - **Tracking:** Each summarization tracked in `api_usage` table
 - **Cost:** Approximately $0.003 per summary
@@ -380,6 +411,7 @@ All endpoints follow a consistent error response format:
 ```
 
 Common error codes:
+
 - `rate_limit_exceeded`: API rate limit hit
 - `article_not_found`: Article ID not found
 - `sync_start_failed`: Failed to initiate sync
@@ -392,7 +424,9 @@ Common error codes:
 ## Database Tables
 
 ### api_usage
+
 Tracks API usage for rate limiting:
+
 ```sql
 CREATE TABLE api_usage (
   id UUID PRIMARY KEY,
@@ -404,7 +438,9 @@ CREATE TABLE api_usage (
 ```
 
 ### sync_metadata
+
 Stores sync-related metadata:
+
 ```sql
 CREATE TABLE sync_metadata (
   key VARCHAR(100) PRIMARY KEY,
@@ -414,6 +450,7 @@ CREATE TABLE sync_metadata (
 ```
 
 ### articles (extended columns)
+
 ```sql
 ALTER TABLE articles ADD COLUMN full_content TEXT;
 ALTER TABLE articles ADD COLUMN has_full_content BOOLEAN;
@@ -430,6 +467,7 @@ Use curl commands or tools like Postman to test endpoints directly. All test/deb
 ### Curl Examples
 
 #### Health Checks
+
 ```bash
 # Application health
 curl http://100.96.166.53:3147/reader/api/health/app
@@ -445,6 +483,7 @@ curl http://100.96.166.53:3147/reader/api/health/freshness
 ```
 
 #### Manual Sync
+
 ```bash
 # Trigger manual sync
 curl -X POST http://100.96.166.53:3147/reader/api/sync \
@@ -452,6 +491,7 @@ curl -X POST http://100.96.166.53:3147/reader/api/sync \
 ```
 
 #### Article Operations
+
 ```bash
 # Fetch full article content
 curl -X POST http://100.96.166.53:3147/reader/api/articles/ARTICLE_ID/fetch-content \

@@ -20,7 +20,7 @@ A clean, fast, and intelligent RSS reader that respects the user's time by provi
 
 ### Target User
 
-Initially built for personal use, with exactly one user,  with plans to open-source under GPL for the wider community.
+Initially built for personal use, with exactly one user, with plans to open-source under GPL for the wider community.
 
 ### Related Documentation
 
@@ -29,9 +29,10 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 
 ### Implementation Note
 
-**Current State vs Target Architecture**: This PRD describes the target server-client architecture where all Inoreader API communication happens server-side. The current implementation (as of July 2025) includes client-side OAuth and API calls that will be migrated to the server. 
+**Current State vs Target Architecture**: This PRD describes the target server-client architecture where all Inoreader API communication happens server-side. The current implementation (as of July 2025) includes client-side OAuth and API calls that will be migrated to the server.
 
 **Migration Approach**: The migration will use a clean-slate approach:
+
 - Keep all existing Supabase table structures (no schema changes)
 - Clear all existing article data before first server sync
 - No data migration needed - start fresh with server-side sync
@@ -60,6 +61,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 ### Content Processing & Full Content Extraction
 
 #### Core Content Handling
+
 - Server stores RSS content as-is from Inoreader (never replaced)
 - Full content stored in separate `full_content` field in database
 - Server uses Mozilla Readability for content extraction
@@ -67,6 +69,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - Visual indicator for fetched content (2% opacity overlay)
 
 #### Article List Display Priority
+
 - **Content snippets in article list use priority order**:
   1. AI summary (if available) - displayed in full
   2. Full content (if fetched) - line-clamped to 4 lines
@@ -75,6 +78,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - AI summaries exempt from line-clamping for complete context
 
 #### User Interface
+
 - **Header Menu**: Reorganized for cleaner layout
   - Header buttons: Back, Star, Summary, Fetch Full Content, More (⋮)
   - More dropdown contains: Share, Open Original
@@ -94,6 +98,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
   - "Content extraction failed. The article may be behind a paywall."
 
 #### Extraction Behavior
+
 - User-triggered full content fetching via buttons in article view
 - Server fetches article URL and extracts using Mozilla Readability
 - Clean, readable content extracted (ads/navigation removed)
@@ -102,6 +107,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - Failed extractions show user-friendly error with reason (manual fetch only)
 
 #### Auto-Fetch for Partial Feeds
+
 - Feeds can be marked as "partial content" via toggle in article view
 - Auto-fetch runs as part of sync process (after normal article sync completes)
 - Applies to: Manual sync, 2am automatic sync, 2pm automatic sync
@@ -111,6 +117,7 @@ Initially built for personal use, with exactly one user,  with plans to open-sou
 - Silent failures for auto-fetch (no user notification)
 
 #### Database Changes
+
 - Add `is_partial_content` boolean to feeds table
 - Add fetch_logs table for tracking all extraction attempts
 - Track attempt timestamp, success/failure, error reason
@@ -158,15 +165,17 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 #### Setup Process
 
 1. **Automated Setup with Playwright**:
+
    - Uses test credentials from `.env` file
    - No manual login required
    - Runs directly on Mac Mini server
 
 2. **OAuth Flow**:
+
    ```bash
    # Run on Mac Mini (already there, no SSH needed)
    npm run setup:oauth
-   
+
    # Script automatically:
    # - Starts temporary Express server on localhost:8080
    # - Launches Playwright browser
@@ -177,6 +186,7 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
    ```
 
 3. **Token Storage**:
+
    - Tokens stored in encrypted JSON file
    - Default location: `~/.rss-reader/tokens.json`
    - Environment variable: `RSS_READER_TOKENS_PATH`
@@ -184,6 +194,7 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
    - Encryption: Uses system keychain (node-keytar) or AES-256
 
 4. **Token Structure**:
+
    ```json
    {
      "access_token": "encrypted_token_here",
@@ -214,18 +225,22 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 **Efficient API Strategy: 4-5 calls per sync**
 
 1. **Get Feed Structure** (2 calls):
+
    - `/subscription/list` - All feed subscriptions and folders
    - `/tag/list` - All user tags and labels
 
 2. **Get Articles** (1 call):
+
    - `/stream/contents/user/-/state/com.google/reading-list`
    - Parameters: `n=100` (max articles), `ot=[timestamp]` (since last sync)
    - Returns ALL articles from ALL feeds in one request
 
 3. **Get Unread Counts** (1 call):
+
    - `/unread-count` - Returns counts for all feeds/folders
 
 4. **Update Read States** (0-1 call, if needed):
+
    - `/edit-tag` - Batch update read/unread changes from client
 
 5. **Write to Supabase**:
@@ -287,7 +302,7 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 - **Filter Persistence**: User's preference saved in localStorage
 - **Dynamic Headers**: Page title changes based on active filter
   - "Unread Articles" when showing unread only
-  - "Read Articles" when showing read only  
+  - "Read Articles" when showing read only
   - "All Articles" when showing everything
 - **Database Counts**: Article counts fetched from database, not loaded articles
   - Smart caching with 5-minute TTL for performance
@@ -311,6 +326,7 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 
 **Default Configuration**:
 The system uses a modular approach to construct summarization prompts with these default values:
+
 - **Word Count**: 150-175 words
 - **Focus**: key facts, main arguments, and important conclusions
 - **Style**: objective and informative
@@ -326,6 +342,7 @@ SUMMARY_STYLE=objective                 # Writing style
 ```
 
 **Generated Prompt Template** (constructed from variables):
+
 ```
 You are a news summarization assistant. Create a {STYLE} summary of the following article in {WORD_COUNT} words. Focus on {FOCUS}. Maintain objectivity and preserve the author's core message.
 
@@ -345,6 +362,7 @@ Write a clear, informative summary that captures the essence of this article wit
 **Customization Examples**:
 
 1. **Technical Blog Summarization**:
+
    ```env
    SUMMARY_WORD_COUNT=200-250
    SUMMARY_FOCUS=technical details, implementation steps, and code examples
@@ -352,6 +370,7 @@ Write a clear, informative summary that captures the essence of this article wit
    ```
 
 2. **Executive Briefing Style**:
+
    ```env
    SUMMARY_WORD_COUNT=100-125
    SUMMARY_FOCUS=business impact, key decisions, and action items
@@ -366,6 +385,7 @@ Write a clear, informative summary that captures the essence of this article wit
    ```
 
 **Implementation Details**:
+
 - Invalid configuration values silently fall back to defaults
 - Changes require server restart to take effect
 - Configuration is provider-agnostic (works with future LLM providers)
@@ -438,10 +458,12 @@ Write a clear, informative summary that captures the essence of this article wit
 #### Storage Strategy
 
 **Server Storage:**
+
 - Inoreader tokens in local file/environment
 - Sync logs and state
 
 **Supabase Storage:**
+
 - All article metadata and RSS content (in 'content' column)
 - Full content (when fetched by user, in 'full_content' column)
 - Feed and folder structure (existing tables)
@@ -453,6 +475,7 @@ Write a clear, informative summary that captures the essence of this article wit
 - Unread counts by feed/folder/tag (stored in respective tables)
 
 **Client Storage (PWA):**
+
 - Service worker for basic PWA features
 - No article caching (always fetch from Supabase)
 
@@ -490,22 +513,26 @@ Enable independent scrolling for the sidebar and article list, allowing users to
 #### Technical Implementation
 
 **CSS Layout Structure**:
+
 - Main container: `h-screen` with `overflow-hidden` to prevent document scrolling
 - Sidebar: Fixed height container with `overflow-y-auto`
 - Article list: Flexible height container with `overflow-y-auto` and `ios-scroll-container` class
 - Header: Positioned fixed, controlled by article list scroll events
 
 **Scroll Container Management**:
+
 - Pass `scrollContainerRef` from parent components to children
 - Update all scroll event listeners to use container references instead of window
 - Apply `overscroll-behavior: contain` to prevent scroll chaining
 
 **iOS Considerations**:
+
 - Dual approach for auto-mark-as-read: IntersectionObserver + manual position checking
 - Liquid glass scroll-to-top buttons as workaround for iOS gesture limitation
 - Safe area padding for PWA mode to prevent status bar overlap
 
 **Component Updates**:
+
 - `src/app/page.tsx`: Main layout restructuring with container refs
 - `src/components/articles/article-list.tsx`: Container-based scrolling
 - `src/components/feeds/simple-feed-sidebar.tsx`: Independent scroll container
@@ -713,6 +740,7 @@ Enable independent scrolling for the sidebar and article list, allowing users to
 ### System Overview
 
 The RSS Reader uses a hybrid architecture where:
+
 - **Client (PWA)** reads article data directly from Supabase for performance
 - **Client** calls server API endpoints for operations requiring server-side logic
 - **Server (Mac Mini)** handles all Inoreader communication and processing
@@ -733,7 +761,8 @@ The RSS Reader uses a hybrid architecture where:
 ### Server Architecture
 
 Single Next.js application with:
-- **API Routes**: Handle client requests (/api/*)
+
+- **API Routes**: Handle client requests (/api/\*)
 - **Sync Service**: Background service using node-cron
 - **Process Manager**: PM2 manages the Node.js process
 - **Reverse Proxy**: Caddy routes /reader to Next.js port
@@ -758,7 +787,7 @@ Single Next.js application with:
 
 ```sql
 -- Articles table (add new columns)
-ALTER TABLE articles 
+ALTER TABLE articles
 ADD COLUMN author TEXT,
 ADD COLUMN full_content TEXT,
 ADD COLUMN ai_summary TEXT,
@@ -829,6 +858,7 @@ CREATE INDEX idx_sync_errors_created_at ON sync_errors(created_at DESC);
 ### Server API Endpoints
 
 #### 1. Trigger Manual Sync
+
 ```typescript
 POST /api/sync
 Request: {}
@@ -844,6 +874,7 @@ Errors: {
 ```
 
 #### 2. Check Sync Status
+
 ```typescript
 GET /api/sync/status/:syncId
 Response: {
@@ -857,6 +888,7 @@ Response: {
 ```
 
 #### 3. Fetch Full Article Content
+
 ```typescript
 POST /api/articles/:id/fetch-content
 Request: {}
@@ -872,6 +904,7 @@ Errors: {
 ```
 
 #### 4. Generate AI Summary
+
 ```typescript
 POST /api/articles/:id/summarize
 Request: {
@@ -890,11 +923,12 @@ Errors: {
 ```
 
 ### Error Response Format
+
 ```typescript
 interface ErrorResponse {
-  error: string,
-  message: string,
-  details?: any
+  error: string;
+  message: string;
+  details?: any;
 }
 ```
 
@@ -904,7 +938,7 @@ interface ErrorResponse {
 
 1. **Client initiates sync**: POST /api/sync → receives syncId
 2. **Server updates status**: Writes to sync_metadata table
-3. **Client monitors progress**: 
+3. **Client monitors progress**:
    - Simple polling: GET /api/sync/status/:syncId every 2 seconds
    - (Future enhancement: Supabase realtime subscription)
 4. **Completion**: Client refreshes data when status = 'completed'
@@ -913,7 +947,7 @@ interface ErrorResponse {
 
 - **Strategy**: Last write wins based on timestamps
 - **Implementation**: All updates include updated_at timestamp
-- **Sync order**: 
+- **Sync order**:
   1. Fetch from Inoreader
   2. Apply client changes to Inoreader (read/unread)
   3. Write merged state to Supabase
@@ -960,16 +994,19 @@ const MAX_PER_FEED = 20;
 ## Additional Technical Details
 
 ### Unread Counts
+
 - **Storage**: Cached in feeds.unread_count and tags.unread_count
 - **Update**: Recalculated during each sync
 - **Real-time**: Updated immediately when user marks read/unread
 
 ### Content Extraction Fallback
+
 - **Primary**: Mozilla Readability extracts clean content
 - **Fallback**: If Readability fails, show original RSS content
 - **User feedback**: "Content extraction failed" message with option to view RSS
 
 ### Tailscale Monitoring
+
 - **Health check**: Server monitors Tailscale service every 5 minutes
 - **Auto-restart**: `sudo tailscale up` if service is down
 - **Sudo configuration**: Add to `/etc/sudoers.d/tailscale`:
@@ -980,36 +1017,40 @@ const MAX_PER_FEED = 20;
 - **Critical**: Without Tailscale, clients cannot access the service
 
 ### PM2 Configuration
+
 - **Auto-restart**: Yes, enable on crashes
 - **Memory limit**: 1GB for Next.js app, 256MB for cron service
 - **Config file** (`ecosystem.config.js`):
   ```javascript
   module.exports = {
-    apps: [{
-      name: 'rss-reader',
-      script: 'npm',
-      args: 'start',
-      max_memory_restart: '1G',
-      error_file: 'logs/pm2-error.log',
-      out_file: 'logs/pm2-out.log',
-      merge_logs: true,
-      time: true
-    }, {
-      name: 'rss-sync-cron',
-      script: './src/server/cron.js',
-      instances: 1,
-      max_memory_restart: '256M',
-      error_file: 'logs/cron-error.log',
-      out_file: 'logs/cron-out.log',
-      merge_logs: true,
-      time: true,
-      env: {
-        ENABLE_AUTO_SYNC: true,
-        SYNC_CRON_SCHEDULE: '0 2,14 * * *',
-        SYNC_LOG_PATH: './logs/sync-cron.jsonl'
-      }
-    }]
-  }
+    apps: [
+      {
+        name: "rss-reader",
+        script: "npm",
+        args: "start",
+        max_memory_restart: "1G",
+        error_file: "logs/pm2-error.log",
+        out_file: "logs/pm2-out.log",
+        merge_logs: true,
+        time: true,
+      },
+      {
+        name: "rss-sync-cron",
+        script: "./src/server/cron.js",
+        instances: 1,
+        max_memory_restart: "256M",
+        error_file: "logs/cron-error.log",
+        out_file: "logs/cron-out.log",
+        merge_logs: true,
+        time: true,
+        env: {
+          ENABLE_AUTO_SYNC: true,
+          SYNC_CRON_SCHEDULE: "0 2,14 * * *",
+          SYNC_LOG_PATH: "./logs/sync-cron.jsonl",
+        },
+      },
+    ],
+  };
   ```
 
 ## Development Milestones
@@ -1080,6 +1121,7 @@ const MAX_PER_FEED = 20;
 ### Technology Stack
 
 **Server (Mac Mini):**
+
 - **Runtime**: Node.js for sync service
 - **Scheduler**: node-cron for automated sync
 - **OAuth**: Automated Playwright setup using test credentials
@@ -1088,6 +1130,7 @@ const MAX_PER_FEED = 20;
 - **API Endpoints**: Express for manual sync, full content, summarization
 
 **Client (PWA):**
+
 - **Framework**: Next.js (already in use)
 - **Styling**: Tailwind CSS + Typography plugin
 - **Components**: Radix UI for accessibility
@@ -1096,6 +1139,7 @@ const MAX_PER_FEED = 20;
 - **PWA**: Workbox for service worker
 
 **Infrastructure:**
+
 - **Reverse Proxy**: Caddy for path routing
 - **Network**: Tailscale for secure access
 - **Database**: Supabase (existing)
@@ -1105,6 +1149,7 @@ const MAX_PER_FEED = 20;
 **Access URL:** `http://100.96.166.53/reader`
 
 **Server Components:**
+
 1. **Sync Service** - Runs on Mac Mini, handles all Inoreader communication
 2. **API Service** - Handles full content fetching, summarization
 3. **Next.js App** - Serves the PWA client
@@ -1112,6 +1157,7 @@ const MAX_PER_FEED = 20;
 5. **Cron** - Triggers daily sync
 
 **Data Flow:**
+
 ```
 [Inoreader API] ← → [Mac Mini Sync Service] → [Supabase]
                                                     ↑
@@ -1128,7 +1174,7 @@ const MAX_PER_FEED = 20;
 - **Test Credentials**: Already configured in .env file
   - Inoreader test account credentials available
   - Dev API calls count against same daily limit anyway
-- **Mock Data**: 
+- **Mock Data**:
   - Mock Inoreader responses in `mocks/` directory
   - Environment variable `USE_MOCK_DATA=true` for development
   - Preserves API calls during testing
@@ -1148,6 +1194,7 @@ const MAX_PER_FEED = 20;
 **Current Setup**: Playwright MCP server already configured with test credentials
 
 **Option A: Playwright MCP (Recommended for Initial Development)**
+
 - ✅ **Pros**:
   - Already configured and ready to use
   - Visual testing through browser automation
@@ -1160,6 +1207,7 @@ const MAX_PER_FEED = 20;
   - Manual intervention required
 
 **Option B: Integrated Playwright Tests**
+
 - ✅ **Pros**:
   - Automated regression testing
   - CI/CD integration possible
@@ -1177,6 +1225,7 @@ const MAX_PER_FEED = 20;
 The tech lead should choose one of these frameworks to guide their testing strategy decision:
 
 **1. Risk-Impact Matrix**
+
 - **Evaluate**: Risk of bugs vs Impact on user
 - **Criteria**:
   - Bug probability (Low/Medium/High)
@@ -1185,6 +1234,7 @@ The tech lead should choose one of these frameworks to guide their testing strat
 - **Decision**: High risk + High impact = Integrated tests
 
 **2. ROI (Return on Investment) Analysis**
+
 - **Calculate**: Test value vs Implementation cost
 - **Formula**: ROI = (Bug prevention value - Test maintenance cost) / Test setup time
 - **Factors**:
@@ -1194,6 +1244,7 @@ The tech lead should choose one of these frameworks to guide their testing strat
 - **Decision**: Positive ROI = Implement tests
 
 **3. Technical Debt Quadrant**
+
 - **Categorize**: Testing approach by debt type
 - **Options**:
   - Prudent-Deliberate: "We choose MCP now, migrate later"
@@ -1233,11 +1284,13 @@ Enable two-way synchronization of read/unread and starred status between the RSS
 ### Feature Requirements
 
 #### Sync Scope
+
 - **Read/Unread Status**: Sync both directions for all articles
 - **Starred Status**: Sync both directions for all articles
 - **Excluded**: Tags, folders, and other metadata (not supported in current UI)
 
 #### Sync Timing
+
 - **Automatic Sync**: Every 5 minutes while app is open
 - **Manual Sync**: Include bi-directional sync in manual sync operations
 - **Daily Sync**: Include bi-directional sync in 2am/2pm automated syncs
@@ -1246,17 +1299,20 @@ Enable two-way synchronization of read/unread and starred status between the RSS
 #### Sync Architecture
 
 **Sync Queue Design**:
+
 - Track all local changes with timestamps
 - Persist queue across browser sessions
 - Batch changes for efficient API usage
 - Clear queue after successful sync
 
 **Conflict Resolution**:
+
 - Use timestamp-based resolution (most recent change wins)
 - Track change timestamps in milliseconds
 - Prevent sync loops by tracking sync source
 
 **Error Handling**:
+
 - Retry with exponential backoff (max 3 attempts)
 - Backoff intervals: 10 minutes, 20 minutes, 40 minutes
 - After 3 failures, defer to next scheduled sync
@@ -1265,17 +1321,20 @@ Enable two-way synchronization of read/unread and starred status between the RSS
 #### API Strategy
 
 **Individual Article Sync** (`/edit-tag` endpoint):
+
 - Batch size: 100 articles per API call (configurable)
 - Supports both read/unread and starred/unstarred
 - Multiple article IDs in single request
 
 **Bulk Operations** (Mark All Read):
+
 - Implemented as client-side feature with two-tap confirmation
 - Marks only articles currently in local database (safety feature)
 - Uses sync queue mechanism - each article added individually
 - Avoids dangerous Inoreader API that marks ALL articles account-wide
 
 **Auto-mark on Scroll** (TODO-029 integration):
+
 - Queue articles marked as read during scrolling
 - Sync with same 5-minute interval
 - Handle potentially 300+ articles per session
@@ -1290,7 +1349,7 @@ SYNC_BATCH_SIZE=100                  # Articles per edit-tag API call
 SYNC_RETRY_BACKOFF_MINUTES=10        # Initial retry delay
 SYNC_MAX_RETRIES=3                   # Maximum retry attempts
 
-# Article Retention Configuration  
+# Article Retention Configuration
 ARTICLES_RETENTION_LIMIT=2000        # Total articles to keep (was 500)
 ARTICLES_RETENTION_STARRED_EXEMPT=true  # Never delete starred articles
 ```
@@ -1298,6 +1357,7 @@ ARTICLES_RETENTION_STARRED_EXEMPT=true  # Never delete starred articles
 #### Database Schema
 
 **New Sync Queue Table**:
+
 ```sql
 CREATE TABLE sync_queue (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1315,6 +1375,7 @@ CREATE INDEX idx_sync_queue_attempts ON sync_queue(sync_attempts);
 ```
 
 **Article Table Updates**:
+
 ```sql
 ALTER TABLE articles
 ADD COLUMN last_local_update TIMESTAMPTZ,
@@ -1324,16 +1385,19 @@ ADD COLUMN last_sync_update TIMESTAMPTZ;
 #### Implementation Notes
 
 1. **Sync Loop Prevention**:
+
    - Only sync changes made after last Inoreader sync
    - Track sync source to avoid re-syncing Inoreader changes
    - Use `last_local_update` vs `last_sync_update` comparison
 
 2. **Performance Optimization**:
+
    - Batch database operations
    - Use single Supabase transaction per sync
    - Implement request coalescing for rapid changes
 
 3. **API Usage Efficiency**:
+
    - 5-minute sync: ~12 calls/hour while active
    - Daily syncs: 2 calls
    - Manual syncs: Variable

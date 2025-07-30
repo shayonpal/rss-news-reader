@@ -47,6 +47,7 @@ cp .env.example .env
 ### 2. Environment Configuration
 
 #### Single .env File Structure
+
 ```env
 # ========================================
 # SHARED CONFIGURATION
@@ -95,79 +96,82 @@ module.exports = {
   apps: [
     // Production App
     {
-      name: 'rss-reader-prod',
-      script: 'npm',
-      args: 'start',
-      cwd: '/Users/shayon/DevProjects/rss-news-reader',
+      name: "rss-reader-prod",
+      script: "npm",
+      args: "start",
+      cwd: "/Users/shayon/DevProjects/rss-news-reader",
       instances: 1,
-      exec_mode: 'cluster',
-      max_memory_restart: '1G',
+      exec_mode: "cluster",
+      max_memory_restart: "1G",
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: "production",
         PORT: 3147,
         // Production database vars
         NEXT_PUBLIC_SUPABASE_URL: process.env.PROD_NEXT_PUBLIC_SUPABASE_URL,
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+          process.env.PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY,
         SUPABASE_SERVICE_ROLE_KEY: process.env.PROD_SUPABASE_SERVICE_ROLE_KEY,
         // Shared vars
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
         INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
-        INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET
+        INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
       },
-      error_file: './logs/prod-error.log',
-      out_file: './logs/prod-out.log',
-      time: true
+      error_file: "./logs/prod-error.log",
+      out_file: "./logs/prod-out.log",
+      time: true,
     },
-    
+
     // Development App
     {
-      name: 'rss-reader-dev',
-      script: 'npm',
-      args: 'run dev',
-      cwd: '/Users/shayon/DevProjects/rss-news-reader',
+      name: "rss-reader-dev",
+      script: "npm",
+      args: "run dev",
+      cwd: "/Users/shayon/DevProjects/rss-news-reader",
       instances: 1,
-      exec_mode: 'fork',
-      watch: false,  // Disable in PM2, Next.js handles HMR
+      exec_mode: "fork",
+      watch: false, // Disable in PM2, Next.js handles HMR
       env: {
-        NODE_ENV: 'development',
+        NODE_ENV: "development",
         PORT: 3000,
         // Development database vars
         NEXT_PUBLIC_SUPABASE_URL: process.env.DEV_NEXT_PUBLIC_SUPABASE_URL,
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.DEV_NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+          process.env.DEV_NEXT_PUBLIC_SUPABASE_ANON_KEY,
         SUPABASE_SERVICE_ROLE_KEY: process.env.DEV_SUPABASE_SERVICE_ROLE_KEY,
         // Shared vars
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
         INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
-        INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET
+        INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
       },
-      error_file: './logs/dev-error.log',
-      out_file: './logs/dev-out.log',
-      time: true
+      error_file: "./logs/dev-error.log",
+      out_file: "./logs/dev-out.log",
+      time: true,
     },
-    
+
     // Sync Cron (uses production database)
     {
-      name: 'rss-sync-cron',
-      script: './src/server/cron.js',
+      name: "rss-sync-cron",
+      script: "./src/server/cron.js",
       instances: 1,
-      exec_mode: 'fork',
-      cron_restart: '0 0 * * *',  // Daily restart for stability
-      max_memory_restart: '256M',
+      exec_mode: "fork",
+      cron_restart: "0 0 * * *", // Daily restart for stability
+      max_memory_restart: "256M",
       env: {
-        NODE_ENV: 'production',
-        ENABLE_AUTO_SYNC: 'true',
-        SYNC_CRON_SCHEDULE: '0 2,14 * * *',
-        SYNC_LOG_PATH: './logs/sync-cron.jsonl',
+        NODE_ENV: "production",
+        ENABLE_AUTO_SYNC: "true",
+        SYNC_CRON_SCHEDULE: "0 2,14 * * *",
+        SYNC_LOG_PATH: "./logs/sync-cron.jsonl",
         // Use production database
         NEXT_PUBLIC_SUPABASE_URL: process.env.PROD_NEXT_PUBLIC_SUPABASE_URL,
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        SUPABASE_SERVICE_ROLE_KEY: process.env.PROD_SUPABASE_SERVICE_ROLE_KEY
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+          process.env.PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.PROD_SUPABASE_SERVICE_ROLE_KEY,
       },
-      error_file: './logs/cron-error.log',
-      out_file: './logs/cron-out.log',
-      time: true
-    }
-  ]
+      error_file: "./logs/cron-error.log",
+      out_file: "./logs/cron-out.log",
+      time: true,
+    },
+  ],
 };
 ```
 
@@ -305,11 +309,13 @@ git checkout dev
 ## URL Access Patterns
 
 ### Development
+
 - **Direct**: http://100.96.166.53:3000/reader
 - **API**: http://100.96.166.53:3000/api/*
 - **Database**: Development Supabase project
 
 ### Production
+
 - **Via Caddy**: http://100.96.166.53/reader
 - **API**: http://100.96.166.53/api/*
 - **Database**: Production Supabase project
@@ -317,6 +323,7 @@ git checkout dev
 ## Monitoring and Logs
 
 ### PM2 Commands
+
 ```bash
 # View all processes
 pm2 status
@@ -336,11 +343,12 @@ tail -f logs/sync-cron.jsonl | jq .
 ```
 
 ### Health Checks
+
 ```bash
 # Check production
 curl http://100.96.166.53/reader
 
-# Check development  
+# Check development
 curl http://100.96.166.53:3000/reader
 
 # Check PM2 processes
@@ -353,6 +361,7 @@ sudo systemctl status caddy
 ## Rollback Procedure
 
 ### Quick Rollback
+
 ```bash
 # 1. Revert to previous PM2 saved state
 pm2 resurrect
@@ -362,6 +371,7 @@ pm2 restart rss-reader-prod
 ```
 
 ### Git-based Rollback
+
 ```bash
 # 1. Find previous working commit
 git log --oneline -10
@@ -379,24 +389,28 @@ pm2 reload rss-reader-prod
 ## Best Practices
 
 ### 1. Development Guidelines
+
 - Always work on `dev` branch for new features
 - Test thoroughly before merging to main
 - Run quality checks before every commit
 - Keep development database separate from production
 
 ### 2. Deployment Guidelines
+
 - Build locally before deploying
 - Use PM2 reload (not restart) for zero-downtime
 - Monitor logs during deployment
 - Verify deployment success before leaving
 
 ### 3. Branch Management
+
 - `main` branch = production ready code only
 - `dev` branch = active development and testing
 - No feature branches needed for solo development
 - Merge dev � main only when ready to deploy
 
 ### 4. Emergency Procedures
+
 - If production fails: `pm2 restart rss-reader-prod`
 - If Caddy fails: `sudo systemctl restart caddy`
 - If database issues: Check Supabase dashboard
@@ -405,11 +419,13 @@ pm2 reload rss-reader-prod
 ## Security Considerations
 
 1. **Environment Variables**
+
    - Never commit .env file
    - Keep production keys separate
    - Rotate keys periodically
 
 2. **Database Access**
+
    - Dev database has separate credentials
    - Use RLS policies on both databases
    - Service role keys server-side only
@@ -424,6 +440,7 @@ pm2 reload rss-reader-prod
 ### Common Issues
 
 1. **Port 3147 already in use**
+
    ```bash
    # Find process using port
    lsof -i :3147
@@ -432,6 +449,7 @@ pm2 reload rss-reader-prod
    ```
 
 2. **PM2 process not starting**
+
    ```bash
    # Check logs
    pm2 logs rss-reader-prod --lines 50
@@ -441,6 +459,7 @@ pm2 reload rss-reader-prod
    ```
 
 3. **Build failures**
+
    ```bash
    # Clear Next.js cache
    rm -rf .next
@@ -455,6 +474,7 @@ pm2 reload rss-reader-prod
 ## Summary
 
 This Blue-Green deployment strategy provides:
+
 - **Continuous development** without production impact
 - **Simple workflow** suitable for solo developers
 - **Zero-downtime deployments** via PM2

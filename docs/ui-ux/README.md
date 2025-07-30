@@ -11,11 +11,13 @@ Comprehensive design research and exploration for iOS 26-inspired interface upda
 #### Main Research Documents
 
 1. **liquid-glass-research.md**
+
    - **Description**: Initial research into iOS 26's liquid glass design language
    - **Status**: Research Complete ✅
    - **Contents**: Design principles, visual characteristics, implementation considerations
 
 2. **recommendations-for-shayons-news-pwa.md**
+
    - **Description**: Specific recommendations for applying iOS 26 design to the RSS reader
    - **Status**: Current ✅
    - **Contents**: Feature-by-feature design suggestions, priority recommendations
@@ -32,21 +34,25 @@ Detailed design specifications and implementation assets for the liquid glass re
 #### Core Documentation
 
 1. **README.md**
+
    - Overview of the liquid glass redesign project
    - Implementation timeline and milestones
    - Design system overview
 
 2. **key-decisions.md**
+
    - **Description**: Critical design decisions and rationale
    - **Status**: Current ✅
    - **Contents**: Color palette, typography, spacing system, component architecture
 
 3. **glass-morphism-css-architecture.md**
+
    - **Description**: CSS architecture for implementing glass morphism effects
    - **Status**: Current ✅
    - **Contents**: Backdrop filters, blur effects, transparency layers, performance optimization
 
 4. **animation-system.md**
+
    - **Description**: Comprehensive animation guidelines and specifications
    - **Status**: Current ✅
    - **Contents**: Timing functions, gesture responses, transition patterns
@@ -59,10 +65,12 @@ Detailed design specifications and implementation assets for the liquid glass re
 #### Component Specifications
 
 6. **feed-drill-down-navigation.md**
+
    - Drill-down navigation pattern for feed hierarchy
    - Animation specifications and states
 
 7. **floating-filter-pill.md**
+
    - Floating filter UI component design
    - Interaction patterns and animations
 
@@ -73,6 +81,7 @@ Detailed design specifications and implementation assets for the liquid glass re
 #### Visual Assets
 
 - **Video Demonstrations**:
+
   - `bottom-nav-bar-animation.MP4` - Tab bar animation reference
   - `filter-animation.MP4` - Filter pill animation demo
   - `feed-listing-mockup.mp4` - Feed list interactions
@@ -99,11 +108,13 @@ Complete React/TypeScript implementation of the Figma designs:
 ### Core Principles
 
 1. **Liquid Glass Aesthetic**
+
    - Translucent surfaces with depth
    - Smooth, organic animations
    - Light-reactive interfaces
 
 2. **Spatial Design**
+
    - Clear depth hierarchy
    - Contextual blur effects
    - Dynamic shadows and highlights
@@ -137,6 +148,7 @@ Complete React/TypeScript implementation of the Figma designs:
 ## Implementation Status
 
 ### Completed Components ✅
+
 - Glass morphism base styles
 - Article cards with hover effects
 - Bottom navigation with animations
@@ -144,12 +156,14 @@ Complete React/TypeScript implementation of the Figma designs:
 - Shimmer loading states
 
 ### In Progress 🔄
+
 - Feed drill-down navigation
 - Floating filter pill
 - Pull-to-refresh animation
 - Settings panel redesign
 
 ### Planned 📅
+
 - Onboarding flow
 - Empty states
 - Error states
@@ -158,18 +172,21 @@ Complete React/TypeScript implementation of the Figma designs:
 ## Development Guidelines
 
 ### CSS Architecture
+
 1. Use CSS custom properties for glass effects
 2. Implement backdrop-filter with fallbacks
 3. Layer multiple gradients for depth
 4. Optimize for performance with will-change
 
 ### Component Structure
+
 1. Separate logic from presentation
 2. Use composition for flexibility
 3. Implement proper accessibility
 4. Support keyboard navigation
 
 ### Animation Best Practices
+
 1. Use transform and opacity only
 2. Leverage GPU acceleration
 3. Implement reduced motion support
@@ -185,12 +202,14 @@ Complete React/TypeScript implementation of the Figma designs:
 ## Tools & Resources
 
 ### Design Tools
+
 - Figma for mockups and prototypes
 - Spline for 3D elements
 - After Effects for complex animations
 - Principle for interaction design
 
 ### Development Tools
+
 - Tailwind CSS for utility classes
 - Framer Motion for animations
 - Radix UI for accessible components

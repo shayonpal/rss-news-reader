@@ -5,6 +5,7 @@ This directory contains documentation for all API endpoints and server-side func
 ## Documents
 
 ### server-endpoints.md
+
 - **Description**: Comprehensive documentation of all server-side API endpoints including authentication, feed management, article operations, and sync functionality
 - **Status**: Current ✅
 - **Last Updated**: July 2025
@@ -32,10 +33,10 @@ This directory contains documentation for all API endpoints and server-side func
 
 ## Quick Reference
 
-| Category | Primary Endpoints | Purpose |
-|----------|------------------|----------|
-| Auth | `/api/auth/login`, `/api/auth/status` | OAuth flow and session management |
-| Feeds | `/api/feeds`, `/api/feeds/[id]` | Feed CRUD operations |
-| Articles | `/api/articles`, `/api/articles/[id]` | Article management and state |
-| Sync | `/api/sync/manual`, `/api/sync/status` | Manual and automatic sync |
-| Health | `/api/health/app`, `/api/health/db` | System health monitoring |
+| Category | Primary Endpoints                      | Purpose                           |
+| -------- | -------------------------------------- | --------------------------------- |
+| Auth     | `/api/auth/login`, `/api/auth/status`  | OAuth flow and session management |
+| Feeds    | `/api/feeds`, `/api/feeds/[id]`        | Feed CRUD operations              |
+| Articles | `/api/articles`, `/api/articles/[id]`  | Article management and state      |
+| Sync     | `/api/sync/manual`, `/api/sync/status` | Manual and automatic sync         |
+| Health   | `/api/health/app`, `/api/health/db`    | System health monitoring          |

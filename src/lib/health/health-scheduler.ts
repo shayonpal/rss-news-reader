@@ -1,5 +1,5 @@
-import { healthCheckService } from './health-check-service';
-import { useHealthStore } from '@/lib/stores/health-store';
+import { healthCheckService } from "./health-check-service";
+import { useHealthStore } from "@/lib/stores/health-store";
 
 export class HealthCheckScheduler {
   private static instance: HealthCheckScheduler;
@@ -17,18 +17,20 @@ export class HealthCheckScheduler {
 
   start(): void {
     if (this.isRunning) {
-      console.log('Health check scheduler already running');
+      console.log("Health check scheduler already running");
       return;
     }
 
     const store = useHealthStore.getState();
     if (!store.autoCheckEnabled) {
-      console.log('Auto health checks disabled');
+      console.log("Auto health checks disabled");
       return;
     }
 
     this.isRunning = true;
-    console.log(`Starting health check scheduler (interval: ${store.checkInterval} minutes)`);
+    console.log(
+      `Starting health check scheduler (interval: ${store.checkInterval} minutes)`
+    );
 
     // Perform initial check
     this.performCheck();
@@ -51,7 +53,7 @@ export class HealthCheckScheduler {
     }
 
     this.isRunning = false;
-    console.log('Health check scheduler stopped');
+    console.log("Health check scheduler stopped");
   }
 
   restart(): void {
@@ -64,7 +66,7 @@ export class HealthCheckScheduler {
       const store = useHealthStore.getState();
       await store.performHealthCheck();
     } catch (error) {
-      console.error('Scheduled health check failed:', error);
+      console.error("Scheduled health check failed:", error);
     }
   }
 
@@ -74,7 +76,9 @@ export class HealthCheckScheduler {
 
     if (this.isRunning && store.currentHealth) {
       const intervalMs = store.checkInterval * 60 * 1000;
-      nextCheck = new Date(store.currentHealth.timestamp.getTime() + intervalMs);
+      nextCheck = new Date(
+        store.currentHealth.timestamp.getTime() + intervalMs
+      );
     }
 
     return {
@@ -89,7 +93,7 @@ export const healthScheduler = HealthCheckScheduler.getInstance();
 
 // Browser-only auto-start function
 export function initializeHealthScheduler(): void {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return;
   }
 
@@ -97,24 +101,24 @@ export function initializeHealthScheduler(): void {
   healthScheduler.start();
 
   // Listen for visibility changes to pause/resume checks
-  document.addEventListener('visibilitychange', () => {
+  document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      console.log('App hidden, pausing health checks');
+      console.log("App hidden, pausing health checks");
       healthScheduler.stop();
     } else {
-      console.log('App visible, resuming health checks');
+      console.log("App visible, resuming health checks");
       healthScheduler.start();
     }
   });
 
   // Listen for online/offline events
-  window.addEventListener('online', () => {
-    console.log('Network online, resuming health checks');
+  window.addEventListener("online", () => {
+    console.log("Network online, resuming health checks");
     healthScheduler.start();
   });
 
-  window.addEventListener('offline', () => {
-    console.log('Network offline, pausing health checks');
+  window.addEventListener("offline", () => {
+    console.log("Network offline, pausing health checks");
     healthScheduler.stop();
   });
 

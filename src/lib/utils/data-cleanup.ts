@@ -5,59 +5,65 @@
  */
 export function extractTextContent(data: any): string {
   // If it's already a string, clean it up
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     // Strip HTML tags using regex and decode common HTML entities
     const text = data
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
+      .replace(/<[^>]*>/g, "") // Remove HTML tags
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&#039;/g, "'")
       .replace(/&ldquo;/g, '"')
       .replace(/&rdquo;/g, '"')
       .replace(/&lsquo;/g, "'")
       .replace(/&rsquo;/g, "'")
-      .replace(/&hellip;/g, '...')
-      .replace(/&mdash;/g, '—')
-      .replace(/&ndash;/g, '–')
-      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/&hellip;/g, "...")
+      .replace(/&mdash;/g, "—")
+      .replace(/&ndash;/g, "–")
+      .replace(/\s+/g, " ") // Normalize whitespace
       .trim();
-    
+
     return text;
   }
-  
+
   // If it's null or undefined, return empty string
   if (data == null) {
-    return '';
+    return "";
   }
-  
+
   // If it's an object with a content property, extract it
-  if (typeof data === 'object' && 'content' in data) {
-    if (typeof data.content === 'string') {
+  if (typeof data === "object" && "content" in data) {
+    if (typeof data.content === "string") {
       return data.content;
     }
   }
-  
+
   // If it's an object without content property, try to convert to string
-  if (typeof data === 'object') {
+  if (typeof data === "object") {
     try {
       // Check if it looks like a content object that should be stringified
-      if ('direction' in data && typeof data.direction === 'string') {
-        console.warn('Found object with direction property, likely corrupted InoreaderContent:', data);
+      if ("direction" in data && typeof data.direction === "string") {
+        console.warn(
+          "Found object with direction property, likely corrupted InoreaderContent:",
+          data
+        );
         return JSON.stringify(data);
       }
-      
+
       // For any other object, return empty string to avoid [object Object]
-      console.warn('Found unexpected object type, returning empty string:', data);
-      return '';
+      console.warn(
+        "Found unexpected object type, returning empty string:",
+        data
+      );
+      return "";
     } catch (error) {
-      console.error('Error processing object data:', error);
-      return '';
+      console.error("Error processing object data:", error);
+      return "";
     }
   }
-  
+
   // For any other type, convert to string
   return String(data);
 }
@@ -67,11 +73,13 @@ export function extractTextContent(data: any): string {
  */
 export function isArticleDataCorrupted(article: any): boolean {
   if (!article) return false;
-  
+
   // Check if content or summary are objects instead of strings
-  const hasCorruptedContent = typeof article.content === 'object' && article.content !== null;
-  const hasCorruptedSummary = typeof article.summary === 'object' && article.summary !== null;
-  
+  const hasCorruptedContent =
+    typeof article.content === "object" && article.content !== null;
+  const hasCorruptedSummary =
+    typeof article.summary === "object" && article.summary !== null;
+
   return hasCorruptedContent || hasCorruptedSummary;
 }
 
@@ -80,7 +88,7 @@ export function isArticleDataCorrupted(article: any): boolean {
  */
 export function cleanupArticleData(article: any): any {
   if (!article) return article;
-  
+
   return {
     ...article,
     content: extractTextContent(article.content),

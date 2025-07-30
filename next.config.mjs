@@ -1,9 +1,9 @@
-import { InjectManifest } from 'workbox-webpack-plugin';
+import { InjectManifest } from "workbox-webpack-plugin";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/reader',
-  distDir: process.env.NEXT_BUILD_DIR || '.next',
+  basePath: "/reader",
+  distDir: process.env.NEXT_BUILD_DIR || ".next",
   experimental: {
     typedRoutes: true,
   },
@@ -20,8 +20,8 @@ const nextConfig = {
     if (!dev && !isServer) {
       config.plugins.push(
         new InjectManifest({
-          swSrc: './src/sw.js',
-          swDest: '../public/sw.js',
+          swSrc: "./src/sw.js",
+          swDest: "../public/sw.js",
           exclude: [/\.map$/, /manifest$/, /\.DS_Store$/],
           maximumFileSizeToCacheInBytes: 5000000,
         })

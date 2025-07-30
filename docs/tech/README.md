@@ -7,11 +7,13 @@ This directory contains all technical documentation for the RSS News Reader appl
 ### Core Technical Documentation
 
 1. **technology-stack.md**
+
    - **Description**: Complete technology stack documentation including frameworks, libraries, and tools
    - **Status**: Current ✅
    - **Contents**: Next.js 14, TypeScript, Supabase, PM2, Tailwind CSS, and all dependencies
 
 2. **implementation-strategy.md**
+
    - **Description**: High-level implementation approach and architectural decisions
    - **Status**: Current ✅
    - **Contents**: Project phases, development workflow, testing strategy, deployment approach
@@ -24,11 +26,13 @@ This directory contains all technical documentation for the RSS News Reader appl
 ### Feature-Specific Documentation
 
 4. **bidirectional-sync-investigation.md**
+
    - **Description**: Investigation and implementation of two-way sync with Inoreader
    - **Status**: Completed ✅
    - **Contents**: Sync architecture, conflict resolution, implementation details
 
 5. **button-architecture.md**
+
    - **Description**: Standardized button component architecture and design system
    - **Status**: Current ✅
    - **Contents**: Button variants, states, accessibility, usage guidelines
@@ -41,6 +45,7 @@ This directory contains all technical documentation for the RSS News Reader appl
 ### Monitoring & Infrastructure
 
 7. **uptime-kuma-setup.md**
+
    - **Description**: Setup guide for Uptime Kuma monitoring service
    - **Status**: Current ✅
    - **Contents**: Docker setup, monitor configuration, alert rules
@@ -53,6 +58,7 @@ This directory contains all technical documentation for the RSS News Reader appl
 ### Issues & Maintenance
 
 9. **known-issues.md**
+
    - **Description**: Documentation of known issues, limitations, and workarounds
    - **Status**: Living Document 🔄
    - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
@@ -65,6 +71,7 @@ This directory contains all technical documentation for the RSS News Reader appl
 ## Architecture Overview
 
 ### System Architecture
+
 ```
 ┌────────────────┐
 │   Inoreader    │
@@ -93,6 +100,7 @@ This directory contains all technical documentation for the RSS News Reader appl
 ## Development Guidelines
 
 ### Code Organization
+
 - `/app` - Next.js 14 app directory structure
 - `/components` - Reusable React components
 - `/lib` - Utility functions and helpers
@@ -100,12 +108,14 @@ This directory contains all technical documentation for the RSS News Reader appl
 - `/types` - TypeScript type definitions
 
 ### Testing Strategy
+
 - Unit tests for utilities and services
 - Integration tests for API endpoints
 - E2E tests for critical user flows
 - Manual testing for PWA features
 
 ### Performance Targets
+
 - Page load: < 2 seconds
 - API response: < 500ms
 - Sync operation: < 10 seconds
@@ -121,6 +131,7 @@ This directory contains all technical documentation for the RSS News Reader appl
 ## Quick Reference
 
 ### Technology Versions
+
 - Next.js: 14.2.5
 - React: 18.3.1
 - TypeScript: 5.5.4
@@ -128,12 +139,14 @@ This directory contains all technical documentation for the RSS News Reader appl
 - PM2: Latest
 
 ### Key Dependencies
+
 - Supabase Client: 2.45.4
 - Tailwind CSS: 3.4.1
 - SWR: 2.2.5
 - Radix UI: Latest
 
 ### Development Commands
+
 ```bash
 # Development
 npm run dev

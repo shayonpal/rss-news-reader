@@ -1,12 +1,15 @@
 # iOS 26 Liquid Glass Redesign - Documentation Hub
 
 ## Overview
+
 This directory contains all documentation and resources for implementing Apple's iOS 26 Liquid Glass design system in the RSS Reader PWA. The redesign focuses on native iOS feel with glass morphism effects and bottom tab navigation.
 
 ## Quick Context
+
 **Goal**: Transform the RSS Reader PWA to feel like a native iOS 26 app with Liquid Glass design language.
 
 **Key Changes**:
+
 - Replace hamburger menu with bottom tab navigation
 - Implement adaptive glass morphism (heavy blur in light mode, lighter in dark)
 - Remove sidebar completely - simplified navigation
@@ -15,35 +18,45 @@ This directory contains all documentation and resources for implementing Apple's
 ## Documentation Files
 
 ### 📋 [key-decisions.md](./key-decisions.md)
+
 All major design and technical decisions made during planning:
+
 - 4-tab bottom navigation structure
 - Implementation order (D→A→B→C)
 - Visual design choices
 - Technical stack decisions
 
 ### 🎨 [glass-morphism-css-architecture.md](./glass-morphism-css-architecture.md)
+
 Complete CSS system for glass effects:
+
 - CSS custom properties for adaptive light/dark modes
 - Utility classes for different glass levels
 - Performance optimizations and fallbacks
 - Component-specific glass styles
 
 ### 📱 [tab-navigation-component.md](./tab-navigation-component.md)
+
 Bottom tab navigation implementation:
+
 - Component structure with TypeScript interfaces
 - State management integration
 - Route structure updates
 - Icon system (SF Symbols + Heroicons)
 
 ### 🔄 [migration-plan.md](./migration-plan.md)
+
 Step-by-step migration from hamburger menu to tabs:
+
 - Components to remove (sidebar, menu button)
 - Code modifications with before/after examples
 - New pages to create (feeds, stats)
 - 4-day phased implementation approach
 
 ### ✨ [animation-system.md](./animation-system.md)
+
 All animations and interactions:
+
 - Tab icon morphing (outline to filled)
 - Glass hover/press effects
 - Summary expand with auto-scroll
@@ -52,12 +65,14 @@ All animations and interactions:
 ## Design Resources
 
 ### Mockups
+
 - `figma-mockup-listing-page.gif` - Article listing page design
 - `feed-listing-mockup.gif` - Feeds page with folder navigation
 - `bottom-nav-bar-animation.MP4` - Tab switching animation reference
 - `filter-animation.MP4` - Filter toggle interaction
 
 ### Figma Export Code
+
 - `figma-mockup-code-files/` - **Figma mockup code (90% complete)**
   - ✅ All navigation pages implemented (Articles, Feeds, Stats, Settings)
   - ✅ Glass morphism effects and animations
@@ -70,6 +85,7 @@ All animations and interactions:
 ## Current Status
 
 ### ✅ Completed
+
 - All core documentation created
 - Navigation mockups complete (Articles, Feeds, Stats, Settings)
 - Glass morphism CSS system defined
@@ -78,6 +94,7 @@ All animations and interactions:
 - Dual filter system finalized
 
 ### 🚧 In Progress
+
 - Article detail view mockup (navigation pages complete)
   - Glass morphism header with back button
   - Action buttons (star, summarize, fetch content, more menu)
@@ -85,6 +102,7 @@ All animations and interactions:
 - Stats and Settings pages have placeholder content for now
 
 ### 📝 Pending Updates
+
 - Article listing will need dual filters:
   - Read Status: All/Unread/Read
   - Source: All/By Folder/By Feed
@@ -117,11 +135,13 @@ NO SIDEBAR - Simplified single-screen architecture
 ## Tech Stack Alignment
 
 **Mockup Stack** (Figma Export):
+
 - React + TypeScript
 - Tailwind CSS
 - Mock data
 
 **Our Stack**:
+
 - Next.js + TypeScript ✓
 - Tailwind CSS ✓
 - Supabase + Zustand stores
@@ -141,6 +161,7 @@ NO SIDEBAR - Simplified single-screen architecture
 ## Next Steps
 
 Once Figma mockup reaches 80% completion:
+
 1. Export updated code for analysis
 2. Review against existing documentation
 3. Update docs based on final design decisions

@@ -730,12 +730,14 @@ Based on analysis of the issue where content works correctly in Safari browser b
 ### Proposed Solution:
 
 1. **Update globals.css** - Add PWA-specific CSS rules that properly handle safe areas without double-applying them:
+
    - Use `.pwa-standalone` class (already detected by PWADetector component)
    - Create CSS custom properties for dynamic height calculations
    - Separate calculations for browser vs PWA mode
    - Remove conflicting safe area applications
 
 2. **Update page.tsx** - Fix the header positioning and article list container:
+
    - Remove inline style `top: 'env(safe-area-inset-top)'` from header
    - Update paddingTop calculation for article list container
    - Ensure consistent spacing across both modes
@@ -746,6 +748,7 @@ Based on analysis of the issue where content works correctly in Safari browser b
    - Ensure proper content flow in PWA mode
 
 ### Key Changes:
+
 - Browser mode: Apply safe areas normally
 - PWA mode: Account for iOS status bar overlay without double-padding
 - Use CSS variables for all dynamic calculations
@@ -758,27 +761,32 @@ This approach follows Apple's design guidelines and accounts for iOS-specific PW
 Multiple approaches were tried to fix the PWA content cutoff issue:
 
 ### Attempt 1: Dynamic CSS Variables
+
 - Added CSS variables for header/footer heights including safe areas
 - Used `--header-height: calc(60px + env(safe-area-inset-top))`
 - Result: Partially fixed but content still cut off in PWA mode
 
 ### Attempt 2: -webkit-fill-available
+
 - Applied `-webkit-fill-available` to html/body based on Perplexity's recommendation
 - Changed container to use flex layout with scrollable content area
 - Result: Made the issue worse with extra spacing at bottom
 
 ### Attempt 3: Simplified Safe Area Classes
+
 - Created `.ios-safe-container`, `.ios-safe-header`, `.ios-safe-footer` classes
 - Reverted to fixed positioning with calculated spacers
 - Positioned headers with `top: env(safe-area-inset-top)`
 - Result: Fixed Safari browser but PWA still has issues with double padding
 
 ### Current State
+
 - Safari browser: Working correctly
 - PWA mode: Still has content cutoff and spacing issues
 - The safe area handling is being applied inconsistently between browser and PWA modes
 
 ### Next Steps
+
 - Consider using a different approach entirely
 - May need device-specific testing with actual iOS devices
 - Could explore using viewport units differently or JavaScript-based solution
