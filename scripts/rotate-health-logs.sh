@@ -17,6 +17,8 @@ LOG_FILES=(
     "sync-health.jsonl"
     "cron-health.jsonl"
     "inoreader-api-calls.jsonl"
+    "tailscale-monitor.log"
+    "services-monitor.jsonl"
 )
 
 # Function to rotate a single log file
@@ -38,7 +40,16 @@ rotate_log() {
     if [ $size_bytes -gt 0 ]; then
         # Create timestamp for rotated file
         local timestamp=$(date +"%Y%m%d_%H%M%S")
-        local rotated_name="${log_file%.jsonl}_${timestamp}.jsonl"
+        local rotated_name
+        
+        # Handle different file extensions
+        if [[ "$log_file" == *.jsonl ]]; then
+            rotated_name="${log_file%.jsonl}_${timestamp}.jsonl"
+        elif [[ "$log_file" == *.log ]]; then
+            rotated_name="${log_file%.log}_${timestamp}.log"
+        else
+            rotated_name="${log_file}_${timestamp}"
+        fi
         
         # Move current log to rotated name
         mv "$full_path" "$LOG_DIR/$rotated_name"
@@ -59,10 +70,19 @@ rotate_log() {
 clean_old_logs() {
     local log_pattern="$1"
     
-    # Find and remove compressed logs older than retention period
-    find "$LOG_DIR" -name "${log_pattern%.jsonl}_*.jsonl.gz" -mtime +$RETENTION_DAYS -exec rm {} \; -print | while read -r file; do
-        echo "Removed old log: $(basename "$file")"
-    done
+    # Handle both .jsonl and .log file extensions
+    local base_pattern
+    if [[ "$log_pattern" == *.jsonl ]]; then
+        base_pattern="${log_pattern%.jsonl}"
+        find "$LOG_DIR" -name "${base_pattern}_*.jsonl.gz" -mtime +$RETENTION_DAYS -exec rm {} \; -print | while read -r file; do
+            echo "Removed old log: $(basename "$file")"
+        done
+    elif [[ "$log_pattern" == *.log ]]; then
+        base_pattern="${log_pattern%.log}"
+        find "$LOG_DIR" -name "${base_pattern}_*.log.gz" -mtime +$RETENTION_DAYS -exec rm {} \; -print | while read -r file; do
+            echo "Removed old log: $(basename "$file")"
+        done
+    fi
 }
 
 # Main execution

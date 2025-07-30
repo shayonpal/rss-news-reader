@@ -193,7 +193,6 @@ After presenting the implementation strategy, ask:
 Do you:
 1. ✅ Agree with this implementation strategy?
 2. 🔄 Want to continue evolving it?
-3. 🔍 Want a domain expert review?
 
 Please respond with 1, 2, or 3.
 ```
@@ -203,15 +202,6 @@ Please respond with 1, 2, or 3.
 - Iterate on the strategy based on feedback
 - Present revised strategy
 - Return to the options (1, 2, or 3) until I agree
-
-### If I choose 3 (Domain expert review):
-- Ask: "Which domain should I focus on? (e.g., database, infrastructure, UI)"
-- Based on my response, provide deep technical analysis:
-  - **Database**: Schema optimization, query performance, migration strategy
-  - **Infrastructure**: Service architecture, deployment strategy, monitoring
-  - **UI**: Component design, accessibility, performance optimization
-- Present the technical validation and concerns
-- Return to the options (1, 2, or 3) with insights incorporated
 
 ### If I choose 1 (Agree):
 Proceed to step 9 for finalization.

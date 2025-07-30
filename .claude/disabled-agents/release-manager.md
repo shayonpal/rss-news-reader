@@ -1,6 +1,6 @@
 ---
 name: release-manager
-description: Use this agent proactively when preparing releases for the RSS News Reader project. This includes managing version bumps, updating documentation, coordinating the merge from dev to main branch, and preparing for production deployment. Examples: <example>Context: User has finished implementing features and wants to prepare a new release. user: "I've completed all the features for v0.8.0, let's prepare for release" task: "Handle release preparation including version bumps and documentation updates"</example> <example>Context: User wants to deploy latest changes to production. user: "We need to release the latest bug fixes to production" task: "Prepare and coordinate release process from dev to main branch"</example>
+description: Use this agent when preparing releases for the RSS News Reader project. This includes managing version bumps, updating documentation, coordinating the merge from dev to main branch, and preparing for production deployment. Examples: <example>Context: User has finished implementing features and wants to prepare a new release. user: "I've completed all the features for v0.8.0, let's prepare for release" task: "Handle release preparation including version bumps and documentation updates"</example> <example>Context: User wants to deploy latest changes to production. user: "We need to release the latest bug fixes to production" task: "Prepare and coordinate release process from dev to main branch"</example>
 tools: Task, Bash, Glob, Grep, LS, Read
 ---
 

@@ -5,7 +5,7 @@ argument-hint: [commit-message or linear-issue-id]
 
 # Commit and Push Changes
 
-Commit and push changes to the repository after ensuring all quality checks pass and documentation is updated.
+Commit and push changes to the repository after ensuring all quality checks pass and documentation is updated, especially CHANGELOG.md.
 
 ## 1. Pre-Commit Validation
 
@@ -19,7 +19,7 @@ git diff --stat
 git branch --show-current
 ```
 
-If on `main` or `master`:
+If on `main`:
 - **STOP** and ask if I really want to commit directly to main
 - Suggest creating a feature branch first
 
