@@ -1,13 +1,13 @@
-# Prepare and Execute Production Release
+# Prepare and Execute Release
 
-I need to prepare a production release from `dev` to `main` branch, then deploy it as a separate step.
+I need to prepare a release from `dev` to `main` branch. Since production has been retired, the single development environment (port 3000) serves all traffic.
 
 ## Phase 1: Pre-Release Quality Checks
 Run these automated checks in parallel on the `dev` branch:
 - `npm run type-check`
 - `npm run lint` 
 - `npm run test` (if tests exist)
-- `npm run build` (validate production build)
+- `npm run build` (validate build)
 - Check git status for uncommitted changes
 
 Stop immediately if any check fails.
@@ -34,52 +34,20 @@ Use `release-manager` agent to coordinate the release:
 5. Create and push release tag (vX.Y.Z)
 6. Return to dev branch
 
-**STOP HERE** - Release is created but NOT deployed.
-
-## Phase 4: Pre-Deployment Verification
-Before deploying, verify on the `main` branch:
+## Phase 4: Post-Release Verification
+After the release is created:
 - Latest tag exists: `git describe --tags`
 - Main branch is clean: `git status`
 - Release notes are complete in CHANGELOG.md
-- No .claude directory in production (security check)
-
-## Phase 5: Production Deployment
-If everything looks good, use `devops-expert` agent to handle deployment:
-1. Execute `./scripts/deploy-production.sh` which will:
-   - Verify we're on main branch
-   - Pull latest changes
-   - Run quality checks again
-   - Build production bundle
-   - Reload PM2 with zero downtime
-   - Perform health checks
-2. Monitor deployment logs
-3. Verify deployment at http://100.96.166.53:3000/reader
-4. Return to dev branch
-
-## Phase 6: Post-Deployment Verification
-After deployment completes:
-- Check PM2 status: `pm2 status`
-- Verify health endpoints: `/api/health/app` and `/api/health/db`
-- Test manual sync functionality
-- Monitor logs for first 5 minutes
-
-## Rollback Plan
-If issues arise post-deployment:
-1. Document the specific issue
-2. Use `devops-expert` to execute rollback:
-   - Checkout previous tag
-   - Re-run deployment script
-   - Verify rollback success
 
 ## Success Criteria
 - All quality checks pass
 - No critical issues from reviews
 - Clean merge to main
-- Successful deployment with health checks
-- No errors in first 5 minutes
+- Successful release tag creation
 
 ## Context
-- Dev branch: Staging environment
-- Main branch: Production-ready code
-- Deployment script: `./scripts/deploy-production.sh`
+- Dev branch: Active development
+- Main branch: Release-ready code
+- Environment: Single dev environment on port 3000
 - App URL: http://100.96.166.53:3000/reader
