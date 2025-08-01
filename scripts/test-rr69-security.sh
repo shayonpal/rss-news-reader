@@ -70,7 +70,7 @@ echo ""
 echo -e "${BLUE}Running E2E Security Tests...${NC}"
 
 # Check if production server is accessible
-PROD_URL="http://100.96.166.53:3147/reader"
+PROD_URL="http://100.96.166.53:3000/reader"
 if curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" | grep -q "200"; then
     echo "Production server accessible, running E2E tests..."
     

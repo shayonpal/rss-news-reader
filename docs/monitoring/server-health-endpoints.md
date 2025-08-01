@@ -31,7 +31,7 @@ All health endpoints return standardized JSON responses with the following struc
 
 - **Monitor Type**: HTTP(s)
 - **Friendly Name**: RSS Reader Production
-- **URL**: `http://localhost:3147/reader/api/health/app`
+- **URL**: `http://localhost:3000/reader/api/health/app`
 - **Method**: GET
 - **Heartbeat Interval**: 60 seconds
 - **Retries**: 3
@@ -82,7 +82,7 @@ All health endpoints return standardized JSON responses with the following struc
 
 - **Monitor Type**: HTTP(s)
 - **Friendly Name**: RSS Sync Cron
-- **URL**: `http://localhost:3147/reader/api/health/cron`
+- **URL**: `http://localhost:3000/reader/api/health/cron`
 - **Method**: GET
 - **Heartbeat Interval**: 300 seconds (5 minutes)
 - **Retries**: 2
@@ -99,7 +99,7 @@ All health endpoints return standardized JSON responses with the following struc
 
 Based on our implementation, the following monitors should be removed as they're redundant:
 
-1. **Production Port** (TCP Port 3147) - Redundant with Production App monitor
+1. **Development Port** (TCP Port 3000) - Redundant with Main App monitor
 2. **Sync Port** (TCP Port 3000/3001) - Redundant with Sync Server monitor
 
 ## Alert Configuration
@@ -110,7 +110,7 @@ For critical failures that the monitor-services.sh script can't handle:
 
 1. Create a webhook notification:
 
-   - **Webhook URL**: `http://localhost:3147/reader/api/webhooks/uptime-kuma-recovery`
+   - **Webhook URL**: `http://localhost:3000/reader/api/webhooks/uptime-kuma-recovery`
    - **Request Method**: POST
    - **Content Type**: application/json
    - **Request Body**:

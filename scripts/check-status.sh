@@ -24,22 +24,6 @@ else
 fi
 echo ""
 
-# Check if Caddy is running
-echo "🌐 Caddy Status:"
-if pgrep -x "caddy" > /dev/null; then
-    echo "✅ Caddy is running"
-    echo "   PID: $(pgrep -x caddy)"
-    
-    # Test the proxied endpoint
-    if curl -s -o /dev/null -w "✅ Proxy working (HTTP %{http_code})\n" http://localhost/reader; then
-        echo "   URL: http://localhost/reader"
-    else
-        echo "❌ Proxy not responding"
-    fi
-else
-    echo "❌ Caddy is not running"
-fi
-echo ""
 
 # Check Tailscale status
 echo "🔒 Tailscale Status:"
@@ -63,7 +47,3 @@ if [ -f "logs/pm2-out.log" ]; then
     tail -5 logs/pm2-out.log | sed 's/^/   /'
 fi
 
-if [ -f "logs/caddy-access.log" ]; then
-    echo "   Last 5 access requests:"
-    tail -5 logs/caddy-access.log | sed 's/^/   /'
-fi

@@ -470,23 +470,23 @@ Use curl commands or tools like Postman to test endpoints directly. All test/deb
 
 ```bash
 # Application health
-curl http://100.96.166.53:3147/reader/api/health/app
+curl http://100.96.166.53:3000/reader/api/health/app
 
 # Database health
-curl http://100.96.166.53:3147/reader/api/health/db
+curl http://100.96.166.53:3000/reader/api/health/db
 
 # Cron health
-curl http://100.96.166.53:3147/reader/api/health/cron
+curl http://100.96.166.53:3000/reader/api/health/cron
 
 # Article freshness
-curl http://100.96.166.53:3147/reader/api/health/freshness
+curl http://100.96.166.53:3000/reader/api/health/freshness
 ```
 
 #### Manual Sync
 
 ```bash
 # Trigger manual sync
-curl -X POST http://100.96.166.53:3147/reader/api/sync \
+curl -X POST http://100.96.166.53:3000/reader/api/sync \
   -H "Content-Type: application/json"
 ```
 
@@ -494,11 +494,11 @@ curl -X POST http://100.96.166.53:3147/reader/api/sync \
 
 ```bash
 # Fetch full article content
-curl -X POST http://100.96.166.53:3147/reader/api/articles/ARTICLE_ID/fetch-content \
+curl -X POST http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/fetch-content \
   -H "Content-Type: application/json"
 
 # Generate AI summary
-curl -X POST http://100.96.166.53:3147/reader/api/articles/ARTICLE_ID/summarize \
+curl -X POST http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/summarize \
   -H "Content-Type: application/json"
 ```
 

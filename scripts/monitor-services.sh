@@ -127,7 +127,7 @@ update_restart_tracking() {
 # Check main app health
 check_main_app() {
     local start_time=$(date +%s)
-    local health_url="http://localhost:3147/reader/api/health/app?ping=true"
+    local health_url="http://localhost:3000/reader/api/health/app?ping=true"
     
     # Try production port first, then dev
     local response=$(curl -s -m 1 -w "\n%{http_code}" "$health_url" 2>/dev/null || echo "000")
@@ -417,7 +417,7 @@ monitor_loop() {
         if ! check_main_app; then
             app_down=1
             # Try to restart
-            restart_service "rss-reader-prod"
+            restart_service "rss-reader-dev"
         fi
         
         if ! check_sync_server; then

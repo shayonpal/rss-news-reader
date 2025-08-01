@@ -53,7 +53,7 @@ If everything looks good, use `devops-expert` agent to handle deployment:
    - Reload PM2 with zero downtime
    - Perform health checks
 2. Monitor deployment logs
-3. Verify production at http://100.96.166.53:3147/reader
+3. Verify deployment at http://100.96.166.53:3000/reader
 4. Return to dev branch
 
 ## Phase 6: Post-Deployment Verification
@@ -82,4 +82,4 @@ If issues arise post-deployment:
 - Dev branch: Staging environment
 - Main branch: Production-ready code
 - Deployment script: `./scripts/deploy-production.sh`
-- Production URL: http://100.96.166.53:3147/reader
+- App URL: http://100.96.166.53:3000/reader

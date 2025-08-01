@@ -66,8 +66,6 @@ test_active_logs_preserved() {
     log_test "Verifying active logs are preserved"
     
     local active_log_patterns=(
-        "prod-out*.log"
-        "prod-error*.log"
         "dev-out*.log"
         "dev-error*.log"
         "cron-out*.log"
@@ -82,10 +80,10 @@ test_active_logs_preserved() {
         fi
     done
     
-    if [ "$preserved_count" -ge 4 ]; then
-        log_pass "Active logs preserved ($preserved_count/7 found)"
+    if [ "$preserved_count" -ge 3 ]; then
+        log_pass "Active logs preserved ($preserved_count/5 found)"
     else
-        log_fail "Too few active logs preserved ($preserved_count/7 found)"
+        log_fail "Too few active logs preserved ($preserved_count/5 found)"
     fi
 }
 

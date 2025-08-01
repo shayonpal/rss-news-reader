@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.10.1] - Friday, August 1, 2025 at 4:36 AM
+
+### Added
+- **Production Removal Documentation (RR-107)**
+  - Created comprehensive documentation at `docs/infrastructure/production-removal-2025-08.md`
+  - Documents complete production environment removal process (July 31 - August 1, 2025)
+  - Includes 8-phase implementation details, technical changes, and verification results
+  - **IMPORTANT: Production server has been permanently retired - all development work will now be done on the dev server at http://100.96.166.53:3000/reader**
+  - **Stable code will be merged to main branch as releases when needed**
+  - **Testing should be performed on Tailscale URL (http://100.96.166.53:3000/reader) instead of localhost:3000 wherever possible**
+  - Documents memory usage improvement (87.5% → 71%) and system stabilization
+  - Provides rollback procedures and lessons learned for future reference
+
+## [0.10.0] - Thursday, July 31, 2025 at 11:58 PM
+
+### Changed
+- **Removed Production Environment (RR-92)**
+  - Simplified architecture to single development environment on port 3000
+  - Removed `rss-reader-prod` PM2 process (port 3147 now free)
+  - Updated all configurations, scripts, and documentation to use dev-only setup
+  - Reduced memory usage by ~45% by eliminating duplicate service
+- **Final Documentation Check Completed**
+  - Verified all documentation accurately reflects single-environment setup
+  - Fixed version consistency between package.json (0.8.0 → 0.10.1) and CHANGELOG.md
+  - Confirmed comprehensive documentation coverage across README.md, CLAUDE.md, and infrastructure docs
+  - All production environment references successfully removed from project documentation
+  - All functionality preserved - no user-facing changes
+  - Development server (port 3000) now serves as the main application
+
 ## [0.9.0] - Wednesday, July 30, 2025 at 8:07 AM
 
 ### Added

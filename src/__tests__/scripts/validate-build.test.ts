@@ -66,14 +66,14 @@ describe("validate-build.sh - RR-69 Updates", () => {
   });
 
   describe("Health Endpoint URL Configuration", () => {
-    it("should use correct production URL for health checks", () => {
+    it("should use correct development URL for health checks", () => {
       // Check base URL configuration
-      expect(scriptContent).toContain("http://100.96.166.53:3147");
+      expect(scriptContent).toContain("http://100.96.166.53:3000");
 
-      // Should not reference localhost for production validation
-      const productionSections = scriptContent.match(/base_url=.*3147/g) || [];
-      productionSections.forEach((section) => {
-        expect(section).toContain("100.96.166.53:3147");
+      // Should use development port only
+      const urlSections = scriptContent.match(/base_url=.*3000/g) || [];
+      urlSections.forEach((section) => {
+        expect(section).toContain("100.96.166.53:3000");
       });
     });
 

@@ -158,7 +158,7 @@ Both systems use the same status levels:
 
 1. Check server logs: `pm2 logs`
 2. Verify service status: `pm2 status`
-3. Test endpoints manually: `curl http://localhost:3147/reader/api/health/app`
+3. Test endpoints manually: `curl http://localhost:3000/reader/api/health/app`
 4. Review JSONL logs in `/logs` directory
 
 ### Client Health Issues

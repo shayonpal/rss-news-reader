@@ -8,8 +8,8 @@ echo "==================================="
 echo ""
 
 # Check Production App
-echo -n "Production App (3147): "
-if curl -s -m 2 "http://localhost:3147/reader/api/health/app?ping=true" | grep -q '"status":"ok"'; then
+echo -n "App (3000): "
+if curl -s -m 2 "http://localhost:3000/reader/api/health/app?ping=true" | grep -q '"status":"ok"'; then
     echo "✅ Running"
 else
     echo "❌ Not responding"
@@ -33,7 +33,7 @@ fi
 
 # Check Database Health
 echo -n "Database Connection: "
-if curl -s -m 2 "http://localhost:3147/reader/api/health/db" | grep -q '"database"'; then
+if curl -s -m 2 "http://localhost:3000/reader/api/health/db" | grep -q '"database"'; then
     echo "✅ Connected"
 else
     echo "❌ Not available"

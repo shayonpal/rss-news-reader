@@ -36,9 +36,9 @@ This directory contains all documentation related to deploying, configuring, and
 
 ## Deployment Architecture
 
-### Current Production Setup
+### Current Setup
 
-- **URL**: http://100.96.166.53:3147/reader
+- **URL**: http://100.96.166.53:3000/reader
 - **Process Manager**: PM2 with ecosystem.config.js
 - **Startup**: macOS LaunchAgent → startup-sequence.sh → PM2
 - **Access Control**: Tailscale network only (no public access)
@@ -47,10 +47,9 @@ This directory contains all documentation related to deploying, configuring, and
 
 ### PM2 Services
 
-1. **rss-reader-prod** (port 3147) - Production Next.js server
-2. **rss-reader-dev** (port 3000) - Development server (optional)
-3. **rss-sync-server** (port 3001) - Bidirectional sync service
-4. **rss-sync-cron** - Automatic sync scheduler
+1. **rss-reader-dev** (port 3000) - Main Next.js server
+2. **rss-sync-server** (port 3001) - Bidirectional sync service
+3. **rss-sync-cron** - Automatic sync scheduler
 
 ### PM2 Stability Features (Updated July 26, 2025)
 
@@ -82,11 +81,11 @@ This directory contains all documentation related to deploying, configuring, and
 # Check all services
 pm2 list
 
-# Restart production
-pm2 restart rss-reader-prod
+# Restart main app
+pm2 restart rss-reader-dev
 
 # View logs
-pm2 logs rss-reader-prod --lines 100
+pm2 logs rss-reader-dev --lines 100
 
 # Save PM2 state
 pm2 save --force

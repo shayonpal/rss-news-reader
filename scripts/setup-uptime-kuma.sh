@@ -138,7 +138,7 @@ const monitors = [
     {
         name: "RSS Reader - Production App",
         type: "http",
-        url: "http://100.96.166.53:3147/reader/api/health/app?ping=true",
+        url: "http://100.96.166.53:3000/reader/api/health/app?ping=true",
         interval: 60,
         retryInterval: 20,
         maxretries: 3,
@@ -168,7 +168,7 @@ const monitors = [
     {
         name: "RSS Reader - Database",
         type: "http",
-        url: "http://100.96.166.53:3147/reader/api/health/db",
+        url: "http://100.96.166.53:3000/reader/api/health/db",
         interval: 300,
         retryInterval: 60,
         maxretries: 3,
@@ -179,7 +179,7 @@ const monitors = [
         name: "RSS Reader - Production Port",
         type: "port",
         hostname: "100.96.166.53",
-        port: 3147,
+        port: 3000,
         interval: 300,
         retryInterval: 60,
         maxretries: 3,

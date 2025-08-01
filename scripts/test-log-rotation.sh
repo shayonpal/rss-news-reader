@@ -168,7 +168,7 @@ test_service_continuity() {
     log_test "Verifying service continuity after rotation"
     
     # Check if all required PM2 services are running
-    local required_services=("rss-reader-prod" "rss-sync-cron")
+    local required_services=("rss-reader-dev" "rss-sync-cron")
     local running_services=0
     
     for service in "${required_services[@]}"; do

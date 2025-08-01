@@ -1,6 +1,6 @@
 {
   "name": "rss-news-reader",
-  "version": "0.8.0",
+  "version": "0.10.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,9 +10,7 @@
     "dev:turbo": "next dev --turbo",
     "prebuild": "./scripts/validate-env.sh",
     "build": "next build",
-    "build:prod": "NEXT_BUILD_DIR=.next-prod next build",
     "start": "next start",
-    "start:prod": "NEXT_BUILD_DIR=.next-prod next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "vitest",

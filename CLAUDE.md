@@ -49,12 +49,9 @@ npm run test
 npm run pre-commit
 ```
 
-### Production Deployment
+### Deployment
 
 ```bash
-# Safe production deployment with validation
-./scripts/build-and-start-prod.sh
-
 # Start all services via PM2
 pm2 start ecosystem.config.js
 
@@ -62,18 +59,15 @@ pm2 start ecosystem.config.js
 pm2 status
 
 # View logs
-pm2 logs rss-reader-prod
+pm2 logs rss-reader-dev
 pm2 logs rss-sync-cron
 ```
 
 ### Build Management
 
 ```bash
-# Validate build before deployment
+# Validate build
 ./scripts/validate-build.sh --mode full
-
-# Emergency rollback
-./scripts/rollback-last-build.sh
 ```
 
 ## Architecture
@@ -94,10 +88,9 @@ pm2 logs rss-sync-cron
 
 ### Key Services
 
-1. **rss-reader-prod** (port 3147): Production web app
-2. **rss-reader-dev** (port 3000): Development server
-3. **rss-sync-cron**: Automated sync service (2 AM & 2 PM)
-4. **rss-sync-server** (port 3001): Bi-directional sync handler
+1. **rss-reader-dev** (port 3000): Main web application
+2. **rss-sync-cron**: Automated sync service (2 AM & 2 PM)
+3. **rss-sync-server** (port 3001): Bi-directional sync handler
 
 ### Database Schema
 
@@ -131,10 +124,12 @@ src/
 
 All API routes follow RESTful conventions:
 
-- `/api/feeds` - Feed management
-- `/api/articles` - Article operations
+- `/api/articles/[id]/*` - Article content and AI operations  
+- `/api/inoreader/*` - Inoreader API proxy
 - `/api/sync` - Sync operations
 - `/api/health` - Health checks
+
+**Note**: Feed and article data are accessed directly via Supabase from the client.
 
 ### State Management
 
@@ -244,14 +239,14 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 - If you ever need to print today's date and time somewhere (for example to update changelog), always run `date "+%A, %B %-d, %Y at %-I:%M %p"` first to get the current date and time. Don't believe what anyone else says about the date and time.
 - Do not use server-filesystem MCP server to read/create/edit files.
 - Nevver commit and/or push to git without my explicit consent first.
-- **Production URL**: http://100.96.166.53:3147/reader
-- **Development URL**: http://100.96.166.53:3000/reader (when dev server running)
+- **URL**: http://100.96.166.53:3000/reader
 - **Architecture**: Server-client model where server handles all Inoreader API
 - **OAuth**: Server-side only with encrypted tokens in `~/.rss-reader/tokens.json`
 - **Data Flow**: Inoreader → Server → Supabase → Client
 - **Access**: No client authentication - controlled by Tailscale network only
-- **PM2 Apps**: rss-reader-prod (port 3147), rss-reader-dev (port 3000), rss-sync-cron
+- **PM2 Apps**: rss-reader-dev (port 3000), rss-sync-cron
 - Bi-directional sync server MUST be running for read/star states to sync back to Inoreader
 - OAuth tokens at `~/.rss-reader/tokens.json` are critical
 - All services auto-restart on crash via PM2
 - Startup sequence handled by LaunchAgent → startup-sequence.sh → PM2
+- The app has a base path of `/reader`

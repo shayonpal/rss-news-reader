@@ -7,9 +7,8 @@ echo "============================"
 echo ""
 
 # Check build directories
-echo "📁 Build Directories:"
+echo "📁 Build Directory:"
 [ -d ".next" ] && echo "✅ Development (.next): $(du -sh .next | cut -f1)" || echo "❌ Development (.next): Not found"
-[ -d ".next-prod" ] && echo "✅ Production (.next-prod): $(du -sh .next-prod | cut -f1)" || echo "❌ Production (.next-prod): Not found"
 echo ""
 
 # Check PM2 services
@@ -30,10 +29,9 @@ echo ""
 
 # Check health endpoints
 echo "🏥 Health Checks:"
-curl -sf http://localhost:3147/reader/api/health/app >/dev/null && echo "✅ Production App: Healthy" || echo "❌ Production App: Not responding"
-curl -sf http://localhost:3000/reader/api/health/app >/dev/null && echo "✅ Development App: Healthy" || echo "⚠️  Development App: Not running"
+curl -sf http://localhost:3000/reader/api/health/app >/dev/null && echo "✅ App: Healthy" || echo "❌ App: Not responding"
 curl -sf http://localhost:3001/server/health >/dev/null && echo "✅ Sync Server: Healthy" || echo "❌ Sync Server: Not responding"
-curl -sf http://localhost:3147/reader/api/health/db >/dev/null && echo "✅ Database: Connected" || echo "❌ Database: Connection failed"
+curl -sf http://localhost:3000/reader/api/health/db >/dev/null && echo "✅ Database: Connected" || echo "❌ Database: Connection failed"
 echo ""
 
 # Show recent API calls

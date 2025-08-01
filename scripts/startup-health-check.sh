@@ -136,8 +136,8 @@ main() {
     echo "✅"
     
     # Define services to check
-    local services=("rss-reader-prod" "rss-sync-server" "rss-sync-cron")
-    local urls=("http://localhost:3147/reader/api/health/app?ping=true" "http://localhost:3001/server/health" "cron")
+    local services=("rss-reader-dev" "rss-sync-server" "rss-sync-cron")
+    local urls=("http://localhost:3000/reader/api/health/app?ping=true" "http://localhost:3001/server/health" "cron")
     
     local all_healthy=true
     local unhealthy_services=()

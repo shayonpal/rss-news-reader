@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # RSS Reader Startup Script
-# This script starts PM2 apps and Caddy on system boot
+# This script starts PM2 apps on system boot
 
 set -e
 
@@ -52,37 +52,14 @@ else
     log "PM2 is already running"
 fi
 
-# Start Caddy if not running
-if ! is_running "caddy"; then
-    log "Starting Caddy..."
-    caddy start --config ./Caddyfile >> "$LOG_FILE" 2>> "$ERROR_FILE"
-    
-    # Wait for Caddy to start
-    sleep 3
-    
-    # Check if Caddy is running
-    if is_running "caddy"; then
-        log "Caddy started successfully"
-    else
-        log "ERROR: Failed to start Caddy"
-        exit 1
-    fi
-else
-    log "Caddy is already running"
-fi
 
 # Health check
 sleep 5
-if curl -s http://localhost:3147/reader > /dev/null; then
-    log "✅ RSS Reader is running on port 3147"
+if curl -s http://localhost:3000/reader > /dev/null; then
+    log "✅ RSS Reader is running on port 3000"
 else
     log "⚠️  RSS Reader may not be responding correctly"
 fi
 
-if curl -s http://localhost/reader > /dev/null; then
-    log "✅ Caddy reverse proxy is working"
-else
-    log "⚠️  Caddy reverse proxy may not be working"
-fi
 
 log "Startup complete!"
