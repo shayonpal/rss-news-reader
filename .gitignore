@@ -57,5 +57,4 @@ docs/revised-priority.md
 
 # Token files
 ~/.rss-reader/tokens.json
-*.claude/
 documentation-analysis-report.json
