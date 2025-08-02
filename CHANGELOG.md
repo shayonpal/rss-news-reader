@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Fixed
+- **Health Endpoint Response Format (RR-120)** - Saturday, August 2, 2025 at 1:25 AM
+  - Added missing `timestamp` field to `/api/health/app` response at root level
+  - Fixed ping response to return `{ status: "ok", ping: true }` instead of including timestamp
+  - Removed problematic catch-all API route that was breaking all API endpoints (JSON 404s moved to RR-122)
+  - All health endpoint response formats now match integration test expectations
+
 - **Test Configuration Separation (RR-118)**
   - Fixed integration tests failing due to global fetch mocking interference
   - Separated unit tests (jsdom + mocked fetch) from integration tests (node + real HTTP)

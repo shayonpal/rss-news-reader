@@ -11,11 +11,17 @@ export async function GET(request: NextRequest) {
     const isPing = url.searchParams.get("ping") === "true";
 
     if (isPing) {
-      return NextResponse.json({ status: "ok", timestamp: new Date() });
+      return NextResponse.json({ status: "ok", ping: true });
     }
 
     // Perform comprehensive health check
     const health = await appHealthCheck.checkHealth();
+
+    // Add timestamp at root level
+    const healthWithTimestamp = {
+      ...health,
+      timestamp: new Date().toISOString()
+    };
 
     // Determine HTTP status code based on health
     let statusCode = 200;
@@ -25,7 +31,7 @@ export async function GET(request: NextRequest) {
       statusCode = 200; // Still return 200 for degraded, but include status in body
     }
 
-    return NextResponse.json(health, { status: statusCode });
+    return NextResponse.json(healthWithTimestamp, { status: statusCode });
   } catch (error) {
     console.error("Health check endpoint error:", error);
 
@@ -42,6 +48,7 @@ export async function GET(request: NextRequest) {
         uptime: 0,
         lastActivity: new Date().toISOString(),
         errorCount: 1,
+        timestamp: new Date().toISOString(),
         dependencies: {
           database: "unknown",
           oauth: "unknown",
