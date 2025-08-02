@@ -22,7 +22,7 @@ Check $ARGUMENTS:
 If Linear issue ID provided:
 
 1. **Fetch Issue Details**:
-   - Use `linear-expert` to get full issue with ALL comments
+   - Use `linear-expert` to get full issue with ALL comments and sub-issues (if they exist)
    - Extract description, labels, priority, dependencies
    - Remember: Issue + comments = living specification
 

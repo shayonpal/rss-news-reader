@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Fixed
+- **Health Endpoints Graceful Degradation in Test Environment (RR-119)** - Saturday, August 2, 2025
+  - Created environment detection utility (src/lib/utils/environment.ts) to reliably detect test environments
+  - Updated all health endpoints to gracefully handle missing services in test environments
+  - Health endpoints now return 200 status with service unavailability metadata instead of 503 errors
+  - Added environment field to all health responses for better debugging
+  - Preserves production behavior - real errors still return 503 status
+  - Fixes test environment compatibility issues without affecting production monitoring
+
 - **Test Runner Memory Exhaustion (RR-123)** - Saturday, August 2, 2025 at 12:28 PM
   - Fixed catastrophic memory exhaustion issue where test runner spawned 8 vitest processes consuming ~36GB RAM
   - Updated npm test script to use safe-test-runner.sh preventing double test execution
