@@ -10,6 +10,17 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test-setup.ts"],
     exclude: ['**/src/__tests__/integration/**', '**/node_modules/**'],
+    // Resource limits to prevent memory exhaustion (RR-123)
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+        maxForks: 2,
+      },
+    },
+    maxConcurrency: 1,
+    testTimeout: 30000, // 30 seconds
+    hookTimeout: 30000, // 30 seconds
   },
   resolve: {
     alias: {

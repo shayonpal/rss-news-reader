@@ -16,8 +16,18 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
   let app: any;
 
   beforeAll(async () => {
-    // Start Next.js server for testing
-    app = next({ dev, dir: process.cwd() });
+    // Set environment variable to use separate build directory
+    process.env.NEXT_BUILD_DIR = '.next-test';
+    
+    // Start Next.js server for testing with basePath configuration
+    // This will use .next-test directory due to NEXT_BUILD_DIR env var
+    app = next({ 
+      dev, 
+      dir: process.cwd(), 
+      conf: { 
+        basePath: '/reader'
+      } 
+    });
     const handle = app.getRequestHandler();
     await app.prepare();
 
@@ -36,11 +46,14 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
 
   afterAll(async () => {
     await new Promise((resolve) => server.close(resolve));
+    await app.close();
+    // Clean up environment variable
+    delete process.env.NEXT_BUILD_DIR;
   });
 
   describe("Production Health Endpoints", () => {
-    it("should return 200 for /api/health/app", async () => {
-      const response = await fetch(`http://localhost:${port}/api/health/app`);
+    it("should return 200 for /reader/api/health/app", async () => {
+      const response = await fetch(`http://localhost:${port}/reader/api/health/app`);
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -49,9 +62,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(data).toHaveProperty("version");
     });
 
-    it("should support ping parameter for /api/health/app", async () => {
+    it("should support ping parameter for /reader/api/health/app", async () => {
       const response = await fetch(
-        `http://localhost:${port}/api/health/app?ping=true`
+        `http://localhost:${port}/reader/api/health/app?ping=true`
       );
       expect(response.status).toBe(200);
 
@@ -60,8 +73,8 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(data).toHaveProperty("ping", true);
     });
 
-    it("should return 200 for /api/health/db", async () => {
-      const response = await fetch(`http://localhost:${port}/api/health/db`);
+    it("should return 200 for /reader/api/health/db", async () => {
+      const response = await fetch(`http://localhost:${port}/reader/api/health/db`);
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -69,9 +82,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(data).toHaveProperty("timestamp");
     });
 
-    it("should return 200 for /api/health/freshness", async () => {
+    it("should return 200 for /reader/api/health/freshness", async () => {
       const response = await fetch(
-        `http://localhost:${port}/api/health/freshness`
+        `http://localhost:${port}/reader/api/health/freshness`
       );
       expect(response.status).toBe(200);
 
@@ -81,8 +94,8 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(data).toHaveProperty("articles");
     });
 
-    it("should return 200 for /api/health/cron", async () => {
-      const response = await fetch(`http://localhost:${port}/api/health/cron`);
+    it("should return 200 for /reader/api/health/cron", async () => {
+      const response = await fetch(`http://localhost:${port}/reader/api/health/cron`);
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -93,11 +106,11 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
 
   describe("Removed Test Endpoints", () => {
     const removedEndpoints = [
-      "/api/test-supabase",
-      "/api/test-prompt-config",
-      "/api/test-api-endpoints",
-      "/api/test-refresh-stats",
-      "/api/debug/data-cleanup",
+      "/reader/api/test-supabase",
+      "/reader/api/test-prompt-config",
+      "/reader/api/test-api-endpoints",
+      "/reader/api/test-refresh-stats",
+      "/reader/api/debug/data-cleanup",
     ];
 
     removedEndpoints.forEach((endpoint) => {
@@ -126,7 +139,7 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
   describe("Core API Functionality", () => {
     it("should still serve authentication status endpoint", async () => {
       const response = await fetch(
-        `http://localhost:${port}/api/auth/inoreader/status`
+        `http://localhost:${port}/reader/api/auth/inoreader/status`
       );
       expect(response.status).toBe(200);
 
@@ -137,7 +150,7 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
     it("should serve specific article endpoints", async () => {
       // Test that article-specific endpoints exist (even if they return errors without params)
       // Note: /api/articles and /api/feeds base endpoints don't exist - data is fetched via Supabase directly
-      const response = await fetch(`http://localhost:${port}/api/articles/test-id/fetch-content`, {
+      const response = await fetch(`http://localhost:${port}/reader/api/articles/test-id/fetch-content`, {
         method: 'POST'
       });
       // Should return 400 or 404 for invalid ID, not route-not-found
@@ -148,10 +161,10 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
   describe("Error Response Consistency", () => {
     it("should return consistent 404 error format", async () => {
       const response1 = await fetch(
-        `http://localhost:${port}/api/test-supabase`
+        `http://localhost:${port}/reader/api/test-supabase`
       );
       const response2 = await fetch(
-        `http://localhost:${port}/api/non-existent-endpoint`
+        `http://localhost:${port}/reader/api/non-existent-endpoint`
       );
 
       expect(response1.status).toBe(404);
@@ -171,7 +184,7 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
     it("should respond quickly to health checks", async () => {
       const start = Date.now();
       const response = await fetch(
-        `http://localhost:${port}/api/health/app?ping=true`
+        `http://localhost:${port}/reader/api/health/app?ping=true`
       );
       const duration = Date.now() - start;
 
@@ -182,7 +195,7 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
     it("should handle concurrent health checks", async () => {
       const promises = Array(10)
         .fill(null)
-        .map(() => fetch(`http://localhost:${port}/api/health/app`));
+        .map(() => fetch(`http://localhost:${port}/reader/api/health/app`));
 
       const responses = await Promise.all(promises);
       responses.forEach((response) => {

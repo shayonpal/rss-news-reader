@@ -3,6 +3,27 @@
 ## [Unreleased]
 
 ### Fixed
+- **Test Runner Memory Exhaustion (RR-123)** - Saturday, August 2, 2025 at 12:28 PM
+  - Fixed catastrophic memory exhaustion issue where test runner spawned 8 vitest processes consuming ~36GB RAM
+  - Updated npm test script to use safe-test-runner.sh preventing double test execution
+  - Added resource limits to vitest configs (maxConcurrency: 1, maxForks: 2, 30s timeouts)
+  - Created emergency recovery script (kill-test-processes.sh) for clearing orphaned test processes
+  - Added real-time test process monitoring script (monitor-test-processes.sh)
+  - Sequential test execution prevents resource conflicts (tests complete in ~105 seconds)
+  - PM2 services remain stable during test execution - no more service outages
+  - Updated test-expert agent and test command documentation with safe execution patterns
+  - **CRITICAL**: Always use `npm test` for safe execution, never run vitest directly with full suite
+
+### Documentation
+- **Safe Test Practices Documentation (RR-123)** - Saturday, August 2, 2025 at 11:56 AM
+  - Created comprehensive documentation for memory-safe test execution at `docs/testing/safe-test-practices.md`
+  - Added detailed overview of test runner memory exhaustion issue and protective measures
+  - Documented safe test execution commands, resource limits, and emergency procedures
+  - Added guidelines for writing memory-efficient tests and troubleshooting common issues
+  - Updated README.md with dedicated testing section emphasizing safe practices
+  - Included references to emergency scripts and real-time monitoring tools
+
+### Fixed
 - **Health Endpoint Response Format (RR-120)** - Saturday, August 2, 2025 at 1:25 AM
   - Added missing `timestamp` field to `/api/health/app` response at root level
   - Fixed ping response to return `{ status: "ok", ping: true }` instead of including timestamp

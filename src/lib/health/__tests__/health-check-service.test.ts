@@ -243,10 +243,7 @@ describe("HealthCheckService", () => {
 
   describe("Network Health Checks", () => {
     it("should detect online status", async () => {
-      Object.defineProperty(navigator, "onLine", {
-        configurable: true,
-        value: true,
-      });
+      vi.stubGlobal('navigator', { onLine: true });
 
       const result = await service.checkHealth();
       const networkService = result.services.find((s) => s.name === "network");
@@ -259,10 +256,7 @@ describe("HealthCheckService", () => {
     });
 
     it("should detect offline status", async () => {
-      Object.defineProperty(navigator, "onLine", {
-        configurable: true,
-        value: false,
-      });
+      vi.stubGlobal('navigator', { onLine: false });
 
       const result = await service.checkHealth();
       const networkService = result.services.find((s) => s.name === "network");

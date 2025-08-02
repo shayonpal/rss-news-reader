@@ -43,7 +43,9 @@ export interface SystemHealth {
   uptime: number;
   lastActivity: string;
   errorCount: number;
-  dependencies: Record<string, HealthStatus>;
+  environment?: string;
+  timestamp?: string;
+  dependencies: Record<string, HealthStatus | string>;
   performance: {
     avgSyncTime: number;
     avgDbQueryTime: number;

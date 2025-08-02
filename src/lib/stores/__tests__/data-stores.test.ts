@@ -3,6 +3,59 @@
  * Tests database initialization, CRUD operations, and offline functionality
  */
 
+import { vi } from "vitest";
+
+// Create a chainable query mock for Supabase
+const createChainableQuery = (data: any[] = []) => {
+  const query: any = {};
+  
+  // Add chainable methods that return the query object
+  query.select = vi.fn().mockReturnValue(query);
+  query.eq = vi.fn().mockReturnValue(query);
+  query.neq = vi.fn().mockReturnValue(query);
+  query.in = vi.fn().mockReturnValue(query);
+  query.order = vi.fn().mockReturnValue(query);
+  query.limit = vi.fn().mockReturnValue(query);
+  query.offset = vi.fn().mockReturnValue(query);
+  query.range = vi.fn().mockReturnValue(query);
+  query.single = vi.fn().mockReturnValue(query);
+  query.maybeSingle = vi.fn().mockReturnValue(query);
+  
+  // Make the query thenable so it can be awaited
+  query.then = vi.fn().mockImplementation((resolve) => {
+    const result = data.length === 1 ? { data: data[0], error: null } : { data, error: null };
+    resolve(result);
+    return Promise.resolve(result);
+  });
+  
+  return query;
+};
+
+// Mock Supabase client to avoid environment variable requirements
+vi.mock("@/lib/db/supabase", () => ({
+  supabase: {
+    from: vi.fn((table: string) => ({
+      select: vi.fn(() => createChainableQuery([])),
+      insert: vi.fn(() => createChainableQuery([])),
+      update: vi.fn(() => createChainableQuery([])),
+      delete: vi.fn(() => createChainableQuery([])),
+      upsert: vi.fn(() => createChainableQuery([])),
+    })),
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null })
+    },
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null })
+  },
+  supabaseAdmin: {
+    from: vi.fn((table: string) => ({
+      select: vi.fn(() => createChainableQuery([])),
+      insert: vi.fn(() => createChainableQuery([])),
+      update: vi.fn(() => createChainableQuery([])),
+      delete: vi.fn(() => createChainableQuery([])),
+    }))
+  }
+}));
+
 import { db } from "@/lib/db/database";
 import { useArticleStore } from "../article-store";
 import { useFeedStore } from "../feed-store";

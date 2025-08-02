@@ -5,7 +5,11 @@ argument_hint: <linear-issue-id>
 
 # Test Implementation
 
-Test the implementation for Linear issue $ARGUMENTS against its documented requirements and acceptance criteria. Test on dev server ONLY, and never on production server. Dev server is the development server. 
+Test the implementation for Linear issue $ARGUMENTS against its documented requirements and acceptance criteria. Test on dev server ONLY, and never on production server. Dev server is the development server.
+
+## ⚠️ CRITICAL WARNING: Memory-Safe Test Execution Required
+
+**Previous test runner issues caused severe memory exhaustion requiring system reboots (RR-123).** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
 
 ## Step 0: Linear Validation
 
@@ -46,11 +50,29 @@ Clear test artifacts and ensure clean state for testing.
 ## 2. Test Execution
 
 ### A. Unit Test Verification
+
+⚠️ **CRITICAL: Use Memory-Safe Test Execution**
 ```bash
+# SAFE - Uses safe-test-runner.sh with resource limits
 npm test
-npm run test:coverage
+
+# AVOID - Coverage can spawn excessive processes
+# npm run test:coverage  # Use only for specific files
+
+# If tests hang or cause memory issues:
+./scripts/kill-test-processes.sh
+
+# Monitor test execution in another terminal:
+./scripts/monitor-test-processes.sh
 ```
-Document: total tests, pass/fail counts, coverage %, failing test details.
+
+**Resource Limits Enforced:**
+- Max 1 concurrent test execution
+- Max 2 vitest worker processes  
+- 30-second timeout per test
+- Automatic cleanup on exit
+
+Document: total tests, pass/fail counts, coverage % (if run), failing test details.
 
 ### B. Integration Testing
 Test based on feature type:

@@ -41,13 +41,14 @@ describe("Health Route Handler - RR-120 Timestamp Field", () => {
     const routeModule = await import("@/app/api/health/route");
     GET = routeModule.GET;
     
-    // Default mock response without timestamp (mimicking current broken state)
+    // Default mock response with timestamp (after fix)
     mockHealthCheck.checkHealth.mockResolvedValue({
       status: "healthy",
       service: "rss-reader-app",
       uptime: 3600,
       lastActivity: "2025-01-02T20:00:00.000Z",
       errorCount: 0,
+      timestamp: new Date().toISOString(),
       dependencies: {
         database: "healthy",
         oauth: "healthy"
@@ -57,7 +58,6 @@ describe("Health Route Handler - RR-120 Timestamp Field", () => {
         avgApiCallTime: 100,
         avgSyncTime: 2000
       }
-      // Note: No timestamp field - this is the bug we're testing for
     });
   });
 

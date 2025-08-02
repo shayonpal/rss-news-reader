@@ -17,10 +17,11 @@ module.exports = {
       exp_backoff_restart_delay: 100, // Exponential backoff starting at 100ms
       wait_ready: true, // Wait for ready signal from health check
       listen_timeout: 20000, // Max 20 seconds to signal ready
-      max_memory_restart: "512M", // Conservative memory limit
+      max_memory_restart: "1024M", // Increased from 512M to prevent webpack build failures
       env_file: ".env",
       env: {
         NODE_ENV: "development",
+        NODE_OPTIONS: "--max-old-space-size=896", // 896MB heap size (leaves room for PM2 overhead)
         PORT: 3000,
         // Use existing database vars (same for both environments)
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

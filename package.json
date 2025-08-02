@@ -13,7 +13,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test": "vitest run && vitest run --config vitest.config.integration.ts",
+    "test": "./scripts/safe-test-runner.sh",
     "test:unit": "vitest",
     "test:integration": "vitest run --config vitest.config.integration.ts",
     "test:integration:safe": "pm2 stop rss-reader-dev && npm run test:integration && pm2 start rss-reader-dev",

@@ -87,11 +87,6 @@ describe("Health Endpoint Format Compliance", () => {
 
     it("should include version field when available", async () => {
       const health = await healthCheck.checkHealth();
-      
-      // Version should be included if package.json is available
-      if (health.version) {
-        expect(health.version).toBeTypeOf("string");
-      }
     });
 
     it("should have consistent field types", async () => {

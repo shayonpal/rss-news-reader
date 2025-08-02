@@ -73,11 +73,8 @@ SERVER_VARS=(
     "NODE_ENV"
 )
 
-# Production/Development specific variables
+# Development specific variables (production retired per RR-92)
 ENV_SPECIFIC_VARS=(
-    "PROD_PORT"
-    "PROD_NODE_ENV"
-    "PROD_NEXT_PUBLIC_BASE_URL"
     "DEV_PORT"
     "DEV_NODE_ENV"
     "DEV_NEXT_PUBLIC_BASE_URL"

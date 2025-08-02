@@ -7,6 +7,16 @@ cd /Users/shayon/DevProjects/rss-news-reader
 
 echo "🚀 Starting RSS Reader services..."
 
+# Clean webpack cache on startup to prevent corruption
+echo "Cleaning webpack cache..."
+if [ -d ".next" ]; then
+    echo "Removing .next directory to ensure clean build..."
+    rm -rf .next
+    echo "✓ Webpack cache cleaned"
+else
+    echo "✓ No webpack cache to clean"
+fi
+
 # 1. Start PM2 if not running
 if ! pm2 pid > /dev/null 2>&1; then
     echo "Starting PM2 daemon..."

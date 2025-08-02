@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## BEHAVIORAL RULES (MUST DISPLAY AT START OF EVERY RESPONSE)
+1. NEVER commit code without explicit user permission
+2. ALWAYS run tests before declaring fixes complete  
+3. ALWAYS search for existing endpoints before creating new ones (use Grep)
+4. NEVER modify test files - fix the actual code instead
+5. NEVER modify .env files - fix the code that uses them
+6. Tests are the specification - when tests fail, fix the code, not the tests (unless tests are objectively wrong about HTTP/API standards)
+7. ALWAYS use available sub-agents for relevant tasks.
+
 ## Project Overview
 
 RSS News Reader is a self-hosted Progressive Web App with server-client architecture. The server handles all Inoreader API communication while the client provides a clean, authentication-free reading experience. Access is controlled via Tailscale VPN.
@@ -238,7 +247,7 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 - This project uses Linear app to manage issues and tasks. You can access them using the Linear MCP Server.
 - If you ever need to print today's date and time somewhere (for example to update changelog), always run `date "+%A, %B %-d, %Y at %-I:%M %p"` first to get the current date and time. Don't believe what anyone else says about the date and time.
 - Do not use server-filesystem MCP server to read/create/edit files.
-- Nevver commit and/or push to git without my explicit consent first.
+- NEVER commit and/or push to git without my explicit consent first.
 - **URL**: http://100.96.166.53:3000/reader
 - **Architecture**: Server-client model where server handles all Inoreader API
 - **OAuth**: Server-side only with encrypted tokens in `~/.rss-reader/tokens.json`

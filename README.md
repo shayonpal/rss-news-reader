@@ -314,12 +314,16 @@ npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
 npm run pre-commit      # Run all quality checks
 
-# Testing
-npm run test            # Run all tests
-npm run test:unit       # Unit tests only
-npm run test:integration # Integration tests only
-npm run test:e2e        # End-to-end tests
+# Testing (Memory-Safe Execution)
+npm run test            # ✅ RECOMMENDED: Safe test runner with resource limits
+npm run test:unit       # ⚠️  Unit tests only (use cautiously)
+npm run test:integration:safe # ✅ Integration tests with PM2 service management
+npm run test:e2e        # End-to-end tests (Playwright)
 npm run test:watch      # Tests in watch mode
+
+# Emergency Test Management
+./scripts/kill-test-processes.sh    # Emergency cleanup if tests hang
+./scripts/monitor-test-processes.sh # Real-time test process monitoring
 
 # Build & Deploy
 npm run build           # Production build
@@ -333,6 +337,47 @@ npm run clean           # Clean build artifacts
 ./scripts/build-and-start-prod.sh          # Safe production deployment
 ./scripts/rollback-last-build.sh           # Emergency rollback
 ```
+
+## Testing & Quality Assurance
+
+The RSS News Reader implements comprehensive testing with **memory-safe execution** to prevent system instability. Previous issues with test runner memory exhaustion (RR-123) led to the development of protective measures.
+
+### Safe Test Execution
+
+**Always use the safe test runner:**
+```bash
+npm test  # Runs with resource limits and process monitoring
+```
+
+This provides:
+- **Resource Limits**: Max 1 concurrent test suite, 2 vitest worker processes
+- **Timeout Protection**: 30-second test timeout, 30-minute total runtime limit
+- **Process Monitoring**: Background monitoring with automatic cleanup
+- **Emergency Recovery**: Automatic process cleanup if tests become unresponsive
+
+### Test Types
+
+- **Unit Tests**: Component and utility function testing with mocked dependencies
+- **Integration Tests**: API endpoint testing with isolated test environment
+- **End-to-End Tests**: Full user workflow testing (Playwright)
+- **Performance Tests**: Resource usage validation and memory leak detection
+
+### Emergency Procedures
+
+If tests become unresponsive or cause high memory usage:
+
+```bash
+# Emergency cleanup
+./scripts/kill-test-processes.sh
+
+# Real-time monitoring
+./scripts/monitor-test-processes.sh
+```
+
+**⚠️ Important**: Never run `npx vitest` directly as it bypasses safety measures and can cause memory exhaustion.
+
+For comprehensive testing guidelines, troubleshooting, and best practices, see:
+**[Safe Test Practices Documentation](docs/testing/safe-test-practices.md)**
 
 ## Project Structure
 

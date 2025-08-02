@@ -6,7 +6,7 @@ I need to prepare a release from `dev` to `main` branch. Since production has be
 Run these automated checks in parallel on the `dev` branch:
 - `npm run type-check`
 - `npm run lint` 
-- `npm run test` (if tests exist)
+- `npm run test` (SAFE - uses safe-test-runner.sh with resource limits)
 - `npm run build` (validate build)
 - Check git status for uncommitted changes
 - Ensure there are no webpack build corruptions

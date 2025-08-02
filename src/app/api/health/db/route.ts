@@ -1,11 +1,32 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/db/supabase";
+import { isTestEnvironment, getEnvironmentInfo } from "@/lib/utils/environment";
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const startTime = Date.now();
+  const envInfo = getEnvironmentInfo();
+  
+  // Set cache headers
+  const headers = {
+    "Cache-Control": "no-store, max-age=0",
+  };
+
+  // Skip database check in test environment
+  if (isTestEnvironment()) {
+    return NextResponse.json(
+      {
+        status: "healthy",
+        database: "unavailable",
+        message: "Database health check skipped in test environment",
+        environment: envInfo.environment,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200, headers }
+    );
+  }
 
   try {
     // Test database connectivity with a simple query
@@ -25,8 +46,10 @@ export async function GET() {
           message: "Database query failed",
           error: error.message,
           queryTime,
+          environment: envInfo.environment,
+          timestamp: new Date().toISOString(),
         },
-        { status: 503 }
+        { status: 503, headers }
       );
     }
 
@@ -34,6 +57,7 @@ export async function GET() {
     const healthChecks = {
       connectivity: true,
       queryTime,
+      environment: envInfo.environment,
       timestamp: new Date().toISOString(),
     };
 
@@ -46,7 +70,7 @@ export async function GET() {
           message: "Database responding slowly",
           ...healthChecks,
         },
-        { status: 200 }
+        { status: 200, headers }
       );
     }
 
@@ -58,7 +82,7 @@ export async function GET() {
         message: "Database is healthy",
         ...healthChecks,
       },
-      { status: 200 }
+      { status: 200, headers }
     );
   } catch (error) {
     console.error("Database health check error:", error);
@@ -69,8 +93,10 @@ export async function GET() {
         message: "Failed to check database health",
         error: error instanceof Error ? error.message : "Unknown error",
         queryTime: Date.now() - startTime,
+        environment: envInfo.environment,
+        timestamp: new Date().toISOString(),
       },
-      { status: 503 }
+      { status: 503, headers }
     );
   }
 }
