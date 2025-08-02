@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/test-setup.ts"],
-    exclude: ['**/src/__tests__/integration/**', '**/node_modules/**'],
+    environment: "node", // Use node environment for integration tests
+    setupFiles: ["./src/test-setup-integration.ts"], // Different setup file
+    include: ['**/src/__tests__/integration/**'],
   },
   resolve: {
     alias: {

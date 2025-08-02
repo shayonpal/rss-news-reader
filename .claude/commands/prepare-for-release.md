@@ -9,6 +9,7 @@ Run these automated checks in parallel on the `dev` branch:
 - `npm run test` (if tests exist)
 - `npm run build` (validate build)
 - Check git status for uncommitted changes
+- Ensure there are no webpack build corruptions
 
 Stop immediately if any check fails.
 

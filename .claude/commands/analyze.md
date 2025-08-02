@@ -13,6 +13,7 @@ This is a `read-only` mode discussion session. No files will be written during a
 
 Check $ARGUMENTS:
 - If starts with "RR-" or just a number → Linear issue analysis (continue to step 2A)
+- If Linear URL, then it could be a Project. List oll projects, surmise the project ID and read the project description and issues within it
 - If any other text → Idea exploration (go to step 2B)
 - If empty → Error: "Please provide a Linear issue ID (e.g., RR-123) or describe an idea to explore"
 
@@ -21,23 +22,18 @@ Check $ARGUMENTS:
 If Linear issue ID provided:
 
 1. **Fetch Issue Details**:
-   - Get full issue details using Linear MCP server with ALL comments
+   - Use `linear-expert` to get full issue with ALL comments
    - Extract description, labels, priority, dependencies
    - Remember: Issue + comments = living specification
-   - Search comments for:
-     - Implementation plan patterns (e.g., "implementation plan", "approach:")
-     - Test case documentation (e.g., "test cases", "test scenarios:")
 
 2. **Check Related Context**:
    - Parent/child issues
    - Blocking/blocked by relationships
    - Related completed issues for patterns
-   - Use smart filtering to avoid context overflow (limit: 20 items)
 
 3. **Update Status**:
-   - Move issue to "In Progress" if needed
+   - Use `linear-expert` to move to "In Progress" if needed
    - Add analysis start comment with timestamp
-   - Format: "Analysis started at [timestamp]"
 
 Then continue to step 3.
 
@@ -59,31 +55,12 @@ Then continue to step 3.
 
 ## 3. Technical Analysis
 
-Gather comprehensive context through read-only analysis:
+Use read-only agents to gather comprehensive context:
 
 ### Core Context Gathering:
-
-**Documentation Analysis**:
-- Search for project documentation across all docs/ directories
-- Find API documentation, architecture guides, deployment docs
-- Check for existing implementation patterns in similar features
-- Identify environment variables and configuration requirements
-- Assess documentation coverage and identify gaps
-
-**Database Schema Analysis**:
-- List all tables and their relationships
-- Check indexes and performance implications
-- Analyze data growth patterns and retention
-- Identify foreign key relationships and orphaned records
-- Review materialized views (especially feed_stats)
-- Check RLS policies and user restrictions
-
-**Infrastructure Context**:
-- Check PM2 service configurations and health
-- Review deployment scripts and processes
-- Analyze memory constraints (<100MB free RAM typical)
-- Check sync pipeline health and recent errors
-- Review API usage patterns and rate limits
+- Use `doc-search` for project documentation
+- Use `db-expert-readonly` for database schema analysis
+- Use `devops-expert-readonly` for infrastructure context
 
 ### Pattern Analysis:
 - Similar features already implemented
@@ -128,37 +105,18 @@ Based on issue type:
 
 ## 5. Dependency Analysis
 
-Check through read-only analysis:
-- **Database changes?** → Analyze schema impact, migration needs, RLS policies
-- **Sync logic changes?** → Review sync pipeline, API limits, queue processing
-- **Infrastructure changes?** → Check deployment requirements, service configs
+Use read-only agents to check:
+- **Database changes?** → `db-expert-readonly` for schema impact
+- **Sync logic changes?** → `devops-expert-readonly` for sync analysis
+- **Infrastructure changes?** → `devops-expert-readonly` for deployment impact
 
 ## 6. Test Planning
 
-Generate comprehensive test cases including:
-- Unit tests for new functionality
-- Integration tests for sync pipeline
-- Edge cases based on requirements
-- Acceptance criteria verification
-- Performance benchmarks
-- Security validations
-
-Format test cases as:
-```
-**Test Cases**
-
-1. Unit Tests:
-   - [Component]: Test description
-   - Expected: Result
-   - Edge case: Handling
-
-2. Integration Tests:
-   - Sync pipeline: Test scenario
-   - API endpoints: Expected behavior
-   
-3. Acceptance Tests:
-   - [Criteria from Linear]: How to verify
-```
+Draft:
+- Test scenarios based on requirements
+- Edge cases to consider
+- Test data needs
+- Integration test approach
 
 ## 7. Implementation Strategy Presentation
 
@@ -193,6 +151,7 @@ After presenting the implementation strategy, ask:
 Do you:
 1. ✅ Agree with this implementation strategy?
 2. 🔄 Want to continue evolving it?
+3. 🔍 Want a domain expert to review it?
 
 Please respond with 1, 2, or 3.
 ```
@@ -203,6 +162,17 @@ Please respond with 1, 2, or 3.
 - Present revised strategy
 - Return to the options (1, 2, or 3) until I agree
 
+### If I choose 3 (Domain expert review):
+- Ask: "Which domain expert should review this? (e.g., db-expert, devops-expert, ui-expert)"
+- Based on the response, use the appropriate expert agent to review the implementation strategy
+- The expert should provide:
+  - Technical validation of the approach
+  - Potential issues or concerns
+  - Optimization suggestions
+  - Best practices relevant to their domain
+- Present the expert's feedback
+- Return to the options (1, 2, or 3) with the expert insights incorporated
+
 ### If I choose 1 (Agree):
 Proceed to step 9 for finalization.
 
@@ -212,34 +182,32 @@ Once I agree with the implementation strategy:
 
 ### 9A. Update Linear Issue with Implementation Strategy
 
-Use Linear MCP server to:
+Use `linear-expert` to:
 1. Add the agreed implementation strategy as a comment on the issue
 2. Format the comment clearly with:
    - "**Implementation Strategy (Approved)**"
    - The full strategy details
    - Timestamp of approval
 
-### 9B. Generate Comprehensive Test Cases
+### 9B. Generate Test Cases
 
-Based on:
+Use `test-expert` agent with:
 1. The full Linear issue details (title, description, comments)
 2. The agreed implementation strategy
-3. Create test cases including:
-   - Unit tests with specific file paths
-   - Integration tests for affected systems
-   - Edge cases and error scenarios
+3. Request comprehensive test cases including:
+   - Unit tests
+   - Integration tests
+   - Edge cases
    - Acceptance criteria verification
-   - Performance benchmarks where applicable
 
 ### 9C. Update Linear Issue with Test Cases
 
-Use Linear MCP server to:
+Use `linear-expert` to:
 1. Add test cases as a separate comment on the issue
 2. Format the comment with:
    - "**Test Cases**"
    - Structured list of all test scenarios
    - Clear pass/fail criteria
-   - Test file paths where tests should be implemented
 
 ## 10. Final Summary Report
 
@@ -250,7 +218,7 @@ Present a summary of what was accomplished:
 
 📝 Actions Taken:
 1. ✅ Implementation strategy agreed and documented
-2. ✅ Test cases generated comprehensively
+2. ✅ Test cases generated by test-expert
 3. ✅ Linear issue updated with both strategy and test cases
 
 📋 Next Steps:
@@ -268,7 +236,7 @@ If this was idea exploration (not a Linear issue):
 "This idea looks [promising/challenging/interesting]. Would you like me to create a Linear issue for it?"
 
 If yes:
-- Create issue using Linear MCP server
+- Use `linear-expert` to create issue
 - Use the analysis findings for description
 - Apply appropriate labels
 - Return new issue ID
@@ -276,7 +244,7 @@ If yes:
 ## Important Notes
 
 - 🚫 NO file operations during analysis
-- Use read-only operations exclusively
-- Synthesize all analysis from gathered data
+- Use read-only agent variants (db-expert-readonly, devops-expert-readonly, doc-search)
+- Synthesize all analysis from agent data
 - No "waiting for approval" - analysis is complete when presented
 - Implementation requires explicit /execute command

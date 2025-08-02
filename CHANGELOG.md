@@ -1,5 +1,23 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- **Test Configuration Separation (RR-118)**
+  - Fixed integration tests failing due to global fetch mocking interference
+  - Separated unit tests (jsdom + mocked fetch) from integration tests (node + real HTTP)
+  - Added directory-based routing: `src/__tests__/integration/` automatically uses node environment
+  - Updated vitest configurations with proper include/exclude patterns
+  - Integration tests can now make real HTTP requests without interference
+  - Added comprehensive test organization documentation in `src/__tests__/README.md`
+  - No breaking changes to existing test structure
+
+### Technical
+- Updated `vitest.config.ts` to exclude integration directory
+- Updated `vitest.config.integration.ts` to include only integration tests
+- Fixed package.json test scripts to run both test suites correctly
+- Removed broken reference to non-existent `vitest.config.unit.ts`
+
 ## [0.10.1] - Friday, August 1, 2025 at 4:36 AM
 
 ### Added
