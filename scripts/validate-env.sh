@@ -26,14 +26,21 @@ echo "=========================================="
 echo ""
 
 # Load environment variables
-if [[ -f "$PROJECT_ROOT/.env" ]]; then
+# Check for test environment first
+if [[ "$NODE_ENV" == "test" ]] && [[ -f "$PROJECT_ROOT/.env.test" ]]; then
+    # Use export to make variables available to this script
+    set -a
+    source "$PROJECT_ROOT/.env.test"
+    set +a
+    echo -e "${GREEN}✓${NC} Environment file loaded: .env.test (test mode)"
+elif [[ -f "$PROJECT_ROOT/.env" ]]; then
     # Use export to make variables available to this script
     set -a
     source "$PROJECT_ROOT/.env"
     set +a
     echo -e "${GREEN}✓${NC} Environment file loaded: .env"
 else
-    echo -e "${RED}✗${NC} .env file not found!"
+    echo -e "${RED}✗${NC} No environment file found (.env or .env.test)!"
     exit 1
 fi
 

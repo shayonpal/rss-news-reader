@@ -4,37 +4,19 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { createServer } from "http";
-import { parse } from "url";
-import next from "next";
+import { setupTestServer } from "./test-server";
+import type { Server } from "http";
 
-const dev = process.env.NODE_ENV !== "production";
 const port = 3148; // Use different port for testing
 
 describe("Health Endpoints - Post RR-69 Verification", () => {
-  let server: any;
+  let server: Server;
   let app: any;
 
   beforeAll(async () => {
-    // Set environment variable to use separate build directory
-    process.env.NEXT_BUILD_DIR = '.next-test';
-    
-    // Start Next.js server for testing with basePath configuration
-    // This will use .next-test directory due to NEXT_BUILD_DIR env var
-    app = next({ 
-      dev, 
-      dir: process.cwd(), 
-      conf: { 
-        basePath: '/reader'
-      } 
-    });
-    const handle = app.getRequestHandler();
-    await app.prepare();
-
-    server = createServer((req, res) => {
-      const parsedUrl = parse(req.url!, true);
-      handle(req, res, parsedUrl);
-    });
+    const setup = await setupTestServer(port);
+    server = setup.server;
+    app = setup.app;
 
     await new Promise<void>((resolve) => {
       server.listen(port, () => {
@@ -46,7 +28,6 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
 
   afterAll(async () => {
     await new Promise((resolve) => server.close(resolve));
-    await app.close();
     // Clean up environment variable
     delete process.env.NEXT_BUILD_DIR;
   });

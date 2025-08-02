@@ -3,6 +3,16 @@
 ## [Unreleased]
 
 ### Fixed
+- **Initialize Test Server with Proper Dependencies (RR-121)** - Saturday, August 2, 2025 at 2:06 PM
+  - Created centralized test server setup (src/__tests__/integration/test-server.ts) with proper environment loading
+  - Fixed "fetch returns undefined" error that was causing 20 integration test failures
+  - Added loadEnvConfig from @next/env to properly load .env.test in test environments
+  - Created .env.test file for test-specific configuration with IS_TEST_ENVIRONMENT flag
+  - Updated validate-env.sh to support .env.test when NODE_ENV=test
+  - Set NEXT_BUILD_DIR to .next-test to prevent test/production build conflicts
+  - Fixed NODE_ENV timing issue using Object.defineProperty for proper test detection
+  - 13 of 20 integration tests now pass (remaining 7 tracked in RR-114, RR-122, RR-117)
+
 - **Health Endpoints Graceful Degradation in Test Environment (RR-119)** - Saturday, August 2, 2025
   - Created environment detection utility (src/lib/utils/environment.ts) to reliably detect test environments
   - Updated all health endpoints to gracefully handle missing services in test environments

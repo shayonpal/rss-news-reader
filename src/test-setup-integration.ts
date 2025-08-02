@@ -1,16 +1,10 @@
-import "@testing-library/jest-dom";
-import "fake-indexeddb/auto";
+// Integration test setup - uses real fetch, not mocks
+// Node 18+ has native fetch support
 
-// Mock navigator.onLine
-Object.defineProperty(navigator, "onLine", {
-  writable: true,
-  value: true,
-});
+// Set test environment flag
+process.env.IS_TEST_ENVIRONMENT = 'true';
 
-// DO NOT mock fetch for integration tests - we need real HTTP requests!
-// global.fetch = vi.fn();
-
-// Reset mocks before each test
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+// Ensure we're not using mocked fetch from unit tests
+if ('vi' in global && (global as any).vi && (global as any).fetch?.mock) {
+  delete (global as any).fetch;
+}
