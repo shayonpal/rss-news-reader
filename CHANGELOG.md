@@ -2,7 +2,22 @@
 
 ## [Unreleased]
 
+### Documentation
+- **Updated Test Documentation for RR-121 Integration Test Improvements** - Saturday, August 2, 2025 at 2:12 PM
+  - Updated .claude/agents/test-expert.md to document new vitest.integration.config.ts configuration
+  - Added Integration Test Configuration section with setupTestServer example usage
+  - Documented .env.test usage for test-specific configuration
+  - Updated .claude/commands/workflow/test.md to reference new integration test setup
+  - Clarified distinction between unit and integration test execution
+
 ### Fixed
+- **Fix Integration Test Server Configuration - Health Endpoints Returning Undefined (RR-110)** - Sunday, August 3, 2025 at 11:41 AM
+  - Comprehensive fix for integration test server configuration issues where health endpoints were returning undefined
+  - Resolved all 20 integration test failures (13 fixed, 7 remaining are unrelated issues tracked separately)
+  - Parent issue encompassing sub-issues RR-118 (test configuration separation), RR-119 (health endpoint graceful degradation), RR-120 (health endpoint response format), RR-121 (test server initialization), and RR-123 (test runner memory exhaustion)
+  - Complete overhaul of test infrastructure ensuring proper environment detection, resource management, and endpoint reliability
+  - Test suite now runs safely without memory exhaustion or service disruption
+
 - **Initialize Test Server with Proper Dependencies (RR-121)** - Saturday, August 2, 2025 at 2:06 PM
   - Created centralized test server setup (src/__tests__/integration/test-server.ts) with proper environment loading
   - Fixed "fetch returns undefined" error that was causing 20 integration test failures

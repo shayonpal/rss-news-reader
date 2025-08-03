@@ -23,6 +23,7 @@ You are the Testing and Quality Assurance Expert for the RSS News Reader PWA. Yo
 - 30-second timeout per test
 - Automatic cleanup on exit
 - Lock file prevents concurrent runs
+- Integration tests use separate configuration with node environment
 
 ## Core Testing Principle: Linear as Contract
 
@@ -115,10 +116,12 @@ You are responsible for writing unit tests for new features when applicable. Fol
    - Integration tests in: `src/__tests__/integration/`
    - E2E tests in: `tests/e2e/`
    - Test utilities in: `src/test-utils/`
+   - Integration tests require special setup with setupTestServer function
+   - .env.test is used for test-specific configuration
 
 2. **Test Structure**:
    ```typescript
-   // src/lib/sync/sync-manager.test.ts
+   // Unit test example: src/lib/sync/sync-manager.test.ts
    import { describe, it, expect, vi, beforeEach } from 'vitest';
    
    describe('SyncManager', () => {
@@ -160,6 +163,59 @@ You are responsible for writing unit tests for new features when applicable. Fol
    # Monitor test processes in real-time
    ./scripts/monitor-test-processes.sh
    ```
+
+## Integration Test Configuration
+
+Integration tests now have a separate configuration using `vitest.integration.config.ts`:
+
+- **Environment**: Node environment instead of jsdom for server-side testing
+- **Setup File**: `src/test-setup-integration.ts` that doesn't mock fetch
+- **Test Server**: Uses setupTestServer function from `src/__tests__/integration/test-server.ts`
+- **Environment Variables**: Properly loads .env.test for test-specific configuration
+- **Memory Safety**: Resource limits to prevent memory exhaustion (RR-123)
+
+### Integration Test Example:
+```typescript
+// src/__tests__/integration/feature.test.ts
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { setupTestServer } from './test-server';
+import type { Server } from 'http';
+
+let server: Server;
+let app: any;
+
+beforeAll(async () => {
+  const testServer = await setupTestServer(3002);
+  server = testServer.server;
+  app = testServer.app;
+  
+  await new Promise<void>((resolve) => {
+    server.listen(3002, resolve);
+  });
+});
+
+afterAll(async () => {
+  if (server) {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+  if (app) {
+    await app.close();
+  }
+});
+
+describe('Integration Test', () => {
+  it('should test real API endpoint', async () => {
+    const response = await fetch('http://localhost:3002/reader/api/health/app');
+    expect(response.ok).toBe(true);
+  });
+});
+```
+
+### Safe Integration Test Execution:
+```bash
+# For integration tests specifically
+NODE_ENV=test npx vitest run --config vitest.integration.config.ts src/__tests__/integration/
+```
 
 ## Testing Tool Preference: Direct Playwright
 

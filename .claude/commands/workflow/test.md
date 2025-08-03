@@ -47,6 +47,8 @@ curl -s http://localhost:3000/api/health/db | jq .database
 ```
 Clear test artifacts and ensure clean state for testing.
 
+**Note about Integration Test Setup**: Integration tests now properly load environment variables from .env.test and use the test-server.ts setup for integration tests with real API endpoints.
+
 ## 2. Test Execution
 
 ### A. Unit Test Verification
@@ -73,6 +75,8 @@ npm test
 - Automatic cleanup on exit
 
 Document: total tests, pass/fail counts, coverage % (if run), failing test details.
+
+**Note**: Integration tests should use `vitest.integration.config.ts` and fetch is no longer mocked in integration tests.
 
 ### B. Integration Testing
 Test based on feature type:
