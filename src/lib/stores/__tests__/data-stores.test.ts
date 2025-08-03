@@ -3,7 +3,28 @@
  * Tests database initialization, CRUD operations, and offline functionality
  */
 
-import { vi } from "vitest";
+import { vi, beforeEach, afterEach, describe, test, expect } from "vitest";
+
+// Mock the database module first before any imports
+let mockDb: any;
+
+vi.mock("@/lib/db/database", async () => {
+  const actual = await vi.importActual("@/lib/db/database");
+  return {
+    ...actual,
+    AppDatabase: actual.AppDatabase,
+    db: new Proxy({}, {
+      get(target, prop) {
+        // Access the variable through globalThis to avoid initialization issues
+        const mockedDb = (globalThis as any).mockDbInstance;
+        if (mockedDb && prop in mockedDb) {
+          return mockedDb[prop];
+        }
+        return undefined;
+      }
+    })
+  };
+});
 
 // Create a chainable query mock for Supabase
 const createChainableQuery = (data: any[] = []) => {
@@ -56,7 +77,8 @@ vi.mock("@/lib/db/supabase", () => ({
   }
 }));
 
-import { db } from "@/lib/db/database";
+// Import after mocks are set up
+import { AppDatabase } from "@/lib/db/database";
 import { useArticleStore } from "../article-store";
 import { useFeedStore } from "../feed-store";
 import { useSyncStore } from "../sync-store";
@@ -111,16 +133,50 @@ const mockFolder: Folder = {
   updatedAt: new Date(),
 };
 
+// Generate unique database names per test to prevent cross-test pollution
+const generateUniqueDbName = (testName: string): string => {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `test_db_${testName}_${timestamp}_${random}`;
+};
+
+// Test-specific database instance
+let testDb: AppDatabase;
+
 describe("Data Stores Integration Tests", () => {
   beforeEach(async () => {
-    // Clear database before each test
-    await db.delete();
-    await db.open();
+    // Create a new database instance with unique name for each test
+    const dbName = generateUniqueDbName("data_stores");
+    testDb = new AppDatabase(dbName);
+    mockDb = testDb; // Set the mock to use our test database
+    (globalThis as any).mockDbInstance = testDb; // Also set global reference
+    
+    // Clear any existing database and open fresh instance
+    await testDb.safeDelete();
+    await testDb.open();
   });
 
-  afterAll(async () => {
-    // Clean up
-    await db.delete();
+  afterEach(async () => {
+    // Clean up test database with proper synchronization
+    if (testDb) {
+      try {
+        // Ensure all transactions are complete
+        if (testDb.isOpen()) {
+          await testDb.transaction('r', testDb.tables, async () => {
+            // This empty transaction ensures all pending operations complete
+          });
+        }
+        
+        // Safe cleanup
+        await testDb.safeDelete();
+      } catch (error) {
+        console.warn('Error during test cleanup:', error);
+      }
+    }
+    
+    // Clear mock references
+    mockDb = null as any;
+    (globalThis as any).mockDbInstance = null;
   });
 
   describe("Database Initialization", () => {
@@ -134,24 +190,22 @@ describe("Data Stores Integration Tests", () => {
     });
 
     test("should create all required tables", async () => {
-      await db.open();
-
       // Check if all tables exist
-      expect(db.articles).toBeDefined();
-      expect(db.feeds).toBeDefined();
-      expect(db.folders).toBeDefined();
-      expect(db.summaries).toBeDefined();
-      expect(db.pendingActions).toBeDefined();
-      expect(db.apiUsage).toBeDefined();
-      expect(db.userPreferences).toBeDefined();
-      expect(db.dbInfo).toBeDefined();
+      expect(testDb.articles).toBeDefined();
+      expect(testDb.feeds).toBeDefined();
+      expect(testDb.folders).toBeDefined();
+      expect(testDb.summaries).toBeDefined();
+      expect(testDb.pendingActions).toBeDefined();
+      expect(testDb.apiUsage).toBeDefined();
+      expect(testDb.userPreferences).toBeDefined();
+      expect(testDb.dbInfo).toBeDefined();
     });
 
     test("should handle database corruption gracefully", async () => {
       const dataStore = useDataStore.getState();
 
       // Simulate corruption by recording it
-      await db.recordCorruption();
+      await testDb.recordCorruption();
 
       const validation = await dataStore.validateDatabase();
       expect(typeof validation).toBe("boolean");
@@ -161,9 +215,9 @@ describe("Data Stores Integration Tests", () => {
   describe("Article Store Tests", () => {
     beforeEach(async () => {
       // Add test data
-      await db.folders.add(mockFolder);
-      await db.feeds.add(mockFeed);
-      await db.articles.add(mockArticle);
+      await testDb.folders.add(mockFolder);
+      await testDb.feeds.add(mockFeed);
+      await testDb.articles.add(mockArticle);
     });
 
     test("should load articles correctly", async () => {
@@ -190,7 +244,7 @@ describe("Data Stores Integration Tests", () => {
 
       await articleStore.markAsRead("test-article-1");
 
-      const article = await db.articles.get("test-article-1");
+      const article = await testDb.articles.get("test-article-1");
       expect(article?.isRead).toBe(true);
 
       // Check store is updated
@@ -203,12 +257,12 @@ describe("Data Stores Integration Tests", () => {
 
       await articleStore.toggleStar("test-article-1");
 
-      const article = await db.articles.get("test-article-1");
+      const article = await testDb.articles.get("test-article-1");
       expect(article?.tags).toContain("starred");
 
       // Toggle again
       await articleStore.toggleStar("test-article-1");
-      const article2 = await db.articles.get("test-article-1");
+      const article2 = await testDb.articles.get("test-article-1");
       expect(article2?.tags).not.toContain("starred");
     });
 
@@ -230,9 +284,9 @@ describe("Data Stores Integration Tests", () => {
 
   describe("Feed Store Tests", () => {
     beforeEach(async () => {
-      await db.folders.add(mockFolder);
-      await db.feeds.add(mockFeed);
-      await db.articles.add(mockArticle);
+      await testDb.folders.add(mockFolder);
+      await testDb.feeds.add(mockFeed);
+      await testDb.articles.add(mockArticle);
     });
 
     test("should load feed hierarchy correctly", async () => {
@@ -262,7 +316,7 @@ describe("Data Stores Integration Tests", () => {
       expect(folderId).toBeTruthy();
       expect(typeof folderId).toBe("string");
 
-      const folder = await db.folders.get(folderId!);
+      const folder = await testDb.folders.get(folderId!);
       expect(folder?.title).toBe("New Test Folder");
     });
 
@@ -275,7 +329,7 @@ describe("Data Stores Integration Tests", () => {
       // Move feed
       await feedStore.moveFeedToFolder("test-feed-1", newFolderId);
 
-      const feed = await db.feeds.get("test-feed-1");
+      const feed = await testDb.feeds.get("test-feed-1");
       expect(feed?.folderId).toBe(newFolderId);
     });
 
@@ -291,7 +345,7 @@ describe("Data Stores Integration Tests", () => {
 
   describe("Sync Store Tests", () => {
     beforeEach(async () => {
-      await db.articles.add(mockArticle);
+      await testDb.articles.add(mockArticle);
       // Reset navigator.onLine
       (navigator as any).onLine = true;
     });
@@ -384,7 +438,7 @@ describe("Data Stores Integration Tests", () => {
       await dataStore.initializeDatabase();
 
       // Add some test data
-      await db.articles.add(mockArticle);
+      await testDb.articles.add(mockArticle);
 
       await dataStore.performMaintenance();
 
@@ -434,7 +488,7 @@ describe("Data Stores Integration Tests", () => {
         publishedAt: new Date(Date.now() - i * 1000),
       }));
 
-      await db.articles.bulkAdd(articles);
+      await testDb.articles.bulkAdd(articles);
 
       const startTime = Date.now();
       await articleStore.loadArticles();
@@ -451,14 +505,19 @@ describe("Data Stores Integration Tests", () => {
 // Export test utilities for browser testing
 export const testUtils = {
   async resetDatabase() {
-    await db.delete();
-    await db.open();
+    if (testDb) {
+      await testDb.safeDelete();
+      testDb = new AppDatabase(generateUniqueDbName("reset"));
+      await testDb.open();
+    }
   },
 
   async addTestData() {
-    await db.folders.add(mockFolder);
-    await db.feeds.add(mockFeed);
-    await db.articles.add(mockArticle);
+    if (testDb) {
+      await testDb.folders.add(mockFolder);
+      await testDb.feeds.add(mockFeed);
+      await testDb.articles.add(mockArticle);
+    }
   },
 
   async testStores() {

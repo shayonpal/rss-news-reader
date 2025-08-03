@@ -78,6 +78,7 @@ Use read-only agents to gather comprehensive context:
 - **Be direct**: "This won't work because..." with clear reasoning
 - **Suggest improvements**: "What if we modified it to..."
 - **Consider effort vs value**: "Is this worth 3 days for 2% improvement?"
+- Also analyze, in the process, if the issues is even a valid issue.
 
 This is a collaborative discussion to find the best solution.
 
