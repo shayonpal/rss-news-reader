@@ -79,6 +79,7 @@ Use read-only agents to gather comprehensive context:
 - **Suggest improvements**: "What if we modified it to..."
 - **Consider effort vs value**: "Is this worth 3 days for 2% improvement?"
 - Also analyze, in the process, if the issues is even a valid issue.
+- Which existing test and/or documentation will need updating because of this issue?
 
 This is a collaborative discussion to find the best solution.
 

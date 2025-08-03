@@ -236,4 +236,110 @@ describe('/api/health/app', () => {
       timestamp: expect.any(String),
     });
   });
+
+  // RR-114: Tests for version property requirement
+  describe('RR-114: Version Property Tests', () => {
+    it('should return version property in test environment', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(true);
+      vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
+        status: 'healthy',
+        service: 'rss-reader-app',
+        uptime: 100,
+        lastActivity: new Date().toISOString(),
+        errorCount: 0,
+        environment: 'test',
+        dependencies: {
+          database: 'skipped',
+          oauth: 'skipped',
+        },
+        performance: {
+          avgSyncTime: 0,
+          avgDbQueryTime: 0,
+          avgApiCallTime: 0,
+        },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/health/app');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('version');
+      expect(typeof data.version).toBe('string');
+      expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
+    });
+
+    it('should return version property in production environment', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(false);
+      vi.mocked(getEnvironmentInfo).mockReturnValue({
+        environment: 'production',
+        isTest: false,
+        hasDatabase: true,
+        runtime: 'node',
+        timestamp: '2025-08-02T06:00:00.000Z',
+      });
+
+      vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
+        status: 'healthy',
+        service: 'rss-reader-app',
+        uptime: 100,
+        lastActivity: new Date().toISOString(),
+        errorCount: 0,
+        environment: 'production',
+        dependencies: {
+          database: 'healthy',
+          oauth: 'healthy',
+        },
+        performance: {
+          avgSyncTime: 100,
+          avgDbQueryTime: 50,
+          avgApiCallTime: 150,
+        },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/health/app');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('version');
+      expect(typeof data.version).toBe('string');
+      expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
+    });
+
+    it('should return version property even when health check fails', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(false);
+      vi.mocked(getEnvironmentInfo).mockReturnValue({
+        environment: 'production',
+        isTest: false,
+        hasDatabase: true,
+        runtime: 'node',
+        timestamp: '2025-08-02T06:00:00.000Z',
+      });
+
+      vi.mocked(appHealthCheck.checkHealth).mockRejectedValue(new Error('Service unavailable'));
+
+      const request = new NextRequest('http://localhost:3000/api/health/app');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data).toHaveProperty('version');
+      expect(typeof data.version).toBe('string');
+      expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
+    });
+
+    it('should return version property with ping=true parameter', async () => {
+      const request = new NextRequest('http://localhost:3000/api/health/app?ping=true');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('status', 'ok');
+      expect(data).toHaveProperty('ping', true);
+      expect(data).toHaveProperty('version');
+      expect(typeof data.version).toBe('string');
+      expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
+    });
+  });
 });

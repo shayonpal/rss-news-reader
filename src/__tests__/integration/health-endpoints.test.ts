@@ -43,6 +43,18 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(data).toHaveProperty("version");
     });
 
+    // RR-114: Enhanced version property integration tests
+    it("should return valid version property format in /reader/api/health/app", async () => {
+      const response = await fetch(`http://localhost:${port}/reader/api/health/app`);
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data).toHaveProperty("version");
+      expect(typeof data.version).toBe("string");
+      expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
+      expect(data.version.length).toBeGreaterThan(4); // At least "0.0.1"
+    });
+
     it("should support ping parameter for /reader/api/health/app", async () => {
       const response = await fetch(
         `http://localhost:${port}/reader/api/health/app?ping=true`
@@ -52,6 +64,10 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       const data = await response.json();
       expect(data).toHaveProperty("status", "ok");
       expect(data).toHaveProperty("ping", true);
+      // RR-114: Version should be returned even with ping=true
+      expect(data).toHaveProperty("version");
+      expect(typeof data.version).toBe("string");
+      expect(data.version).toMatch(/^\d+\.\d+\.\d+$/);
     });
 
     it("should return 200 for /reader/api/health/db", async () => {
@@ -61,6 +77,24 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       const data = await response.json();
       expect(data).toHaveProperty("database");
       expect(data).toHaveProperty("timestamp");
+    });
+
+    // RR-114: Connection property alias integration tests
+    it("should return connection property as alias for database property in /reader/api/health/db", async () => {
+      const response = await fetch(`http://localhost:${port}/reader/api/health/db`);
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data).toHaveProperty("database");
+      expect(data).toHaveProperty("connection"); // RR-114: connection alias
+      expect(data.connection).toBe(data.database); // Alias should match database value
+      expect(typeof data.database).toBe("string");
+      expect(typeof data.connection).toBe("string");
+      
+      // Verify common database status values
+      const validStatuses = ["connected", "unavailable", "error", "slow"];
+      expect(validStatuses).toContain(data.database);
+      expect(validStatuses).toContain(data.connection);
     });
 
     it("should return 200 for /reader/api/health/freshness", async () => {

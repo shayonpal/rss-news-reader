@@ -134,4 +134,126 @@ describe('/api/health/db', () => {
       queryTime: expect.any(Number),
     });
   });
+
+  // RR-114: Tests for connection property alias requirement
+  describe('RR-114: Connection Property Alias Tests', () => {
+    it('should return connection property as alias for database property in test environment', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(true);
+
+      const request = new NextRequest('http://localhost:3000/api/health/db');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('database', 'unavailable');
+      expect(data).toHaveProperty('connection', 'unavailable'); // RR-114: connection alias
+      expect(data.connection).toBe(data.database); // Alias should match database value
+    });
+
+    it('should return connection property as alias in production environment with healthy database', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(false);
+      vi.mocked(getEnvironmentInfo).mockReturnValue({
+        environment: 'production',
+        isTest: false,
+        hasDatabase: true,
+        runtime: 'node',
+        timestamp: '2025-08-02T06:00:00.000Z',
+      });
+
+      vi.mocked(supabase.from).mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: [{ count: 1 }], error: null }),
+      } as any);
+
+      const request = new NextRequest('http://localhost:3000/api/health/db');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('database', 'connected');
+      expect(data).toHaveProperty('connection', 'connected'); // RR-114: connection alias
+      expect(data.connection).toBe(data.database); // Alias should match database value
+    });
+
+    it('should return connection property as alias when database is slow/degraded', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(false);
+      vi.mocked(getEnvironmentInfo).mockReturnValue({
+        environment: 'production',
+        isTest: false,
+        hasDatabase: true,
+        runtime: 'node',
+        timestamp: '2025-08-02T06:00:00.000Z',
+      });
+
+      // Mock slow query response (>5000ms simulated by returning different mock data)
+      const slowQueryStartTime = Date.now() - 6000; // Simulate 6 second query time
+      const originalDateNow = Date.now;
+      Date.now = vi.fn()
+        .mockReturnValueOnce(slowQueryStartTime) // First call for startTime
+        .mockReturnValue(slowQueryStartTime + 6000); // Subsequent calls for queryTime calculation
+
+      vi.mocked(supabase.from).mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: [{ count: 1 }], error: null }),
+      } as any);
+
+      const request = new NextRequest('http://localhost:3000/api/health/db');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toHaveProperty('database', 'slow');
+      expect(data).toHaveProperty('connection', 'slow'); // RR-114: connection alias
+      expect(data.connection).toBe(data.database); // Alias should match database value
+
+      // Restore Date.now
+      Date.now = originalDateNow;
+    });
+
+    it('should return connection property as alias when database has errors', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(false);
+      vi.mocked(getEnvironmentInfo).mockReturnValue({
+        environment: 'production',
+        isTest: false,
+        hasDatabase: true,
+        runtime: 'node',
+        timestamp: '2025-08-02T06:00:00.000Z',
+      });
+
+      const mockError = new Error('Connection refused');
+      vi.mocked(supabase.from).mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: null, error: mockError }),
+      } as any);
+
+      const request = new NextRequest('http://localhost:3000/api/health/db');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data).toHaveProperty('database', 'error');
+      expect(data).toHaveProperty('connection', 'error'); // RR-114: connection alias
+      expect(data.connection).toBe(data.database); // Alias should match database value
+    });
+
+    it('should return connection property as alias when database throws exception', async () => {
+      vi.mocked(isTestEnvironment).mockReturnValue(false);
+      vi.mocked(getEnvironmentInfo).mockReturnValue({
+        environment: 'production',
+        isTest: false,
+        hasDatabase: true,
+        runtime: 'node',
+        timestamp: '2025-08-02T06:00:00.000Z',
+      });
+
+      const mockError = new Error('Database connection lost');
+      vi.mocked(supabase.from).mockRejectedValue(mockError);
+
+      const request = new NextRequest('http://localhost:3000/api/health/db');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data).toHaveProperty('database', 'error');
+      expect(data).toHaveProperty('connection', 'error'); // RR-114: connection alias
+      expect(data.connection).toBe(data.database); // Alias should match database value
+    });
+  });
 });

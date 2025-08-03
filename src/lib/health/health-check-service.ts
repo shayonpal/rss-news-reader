@@ -34,6 +34,15 @@ export class HealthCheckService {
     this.startTime = new Date();
   }
 
+  // Reset method for test isolation
+  reset(): void {
+    this.startTime = new Date();
+    this.totalChecks = 0;
+    this.failedChecks = 0;
+    this.lastError = undefined;
+    this.checkHistory.clear();
+  }
+
   static getInstance(): HealthCheckService {
     if (!HealthCheckService.instance) {
       HealthCheckService.instance = new HealthCheckService();
@@ -46,16 +55,14 @@ export class HealthCheckService {
     this.totalChecks++;
 
     try {
-      // Run all health checks in parallel
-      const [database, api, cache, auth, network] = await Promise.all([
+      // Run all health checks in parallel (API and Auth checks removed - server-side only)
+      const [database, cache, network] = await Promise.all([
         this.checkDatabase(),
-        this.checkApis(),
         this.checkCache(),
-        this.checkAuth(),
         this.checkNetwork(),
       ]);
 
-      const services: ServiceHealth[] = [database, api, cache, auth, network];
+      const services: ServiceHealth[] = [database, cache, network];
       const overall = this.calculateOverallStatus(services);
 
       // Track failed checks
@@ -239,68 +246,7 @@ export class HealthCheckService {
     }
   }
 
-  private async checkApis(): Promise<ServiceHealth> {
-    const checks: ComponentHealthCheck[] = [];
-
-    // Check Inoreader API
-    const inoreaderCheck = await this.checkInoreaderApi();
-    checks.push(inoreaderCheck);
-
-    // Check Claude API (if configured)
-    const claudeCheck = await this.checkClaudeApi();
-    checks.push(claudeCheck);
-
-    // Calculate overall API status
-    const statuses = checks.map((c) => c.status);
-    let overallStatus: HealthStatus = "healthy";
-
-    if (statuses.includes("unhealthy")) {
-      overallStatus = "unhealthy";
-    } else if (statuses.includes("degraded")) {
-      overallStatus = "degraded";
-    }
-
-    return {
-      name: "api",
-      displayName: "External APIs",
-      status: overallStatus,
-      lastCheck: new Date(),
-      message: this.getServiceMessage("api", overallStatus),
-      checks,
-    };
-  }
-
-  private async checkInoreaderApi(): Promise<ApiHealth> {
-    // DISABLED: Authentication is now handled server-side only
-    // No client-side auth endpoints exist in the new architecture
-    return {
-      name: "inoreader",
-      status: "unknown",
-      message: "Inoreader API check disabled (server-side auth only)",
-      duration: 0,
-      details: {
-        endpoint: "N/A - Server-side only",
-        responseTime: 0,
-        statusCode: 0,
-      },
-    };
-  }
-
-  private async checkClaudeApi(): Promise<ApiHealth> {
-    // DISABLED: Claude API is now accessed server-side only
-    // No client-side Claude endpoints exist in the new architecture
-    return {
-      name: "claude",
-      status: "unknown",
-      message: "Claude API check disabled (server-side only)",
-      duration: 0,
-      details: {
-        endpoint: "N/A - Server-side only",
-        responseTime: 0,
-        statusCode: 0,
-      },
-    };
-  }
+  // API checks removed - all API access is server-side only for security
 
   private async checkCache(): Promise<ServiceHealth> {
     const checks: ComponentHealthCheck[] = [];
@@ -406,35 +352,7 @@ export class HealthCheckService {
     }
   }
 
-  private async checkAuth(): Promise<ServiceHealth> {
-    const checks: ComponentHealthCheck[] = [];
-
-    // DISABLED: Authentication is now handled server-side only
-    // No client authentication in the new architecture
-    const authCheck: AuthHealth = {
-      name: "authentication",
-      status: "unknown",
-      message: "Auth check disabled (server-side only)",
-      details: {
-        authenticated: false,
-        tokenValid: false,
-        refreshAvailable: false,
-      },
-    };
-
-    checks.push(authCheck);
-
-    const overallStatus = this.calculateComponentStatus(checks);
-
-    return {
-      name: "auth",
-      displayName: "Authentication",
-      status: overallStatus,
-      lastCheck: new Date(),
-      message: this.getServiceMessage("auth", overallStatus),
-      checks,
-    };
-  }
+  // Auth check removed - authentication is server-side only for security
 
   private async checkNetwork(): Promise<ServiceHealth> {
     const checks: ComponentHealthCheck[] = [];

@@ -20,6 +20,7 @@ export async function GET() {
       {
         status: "healthy",
         database: "unavailable",
+        connection: "unavailable", // RR-114: Add connection property as alias
         message: "Database health check skipped in test environment",
         environment: envInfo.environment,
         timestamp: new Date().toISOString(),
@@ -43,6 +44,7 @@ export async function GET() {
         {
           status: "unhealthy",
           database: "error",
+          connection: "error", // RR-114: Add connection property as alias
           message: "Database query failed",
           error: error.message,
           queryTime,
@@ -67,6 +69,7 @@ export async function GET() {
         {
           status: "degraded",
           database: "slow",
+          connection: "slow", // RR-114: Add connection property as alias
           message: "Database responding slowly",
           ...healthChecks,
         },
@@ -79,6 +82,7 @@ export async function GET() {
       {
         status: "healthy",
         database: "connected",
+        connection: "connected", // RR-114: Add connection property as alias
         message: "Database is healthy",
         ...healthChecks,
       },
@@ -90,6 +94,7 @@ export async function GET() {
       {
         status: "unhealthy",
         database: "error",
+        connection: "error", // RR-114: Add connection property as alias
         message: "Failed to check database health",
         error: error instanceof Error ? error.message : "Unknown error",
         queryTime: Date.now() - startTime,
