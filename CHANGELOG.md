@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-08-04
+
 ### Added
 - **Production Build Optimizations** (Monday, August 4, 2025 at 11:53 AM)
   - Added `type-check:prod` script with production-specific TypeScript configuration
