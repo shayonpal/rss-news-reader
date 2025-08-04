@@ -3,14 +3,14 @@
 
 const monitors = [
   {
-    name: "RSS Reader - Production App",
+    name: "RSS Reader - Main App",
     type: "http",
-    url: "http://100.96.166.53:3147/reader/api/health/app?ping=true",
+    url: "http://100.96.166.53:3000/reader/api/health/app?ping=true",
     interval: 60,
     retryInterval: 20,
     maxretries: 3,
     accepted_statuscodes: ["200"],
-    description: "Main production RSS Reader application",
+    description: "Main RSS Reader application",
   },
   {
     name: "RSS Reader - Sync Server",
@@ -23,19 +23,9 @@ const monitors = [
     description: "Bi-directional sync server",
   },
   {
-    name: "RSS Reader - Dev App",
-    type: "http",
-    url: "http://100.96.166.53:3000/reader/api/health/app?ping=true",
-    interval: 300, // Check dev less frequently
-    retryInterval: 60,
-    maxretries: 2,
-    accepted_statuscodes: ["200"],
-    description: "Development RSS Reader application",
-  },
-  {
     name: "RSS Reader - Database",
     type: "http",
-    url: "http://100.96.166.53:3147/reader/api/health/db",
+    url: "http://100.96.166.53:3000/reader/api/health/db",
     interval: 300,
     retryInterval: 60,
     maxretries: 3,
@@ -43,14 +33,14 @@ const monitors = [
     description: "Supabase database connection",
   },
   {
-    name: "RSS Reader - Production Port",
+    name: "RSS Reader - Main Port",
     type: "port",
     hostname: "100.96.166.53",
-    port: 3147,
+    port: 3000,
     interval: 300,
     retryInterval: 60,
     maxretries: 3,
-    description: "Production application port",
+    description: "Main application port",
   },
   {
     name: "RSS Reader - Sync Port",

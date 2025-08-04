@@ -26,7 +26,14 @@ echo "=========================================="
 echo ""
 
 # Load environment variables
-if [[ -f "$PROJECT_ROOT/.env" ]]; then
+# Check for test environment first
+if [[ "$NODE_ENV" == "test" ]] && [[ -f "$PROJECT_ROOT/.env.test" ]]; then
+    # Use export to make variables available to this script
+    set -a
+    source "$PROJECT_ROOT/.env.test"
+    set +a
+    echo -e "${GREEN}✓${NC} Environment file loaded: .env.test (test mode)"
+elif [[ -f "$PROJECT_ROOT/.env" ]]; then
     # Use export to make variables available to this script
     set -a
     source "$PROJECT_ROOT/.env"
@@ -78,11 +85,8 @@ SERVER_VARS=(
     "NODE_ENV"
 )
 
-# Production/Development specific variables
+# Development specific variables (production retired per RR-92)
 ENV_SPECIFIC_VARS=(
-    "PROD_PORT"
-    "PROD_NODE_ENV"
-    "PROD_NEXT_PUBLIC_BASE_URL"
     "DEV_PORT"
     "DEV_NODE_ENV"
     "DEV_NEXT_PUBLIC_BASE_URL"

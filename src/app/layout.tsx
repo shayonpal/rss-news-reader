@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { RecoveryProvider } from "@/components/migration/RecoveryProvider";
 import { PWADetector } from "@/components/pwa-detector";
 import { Toaster } from "sonner";
+import { themeScript } from "@/lib/theme-script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -66,6 +67,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={inter.className}>
         <PWAProvider />
         <ThemeProvider />

@@ -29,22 +29,34 @@ check_sync_status() {
         return 1
     fi
     
-    # Get last 10 sync attempts
-    local recent_syncs=$(tail -50 "$SYNC_LOG" | jq -s '
+    # Get last 10 sync attempts with timeout
+    local recent_syncs=$(timeout 5 tail -50 "$SYNC_LOG" | jq -s '
         map(select(.status == "completed" or .status == "error")) | 
         sort_by(.timestamp) | 
         reverse | 
         .[0:10]
-    ')
+    ' 2>/dev/null)
+    
+    if [ -z "$recent_syncs" ] || [ "$recent_syncs" = "null" ]; then
+        echo "consecutive_failures:0"
+        echo "hours_since_success:999"
+        echo "hours_since_attempt:999"
+        return 0
+    fi
     
     # Count consecutive failures
     local consecutive_failures=0
     local last_success_time=""
     local last_attempt_time=""
     
-    while read -r sync; do
-        local status=$(echo "$sync" | jq -r '.status')
-        local timestamp=$(echo "$sync" | jq -r '.timestamp')
+    # Process each sync entry (avoid subshell with process substitution)
+    while IFS= read -r sync; do
+        local status=$(echo "$sync" | jq -r '.status' 2>/dev/null || echo "error")
+        local timestamp=$(echo "$sync" | jq -r '.timestamp' 2>/dev/null || echo "")
+        
+        if [ -z "$timestamp" ]; then
+            continue
+        fi
         
         if [ -z "$last_attempt_time" ]; then
             last_attempt_time="$timestamp"
@@ -58,12 +70,13 @@ check_sync_status() {
             fi
             break
         fi
-    done < <(echo "$recent_syncs" | jq -c '.[]')
+    done < <(echo "$recent_syncs" | jq -c '.[]' 2>/dev/null || echo "")
     
     # Calculate time since last success
     local hours_since_success=""
     if [ -n "$last_success_time" ]; then
-        local last_success_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${last_success_time%.*}" +%s 2>/dev/null || date -d "${last_success_time}" +%s)
+        # Use Node.js for cross-platform date parsing
+        local last_success_epoch=$(node -e "console.log(Math.floor(new Date('$last_success_time').getTime() / 1000))")
         local current_epoch=$(date +%s)
         hours_since_success=$(( (current_epoch - last_success_epoch) / 3600 ))
     fi
@@ -71,7 +84,8 @@ check_sync_status() {
     # Calculate time since last attempt
     local hours_since_attempt=""
     if [ -n "$last_attempt_time" ]; then
-        local last_attempt_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${last_attempt_time%.*}" +%s 2>/dev/null || date -d "${last_attempt_time}" +%s)
+        # Use Node.js for cross-platform date parsing
+        local last_attempt_epoch=$(node -e "console.log(Math.floor(new Date('$last_attempt_time').getTime() / 1000))")
         local current_epoch=$(date +%s)
         hours_since_attempt=$(( (current_epoch - last_attempt_epoch) / 3600 ))
     fi
@@ -84,8 +98,8 @@ check_sync_status() {
 
 # Check article freshness via API
 check_article_freshness() {
-    # Use the freshness API endpoint instead of direct DB query
-    local response=$(curl -s "http://localhost:3147/reader/api/health/freshness" 2>/dev/null)
+    # Use the freshness API endpoint with timeout
+    local response=$(timeout 10 curl -s --max-time 8 "http://localhost:3000/reader/api/health/freshness" 2>/dev/null)
     
     if [ -z "$response" ]; then
         echo "999"
@@ -93,6 +107,9 @@ check_article_freshness() {
     fi
     
     local hours=$(echo "$response" | jq -r '.hoursSinceLastArticle' 2>/dev/null || echo "999")
+    if [ "$hours" = "null" ]; then
+        hours="999"
+    fi
     echo "$hours"
 }
 

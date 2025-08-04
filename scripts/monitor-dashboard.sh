@@ -77,7 +77,7 @@ check_sync_status() {
 
 # Function to check article freshness
 check_article_freshness() {
-    local response=$(curl -s "http://localhost:3147/reader/api/health/freshness" 2>/dev/null)
+    local response=$(curl -s "http://localhost:3000/reader/api/health/freshness" 2>/dev/null)
     
     if [ -z "$response" ]; then
         echo -e "${RED}❌ Article Freshness: Cannot check${NC}"
@@ -103,14 +103,13 @@ echo -e "Time: $(date '+%Y-%m-%d %H:%M:%S %Z')\n"
 
 echo -e "${BLUE}Service Health:${NC}"
 echo "---------------------"
-check_service "Production App" "http://100.96.166.53:3147/reader/api/health/app?ping=true"
+check_service "App" "http://100.96.166.53:3000/reader/api/health/app?ping=true"
 check_service "Sync Server" "http://localhost:3001/server/health"
-check_service "Database" "http://100.96.166.53:3147/reader/api/health/db"
-check_service "Dev App" "http://100.96.166.53:3000/reader/api/health/app?ping=true" || true
+check_service "Database" "http://100.96.166.53:3000/reader/api/health/db"
 
 echo -e "\n${BLUE}PM2 Processes:${NC}"
 echo "---------------------"
-check_pm2_process "rss-reader-prod"
+check_pm2_process "rss-reader-dev"
 check_pm2_process "rss-sync-server"
 check_pm2_process "rss-sync-cron"
 check_pm2_process "rss-reader-dev" || true
@@ -162,5 +161,5 @@ echo -e "${BLUE}Actions:${NC}"
 echo "1. View detailed logs: pm2 logs"
 echo "2. Restart all services: pm2 restart ecosystem.config.js"
 echo "3. Check Uptime Kuma: http://localhost:3080"
-echo "4. Manual sync: curl -X POST http://localhost:3147/reader/api/sync"
+echo "4. Manual sync: curl -X POST http://localhost:3000/reader/api/sync"
 echo "======================================"

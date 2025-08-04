@@ -47,8 +47,7 @@ Use `db-expert-readonly` to analyze:
 ### 5. Network Access
 Verify connectivity using curl or fetch:
 - Test Tailscale network access to 100.96.166.53
-- Confirm production URL responds on port 3147
-- Check development URL on port 3000 if dev server is running
+- Confirm main URL responds on port 3000
 
 ### 6. System Resources
 Use `devops-expert-readonly` to monitor:

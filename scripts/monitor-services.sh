@@ -127,7 +127,7 @@ update_restart_tracking() {
 # Check main app health
 check_main_app() {
     local start_time=$(date +%s)
-    local health_url="http://localhost:3147/reader/api/health/app?ping=true"
+    local health_url="http://localhost:3000/reader/api/health/app?ping=true"
     
     # Try production port first, then dev
     local response=$(curl -s -m 1 -w "\n%{http_code}" "$health_url" 2>/dev/null || echo "000")
@@ -417,7 +417,40 @@ monitor_loop() {
         if ! check_main_app; then
             app_down=1
             # Try to restart
-            restart_service "rss-reader-prod"
+            restart_service "rss-reader-dev"
+        fi
+        
+        # Check for webpack errors after any restart
+        if [ $app_down -eq 1 ]; then
+            echo "Checking for webpack errors..."
+            local webpack_error_count=$(pm2 logs rss-reader-dev --lines 50 --nostream 2>/dev/null | grep -c "Cannot find module" || echo "0")
+            
+            if [ "$webpack_error_count" -gt 0 ]; then
+                echo "⚠️  Webpack corruption detected! Running recovery..."
+                local event=$(jq -c -n \
+                    --arg ts "$(get_timestamp)" \
+                    --arg service "rss-reader-dev" \
+                    --arg error_type "webpack_corruption" \
+                    --arg error_count "$webpack_error_count" \
+                    '{
+                        "timestamp": $ts,
+                        "service": $service,
+                        "event": "webpack_error_detected",
+                        "error_type": $error_type,
+                        "error_count": ($error_count | tonumber),
+                        "action": "running_recovery"
+                    }')
+                log_event "$event"
+                
+                # Run recovery script
+                if [ -x "$SCRIPT_DIR/webpack-recovery.sh" ]; then
+                    "$SCRIPT_DIR/webpack-recovery.sh"
+                    # Recovery script will log its own results
+                else
+                    echo "❌ Recovery script not found or not executable"
+                    add_error_to_buffer "rss-reader-dev" "recovery_script_missing" "webpack-recovery.sh not found"
+                fi
+            fi
         fi
         
         if ! check_sync_server; then

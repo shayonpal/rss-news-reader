@@ -20,8 +20,7 @@ This document outlines the complete CI/CD strategy for the RSS News Reader PWA u
 
 1. **PM2 Process Manager**: Manages both production and development instances
 2. **Port Allocation**:
-   - Production: Port 3147 (uncommon port to avoid conflicts)
-   - Development: Port 3000 (standard Next.js dev port)
+   - Development: Port 3000 (main application port)
 3. **Database Strategy**: Separate development database (Option B from discussion)
 4. **Reverse Proxy**: Caddy routes production traffic
 
@@ -69,10 +68,7 @@ PROD_NEXT_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
 PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY=your-prod-anon-key
 PROD_SUPABASE_SERVICE_ROLE_KEY=your-prod-service-key
 
-# Production Settings
-PROD_PORT=3147
-PROD_NODE_ENV=production
-PROD_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
+# Production Settings (DEPRECATED - use dev settings)
 
 # ========================================
 # DEVELOPMENT CONFIGURATION
@@ -94,29 +90,29 @@ DEV_NEXT_PUBLIC_BASE_URL=http://100.96.166.53
 // ecosystem.config.js
 module.exports = {
   apps: [
-    // Production App
+    // Main App (formerly production)
     {
-      name: "rss-reader-prod",
+      name: "rss-reader-dev",
       script: "npm",
       args: "start",
       cwd: "/Users/shayon/DevProjects/rss-news-reader",
       instances: 1,
-      exec_mode: "cluster",
-      max_memory_restart: "1G",
+      exec_mode: "fork",
+      max_memory_restart: "512M",
       env: {
         NODE_ENV: "production",
-        PORT: 3147,
-        // Production database vars
-        NEXT_PUBLIC_SUPABASE_URL: process.env.PROD_NEXT_PUBLIC_SUPABASE_URL,
+        PORT: 3000,
+        // Database vars
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY:
-          process.env.PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        SUPABASE_SERVICE_ROLE_KEY: process.env.PROD_SUPABASE_SERVICE_ROLE_KEY,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         // Shared vars
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
         INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
         INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
       },
-      error_file: "./logs/prod-error.log",
+      error_file: "./logs/dev-error.log",
       out_file: "./logs/prod-out.log",
       time: true,
     },
@@ -439,11 +435,11 @@ pm2 reload rss-reader-prod
 
 ### Common Issues
 
-1. **Port 3147 already in use**
+1. **Port 3000 already in use**
 
    ```bash
    # Find process using port
-   lsof -i :3147
+   lsof -i :3000
    # Kill if needed
    kill -9 <PID>
    ```

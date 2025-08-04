@@ -10,11 +10,11 @@ This directory contains documentation for all API endpoints and server-side func
 - **Status**: Current ✅
 - **Last Updated**: July 2025
 - **Contents**:
-  - Authentication endpoints (`/api/auth/*`)
-  - Feed management endpoints (`/api/feeds/*`)
-  - Article operations (`/api/articles/*`)
+  - Inoreader proxy endpoints (`/api/inoreader/*`)
+  - Article content operations (`/api/articles/[id]/*`)
   - Sync endpoints (`/api/sync/*`)
   - Health check endpoints (`/api/health/*`)
+  - Analytics endpoints (`/api/analytics/*`)
   - Request/response formats
   - Error handling patterns
 
@@ -33,10 +33,12 @@ This directory contains documentation for all API endpoints and server-side func
 
 ## Quick Reference
 
-| Category | Primary Endpoints                      | Purpose                           |
-| -------- | -------------------------------------- | --------------------------------- |
-| Auth     | `/api/auth/login`, `/api/auth/status`  | OAuth flow and session management |
-| Feeds    | `/api/feeds`, `/api/feeds/[id]`        | Feed CRUD operations              |
-| Articles | `/api/articles`, `/api/articles/[id]`  | Article management and state      |
-| Sync     | `/api/sync/manual`, `/api/sync/status` | Manual and automatic sync         |
-| Health   | `/api/health/app`, `/api/health/db`    | System health monitoring          |
+| Category | Primary Endpoints                               | Purpose                           |
+| -------- | ----------------------------------------------- | --------------------------------- |
+| Inoreader| `/api/inoreader/user-info`, `/api/inoreader/subscriptions` | Proxy to Inoreader API |
+| Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize` | Content extraction and AI summaries |
+| Sync     | `/api/sync`, `/api/sync/status`                 | Manual and automatic sync         |
+| Health   | `/api/health/app`, `/api/health/db`             | System health monitoring          |
+| Analytics| `/api/analytics/fetch-stats`                    | Usage analytics                   |
+
+**Note**: Feed and article data are accessed directly via Supabase from the client. Base `/api/feeds` and `/api/articles` endpoints don't exist.

@@ -107,8 +107,8 @@ test_endpoint "Dev App Health" "http://localhost:3000/reader/api/health/app" "rs
 
 echo "Production Environment:"
 echo "----------------------"
-test_endpoint "Production App Health" "http://localhost:3147/reader/api/health/app" "rss-reader-app"
-test_endpoint "Cron Service Health" "http://localhost:3147/reader/api/health/cron" "rss-sync-cron"
+test_endpoint "App Health" "http://localhost:3000/reader/api/health/app" "rss-reader-app"
+test_endpoint "Cron Service Health" "http://localhost:3000/reader/api/health/cron" "rss-sync-cron"
 
 echo "Sync Server:"
 echo "-----------"

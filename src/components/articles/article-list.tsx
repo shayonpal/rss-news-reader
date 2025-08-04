@@ -189,7 +189,7 @@ export function ArticleList({
         });
       }
     }
-  }, [loadingArticles, articles.size]);
+  }, [loadingArticles, articles.size, scrollContainerRef]);
 
   // Reset restoration flag when feed changes
   useEffect(() => {
@@ -221,7 +221,7 @@ export function ArticleList({
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loadingMore, loadMoreArticles]);
+  }, [hasMore, loadingMore, loadMoreArticles, scrollContainerRef]);
 
   // Pull-to-refresh handler
   const handleTouchStart = useCallback((e: React.TouchEvent) => {

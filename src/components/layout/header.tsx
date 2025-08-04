@@ -5,6 +5,7 @@ import { useUIStore } from "@/lib/stores/ui-store";
 import { useSyncStore } from "@/lib/stores/sync-store";
 import { Button } from "@/components/ui/button";
 import { HealthStatusWidget } from "@/components/health/health-status-widget";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
   const { toggleSidebar } = useUIStore();
@@ -51,6 +52,7 @@ export function Header() {
                 className={`h-5 w-5 ${isSyncing ? "animate-spin" : ""}`}
               />
             </Button>
+            <ThemeToggle />
             <HealthStatusWidget />
             <div className="text-sm font-medium text-muted-foreground">
               RSS Reader

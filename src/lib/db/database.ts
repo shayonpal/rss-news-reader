@@ -46,8 +46,8 @@ export class AppDatabase extends Dexie {
   userPreferences!: Table<StoredUserPreferences, number>;
   dbInfo!: Table<DatabaseInfo, number>;
 
-  constructor() {
-    super("ShayonNewsDB");
+  constructor(dbName?: string) {
+    super(dbName || "ShayonNewsDB");
 
     // Version 1: Initial schema
     this.version(1).stores({
@@ -66,7 +66,14 @@ export class AppDatabase extends Dexie {
     // Error handling
     this.on("versionchange", () => {
       console.warn("Database version changed by another tab. Reloading...");
-      window.location.reload();
+      // Only reload in browser environment, not in tests
+      if (typeof window !== "undefined" && window.location && typeof window.location.reload === "function") {
+        try {
+          window.location.reload();
+        } catch (error) {
+          console.warn("Unable to reload page:", error);
+        }
+      }
     });
   }
 
@@ -179,6 +186,30 @@ export class AppDatabase extends Dexie {
         this.userPreferences.clear(),
       ]);
     });
+  }
+
+  // Safe lifecycle management methods
+  async safeClose(): Promise<void> {
+    try {
+      if (this.isOpen()) {
+        await this.close();
+      }
+    } catch (error) {
+      console.warn(`Error closing database ${this.name}:`, error);
+    }
+  }
+
+  async safeDelete(): Promise<void> {
+    try {
+      await this.safeClose();
+      await Dexie.delete(this.name);
+    } catch (error) {
+      console.warn(`Error deleting database ${this.name}:`, error);
+    }
+  }
+
+  getDatabaseName(): string {
+    return this.name;
   }
 }
 

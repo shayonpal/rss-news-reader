@@ -5,12 +5,18 @@ argument_hint: <linear-issue-id>
 
 # Test Implementation
 
-Test the implementation for Linear issue $ARGUMENTS against its documented requirements and acceptance criteria. Test on dev server ONLY, and never on production server. Dev server is the development server. 
+Test the implementation for Linear issue $ARGUMENTS against its documented requirements and acceptance criteria. Test on dev server ONLY, and never on production server. Dev server is the development server.
+
+## ⚠️ CRITICAL WARNING: Memory-Safe Test Execution Required
+
+**Previous test runner issues caused severe memory exhaustion requiring system reboots (RR-123).** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
+
+If you must run a test command that might hang the activity, ask me to run it on your behalf instead. Just give me the entire command to run, along with a way to pipe the output to a file so that you can read it easily. `tee` command will be preferred wherever possible.
 
 ## Step 0: Linear Validation
 
 ### Verify Issue Status
-Use Linear MCP server to:
+Use `linear-expert` agent to:
 1. Verify issue exists and is in "In Review" status
 2. If not in review:
    - If "In Progress": Suggest completing implementation first
@@ -43,14 +49,36 @@ curl -s http://localhost:3000/api/health/db | jq .database
 ```
 Clear test artifacts and ensure clean state for testing.
 
+**Note about Integration Test Setup**: Integration tests now properly load environment variables from .env.test and use the test-server.ts setup for integration tests with real API endpoints.
+
 ## 2. Test Execution
 
 ### A. Unit Test Verification
+
+⚠️ **CRITICAL: Use Memory-Safe Test Execution**
 ```bash
+# SAFE - Uses safe-test-runner.sh with resource limits
 npm test
-npm run test:coverage
+
+# AVOID - Coverage can spawn excessive processes
+# npm run test:coverage  # Use only for specific files
+
+# If tests hang or cause memory issues:
+./scripts/kill-test-processes.sh
+
+# Monitor test execution in another terminal:
+./scripts/monitor-test-processes.sh
 ```
-Document: total tests, pass/fail counts, coverage %, failing test details.
+
+**Resource Limits Enforced:**
+- Max 1 concurrent test execution
+- Max 2 vitest worker processes  
+- 30-second timeout per test
+- Automatic cleanup on exit
+
+Document: total tests, pass/fail counts, coverage % (if run), failing test details.
+
+**Note**: Integration tests should use `vitest.integration.config.ts` and fetch is no longer mocked in integration tests.
 
 ### B. Integration Testing
 Test based on feature type:
@@ -110,7 +138,7 @@ Severity: Critical (data loss, security, crashes) → High (major features) → 
 
 ## 7. Update Linear
 
-Add test report as comment. Update labels (add "has-bugs" if needed). Update status: pass → stay "In Review", minor issues → stay "In Review" with comment, blocking → "In Progress". Create separate issues for complex bugs.
+Ask `linear-expert` agent to ddd test report as comment. Update labels (add "has-bugs" if needed). Update status: pass → stay "In Review", minor issues → stay "In Review" with comment, blocking → "In Progress". Create separate issues for complex bugs.
 
 ## 8. Bug Fixing Loop
 
@@ -151,7 +179,7 @@ Update relevant project documentation:
 ```
 Include: date, Linear reference, user impact, breaking changes (⚠️), migration steps.
 
-### Close Linear Issue
+### Close Linear Issue using `linear-expert` agent
 After confirmation: Change status to "Done", add final comment with timestamp, ensure linked issues resolved, confirm deployment readiness, note follow-ups.
 
 ## Important Notes

@@ -9,6 +9,7 @@
 
 # testing
 /coverage
+/test-results/
 
 # next.js
 /.next*
@@ -30,6 +31,7 @@ yarn-error.log*
 .env*.local
 .env
 .env.backup
+.env.test
 
 # vercel
 .vercel
@@ -57,5 +59,4 @@ docs/revised-priority.md
 
 # Token files
 ~/.rss-reader/tokens.json
-*.claude/
 documentation-analysis-report.json

@@ -33,29 +33,28 @@ The RSS News Reader requires several services to be running for full functionali
 
 ### Services & Ports
 
-| Service Name        | PM2 Process Name | Port | Environment | Purpose                               |
-| ------------------- | ---------------- | ---- | ----------- | ------------------------------------- |
-| RSS Reader App      | rss-reader-prod  | 3147 | Production  | Main web application server           |
-| RSS Reader Dev      | rss-reader-dev   | 3000 | Development | Development server (when running)     |
-| Sync Cron Service   | rss-sync-cron    | N/A  | Both        | Automated article syncing (2AM & 2PM) |
-| Supabase PostgreSQL | N/A              | 5432 | Both        | Database server (cloud-hosted)        |
-| Tailscale           | N/A              | N/A  | Both        | VPN for secure network access         |
+| Service Name        | PM2 Process Name | Port | Purpose                               |
+| ------------------- | ---------------- | ---- | ------------------------------------- |
+| RSS Reader Dev      | rss-reader-dev   | 3000 | Development/main web application      |
+| Sync Cron Service   | rss-sync-cron    | N/A  | Automated article syncing (2AM & 2PM) |
+| Supabase PostgreSQL | N/A              | 5432 | Database server (cloud-hosted)        |
+| Tailscale           | N/A              | N/A  | VPN for secure network access         |
 
 ### Essential Startup Commands
 
 ```bash
-# Start all production services
+# Start all services
 pm2 start ecosystem.config.js
 
 # Check service status
 pm2 status
 
 # View service logs
-pm2 logs rss-reader-prod
+pm2 logs rss-reader-dev
 pm2 logs rss-sync-cron
 
 # Restart services
-pm2 restart rss-reader-prod
+pm2 restart rss-reader-dev
 pm2 restart rss-sync-cron
 
 # Stop services
@@ -64,10 +63,10 @@ pm2 stop all
 
 ### Health Check Endpoints
 
-- **Application Health**: http://100.96.166.53:3147/api/health/app
-- **Database Health**: http://100.96.166.53:3147/api/health/db
-- **Article Freshness**: http://100.96.166.53:3147/api/health/freshness
-- **Cron Service Status**: http://100.96.166.53:3147/api/health/cron
+- **Application Health**: http://100.96.166.53:3000/api/health/app
+- **Database Health**: http://100.96.166.53:3000/api/health/db
+- **Article Freshness**: http://100.96.166.53:3000/api/health/freshness
+- **Cron Service Status**: http://100.96.166.53:3000/api/health/cron
 - **Sync Status**: Check via PM2 logs for `rss-sync-cron`
 
 ### Monitoring
@@ -78,11 +77,9 @@ The RSS News Reader includes comprehensive multi-layered monitoring implemented 
 
 - **Access URL**: http://100.96.166.53:3080 (within Tailscale network)
 - **Services Monitored**: Complete coverage of all RSS Reader services
-  - RSS Reader Production (port 3147)
   - RSS Reader Development (port 3000)
   - Bi-directional Sync Server (port 3001)
-  - Production Health Endpoint
-  - Development Health Endpoint
+  - Health Endpoint
   - Cron Service Health (file-based check)
   - Sync API Endpoint monitoring
   - Article freshness checks
@@ -172,21 +169,15 @@ The RSS reader includes an automatic sync service that runs twice daily to keep 
 - Refreshes feed statistics materialized view
 - Tracks success/failure metrics
 
-### Production Deployment
+### Build Validation
 
-The RSS Reader includes a comprehensive build validation system to prevent deployment of broken builds:
+The RSS Reader includes a comprehensive build validation system:
 
 ```bash
-# Build and deploy with validation (recommended)
-./scripts/build-and-start-prod.sh
-
-# Validate existing build before deployment
+# Validate build
 ./scripts/validate-build.sh --mode full
 
-# Emergency rollback to last working build
-./scripts/rollback-last-build.sh
-
-# Standard PM2 deployment (without validation)
+# Standard PM2 deployment
 pm2 start ecosystem.config.js
 
 # Monitor sync logs
@@ -196,8 +187,6 @@ tail -f logs/sync-cron.jsonl | jq .
 **Build Validation Features**:
 
 - **Pre-deployment Validation**: Ensures all API routes are compiled correctly
-- **Automatic Backup**: Creates backup before each deployment
-- **Rollback Capability**: Restore last known good build if deployment fails
 - **PM2 Integration**: Pre-start hooks prevent broken builds from starting
 - **Uptime Kuma Notifications**: Build status pushed to monitoring system
 
@@ -306,7 +295,6 @@ This ensures your reading progress stays synchronized across all Inoreader clien
 **URLs:**
 
 - Development: http://100.96.166.53:3000/reader
-- Production: http://100.96.166.53/reader (requires Caddy setup)
 
 ### Development Commands
 
@@ -326,12 +314,16 @@ npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
 npm run pre-commit      # Run all quality checks
 
-# Testing
-npm run test            # Run all tests
-npm run test:unit       # Unit tests only
-npm run test:integration # Integration tests only
-npm run test:e2e        # End-to-end tests
+# Testing (Memory-Safe Execution)
+npm run test            # ✅ RECOMMENDED: Safe test runner with resource limits
+npm run test:unit       # ⚠️  Unit tests only (use cautiously)
+npm run test:integration:safe # ✅ Integration tests with PM2 service management
+npm run test:e2e        # End-to-end tests (Playwright)
 npm run test:watch      # Tests in watch mode
+
+# Emergency Test Management
+./scripts/kill-test-processes.sh    # Emergency cleanup if tests hang
+./scripts/monitor-test-processes.sh # Real-time test process monitoring
 
 # Build & Deploy
 npm run build           # Production build
@@ -345,6 +337,47 @@ npm run clean           # Clean build artifacts
 ./scripts/build-and-start-prod.sh          # Safe production deployment
 ./scripts/rollback-last-build.sh           # Emergency rollback
 ```
+
+## Testing & Quality Assurance
+
+The RSS News Reader implements comprehensive testing with **memory-safe execution** to prevent system instability. Previous issues with test runner memory exhaustion (RR-123) led to the development of protective measures.
+
+### Safe Test Execution
+
+**Always use the safe test runner:**
+```bash
+npm test  # Runs with resource limits and process monitoring
+```
+
+This provides:
+- **Resource Limits**: Max 1 concurrent test suite, 2 vitest worker processes
+- **Timeout Protection**: 30-second test timeout, 30-minute total runtime limit
+- **Process Monitoring**: Background monitoring with automatic cleanup
+- **Emergency Recovery**: Automatic process cleanup if tests become unresponsive
+
+### Test Types
+
+- **Unit Tests**: Component and utility function testing with mocked dependencies
+- **Integration Tests**: API endpoint testing with isolated test environment
+- **End-to-End Tests**: Full user workflow testing (Playwright)
+- **Performance Tests**: Resource usage validation and memory leak detection
+
+### Emergency Procedures
+
+If tests become unresponsive or cause high memory usage:
+
+```bash
+# Emergency cleanup
+./scripts/kill-test-processes.sh
+
+# Real-time monitoring
+./scripts/monitor-test-processes.sh
+```
+
+**⚠️ Important**: Never run `npx vitest` directly as it bypasses safety measures and can cause memory exhaustion.
+
+For comprehensive testing guidelines, troubleshooting, and best practices, see:
+**[Safe Test Practices Documentation](docs/testing/safe-test-practices.md)**
 
 ## Project Structure
 
@@ -373,11 +406,9 @@ src/
 
 **Version**: 0.6.0
 
-### Production Access
+### Development Access
 
-- **Production URL**: http://100.96.166.53:3147/reader
-- **Development URL**: http://100.96.166.53:3000/reader (when dev server running)
-- **Note**: Using port 3147 due to Obsidian Docker container on port 80
+- **URL**: http://100.96.166.53:3000/reader
 
 ### Deployment Status (July 22, 2025)
 
@@ -387,6 +418,8 @@ src/
 - ✅ **Tailscale Monitoring** - Auto-restart service ensures constant availability
 - ✅ **Database Security** - Row Level Security enabled on all tables
 - ✅ **Performance Optimized** - Feed loading reduced from 6.4s to <500ms
+
+> **Note (August 1, 2025)**: The production server on the local machine has been retired. The RSS Reader now runs as a single development environment for improved stability and resource efficiency. For details on this architectural change, see [Production Environment Removal Documentation](docs/infrastructure/production-removal-2025-08.md).
 
 ### Key Milestones Achieved
 

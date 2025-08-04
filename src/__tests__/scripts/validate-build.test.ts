@@ -66,14 +66,14 @@ describe("validate-build.sh - RR-69 Updates", () => {
   });
 
   describe("Health Endpoint URL Configuration", () => {
-    it("should use correct production URL for health checks", () => {
+    it("should use correct development URL for health checks", () => {
       // Check base URL configuration
-      expect(scriptContent).toContain("http://100.96.166.53:3147");
+      expect(scriptContent).toContain("http://100.96.166.53:3000");
 
-      // Should not reference localhost for production validation
-      const productionSections = scriptContent.match(/base_url=.*3147/g) || [];
-      productionSections.forEach((section) => {
-        expect(section).toContain("100.96.166.53:3147");
+      // Should use development port only
+      const urlSections = scriptContent.match(/base_url=.*3000/g) || [];
+      urlSections.forEach((section) => {
+        expect(section).toContain("100.96.166.53:3000");
       });
     });
 
@@ -95,7 +95,9 @@ describe("validate-build.sh - RR-69 Updates", () => {
 
       // Should check status codes for health endpoints
       expect(scriptContent).toMatch(/health_status_code/);
-      expect(scriptContent).toMatch(/prod_status_code/);
+      
+      // Production removed per RR-92, only dev environment exists
+      expect(scriptContent).not.toMatch(/prod_status_code/);
     });
 
     it("should not expect test endpoints to return 200", () => {

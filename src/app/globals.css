@@ -9,8 +9,8 @@ body {
   width: 100%;
 }
 
-/* iOS PWA safe area handling - only applies in standalone mode */
-.pwa-standalone .pwa-safe-area-top {
+/* iOS PWA safe area handling - only for headers, not spacers */
+.pwa-standalone header.pwa-safe-area-top {
   padding-top: env(safe-area-inset-top);
 }
 

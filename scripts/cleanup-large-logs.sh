@@ -68,20 +68,6 @@ remove_large_file "$LOG_DIR/tailscale-monitor.log" "7" "remove"
 echo ""
 echo "2. Cleaning up old numbered PM2 logs:"
 
-# Remove old prod logs (keep only the latest)
-for file in "$LOG_DIR"/prod-error-*.log; do
-    if [ -f "$file" ]; then
-        file_num=$(echo "$file" | grep -o '[0-9]\+' | tail -1)
-        size_bytes=$(stat -f%z "$file" 2>/dev/null || echo "0")
-        size_mb=$((size_bytes / 1024 / 1024))
-        
-        # Keep only files smaller than 1MB or the very latest
-        if [ "$size_mb" -gt 1 ] && [ "$file_num" -lt 16 ]; then
-            remove_large_file "$file" "$size_mb" "remove"
-        fi
-    fi
-done
-
 # Remove old dev logs (keep only current)
 for file in "$LOG_DIR"/dev-error-*.log; do
     if [ -f "$file" ]; then

@@ -5,6 +5,7 @@ import { storageManager, type StorageStats } from "@/lib/db/storage-manager";
 import { DatabaseMigrations } from "@/lib/db/migrations";
 import { userPreferencesRepository } from "@/lib/db/repositories/user-preferences-repository";
 import { apiUsageRepository } from "@/lib/db/repositories/api-usage-repository";
+import { isTestEnvironment } from "@/lib/utils/environment";
 import type { UserPreferences, ApiUsage } from "@/types";
 
 interface DatabaseStatus {
@@ -411,7 +412,7 @@ export const useDataStore = create<DataState>()(
   )
 );
 
-// Auto-initialize database on store creation
-if (typeof window !== "undefined") {
+// Auto-initialize database on store creation (except in test environments)
+if (typeof window !== "undefined" && !isTestEnvironment()) {
   useDataStore.getState().initializeDatabase().catch(console.error);
 }

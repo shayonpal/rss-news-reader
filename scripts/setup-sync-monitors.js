@@ -6,7 +6,7 @@ const syncMonitors = [
   {
     name: "RSS Reader - Sync API Endpoint",
     type: "http",
-    url: "http://100.96.166.53:3147/reader/api/sync",
+    url: "http://100.96.166.53:3000/reader/api/sync",
     method: "GET",
     interval: 300, // 5 minutes
     retryInterval: 60,
@@ -17,7 +17,7 @@ const syncMonitors = [
   {
     name: "RSS Reader - Article Freshness",
     type: "http",
-    url: "http://100.96.166.53:3147/reader/api/health/freshness",
+    url: "http://100.96.166.53:3000/reader/api/health/freshness",
     interval: 1800, // 30 minutes
     retryInterval: 300,
     maxretries: 3,
@@ -32,7 +32,7 @@ const syncMonitors = [
   {
     name: "RSS Reader - Cron Health File",
     type: "http",
-    url: "http://100.96.166.53:3147/reader/api/health/cron",
+    url: "http://100.96.166.53:3000/reader/api/health/cron",
     interval: 900, // 15 minutes
     retryInterval: 180,
     maxretries: 2,
