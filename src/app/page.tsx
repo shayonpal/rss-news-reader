@@ -166,7 +166,7 @@ export default function HomePage() {
         {/* Article List Container with its own scroll */}
         <div
           ref={articleListRef}
-          className="ios-scroll-container relative flex-1 overflow-y-auto pt-[73px]"
+          className="ios-scroll-container relative flex-1 overflow-y-auto pt-[70px] pwa-standalone:pt-[calc(50px+env(safe-area-inset-top))]"
         >
           <ArticleList
             feedId={selectedFeedId || undefined}

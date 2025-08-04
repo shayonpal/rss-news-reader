@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **[RR-35]** Fixed PWA body content getting cut off on iPhone 15 Pro Max
+  - Resolved double safe area padding issue (60px + 47px = 107px total)
+  - Added missing `pwa-standalone:` Tailwind variant configuration
+  - Updated spacer elements to use conditional height instead of padding
+  - Properly adjusted article list container padding for PWA mode
 - **[RR-127]** Fixed test regression issues where previously passing tests failed after ConfigurableHealthCheckMock introduction
   - Added missing `AppHealthCheck` export to health route test mocks
   - Fixed theme provider test mocks to properly handle Zustand selector pattern

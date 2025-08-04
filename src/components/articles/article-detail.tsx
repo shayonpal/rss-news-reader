@@ -398,7 +398,7 @@ export function ArticleDetail({
       </header>
 
       {/* Spacer for fixed header */}
-      <div className="pwa-safe-area-top h-[60px]" />
+      <div className="h-[60px] pwa-standalone:h-[calc(60px+env(safe-area-inset-top))]" />
 
       {/* Article Content */}
       <article className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -482,7 +482,7 @@ export function ArticleDetail({
       </footer>
 
       {/* Spacer for fixed footer */}
-      <div className="h-[60px]" />
+      <div className="h-[60px] pwa-standalone:h-[calc(60px+env(safe-area-inset-bottom))]" />
 
       {/* Liquid Glass Scroll to Top button for iOS */}
       {isIOS && showScrollToTop && (
