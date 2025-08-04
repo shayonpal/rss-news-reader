@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter, notFound } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { ArticleDetail } from "@/components/articles/article-detail";
+import ArticleNotFound from "./not-found";
 import type { Article } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 
@@ -17,6 +18,7 @@ export default function ArticlePage() {
   const { feeds } = useFeedStore();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFoundError, setNotFoundError] = useState(false);
 
   useEffect(() => {
     const loadArticle = async () => {
@@ -31,18 +33,18 @@ export default function ArticlePage() {
           }
         } else {
           // Article not found
-          notFound();
+          setNotFoundError(true);
         }
       } catch (error) {
         console.error("Error loading article:", error);
-        router.push("/");
+        setNotFoundError(true);
       } finally {
         setLoading(false);
       }
     };
 
     loadArticle();
-  }, [articleId, getArticle, markAsRead, router]);
+  }, [articleId, getArticle, markAsRead]);
 
   const handleToggleStar = async () => {
     if (article) {
@@ -86,8 +88,8 @@ export default function ArticlePage() {
     );
   }
 
-  if (!article) {
-    return null;
+  if (notFoundError || !article) {
+    return <ArticleNotFound />;
   }
 
   const feed = feeds.get(article.feedId || "");

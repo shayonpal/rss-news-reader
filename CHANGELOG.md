@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed theme provider test mocks to properly handle Zustand selector pattern
   - Resolved timer conflicts between React Testing Library and Vitest fake timers
   - 22 previously failing tests now pass (17 health route + 5 theme provider)
+- **[RR-116]** Fixed 404 page content validation in integration tests (Monday, August 4, 2025 at 1:52 AM)
+  - Aligned integration tests with Next.js App Router behavior
+  - Updated global 404 page to match article 404 styling
+  - Properly handle client-side rendering constraints for article pages
+  - All 55 404-related integration tests now pass
 
 ### Changed
 - **[RR-115]** Health endpoints now return proper HTTP status codes (200 for healthy/degraded, 503 for unhealthy)
