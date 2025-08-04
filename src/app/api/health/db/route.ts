@@ -23,6 +23,7 @@ export async function GET() {
         connection: "unavailable", // RR-114: Add connection property as alias
         message: "Database health check skipped in test environment",
         environment: envInfo.environment,
+        queryTime: 0, // RR-115: Add queryTime for test environment
         timestamp: new Date().toISOString(),
       },
       { status: 200, headers }

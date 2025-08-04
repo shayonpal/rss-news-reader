@@ -6,24 +6,29 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "../../app/api/health/route";
-import { AppHealthCheck } from "@/lib/health/app-health-check";
+import { AppHealthCheck, appHealthCheck } from "@/lib/health/app-health-check";
 
 // Mock dependencies
 vi.mock("@supabase/supabase-js");
 vi.mock("fs/promises");
 
-const mockHealthCheck = {
-  checkHealth: vi.fn()
-};
+vi.mock("@/lib/health/app-health-check", () => {
+  const mockHealthCheck = {
+    checkHealth: vi.fn()
+  };
+  
+  return {
+    appHealthCheck: mockHealthCheck,
+    AppHealthCheck: {
+      logError: vi.fn(),
+      trackMetric: vi.fn(),
+      getInstance: vi.fn(() => mockHealthCheck)
+    }
+  };
+});
 
-vi.mock("@/lib/health/app-health-check", () => ({
-  appHealthCheck: mockHealthCheck,
-  AppHealthCheck: {
-    logError: vi.fn(),
-    trackMetric: vi.fn(),
-    getInstance: vi.fn(() => mockHealthCheck)
-  }
-}));
+// Get mocked instance
+const mockHealthCheck = appHealthCheck as any;
 
 describe("Health Endpoint Edge Cases", () => {
   beforeEach(() => {

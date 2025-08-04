@@ -13,6 +13,20 @@ import { isTestEnvironment, getEnvironmentInfo } from "@/lib/utils/environment";
 // Track service start time
 const SERVICE_START_TIME = Date.now();
 
+// Service initialization states
+const serviceStates = {
+  database: 'initializing' as 'initializing' | 'ready' | 'failed',
+  oauth: 'initializing' as 'initializing' | 'ready' | 'failed',
+  startup: {
+    startTime: Date.now(),
+    readyTime: 0,
+    isReady: false
+  }
+};
+
+// Minimum startup time before considering services ready (ms)
+const MIN_STARTUP_TIME = 2000; // 2 seconds
+
 // In-memory error tracking (last hour)
 const errorLog: { timestamp: number; error: string }[] = [];
 
@@ -26,6 +40,10 @@ const performanceMetrics = {
 export class AppHealthCheck {
   private static instance: AppHealthCheck;
   private supabase: any;
+  private healthCheckLock = false;
+  private lastHealthCheckResult: SystemHealth | null = null;
+  private lastHealthCheckTime = 0;
+  private readonly HEALTH_CHECK_CACHE_MS = 5000; // Cache results for 5 seconds
 
   private constructor() {
     // Initialize Supabase client for health checks
@@ -43,8 +61,40 @@ export class AppHealthCheck {
   }
 
   async checkHealth(): Promise<SystemHealth> {
-    const envInfo = getEnvironmentInfo();
-    const services: ServiceHealth[] = [];
+    // RR-115: Implement race condition prevention
+    // Return cached result if available and fresh
+    if (this.lastHealthCheckResult && 
+        (Date.now() - this.lastHealthCheckTime) < this.HEALTH_CHECK_CACHE_MS) {
+      return this.lastHealthCheckResult;
+    }
+    
+    // If another health check is in progress, wait for it
+    if (this.healthCheckLock) {
+      // Wait up to 10 seconds for the lock to be released
+      const maxWaitTime = 10000;
+      const startWait = Date.now();
+      
+      while (this.healthCheckLock && (Date.now() - startWait) < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // If we have a cached result after waiting, return it
+      if (this.lastHealthCheckResult && 
+          (Date.now() - this.lastHealthCheckTime) < this.HEALTH_CHECK_CACHE_MS * 2) {
+        return this.lastHealthCheckResult;
+      }
+    }
+    
+    // Acquire lock
+    this.healthCheckLock = true;
+    
+    try {
+      const envInfo = getEnvironmentInfo();
+      const services: ServiceHealth[] = [];
+      
+      // Check if services are still initializing
+      const timeSinceStart = Date.now() - serviceStates.startup.startTime;
+      const isInitializing = timeSinceStart < MIN_STARTUP_TIME || !serviceStates.startup.isReady;
 
     // In test environment, skip dependency checks
     if (isTestEnvironment()) {
@@ -60,8 +110,8 @@ export class AppHealthCheck {
         environment: envInfo.environment,
         timestamp: new Date().toISOString(),
         dependencies: {
-          database: "skipped",
-          oauth: "skipped",
+          database: isInitializing ? "initializing" : "skipped",
+          oauth: isInitializing ? "initializing" : "skipped",
         },
         performance: {
           avgDbQueryTime: 0,
@@ -94,13 +144,38 @@ export class AppHealthCheck {
     // Check database connectivity
     const dbHealth = await this.checkDatabase();
     services.push(dbHealth);
+    
+    // Update service state based on health check
+    if (dbHealth.status === 'healthy') {
+      serviceStates.database = 'ready';
+    } else if (dbHealth.status === 'unhealthy') {
+      serviceStates.database = 'failed';
+    }
 
     // Check OAuth token validity
     const authHealth = await this.checkOAuthTokens();
     services.push(authHealth);
+    
+    // Update service state based on health check
+    if (authHealth.status === 'healthy') {
+      serviceStates.oauth = 'ready';
+    } else if (authHealth.status === 'unhealthy') {
+      serviceStates.oauth = 'failed';
+    }
+    
+    // Mark services as ready if both are healthy and enough time has passed
+    if (!serviceStates.startup.isReady && 
+        serviceStates.database === 'ready' && 
+        serviceStates.oauth === 'ready' &&
+        timeSinceStart >= MIN_STARTUP_TIME) {
+      serviceStates.startup.isReady = true;
+      serviceStates.startup.readyTime = Date.now();
+    }
 
     // Calculate overall status
-    const overall = this.calculateOverallStatus(services);
+    const overall = isInitializing 
+      ? 'degraded' as HealthStatus  // Services still starting up
+      : this.calculateOverallStatus(services);
 
     // Get error count from last hour
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
@@ -132,7 +207,7 @@ export class AppHealthCheck {
       },
     });
 
-    return {
+    const result: SystemHealth = {
       status: overall,
       service: "rss-reader-app",
       uptime: uptimeSeconds,
@@ -153,6 +228,16 @@ export class AppHealthCheck {
         services,
       },
     };
+    
+    // Cache the result
+    this.lastHealthCheckResult = result;
+    this.lastHealthCheckTime = Date.now();
+    
+    return result;
+    } finally {
+      // Always release the lock
+      this.healthCheckLock = false;
+    }
   }
 
   private async checkDatabase(): Promise<ServiceHealth> {
@@ -169,6 +254,7 @@ export class AppHealthCheck {
         .single();
 
       const duration = Date.now() - start;
+      const queryTime = duration; // RR-115: Add queryTime tracking
 
       // Track performance
       this.trackPerformance("dbQueries", duration);
@@ -187,6 +273,7 @@ export class AppHealthCheck {
           status: "healthy",
           message: "Database connection successful",
           duration,
+          queryTime, // RR-115: Include queryTime in check
         });
 
         // Check database performance

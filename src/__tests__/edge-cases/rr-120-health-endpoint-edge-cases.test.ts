@@ -9,20 +9,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "@/app/api/health/route";
+import { appHealthCheck } from "@/lib/health/app-health-check";
 
 // Mock the health check service with various failure modes
-const mockHealthCheck = {
-  checkHealth: vi.fn()
-};
-
-const mockAppHealthCheck = {
-  logError: vi.fn()
-};
-
 vi.mock("@/lib/health/app-health-check", () => ({
-  appHealthCheck: mockHealthCheck,
-  AppHealthCheck: mockAppHealthCheck
+  appHealthCheck: {
+    checkHealth: vi.fn()
+  },
+  AppHealthCheck: {
+    logError: vi.fn()
+  }
 }));
+
+// Get the mocked instance
+const mockHealthCheck = appHealthCheck as any;
 
 describe("Health Endpoint Edge Cases - RR-120", () => {
   beforeEach(() => {

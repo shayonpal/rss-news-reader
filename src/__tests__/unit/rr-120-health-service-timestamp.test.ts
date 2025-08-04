@@ -9,9 +9,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AppHealthCheck } from "@/lib/health/app-health-check";
 import type { SystemHealth } from "@/types/health";
+import * as fs from "fs/promises";
+import { createClient } from "@supabase/supabase-js";
 
 // Mock fs/promises for log file operations
-const mockFs = {
+vi.mock("fs/promises", () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   appendFile: vi.fn().mockResolvedValue(undefined),
   access: vi.fn().mockResolvedValue(undefined),
@@ -19,21 +21,21 @@ const mockFs = {
   stat: vi.fn().mockResolvedValue({
     mtime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
   })
-};
-
-vi.mock("fs/promises", () => mockFs);
+}));
 
 // Mock Supabase client
-const mockSupabaseQuery = {
-  from: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  single: vi.fn().mockResolvedValue({ data: { key: "test" }, error: null })
-};
-
 vi.mock("@supabase/supabase-js", () => ({
-  createClient: vi.fn(() => mockSupabaseQuery)
+  createClient: vi.fn(() => ({
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: { key: "test" }, error: null })
+  }))
 }));
+
+// Get mocked instances
+const mockFs = fs as any;
+const mockSupabaseQuery = (createClient as any)();
 
 describe("Health Service Timestamp Generation - RR-120", () => {
   let healthService: AppHealthCheck;

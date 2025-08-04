@@ -12,9 +12,8 @@ export async function GET(request: NextRequest) {
     const isPing = url.searchParams.get("ping") === "true";
 
     if (isPing) {
-      // Get version even for ping requests
-      const version = await getAppVersion();
-      return NextResponse.json({ status: "ok", ping: true, version });
+      // Ping response should be minimal - no version or timestamp
+      return NextResponse.json({ status: "ok", ping: true });
     }
 
     // Perform comprehensive health check
@@ -31,11 +30,27 @@ export async function GET(request: NextRequest) {
     };
 
     // Determine HTTP status code based on health
+    // RR-115: Improve status code determination based on service states
     let statusCode = 200;
-    if (health.status === "unhealthy") {
+    
+    // Check if critical dependencies are unhealthy
+    const isCriticallyUnhealthy = health.dependencies && (
+      health.dependencies.database === "unhealthy" ||
+      health.dependencies.database === "failed" ||
+      health.dependencies.database === "error"
+    );
+    
+    if (health.status === "unhealthy" || isCriticallyUnhealthy) {
       statusCode = 503; // Service Unavailable
     } else if (health.status === "degraded") {
-      statusCode = 200; // Still return 200 for degraded, but include status in body
+      // Check if degraded due to initialization
+      const isInitializing = health.dependencies && (
+        health.dependencies.database === "initializing" ||
+        health.dependencies.oauth === "initializing"
+      );
+      
+      // Return 200 for degraded states (including initialization)
+      statusCode = 200;
     }
 
     return NextResponse.json(healthWithTimestamp, { status: statusCode });

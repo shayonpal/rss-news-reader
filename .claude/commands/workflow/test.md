@@ -11,10 +11,12 @@ Test the implementation for Linear issue $ARGUMENTS against its documented requi
 
 **Previous test runner issues caused severe memory exhaustion requiring system reboots (RR-123).** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
 
+If you must run a test command that might hang the activity, ask me to run it on your behalf instead. Just give me the entire command to run, along with a way to pipe the output to a file so that you can read it easily. `tee` command will be preferred wherever possible.
+
 ## Step 0: Linear Validation
 
 ### Verify Issue Status
-Use Linear MCP server to:
+Use `linear-expert` agent to:
 1. Verify issue exists and is in "In Review" status
 2. If not in review:
    - If "In Progress": Suggest completing implementation first
@@ -136,7 +138,7 @@ Severity: Critical (data loss, security, crashes) → High (major features) → 
 
 ## 7. Update Linear
 
-Add test report as comment. Update labels (add "has-bugs" if needed). Update status: pass → stay "In Review", minor issues → stay "In Review" with comment, blocking → "In Progress". Create separate issues for complex bugs.
+Ask `linear-expert` agent to ddd test report as comment. Update labels (add "has-bugs" if needed). Update status: pass → stay "In Review", minor issues → stay "In Review" with comment, blocking → "In Progress". Create separate issues for complex bugs.
 
 ## 8. Bug Fixing Loop
 
@@ -177,7 +179,7 @@ Update relevant project documentation:
 ```
 Include: date, Linear reference, user impact, breaking changes (⚠️), migration steps.
 
-### Close Linear Issue
+### Close Linear Issue using `linear-expert` agent
 After confirmation: Change status to "Done", add final comment with timestamp, ensure linked issues resolved, confirm deployment readiness, note follow-ups.
 
 ## Important Notes

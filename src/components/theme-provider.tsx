@@ -6,19 +6,32 @@ import { useUIStore } from "@/lib/stores/ui-store";
 export function ThemeProvider() {
   const theme = useUIStore((state) => state.theme);
 
+  // Apply theme immediately on mount and when it changes
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
+    const applyTheme = () => {
+      const root = window.document.documentElement;
+      
+      // Remove existing theme classes
+      root.classList.remove("light", "dark");
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light";
+        root.classList.add(systemTheme);
+      } else {
+        root.classList.add(theme);
+      }
+    };
+
+    // Apply immediately
+    applyTheme();
+
+    // Also apply after a short delay to handle any hydration issues
+    const timer = setTimeout(applyTheme, 10);
+
+    return () => clearTimeout(timer);
   }, [theme]);
 
   // Listen for system theme changes
@@ -36,6 +49,12 @@ export function ThemeProvider() {
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
+
+  // Debug effect to verify the component is rendering
+  useEffect(() => {
+    console.log("[ThemeProvider] Mounted with theme:", theme);
+    return () => console.log("[ThemeProvider] Unmounted");
+  }, []);
 
   return null;
 }

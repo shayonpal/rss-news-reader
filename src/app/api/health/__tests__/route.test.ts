@@ -6,15 +6,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { GET } from "../route";
+import { appHealthCheck } from "@/lib/health/app-health-check";
 
 // Mock the health check service
-const mockHealthCheck = {
-  checkHealth: vi.fn()
-};
-
 vi.mock("@/lib/health/app-health-check", () => ({
-  appHealthCheck: mockHealthCheck
+  appHealthCheck: {
+    checkHealth: vi.fn()
+  },
+  AppHealthCheck: {
+    logError: vi.fn()
+  }
 }));
+
+// Get mocked instance
+const mockHealthCheck = appHealthCheck as any;
 
 describe("Health API Route Handler", () => {
   beforeEach(() => {

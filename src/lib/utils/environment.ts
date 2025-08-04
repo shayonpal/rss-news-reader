@@ -8,6 +8,14 @@ export interface EnvironmentInfo {
   hasDatabase: boolean;
   runtime: 'node' | 'vitest' | 'jest';
   timestamp: string;
+  serviceConfig?: ServiceConfiguration;
+}
+
+export interface ServiceConfiguration {
+  healthCheckTimeout: number;
+  minStartupTime: number;
+  cacheResultsMs: number;
+  gracefulDegradation: boolean;
 }
 
 /**
@@ -48,11 +56,39 @@ export function getEnvironmentInfo(): EnvironmentInfo {
     runtime = 'jest';
   }
 
+  const serviceConfig = getServiceConfiguration(isTest);
+  
   return {
     environment: process.env.NODE_ENV || 'development',
     isTest,
     hasDatabase,
     runtime,
     timestamp: new Date().toISOString(),
+    serviceConfig,
+  };
+}
+
+/**
+ * Gets environment-specific service configuration
+ * @param isTest Whether running in test environment
+ * @returns Service configuration appropriate for the environment
+ */
+function getServiceConfiguration(isTest: boolean): ServiceConfiguration {
+  if (isTest) {
+    // Test environment configuration - faster timeouts, no startup delays
+    return {
+      healthCheckTimeout: 5000,    // 5 seconds
+      minStartupTime: 0,          // No startup delay in tests
+      cacheResultsMs: 1000,       // 1 second cache
+      gracefulDegradation: true,  // Always degrade gracefully in tests
+    };
+  }
+  
+  // Production/development configuration
+  return {
+    healthCheckTimeout: 30000,    // 30 seconds
+    minStartupTime: 2000,        // 2 seconds startup time
+    cacheResultsMs: 5000,        // 5 seconds cache
+    gracefulDegradation: false,  // Fail fast in production
   };
 }

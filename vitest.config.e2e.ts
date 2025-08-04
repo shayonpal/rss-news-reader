@@ -3,28 +3,17 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
+// E2E tests should be excluded from vitest since they use Playwright
+// This config is just to ensure they're not picked up by vitest
 export default defineConfig({
   plugins: [react()],
   test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/test-setup.ts"],
     exclude: [
-      '**/src/__tests__/integration/**',
       '**/src/__tests__/e2e/**',
-      '**/node_modules/**'
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**'
     ],
-    // Resource limits to prevent memory exhaustion (RR-123)
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-        maxForks: 2,
-      },
-    },
-    maxConcurrency: 1,
-    testTimeout: 30000, // 30 seconds
-    hookTimeout: 30000, // 30 seconds
   },
   resolve: {
     alias: {
