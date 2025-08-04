@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated global 404 page to match article 404 styling
   - Properly handle client-side rendering constraints for article pages
   - All 55 404-related integration tests now pass
+- **[RR-117]** Fixed missing auth status endpoint causing integration test failure (Monday, August 4, 2025 at 2:47 AM)
+  - Created `/api/auth/inoreader/status` endpoint for OAuth token status
+  - Maintains VPN-based security model without implementing real authentication
+  - Returns token age, encryption status, and expiry warnings
+  - Integration test now passes with proper endpoint validation
 
 ### Changed
 - **[RR-115]** Health endpoints now return proper HTTP status codes (200 for healthy/degraded, 503 for unhealthy)
@@ -32,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[RR-121]** Test server now properly initializes with dependencies from test-server.ts
 
 ### Added
+- **[RR-117]** Auth status endpoint at `/api/auth/inoreader/status` for integration test requirements
 - **[RR-127]** ConfigurableHealthCheckMock system for flexible test scenarios
 - **[RR-123]** Memory-safe test runner with resource limits to prevent system exhaustion
 - **[RR-114]** Version utility for consistent version retrieval across the application
