@@ -132,6 +132,7 @@ export class HealthCheckService {
           status: "unknown",
           message: "Database check not available server-side",
           duration: Date.now() - start,
+          queryTime: 0, // RR-115: Add queryTime for server-side
         };
       }
 
@@ -146,6 +147,7 @@ export class HealthCheckService {
         status: "healthy",
         message: "Database connection is active",
         duration,
+        queryTime: duration, // RR-115: Add queryTime property
         details: {
           connected: true,
           tablesCount: 8, // Based on your schema
@@ -160,6 +162,7 @@ export class HealthCheckService {
         status: "unhealthy",
         message: "Database connection failed",
         duration: Date.now() - start,
+        queryTime: Date.now() - start, // RR-115: Add queryTime property
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }

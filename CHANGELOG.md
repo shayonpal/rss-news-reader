@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed
+- **Resolve Health Endpoints Returning 503 Status Codes (RR-115)** - Sunday, August 3, 2025 at 8:13 PM
+  - Fixed health endpoints incorrectly returning 503 Service Unavailable instead of 200 OK when services were healthy
+  - Added queryTime property to all database health check responses for performance tracking
+  - Implemented service startup state tracking (initializing, ready, failed) to handle initialization gracefully
+  - Added browser API graceful degradation for test environments to prevent errors
+  - Improved HTTP status code logic: 200 for healthy/degraded states, 503 only for truly unavailable services
+  - Implemented race condition prevention with lock mechanism and 5-second result caching
+  - Added environment-specific service configuration for test vs production behavior
+  - Health endpoints now consistently return proper status codes, improving external monitoring reliability
+
 ### Documentation
 - **Updated Test Documentation for RR-121 Integration Test Improvements** - Saturday, August 2, 2025 at 2:12 PM
   - Updated .claude/agents/test-expert.md to document new vitest.integration.config.ts configuration
