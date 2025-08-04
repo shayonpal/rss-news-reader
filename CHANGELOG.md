@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Package Dependency Updates** (Monday, August 4, 2025 at 12:56 PM)
+  - Removed unused `punycode` package (still available via transitive dependencies)
+  - Removed unused `@radix-ui/react-toast` package (replaced by sonner)
+  - Updated 16 packages to latest minor/patch versions:
+    - `@anthropic-ai/sdk`: 0.56.0 → 0.57.0 (improved edge runtime support, bug fixes)
+    - `@radix-ui/react-avatar`: 1.1.0 → 1.1.10
+    - `@radix-ui/react-collapsible`: 1.1.0 → 1.1.11
+    - `@radix-ui/react-dropdown-menu`: 2.1.1 → 2.1.15
+    - `@radix-ui/react-progress`: 1.1.0 → 1.1.7
+    - `@supabase/supabase-js`: 2.45.0 → 2.51.0
+    - `axios`: 1.7.2 → 1.9.0
+    - `date-fns`: 3.6.0 → 4.1.0
+    - `lucide-react`: 0.426.0 → 0.427.0
+    - `next`: 14.2.5 → 14.2.15
+    - `sonner`: 1.5.0 → 2.0.6
+    - `tailwind-merge`: 2.4.0 → 2.5.0
+    - `uuid`: 10.0.0 → 11.1.0
+    - `zustand`: 4.5.4 → 5.0.0
+    - `node-cron`: 3.0.3 → 4.2.1
+    - `express`: 4.19.2 → 5.1.0
+  - All updates tested and verified to be backward compatible
+
 ## [0.11.0] - 2025-08-04
 
 ### Added
