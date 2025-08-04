@@ -30,12 +30,12 @@ describe('RR-127 Phase 3: Mock Infrastructure Consolidation', () => {
           const mockCalls = content.match(/vi\.mock\(['"]([^'"]+)['"]\)/g) || [];
           
           mockCalls.forEach(mockCall => {
-            const module = mockCall.match(/vi\.mock\(['"]([^'"]+)['"]\)/)?.[1];
-            if (module) {
-              if (!mockPatterns[module]) {
-                mockPatterns[module] = [];
+            const moduleName = mockCall.match(/vi\.mock\(['"]([^'"]+)['"]\)/)?.[1];
+            if (moduleName) {
+              if (!mockPatterns[moduleName]) {
+                mockPatterns[moduleName] = [];
               }
-              mockPatterns[module].push(testFile);
+              mockPatterns[moduleName].push(testFile);
             }
           });
         }
@@ -339,19 +339,19 @@ describe('RR-127 Phase 3: Mock Infrastructure Consolidation', () => {
           const mockMatches = content.match(/vi\.mock\(['"]([^'"]+)['"],\s*\(\)\s*=>\s*(\{[^}]+\})/g) || [];
           
           mockMatches.forEach(match => {
-            const module = match.match(/vi\.mock\(['"]([^'"]+)['"]/)?.[1];
-            if (module) {
-              if (!mockConfigurations[module]) {
-                mockConfigurations[module] = [];
+            const moduleName = match.match(/vi\.mock\(['"]([^'"]+)['"]/)?.[1];
+            if (moduleName) {
+              if (!mockConfigurations[moduleName]) {
+                mockConfigurations[moduleName] = [];
               }
-              mockConfigurations[module].push(match);
+              mockConfigurations[moduleName].push(match);
             }
           });
         }
       }
       
       // Same modules should have similar mock configurations
-      Object.entries(mockConfigurations).forEach(([module, configs]) => {
+      Object.entries(mockConfigurations).forEach(([moduleName, configs]) => {
         if (configs.length > 1) {
           // All configurations for the same module should be similar
           // (This is a heuristic - manual review may be needed)

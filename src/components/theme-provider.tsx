@@ -54,7 +54,7 @@ export function ThemeProvider() {
   useEffect(() => {
     console.log("[ThemeProvider] Mounted with theme:", theme);
     return () => console.log("[ThemeProvider] Unmounted");
-  }, []);
+  }, [theme]);
 
   return null;
 }

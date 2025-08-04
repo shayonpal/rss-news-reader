@@ -433,7 +433,7 @@ describe("RR-115: Health Service Startup Dependencies", () => {
         ]
       });
       
-      let result1 = await service.checkHealth();
+      const result1 = await service.checkHealth();
       expect(result1.status).toBe("unhealthy");
       expect(result1.metrics.failedChecks).toBe(1);
       
@@ -485,7 +485,7 @@ describe("RR-115: Health Service Startup Dependencies", () => {
         ]
       });
       
-      let result2 = await service.checkHealth();
+      const result2 = await service.checkHealth();
       expect(result2.status).toBe("healthy");
       expect(result2.metrics.totalChecks).toBe(2);
       expect(result2.metrics.failedChecks).toBe(1); // Previous failure should be tracked

@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "docs/**/*",
+    "logs/**/*",
+    "test-results/**/*",
+    "tests/**/*",
+    "scripts/**/*.test.js",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/__tests__/**/*",
+    "src/test-setup.ts",
+    "src/test-setup-integration.ts",
+    "src/test-utils/**/*",
+    "**/__tests__/**/*",
+    "vitest.config.ts",
+    "vitest.config.*.ts",
+    "playwright.config.ts",
+    ".next-test/**/*"
+  ]
+}

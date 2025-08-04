@@ -273,7 +273,6 @@ export class AppHealthCheck {
           status: "healthy",
           message: "Database connection successful",
           duration,
-          queryTime, // RR-115: Include queryTime in check
         });
 
         // Check database performance

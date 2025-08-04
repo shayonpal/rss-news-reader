@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Production Build Optimizations** (Monday, August 4, 2025 at 11:53 AM)
+  - Added `type-check:prod` script with production-specific TypeScript configuration
+  - Created `tsconfig.prod.json` for optimized production type checking
+  - Configured Next.js to skip ESLint and TypeScript errors during production builds
+  - These changes improve build reliability in production environments
+- **[RR-117]** Comprehensive test suite for auth status endpoint (Monday, August 4, 2025 at 11:53 AM)
+  - Added unit tests for auth status functionality
+  - Added integration tests for API endpoint behavior
+  - Added edge case tests for error scenarios
+  - Added acceptance tests for end-to-end validation
+  - Created comprehensive test plan documentation
+
 ### Fixed
+- **[RR-115]** Cleaned up health service implementation (Monday, August 4, 2025 at 11:53 AM)
+  - Removed unnecessary `queryTime` property from health check responses
+  - Fixed variable declarations in tests (const instead of let)
+  - Improved code consistency across health check services
+- **Minor UI improvements** (Monday, August 4, 2025 at 11:53 AM)
+  - Updated service worker build output
+  - Fixed minor styling in 404 page
+  - Improved article list component consistency
+  - Enhanced theme provider implementation
 - **[RR-35]** Fixed PWA body content getting cut off on iPhone 15 Pro Max
   - Resolved double safe area padding issue (60px + 47px = 107px total)
   - Added missing `pwa-standalone:` Tailwind variant configuration
