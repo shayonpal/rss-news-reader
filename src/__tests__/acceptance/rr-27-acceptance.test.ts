@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { test as playwrightTest, expect as playwrightExpect, type Page, type BrowserContext } from '@playwright/test';
+import { articleListStateManager } from '@/lib/utils/article-list-state-manager';
 
 /**
  * RR-27: Fix Article List State Preservation on Back Navigation - Acceptance Tests
@@ -420,24 +421,11 @@ describe('RR-27: Article List State Preservation - Acceptance Criteria', () => {
 
       vi.stubGlobal('sessionStorage', mockSessionStorage);
 
-      const checkExpiry = (stateStr: string | null) => {
-        if (!stateStr) return null;
-        try {
-          const parsedState = JSON.parse(stateStr);
-          
-          // Invalid timestamp should be treated as expired
-          if (isNaN(parsedState.timestamp)) {
-            mockSessionStorage.removeItem('articleListState');
-            return null;
-          }
-          return parsedState;
-        } catch {
-          return null;
-        }
-      };
-
-      const result = checkExpiry(mockSessionStorage.data.articleListState);
+      // Use our actual implementation
+      const result = articleListStateManager.getListState();
       expect(result).toBeNull();
+      
+      // Verify that the state was cleared
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('articleListState');
 
       vi.unstubAllGlobals();

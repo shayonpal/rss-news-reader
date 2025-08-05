@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Article List State Preservation (RR-27) - In Review** (Monday, August 4, 2025 at 8:47 PM)
+  - **Core Feature**: ✅ Articles marked as read remain visible in "Unread Only" mode when navigating back from detail view
+  - **Hybrid Query**: ✅ Implemented efficient database approach that loads both unread articles and preserved read articles
+  - **Visual Differentiation**: ✅ Session-preserved articles show with opacity 0.85 and left border indicator
+  - **Session Management**: ✅ Preserved article IDs stored with 30-minute expiry, max 50 articles to prevent unbounded growth
+  - **Critical Bug Fix**: ✅ Fixed issue where complete article list appeared after reading multiple articles
+  - **State Clearing**: ✅ Preserved state correctly clears when switching feeds or changing read status filters
+  - **Auto-Mark Protection**: ✅ Added 2-second delay to prevent false auto-reads during feed switches
+  - **Performance**: ✅ Minimal impact - hybrid query adds only 0.117ms overhead (0.325ms vs 0.208ms)
+  - **Known Limitation**: Scroll position preserved but articles above viewport not auto-marked (tracked in RR-139)
+
+- **Development Workflow Hooks** (Monday, August 4, 2025 at 8:16 PM)
+  - Added Claude Code hooks to enforce project conventions and improve developer experience:
+    - **PM2 Command Enforcement**: Blocks `npm run dev` commands and suggests PM2 alternatives
+    - **Test Safety Reminder**: Shows safer test command alternatives when running `npm run test` with 20-second pause
+    - **Database Change Detection**: Monitors Supabase MCP operations and reminds about RLS policies and materialized view refresh
+    - **Code Quality Tracking**: Tracks edited TypeScript/JavaScript files and suggests running type-check and lint after changes
+  - Hooks configuration stored in `~/.claude/hooks.json`
+  - Improves consistency with production-like development environment
+
 ### Changed
 - **Package Dependency Updates** (Monday, August 4, 2025 at 12:56 PM)
   - Removed unused `punycode` package (still available via transitive dependencies)

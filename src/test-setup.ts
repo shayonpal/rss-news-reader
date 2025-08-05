@@ -28,6 +28,17 @@ Object.defineProperty(global.navigator, "onLine", {
 // Mock fetch globally
 global.fetch = vi.fn();
 
+// Mock IntersectionObserver which is not available in jsdom
+global.IntersectionObserver = vi.fn().mockImplementation((callback, options) => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+  takeRecords: vi.fn(),
+  root: null,
+  rootMargin: '',
+  thresholds: [],
+}));
+
 // Reset mocks before each test
 beforeEach(() => {
   vi.clearAllMocks();

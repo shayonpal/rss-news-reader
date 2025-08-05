@@ -10,11 +10,27 @@ import { useArticleStore } from "@/lib/stores/article-store";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useHydrationFix } from "@/hooks/use-hydration-fix";
 import { Menu, X, ArrowUp } from "lucide-react";
+import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 
 export default function HomePage() {
   const router = useRouter();
   // Fix hydration issues with localStorage
   useHydrationFix();
+  
+  // Clear preserved article state on page unload (browser refresh, tab close, etc.)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only clear if user is refreshing or closing tab, not navigating within app
+      articleListStateManager.clearState();
+    };
+    
+    // Listen for page unload events (browser refresh, tab close, etc.)
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   // Header show/hide refs
   const lastScrollY = useRef(0);

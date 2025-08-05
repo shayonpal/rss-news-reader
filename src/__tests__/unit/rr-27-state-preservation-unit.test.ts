@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { ArticleListStateManager, navigationHistory, type ListState, type ArticleState } from '@/lib/utils/article-list-state-manager';
+import { NavigationHistory } from '@/lib/utils/navigation-history';
 
 // Mock sessionStorage for testing
 const mockSessionStorage = {
@@ -26,14 +28,6 @@ interface ArticleState {
   sessionPreserved: boolean;
 }
 
-interface ListState {
-  articles: ArticleState[];
-  scrollPosition: number;
-  timestamp: number;
-  filter: 'all' | 'unread' | 'read';
-  feedId?: string;
-  folderId?: string;
-}
 
 class ArticleListStateManager {
   private readonly STATE_KEY = 'articleListState';

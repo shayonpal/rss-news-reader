@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/db/supabase";
 import { useSyncStore } from "./sync-store";
+import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 import type { Article, ArticleState, Summary } from "@/types";
 import type { Database } from "@/lib/db/types";
 
@@ -58,11 +59,158 @@ interface ArticleStoreState {
 
 const ARTICLES_PER_PAGE = 50;
 
+// Context for mark-as-read operations
+interface MarkAsReadContext {
+  feedId?: string;
+  folderId?: string;
+  currentView: 'all' | 'feed' | 'folder';
+  filterMode: 'all' | 'unread' | 'read';
+}
+
 // Get initial read status filter from localStorage (client-side only)
 const getInitialReadStatusFilter = (): "all" | "unread" | "read" => {
   // Always return default during SSR
   return "unread"; // Default to unread only
 };
+
+// Centralized function for all mark-as-read operations
+async function markArticlesAsReadWithSession(
+  articleIds: string[],
+  articles: Map<string, Article>,
+  context: MarkAsReadContext,
+  markType: 'manual' | 'auto' | 'bulk',
+  updateDatabase: (ids: string[]) => Promise<void>,
+  updateStore: (updatedArticles: Map<string, Article>) => void
+): Promise<void> {
+  if (articleIds.length === 0) return;
+
+  try {
+    // 1. Update database
+    await updateDatabase(articleIds);
+
+    // 2. Update store
+    const updatedArticles = new Map(articles);
+    articleIds.forEach(id => {
+      const article = updatedArticles.get(id);
+      if (article) {
+        updatedArticles.set(id, { ...article, isRead: true });
+      }
+    });
+    updateStore(updatedArticles);
+
+    // 3. Ensure session state exists with proper context
+    let state = articleListStateManager.getListState();
+    
+    // Create new state if none exists
+    if (!state) {
+      state = {
+        articleIds: [],
+        readStates: {},
+        autoReadArticles: [],
+        manualReadArticles: [],
+        scrollPosition: 0,
+        timestamp: Date.now(),
+        filterMode: context.filterMode,
+        feedId: context.feedId,
+        folderId: context.folderId,
+      };
+    }
+
+    // 4. Add articles to appropriate session arrays based on markType
+    // Update session state
+    if (markType === 'auto') {
+      state.autoReadArticles = [...new Set([...state.autoReadArticles, ...articleIds])];
+    } else {
+      state.manualReadArticles = [...new Set([...state.manualReadArticles, ...articleIds])];
+    }
+
+    // Limit session state to prevent unbounded growth
+    const MAX_SESSION_ARTICLES = 50;
+    if (state.autoReadArticles.length > MAX_SESSION_ARTICLES) {
+      state.autoReadArticles = state.autoReadArticles.slice(-MAX_SESSION_ARTICLES);
+    }
+    if (state.manualReadArticles.length > MAX_SESSION_ARTICLES) {
+      state.manualReadArticles = state.manualReadArticles.slice(-MAX_SESSION_ARTICLES);
+    }
+
+    // Update read states - only keep states for articles we're tracking
+    const trackedArticles = new Set([...state.autoReadArticles, ...state.manualReadArticles]);
+    const newReadStates: Record<string, boolean> = {};
+    trackedArticles.forEach(id => {
+      newReadStates[id] = true;
+    });
+    articleIds.forEach(id => {
+      newReadStates[id] = true;
+    });
+    state.readStates = newReadStates;
+
+    // Don't update context if state already exists - preserve the original view context
+    // Only set context when creating new state (handled above)
+
+    // Save updated session state
+    articleListStateManager.saveListState(state);
+
+    // 5. Also store article IDs separately for the hybrid query
+    // This ensures they can be loaded from the database even when filtered
+    const allPreservedIds = [...new Set([
+      ...(state.autoReadArticles || []),
+      ...(state.manualReadArticles || [])
+    ])];
+    
+    if (allPreservedIds.length > 0) {
+      try {
+        // Store with timestamps for expiry management
+        const preservedWithTimestamps = allPreservedIds.map(id => ({
+          id,
+          timestamp: Date.now()
+        }));
+        
+        // Get existing preserved IDs
+        const existingPreserved = sessionStorage.getItem('preserved_article_ids');
+        let allPreserved = preservedWithTimestamps;
+        
+        if (existingPreserved) {
+          const parsed = JSON.parse(existingPreserved);
+          // Merge with existing, keeping newer timestamps
+          const existingMap = new Map(parsed.map((item: any) => [
+            typeof item === 'string' ? item : item.id,
+            item
+          ]));
+          
+          // Add new items
+          preservedWithTimestamps.forEach(item => {
+            existingMap.set(item.id, item);
+          });
+          
+          allPreserved = Array.from(existingMap.values());
+        }
+        
+        // Clean up old entries (>30 minutes) and limit to 50 most recent
+        const now = Date.now();
+        const validPreserved = allPreserved
+          .filter((item: any) => {
+            const timestamp = typeof item === 'string' ? now : item.timestamp;
+            return (now - timestamp) < 30 * 60 * 1000;
+          })
+          .sort((a: any, b: any) => {
+            const aTime = typeof a === 'string' ? 0 : a.timestamp;
+            const bTime = typeof b === 'string' ? 0 : b.timestamp;
+            return bTime - aTime;
+          })
+          .slice(0, 50);
+        
+        sessionStorage.setItem('preserved_article_ids', JSON.stringify(validPreserved));
+        console.log(`💾 Stored ${validPreserved.length} preserved article IDs for hybrid query`);
+      } catch (e) {
+        console.error('Failed to store preserved article IDs:', e);
+      }
+    }
+
+  } catch (error) {
+    console.error('Failed to mark articles as read with session:', error);
+    throw error;
+  }
+}
 
 export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Initial state
@@ -111,11 +259,60 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       // Apply read status filter
       const readStatusFilter = get().readStatusFilter;
-      if (readStatusFilter === "unread") {
+      
+      // Get preserved article IDs for hybrid query
+      const getPreservedArticleIds = (): string[] => {
+        try {
+          // First check the dedicated preserved IDs storage
+          const preservedIds = sessionStorage.getItem('preserved_article_ids');
+          if (preservedIds) {
+            const parsed = JSON.parse(preservedIds);
+            // Clean up expired IDs (older than 30 minutes)
+            const now = Date.now();
+            const validIds = parsed.filter((item: any) => {
+              if (typeof item === 'string') return true; // Legacy format
+              return item.timestamp && (now - item.timestamp < 30 * 60 * 1000);
+            }).map((item: any) => typeof item === 'string' ? item : item.id);
+            return validIds;
+          }
+          
+          // Fallback: extract from session state
+          const state = sessionStorage.getItem('rss_reader_list_state');
+          if (!state) return [];
+          const parsed = JSON.parse(state);
+          const isNotExpired = parsed.expiresAt && (new Date(parsed.expiresAt) > new Date());
+          if (!isNotExpired) return [];
+          
+          // Combine auto-read and manual-read articles
+          const allPreserved = [
+            ...(parsed.autoReadArticles || []),
+            ...(parsed.manualReadArticles || [])
+          ];
+          return [...new Set(allPreserved)]; // Remove duplicates
+        } catch {
+          return [];
+        }
+      };
+      
+      const preservedArticleIds = getPreservedArticleIds();
+      const hasPreservedArticles = preservedArticleIds.length > 0;
+      
+      // Apply hybrid query for unread filter with preserved articles
+      console.log(`📊 Database query - preservedArticles: ${preservedArticleIds.length}, readStatusFilter: ${readStatusFilter}`);
+      
+      if (readStatusFilter === "unread" && hasPreservedArticles) {
+        // Hybrid query: load unread articles + specific preserved read articles
+        // Use Supabase's OR operator for optimal performance
+        query = query.or(`is_read.eq.false,id.in.(${preservedArticleIds.join(',')})`);
+        console.log(`🔀 Using hybrid query: unread + ${preservedArticleIds.length} preserved articles`);
+      } else if (readStatusFilter === "unread") {
+        // Standard unread filter
         query = query.eq("is_read", false);
       } else if (readStatusFilter === "read") {
+        // Standard read filter
         query = query.eq("is_read", true);
       }
+      // For "all" filter, no filtering needed
 
       // Apply starred filter (legacy filter - only for starred)
       const filter = get().filter;
@@ -222,8 +419,48 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         }
       }
 
-      // Apply read status filter
-      if (readStatusFilter === "unread") {
+      // Apply read status filter with hybrid query support
+      // Get preserved article IDs for hybrid query (same logic as loadArticles)
+      const getPreservedArticleIds = (): string[] => {
+        try {
+          // First check the dedicated preserved IDs storage
+          const preservedIds = sessionStorage.getItem('preserved_article_ids');
+          if (preservedIds) {
+            const parsed = JSON.parse(preservedIds);
+            // Clean up expired IDs (older than 30 minutes)
+            const now = Date.now();
+            const validIds = parsed.filter((item: any) => {
+              if (typeof item === 'string') return true; // Legacy format
+              return item.timestamp && (now - item.timestamp < 30 * 60 * 1000);
+            }).map((item: any) => typeof item === 'string' ? item : item.id);
+            return validIds;
+          }
+          
+          // Fallback: extract from session state
+          const state = sessionStorage.getItem('rss_reader_list_state');
+          if (!state) return [];
+          const parsed = JSON.parse(state);
+          const isNotExpired = parsed.expiresAt && (new Date(parsed.expiresAt) > new Date());
+          if (!isNotExpired) return [];
+          
+          // Combine auto-read and manual-read articles
+          const allPreserved = [
+            ...(parsed.autoReadArticles || []),
+            ...(parsed.manualReadArticles || [])
+          ];
+          return [...new Set(allPreserved)]; // Remove duplicates
+        } catch {
+          return [];
+        }
+      };
+      
+      const preservedArticleIds = getPreservedArticleIds();
+      const hasPreservedArticles = preservedArticleIds.length > 0;
+      
+      if (readStatusFilter === "unread" && hasPreservedArticles) {
+        // Hybrid query for pagination: unread + preserved articles
+        query = query.or(`is_read.eq.false,id.in.(${preservedArticleIds.join(',')})`);
+      } else if (readStatusFilter === "unread") {
         query = query.eq("is_read", false);
       } else if (readStatusFilter === "read") {
         query = query.eq("is_read", true);
@@ -327,41 +564,63 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark as read
   markAsRead: async (articleId: string) => {
     try {
-      const { articles } = get();
+      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } = get();
       const article = articles.get(articleId);
       if (!article || article.isRead) return;
 
-      const timestamp = new Date().toISOString();
+      // Define database update function
+      const updateDatabase = async (ids: string[]) => {
+        const timestamp = new Date().toISOString();
+        const { error } = await supabase
+          .from("articles")
+          .update({
+            is_read: true,
+            last_local_update: timestamp,
+            updated_at: timestamp,
+          })
+          .in("id", ids);
 
-      // Update in database with local update timestamp
-      const { error } = await supabase
-        .from("articles")
-        .update({
-          is_read: true,
-          last_local_update: timestamp,
-          updated_at: timestamp,
-        })
-        .eq("id", articleId);
+        if (error) throw error;
 
-      if (error) throw error;
+        // Add to sync queue for bi-directional sync
+        for (const id of ids) {
+          const art = articles.get(id);
+          if (art?.inoreaderItemId) {
+            const { error: rpcError } = await supabase.rpc("add_to_sync_queue", {
+              p_article_id: id,
+              p_inoreader_id: art.inoreaderItemId,
+              p_action_type: "read",
+            });
 
-      // Add to sync queue for bi-directional sync
-      if (article.inoreaderItemId) {
-        const { error: rpcError } = await supabase.rpc("add_to_sync_queue", {
-          p_article_id: articleId,
-          p_inoreader_id: article.inoreaderItemId,
-          p_action_type: "read",
-        });
-
-        if (rpcError) {
-          console.error("Failed to add to sync queue:", rpcError);
+            if (rpcError) {
+              console.error("Failed to add to sync queue:", rpcError);
+            }
+          }
         }
-      }
+      };
 
-      // Update in store
-      const updatedArticles = new Map(articles);
-      updatedArticles.set(articleId, { ...article, isRead: true });
-      set({ articles: updatedArticles });
+      // Define store update function
+      const updateStore = (updatedArticles: Map<string, Article>) => {
+        set({ articles: updatedArticles });
+      };
+
+      // Determine context
+      const context: MarkAsReadContext = {
+        feedId: selectedFeedId || article.feedId,
+        folderId: selectedFolderId || undefined,
+        currentView: selectedFeedId ? 'feed' : selectedFolderId ? 'folder' : 'all',
+        filterMode: readStatusFilter,
+      };
+
+      // Use centralized function
+      await markArticlesAsReadWithSession(
+        [articleId],
+        articles,
+        context,
+        'manual',
+        updateDatabase,
+        updateStore
+      );
 
       // Invalidate article count cache
       if (
@@ -390,8 +649,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     if (articleIds.length === 0) return;
 
     try {
-      const { articles } = get();
-      const timestamp = new Date().toISOString();
+      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } = get();
 
       // Filter out articles that are already read
       const articlesToMark = articleIds.filter((id) => {
@@ -401,61 +659,69 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       if (articlesToMark.length === 0) return;
 
-      // Update in database with local update timestamp
-      const { error } = await supabase
-        .from("articles")
-        .update({
-          is_read: true,
-          last_local_update: timestamp,
-          updated_at: timestamp,
-        })
-        .in("id", articlesToMark);
+      // Define database update function
+      const updateDatabase = async (ids: string[]) => {
+        const timestamp = new Date().toISOString();
+        const { error } = await supabase
+          .from("articles")
+          .update({
+            is_read: true,
+            last_local_update: timestamp,
+            updated_at: timestamp,
+          })
+          .in("id", ids);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Add to sync queue for bi-directional sync (batch)
-      const syncQueueEntries = articlesToMark
-        .map((id) => {
+        // Add to sync queue for bi-directional sync
+        for (const id of ids) {
           const article = articles.get(id);
-          return article?.inoreaderItemId
-            ? {
-                article_id: id,
-                inoreader_id: article.inoreaderItemId,
-                action_type: "read",
-              }
-            : null;
-        })
-        .filter(Boolean);
-
-      if (syncQueueEntries.length > 0) {
-        // We'll add them one by one since the RPC function takes single entries
-        for (const entry of syncQueueEntries) {
-          if (entry) {
-            const { error: rpcError } = await supabase.rpc(
-              "add_to_sync_queue",
-              {
-                p_article_id: entry.article_id,
-                p_inoreader_id: entry.inoreader_id,
-                p_action_type: entry.action_type,
-              }
-            );
+          if (article?.inoreaderItemId) {
+            const { error: rpcError } = await supabase.rpc("add_to_sync_queue", {
+              p_article_id: id,
+              p_inoreader_id: article.inoreaderItemId,
+              p_action_type: "read",
+            });
 
             if (rpcError) {
               console.error("Failed to add to sync queue:", rpcError);
             }
           }
         }
-      }
+      };
 
-      // Update in store
-      const updatedArticles = new Map(articles);
-      articlesToMark.forEach((id) => {
-        const article = articles.get(id);
-        if (article) {
-          updatedArticles.set(id, { ...article, isRead: true });
-        }
-      });
-      set({ articles: updatedArticles });
+      // Define store update function
+      const updateStore = (updatedArticles: Map<string, Article>) => {
+        set({ articles: updatedArticles });
+      };
+
+      // Determine context - infer from first article if needed
+      const firstArticle = articles.get(articlesToMark[0]);
+      const context: MarkAsReadContext = {
+        feedId: selectedFeedId || firstArticle?.feedId,
+        folderId: selectedFolderId || undefined,
+        currentView: selectedFeedId ? 'feed' : selectedFolderId ? 'folder' : 'all',
+        filterMode: readStatusFilter,
+      };
+
+      // Use centralized function - this is typically auto-read from scrolling
+      await markArticlesAsReadWithSession(
+        articlesToMark,
+        articles,
+        context,
+        'auto', // markMultipleAsRead is typically used for auto-mark-as-read
+        updateDatabase,
+        updateStore
+      );
+
+      // Invalidate article count cache
+      if (
+        typeof window !== "undefined" &&
+        (window as any).__articleCountManager &&
+        firstArticle?.feedId
+      ) {
+        (window as any).__articleCountManager.invalidateCache(firstArticle.feedId);
+      }
 
       // Invalidate article count cache for affected feeds
       if (
@@ -685,44 +951,44 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     }
   },
 
-  // Mark all as read (only articles in local database)
+  // Mark all as read - marks ALL articles in database, not just loaded ones
   markAllAsRead: async (feedId?: string) => {
     try {
-      const { articles: storeArticles } = get();
+      const { articles: storeArticles, selectedFeedId, selectedFolderId, readStatusFilter } = get();
       const timestamp = new Date().toISOString();
 
-      // Find all unread articles for the feed
-      const articlesToMark: string[] = [];
-      Array.from(storeArticles.entries()).forEach(([id, article]) => {
-        if (!article.isRead && (!feedId || article.feedId === feedId)) {
-          articlesToMark.push(id);
-        }
-      });
-
-      if (articlesToMark.length === 0) {
-        console.log("No unread articles to mark");
+      if (!feedId) {
+        console.log("No feedId provided for markAllAsRead");
         return;
       }
 
-      // Update in database
-      const { error } = await supabase
+      // Step 1: Mark ALL unread articles in database directly (not just loaded ones)
+      const { data: markedArticles, error } = await supabase
         .from("articles")
         .update({
           is_read: true,
           last_local_update: timestamp,
           updated_at: timestamp,
         })
-        .in("id", articlesToMark);
+        .eq("feed_id", feedId)
+        .eq("is_read", false)
+        .select("id, inoreader_id");
 
       if (error) throw error;
 
-      // Add each article to sync queue for bi-directional sync
-      for (const articleId of articlesToMark) {
-        const article = storeArticles.get(articleId);
-        if (article?.inoreaderItemId) {
+      if (!markedArticles || markedArticles.length === 0) {
+        console.log("No unread articles to mark");
+        return;
+      }
+
+      console.log(`Marked ${markedArticles.length} articles as read in feed ${feedId}`);
+
+      // Step 2: Add ALL marked articles to sync queue
+      for (const article of markedArticles) {
+        if (article.inoreader_id) {
           const { error: rpcError } = await supabase.rpc("add_to_sync_queue", {
-            p_article_id: articleId,
-            p_inoreader_id: article.inoreaderItemId,
+            p_article_id: article.id,
+            p_inoreader_id: article.inoreader_id,
             p_action_type: "read",
           });
 
@@ -732,16 +998,44 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         }
       }
 
-      // Update in store
+      // Step 3: Update store for any loaded articles
       const updatedArticles = new Map(storeArticles);
-      articlesToMark.forEach((id) => {
-        const article = updatedArticles.get(id);
-        if (article) {
-          updatedArticles.set(id, { ...article, isRead: true });
+      const loadedArticleIds: string[] = [];
+      
+      markedArticles.forEach((markedArticle) => {
+        const storeArticle = updatedArticles.get(markedArticle.id);
+        if (storeArticle) {
+          updatedArticles.set(markedArticle.id, { ...storeArticle, isRead: true });
+          loadedArticleIds.push(markedArticle.id);
         }
       });
 
-      set({ articles: updatedArticles });
+      // Define store update function
+      const updateStore = (articles: Map<string, Article>) => {
+        set({ articles });
+      };
+
+      // Step 4: Update session state with ALL marked articles for preservation
+      const context: MarkAsReadContext = {
+        feedId,
+        folderId: selectedFolderId || undefined,
+        currentView: 'feed',
+        filterMode: readStatusFilter,
+      };
+
+      // Extract all article IDs that were marked
+      const allMarkedIds = markedArticles.map(a => a.id);
+
+      // Use centralized function to update session state
+      // Note: We pass empty update functions since we already handled database/store updates
+      await markArticlesAsReadWithSession(
+        allMarkedIds,
+        storeArticles,
+        context,
+        'bulk',
+        async () => {}, // Database already updated
+        updateStore     // Store update
+      );
 
       // Invalidate article count cache
       if (
@@ -752,7 +1046,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       }
 
       console.log(
-        `Marked ${articlesToMark.length} articles as read in local database and queued for sync`
+        `Marked ${markedArticles.length} articles as read in local database and queued for sync`
       );
     } catch (error) {
       console.error("Failed to mark all as read:", error);

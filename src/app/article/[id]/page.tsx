@@ -8,6 +8,7 @@ import { ArticleDetail } from "@/components/articles/article-detail";
 import ArticleNotFound from "./not-found";
 import type { Article } from "@/types";
 import { formatDistanceToNow } from "date-fns";
+import { navigationHistory } from "@/lib/utils/navigation-history";
 
 export default function ArticlePage() {
   const params = useParams();
@@ -27,9 +28,15 @@ export default function ArticlePage() {
 
         if (fetchedArticle) {
           setArticle(fetchedArticle);
+          
+          // Track navigation to this article
+          navigationHistory.addEntry(`/article/${articleId}`, articleId);
+          
           // Mark as read when opened
           if (!fetchedArticle.isRead) {
             await markAsRead(articleId);
+            // Note: markAsRead already handles all session state updates via markArticlesAsReadWithSession
+            // No need for duplicate session state handling here
           }
         } else {
           // Article not found
@@ -76,6 +83,12 @@ export default function ArticlePage() {
 
     const targetArticle = allArticles[targetIndex];
     if (targetArticle) {
+      // Mark the target article as read if navigating to it
+      if (!targetArticle.isRead) {
+        await markAsRead(targetArticle.id);
+        // Note: markAsRead already handles all session state updates via markArticlesAsReadWithSession
+      }
+      
       router.push(`/article/${encodeURIComponent(targetArticle.id)}`);
     }
   };
