@@ -1,11 +1,11 @@
 ---
-description: Analyze codebase for redundant files, outdated documentation, and restructuring opportunities. Provides non-destructive recommendations only.
+description: Investigate this codebase for redundant files, outdated documentation, and restructuring opportunities. Provides non-destructive recommendations only.
 argument-hint: [focus area - docs, code, config, test, all]
 ---
 
 # Codebase Cleanup Analysis
 
-Perform a comprehensive read-only analysis of the codebase to identify files that can be deleted, consolidated, or restructured.
+Perform a comprehensive read-only analysis of the codebase and think hard to identify files that can be deleted, consolidated, or restructured.
 
 ## Analysis Scope
 

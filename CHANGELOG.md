@@ -18,6 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Resource Usage**: Stable at 24-30 API calls/day (well within 1000-5000 limit), ~68MB memory for cron service
   - **Uptime Kuma**: Already configured correctly with 4-hour heartbeat interval
 
+- **Service Health Monitoring (RR-125) - Completed** (Tuesday, August 5, 2025)
+  - **Automatic Recovery**: Integrated monitoring service into PM2 ecosystem for automatic API failure recovery
+  - **HTML Detection**: Monitors detect when JSON endpoints return HTML 404/500 pages and trigger auto-restart
+  - **Rate Limiting**: Maximum 3 auto-restarts per hour with 5-minute cooldown between attempts
+  - **PM2 Integration**: New `rss-services-monitor` service managed by PM2 with automatic startup on boot
+  - **Monitoring Script**: Created PM2-compatible wrapper (`monitor-services-pm2.sh`) for existing monitoring logic
+  - **Health Checks**: Monitors all services every 2 minutes - main app, cron, sync server, and data freshness
+  - **Restart Tracking**: File-based tracking in `logs/restart-tracking/` to persist restart counts across monitor restarts
+  - **Discord Notifications**: Optional webhook alerts for critical failures and rate limit events
+  - **Configuration**: 15-minute implementation using existing infrastructure - no new code, just configuration
+
 - **Article List State Preservation (RR-27) - In Review** (Monday, August 4, 2025 at 8:47 PM)
   - **Core Feature**: ✅ Articles marked as read remain visible in "Unread Only" mode when navigating back from detail view
   - **Hybrid Query**: ✅ Implemented efficient database approach that loads both unread articles and preserved read articles

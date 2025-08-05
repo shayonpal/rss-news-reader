@@ -119,5 +119,38 @@ module.exports = {
       out_file: "./logs/sync-server-out.log",
       time: true,
     },
+
+    // Service Health Monitor
+    {
+      name: "rss-services-monitor",
+      script: "./scripts/monitor-services-pm2.sh",
+      instances: 1,
+      exec_mode: "fork",
+      interpreter: "/bin/bash",
+      min_uptime: 10000, // 10 seconds - prevent rapid restart loops
+      kill_timeout: 5000, // 5 seconds - monitoring script should exit quickly
+      max_restarts: 10, // Conservative for monitoring
+      restart_delay: 60000, // 1 minute delay before restart
+      wait_ready: false, // Monitor doesn't need ready signal
+      max_memory_restart: "128M", // Minimal memory for bash script
+      env: {
+        NODE_ENV: "development",
+        // Health check URLs
+        HEALTH_URL: "http://localhost:3000/api/health",
+        FRESHNESS_URL: "http://localhost:3000/api/health/freshness",
+        // Discord webhook (if configured)
+        DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL || "",
+        // Monitoring configuration
+        CHECK_INTERVAL: 120, // Check every 2 minutes
+        MAX_RESTARTS_PER_HOUR: 3, // Rate limit for auto-restarts
+        RESTART_COOLDOWN: 300, // 5 minutes between restart attempts
+        // Log configuration
+        LOG_FILE: "./logs/monitor-services.jsonl",
+        ERROR_LOG: "./logs/monitor-error.log",
+      },
+      error_file: "./logs/monitor-error.log",
+      out_file: "./logs/monitor-out.log",
+      time: true,
+    },
   ],
 };

@@ -19,7 +19,7 @@ Use `docs-expert-readonly` to analyze the following documents:
 
 Use `git-expert` to analyze recent commit history and patterns.
 
-Use `db-expert-readonly` to understand the database schema and structure.
+Use `db-expert-readonly` to understand the database schema and structure. Also look into RLS rules and seurity advisories from Supabase.
 
 All logs are available at logs/ directory for review.
 

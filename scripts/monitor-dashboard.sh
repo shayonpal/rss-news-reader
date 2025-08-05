@@ -65,7 +65,7 @@ check_sync_status() {
     local hours_ago=$(( ($(date +%s) - $(date -d "$timestamp" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${timestamp%.*}" +%s)) / 3600 ))
     
     if [ "$status" = "completed" ]; then
-        if [ $hours_ago -gt 12 ]; then
+        if [ $hours_ago -gt 5 ]; then
             echo -e "${YELLOW}⚠️  Last Sync: ${hours_ago}h ago (stale)${NC}"
         else
             echo -e "${GREEN}✅ Last Sync: ${hours_ago}h ago${NC}"
