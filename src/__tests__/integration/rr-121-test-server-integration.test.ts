@@ -58,7 +58,6 @@ describe('RR-121: Environment Variable Loading Integration Tests', () => {
       const endpoints = [
         '/reader/api/health/app',
         '/reader/api/health/db',
-        '/reader/api/health/freshness',
         '/reader/api/health/cron'
       ];
 

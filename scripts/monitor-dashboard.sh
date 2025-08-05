@@ -75,24 +75,7 @@ check_sync_status() {
     fi
 }
 
-# Function to check article freshness
-check_article_freshness() {
-    local response=$(curl -s "http://localhost:3000/reader/api/health/freshness" 2>/dev/null)
-    
-    if [ -z "$response" ]; then
-        echo -e "${RED}❌ Article Freshness: Cannot check${NC}"
-        return 1
-    fi
-    
-    local hours=$(echo "$response" | jq -r '.hoursSinceLastArticle')
-    local status=$(echo "$response" | jq -r '.status')
-    
-    if [ "$status" = "healthy" ]; then
-        echo -e "${GREEN}✅ Article Freshness: ${hours}h old${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Article Freshness: ${hours}h old (stale)${NC}"
-    fi
-}
+# Function removed - freshness API no longer exists
 
 # Main dashboard
 clear
@@ -117,7 +100,6 @@ check_pm2_process "rss-reader-dev" || true
 echo -e "\n${BLUE}Sync Health:${NC}"
 echo "---------------------"
 check_sync_status
-check_article_freshness
 
 echo -e "\n${BLUE}Monitoring Services:${NC}"
 echo "---------------------"

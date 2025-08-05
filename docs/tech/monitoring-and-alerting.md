@@ -41,7 +41,6 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 - Tracks:
   - Consecutive sync failures
   - Time since last successful sync
-  - Article freshness (database query)
   - Cron service activity
 - Alerts when:
   - 2+ consecutive sync failures
@@ -67,7 +66,6 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 
 ### New
 
-- `/api/health/freshness` - Article freshness check
 - `/api/health/cron` - Cron service status
 
 ## Alert Channels
@@ -97,7 +95,6 @@ Shows comprehensive status of:
 - All services
 - PM2 processes
 - Sync health
-- Article freshness
 - Recent alerts
 
 ### Start Monitoring

@@ -44,14 +44,6 @@ describe('RR-121: Acceptance Criteria Verification', () => {
       expect(data.database).toBe('connected');
     });
 
-    it('should return 200 for /reader/api/health/freshness', async () => {
-      const response = await fetch(`${baseUrl}/reader/api/health/freshness`);
-      expect(response.status).toBe(200);
-      
-      const data = await response.json();
-      expect(data.status).toBeDefined();
-    });
-
     it('should return 200 for /reader/api/health/cron', async () => {
       const response = await fetch(`${baseUrl}/reader/api/health/cron`);
       expect(response.status).toBe(200);

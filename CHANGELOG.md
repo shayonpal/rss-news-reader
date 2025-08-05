@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Redundant Freshness API (RR-106) - Completed** (Tuesday, August 5, 2025 at 7:28 PM)
+  - **API Removal**: Completely removed `/api/health/freshness` endpoint that wasn't solving its intended purpose
+  - **Monitoring Consolidation**: Reduced from 4 to 3 health endpoints (app, db, cron) for clearer monitoring
+  - **Script Updates**: Updated all monitoring scripts to remove freshness checks and use replacement endpoints
+  - **Test Cleanup**: Removed freshness unit tests and updated 5 integration test files
+  - **Bug Fix**: Fixed field name inconsistency (hoursSinceLastArticle vs hoursSinceLatest)
+  - **Documentation**: Updated CLAUDE.md and monitoring docs to reflect 3-endpoint architecture
+  - **Benefits**: Simplified monitoring, better metrics from sync health, reduced confusion about "staleness"
+  - **Note**: Original UI freshness perception issue (RR-26) remains unsolved and needs UI/UX improvements
+
 ### Added
 - **6x Daily Sync Frequency (RR-130) - Completed** (Tuesday, August 5, 2025 at 4:39 PM)
   - **Increased Sync Frequency**: Updated from 2x daily (2 AM & 2 PM) to 6x daily (2, 6, 10 AM & 2, 6, 10 PM EST/EDT)

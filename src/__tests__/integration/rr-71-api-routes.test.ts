@@ -37,7 +37,6 @@ describe("RR-71: API Route Cleanup", () => {
       "app/api/sync/route.ts",
       "app/api/health/app/route.ts",
       "app/api/health/db/route.ts",
-      "app/api/health/freshness/route.ts",
       "app/api/health/route.ts",
     ];
 

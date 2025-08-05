@@ -210,8 +210,8 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 
 ### Health Endpoints
 
-- `/api/health/app` and `/api/health/db` - Basic application health
-- `/api/health/freshness` - Article data freshness check
+- `/api/health/app` - Application health and version
+- `/api/health/db` - Database connectivity status
 - `/api/health/cron` - Cron service status monitoring
 
 ### Monitoring Tools

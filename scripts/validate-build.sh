@@ -106,7 +106,6 @@ validate_api_routes() {
     local critical_endpoints=(
         "GET:/api/health/app"
         "GET:/api/health/db"
-        "GET:/api/health/freshness"
         "POST:/api/sync/metadata"
     )
     

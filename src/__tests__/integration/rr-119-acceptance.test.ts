@@ -37,13 +37,6 @@ describe('RR-119 Acceptance Criteria', () => {
         res.setHeader('Content-Type', 'application/json');
         const data = await response.json();
         res.end(JSON.stringify(data));
-      } else if (req.url === '/api/health/freshness') {
-        const { GET } = await import('@/app/api/health/freshness/route');
-        const response = await GET(new Request(`http://localhost:${PORT}${req.url}`));
-        res.statusCode = response.status;
-        res.setHeader('Content-Type', 'application/json');
-        const data = await response.json();
-        res.end(JSON.stringify(data));
       } else if (req.url === '/api/health/app' || req.url === '/api/health') {
         const { GET } = await import('@/app/api/health/route');
         const response = await GET(new Request(`http://localhost:${PORT}${req.url}`));
@@ -87,15 +80,6 @@ describe('RR-119 Acceptance Criteria', () => {
       expect(data.message).toContain('skipped');
     });
 
-    it('should return 200 for /api/health/freshness endpoint', async () => {
-      const response = await fetch(`http://localhost:${PORT}/api/health/freshness`);
-      expect(response.status).toBe(200);
-      
-      const data = await response.json();
-      expect(data.status).toBe('healthy');
-      expect(data.message).toContain('skipped');
-    });
-
     it('should return 200 for /api/health/app endpoint', async () => {
       const response = await fetch(`http://localhost:${PORT}/api/health/app`);
       expect(response.status).toBe(200);
@@ -122,15 +106,6 @@ describe('RR-119 Acceptance Criteria', () => {
       expect(data.lastCheck).toBe(null);
     });
 
-    it('should indicate freshness check is skipped in /api/health/freshness', async () => {
-      const response = await fetch(`http://localhost:${PORT}/api/health/freshness`);
-      const data = await response.json();
-      
-      expect(data.message).toContain('skipped');
-      expect(data.data.latestArticleTime).toBe(null);
-      expect(data.data.articlesLast24h).toBe(0);
-    });
-
     it('should indicate dependencies are skipped in /api/health/app', async () => {
       const response = await fetch(`http://localhost:${PORT}/api/health/app`);
       const data = await response.json();
@@ -144,7 +119,6 @@ describe('RR-119 Acceptance Criteria', () => {
     const endpoints = [
       '/api/health/db',
       '/api/health/cron', 
-      '/api/health/freshness',
       '/api/health/app',
       '/api/health'
     ];
@@ -162,7 +136,6 @@ describe('RR-119 Acceptance Criteria', () => {
     const endpoints = [
       '/api/health/db',
       '/api/health/cron', 
-      '/api/health/freshness',
       '/api/health/app'
     ];
 
@@ -181,7 +154,6 @@ describe('RR-119 Acceptance Criteria', () => {
       const endpoints = [
         '/api/health/db',
         '/api/health/cron', 
-        '/api/health/freshness',
         '/api/health/app'
       ];
 
@@ -197,8 +169,7 @@ describe('RR-119 Acceptance Criteria', () => {
     it('should set correct cache headers', async () => {
       const endpoints = [
         '/api/health/db',
-        '/api/health/cron', 
-        '/api/health/freshness'
+        '/api/health/cron'
       ];
 
       for (const endpoint of endpoints) {

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # RSS Reader Sync Health Monitor
-# Monitors sync operations and article freshness
+# Monitors sync operations and health
 
 LOG_FILE="/Users/shayon/DevProjects/rss-news-reader/logs/sync-health-monitor.jsonl"
 SYNC_LOG="/Users/shayon/DevProjects/rss-news-reader/logs/sync-cron.jsonl"
@@ -9,7 +9,7 @@ DISCORD_WEBHOOK="https://discord.com/api/webhooks/1398487627765649498/n6mIouChkY
 
 # Thresholds (Updated for 6x daily sync frequency)
 SYNC_FAILURE_THRESHOLD=2  # Alert after 2 consecutive failures
-ARTICLE_FRESHNESS_HOURS=5  # Alert if no new articles in 5 hours (4-hour interval + 1 hour buffer)
+SYNC_SUCCESS_HOURS=5  # Alert if no successful sync in 5 hours (4-hour interval + 1 hour buffer)
 SYNC_INTERVAL_HOURS=6  # Alert if no sync attempt in 6 hours (4-hour interval + 2 hour buffer)
 
 # Get current timestamp
@@ -96,22 +96,7 @@ check_sync_status() {
     echo "hours_since_attempt:$hours_since_attempt"
 }
 
-# Check article freshness via API
-check_article_freshness() {
-    # Use the freshness API endpoint with timeout
-    local response=$(timeout 10 curl -s --max-time 8 "http://localhost:3000/reader/api/health/freshness" 2>/dev/null)
-    
-    if [ -z "$response" ]; then
-        echo "999"
-        return
-    fi
-    
-    local hours=$(echo "$response" | jq -r '.hoursSinceLastArticle' 2>/dev/null || echo "999")
-    if [ "$hours" = "null" ]; then
-        hours="999"
-    fi
-    echo "$hours"
-}
+# Function removed - freshness API no longer exists
 
 # Send critical alert
 send_critical_alert() {
@@ -150,22 +135,17 @@ monitor_sync_health() {
     local hours_since_success=$(echo "$sync_status" | grep "hours_since_success:" | cut -d: -f2)
     local hours_since_attempt=$(echo "$sync_status" | grep "hours_since_attempt:" | cut -d: -f2)
     
-    # Check article freshness
-    local article_age_hours=$(check_article_freshness)
-    
-    # Log current status
+    # Log current status (removed article freshness)
     local status_event=$(jq -c -n \
         --arg ts "$(get_timestamp)" \
         --arg failures "$consecutive_failures" \
         --arg success_hours "$hours_since_success" \
         --arg attempt_hours "$hours_since_attempt" \
-        --arg article_hours "$article_age_hours" \
         '{
             "timestamp": $ts,
             "consecutive_failures": ($failures | tonumber),
             "hours_since_success": ($success_hours | tonumber),
-            "hours_since_attempt": ($attempt_hours | tonumber),
-            "article_age_hours": ($article_hours | tonumber)
+            "hours_since_attempt": ($attempt_hours | tonumber)
         }')
     
     log_event "$status_event"
@@ -179,7 +159,7 @@ monitor_sync_health() {
     fi
     
     # Alert 2: No successful sync in threshold time
-    if [ -n "$hours_since_success" ] && [ "$hours_since_success" -ge "$ARTICLE_FRESHNESS_HOURS" ]; then
+    if [ -n "$hours_since_success" ] && [ "$hours_since_success" -ge "$SYNC_SUCCESS_HOURS" ]; then
         alerts+=("stale_sync")
     fi
     
@@ -188,10 +168,7 @@ monitor_sync_health() {
         alerts+=("no_sync_attempts")
     fi
     
-    # Alert 4: Stale articles
-    if [ "$article_age_hours" != "999" ] && [ "${article_age_hours%.*}" -ge "$ARTICLE_FRESHNESS_HOURS" ]; then
-        alerts+=("stale_articles")
-    fi
+    # Alert 4 removed - freshness API no longer exists
     
     # Send alerts if needed
     if [ ${#alerts[@]} -gt 0 ]; then
@@ -209,9 +186,6 @@ monitor_sync_health() {
             fields+='{"name":"💀 Cron Service","value":"No sync attempts in '$hours_since_attempt' hours","inline":true},'
         fi
         
-        if [[ " ${alerts[@]} " =~ " stale_articles " ]]; then
-            fields+='{"name":"📰 Article Freshness","value":"No new articles in '${article_age_hours%.*}' hours","inline":true},'
-        fi
         
         # Add recommended actions
         fields+='{"name":"🔧 Recommended Actions","value":"1. Check PM2 status\\n2. Review sync logs\\n3. Verify API endpoints\\n4. Check OAuth tokens","inline":false}'
