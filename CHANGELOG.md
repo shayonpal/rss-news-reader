@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **6x Daily Sync Frequency (RR-130) - Completed** (Tuesday, August 5, 2025 at 4:39 PM)
+  - **Increased Sync Frequency**: Updated from 2x daily (2 AM & 2 PM) to 6x daily (2, 6, 10 AM & 2, 6, 10 PM EST/EDT)
+  - **Reduced Article Delay**: Maximum delay between publication and availability reduced from ~11 hours to ~4 hours
+  - **Cron Schedule**: Updated to `0 2,6,10,14,18,22 * * *` with America/Toronto timezone
+  - **Monitoring Updates**: Adjusted thresholds - article freshness to 5 hours, sync interval to 6 hours
+  - **API Rate Limit Tracking**: Added header parsing for X-Reader-Zone1-Usage/Limit headers with throttling recommendations
+  - **Materialized View Refresh**: Automatic `feed_stats` refresh after each successful sync via new `/api/sync/refresh-view` endpoint
+  - **Resource Usage**: Stable at 24-30 API calls/day (well within 1000-5000 limit), ~68MB memory for cron service
+  - **Uptime Kuma**: Already configured correctly with 4-hour heartbeat interval
+
 - **Article List State Preservation (RR-27) - In Review** (Monday, August 4, 2025 at 8:47 PM)
   - **Core Feature**: ✅ Articles marked as read remain visible in "Unread Only" mode when navigating back from detail view
   - **Hybrid Query**: ✅ Implemented efficient database approach that loads both unread articles and preserved read articles

@@ -7,10 +7,10 @@ LOG_FILE="/Users/shayon/DevProjects/rss-news-reader/logs/sync-health-monitor.jso
 SYNC_LOG="/Users/shayon/DevProjects/rss-news-reader/logs/sync-cron.jsonl"
 DISCORD_WEBHOOK="https://discord.com/api/webhooks/1398487627765649498/n6mIouChkYqBCL67vj5Jbn0XL67vj5Jbn0X0XP3uU_rFXhSRcRmQdE2yiJBcvPL7sF9VphClpie5ObE"
 
-# Thresholds
+# Thresholds (Updated for 6x daily sync frequency)
 SYNC_FAILURE_THRESHOLD=2  # Alert after 2 consecutive failures
-ARTICLE_FRESHNESS_HOURS=12  # Alert if no new articles in 12 hours
-SYNC_INTERVAL_HOURS=15  # Alert if no sync attempt in 15 hours
+ARTICLE_FRESHNESS_HOURS=5  # Alert if no new articles in 5 hours (4-hour interval + 1 hour buffer)
+SYNC_INTERVAL_HOURS=6  # Alert if no sync attempt in 6 hours (4-hour interval + 2 hour buffer)
 
 # Get current timestamp
 get_timestamp() {

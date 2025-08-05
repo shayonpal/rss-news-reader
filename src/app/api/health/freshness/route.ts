@@ -20,8 +20,9 @@ export async function GET() {
         data: {
           latestArticleTime: null,
           hoursSinceLatest: null,
-          articlesLast24h: 0,
+          articlesLast5h: 0,
           totalArticles: 0,
+          syncFrequency: "6x daily (every 4 hours)",
         },
         timestamp: new Date().toISOString(),
       },
@@ -41,10 +42,10 @@ export async function GET() {
       throw latestError;
     }
 
-    // Count articles in last 24 hours
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // Count articles in last 5 hours (for 6x daily sync)
+    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString();
     const { data: recentCount, error: recentError } = await supabase
-      .rpc("count_articles_since", { since_time: twentyFourHoursAgo });
+      .rpc("count_articles_since", { since_time: fiveHoursAgo });
 
     if (recentError) {
       throw recentError;
@@ -66,22 +67,22 @@ export async function GET() {
       ? Math.round((now.getTime() - latestArticleTime.getTime()) / (1000 * 60 * 60))
       : null;
 
-    const articlesLast24h = recentCount?.[0]?.count || 0;
+    const articlesLast5h = recentCount?.[0]?.count || 0;
     const totalArticles = totalCount?.[0]?.count || 0;
 
-    // Determine health status
+    // Determine health status (updated for 6x daily sync)
     let status = "healthy";
     let message = "Articles are fresh";
 
     if (!latestArticleTime || hoursSinceLatest === null) {
       status = "unknown";
       message = "No articles found";
-    } else if (hoursSinceLatest > 48) {
+    } else if (hoursSinceLatest > 6) {
       status = "stale";
-      message = `No new articles in the last ${hoursSinceLatest} hours`;
-    } else if (articlesLast24h === 0) {
+      message = `No new articles in the last ${hoursSinceLatest} hours (expected within 4-6 hours)`;
+    } else if (articlesLast5h === 0) {
       status = "degraded";
-      message = "No new articles in the last 24 hours";
+      message = "No new articles in the last 5 hours";
     }
 
     return NextResponse.json(
@@ -92,8 +93,9 @@ export async function GET() {
         data: {
           latestArticleTime: latestArticleTime?.toISOString() || null,
           hoursSinceLatest,
-          articlesLast24h,
+          articlesLast5h,
           totalArticles,
+          syncFrequency: "6x daily (every 4 hours)",
         },
         timestamp: new Date().toISOString(),
       },

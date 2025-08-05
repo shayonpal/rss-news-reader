@@ -15,7 +15,7 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
 - **Production App**: HTTP check every 60s on health endpoint
 - **Sync Server**: HTTP check every 60s on port 3001
 - **Database**: Health check every 300s
-- **Cron Service**: Push monitor expecting heartbeat every 15 hours
+- **Cron Service**: Push monitor expecting heartbeat every 4 hours (6x daily sync)
 
 #### New Sync-Specific Monitors (To Configure)
 
@@ -45,9 +45,9 @@ The RSS Reader uses a multi-layered monitoring approach to ensure sync reliabili
   - Cron service activity
 - Alerts when:
   - 2+ consecutive sync failures
-  - No successful sync in 12+ hours
-  - No sync attempts in 15+ hours
-  - No new articles in 12+ hours
+  - No successful sync in 5+ hours (4-hour interval + 1 hour buffer)
+  - No sync attempts in 6+ hours (4-hour interval + 2 hour buffer)
+  - No new articles in 5+ hours
 
 ### 4. Enhanced Cron Service
 

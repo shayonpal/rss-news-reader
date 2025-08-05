@@ -65,7 +65,7 @@ module.exports = {
       env: {
         NODE_ENV: "development",
         ENABLE_AUTO_SYNC: "true",
-        SYNC_CRON_SCHEDULE: "0 2,14 * * *",
+        SYNC_CRON_SCHEDULE: "0 2,6,10,14,18,22 * * *",
         SYNC_LOG_PATH: "./logs/sync-cron.jsonl",
         // Database configuration
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

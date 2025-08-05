@@ -73,11 +73,11 @@ export async function GET() {
     const ageMinutes = (Date.now() - lastCheckTime.getTime()) / (1000 * 60);
     const ageHours = ageMinutes / 60;
 
-    // Consider unhealthy if last check is older than 24 hours
-    const isStale = ageHours > 24;
+    // Consider unhealthy if last check is older than 5 hours (4-hour interval + 1 hour buffer)
+    const isStale = ageHours > 5;
     const status = isStale ? "unhealthy" : lastHealthData.status;
     const message = isStale 
-      ? `Last check was ${Math.round(ageHours)} hours ago`
+      ? `Last check was ${Math.round(ageHours)} hours ago (expected every 4 hours)`
       : lastHealthData.message || "Sync completed successfully";
 
     return NextResponse.json(
