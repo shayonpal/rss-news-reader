@@ -17,6 +17,8 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
   - Smart content priority display
   - Comprehensive fetch statistics dashboard
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
+- **Author Display**: Shows article authors in list and detail views (v0.12.0)
+- **Navigation State Preservation**: Articles remain visible when returning from detail view (v0.12.0)
 - **Server-Side Sync**: Efficient sync with only 4-5 API calls
 - **Bi-directional Sync**: Changes sync back to Inoreader (read/unread, star/unstar)
 - **Mark All Read**: Quickly mark all articles in a feed as read with two-tap confirmation
@@ -36,7 +38,7 @@ The RSS News Reader requires several services to be running for full functionali
 | Service Name        | PM2 Process Name | Port | Purpose                               |
 | ------------------- | ---------------- | ---- | ------------------------------------- |
 | RSS Reader Dev      | rss-reader-dev   | 3000 | Development/main web application      |
-| Sync Cron Service   | rss-sync-cron    | N/A  | Automated article syncing (2AM & 2PM) |
+| Sync Cron Service   | rss-sync-cron    | N/A  | Automated article syncing (6x daily)  |
 | Supabase PostgreSQL | N/A              | 5432 | Database server (cloud-hosted)        |
 | Tailscale           | N/A              | N/A  | VPN for secure network access         |
 
@@ -404,7 +406,7 @@ src/
 
 **Phase**: Production Deployed
 
-**Version**: 0.6.0
+**Version**: 0.12.0
 
 ### Development Access
 
@@ -413,7 +415,7 @@ src/
 ### Deployment Status (July 22, 2025)
 
 - ✅ **Production Deployed** - RSS reader running on PM2 with automatic startup
-- ✅ **Automatic Daily Sync** - Cron service syncing at 2:00 AM and 2:00 PM Toronto time
+- ✅ **Automatic 6x Daily Sync** - Cron service runs every 4 hours (2, 6, 10, 14, 18, 22 Toronto time)
 - ✅ **69 feeds** and **250 articles** synced and available
 - ✅ **Tailscale Monitoring** - Auto-restart service ensures constant availability
 - ✅ **Database Security** - Row Level Security enabled on all tables
