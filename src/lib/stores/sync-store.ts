@@ -30,6 +30,7 @@ export interface SyncState {
   setSyncError: (error: string | null) => void;
   setSyncProgress: (progress: number) => void;
   setSyncMessage: (message: string | null) => void;
+  loadLastSyncTime: () => Promise<void>;
   setRateLimit: (
     rateLimit: { used: number; limit: number; remaining: number } | null
   ) => void;
@@ -66,6 +67,22 @@ export const useSyncStore = create<SyncState>()(
       setSyncProgress: (progress) => set({ syncProgress: progress }),
       setSyncMessage: (message) => set({ syncMessage: message }),
       setRateLimit: (rateLimit) => set({ rateLimit }),
+
+      // Load last sync time from server
+      loadLastSyncTime: async () => {
+        try {
+          const response = await fetch("/reader/api/sync/last-sync");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.lastSyncTime) {
+              set({ lastSyncTime: new Date(data.lastSyncTime).getTime() });
+              console.log(`Loaded last sync time from ${data.source}:`, data.lastSyncTime);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load last sync time:", error);
+        }
+      },
 
       // Queue management
       addToQueue: (actionData) => {

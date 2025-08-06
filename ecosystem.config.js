@@ -137,7 +137,6 @@ module.exports = {
         NODE_ENV: "development",
         // Health check URLs
         HEALTH_URL: "http://localhost:3000/api/health",
-        FRESHNESS_URL: "http://localhost:3000/api/health/freshness",
         // Discord webhook (if configured)
         DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL || "",
         // Monitoring configuration

@@ -64,10 +64,21 @@ export default function FetchStatsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedFeeds, setExpandedFeeds] = useState<Set<string>>(new Set());
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     fetchStats();
-  }, []);
+    
+    // Set up auto-refresh every 30 seconds when enabled
+    if (autoRefresh) {
+      const interval = setInterval(() => {
+        fetchStats();
+      }, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [autoRefresh]);
 
   const fetchStats = async () => {
     try {
@@ -76,6 +87,8 @@ export default function FetchStatsPage() {
       if (!response.ok) throw new Error("Failed to fetch stats");
       const data = await response.json();
       setStats(data);
+      setLastRefresh(new Date());
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load stats");
     } finally {
@@ -198,11 +211,31 @@ export default function FetchStatsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="fixed left-0 right-0 top-0 z-10 border-b bg-background">
-        <div className="flex h-[60px] items-center px-4">
-          <IOSButton onClick={() => router.back()} className="mr-3">
-            <ArrowLeft className="h-5 w-5" />
-          </IOSButton>
-          <h1 className="text-lg font-semibold">Fetch Statistics</h1>
+        <div className="flex h-[60px] items-center justify-between px-4">
+          <div className="flex items-center">
+            <IOSButton onClick={() => router.back()} className="mr-3">
+              <ArrowLeft className="h-5 w-5" />
+            </IOSButton>
+            <h1 className="text-lg font-semibold">Fetch Statistics</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              Updated {formatDistanceToNow(lastRefresh, { addSuffix: true })}
+            </span>
+            <IOSButton
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={cn(
+                "px-3 py-1 text-xs",
+                autoRefresh && "bg-blue-100 dark:bg-blue-900"
+              )}
+            >
+              <RefreshCw className={cn("h-3 w-3 mr-1", autoRefresh && "animate-spin")} />
+              {autoRefresh ? "Auto" : "Manual"}
+            </IOSButton>
+            <IOSButton onClick={fetchStats} disabled={loading}>
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </IOSButton>
+          </div>
         </div>
       </header>
 

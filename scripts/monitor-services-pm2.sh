@@ -18,7 +18,6 @@ RESTART_COOLDOWN="${RESTART_COOLDOWN:-300}"
 
 # Health endpoints
 health_url="${HEALTH_URL:-http://localhost:3000/api/health}"
-freshness_url="${FRESHNESS_URL:-http://localhost:3000/api/health/freshness}"
 cron_health_url="http://localhost:3000/api/health/cron"
 sync_health_url="http://localhost:3001/health"
 
@@ -209,22 +208,7 @@ check_cron_service() {
     fi
 }
 
-# Check data freshness
-check_freshness() {
-    local response=$(curl -s -m 1 "$freshness_url" 2>/dev/null || echo "{}")
-    
-    if echo "$response" | jq -e '.status == "healthy"' > /dev/null 2>&1; then
-        log_event "freshness_check" "data" "fresh" "Data is up to date"
-    else
-        local hours_old=$(echo "$response" | jq -r '.data.hoursSinceLastSync // "unknown"')
-        echo -e "${YELLOW}⚠️  Data is ${hours_old} hours old${NC}"
-        log_event "freshness_check" "data" "stale" "Data is ${hours_old} hours old"
-        
-        if [ "$hours_old" != "unknown" ] && [ $(echo "$hours_old > 6" | bc) -eq 1 ]; then
-            send_discord_notification "⚠️ RSS data is ${hours_old} hours old - sync may be failing" "yellow"
-        fi
-    fi
-}
+# Note: Freshness check removed after RR-106 - monitoring is now handled via sync logs
 
 # Check sync server
 check_sync_server() {
@@ -247,7 +231,7 @@ check_sync_server() {
 echo "🚀 Starting RSS Reader services monitoring (PM2 mode)"
 echo "Monitoring configuration:"
 echo "  - Health URL: $health_url"
-echo "  - Freshness URL: $freshness_url"
+echo "  - Sync Server URL: $sync_health_url"
 echo "  - Check interval: ${CHECK_INTERVAL}s"
 echo "  - Log file: $LOG_FILE"
 
@@ -258,7 +242,6 @@ trap 'echo "Received shutdown signal, stopping monitor..."; exit 0' SIGTERM SIGI
 while true; do
     check_main_app
     check_cron_service
-    check_freshness
     check_sync_server
     
     # Sleep with interrupt handling

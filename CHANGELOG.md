@@ -18,6 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Benefits**: Simplified monitoring, better metrics from sync health, reduced confusion about "staleness"
   - **Note**: Original UI freshness perception issue (RR-26) remains unsolved and needs UI/UX improvements
 
+### Changed
+- **Monitoring Scripts Update After Freshness API Removal (RR-124) - Completed** (Tuesday, August 6, 2025 at 1:50 AM)
+  - **Fixed Critical UI Bug**: Last sync time now displays correctly on initial page load (previously showed "never synced")
+  - **New API Endpoint**: Added `/api/sync/last-sync` to reliably fetch last sync time from logs or database
+  - **Timezone Display**: Updated sidebar to show relative time using formatDistanceToNow ("3 hours ago" format)
+  - **Fetch Stats Auto-Refresh**: Added 30-second auto-refresh with toggle control for real-time monitoring
+  - **Uptime Kuma Integration**: Implemented push monitors for Sync Status, API Usage, Fetch Stats, and Database Health
+  - **Kuma Compatibility Fix**: Changed from numeric status codes (0,1,2) to 'up'/'down' string values
+  - **Monitoring Scripts Cleanup**: Removed all freshness API references from monitor-dashboard.sh and sync-health-monitor.sh
+  - **Threshold Updates**: Adjusted sync health thresholds from 5 to 4 hours to reflect actual sync frequency
+  - **Impact**: Significantly improved user experience with accurate sync status and enhanced monitoring capabilities
+
 ### Added
 - **6x Daily Sync Frequency (RR-130) - Completed** (Tuesday, August 5, 2025 at 4:39 PM)
   - **Increased Sync Frequency**: Updated from 2x daily (2 AM & 2 PM) to 6x daily (2, 6, 10 AM & 2, 6, 10 PM EST/EDT)

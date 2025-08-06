@@ -9,8 +9,8 @@ DISCORD_WEBHOOK="https://discord.com/api/webhooks/1398487627765649498/n6mIouChkY
 
 # Thresholds (Updated for 6x daily sync frequency)
 SYNC_FAILURE_THRESHOLD=2  # Alert after 2 consecutive failures
-SYNC_SUCCESS_HOURS=5  # Alert if no successful sync in 5 hours (4-hour interval + 1 hour buffer)
-SYNC_INTERVAL_HOURS=6  # Alert if no sync attempt in 6 hours (4-hour interval + 2 hour buffer)
+SYNC_SUCCESS_HOURS=4  # Alert if no successful sync in 4 hours (matching sync interval)
+SYNC_INTERVAL_HOURS=5  # Alert if no sync attempt in 5 hours (4-hour interval + 1 hour buffer)
 
 # Get current timestamp
 get_timestamp() {
@@ -134,6 +134,11 @@ monitor_sync_health() {
     local consecutive_failures=$(echo "$sync_status" | grep "consecutive_failures:" | cut -d: -f2)
     local hours_since_success=$(echo "$sync_status" | grep "hours_since_success:" | cut -d: -f2)
     local hours_since_attempt=$(echo "$sync_status" | grep "hours_since_attempt:" | cut -d: -f2)
+    
+    # Push to Kuma if configured
+    if [ -n "${KUMA_SYNC_URL:-}" ]; then
+        /Users/shayon/DevProjects/rss-news-reader/scripts/push-to-kuma.sh sync
+    fi
     
     # Log current status (removed article freshness)
     local status_event=$(jq -c -n \
