@@ -142,6 +142,29 @@ pm2 startup  # Follow the instructions if not already configured
 }
 ```
 
+## Sync Conflict Log
+
+- **Location**: `logs/sync-conflicts.jsonl`
+- **Format**: JSON Lines with detailed conflict information
+- **Purpose**: Tracks conflicts when local article states differ from Inoreader during sync
+- **Fields**: timestamp, syncSessionId, articleId, conflictType, localValue, remoteValue, resolution
+- **Conflict Types**: read_status, starred_status, both
+- **Resolution**: Indicates whether local or remote values won
+
+### Example Conflict Entry
+```json
+{
+  "timestamp": "2025-08-06T21:20:00.000Z",
+  "syncSessionId": "sync_2025-08-06T21:20:00.000Z",
+  "articleId": "article-123",
+  "conflictType": "read_status",
+  "localValue": {"read": true, "starred": false},
+  "remoteValue": {"read": false, "starred": false},
+  "resolution": "remote",
+  "note": "Remote wins: local changes overwritten (API limitation: no remote timestamps)"
+}
+```
+
 ## Related Documentation
 
 - [PM2 Process Management](./pm2-management.md)

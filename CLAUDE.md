@@ -226,6 +226,7 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 - PM2 logs for service monitoring via `pm2 logs`
 - Sync logs in JSONL format at `logs/sync-cron.jsonl`
 - Cron health logs at `logs/cron-health.jsonl`
+- Sync conflict logs at `logs/sync-conflicts.jsonl`
 
 ### Troubleshooting
 

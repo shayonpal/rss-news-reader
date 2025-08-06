@@ -117,6 +117,9 @@ Shows comprehensive status of:
 
 # View recent sync logs
 tail -20 logs/sync-cron.jsonl | jq .
+
+# View recent conflict logs
+tail -20 logs/sync-conflicts.jsonl | jq .
 ```
 
 ## Troubleshooting Sync Failures

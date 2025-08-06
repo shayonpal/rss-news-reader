@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Files Added**: `src/lib/sync/conflict-detector.ts`, comprehensive test files
   - **Impact**: Provides visibility into sync conflicts for monitoring and debugging sync issues
 
+- **Documentation Update for Sync Conflict Logging** (Wednesday, August 6, 2025 at 5:38 PM)
+  - **CLAUDE.md**: Updated Log Files section to include sync-conflicts.jsonl
+  - **Service Monitoring Docs**: Added comprehensive Sync Conflict Log section with example entries
+  - **Monitoring Guide**: Added conflict log viewing command to troubleshooting section
+  - **Files Updated**: CLAUDE.md, docs/operations/service-monitoring.md, docs/tech/monitoring-and-alerting.md
+  - **Impact**: Complete documentation coverage for the new conflict logging feature
+
 ## [0.12.0] - Wednesday, August 6, 2025 at 3:12 AM
 
 ### Fixed
