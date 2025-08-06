@@ -1,50 +1,56 @@
-import "@testing-library/jest-dom";
-import "fake-indexeddb/auto";
-import { vi, beforeEach } from "vitest";
+import { vi } from 'vitest'
 
-// Set test environment
-process.env.NODE_ENV = "test";
-
-// Ensure global objects exist in test environment
-if (typeof global.navigator === "undefined") {
-  global.navigator = {} as Navigator;
-}
-
-if (typeof global.window === "undefined") {
-  global.window = {} as Window & typeof globalThis;
-}
-
-// Mock navigator.onLine
-Object.defineProperty(global.navigator, "onLine", {
-  writable: true,
-  value: true,
-  configurable: true
+// Mock environment
+Object.defineProperty(process.env, 'NODE_ENV', {
+  value: 'test',
+  writable: false,
+  configurable: false
 });
-
-// Mock window.location.reload to prevent JSdom navigation errors
-// We'll use a global beforeEach to override this for specific tests
-(global as any).__originalReload = typeof window !== "undefined" && window.location ? window.location.reload : undefined;
 
 // Mock fetch globally
-global.fetch = vi.fn();
+global.fetch = vi.fn()
 
-// Mock IntersectionObserver which is not available in jsdom
-global.IntersectionObserver = vi.fn().mockImplementation((callback, options) => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-  takeRecords: vi.fn(),
-  root: null,
-  rootMargin: '',
-  thresholds: [],
-}));
+// Mock window.location
+Object.defineProperty(window, 'location', {
+  value: {
+    href: 'http://localhost:3000',
+    origin: 'http://localhost:3000',
+    pathname: '/',
+    search: '',
+    hash: ''
+  },
+  writable: true
+})
 
-// Reset mocks before each test
-beforeEach(() => {
-  vi.clearAllMocks();
-  
-  // Reset navigator.onLine to true for each test
-  if (global.navigator && "onLine" in global.navigator) {
-    (global.navigator as any).onLine = true;
+// Mock localStorage and sessionStorage
+const createStorage = () => {
+  const storage = new Map()
+  return {
+    getItem: (key: string) => storage.get(key) || null,
+    setItem: (key: string, value: string) => storage.set(key, value),
+    removeItem: (key: string) => storage.delete(key),
+    clear: () => storage.clear(),
+    get length() { return storage.size },
+    key: (index: number) => Array.from(storage.keys())[index] || null
   }
-});
+}
+
+Object.defineProperty(window, 'localStorage', { value: createStorage() })
+Object.defineProperty(window, 'sessionStorage', { value: createStorage() })
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
+}
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
+}
+EOF < /dev/null

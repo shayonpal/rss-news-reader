@@ -3,7 +3,7 @@
  * Part of RR-27: Fix Article List State Preservation on Back Navigation
  */
 
-import type { Article } from '@/types/api';
+
 
 export interface ListState {
   timestamp: string;

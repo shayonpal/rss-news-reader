@@ -3,8 +3,10 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "es6"
+      "es2015",
+      "es2017"
     ],
+    "target": "es2015",
     "types": [
       "vitest/globals",
       "@testing-library/jest-dom"
@@ -20,6 +22,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "downlevelIteration": true,
     "plugins": [
       {
         "name": "next"

@@ -27,7 +27,7 @@ echo ""
 
 # Load environment variables
 # Check for test environment first
-if [[ "$NODE_ENV" == "test" ]] && [[ -f "$PROJECT_ROOT/.env.test" ]]; then
+if [[ "${NODE_ENV:-}" == "test" ]] && [[ -f "$PROJECT_ROOT/.env.test" ]]; then
     # Use export to make variables available to this script
     set -a
     source "$PROJECT_ROOT/.env.test"
