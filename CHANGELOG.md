@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Comprehensive Uptime Kuma Monitoring Documentation and Integration (RR-100) - Completed** (Wednesday, August 6, 2025 at 6:00 AM)
+  - **Documentation**: Added complete Uptime Kuma monitoring guide at `docs/tech/uptime-kuma-monitoring.md`
+  - **Service Integration**: Integrated kuma-push-monitor service into PM2 ecosystem.config.js for unified process management
+  - **Monitor Documentation**: Documented all 9 existing Uptime Kuma monitors (4 HTTP monitors, 5 Push monitors)
+  - **Service Recovery**: Fixed and restarted the kuma-push-daemon that had stopped working
+  - **Configuration Details**: Complete setup instructions for Discord webhooks, push monitor tokens, and HTTP monitor endpoints
+  - **Troubleshooting Guide**: Added comprehensive troubleshooting section for common monitoring issues
+  - **Impact**: Unified monitoring infrastructure with proper documentation for all internal API monitoring needs
+
 ## [0.12.0] - Wednesday, August 6, 2025 at 3:12 AM
 
 ### Fixed
