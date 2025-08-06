@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **AI Summary Generation Authentication Issue** (Wednesday, August 6, 2025 at 7:02 PM)
+  - Fixed invalid Anthropic API key that was preventing article summarization
+  - Updated `.env` file with valid API credentials
+  - Restarted PM2 services to load new environment variables
+  - Impact: Restored AI-powered article summary functionality
+
 ### Added
 - **Comprehensive Uptime Kuma Monitoring Documentation and Integration (RR-100) - Completed** (Wednesday, August 6, 2025 at 6:00 AM)
   - **Documentation**: Added complete Uptime Kuma monitoring guide at `docs/tech/uptime-kuma-monitoring.md`
