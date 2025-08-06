@@ -60,7 +60,7 @@ export function SimpleFeedSidebar({
         `[SimpleFeedSidebar] Initial load completed in ${(performance.now() - startTime).toFixed(2)}ms`
       );
     });
-  }, [loadFeedHierarchy]);
+  }, [loadFeedHierarchy, loadLastSyncTime]);
 
   // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {

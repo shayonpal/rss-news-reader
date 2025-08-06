@@ -88,10 +88,13 @@ export class NavigationHistory {
 
   private loadFromStorage(): void {
     try {
-      const saved = sessionStorage.getItem(this.HISTORY_KEY);
-      if (saved) {
-        this.entries = JSON.parse(saved);
-        this.cleanExpiredEntries();
+      // Check if we're in a browser environment
+      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+        const saved = sessionStorage.getItem(this.HISTORY_KEY);
+        if (saved) {
+          this.entries = JSON.parse(saved);
+          this.cleanExpiredEntries();
+        }
       }
     } catch (error) {
       console.error('Failed to load navigation history:', error);
@@ -101,7 +104,10 @@ export class NavigationHistory {
 
   private saveToStorage(): void {
     try {
-      sessionStorage.setItem(this.HISTORY_KEY, JSON.stringify(this.entries));
+      // Check if we're in a browser environment
+      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(this.HISTORY_KEY, JSON.stringify(this.entries));
+      }
     } catch (error) {
       console.error('Failed to save navigation history:', error);
     }

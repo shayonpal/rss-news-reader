@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Critical SSR Error in Navigation History** (Wednesday, August 6, 2025 at 3:08 AM)
+  - Fixed sessionStorage access during server-side rendering that was causing page load failures
+  - Added proper browser environment checks to navigation-history.ts
+  - Prevents ReferenceError that was blocking all page loads in production
+  - Essential fix for RR-27 article list state preservation feature
+
 ### Removed
 - **Redundant Freshness API (RR-106) - Completed** (Tuesday, August 5, 2025 at 7:28 PM)
   - **API Removal**: Completely removed `/api/health/freshness` endpoint that wasn't solving its intended purpose

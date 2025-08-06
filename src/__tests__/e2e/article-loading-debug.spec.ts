@@ -125,7 +125,7 @@ test.describe('Article Loading Debug', () => {
     console.log('\n📍 Step 3: Navigate back to list');
     
     // Track loading states during navigation
-    let loadingStates: any[] = [];
+    const loadingStates: any[] = [];
     
     const trackLoading = async () => {
       const state = await page.evaluate(() => {

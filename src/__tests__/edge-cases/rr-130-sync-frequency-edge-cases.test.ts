@@ -160,7 +160,7 @@ describe('RR-130 Edge Cases: Sync Frequency Implementation', () => {
 
     it('should handle sync timeout edge cases', async () => {
       const syncTimeout = 120000; // 2 minutes
-      let syncStartTime = Date.now();
+      const syncStartTime = Date.now();
       
       const mockLongRunningSyncCheck = () => {
         const elapsed = Date.now() - syncStartTime;

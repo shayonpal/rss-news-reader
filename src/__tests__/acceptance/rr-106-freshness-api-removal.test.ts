@@ -363,28 +363,4 @@ describe('RR-106: Freshness API Removal - Acceptance Criteria', () => {
       expect(true).toBe(true); // Git history verification is manual
     });
   });
-
-  // Helper method for recursive file listing
-  async getAllFiles(dirPath: string): Promise<string[]> {
-    const files: string[] = [];
-    
-    try {
-      const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      
-      for (const entry of entries) {
-        const fullPath = path.join(dirPath, entry.name);
-        
-        if (entry.isDirectory()) {
-          const subFiles = await this.getAllFiles(fullPath);
-          files.push(...subFiles);
-        } else {
-          files.push(fullPath);
-        }
-      }
-    } catch {
-      // Directory not accessible
-    }
-    
-    return files;
-  }
 });

@@ -205,7 +205,7 @@ describe('RR-27: Article List State Preservation - Edge Cases', () => {
         }
       ];
 
-      let autoReadArticles = new Set<string>();
+      const autoReadArticles = new Set<string>();
 
       // Simulate restoration process where observer should be disabled
       let restorationInProgress = true;
