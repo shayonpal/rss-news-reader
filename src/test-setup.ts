@@ -1,11 +1,7 @@
 import { vi } from 'vitest'
 
 // Mock environment
-Object.defineProperty(process.env, 'NODE_ENV', {
-  value: 'test',
-  writable: false,
-  configurable: false
-});
+process.env.NODE_ENV = 'test';
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -53,4 +49,3 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
 }
-EOF < /dev/null

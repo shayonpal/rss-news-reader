@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { promises as fs } from "fs";
 import path from "path";
 import { getAdminClient } from "@/lib/db/supabase-admin";
+import { SyncConflictDetector } from "@/lib/sync/conflict-detector";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -339,6 +340,9 @@ async function performServerSync(syncId: string) {
 
     // Mark sync timestamp for loop prevention
     const syncTimestamp = new Date().toISOString();
+    
+    // Initialize conflict detector for this sync session
+    const conflictDetector = new SyncConflictDetector(syncId);
 
     // Process articles
     if (articles.length > 0 && feedIdMap.size > 0) {
@@ -383,14 +387,14 @@ async function performServerSync(syncId: string) {
           .delete()
           .in("inoreader_id", inoreaderIds);
 
-        // BIDIRECTIONAL SYNC CONFLICT RESOLUTION
-        // ========================================
+        // BIDIRECTIONAL SYNC CONFLICT RESOLUTION WITH DETECTION (RR-30)
+        // ==============================================================
         // Get existing articles to check for local changes that need to be preserved.
         // We need to compare timestamps to avoid overwriting user actions made between syncs.
         const { data: existingArticles } = await supabase
           .from("articles")
           .select(
-            "inoreader_id, is_read, is_starred, last_local_update, last_sync_update, updated_at"
+            "id, inoreader_id, feed_id, is_read, is_starred, last_local_update, last_sync_update, updated_at"
           )
           .in("inoreader_id", inoreaderIds);
 
@@ -403,30 +407,49 @@ async function performServerSync(syncId: string) {
           (article: any) => {
             const existing = existingMap.get(article.inoreader_id);
 
-            if (existing && existing.last_local_update) {
-              // IMPORTANT: We compare last_local_update with last_sync_update (not current time)
-              // This ensures we only preserve changes made AFTER the last sync from Inoreader.
-              // Using current time would cause a race condition where all local changes would
-              // always win, preventing Inoreader changes from ever being applied.
-              const lastSyncTime =
-                existing.last_sync_update || existing.updated_at;
-              if (
-                new Date(existing.last_local_update) > new Date(lastSyncTime)
-              ) {
-                // Local changes are newer than last sync - preserve local state
-                // This handles the case where user marked articles as read/starred
-                // between the last sync and now. Without this, their changes would
-                // be lost every time we sync from Inoreader.
-                console.log(
-                  `[Sync] Preserving local state for article ${article.inoreader_id}`
-                );
-                return {
-                  ...article,
-                  is_read: existing.is_read,
-                  is_starred: existing.is_starred,
-                  // Update sync timestamp but keep local changes
-                  last_sync_update: syncTimestamp,
-                };
+            if (existing) {
+              // Check if states differ (potential conflict)
+              const statesDiffer = existing.is_read !== article.is_read || 
+                                  existing.is_starred !== article.is_starred;
+              
+              if (existing.last_local_update) {
+                // IMPORTANT: We compare last_local_update with last_sync_update (not current time)
+                // This ensures we only preserve changes made AFTER the last sync from Inoreader.
+                // Using current time would cause a race condition where all local changes would
+                // always win, preventing Inoreader changes from ever being applied.
+                const lastSyncTime =
+                  existing.last_sync_update || existing.updated_at;
+                  
+                if (
+                  new Date(existing.last_local_update) > new Date(lastSyncTime)
+                ) {
+                  if (statesDiffer) {
+                    // RR-30: Log conflict - local changes will be preserved
+                    conflictDetector.detectConflict(existing, article, 'local');
+                    console.log(
+                      `[Sync] Conflict detected for ${article.inoreader_id}: preserving local state`
+                    );
+                  }
+                  
+                  // Local changes are newer than last sync - preserve local state
+                  // This handles the case where user marked articles as read/starred
+                  // between the last sync and now. Without this, their changes would
+                  // be lost every time we sync from Inoreader.
+                  return {
+                    ...article,
+                    is_read: existing.is_read,
+                    is_starred: existing.is_starred,
+                    // Update sync timestamp but keep local changes
+                    last_sync_update: syncTimestamp,
+                  };
+                } else if (statesDiffer && existing.last_local_update) {
+                  // Local changes exist but are older than last sync AND states differ
+                  // This means remote wins but we should log the conflict
+                  conflictDetector.detectConflict(existing, article, 'remote');
+                  console.log(
+                    `[Sync] Conflict detected for ${article.inoreader_id}: applying remote state`
+                  );
+                }
               }
             }
 
@@ -504,6 +527,18 @@ async function performServerSync(syncId: string) {
     // Track API usage (approximately 4-5 calls per sync)
     await trackApiUsage("inoreader", 4);
 
+    // RR-30: Write conflict log before completing sync
+    status.progress = 97;
+    status.message = "Logging sync conflicts...";
+    await writeSyncStatus(syncId, status);
+    
+    const conflictSummary = conflictDetector.getSummary();
+    if (conflictSummary.totalConflicts > 0) {
+      await conflictDetector.writeConflicts();
+      console.log(`[Sync] Detected ${conflictSummary.totalConflicts} conflicts:`);
+      console.log(conflictDetector.generateReport());
+    }
+
     // Trigger bidirectional sync to push local changes to Inoreader
     status.progress = 98;
     status.message = "Syncing local changes to Inoreader...";
@@ -535,7 +570,10 @@ async function performServerSync(syncId: string) {
     // Complete
     status.status = "completed";
     status.progress = 100;
-    status.message = `Sync completed. Synced ${subscriptions.length} feeds and ${articles.length} articles.`;
+    const conflictMessage = conflictSummary.totalConflicts > 0 
+      ? ` Detected ${conflictSummary.totalConflicts} conflicts.`
+      : '';
+    status.message = `Sync completed. Synced ${subscriptions.length} feeds and ${articles.length} articles.${conflictMessage}`;
     await writeSyncStatus(syncId, status);
 
     // Schedule file cleanup after 60 seconds to ensure clients can read final status

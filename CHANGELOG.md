@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Troubleshooting Guide**: Added comprehensive troubleshooting section for common monitoring issues
   - **Impact**: Unified monitoring infrastructure with proper documentation for all internal API monitoring needs
 
+- **Sync Conflict Detection Implementation (RR-30) - Completed** (Wednesday, August 6, 2025 at 5:30 PM)
+  - **Feature**: Added conflict detection when local article states differ from Inoreader during sync
+  - **Logging**: Implemented JSONL logging to `logs/sync-conflicts.jsonl` for conflict tracking
+  - **Detection Logic**: State-based comparison due to Inoreader API limitation (no timestamps for read/starred changes)
+  - **Resolution Tracking**: Logs whether local or remote values won in each conflict
+  - **Bug Fix**: Fixed detection for remote-wins scenarios during testing
+  - **Coverage**: Processes 300 articles per sync for conflict detection
+  - **Files Added**: `src/lib/sync/conflict-detector.ts`, comprehensive test files
+  - **Impact**: Provides visibility into sync conflicts for monitoring and debugging sync issues
+
 ## [0.12.0] - Wednesday, August 6, 2025 at 3:12 AM
 
 ### Fixed
