@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - Wednesday, August 6, 2025 at 3:12 AM
+
 ### Fixed
 - **Critical SSR Error in Navigation History** (Wednesday, August 6, 2025 at 3:08 AM)
   - Fixed sessionStorage access during server-side rendering that was causing page load failures
@@ -265,7 +267,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync conflicts between devices
 - Performance bottlenecks in data queries
 
-[Unreleased]: https://github.com/shayonpal/rss-news-reader/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/shayonpal/rss-news-reader/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.11.0...v0.12.0
 [0.10.1]: https://github.com/shayonpal/rss-news-reader/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.8.0...v0.9.0
