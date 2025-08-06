@@ -337,7 +337,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           url: article.url || "",
           tags: article.is_starred ? ["starred"] : [],
           publishedAt: new Date(article.published_at || Date.now()),
-          authorName: article.author || "",
+          author: article.author || undefined,
+          authorName: article.author || "", // Keep for backwards compatibility
           isRead: article.is_read || false,
           createdAt: new Date(article.created_at || Date.now()),
           updatedAt: new Date(article.updated_at || Date.now()),
@@ -488,7 +489,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           url: article.url || "",
           tags: article.is_starred ? ["starred"] : [],
           publishedAt: new Date(article.published_at || Date.now()),
-          authorName: article.author || "",
+          author: article.author || undefined,
+          authorName: article.author || "", // Keep for backwards compatibility
           isRead: article.is_read || false,
           createdAt: new Date(article.created_at || Date.now()),
           updatedAt: new Date(article.updated_at || Date.now()),
@@ -533,7 +535,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           url: article.url || "",
           tags: article.is_starred ? ["starred"] : [],
           publishedAt: new Date(article.published_at || Date.now()),
-          authorName: article.author || "",
+          author: article.author || undefined,
+          authorName: article.author || "", // Keep for backwards compatibility
           isRead: article.is_read || false,
           createdAt: new Date(article.created_at || Date.now()),
           updatedAt: new Date(article.updated_at || Date.now()),

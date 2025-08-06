@@ -31,6 +31,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Significantly improved user experience with accurate sync status and enhanced monitoring capabilities
 
 ### Added
+- **Author Display in Articles (RR-140) - Completed** (Wednesday, January 8, 2025 at 2:44 AM)
+  - **Feature Implementation**: Added author names to both article listing and detail view pages
+  - **API Integration**: Extract author field from Inoreader API during sync with 81% capture rate
+  - **Database**: Successfully capturing authors for 248+ articles (10% total, growing with each sync)
+  - **UI Display**: Authors shown with Feed → Author → Time metadata order in article list
+  - **Responsive Design**: 150px max-width truncation with ellipsis for long author names
+  - **Mobile Support**: Fixed separator visibility on all screen sizes
+  - **Bug Fix**: Corrected article store mapping (author field was mapped to authorName)
+  - **Monitoring**: Added database views and indexes for author statistics tracking
+  - **Performance**: No degradation, maintains 54.5MB memory usage and 138ms query times
+  - **Impact**: Users can now identify content creators and follow favorite writers across feeds
+
 - **6x Daily Sync Frequency (RR-130) - Completed** (Tuesday, August 5, 2025 at 4:39 PM)
   - **Increased Sync Frequency**: Updated from 2x daily (2 AM & 2 PM) to 6x daily (2, 6, 10 AM & 2, 6, 10 PM EST/EDT)
   - **Reduced Article Delay**: Maximum delay between publication and availability reduced from ~11 hours to ~4 hours

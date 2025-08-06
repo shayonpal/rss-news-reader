@@ -15,16 +15,19 @@ Check $ARGUMENTS for mood/preference:
 - `feature` = Show only features
 - No argument = Mixed recommendations
 
-Analyze and recommend the best task to work on using data from `linear-expert`.
+Analyze and recommend the best task to work on using data from `linear-expert`. Before that, ensure that you've checked `CHANGELOG.md` using `doc-search` and past few git commits using `git-expert` to get an idea of what's lately been worked on.
 
 ## 1. Current State Analysis
 
 Use `linear-expert` to get:
 
-- Current "In Progress" items (max 3 allowed)
-- If 3 items already in progress, suggest focusing on completing one
-- Open items in "Todo" or "Backlog" status
-- Recent comments that might indicate priority changes
+- Look into all the incomplete issues, sub-issues, and comments
+- Analyze if they are still valid.
+- Look for:
+   - Potential duplicates
+   - Potential refactoring opportunities
+   - Potential order of execution
+- Ignore priorities mentioned in the issues themselves for this analysis.
 
 ### Task Selection Criteria
 
@@ -70,16 +73,9 @@ Categorize and score available tasks:
 
 Total score 15+ = High Impact
 
-### Time-of-Day Matching:
-
-- Morning (6 AM - 12 PM): Complex features, architecture
-- Afternoon (12 PM - 6 PM): Collaborative work, reviews
-- Evening (6 PM - 11 PM): Medium tasks, bug fixes
-- Late Night (11 PM - 6 AM): UI work, quick wins, isolated tasks
-
 ## 4. Recommendation Format
 
-Based on linear-expert data and analysis, present top 3 options:
+Based on linear-expert data and analysis, present top 6 options:
 
 ```
 🎯 Recommended Tasks:
@@ -127,6 +123,6 @@ When I pick one:
 
 - 🚫 NO file operations during this command
 - Perform all analysis and scoring based on Linear data
-- linear-expert provides raw data only
-- doc-search provides read-only context
+- `linear-expert` provides raw data only
+- `doc-search` provides read-only context
 - Consider ADHD patterns - variety helps, but limit WIP

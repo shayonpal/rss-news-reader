@@ -516,21 +516,21 @@ export function ArticleList({
               {/* Metadata */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                 <span className="font-medium">{article.feedTitle}</span>
-                <span className="hidden sm:inline">•</span>
+                {article.author && (
+                  <>
+                    <span>•</span>
+                    <span className="max-w-[150px] truncate">
+                      {article.author}
+                    </span>
+                  </>
+                )}
+                <span>•</span>
                 <time
                   dateTime={article.publishedAt.toISOString()}
                   suppressHydrationWarning
                 >
                   {formatTimestamp(article.publishedAt)}
                 </time>
-                {article.author && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <span className="max-w-[150px] truncate">
-                      {article.author}
-                    </span>
-                  </>
-                )}
               </div>
 
               {/* Content Preview */}
