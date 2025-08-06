@@ -17,12 +17,12 @@ RSS News Reader is a self-hosted Progressive Web App with server-client architec
 
 Key features:
 
-- Server syncs from Inoreader API (4-5 calls only)
+- Server syncs from Inoreader API (24-30 calls daily with 6x sync)
 - Client reads exclusively from Supabase (PostgreSQL)
 - Bi-directional sync for read/unread and star status
 - AI-powered article summaries using Claude API
 - Full content extraction with Mozilla Readability
-- Automatic daily sync at 2 AM and 2 PM Toronto time
+- Automatic sync 6x daily at 2, 6, 10 AM and 2, 6, 10 PM Toronto time
 
 ## Essential Commands
 
@@ -98,7 +98,7 @@ pm2 logs rss-sync-cron
 ### Key Services
 
 1. **rss-reader-dev** (port 3000): Main web application
-2. **rss-sync-cron**: Automated sync service (2 AM & 2 PM)
+2. **rss-sync-cron**: Automated sync service (6x daily: 2, 6, 10, 14, 18, 22 hours)
 3. **rss-sync-server** (port 3001): Bi-directional sync handler
 
 ### Database Schema
@@ -210,8 +210,8 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 
 ### Health Endpoints
 
-- `/api/health/app` and `/api/health/db` - Basic application health
-- `/api/health/freshness` - Article data freshness check
+- `/api/health/app` - Application health and version
+- `/api/health/db` - Database connectivity status
 - `/api/health/cron` - Cron service status monitoring
 
 ### Monitoring Tools

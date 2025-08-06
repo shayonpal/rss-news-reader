@@ -22,7 +22,7 @@ argument_hint: [linear-issue-id] [additional-context]
 - Suggest creating an issue if one doesn't exist
 
 ### If Linear ID Provided
-Use Linear MCP server to:
+Use `linear-expert` to:
 1. Verify issue exists and get full specification (description + all comments)
 2. Check for required documentation in comments:
    - Look for "Implementation Plan" or "Approach" in any comment
@@ -56,39 +56,23 @@ If any gate fails:
 - Suggest next steps (e.g., "Run /analyze RR-XXX first")
 
 ### Add Implementation Start Comment
-Use Linear MCP server to add comment:
+Use `linear-expert` to add comment:
 - "Starting implementation - [timestamp]"
 - Note any spec changes discovered since analysis
 
 ## 2. Test-First Development
 
 ### Step 1: Write Tests FIRST
-Generate tests based on Linear specification:
-1. Extract test requirements from Linear issue comments
-2. Create test files for:
+Use `test-expert` to:
+1. Generate tests based on Linear specification
+2. Ensure tests validate against documented requirements
+3. Include:
    - Happy path scenarios from Linear spec
    - Edge cases identified during analysis
    - Error handling scenarios
    - Integration points mentioned in Linear
-3. Structure tests following project conventions:
-   - Unit tests: `src/lib/feature.test.ts` next to `src/lib/feature.ts`
-   - Integration tests: `src/__tests__/integration/`
-   - E2E tests: `tests/e2e/` or `src/__tests__/e2e/`
-4. Write tests using Vitest framework:
-   ```typescript
-   import { describe, it, expect, vi, beforeEach } from 'vitest';
-   
-   describe('Feature Name', () => {
-     beforeEach(() => {
-       // Setup and reset mocks
-     });
-     
-     it('should meet acceptance criteria from Linear', async () => {
-       // Test implementation
-     });
-   });
-   ```
-5. Run tests to confirm they fail (red phase): `npm test`
+4. Save tests in appropriate test directory
+5. Run tests to confirm they fail (red phase)
 
 ### Step 2: Implementation
 1. Implement the solution to make tests pass
@@ -104,36 +88,12 @@ Generate tests based on Linear specification:
 
 ## 3. Specialist Reviews
 
-Based on implementation type, perform specialized reviews:
+Based on implementation type, get reviews from read-only agents:
+- **Database changes**: Use `db-expert-readonly` to verify schema/queries
+- **Infrastructure changes**: Use `devops-expert-readonly` to check deployment impact
+- **UI changes**: Use `ui-expert` to review user experience
 
-### Database Changes Review
-If database changes were made:
-- Verify schema changes match requirements
-- Check query performance using EXPLAIN
-- Ensure RLS policies are appropriate
-- Validate foreign key relationships
-- Test migration scripts
-- Check for data integrity issues
-
-### Infrastructure Changes Review
-If infrastructure/deployment changes were made:
-- Check PM2 configuration updates
-- Verify environment variable usage
-- Test deployment scripts
-- Ensure service health endpoints work
-- Validate memory/resource constraints
-- Check sync pipeline impacts
-
-### UI Changes Review
-If UI changes were made:
-- Test responsive design
-- Verify accessibility standards
-- Check iOS PWA specific behaviors
-- Test offline functionality
-- Validate loading states
-- Ensure optimistic UI updates work
-
-Each review should verify:
+Each review should check:
 - Does implementation match Linear requirements?
 - Are there any security concerns?
 - Is error handling adequate?
@@ -150,7 +110,7 @@ Run comprehensive checks:
 
 ## 5. Update Linear
 
-Use Linear MCP server to:
+Use `linear-expert` to:
 1. Change status to "In Review"
 2. Add implementation summary as comment:
    - List all files changed

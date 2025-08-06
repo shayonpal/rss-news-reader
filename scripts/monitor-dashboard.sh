@@ -65,32 +65,13 @@ check_sync_status() {
     local hours_ago=$(( ($(date +%s) - $(date -d "$timestamp" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${timestamp%.*}" +%s)) / 3600 ))
     
     if [ "$status" = "completed" ]; then
-        if [ $hours_ago -gt 12 ]; then
+        if [ $hours_ago -gt 4 ]; then
             echo -e "${YELLOW}⚠️  Last Sync: ${hours_ago}h ago (stale)${NC}"
         else
             echo -e "${GREEN}✅ Last Sync: ${hours_ago}h ago${NC}"
         fi
     else
         echo -e "${RED}❌ Last Sync: Failed ${hours_ago}h ago${NC}"
-    fi
-}
-
-# Function to check article freshness
-check_article_freshness() {
-    local response=$(curl -s "http://localhost:3000/reader/api/health/freshness" 2>/dev/null)
-    
-    if [ -z "$response" ]; then
-        echo -e "${RED}❌ Article Freshness: Cannot check${NC}"
-        return 1
-    fi
-    
-    local hours=$(echo "$response" | jq -r '.hoursSinceLastArticle')
-    local status=$(echo "$response" | jq -r '.status')
-    
-    if [ "$status" = "healthy" ]; then
-        echo -e "${GREEN}✅ Article Freshness: ${hours}h old${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Article Freshness: ${hours}h old (stale)${NC}"
     fi
 }
 
@@ -117,7 +98,6 @@ check_pm2_process "rss-reader-dev" || true
 echo -e "\n${BLUE}Sync Health:${NC}"
 echo "---------------------"
 check_sync_status
-check_article_freshness
 
 echo -e "\n${BLUE}Monitoring Services:${NC}"
 echo "---------------------"

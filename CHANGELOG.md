@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - Wednesday, August 6, 2025 at 3:12 AM
+
+### Fixed
+- **Critical SSR Error in Navigation History** (Wednesday, August 6, 2025 at 3:08 AM)
+  - Fixed sessionStorage access during server-side rendering that was causing page load failures
+  - Added proper browser environment checks to navigation-history.ts
+  - Prevents ReferenceError that was blocking all page loads in production
+  - Essential fix for RR-27 article list state preservation feature
+
+### Removed
+- **Redundant Freshness API (RR-106) - Completed** (Tuesday, August 5, 2025 at 7:28 PM)
+  - **API Removal**: Completely removed `/api/health/freshness` endpoint that wasn't solving its intended purpose
+  - **Monitoring Consolidation**: Reduced from 4 to 3 health endpoints (app, db, cron) for clearer monitoring
+  - **Script Updates**: Updated all monitoring scripts to remove freshness checks and use replacement endpoints
+  - **Test Cleanup**: Removed freshness unit tests and updated 5 integration test files
+  - **Bug Fix**: Fixed field name inconsistency (hoursSinceLastArticle vs hoursSinceLatest)
+  - **Documentation**: Updated CLAUDE.md and monitoring docs to reflect 3-endpoint architecture
+  - **Benefits**: Simplified monitoring, better metrics from sync health, reduced confusion about "staleness"
+  - **Note**: Original UI freshness perception issue (RR-26) remains unsolved and needs UI/UX improvements
+
+### Changed
+- **Monitoring Scripts Update After Freshness API Removal (RR-124) - Completed** (Tuesday, August 6, 2025 at 1:50 AM)
+  - **Fixed Critical UI Bug**: Last sync time now displays correctly on initial page load (previously showed "never synced")
+  - **New API Endpoint**: Added `/api/sync/last-sync` to reliably fetch last sync time from logs or database
+  - **Timezone Display**: Updated sidebar to show relative time using formatDistanceToNow ("3 hours ago" format)
+  - **Fetch Stats Auto-Refresh**: Added 30-second auto-refresh with toggle control for real-time monitoring
+  - **Uptime Kuma Integration**: Implemented push monitors for Sync Status, API Usage, Fetch Stats, and Database Health
+  - **Kuma Compatibility Fix**: Changed from numeric status codes (0,1,2) to 'up'/'down' string values
+  - **Monitoring Scripts Cleanup**: Removed all freshness API references from monitor-dashboard.sh and sync-health-monitor.sh
+  - **Threshold Updates**: Adjusted sync health thresholds from 5 to 4 hours to reflect actual sync frequency
+  - **Impact**: Significantly improved user experience with accurate sync status and enhanced monitoring capabilities
+
+### Added
+- **Author Display in Articles (RR-140) - Completed** (Wednesday, January 8, 2025 at 2:44 AM)
+  - **Feature Implementation**: Added author names to both article listing and detail view pages
+  - **API Integration**: Extract author field from Inoreader API during sync with 81% capture rate
+  - **Database**: Successfully capturing authors for 248+ articles (10% total, growing with each sync)
+  - **UI Display**: Authors shown with Feed → Author → Time metadata order in article list
+  - **Responsive Design**: 150px max-width truncation with ellipsis for long author names
+  - **Mobile Support**: Fixed separator visibility on all screen sizes
+  - **Bug Fix**: Corrected article store mapping (author field was mapped to authorName)
+  - **Monitoring**: Added database views and indexes for author statistics tracking
+  - **Performance**: No degradation, maintains 54.5MB memory usage and 138ms query times
+  - **Impact**: Users can now identify content creators and follow favorite writers across feeds
+
+- **6x Daily Sync Frequency (RR-130) - Completed** (Tuesday, August 5, 2025 at 4:39 PM)
+  - **Increased Sync Frequency**: Updated from 2x daily (2 AM & 2 PM) to 6x daily (2, 6, 10 AM & 2, 6, 10 PM EST/EDT)
+  - **Reduced Article Delay**: Maximum delay between publication and availability reduced from ~11 hours to ~4 hours
+  - **Cron Schedule**: Updated to `0 2,6,10,14,18,22 * * *` with America/Toronto timezone
+  - **Monitoring Updates**: Adjusted thresholds - article freshness to 5 hours, sync interval to 6 hours
+  - **API Rate Limit Tracking**: Added header parsing for X-Reader-Zone1-Usage/Limit headers with throttling recommendations
+  - **Materialized View Refresh**: Automatic `feed_stats` refresh after each successful sync via new `/api/sync/refresh-view` endpoint
+  - **Resource Usage**: Stable at 24-30 API calls/day (well within 1000-5000 limit), ~68MB memory for cron service
+  - **Uptime Kuma**: Already configured correctly with 4-hour heartbeat interval
+
+- **Service Health Monitoring (RR-125) - Completed** (Tuesday, August 5, 2025)
+  - **Automatic Recovery**: Integrated monitoring service into PM2 ecosystem for automatic API failure recovery
+  - **HTML Detection**: Monitors detect when JSON endpoints return HTML 404/500 pages and trigger auto-restart
+  - **Rate Limiting**: Maximum 3 auto-restarts per hour with 5-minute cooldown between attempts
+  - **PM2 Integration**: New `rss-services-monitor` service managed by PM2 with automatic startup on boot
+  - **Monitoring Script**: Created PM2-compatible wrapper (`monitor-services-pm2.sh`) for existing monitoring logic
+  - **Health Checks**: Monitors all services every 2 minutes - main app, cron, sync server, and data freshness
+  - **Restart Tracking**: File-based tracking in `logs/restart-tracking/` to persist restart counts across monitor restarts
+  - **Discord Notifications**: Optional webhook alerts for critical failures and rate limit events
+  - **Configuration**: 15-minute implementation using existing infrastructure - no new code, just configuration
+
+- **Article List State Preservation (RR-27) - In Review** (Monday, August 4, 2025 at 8:47 PM)
+  - **Core Feature**: ✅ Articles marked as read remain visible in "Unread Only" mode when navigating back from detail view
+  - **Hybrid Query**: ✅ Implemented efficient database approach that loads both unread articles and preserved read articles
+  - **Visual Differentiation**: ✅ Session-preserved articles show with opacity 0.85 and left border indicator
+  - **Session Management**: ✅ Preserved article IDs stored with 30-minute expiry, max 50 articles to prevent unbounded growth
+  - **Critical Bug Fix**: ✅ Fixed issue where complete article list appeared after reading multiple articles
+  - **State Clearing**: ✅ Preserved state correctly clears when switching feeds or changing read status filters
+  - **Auto-Mark Protection**: ✅ Added 2-second delay to prevent false auto-reads during feed switches
+  - **Performance**: ✅ Minimal impact - hybrid query adds only 0.117ms overhead (0.325ms vs 0.208ms)
+  - **Known Limitation**: Scroll position preserved but articles above viewport not auto-marked (tracked in RR-139)
+
+- **Development Workflow Hooks** (Monday, August 4, 2025 at 8:16 PM)
+  - Added Claude Code hooks to enforce project conventions and improve developer experience:
+    - **PM2 Command Enforcement**: Blocks `npm run dev` commands and suggests PM2 alternatives
+    - **Test Safety Reminder**: Shows safer test command alternatives when running `npm run test` with 20-second pause
+    - **Database Change Detection**: Monitors Supabase MCP operations and reminds about RLS policies and materialized view refresh
+    - **Code Quality Tracking**: Tracks edited TypeScript/JavaScript files and suggests running type-check and lint after changes
+  - Hooks configuration stored in `~/.claude/hooks.json`
+  - Improves consistency with production-like development environment
+
+### Changed
+- **Package Dependency Updates** (Monday, August 4, 2025 at 12:56 PM)
+  - Removed unused `punycode` package (still available via transitive dependencies)
+  - Removed unused `@radix-ui/react-toast` package (replaced by sonner)
+  - Updated 16 packages to latest minor/patch versions:
+    - `@anthropic-ai/sdk`: 0.56.0 → 0.57.0 (improved edge runtime support, bug fixes)
+    - `@radix-ui/react-avatar`: 1.1.0 → 1.1.10
+    - `@radix-ui/react-collapsible`: 1.1.0 → 1.1.11
+    - `@radix-ui/react-dropdown-menu`: 2.1.1 → 2.1.15
+    - `@radix-ui/react-progress`: 1.1.0 → 1.1.7
+    - `@supabase/supabase-js`: 2.45.0 → 2.51.0
+    - `axios`: 1.7.2 → 1.9.0
+    - `date-fns`: 3.6.0 → 4.1.0
+    - `lucide-react`: 0.426.0 → 0.427.0
+    - `next`: 14.2.5 → 14.2.15
+    - `sonner`: 1.5.0 → 2.0.6
+    - `tailwind-merge`: 2.4.0 → 2.5.0
+    - `uuid`: 10.0.0 → 11.1.0
+    - `zustand`: 4.5.4 → 5.0.0
+    - `node-cron`: 3.0.3 → 4.2.1
+    - `express`: 4.19.2 → 5.1.0
+  - All updates tested and verified to be backward compatible
+
 ## [0.11.0] - 2025-08-04
 
 ### Added
@@ -158,7 +267,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync conflicts between devices
 - Performance bottlenecks in data queries
 
-[Unreleased]: https://github.com/shayonpal/rss-news-reader/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/shayonpal/rss-news-reader/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.11.0...v0.12.0
 [0.10.1]: https://github.com/shayonpal/rss-news-reader/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.8.0...v0.9.0

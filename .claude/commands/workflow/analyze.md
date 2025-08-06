@@ -80,6 +80,7 @@ Use read-only agents to gather comprehensive context:
 - **Consider effort vs value**: "Is this worth 3 days for 2% improvement?"
 - Also analyze, in the process, if the issues is even a valid issue.
 - Which existing test and/or documentation will need updating because of this issue?
+- Before suggesting your implementation strategy to the user, make sure you have also done a thorough internet research using the `web-researcher` agent to investigate if the solution that you think will work is actually going to work.
 
 This is a collaborative discussion to find the best solution.
 

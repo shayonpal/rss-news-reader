@@ -15,15 +15,6 @@ const syncMonitors = [
     description: "Monitor sync API endpoint availability",
   },
   {
-    name: "RSS Reader - Article Freshness",
-    type: "http",
-    url: "http://100.96.166.53:3000/reader/api/health/freshness",
-    interval: 1800, // 30 minutes
-    retryInterval: 300,
-    maxretries: 3,
-    description: "Check if articles are being updated",
-  },
-  {
     name: "RSS Reader - Sync Success Rate",
     type: "push",
     interval: 43200, // 12 hours - alert if no successful sync

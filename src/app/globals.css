@@ -82,6 +82,33 @@ button:not(:disabled) {
   }
 }
 
+/* RR-27: Visual differentiation for session-preserved articles */
+.session-preserved-read {
+  position: relative;
+}
+
+/* Visual indicator for auto-read articles preserved in session */
+.session-preserved-read::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: rgb(59 130 246 / 0.5); /* blue-500 with opacity */
+  border-radius: 0 2px 2px 0;
+}
+
+/* Dark mode variant */
+.dark .session-preserved-read::before {
+  background-color: rgb(96 165 250 / 0.5); /* blue-400 with opacity */
+}
+
+/* Ensure preserved articles maintain proper opacity */
+.session-preserved-read {
+  opacity: 0.85 !important; /* Slightly more visible than regular read (0.7) */
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -329,5 +356,51 @@ button:not(:disabled) {
 
   .liquid-glass-btn {
     animation: liquid-glass-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+/* Session-preserved article styles for RR-27 */
+@layer components {
+  /* Visual differentiation for session-preserved read articles */
+  .session-preserved-read {
+    position: relative;
+    opacity: 0.85 !important; /* Less faded than normal read articles */
+  }
+
+  /* Add visual indicator for session-preserved articles */
+  .session-preserved-read::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--muted-foreground);
+    opacity: 0.5;
+  }
+
+  /* Dark mode adjustments */
+  .dark .session-preserved-read::before {
+    background-color: var(--muted-foreground);
+    opacity: 0.4;
+  }
+
+  /* Hover state for session-preserved articles */
+  .session-preserved-read:hover {
+    opacity: 0.9 !important;
+  }
+
+  /* Add subtle animation when articles are preserved */
+  @keyframes preserve-article {
+    from {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+
+  .session-preserved-read {
+    animation: preserve-article 0.3s ease-out;
   }
 }

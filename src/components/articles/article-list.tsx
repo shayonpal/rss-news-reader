@@ -7,6 +7,8 @@ import { extractTextContent } from "@/lib/utils/data-cleanup";
 import { formatDistanceToNow } from "date-fns";
 import { SummaryButton } from "./summary-button";
 import { StarButton } from "./star-button";
+import { useArticleListState } from "@/hooks/use-article-list-state";
+import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 import type { Article } from "@/types";
 
 interface ArticleListProps {
@@ -34,6 +36,7 @@ export function ArticleList({
   const lastScrollY = useRef<number>(0);
   const pendingMarkAsRead = useRef<Set<string>>(new Set());
   const markAsReadTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoMarkEnabled = useRef<boolean>(false);
 
   const {
     articles,
@@ -52,6 +55,24 @@ export function ArticleList({
     readStatusFilter,
   } = useArticleStore();
 
+  // Integrate article list state preservation
+  const {
+    sessionPreservedArticles,
+    handleArticleClick: handleArticleClickWithState,
+    shouldShowArticle,
+    getArticleClassName,
+    saveStateBeforeNavigation,
+    restoreStateIfAvailable,
+  } = useArticleListState({
+    articles,
+    feedId,
+    folderId,
+    readStatusFilter,
+    scrollContainerRef,
+    onArticleClick,
+    autoMarkObserverRef,
+  });
+
   // Load articles on mount or when feed/folder changes
   useEffect(() => {
     // Clear pending marks when view changes
@@ -62,22 +83,33 @@ export function ArticleList({
     loadArticles(feedId, folderId);
   }, [feedId, folderId, loadArticles]);
 
-  // Batch mark as read with debounce
+  // Batch mark as read with debounce - now tracking auto-read articles
   const processPendingMarkAsRead = useCallback(() => {
     if (pendingMarkAsRead.current.size > 0) {
       const articleIds = Array.from(pendingMarkAsRead.current);
       pendingMarkAsRead.current.clear();
+      
+      // Update state manager to track auto-read articles
+      const updates = articleIds.map(id => ({
+        id,
+        changes: { isRead: true, wasAutoRead: true }
+      }));
+      articleListStateManager.batchUpdateArticles(updates);
+      
       markMultipleAsRead(articleIds);
     }
   }, [markMultipleAsRead]);
 
   // Set up auto-mark as read observer
   useEffect(() => {
-    // Clear pending marks when filter changes
+    // Clear pending marks when filter OR feed/folder changes
     pendingMarkAsRead.current.clear();
     if (markAsReadTimer.current) {
       clearTimeout(markAsReadTimer.current);
     }
+    
+    // Disable auto-mark initially to prevent false marks during render
+    autoMarkEnabled.current = false;
 
     // Detect iOS Safari for fallback behavior
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -102,7 +134,7 @@ export function ArticleList({
             const articleId = element.getAttribute("data-article-id");
             const isRead = element.getAttribute("data-is-read") === "true";
 
-            if (articleId && !isRead) {
+            if (articleId && !isRead && autoMarkEnabled.current) {
               pendingMarkAsRead.current.add(articleId);
             }
           }
@@ -137,7 +169,7 @@ export function ArticleList({
           const articleId = articleElement.getAttribute("data-article-id");
           const isRead = articleElement.getAttribute("data-is-read") === "true";
 
-          if (articleId && !isRead) {
+          if (articleId && !isRead && autoMarkEnabled.current) {
             pendingMarkAsRead.current.add(articleId);
           }
         }
@@ -153,9 +185,16 @@ export function ArticleList({
         threshold: 0, // Trigger as soon as article starts leaving
       });
     }
+    
+    // Enable auto-mark after a delay to prevent false marks during initial render/feed switch
+    const enableTimer = setTimeout(() => {
+      autoMarkEnabled.current = true;
+      console.log('🔓 Auto-mark as read enabled after delay');
+    }, 2000); // 2 second delay
 
     // Clean up on unmount or when filter changes
     return () => {
+      clearTimeout(enableTimer);
       if (scrollContainer) {
         scrollContainer.removeEventListener("scroll", handleScroll);
       }
@@ -168,18 +207,23 @@ export function ArticleList({
       // Process any pending marks before cleanup
       processPendingMarkAsRead();
     };
-  }, [readStatusFilter, processPendingMarkAsRead, scrollContainerRef]);
+  }, [readStatusFilter, feedId, folderId, processPendingMarkAsRead, scrollContainerRef]);
 
-  // Restore scroll position after articles load
+  // Restore scroll position and state after articles load
   useEffect(() => {
     if (!loadingArticles && articles.size > 0 && !hasRestoredScroll.current) {
+      // Try to restore full state first
+      const stateRestored = restoreStateIfAvailable();
+      
+      // Also check for saved scroll position
       const savedScrollPos = sessionStorage.getItem("articleListScroll");
+      const savedState = articleListStateManager.getListState();
 
-      if (savedScrollPos) {
+      if (savedScrollPos || (savedState && !articleListStateManager.isStateExpired())) {
         hasRestoredScroll.current = true;
         // Small delay to ensure DOM is updated
         requestAnimationFrame(() => {
-          const scrollPos = parseInt(savedScrollPos, 10);
+          const scrollPos = savedState?.scrollPosition || parseInt(savedScrollPos || "0", 10);
           const scrollContainer = scrollContainerRef?.current;
           if (scrollContainer) {
             scrollContainer.scrollTop = scrollPos;
@@ -189,11 +233,27 @@ export function ArticleList({
         });
       }
     }
-  }, [loadingArticles, articles.size, scrollContainerRef]);
+  }, [loadingArticles, articles.size, scrollContainerRef, restoreStateIfAvailable]);
 
   // Reset restoration flag when feed changes
+  const previousFeedIdRef = useRef(feedId);
+  const previousFolderIdRef = useRef(folderId);
+  
   useEffect(() => {
     hasRestoredScroll.current = false;
+    
+    // Track feed/folder changes but DON'T clear state
+    // Preserved articles should remain visible across feed changes
+    const feedChanged = previousFeedIdRef.current !== feedId && previousFeedIdRef.current !== undefined;
+    const folderChanged = previousFolderIdRef.current !== folderId && previousFolderIdRef.current !== undefined;
+    
+    if (feedChanged || folderChanged) {
+      console.log(`🔄 Feed/folder changed: ${previousFeedIdRef.current}→${feedId}, ${previousFolderIdRef.current}→${folderId} (keeping preserved articles)`);
+    }
+    
+    // Update refs
+    previousFeedIdRef.current = feedId;
+    previousFolderIdRef.current = folderId;
   }, [feedId, folderId]);
 
   // Set up infinite scroll
@@ -258,20 +318,24 @@ export function ArticleList({
     isPulling.current = false;
   }, [refreshArticles, scrollContainerRef]);
 
-  // Handle article click
+  // Handle article click with state preservation
   const handleArticleClick = useCallback(
     async (article: Article) => {
-      // Save scroll position before navigating
+      // Save full state before navigating
+      saveStateBeforeNavigation();
+      
+      // Also save scroll position for backward compatibility
       const scrollContainer = scrollContainerRef?.current;
       const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
       sessionStorage.setItem("articleListScroll", currentScroll.toString());
 
-      if (!article.isRead) {
-        await markAsRead(article.id);
-      }
-      onArticleClick?.(article.id);
+      // Don't mark as read here - let the article detail page handle it
+      // This prevents the article from immediately disappearing from "Unread Only" view
+      
+      // Use the state-aware click handler
+      handleArticleClickWithState(article);
     },
-    [markAsRead, onArticleClick, scrollContainerRef]
+    [saveStateBeforeNavigation, handleArticleClickWithState, scrollContainerRef]
   );
 
   // Render article preview
@@ -386,29 +450,29 @@ export function ArticleList({
       onTouchEnd={handleTouchEnd}
     >
       <div className="article-list-container divide-y divide-border overflow-x-hidden">
-        {Array.from(articles.values()).map((article) => (
-          <article
-            key={article.id}
-            data-article-id={article.id}
-            data-is-read={article.isRead}
-            ref={(el) => {
-              if (el && autoMarkObserverRef.current && !article.isRead) {
-                autoMarkObserverRef.current.observe(el);
-              }
-            }}
-            className={`relative cursor-pointer overflow-hidden p-4 transition-all duration-300 hover:bg-muted/50 sm:p-6 ${
-              article.isRead ? "opacity-70" : ""
-            }`}
-            onClick={() => handleArticleClick(article)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleArticleClick(article);
-              }
-            }}
-          >
+        {Array.from(articles.values())
+          .filter(article => shouldShowArticle(article))
+          .map((article) => (
+            <article
+              key={article.id}
+              data-article-id={article.id}
+              data-is-read={article.isRead}
+              ref={(el) => {
+                if (el && autoMarkObserverRef.current && !article.isRead) {
+                  autoMarkObserverRef.current.observe(el);
+                }
+              }}
+              className={getArticleClassName(article)}
+              onClick={() => handleArticleClick(article)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleArticleClick(article);
+                }
+              }}
+            >
             {/* Touch target helper for mobile - ensures 44x44px minimum */}
             <div className="absolute inset-0 sm:hidden" aria-hidden="true" />
 
@@ -452,21 +516,21 @@ export function ArticleList({
               {/* Metadata */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                 <span className="font-medium">{article.feedTitle}</span>
-                <span className="hidden sm:inline">•</span>
+                {article.author && (
+                  <>
+                    <span>•</span>
+                    <span className="max-w-[150px] truncate">
+                      {article.author}
+                    </span>
+                  </>
+                )}
+                <span>•</span>
                 <time
                   dateTime={article.publishedAt.toISOString()}
                   suppressHydrationWarning
                 >
                   {formatTimestamp(article.publishedAt)}
                 </time>
-                {article.author && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <span className="max-w-[150px] truncate">
-                      {article.author}
-                    </span>
-                  </>
-                )}
               </div>
 
               {/* Content Preview */}

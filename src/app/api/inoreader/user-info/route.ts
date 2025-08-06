@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimiter } from "@/lib/api/rate-limiter";
 import { logInoreaderApiCall } from "@/lib/api/log-api-call";
+import { processInoreaderResponse, applyThrottleIfNeeded } from "@/lib/api/inoreader-headers";
 
 export async function GET(request: NextRequest) {
   // Get trigger from query params
@@ -30,6 +31,9 @@ export async function GET(request: NextRequest) {
 
     console.log("Making request to Inoreader user-info API...");
 
+    // Apply throttle if needed before making the request
+    await applyThrottleIfNeeded();
+
     // Log the API call
     logInoreaderApiCall("/reader/api/0/user-info", trigger, "GET");
 
@@ -47,6 +51,9 @@ export async function GET(request: NextRequest) {
     );
 
     console.log("Inoreader response status:", inoreaderResponse.status);
+
+    // Process rate limit headers from response
+    processInoreaderResponse(inoreaderResponse);
 
     if (!inoreaderResponse.ok) {
       const errorText = await inoreaderResponse.text();

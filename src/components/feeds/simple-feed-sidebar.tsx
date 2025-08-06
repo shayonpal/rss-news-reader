@@ -14,6 +14,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -36,6 +37,7 @@ export function SimpleFeedSidebar({
     syncProgress,
     syncMessage,
     rateLimit,
+    loadLastSyncTime,
   } = useSyncStore();
   const { theme, setTheme } = useUIStore();
   const { readStatusFilter } = useArticleStore();
@@ -45,15 +47,20 @@ export function SimpleFeedSidebar({
   // Load feeds when component mounts
   useEffect(() => {
     console.log(
-      "[SimpleFeedSidebar] Component mounted, calling loadFeedHierarchy..."
+      "[SimpleFeedSidebar] Component mounted, loading feeds and sync status..."
     );
     const startTime = performance.now();
-    loadFeedHierarchy().then(() => {
+    
+    // Load both feed hierarchy and last sync time
+    Promise.all([
+      loadFeedHierarchy(),
+      loadLastSyncTime()
+    ]).then(() => {
       console.log(
-        `[SimpleFeedSidebar] loadFeedHierarchy completed in ${(performance.now() - startTime).toFixed(2)}ms`
+        `[SimpleFeedSidebar] Initial load completed in ${(performance.now() - startTime).toFixed(2)}ms`
       );
     });
-  }, [loadFeedHierarchy]);
+  }, [loadFeedHierarchy, loadLastSyncTime]);
 
   // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {
@@ -269,7 +276,7 @@ export function SimpleFeedSidebar({
                 <div>
                   Last sync:{" "}
                   <span suppressHydrationWarning>
-                    {new Date(lastSyncTime).toLocaleTimeString()}
+                    {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}
                   </span>
                 </div>
               )}

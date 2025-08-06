@@ -11,7 +11,7 @@ class CronSyncService {
     this.logPath = process.env.SYNC_LOG_PATH || "./logs/sync-cron.jsonl";
     this.healthLogPath = "./logs/cron-health.jsonl";
     this.isEnabled = process.env.ENABLE_AUTO_SYNC === "true";
-    this.schedule = process.env.SYNC_CRON_SCHEDULE || "0 2,14 * * *"; // 2am, 2pm
+    this.schedule = process.env.SYNC_CRON_SCHEDULE || "0 2,6,10,14,18,22 * * *"; // 6x daily
     this.apiUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     this.serviceStartTime = Date.now();
     this.successCount = 0;
@@ -231,6 +231,9 @@ class CronSyncService {
           // Write health status
           await this.writeHealthStatus("healthy");
 
+          // Refresh materialized view for feed stats
+          await this.refreshMaterializedView();
+
           // Send Uptime Kuma push notification
           await this.sendUptimeKumaPush(
             "up",
@@ -295,7 +298,13 @@ class CronSyncService {
 
   getTriggerName() {
     const hour = new Date().getHours();
-    return hour < 12 ? "cron-2am" : "cron-2pm";
+    // Map hours to sync names for 6x daily schedule
+    if (hour < 6) return "cron-2am";
+    else if (hour < 10) return "cron-6am";
+    else if (hour < 14) return "cron-10am";
+    else if (hour < 18) return "cron-2pm";
+    else if (hour < 22) return "cron-6pm";
+    else return "cron-10pm";
   }
 
   async writeHealthStatus(overallStatus = null) {
@@ -348,24 +357,47 @@ class CronSyncService {
     // Parse cron schedule to determine next run
     const now = new Date();
     const hour = now.getHours();
+    const minutes = now.getMinutes();
 
-    // Schedule is '0 2,14 * * *' (2am and 2pm)
-    if (hour < 2) {
-      // Next run is 2am today
-      const next = new Date(now);
-      next.setHours(2, 0, 0, 0);
-      return next.toISOString();
-    } else if (hour < 14) {
-      // Next run is 2pm today
-      const next = new Date(now);
-      next.setHours(14, 0, 0, 0);
-      return next.toISOString();
-    } else {
-      // Next run is 2am tomorrow
-      const next = new Date(now);
-      next.setDate(next.getDate() + 1);
-      next.setHours(2, 0, 0, 0);
-      return next.toISOString();
+    // Schedule is '0 2,6,10,14,18,22 * * *' (6x daily)
+    const scheduledHours = [2, 6, 10, 14, 18, 22];
+    
+    // Find next scheduled hour
+    for (const scheduledHour of scheduledHours) {
+      if (hour < scheduledHour || (hour === scheduledHour && minutes === 0)) {
+        // Next run is today at this hour
+        const next = new Date(now);
+        next.setHours(scheduledHour, 0, 0, 0);
+        return next.toISOString();
+      }
+    }
+    
+    // If we're past all today's scheduled times, next run is 2am tomorrow
+    const next = new Date(now);
+    next.setDate(next.getDate() + 1);
+    next.setHours(2, 0, 0, 0);
+    return next.toISOString();
+  }
+
+  async refreshMaterializedView() {
+    try {
+      console.log("[Cron] Refreshing materialized view feed_stats...");
+      
+      // Call the API endpoint to refresh the materialized view
+      const response = await fetch(`${this.apiUrl}/reader/api/sync/refresh-view`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        console.log("[Cron] Materialized view refreshed successfully");
+      } else {
+        // Log error but don't fail the sync
+        console.error("[Cron] Failed to refresh materialized view:", response.status);
+      }
+    } catch (error) {
+      // Log error but don't fail the sync - view refresh is non-critical
+      console.error("[Cron] Error refreshing materialized view:", error.message);
     }
   }
 }

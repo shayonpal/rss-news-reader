@@ -153,11 +153,11 @@ The application is not accessible via public internet by design for security.
 
 ## Automatic Daily Sync
 
-The RSS reader includes an automatic sync service that runs twice daily to keep your articles fresh:
+The RSS reader includes an automatic sync service that runs 6 times daily to keep your articles fresh:
 
-- **Schedule**: 2:00 AM and 2:00 PM (America/Toronto timezone)
+- **Schedule**: Every 4 hours at 2, 6, 10 AM and 2, 6, 10 PM (America/Toronto timezone)
 - **Implementation**: Node.js cron service running as separate PM2 process
-- **API Efficiency**: Only 4-5 API calls per sync (out of 100 daily limit)
+- **API Efficiency**: 24-30 API calls daily (well within 1000-5000 limit)
 - **Logging**: All sync operations logged to JSONL format for analysis
 - **Error Handling**: Automatic retry with exponential backoff
 
@@ -425,7 +425,7 @@ src/
 
 - **Server-Client Architecture** - Complete separation of concerns
 - **No Client Authentication** - Access controlled by Tailscale network
-- **Automatic Daily Sync** - Cron service runs at 2 AM and 2 PM Toronto time
+- **Automatic 6x Daily Sync** - Cron service runs every 4 hours (2, 6, 10, 14, 18, 22 Toronto time)
 - **Database-Driven Filtering** - Real-time counts with 5-minute cache
 - **PWA Installable** - Works on mobile and desktop devices
 - **Production Ready** - Deployed with PM2 and automatic startup

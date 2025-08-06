@@ -97,18 +97,6 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(validStatuses).toContain(data.connection);
     });
 
-    it("should return 200 for /reader/api/health/freshness", async () => {
-      const response = await fetch(
-        `http://localhost:${port}/reader/api/health/freshness`
-      );
-      expect(response.status).toBe(200);
-
-      const data = await response.json();
-      expect(data).toHaveProperty("timestamp");
-      // Should have freshness metrics
-      expect(data).toHaveProperty("articles");
-    });
-
     it("should return 200 for /reader/api/health/cron", async () => {
       const response = await fetch(`http://localhost:${port}/reader/api/health/cron`);
       expect(response.status).toBe(200);

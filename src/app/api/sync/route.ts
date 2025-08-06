@@ -356,6 +356,7 @@ async function performServerSync(syncId: string) {
             feed_id: feedId,
             inoreader_id: article.id,
             title: article.title || "Untitled",
+            author: article.author || null,
             content: article.content?.content || article.summary?.content || "",
             url:
               article.canonical?.[0]?.href ||

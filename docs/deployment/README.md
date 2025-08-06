@@ -8,7 +8,7 @@ This directory contains all documentation related to deploying, configuring, and
 
 - **Description**: Configuration and setup for automatic feed synchronization using PM2 and cron jobs
 - **Status**: Current ✅
-- **Contents**: Cron schedule (2 AM and 2 PM Toronto time), PM2 ecosystem configuration, sync process details
+- **Contents**: Cron schedule (6x daily: 2, 6, 10, 14, 18, 22 Toronto time), PM2 ecosystem configuration, sync process details
 
 ### caddy-pm2-setup.md
 

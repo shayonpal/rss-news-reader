@@ -60,3 +60,7 @@ docs/revised-priority.md
 # Token files
 ~/.rss-reader/tokens.json
 documentation-analysis-report.json
+
+# Uptime Kuma configuration
+.kuma-push-urls
+kuma-monitor.config.js
