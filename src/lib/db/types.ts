@@ -34,6 +34,7 @@ export interface Database {
           url: string;
           folder_id: string | null;
           unread_count: number;
+          is_partial_feed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -45,6 +46,7 @@ export interface Database {
           url: string;
           folder_id?: string | null;
           unread_count?: number;
+          is_partial_feed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -56,6 +58,7 @@ export interface Database {
           url?: string;
           folder_id?: string | null;
           unread_count?: number;
+          is_partial_feed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -75,6 +78,10 @@ export interface Database {
           published_at: string | null;
           is_read: boolean;
           is_starred: boolean;
+          parsed_at: string | null;
+          parse_failed: boolean;
+          parse_attempts: number;
+          content_length: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -92,6 +99,10 @@ export interface Database {
           published_at?: string | null;
           is_read?: boolean;
           is_starred?: boolean;
+          parsed_at?: string | null;
+          parse_failed?: boolean;
+          parse_attempts?: number;
+          content_length?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -109,6 +120,10 @@ export interface Database {
           published_at?: string | null;
           is_read?: boolean;
           is_starred?: boolean;
+          parsed_at?: string | null;
+          parse_failed?: boolean;
+          parse_attempts?: number;
+          content_length?: number | null;
           created_at?: string;
           updated_at?: string;
         };

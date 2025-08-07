@@ -22,6 +22,10 @@ export interface Article {
   fullContentUrl?: string;
   hasFullContent?: boolean;
   fullContent?: string;
+  parsedAt?: Date;
+  parseFailed?: boolean;
+  parseAttempts?: number;
+  contentLength?: number;
 }
 
 export interface Feed {
@@ -36,6 +40,7 @@ export interface Feed {
   unreadCount: number;
   isActive: boolean;
   isPartialContent?: boolean; // Whether feed typically has partial content
+  isPartialFeed?: boolean; // Flag for feeds with incomplete content requiring on-demand parsing
   lastFetchedAt?: Date;
   inoreaderId?: string; // Inoreader's feed ID
   createdAt: Date;

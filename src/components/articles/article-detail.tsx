@@ -25,6 +25,8 @@ import { SummaryDisplay } from "./summary-display";
 import { FetchContentButton } from "./fetch-content-button";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
+import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
+import { ContentParsingIndicator, ContentLoadingSkeleton } from "./content-parsing-indicator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +70,20 @@ export function ArticleDetail({
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
 
+  // Auto-parse content for partial feeds
+  const {
+    isParsing,
+    parseError,
+    parsedContent,
+    shouldShowRetry,
+    triggerParse,
+    clearError,
+  } = useAutoParseContent({
+    article: currentArticle,
+    feed,
+    enabled: true, // Always enable auto-parsing
+  });
+
   // Update current article when it changes or summary is updated
   useEffect(() => {
     setCurrentArticle(article);
@@ -107,8 +123,8 @@ export function ArticleDetail({
     });
   };
 
-  // Clean and sanitize HTML content - prioritize full content over RSS content
-  const contentToDisplay = currentArticle.fullContent || currentArticle.content;
+  // Clean and sanitize HTML content - prioritize parsed content, then full content, then RSS content
+  const contentToDisplay = parsedContent || currentArticle.fullContent || currentArticle.content;
 
   // Process links BEFORE sanitization to ensure attributes are preserved
   const processedContent = processArticleLinksSSR(contentToDisplay);
@@ -434,24 +450,41 @@ export function ArticleDetail({
           />
         )}
 
-        {/* Article Body */}
-        <div
-          ref={contentRef}
-          className="prose prose-base max-w-none dark:prose-invert sm:prose-lg prose-headings:font-bold prose-a:text-blue-600 prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-code:rounded prose-code:bg-gray-100 prose-code:px-1 prose-pre:overflow-x-auto prose-pre:bg-gray-100 prose-img:h-auto prose-img:max-w-full prose-img:rounded-lg prose-img:shadow-md dark:prose-a:text-blue-400 dark:prose-blockquote:border-gray-700 dark:prose-code:bg-gray-800 dark:prose-pre:bg-gray-800 [&>*]:break-words"
-          style={{ touchAction: "manipulation" }}
-          dangerouslySetInnerHTML={{ __html: cleanContent }}
-        />
-
-        {/* Fetch/Revert Full Content button at bottom */}
-        <div className="mb-8 mt-8 flex justify-center">
-          <FetchContentButton
-            articleId={currentArticle.id}
-            hasFullContent={currentArticle.hasFullContent}
-            variant="button"
-            onSuccess={handleFetchContentSuccess}
-            onRevert={handleRevertContent}
+        {/* Parsing Indicator */}
+        {(isParsing || parseError) && !parsedContent && (
+          <ContentParsingIndicator
+            isParsing={isParsing}
+            error={parseError}
+            onRetry={triggerParse}
+            showRetry={shouldShowRetry}
+            className="mb-6"
           />
-        </div>
+        )}
+
+        {/* Article Body */}
+        {isParsing && !parsedContent ? (
+          <ContentLoadingSkeleton className="mt-6" />
+        ) : (
+          <div
+            ref={contentRef}
+            className="prose prose-base max-w-none dark:prose-invert sm:prose-lg prose-headings:font-bold prose-a:text-blue-600 prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-code:rounded prose-code:bg-gray-100 prose-code:px-1 prose-pre:overflow-x-auto prose-pre:bg-gray-100 prose-img:h-auto prose-img:max-w-full prose-img:rounded-lg prose-img:shadow-md dark:prose-a:text-blue-400 dark:prose-blockquote:border-gray-700 dark:prose-code:bg-gray-800 dark:prose-pre:bg-gray-800 [&>*]:break-words"
+            style={{ touchAction: "manipulation" }}
+            dangerouslySetInnerHTML={{ __html: cleanContent }}
+          />
+        )}
+
+        {/* Fetch/Revert Full Content button at bottom - only show if not auto-parsing */}
+        {!isParsing && (
+          <div className="mb-8 mt-8 flex justify-center">
+            <FetchContentButton
+              articleId={currentArticle.id}
+              hasFullContent={currentArticle.hasFullContent || !!parsedContent}
+              variant="button"
+              onSuccess={handleFetchContentSuccess}
+              onRevert={handleRevertContent}
+            />
+          </div>
+        )}
       </article>
 
       {/* Navigation Footer */}
