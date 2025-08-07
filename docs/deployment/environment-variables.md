@@ -32,8 +32,8 @@ These variables are used at runtime by the server:
 - `SUPABASE_SERVICE_ROLE_KEY` - Server-side database access
 - `SERVER_PORT` - OAuth server port
 - `RSS_READER_TOKENS_PATH` - Token storage location
-- `SYNC_MAX_ARTICLES` - Articles per sync operation
-- `ARTICLES_RETENTION_LIMIT` - Maximum articles to retain
+- `SYNC_MAX_ARTICLES` - Articles per incremental sync operation (default: 500, RR-149)
+- `ARTICLES_RETENTION_LIMIT` - Maximum articles to retain (default: 1000, enforced during sync, RR-149)
 - `SUMMARY_WORD_COUNT` - AI summary length
 - `SUMMARY_FOCUS` - AI summary focus
 - `SUMMARY_STYLE` - AI summary style

@@ -51,7 +51,23 @@ SYNC_LOG_PATH="./logs/sync-cron.jsonl"
 
 # Base URL for API calls (required in production)
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+
+# Incremental sync configuration (RR-149)
+SYNC_MAX_ARTICLES=500
+ARTICLES_RETENTION_LIMIT=1000
 ```
+
+### New Environment Variables (RR-149)
+
+- **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per incremental sync (default: 500)
+  - Used for incremental syncs to balance freshness with efficiency
+  - Weekly full syncs ignore this limit for complete data integrity
+  - Higher values accommodate higher-volume feeds
+
+- **`ARTICLES_RETENTION_LIMIT`**: Maximum articles to retain in database (default: 1000)
+  - Enforced during sync operations to prevent unbounded growth
+  - Older articles are automatically cleaned up when limit is exceeded
+  - Helps maintain database performance
 
 ### PM2 Configuration
 
@@ -66,9 +82,11 @@ The cron service is configured in `ecosystem.config.js`:
   env: {
     NODE_ENV: 'production',
     ENABLE_AUTO_SYNC: 'true',
-    SYNC_CRON_SCHEDULE: '0 2,14 * * *',
+    SYNC_CRON_SCHEDULE: '0 2,6,10,14,18,22 * * *',
     SYNC_LOG_PATH: './logs/sync-cron.jsonl',
-    NEXT_PUBLIC_BASE_URL: 'http://localhost:3000'
+    NEXT_PUBLIC_BASE_URL: 'http://localhost:3000',
+    SYNC_MAX_ARTICLES: '500',
+    ARTICLES_RETENTION_LIMIT: '1000'
   }
 }
 ```

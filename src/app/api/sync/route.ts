@@ -200,6 +200,9 @@ async function performServerSync(syncId: string) {
 
     // Get access token
     const accessToken = await tokenManager.getAccessToken();
+    
+    // RR-149: Track current timestamp for incremental sync
+    const currentTimestamp = Math.floor(Date.now() / 1000);
 
     status.progress = 20;
     status.message = "Fetching subscriptions...";
@@ -326,13 +329,35 @@ async function performServerSync(syncId: string) {
     status.message = "Fetching recent articles...";
     await writeSyncStatus(syncId, status);
 
+    // RR-149: Get last incremental sync timestamp for incremental sync
+    const { data: lastSyncData } = await supabase
+      .from("sync_metadata")
+      .select("value")
+      .eq("key", "last_incremental_sync_timestamp")
+      .single();
+
+    const lastSyncTimestamp = lastSyncData?.value ? parseInt(lastSyncData.value) : null;
+    
+    // Check if we should do a full sync (weekly or no previous timestamp)
+    const shouldDoFullSync = !lastSyncTimestamp || 
+      (currentTimestamp - lastSyncTimestamp) > (7 * 24 * 60 * 60); // 7 days in seconds
+
     // Step 3: Fetch recent articles (single stream call)
     const maxArticles = process.env.SYNC_MAX_ARTICLES
       ? parseInt(process.env.SYNC_MAX_ARTICLES)
       : 100;
-    const streamResponse = await tokenManager.makeAuthenticatedRequest(
-      `https://www.inoreader.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list?n=${maxArticles}`
-    );
+    
+    // RR-149: Build URL with xt parameter to exclude read articles and ot for incremental sync
+    let streamUrl = `https://www.inoreader.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list?n=${maxArticles}&xt=user/-/state/com.google/read`;
+    
+    if (!shouldDoFullSync && lastSyncTimestamp) {
+      streamUrl += `&ot=${lastSyncTimestamp}`;
+      console.log(`[Sync] Performing incremental sync (articles newer than ${new Date(lastSyncTimestamp * 1000).toISOString()})`);
+    } else {
+      console.log(`[Sync] Performing full sync (${shouldDoFullSync ? 'weekly refresh' : 'no previous timestamp'})`);
+    }
+    
+    const streamResponse = await tokenManager.makeAuthenticatedRequest(streamUrl);
 
     if (!streamResponse.ok) {
       throw new Error(`Failed to fetch articles: ${streamResponse.statusText}`);
@@ -564,6 +589,15 @@ async function performServerSync(syncId: string) {
       },
       { onConflict: "key" }
     );
+    
+    // RR-149: Update incremental sync timestamp for next sync
+    await supabase.from("sync_metadata").upsert(
+      {
+        key: "last_incremental_sync_timestamp",
+        value: currentTimestamp.toString(),
+      },
+      { onConflict: "key" }
+    );
 
     // Track API usage (approximately 4-5 calls per sync)
     await trackApiUsage("inoreader", 4);
@@ -595,6 +629,18 @@ async function performServerSync(syncId: string) {
       }
       if (articleCleanupResult.errors.length > 0) {
         console.error("[Sync] Cleanup errors:", articleCleanupResult.errors);
+      }
+      
+      // RR-149: Enforce article retention limit
+      const retentionLimit = process.env.ARTICLES_RETENTION_LIMIT 
+        ? parseInt(process.env.ARTICLES_RETENTION_LIMIT)
+        : 1000;
+      
+      const retentionResult = await cleanupService.enforceRetentionLimit(userId, retentionLimit);
+      if (retentionResult.deletedCount > 0) {
+        console.log(
+          `[Sync] Enforced retention limit: deleted ${retentionResult.deletedCount} articles in ${retentionResult.chunksProcessed} chunks`
+        );
       }
     } catch (error) {
       console.error("[Sync] Error cleaning up read articles:", error);

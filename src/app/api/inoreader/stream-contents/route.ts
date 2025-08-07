@@ -35,11 +35,13 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get("r");
     const continuation = searchParams.get("c");
     const excludeTarget = searchParams.get("xt");
+    const olderThan = searchParams.get("ot");
 
     if (count) inoreaderParams.set("n", count);
     if (sortOrder) inoreaderParams.set("r", sortOrder);
     if (continuation) inoreaderParams.set("c", continuation);
     if (excludeTarget) inoreaderParams.set("xt", excludeTarget);
+    if (olderThan) inoreaderParams.set("ot", olderThan);
 
     // Log the API call
     logInoreaderApiCall(

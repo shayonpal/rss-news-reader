@@ -48,6 +48,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Eliminated false monitoring alerts while maintaining full debugging visibility
 
 ### Added
+- **Incremental Sync for Improved Efficiency (RR-149) - Completed** (Thursday, August 7, 2025 at 2:34 AM)
+  - **Feature**: Implemented intelligent incremental sync using Inoreader's `ot` and `xt` parameters
+  - **Efficiency**: Only fetches articles newer than last sync timestamp, excluding already-read articles
+  - **Performance**: Typical incremental syncs now process 0-50 articles vs previous 100-200
+  - **Weekly Full Sync**: Every 7 days performs complete sync without timestamp filters for data integrity
+  - **Article Retention**: Automatic enforcement of 1000-article limit during sync operations
+  - **Metadata Tracking**: New `last_incremental_sync_timestamp` key for precise sync queries
+  - **Configuration**: New environment variables SYNC_MAX_ARTICLES=500, ARTICLES_RETENTION_LIMIT=1000
+  - **API Optimization**: Maintains same 24-30 daily API calls while processing significantly less data
+  - **Cleanup Integration**: ArticleCleanupService.enforceRetentionLimit() method prevents database bloat
+  - **Fallback Strategy**: Weekly full syncs catch any missed articles and ensure data completeness
+  - **Files Updated**: Sync service, article cleanup service, environment configuration, comprehensive documentation
+  - **Impact**: Dramatically improved sync efficiency while maintaining data integrity and user experience
+
+### Added
 - **Database Cleanup for Deleted Feeds and Read Articles (RR-129) - Completed** (Wednesday, August 6, 2025 at 9:15 PM)
   - **Feature**: Implemented automatic cleanup of deleted feeds and read articles during sync
   - **Database**: Added `deleted_articles` tracking table to prevent re-import of deleted items

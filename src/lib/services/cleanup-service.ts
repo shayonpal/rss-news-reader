@@ -275,6 +275,103 @@ export class ArticleCleanupService {
   }
 
   /**
+   * RR-149: Enforce article retention limit by deleting oldest read articles
+   * Uses existing chunked deletion logic from cleanupReadArticles
+   */
+  async enforceRetentionLimit(userId: string, retentionLimit: number): Promise<{ deletedCount: number; chunksProcessed: number }> {
+    // Get current article count for this user (via feeds relationship)
+    const { count: currentCount } = await this.supabase
+      .from('articles')
+      .select('*, feeds!inner(user_id)', { count: 'exact', head: true })
+      .eq('feeds.user_id', userId);
+
+    if (!currentCount || currentCount <= retentionLimit) {
+      console.log(`[Retention] Article count (${currentCount}) within limit (${retentionLimit})`);
+      return { deletedCount: 0, chunksProcessed: 0 };
+    }
+
+    const articlesToDelete = currentCount - retentionLimit;
+    console.log(`[Retention] Need to delete ${articlesToDelete} articles to meet limit of ${retentionLimit}`);
+
+    const config = await this.getCleanupConfig();
+    const DELETE_CHUNK_SIZE = config.maxIdsPerDeleteOperation || 200;
+    
+    // Get oldest read articles to delete (prioritize read over unread)
+    // Need to join with feeds to filter by user
+    const { data: articles, error: fetchError } = await this.supabase
+      .from('articles')
+      .select('id, inoreader_id, feed_id, feeds!inner(user_id)')
+      .eq('feeds.user_id', userId)
+      .eq('is_read', true)
+      .eq('is_starred', false)
+      .order('published_at', { ascending: true })
+      .limit(articlesToDelete);
+
+    if (fetchError || !articles || articles.length === 0) {
+      // If no read articles or not enough, get oldest unread unstarred articles
+      const { data: unreadArticles, error: unreadError } = await this.supabase
+        .from('articles')
+        .select('id, inoreader_id, feed_id, feeds!inner(user_id)')
+        .eq('feeds.user_id', userId)
+        .eq('is_starred', false)
+        .order('published_at', { ascending: true })
+        .limit(articlesToDelete);
+
+      if (unreadError || !unreadArticles) {
+        console.error('[Retention] Failed to fetch articles for deletion:', unreadError);
+        return { deletedCount: 0, chunksProcessed: 0 };
+      }
+
+      articles.push(...(unreadArticles || []));
+    }
+
+    // Track deletions if enabled
+    if (config.deletionTrackingEnabled && articles.length > 0) {
+      const trackingEntries = articles.map(article => ({
+        inoreader_id: article.inoreader_id,
+        was_read: true,
+        feed_id: article.feed_id,
+        deleted_at: new Date().toISOString()
+      }));
+
+      await this.supabase
+        .from('deleted_articles')
+        .upsert(trackingEntries, { 
+          onConflict: 'inoreader_id',
+          ignoreDuplicates: true 
+        });
+    }
+
+    // Delete articles in chunks using existing pattern
+    let totalDeleted = 0;
+    let chunksProcessed = 0;
+
+    for (let i = 0; i < articles.length; i += DELETE_CHUNK_SIZE) {
+      const chunk = articles.slice(i, i + DELETE_CHUNK_SIZE);
+      chunksProcessed++;
+      
+      console.log(`[Retention] Deleting chunk ${chunksProcessed} (${chunk.length} articles)`);
+      
+      const { error: deleteError } = await this.supabase
+        .from('articles')
+        .delete()
+        .in('id', chunk.map(a => a.id));
+        
+      if (!deleteError) {
+        totalDeleted += chunk.length;
+      }
+      
+      // Add delay between chunks
+      if (i + DELETE_CHUNK_SIZE < articles.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    console.log(`[Retention] Deleted ${totalDeleted} articles in ${chunksProcessed} chunks`);
+    return { deletedCount: totalDeleted, chunksProcessed };
+  }
+
+  /**
    * Execute full cleanup process
    */
   async executeFullCleanup(

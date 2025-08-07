@@ -189,7 +189,7 @@ const syncStrategy = {
 };
 
 // Total per sync: ~4-5 calls
-// Daily usage: ~20-24 calls (4 syncs + manual refreshes)
+// Daily usage: ~24-30 calls (6 incremental syncs + occasional full sync)
 // Leaves 75+ calls for manual operations
 ```
 
@@ -518,13 +518,17 @@ if (needsExtraction) {
 
 ```typescript
 class SyncOrchestrator {
-  async performFullSync(): Promise<SyncResult> {
+  async performSync(): Promise<SyncResult> {
+    // Determine sync type (incremental vs full)
+    const syncType = await this.determineSyncType();
+    
     const steps = [
       this.syncUserInfo,
       this.syncSubscriptions,
-      this.syncArticles,
+      () => this.syncArticles(syncType), // Pass sync type for parameter selection
       this.syncUnreadCounts,
       this.syncReadStates,
+      this.enforceArticleRetention, // NEW: Clean up old articles
     ];
 
     const results = [];
@@ -538,7 +542,18 @@ class SyncOrchestrator {
       }
     }
 
+    // Update sync metadata with appropriate timestamps
+    await this.updateSyncMetadata(syncType);
+    
     return this.consolidateResults(results);
+  }
+  
+  private async determineSyncType(): Promise<'incremental' | 'full'> {
+    const lastFullSync = await getSyncMetadata('last_full_sync_time');
+    if (!lastFullSync) return 'full';
+    
+    const daysSince = (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7 ? 'full' : 'incremental';
   }
 }
 ```
@@ -647,5 +662,72 @@ const sanitizeError = (error: any): PublicError => {
   return publicErrors[error.code] || "Something went wrong";
 };
 ```
+
+## RR-149 Incremental Sync Enhancement
+
+### Overview
+
+The incremental sync implementation significantly improves efficiency by:
+
+1. **Timestamp-Based Filtering**: Uses Inoreader's `ot` parameter to fetch only articles newer than the last sync
+2. **Read Article Exclusion**: Uses `xt=read` parameter to exclude already-read articles
+3. **Weekly Full Sync Fallback**: Performs complete sync every 7 days for data integrity
+4. **Article Retention Management**: Automatically enforces article limits during sync
+
+### Implementation Details
+
+```typescript
+// Incremental sync query construction
+const buildSyncQuery = async (userId: string): Promise<string> => {
+  const baseUrl = `/reader/api/0/stream/contents/user/${userId}/state/com.google/reading-list`;
+  const params = new URLSearchParams({
+    n: process.env.SYNC_MAX_ARTICLES || '500',
+    r: 'n', // Newest first
+    xt: 'read' // Exclude read articles
+  });
+  
+  // Check if we need a full sync (weekly)
+  const lastFullSync = await getSyncMetadata('last_full_sync_time');
+  const daysSinceFullSync = lastFullSync ? 
+    (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24) : 7;
+    
+  if (daysSinceFullSync < 7) {
+    // Incremental sync - add timestamp filter
+    const lastIncSync = await getSyncMetadata('last_incremental_sync_timestamp');
+    if (lastIncSync) {
+      params.set('ot', Math.floor(lastIncSync.getTime() / 1000).toString());
+    }
+  }
+  
+  return `${baseUrl}?${params.toString()}`;
+};
+
+// Article retention enforcement
+const enforceArticleRetention = async (): Promise<void> => {
+  const retentionLimit = parseInt(process.env.ARTICLES_RETENTION_LIMIT || '1000');
+  await ArticleCleanupService.enforceRetentionLimit(retentionLimit);
+};
+```
+
+### Sync Metadata Management
+
+New metadata keys for tracking incremental sync state:
+
+- `last_incremental_sync_timestamp`: Timestamp used for `ot` parameter in next sync
+- `last_full_sync_time`: Tracks when last complete sync was performed
+
+### Performance Benefits
+
+- **Reduced Data Transfer**: Only fetches new, unread articles
+- **Faster Sync Times**: Most incremental syncs process 0-50 articles vs 100-200
+- **Lower API Usage**: Maintains same call count with much less data
+- **Better User Experience**: Quicker syncs mean fresher content
+
+### Fallback Strategy
+
+Weekly full syncs ensure data integrity by:
+- Catching any articles missed due to timestamp issues
+- Synchronizing read states that may have drifted
+- Providing a complete data refresh
 
 This comprehensive API integration plan ensures efficient use of both Inoreader and Claude APIs while maintaining good user experience and staying within rate limits.

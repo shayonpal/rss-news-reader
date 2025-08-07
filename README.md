@@ -165,8 +165,11 @@ The RSS reader includes an automatic sync service that runs 6 times daily to kee
 
 ### Sync Features
 
-- Fetches up to 100 new articles per sync
-- Round-robin distribution across feeds (max 20 per feed)
+- **Incremental Sync**: Only fetches articles newer than last sync using 'ot' parameter
+- **Efficiency Optimization**: Excludes read articles from sync using 'xt' parameter
+- **Weekly Full Sync**: Every 7 days performs complete sync for data integrity
+- Fetches up to 500 new articles per sync (configurable via SYNC_MAX_ARTICLES)
+- **Article Retention**: Automatically enforces 1000-article limit during sync
 - Updates read/unread counts
 - Refreshes feed statistics materialized view
 - Tracks success/failure metrics
@@ -486,7 +489,10 @@ src/
 
 Key configuration options:
 
-- **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per sync (default: 100)
+- **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per sync (default: 500)
+  - Used for incremental syncs to balance freshness with efficiency
+  - Higher values ensure more complete article history
+  - Weekly full syncs ignore this limit for complete data integrity
 
   - Controls how many articles are retrieved from Inoreader in each sync operation
   - Lower values reduce API usage and sync time

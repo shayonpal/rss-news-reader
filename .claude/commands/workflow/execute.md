@@ -154,5 +154,6 @@ Any follow-up tasks needed? (will create new issues)
 - All work must trace to Linear issues (except minor fixes)
 - Implementation plan must be documented before coding
 - Status must be "In Progress" before writing code
+- When implementing the task, ensure existing code, functions, api endpoints and methods are used and extended as much as possible, instead of creating new ones.
 
 Remember: The Linear issue and its comments are the contract. No implementation without proper documentation and tracking!

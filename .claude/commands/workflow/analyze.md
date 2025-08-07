@@ -251,3 +251,4 @@ If yes:
 - Synthesize all analysis from agent data
 - No "waiting for approval" - analysis is complete when presented
 - Implementation requires explicit /execute command
+- When suggesting how to implement, ensure existing code, functions, api endpoints and methods are used and extended as much as possible, instead of creating new ones.
