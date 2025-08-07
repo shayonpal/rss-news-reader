@@ -36,6 +36,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Restarted PM2 services to load new environment variables
   - Impact: Restored AI-powered article summary functionality
 
+- **Monitoring False Positives from Auto-Fetch Operations (RR-151) - Completed** (Thursday, August 7, 2025 at 3:15 AM)
+  - **Problem**: Fixed Fetch Success Rate monitor showing ~1% success rate due to auto-fetch operations being counted as failures
+  - **Root Cause**: Auto-fetch operations from RR-148 fetch HTML content (expected) but were being counted as JSON API failures in health metrics
+  - **Solution**: Modified `/api/health/parsing` endpoint to exclude `fetch_type='auto'` from success rate calculations
+  - **Monitoring Impact**: Uptime Kuma now shows accurate service health instead of false "service down" alerts
+  - **Transparency**: Auto-fetch operations still logged and reported separately for debugging purposes
+  - **Response Format**: Added explanatory note "Success rate excludes auto-fetch operations (content parsing)"
+  - **Result**: Health status changed from "unhealthy" (1% success) to "healthy" (100% success)
+  - **Files Updated**: `/src/app/api/health/parsing/route.ts` with filtered fetch statistics
+  - **Impact**: Eliminated false monitoring alerts while maintaining full debugging visibility
+
 ### Added
 - **Database Cleanup for Deleted Feeds and Read Articles (RR-129) - Completed** (Wednesday, August 6, 2025 at 9:15 PM)
   - **Feature**: Implemented automatic cleanup of deleted feeds and read articles during sync
