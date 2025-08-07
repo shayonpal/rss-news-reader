@@ -16,7 +16,7 @@ KUMA_DB_URL="${KUMA_DB_URL:-}"
 # Source files
 SYNC_LOG="/Users/shayon/DevProjects/rss-news-reader/logs/sync-cron.jsonl"
 API_USAGE_URL="http://localhost:3000/reader/api/health/app"
-FETCH_STATS_URL="http://localhost:3000/reader/api/analytics/fetch-stats"
+FETCH_STATS_URL="http://localhost:3000/reader/api/health/parsing"
 DB_HEALTH_URL="http://localhost:3001/server/health"
 
 # Function to push sync status to Kuma
@@ -59,13 +59,39 @@ push_api_usage() {
         return 0
     fi
     
-    # For now, just report healthy since apiCallsRemaining not in response
-    local msg="API: Health endpoint OK"
+    # Check the health endpoint
+    local response=$(curl -s "$API_USAGE_URL" 2>/dev/null)
+    local http_code=$(curl -s -o /dev/null -w "%{http_code}" "$API_USAGE_URL" 2>/dev/null)
     
-    curl -s -G "$KUMA_API_URL" \
-        --data-urlencode "status=up" \
-        --data-urlencode "msg=${msg}" \
-        --data-urlencode "ping=" > /dev/null 2>&1
+    if [ "$http_code" = "200" ] && [ -n "$response" ]; then
+        # Extract health status and any relevant info
+        local health_status=$(echo "$response" | jq -r '.status // "unknown"')
+        local db_status=$(echo "$response" | jq -r '.dependencies.database // "unknown"')
+        local oauth_status=$(echo "$response" | jq -r '.dependencies.oauth // "unknown"')
+        local uptime=$(echo "$response" | jq -r '.uptime // 0')
+        
+        # Convert uptime to human readable
+        local uptime_min=$((uptime / 60))
+        
+        local msg="API: ${health_status} | DB: ${db_status} | OAuth: ${oauth_status} | Uptime: ${uptime_min}m"
+        local kuma_status="up"
+        
+        # Mark as down if health is not healthy or degraded
+        if [ "$health_status" != "healthy" ] && [ "$health_status" != "degraded" ]; then
+            kuma_status="down"
+        fi
+        
+        curl -s -G "$KUMA_API_URL" \
+            --data-urlencode "status=${kuma_status}" \
+            --data-urlencode "msg=${msg}" \
+            --data-urlencode "ping=" > /dev/null 2>&1
+    else
+        # Endpoint failed
+        curl -s -G "$KUMA_API_URL" \
+            --data-urlencode "status=down" \
+            --data-urlencode "msg=API health endpoint unreachable (HTTP $http_code)" \
+            --data-urlencode "ping=" > /dev/null 2>&1
+    fi
 }
 
 # Function to push fetch success rate to Kuma
@@ -76,15 +102,20 @@ push_fetch_stats() {
     
     local response=$(curl -s "$FETCH_STATS_URL" 2>/dev/null)
     
-    if [ -n "$response" ] && echo "$response" | jq -e '.overall' > /dev/null 2>&1; then
-        local today_rate=$(echo "$response" | jq -r '.overall.today.successRate // 0')
-        local today_total=$(echo "$response" | jq -r '.overall.today.total // 0')
+    if [ -n "$response" ] && echo "$response" | jq -e '.metrics.fetch' > /dev/null 2>&1; then
+        # Extract the success rate (already formatted as percentage string)
+        local success_rate=$(echo "$response" | jq -r '.metrics.fetch.successRate // "0%"')
+        local api_total=$(echo "$response" | jq -r '.metrics.fetch.last24Hours.api.total // 0')
+        local auto_total=$(echo "$response" | jq -r '.metrics.fetch.last24Hours.auto.total // 0')
         
-        local msg="Fetch rate: ${today_rate}% (${today_total} attempts today)"
+        local msg="Fetch rate: ${success_rate} (${api_total} API calls, ${auto_total} auto-fetch excluded)"
         local kuma_status="up"
         
-        # Down if success rate is low
-        if [ "$today_total" -gt 0 ] && [ $(echo "$today_rate < 80" | bc -l 2>/dev/null || echo 0) -eq 1 ]; then
+        # Extract numeric rate for comparison (remove % sign)
+        local numeric_rate=$(echo "$success_rate" | sed 's/%$//')
+        
+        # Down if success rate is low (but only if there were actual API calls)
+        if [ "$api_total" -gt 0 ] && [ $(echo "$numeric_rate < 80" | bc -l 2>/dev/null || echo 0) -eq 1 ]; then
             kuma_status="down"
         fi
         

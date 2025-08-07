@@ -64,3 +64,8 @@ documentation-analysis-report.json
 # Uptime Kuma configuration
 .kuma-push-urls
 kuma-monitor.config.js
+
+# Test and debug logs
+*.log
+rr-*.log
+test-output.log

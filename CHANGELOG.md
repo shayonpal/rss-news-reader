@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Complete documentation coverage for RR-129/RR-150 cleanup functionality
 
 ### Fixed
+- **Monitoring Infrastructure False Status Fixes - Completed** (Thursday, August 7, 2025 at 6:37 PM)
+  - **Problem**: Fixed rss-services-monitor restart loops caused by incorrect health endpoint URLs missing /reader prefix
+  - **Problem**: Fixed Fetch Success Rate monitor showing false "Down" status by updating to use corrected /api/health/parsing endpoint from RR-151  
+  - **Problem**: Fixed API Usage monitor showing low uptime by implementing actual health endpoint checking instead of placeholder
+  - **Files Updated**: ecosystem.config.js, scripts/monitor-services-pm2.sh, scripts/push-to-kuma.sh
+  - **Impact**: All monitoring services now report accurate health status in Uptime Kuma with corrected endpoint URLs
+  - **Result**: Eliminated false monitoring alerts and restart loops, ensuring reliable service monitoring
+
 - **Request-URI Too Large Error in Article Cleanup (RR-150) - Completed** (Wednesday, August 6, 2025 at 10:53 PM)
   - **Problem**: Fixed 414 Request-URI Too Large error occurring when deleting large batches of articles (>1000 articles)
   - **Solution**: Implemented chunked deletion approach processing articles in batches of 200
