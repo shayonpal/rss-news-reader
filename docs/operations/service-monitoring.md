@@ -165,8 +165,47 @@ pm2 startup  # Follow the instructions if not already configured
 }
 ```
 
+## Database Cleanup Monitoring
+
+### Cleanup Operations
+
+The sync process includes automatic database cleanup to prevent unbounded growth:
+
+- **Feed Cleanup**: Removes feeds that no longer exist in Inoreader
+- **Article Cleanup**: Removes read articles with deletion tracking to prevent re-import  
+- **Chunked Deletion**: Large cleanup operations are processed in chunks of 200 articles to avoid URI length limits (RR-150)
+
+### Cleanup Monitoring Metrics
+
+- **Articles Deleted**: Count of read articles removed during cleanup
+- **Feeds Deleted**: Count of obsolete feeds removed
+- **Tracking Records**: Count of deletion tracking records created
+- **Chunk Processing**: Number of chunks processed for large deletions
+- **Processing Time**: Duration of cleanup operations
+
+### Cleanup Configuration
+
+Cleanup behavior is controlled through the `system_config` table:
+
+| Configuration | Default | Description |
+|---------------|---------|-------------|
+| `deletion_tracking_enabled` | `true` | Enable/disable deletion tracking |
+| `cleanup_read_articles_enabled` | `true` | Enable/disable read article cleanup |
+| `feed_deletion_safety_threshold` | `0.5` | Max percentage of feeds to delete |
+| `max_articles_per_cleanup_batch` | `1000` | Max articles per cleanup batch |
+| `max_ids_per_delete_operation` | `200` | Max IDs per delete operation (RR-150) |
+
+### Cleanup Error Monitoring
+
+Monitor these cleanup-specific errors:
+
+- **URI Length Errors**: Should be resolved with chunked deletion (RR-150)
+- **Safety Threshold Violations**: When too many feeds would be deleted
+- **Partial Cleanup Failures**: When some chunks fail but others succeed
+
 ## Related Documentation
 
 - [PM2 Process Management](./pm2-management.md)
 - [Health Endpoints](../api/health-endpoints.md)
 - [Troubleshooting Guide](./troubleshooting.md)
+- [Cleanup Architecture](../tech/cleanup-architecture.md)

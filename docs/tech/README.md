@@ -42,28 +42,33 @@ This directory contains all technical documentation for the RSS News Reader appl
    - **Status**: Current ✅
    - **Contents**: Architecture patterns, implementation details, API endpoints, monitoring
 
+7. **cleanup-architecture.md**
+   - **Description**: Database cleanup system with chunked deletion for handling large datasets
+   - **Status**: Current ✅ (Updated for RR-150)
+   - **Contents**: Feed and article cleanup, deletion tracking, chunked deletion to solve URI length limits
+
 ### Monitoring & Infrastructure
 
-7. **uptime-kuma-setup.md**
+8. **uptime-kuma-setup.md**
 
    - **Description**: Setup guide for Uptime Kuma monitoring service
    - **Status**: Current ✅
    - **Contents**: Docker setup, monitor configuration, alert rules
 
-8. **uptime-kuma-monitoring-strategy.md**
+9. **uptime-kuma-monitoring-strategy.md**
    - **Description**: Comprehensive monitoring strategy using Uptime Kuma
    - **Status**: Current ✅
    - **Contents**: Monitoring objectives, metrics, alerting strategy, dashboards
 
 ### Issues & Maintenance
 
-9. **known-issues.md**
+10. **known-issues.md**
 
-   - **Description**: Documentation of known issues, limitations, and workarounds
-   - **Status**: Living Document 🔄
-   - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
+    - **Description**: Documentation of known issues, limitations, and workarounds
+    - **Status**: Living Document 🔄
+    - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-10. **security.md**
+11. **security.md**
     - **Description**: Security measures, policies, and incident documentation
     - **Status**: Current ✅
     - **Contents**: Network security, authentication, security fixes (RR-69), best practices

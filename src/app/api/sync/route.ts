@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { getAdminClient } from "@/lib/db/supabase-admin";
 import { SyncConflictDetector } from "@/lib/sync/conflict-detector";
+import { ArticleCleanupService } from "@/lib/services/cleanup-service";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -307,6 +308,20 @@ async function performServerSync(syncId: string) {
         .upsert(feedsToUpsert, { onConflict: "inoreader_id" });
     }
 
+    // RR-129: Clean up deleted feeds and their articles
+    const cleanupService = new ArticleCleanupService(supabase);
+    const inoreaderFeedIds = subscriptions.map((sub: any) => sub.id);
+    const feedCleanupResult = await cleanupService.cleanupDeletedFeeds(
+      inoreaderFeedIds,
+      userId
+    );
+    
+    if (feedCleanupResult.feedsDeleted > 0) {
+      console.log(
+        `[Sync] Cleaned up ${feedCleanupResult.feedsDeleted} deleted feeds and ${feedCleanupResult.articlesDeleted} articles`
+      );
+    }
+
     status.progress = 60;
     status.message = "Fetching recent articles...";
     await writeSyncStatus(syncId, status);
@@ -346,11 +361,37 @@ async function performServerSync(syncId: string) {
 
     // Process articles
     if (articles.length > 0 && feedIdMap.size > 0) {
+      // RR-129: Check for previously deleted articles to prevent re-import
+      const articleInoreaderIds = articles.map((a: any) => a.id);
+      const deletedArticles = await cleanupService.wasArticleDeleted(articleInoreaderIds);
+      
       const articlesToUpsert = articles
         .filter((article: any) => {
           // Find which feed this article belongs to
           const feedInorId = article.origin?.streamId;
-          return feedInorId && feedIdMap.has(feedInorId);
+          const hasValidFeed = feedInorId && feedIdMap.has(feedInorId);
+          
+          // RR-129: Skip articles that were previously deleted as read
+          // UNLESS they are now unread in Inoreader (user changed their mind)
+          if (deletedArticles.has(article.id)) {
+            const isNowUnread = !article.categories?.includes("user/-/state/com.google/read");
+            if (isNowUnread) {
+              console.log(`[Sync] Re-importing article ${article.id} - now marked as unread in Inoreader`);
+              // Remove from deletion tracking since user wants it back
+              supabase.from('deleted_articles')
+                .delete()
+                .eq('inoreader_id', article.id)
+                .then(() => {
+                  console.log(`[Sync] Removed ${article.id} from deletion tracking`);
+                });
+              return hasValidFeed;
+            } else {
+              console.log(`[Sync] Skipping previously deleted article ${article.id}`);
+              return false;
+            }
+          }
+          
+          return hasValidFeed;
         })
         .map((article: any) => {
           const feedInorId = article.origin?.streamId;
@@ -539,8 +580,29 @@ async function performServerSync(syncId: string) {
       console.log(conflictDetector.generateReport());
     }
 
-    // Trigger bidirectional sync to push local changes to Inoreader
+    // RR-129: Clean up read articles with tracking
     status.progress = 98;
+    status.message = "Cleaning up read articles...";
+    await writeSyncStatus(syncId, status);
+    console.log("[Sync] Cleaning up read articles with tracking...");
+    
+    try {
+      const articleCleanupResult = await cleanupService.cleanupReadArticles(userId);
+      if (articleCleanupResult.readArticlesDeleted > 0) {
+        console.log(
+          `[Sync] Deleted ${articleCleanupResult.readArticlesDeleted} read articles, tracked ${articleCleanupResult.trackingEntriesCreated} deletions`
+        );
+      }
+      if (articleCleanupResult.errors.length > 0) {
+        console.error("[Sync] Cleanup errors:", articleCleanupResult.errors);
+      }
+    } catch (error) {
+      console.error("[Sync] Error cleaning up read articles:", error);
+      // Don't fail the sync if cleanup fails
+    }
+
+    // Trigger bidirectional sync to push local changes to Inoreader
+    status.progress = 99;
     status.message = "Syncing local changes to Inoreader...";
     await writeSyncStatus(syncId, status);
     console.log("[Sync] Triggering bidirectional sync...");

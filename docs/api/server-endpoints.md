@@ -17,7 +17,7 @@ All server API endpoints are designed to handle complex operations that should n
 
 **Endpoint:** `POST /api/sync`
 
-**Description:** Triggers a server-side sync with Inoreader API
+**Description:** Triggers a server-side sync with Inoreader API, including automated database cleanup
 
 **Request:**
 
@@ -37,6 +37,11 @@ Content-Type: application/json
     "remaining": 96,
     "limit": 100,
     "used": 4
+  },
+  "cleanup": {
+    "articlesDeleted": 150,
+    "feedsDeleted": 2,
+    "trackingRecordsCreated": 150
   }
 }
 ```

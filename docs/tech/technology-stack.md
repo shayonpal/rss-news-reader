@@ -177,6 +177,7 @@ For theme preference only.
 - inoreaderService: All Inoreader API calls
 - anthropicService: Claude AI summarization
 - readabilityService: Article content extraction
+- cleanupService: Database cleanup and maintenance (RR-129/RR-150)
 ```
 
 ## Development & Build Tools
@@ -511,6 +512,35 @@ class SyncService {
 
     // 4. Write to Supabase
     await this.supabase.upsertAll(feeds, tags, articles, counts);
+    
+    // 5. Execute cleanup operations (RR-129)
+    const cleanupService = new ArticleCleanupService(supabase);
+    await cleanupService.executeFullCleanup(feedIds, userId);
+  }
+}
+
+// Database cleanup service (RR-129/RR-150)
+class ArticleCleanupService {
+  async executeFullCleanup(feedIds: string[], userId: string) {
+    // Remove feeds no longer in Inoreader
+    await this.cleanupDeletedFeeds(feedIds, userId);
+    
+    // Remove read articles with chunked deletion (RR-150)
+    await this.cleanupReadArticles(userId);
+  }
+  
+  // Chunked deletion to handle large datasets (RR-150)
+  async processArticleDeletion(articlesToDelete: Article[]) {
+    const chunkSize = config.maxIdsPerDeleteOperation || 200;
+    
+    for (let i = 0; i < articlesToDelete.length; i += chunkSize) {
+      const chunk = articlesToDelete.slice(i, i + chunkSize);
+      await this.supabase.from('articles').delete()
+        .in('id', chunk.map(a => a.id));
+      
+      // Rate limiting between chunks
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 }
 ```

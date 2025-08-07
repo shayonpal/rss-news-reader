@@ -7,12 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **Updated Documentation for RR-129 Database Cleanup Implementation** (Wednesday, August 6, 2025 at 11:07 PM)  
+  - **API Docs**: Updated `/api/sync` endpoint documentation to include cleanup response fields
+  - **Monitoring Docs**: Added comprehensive database cleanup monitoring section to service-monitoring.md
+  - **Known Issues**: Added resolved status for RR-150 URI length limits issue with detailed solution
+  - **Architecture Docs**: Enhanced cleanup-architecture.md with RR-150 chunked deletion details (already current)
+  - **Tech Stack**: Updated technology-stack.md to include cleanup service in server integrations
+  - **Coverage**: All documentation now reflects current state of database cleanup implementation
+  - **Impact**: Complete documentation coverage for RR-129/RR-150 cleanup functionality
+
 ### Fixed
+- **Request-URI Too Large Error in Article Cleanup (RR-150) - Completed** (Wednesday, August 6, 2025 at 10:53 PM)
+  - **Problem**: Fixed 414 Request-URI Too Large error occurring when deleting large batches of articles (>1000 articles)
+  - **Solution**: Implemented chunked deletion approach processing articles in batches of 200
+  - **Configuration**: Added `max_ids_per_delete_operation` system config with default value of 200
+  - **Performance**: Added 100ms delay between chunks to prevent database overload
+  - **Monitoring**: Enhanced logging to track chunk processing progress (e.g., "Deleting chunk 1/5")
+  - **Reliability**: Individual chunk failures no longer block entire cleanup operation
+  - **Database Impact**: Reduced URI length from potentially 20,000+ characters to manageable 4,000 character chunks
+  - **Files Updated**: `cleanup-service.ts` with chunked deletion logic, system configuration defaults
+  - **Documentation**: Added comprehensive cleanup architecture documentation
+  - **Impact**: Eliminated cleanup failures, enabling successful processing of large article deletion batches
+
 - **AI Summary Generation Authentication Issue** (Wednesday, August 6, 2025 at 7:02 PM)
   - Fixed invalid Anthropic API key that was preventing article summarization
   - Updated `.env` file with valid API credentials
   - Restarted PM2 services to load new environment variables
   - Impact: Restored AI-powered article summary functionality
+
+### Added
+- **Database Cleanup for Deleted Feeds and Read Articles (RR-129) - Completed** (Wednesday, August 6, 2025 at 9:15 PM)
+  - **Feature**: Implemented automatic cleanup of deleted feeds and read articles during sync
+  - **Database**: Added `deleted_articles` tracking table to prevent re-import of deleted items
+  - **Feed Cleanup**: Successfully removes feeds deleted from Inoreader (3 feeds cleaned in testing)
+  - **Article Tracking**: Tracks deleted articles with 90-day retention policy
+  - **Sync Prevention**: Prevents re-import of previously deleted read articles
+  - **State Reconciliation**: Re-imports articles if marked unread in Inoreader after deletion
+  - **Safety Mechanisms**: 50% deletion threshold, starred article protection
+  - **Configuration**: System config controls for enabling/disabling cleanup
+  - **Files Added**: Migration SQL, ArticleCleanupService, integration in sync route
+  - **Production Success**: Successfully cleaned up 1000+ articles in production with chunked deletion approach
+  - **Impact**: Reduces database bloat from orphaned feeds and successfully handles large article cleanup batches
 
 ### Added
 - **On-Demand Content Parsing for Partial Feeds (RR-148) - Completed** (Thursday, January 8, 2025)
