@@ -62,56 +62,16 @@ Use `linear-expert` to add comment:
 
 ## 2. Test-First Development
 
-### Step 1: Rebuild Context and Write Tests FIRST
-
-#### 1A. Gather Complete Context (Since context was cleared)
-Use agents IN PARALLEL to rebuild understanding:
-
-1. **Linear Context** (linear-expert):
-   - Get full issue with all comments
-   - Extract Test Contracts from comments
-   - Find Implementation Strategy
-
-2. **Database Context** (db-expert-readonly):
-   - Get schema for relevant tables
-   - Understand constraints and relationships
-   - Check existing data patterns
-
-3. **Code Context** (doc-search):
-   - Find similar test files (*.test.ts)
-   - Identify test utilities and helpers
-   - Find similar API implementations
-   - Check existing error handling patterns
-
-4. **Memory Context** (memory MCP):
-   - Search for project-specific patterns
-   - Retrieve any stored testing approaches
-
-#### 1B. Invoke test-expert with FULL Context
-Provide test-expert with complete context package:
-```
-Linear Issue: [full details]
-Test Contracts: [from Linear comments]
-Implementation Strategy: [from Linear]
-
-Database Schema:
-[Complete relevant table structures]
-
-Existing Test Examples:
-[Similar tests from codebase]
-
-Test Utilities Available:
-[Helper functions, setup patterns]
-
-CRITICAL: These tests are the SPECIFICATION. They define what the implementation must do. Tests should NEVER be modified to match implementation - implementation must be modified to pass tests.
-```
-
-#### 1C. Validate Tests Are Specifications
-Ensure test-expert has written tests that:
-1. Match the Test Contracts exactly
-2. Use existing test patterns from codebase
-3. Test behavior, not implementation details
-4. Include all acceptance criteria from Linear
+### Step 1: Write Tests FIRST
+Use `test-expert` to:
+1. Generate tests based on Linear specification
+2. Ensure tests validate against documented requirements
+3. Include:
+   - Happy path scenarios from Linear spec
+   - Edge cases identified during analysis
+   - Error handling scenarios
+   - Integration points mentioned in Linear
+4. Save tests in appropriate test directory
 5. Run tests to confirm they fail (red phase)
 
 ### Step 2: Implementation

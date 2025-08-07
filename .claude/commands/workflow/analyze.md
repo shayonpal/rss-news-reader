@@ -1,254 +1,301 @@
 ---
-description: Analyze a Linear issue or explore an idea in context of the app
-argument-hint: <issue-id or idea-description>
+description: Analyze a Linear issue in comprehensive context of the app
+argument-hint: <issue-id>
 ---
 
-# Analyze Linear Issue or Explore Ideas
+# Analyze Linear Issue with Full Context
 
-Analyze the Linear issue or idea provided in $ARGUMENTS and prepare an implementation plan or feasibility assessment.
+Analyze the Linear issue provided in $ARGUMENTS with comprehensive project understanding.
 
 This is a `read-only` mode discussion session. No files will be written during analysis.
 
 ## 1. Parse Input
 
 Check $ARGUMENTS:
-- If starts with "RR-" or just a number → Linear issue analysis (continue to step 2A)
-- If Linear URL, then it could be a Project. List oll projects, surmise the project ID and read the project description and issues within it
-- If any other text → Idea exploration (go to step 2B)
-- If empty → Error: "Please provide a Linear issue ID (e.g., RR-123) or describe an idea to explore"
+- If starts with "RR-" or just a number → Linear issue analysis (continue)
+- If Linear URL → Extract project/issue ID and continue
+- If empty or other text → Error: "Please provide a Linear issue ID (e.g., RR-123). Use /capture-idea for new ideas."
 
-## 2A. Linear Issue Analysis
+## 2. Parallel Context Gathering
 
-If Linear issue ID provided:
+**Execute ALL of these IN PARALLEL using agents:**
 
-1. **Fetch Issue Details**:
-   - Use `linear-expert` to get full issue with ALL comments and sub-issues (if they exist)
-   - Extract description, labels, priority, dependencies
-   - Remember: Issue + comments = living specification
+### 2A. Linear Issue Context
+Use `linear-expert` to:
+- Get full issue with ALL comments and sub-issues
+- Check parent/child issues and dependencies
+- Extract description, labels, priority
+- Remember: Issue + comments = living specification
 
-2. **Check Related Context**:
-   - Parent/child issues
-   - Blocking/blocked by relationships
-   - Related completed issues for patterns
+### 2B. Project Memory Context
+Use memory MCP in two steps:
+1. **Search for relevant nodes** using `mcp__memory__search_nodes`:
+   - Search with query "RSS Reader" OR "RSS News Reader" for project context
+   - Also search with keywords from the issue title/description
+   - Look for technical terms mentioned in the issue
+2. **Open found nodes** using `mcp__memory__open_nodes` to retrieve:
+   - Project-specific technical decisions and patterns
+   - Stored knowledge about similar features
+   - Historical context about architectural choices
+   - Any observations related to the current issue topic
 
-3. **Update Status**:
-   - Use `linear-expert` to move to "In Progress" if needed
-   - Add analysis start comment with timestamp
+### 2C. Recent Work Context
+Use `doc-search` and `git-expert` to:
+- Check CHANGELOG.md for recently shipped features
+- Review last 20 git commits to understand recent changes
+- Identify patterns from completed work
 
-Then continue to step 3.
+### 2D. Database Context
+Use `db-expert-readonly` to:
+- Get complete database schema and table structures
+- Understand existing columns, indexes, and relationships
+- Check RLS policies and security advisories
+- Identify what data structures already exist
 
-## 2B. Idea Exploration
+### 2E. Existing Code Context
+Use `doc-search` to find:
+- **API Endpoints**: Search for "app.get", "app.post", "router.get", "router.post", "export async function GET", "export async function POST" patterns
+- **Similar Features**: Search for related functionality already implemented
+- **Test Patterns**: Identify existing test approaches
+- Review docs/api/server-endpoints.md for documented endpoints
 
-If idea description provided:
+## 3. Update Linear Status
 
-1. **Capture the Idea**:
-   - Parse the description for key concepts
-   - Identify what problem it might solve
-   - Consider how it fits with existing features
+Use `linear-expert` to:
+- Move issue to "In Progress" 
 
-2. **Stay Read-Only**:
-   - DO NOT create Linear issue yet
-   - DO NOT modify any code
-   - Focus on feasibility analysis
+## 4. Deep Technical Analysis
 
-Then continue to step 3.
+Based on gathered context, ultrathink and analyze:
 
-## 3. Technical Analysis
+### Implementation Requirements:
+- Can this use existing API endpoints? (prefer extending over creating new)
+- Can this use existing database tables/columns? (prefer extending over new)
+- What similar patterns exist in the codebase?
+- Which files will need modification?
 
-Use read-only agents to gather comprehensive context:
+### Technical Validation:
+- Use `web-researcher` agent to research if proposed solution will work
+- Verify technical feasibility with external documentation
+- Check for potential gotchas or limitations
 
-### Core Context Gathering:
-- Use `doc-search` for project documentation
-- Use `db-expert-readonly` for database schema analysis
-- Use `devops-expert-readonly` for infrastructure context
+### Impact Analysis:
+- Which existing tests need updating?
+- Which documentation needs updating?
+- Performance implications?
+- Security considerations?
 
-### Pattern Analysis:
-- Similar features already implemented
-- Established coding patterns
-- Performance considerations
-- Security requirements
+## 5. Pragmatic Assessment
 
-## 3.5 Pragmatic Analysis Approach
+**Challenge Everything:**
+- Does this actually solve the stated problem?
+- Is the effort worth the value? (e.g., "3 days for 2% improvement?")
+- Are there simpler alternatives?
+- Is this even a valid issue that needs solving?
+- What could go wrong with this approach?
 
-**Important**: During analysis, provide honest technical assessment:
+**Be Direct:**
+- "This won't work because..." with clear reasoning
+- "Consider X instead because..."
+- "This might cause Y issue..."
 
-- **Challenge assumptions**: Question if the idea truly solves the stated problem
-- **Consider alternatives**: "Have you considered X instead?"
-- **Identify risks**: "This might cause Y issue because..."
-- **Be direct**: "This won't work because..." with clear reasoning
-- **Suggest improvements**: "What if we modified it to..."
-- **Consider effort vs value**: "Is this worth 3 days for 2% improvement?"
-- Also analyze, in the process, if the issues is even a valid issue.
-- Which existing test and/or documentation will need updating because of this issue?
-- Before suggesting your implementation strategy to the user, make sure you have also done a thorough internet research using the `web-researcher` agent to investigate if the solution that you think will work is actually going to work.
+## 6. Implementation Strategy
 
-This is a collaborative discussion to find the best solution.
+Create detailed strategy based on issue type:
 
-## 4. Implementation Planning
+### For All Types:
+1. List specific files to modify (with line references if applicable)
+2. Identify which existing endpoints/functions to extend
+3. Database changes needed (if any)
+4. Test scenarios to implement
+5. Documentation updates required
 
-Based on issue type:
-
-### For Bugs:
-1. Identify affected components
-2. Locate likely source files
-3. Suggest debugging approach
-4. List test scenarios
-
-### For Features:
-1. Break down into sub-tasks
-2. Identify dependencies
-3. Suggest implementation order
-4. Define acceptance criteria
-
-### For Enhancements:
-1. Find current implementation
-2. Assess impact radius
-3. Suggest incremental approach
-4. Consider backward compatibility
-
-## 5. Dependency Analysis
-
-Use read-only agents to check:
-- **Database changes?** → `db-expert-readonly` for schema impact
-- **Sync logic changes?** → `devops-expert-readonly` for sync analysis
-- **Infrastructure changes?** → `devops-expert-readonly` for deployment impact
-
-## 6. Test Planning
-
-Draft:
-- Test scenarios based on requirements
-- Edge cases to consider
-- Test data needs
-- Integration test approach
-
-## 7. Implementation Strategy Presentation
-
-Present findings in PM-friendly language:
-
+### Present Strategy:
 ```
 📋 Analysis for RR-XXX: [Title]
 
 📝 Summary:
-[2-3 sentences explaining the task]
+[2-3 sentences in PM-friendly language]
+
+🔄 Reusing Existing Code:
+- API: [Existing endpoint to extend or "New endpoint required"]
+- Database: [Existing tables/columns or "New migration needed"]
+- Patterns: [Similar features to follow]
 
 🎯 Implementation Strategy:
-1. [Step 1 - what and why]
-2. [Step 2 - what and why]
-3. [Step 3 - what and why]
+1. [Specific file/component - what and why]
+2. [Next step with file reference]
+3. [Continue with concrete steps]
 
 ⚠️ Considerations:
 - [Technical constraint or risk]
-- [Dependency or coordination need]
+- [Dependencies or blockers]
 
-⏱️ Estimate: [X hours/days]
+📝 Tests Required:
+- [Specific test scenarios]
 
-❓ Questions:
-- [Any clarification needed]
+📚 Documentation Updates:
+- [Files needing updates]
+
+❓ Clarifications Needed:
+- [Any ambiguities]
 ```
 
-## 8. Interactive Strategy Refinement
+## 7. Interactive Refinement
 
-After presenting the implementation strategy, ask:
-
+Ask:
 ```
 Do you:
 1. ✅ Agree with this implementation strategy?
-2. 🔄 Want to continue evolving it?
-3. 🔍 Want a domain expert to review it?
+2. 🔄 Want to refine it further?
+3. 🔍 Want a domain expert review?
 
 Please respond with 1, 2, or 3.
 ```
 
-### If I choose 2 (Continue evolving):
-- Ask for specific concerns or areas to refine
-- Iterate on the strategy based on feedback
-- Present revised strategy
-- Return to the options (1, 2, or 3) until I agree
+### If 2 (Refine):
+- Ask for specific concerns
+- Iterate on strategy
+- Return to options
 
-### If I choose 3 (Domain expert review):
-- Ask: "Which domain expert should review this? (e.g., db-expert, devops-expert, ui-expert)"
-- Based on the response, use the appropriate expert agent to review the implementation strategy
-- The expert should provide:
-  - Technical validation of the approach
-  - Potential issues or concerns
-  - Optimization suggestions
-  - Best practices relevant to their domain
-- Present the expert's feedback
-- Return to the options (1, 2, or 3) with the expert insights incorporated
+### If 3 (Expert Review):
+- Ask which expert (db-expert, devops-expert, ui-expert, test-expert)
+- Get expert validation and recommendations
+- Incorporate feedback and return to options
 
-### If I choose 1 (Agree):
-Proceed to step 9 for finalization.
+### If 1 (Agree):
+Continue to step 8
 
-## 9. Finalize Implementation Strategy
+### If no option chosen:
+- The user is providing more context and has more doubts
+- This is same as choosing 2. They want to continue evolving the strategy.
+- Iterate and return to options again
+- Continue until the user has provided an option
 
-Once I agree with the implementation strategy:
+## 8. Mandatory Documentation
 
-### 9A. Update Linear Issue with Implementation Strategy
+**These steps are REQUIRED - do not skip:**
 
-Use `linear-expert` to:
-1. Add the agreed implementation strategy as a comment on the issue
-2. Format the comment clearly with:
-   - "**Implementation Strategy (Approved)**"
-   - The full strategy details
-   - Timestamp of approval
+### 8A. Generate Concrete Test Contracts
+Based on the approved strategy, create explicit contracts:
 
-### 9B. Generate Test Cases
+```
+📝 Test Contracts for RR-XXX:
 
-Use `test-expert` agent with:
-1. The full Linear issue details (title, description, comments)
-2. The agreed implementation strategy
-3. Request comprehensive test cases including:
-   - Unit tests
-   - Integration tests
-   - Edge cases
-   - Acceptance criteria verification
+API Contracts:
+- Endpoint: [exact path]
+- Method: [GET/POST/PUT/DELETE]
+- Request Body: [exact JSON structure]
+- Success Response: [exact JSON with status code]
+- Error Responses: 
+  - 400: [exact error format]
+  - 404: [exact error format]
+  - 500: [exact error format]
 
-### 9C. Update Linear Issue with Test Cases
+Database Contracts:
+- Table: [table name]
+- Operation: [INSERT/UPDATE/DELETE]
+- Fields Changed: [field: old_value → new_value]
+- Constraints: [any constraints that must be checked]
 
-Use `linear-expert` to:
-1. Add test cases as a separate comment on the issue
-2. Format the comment with:
-   - "**Test Cases**"
-   - Structured list of all test scenarios
-   - Clear pass/fail criteria
+State Transitions:
+- Before: [exact database state]
+- Action: [what triggers the change]
+- After: [exact expected state]
+```
 
-## 10. Final Summary Report
+### 8B. Update Linear with Strategy and Contracts
+Use `linear-expert` to add comment:
+```
+**Implementation Strategy (Approved)**
+[Full strategy details]
 
-Present a summary of what was accomplished:
+**Test Contracts**
+[All contracts from 8A]
+
+Timestamp: [current time]
+```
+
+### 8C. Gather Complete Context for test-expert
+Before invoking test-expert, gather ALL necessary context:
+
+1. **Database Schema** (from db-expert-readonly):
+   - Relevant table structures
+   - Column types and constraints
+   - Existing indexes
+
+2. **Existing Test Patterns** (from doc-search):
+   - Search for similar *.test.ts files
+   - Identify test utilities and helpers
+   - Find test setup patterns
+
+3. **Existing Code Patterns** (from doc-search):
+   - Similar API endpoints
+   - Similar database operations
+   - Error handling patterns
+
+### 8D. Generate Test Cases with Full Context
+Use `test-expert` providing COMPLETE context package:
+```
+Linear Issue: [full details including all comments]
+Implementation Strategy: [from 8A]
+Test Contracts: [from 8A]
+
+Database Context:
+[Complete schema for relevant tables]
+
+Existing Test Patterns:
+[Examples of similar tests from codebase]
+
+Existing Code Patterns:
+[Similar implementations found]
+
+IMPORTANT: These tests are the SPECIFICATION. Write them to define exact behavior that implementation must conform to. Tests should NOT be modified later to match implementation.
+```
+
+### 8E. Update Linear with Test Cases
+Use `linear-expert` to add comment:
+```
+**Test Cases (Specification)**
+[All test scenarios with exact input/output]
+
+Note: These tests define the specification. Implementation must conform to these tests.
+```
+
+## 9. Final Summary
 
 ```
 ✅ Analysis Complete for RR-XXX
 
-📝 Actions Taken:
-1. ✅ Implementation strategy agreed and documented
-2. ✅ Test cases generated by test-expert
-3. ✅ Linear issue updated with both strategy and test cases
+📝 Actions Completed:
+1. ✅ Comprehensive context gathered (memory, recent work, DB, existing code)
+2. ✅ Implementation strategy documented in Linear
+3. ✅ Test cases generated and documented
+4. ✅ Issue status updated to "In Progress"
+
+🔍 Key Findings:
+- Existing code to reuse: [list]
+- New code required: [list]
+- API Endpoints:
+   - Existing to reuse/extend: [list]
+   - New to create: [list]
+- Database changes: [if any]
+- Related context from memory: [if any]
 
 📋 Next Steps:
 - Use /execute RR-XXX to begin implementation
-- All test cases are documented in the issue
-- Implementation strategy is approved and ready
+- All requirements documented in Linear issue
 
-🔗 Linear Issue: [Link to issue]
+🔗 Linear Issue: [Link]
 ```
 
-## 11. Idea Evaluation (for non-issue analysis)
-
-If this was idea exploration (not a Linear issue):
-
-"This idea looks [promising/challenging/interesting]. Would you like me to create a Linear issue for it?"
-
-If yes:
-- Use `linear-expert` to create issue
-- Use the analysis findings for description
-- Apply appropriate labels
-- Return new issue ID
-
-## Important Notes
+## Important Rules
 
 - 🚫 NO file operations during analysis
-- Use read-only agent variants (db-expert-readonly, devops-expert-readonly, doc-search)
-- Synthesize all analysis from agent data
-- No "waiting for approval" - analysis is complete when presented
-- Implementation requires explicit /execute command
-- When suggesting how to implement, ensure existing code, functions, api endpoints and methods are used and extended as much as possible, instead of creating new ones.
+- ✅ ALWAYS update Linear with strategy and tests
+- ✅ ALWAYS check CHANGELOG.md and recent commits
+- ✅ ALWAYS check database schema
+- ✅ ALWAYS search for existing code patterns
+- Prefer extending existing code over creating new
+- Use read-only agents for all analysis
+- Be pragmatic and challenge assumptions

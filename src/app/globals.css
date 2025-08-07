@@ -99,6 +99,18 @@ button:not(:disabled) {
   border-radius: 0 2px 2px 0;
 }
 
+/* Hide scrollbars while maintaining scroll functionality */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
 /* Dark mode variant */
 .dark .session-preserved-read::before {
   background-color: rgb(96 165 250 / 0.5); /* blue-400 with opacity */

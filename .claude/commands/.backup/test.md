@@ -13,7 +13,7 @@ Test the implementation for Linear issue $ARGUMENTS against its documented requi
 
 If you must run a test command that might hang the activity, ask me to run it on your behalf instead. Just give me the entire command to run, along with a way to pipe the output to a file so that you can read it easily. `tee` command will be preferred wherever possible.
 
-## Step 0: Linear Validation & Context Recovery
+## Step 0: Linear Validation
 
 ### Verify Issue Status
 Use `linear-expert` agent to:
@@ -26,60 +26,22 @@ Use `linear-expert` agent to:
 4. Extract:
    - Original requirements
    - Implementation plan from comments
-   - **Test Contracts** from comments (API/DB specifications)
    - Test cases from comments
    - Any spec clarifications in comments
-
-### Rebuild Context (Since Cleared)
-Gather context to understand what was implemented:
-
-1. **Database Context** (db-expert-readonly):
-   - Current schema for affected tables
-   - Check if expected changes were made
-   - Verify constraints and indexes
-
-2. **Code Changes** (doc-search):
-   - Search for files mentioned in Linear comments
-   - Find new/modified API endpoints
-   - Check test files that were added/modified
-
-3. **Memory Context** (memory MCP):
-   - Search for relevant project patterns
-   - Retrieve any stored context about this feature
-
-4. **Recent Work** (git-expert):
-   - Check recent commits for this issue (RR-XXX)
-   - Identify all files changed
 
 ### Pre-Test Verification
 Check for:
 1. **Implementation comment**: Look for implementation summary
-2. **Test Contracts**: Verify contracts are documented (from /analyze)
-3. **Test documentation**: Verify test cases are documented
-4. **Files changed**: Note which files were modified
+2. **Test documentation**: Verify test cases are documented
+3. **Files changed**: Note which files were modified
 
 If missing critical information:
 - 🛑 STOP and explain what's needed
 - Suggest running `/execute` if implementation incomplete
 
-## 1. Environment Preparation & Test Planning
+## 1. Environment Preparation
 
-### Create Test Checklist
-Use TodoWrite to track testing progress:
-```
-- [ ] Environment verification
-- [ ] Unit tests execution
-- [ ] Test Contract validation
-- [ ] Integration tests
-- [ ] Acceptance criteria verification (from Linear)
-- [ ] Edge case testing
-- [ ] Performance validation
-- [ ] Security review
-- [ ] Bug documentation
-- [ ] Final report generation
-```
-
-### Verify Testing Environment
+Verify testing environment:
 ```bash
 pm2 status | grep -E "rss-reader|sync"
 curl -s http://localhost:3000/api/health/app | jq .status
@@ -111,80 +73,29 @@ npm test
 **Resource Limits Enforced:**
 - Max 1 concurrent test execution
 - Max 2 vitest worker processes  
-- 120-second timeout per test
+- 30-second timeout per test
 - Automatic cleanup on exit
 
 Document: total tests, pass/fail counts, coverage % (if run), failing test details.
 
 **Note**: Integration tests should use `vitest.integration.config.ts` and fetch is no longer mocked in integration tests.
 
-### B. Test Contract Validation
-**Validate implementation matches the Test Contracts from /analyze:**
-
-Compare actual implementation against documented contracts:
-```
-📝 Test Contract Validation:
-
-API Contract Check:
-- Expected: [from Linear comments]
-- Actual: [test the actual endpoint]
-- Result: ✅ MATCH or ❌ MISMATCH [details]
-
-Database Contract Check:
-- Expected changes: [from Linear]
-- Actual changes: [query database]
-- Result: ✅ MATCH or ❌ MISMATCH [details]
-
-State Transitions:
-- Expected: [from Linear]
-- Actual: [test the transitions]
-- Result: ✅ MATCH or ❌ MISMATCH [details]
-```
-
-If contracts don't match:
-- Document the deviation
-- Determine if it's a test issue or implementation issue
-- Note: Implementation should match contracts, not vice versa
-
-### C. Integration Testing
+### B. Integration Testing
 Test based on feature type:
 - **Sync**: Manual sync via API, check sync_metadata, verify bi-directional sync, monitor API usage
 - **Database**: Schema changes, migrations, query performance, RLS policies, transactions
 - **UI**: Development environment, responsive design, iOS PWA, offline functionality, accessibility
 
-### D. Acceptance Criteria Testing
+### C. Acceptance Criteria Testing
 Test each criterion from Linear issue. Document as:
 ```
 ✅ Criterion: [Description] - PASS - [Evidence]
 ❌ Criterion: [Description] - FAIL - [Issue + Log/Screenshot]
 ```
 
-### E. Edge Case & Regression Testing
+### D. Edge Case & Regression Testing
 Test edge cases: boundary conditions, error scenarios, concurrent operations, network failures, memory constraints.
 Verify core functionality: article reading, sync pipeline, OAuth, performance, critical user paths.
-
-## 2.5. Optional: `test-expert` Quality Review
-
-**When you want a second opinion on implementation quality:**
-
-Use `test-expert` agent for implementation review (not test execution):
-```
-Task: Review the implementation for RR-XXX
-Context:
-- Linear requirements: [provide full details]
-- Test Contracts: [from Linear comments]
-- Implementation files: [list changed files]
-- Test results so far: [your findings]
-
-Review for:
-- Code quality and patterns
-- Security vulnerabilities
-- Performance implications
-- Test coverage adequacy
-- Adherence to specifications
-```
-
-This gives you expert assessment without losing visibility of test execution.
 
 ## 3. Performance Validation
 
@@ -216,39 +127,13 @@ Severity: Critical (data loss, security, crashes) → High (major features) → 
 ```
 📋 Test Report for RR-XXX: [Title]
 
-📊 Test Summary:
-- Unit Tests: X/Y passed (Z% coverage)
-- Test Contracts: ✅ Match | ⚠️ Deviations [list]
-- Integration: Tested [components]
-- Acceptance Criteria: X/Y met
-- Edge Cases: X/Y handled
-- Regression: ✅ Pass | ❌ Issues found
-
-✅ Working:
-- [List verified features]
-- [Contract validations that passed]
-
-❌ Issues Found:
-- [List bugs with severity]
-- [Contract mismatches if any]
-
-🔧 Performance:
-- [Metrics vs baseline]
-- Memory usage: [amount]
-- Query performance: [timing]
-
+📊 Summary: Unit Tests (X/Y, Z%), Integration (tested), Acceptance Criteria (X/Y), Edge Cases (X/Y), Regression (status)
+✅ Working: [List verified features]
+❌ Issues: [List bugs with severity]
+🔧 Performance: [Metrics vs baseline, memory usage, query performance]
 🔒 Security: [Status]
-
-📱 Test Coverage:
-- Desktop browsers: [tested versions]
-- iOS PWA: [version tested]
-- Responsive: [breakpoints verified]
-
-🚀 Release Ready: [Ready|Ready with conditions|Not ready]
-- [Conditions/Blockers if any]
-
-📝 TodoWrite Progress:
-- [Show completed test checklist]
+📱 Devices: [Desktop browsers, iOS PWA version, responsive breakpoints]
+🚀 Ready: [Ready|Ready with conditions|Not ready] - [Conditions/Blockers]
 ```
 
 ## 7. Update Linear
@@ -275,6 +160,7 @@ Wait for manual testing, address concerns, make adjustments if needed.
 
 ### Update Documentation (After Manual Verification)
 Update relevant project documentation:
+- **CLAUDE.md**: Architecture, commands, env vars, database schema, services
 - **API Documentation**: New/changed endpoints with examples and schemas  
 - **Configuration**: Environment variables, PM2 services, monitoring, OAuth
 - **Development**: Build scripts, testing requirements, troubleshooting

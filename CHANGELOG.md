@@ -48,6 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Eliminated false monitoring alerts while maintaining full debugging visibility
 
 ### Added
+- **[RR-146] Collapsible Feeds section in sidebar navigation with session-only state persistence**
+  - Added reusable CollapsibleFilterSection component with Radix UI
+  - Implemented "Shayon's News" branding with RSS icon
+  - Added filter-aware feed counts (unread/read/all modes)
+  - Optimized for iPad PWA with 44px touch targets
+  - Smooth 200ms collapse/expand animations
+  - Responsive design (mobile shows "News" only)
+
 - **Incremental Sync for Improved Efficiency (RR-149) - Completed** (Thursday, August 7, 2025 at 2:34 AM)
   - **Feature**: Implemented intelligent incremental sync using Inoreader's `ot` and `xt` parameters
   - **Efficiency**: Only fetches articles newer than last sync timestamp, excluding already-read articles

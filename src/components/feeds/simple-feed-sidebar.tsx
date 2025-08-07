@@ -12,7 +12,11 @@ import {
   Moon,
   Monitor,
   BarChart3,
+  Newspaper,
+  Rss,
 } from "lucide-react";
+import { CollapsibleFilterSection } from "@/components/ui/collapsible-filter-section";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 
@@ -39,7 +43,7 @@ export function SimpleFeedSidebar({
     rateLimit,
     loadLastSyncTime,
   } = useSyncStore();
-  const { theme, setTheme } = useUIStore();
+  const { theme, setTheme, feedsSectionCollapsed, setFeedsSectionCollapsed } = useUIStore();
   const { readStatusFilter } = useArticleStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastScrollPosition = useRef<number>(0);
@@ -112,7 +116,20 @@ export function SimpleFeedSidebar({
       {/* Header */}
       <div className="border-b p-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Feeds</h2>
+          <div className="flex items-center gap-2">
+            <Image 
+              src="/reader/icons/favicon-32x32.png" 
+              alt="RSS Reader" 
+              width={24} 
+              height={24}
+              className="dark:brightness-110"
+              priority
+            />
+            <h1 className="text-lg font-semibold">
+              <span className="hidden sm:inline">Shayon's </span>
+              News
+            </h1>
+          </div>
           <div className="flex items-center gap-1">
             <button
               onClick={cycleTheme}
@@ -148,7 +165,7 @@ export function SimpleFeedSidebar({
           </div>
         </div>
         <div className="text-sm text-muted-foreground">
-          {totalUnreadCount} unread articles
+          {totalUnreadCount} unread • {feeds.size} feeds
         </div>
       </div>
 
@@ -192,12 +209,23 @@ export function SimpleFeedSidebar({
           <>
             {/* All Articles */}
             <div
-              className={`cursor-pointer p-3 hover:bg-muted/50 ${!selectedFeedId ? "bg-muted font-medium" : ""}`}
+              className={`cursor-pointer px-3 py-2.5 hover:bg-muted/50 transition-colors ${
+                !selectedFeedId 
+                  ? "bg-muted font-semibold border-l-2 border-primary" 
+                  : "hover:border-l-2 hover:border-muted-foreground/30"
+              }`}
               onClick={() => onFeedSelect(null)}
             >
               <div className="flex items-center justify-between">
-                <span>All Articles</span>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                <div className="flex items-center gap-2">
+                  <Newspaper className="h-4 w-4 text-muted-foreground" />
+                  <span>All Articles</span>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                  !selectedFeedId 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-primary/10 text-primary"
+                }`}>
                   {totalUnreadCount}
                 </span>
               </div>
@@ -215,8 +243,23 @@ export function SimpleFeedSidebar({
               </div>
             )}
 
-            {/* Individual Feeds */}
-            {Array.from(feeds.values())
+            {/* Feeds Section */}
+            <CollapsibleFilterSection
+              title="Feeds"
+              count={readStatusFilter === 'unread' 
+                ? Array.from(feedsWithCounts.values()).filter(f => f.unreadCount > 0).length
+                : readStatusFilter === 'read'
+                ? Array.from(feedsWithCounts.values()).filter(f => f.unreadCount === 0).length
+                : feeds.size
+              }
+              defaultOpen={!feedsSectionCollapsed}
+              onToggle={(isOpen) => setFeedsSectionCollapsed(!isOpen)}
+              icon={<Rss className="h-3.5 w-3.5" />}
+              className="border-t mt-2"
+            >
+              <div className="space-y-0.5 max-h-[60vh] overflow-y-auto scrollbar-hide pl-6 pr-1">
+                {/* Individual Feeds */}
+                {Array.from(feeds.values())
               .sort((a, b) =>
                 String(a.title || "").localeCompare(
                   String(b.title || ""),
@@ -247,8 +290,10 @@ export function SimpleFeedSidebar({
                 return (
                   <div
                     key={feed.id}
-                    className={`cursor-pointer p-3 transition-all hover:bg-muted/50 ${
-                      isSelected ? "bg-muted font-medium" : ""
+                    className={`cursor-pointer py-2 px-3 transition-all hover:bg-muted/50 ${
+                      isSelected 
+                        ? "bg-muted font-semibold border-l-2 border-primary -ml-[2px] pl-[14px]" 
+                        : "hover:border-l-2 hover:border-muted-foreground/30"
                     } ${
                       !hasUnread && !isSelected
                         ? "opacity-35 hover:opacity-100"
@@ -256,12 +301,16 @@ export function SimpleFeedSidebar({
                     }`}
                     onClick={() => onFeedSelect(feed.id)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="truncate">
                         {String(feed.title || "Untitled Feed")}
                       </span>
                       {unreadCount > 0 && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                        <span className={`rounded-full px-1.5 py-0.5 text-xs ${
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-primary/10 text-primary"
+                        }`}>
                           {unreadCount > 999 ? "999+" : unreadCount}
                         </span>
                       )}
@@ -269,6 +318,8 @@ export function SimpleFeedSidebar({
                   </div>
                 );
               })}
+              </div>
+            </CollapsibleFilterSection>
 
             {/* Status */}
             <div className="space-y-1 p-3 text-xs text-muted-foreground">
