@@ -440,7 +440,8 @@ TEST_INOREADER_PASSWORD=
   "express": "^4.0.0",
   "pm2": "^5.0.0",
   "@anthropic-ai/sdk": "^0.20.0",
-  "node-keytar": "^7.0.0"
+  "node-keytar": "^7.0.0",
+  "he": "^1.2.0"
 }
 ```
 
@@ -516,6 +517,24 @@ class SyncService {
     // 5. Execute cleanup operations (RR-129)
     const cleanupService = new ArticleCleanupService(supabase);
     await cleanupService.executeFullCleanup(feedIds, userId);
+  }
+}
+
+// HTML Entity Decoder Service (RR-154)
+class HtmlDecoderService {
+  static decodeArticleContent(article: any) {
+    // Uses 'he' library for standards-compliant decoding
+    return {
+      ...article,
+      title: decodeHtmlEntities(article.title),
+      content: decodeHtmlEntities(article.content),
+      description: decodeHtmlEntities(article.description)
+    };
+  }
+  
+  // URL-safe decoding - never decode URLs
+  static isSafeUrl(text: string): boolean {
+    return text?.startsWith('http') || text?.includes('://');
   }
 }
 

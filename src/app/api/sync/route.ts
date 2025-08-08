@@ -5,6 +5,7 @@ import path from "path";
 import { getAdminClient } from "@/lib/db/supabase-admin";
 import { SyncConflictDetector } from "@/lib/sync/conflict-detector";
 import { ArticleCleanupService } from "@/lib/services/cleanup-service";
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -425,9 +426,9 @@ async function performServerSync(syncId: string) {
           return {
             feed_id: feedId,
             inoreader_id: article.id,
-            title: article.title || "Untitled",
+            title: decodeHtmlEntities(article.title) || "Untitled",
             author: article.author || null,
-            content: article.content?.content || article.summary?.content || "",
+            content: decodeHtmlEntities(article.content?.content || article.summary?.content || ""),
             url:
               article.canonical?.[0]?.href ||
               article.alternate?.[0]?.href ||

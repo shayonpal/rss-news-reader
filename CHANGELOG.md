@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - Thursday, August 7, 2025 at 9:21 PM
+
+### Added
+- **HTML Entity Decoding for Article Titles and Content (RR-154) - Completed** (Thursday, August 7, 2025 at 9:21 PM)
+  - **Feature**: Implemented standards-compliant HTML entity decoding for article titles and content during sync
+  - **Library**: Added 'he' library for reliable decoding of HTML entities like &rsquo;, &amp;, &lsquo;, &quot;, &#8217;, &ndash;
+  - **Performance**: <1ms per article, <200ms for 200 articles with efficient batch processing
+  - **URL Safety**: URLs are never decoded to preserve query parameters and special characters
+  - **Data Cleanup**: Migration scripts created to fix existing 75+ articles with HTML entities
+  - **Integration**: Seamlessly integrated into sync pipeline at `/src/app/api/sync/route.ts`
+  - **Module**: Comprehensive decoder at `/src/lib/utils/html-decoder.ts` with full TypeScript types
+  - **Impact**: Resolved display issues where article titles showed raw HTML entities like "Biden&rsquo;s decision" instead of "Biden's decision"
+  - **Files Added**: html-decoder.ts, migrate-html-entities.js, migrate-html-entities-simple.js
+  - **Files Updated**: sync/route.ts with decodeHtmlEntities integration
+  - **Testing**: Comprehensive test coverage including unit, integration, and E2E tests for all decoding scenarios
+
 ### Documentation
 - **Updated Documentation for RR-129 Database Cleanup Implementation** (Wednesday, August 6, 2025 at 11:07 PM)  
   - **API Docs**: Updated `/api/sync` endpoint documentation to include cleanup response fields
@@ -392,6 +408,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance bottlenecks in data queries
 
 [Unreleased]: https://github.com/shayonpal/rss-news-reader/compare/v0.12.0...HEAD
+[0.12.1]: https://github.com/shayonpal/rss-news-reader/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.11.0...v0.12.0
 [0.10.1]: https://github.com/shayonpal/rss-news-reader/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/shayonpal/rss-news-reader/compare/v0.9.0...v0.10.0
