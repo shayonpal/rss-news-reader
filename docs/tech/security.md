@@ -25,6 +25,14 @@ This document outlines the security measures and policies implemented in the RSS
 - **Error Handling**: Consistent error responses without sensitive information leakage
 - **XSS Protection**: HTML escaping implemented for all user-generated content and tag names (RR-128)
 
+### Database Security
+
+- **Row Level Security (RLS)**: Enabled on all tables with user-specific policies
+- **SECURITY INVOKER Views**: All views respect RLS policies of the querying user (RR-67)
+- **Function Search Path Protection**: Critical functions have explicit `search_path = public` to prevent SQL injection
+- **No SECURITY DEFINER**: Eliminated all views with SECURITY DEFINER to prevent privilege escalation
+- **Principle of Least Privilege**: Views and functions run with invoker's permissions, not definer's
+
 ## Security Fixes
 
 ### RR-69: Test/Debug Endpoint Removal (July 30, 2025)
@@ -78,6 +86,42 @@ This document outlines the security measures and policies implemented in the RSS
 - Maintained user experience while ensuring security
 - Established security patterns for future user-generated content
 - No impact on existing functionality or performance
+
+### RR-67: Database Security - SECURITY DEFINER and search_path (August 9, 2025)
+
+**Issue**: Database views with SECURITY DEFINER bypassed Row Level Security policies, and functions without search_path were vulnerable to SQL injection attacks.
+
+**Vulnerabilities Fixed**:
+
+**Views (4 SECURITY DEFINER removed)**:
+- `sync_queue_stats` - Sync monitoring view
+- `author_quality_report` - Author coverage analysis
+- `author_statistics` - Author metrics view
+- `sync_author_health` - Sync health monitoring
+
+**Functions (7 search_path added)**:
+- `get_unread_counts_by_feed` - Core unread count functionality
+- `get_articles_optimized` - Main article fetching
+- `refresh_feed_stats` - Post-sync statistics update
+- `add_to_sync_queue` - Bi-directional sync operations
+- `update_updated_at_column` - Timestamp trigger
+- `increment_api_usage` - API call tracking
+- `clean_old_sync_queue_entries` - Queue maintenance
+
+**Implementation**:
+- Created migration `supabase/migrations/0001_security_fixes_rr67.sql`
+- Views recreated with explicit `WITH (security_invoker = true)`
+- Functions protected with `ALTER FUNCTION ... SET search_path = public`
+- Comprehensive test suite with behavior contracts
+
+**Impact**:
+- 100% elimination of ERROR-level security issues
+- 46% reduction in total security warnings (24 → 13)
+- All views now respect RLS policies of querying user
+- Functions protected against search_path manipulation attacks
+- No data loss or functionality impact
+
+**Testing**: Test-first development with 32 unit tests defining exact expected behavior
 
 ## Security Best Practices
 

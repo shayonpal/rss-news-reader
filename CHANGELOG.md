@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **[RR-67] Database Security Fixes - SECURITY DEFINER and search_path vulnerabilities** (Saturday, August 9, 2025)
+  - **Fixed**: Eliminated 4 SECURITY DEFINER views that bypassed Row Level Security policies
+  - **Fixed**: Added search_path protection to 7 critical functions to prevent SQL injection attacks
+  - **Views Fixed**: `sync_queue_stats`, `author_quality_report`, `author_statistics`, `sync_author_health`
+  - **Functions Protected**: `get_unread_counts_by_feed`, `get_articles_optimized`, `refresh_feed_stats`, `add_to_sync_queue`, `update_updated_at_column`, `increment_api_usage`, `clean_old_sync_queue_entries`
+  - **Migration**: Created `supabase/migrations/0001_security_fixes_rr67.sql` with atomic rollback capability
+  - **Impact**: 100% elimination of ERROR-level security issues, 46% reduction in total security warnings
+  - **RLS Compliance**: All views now properly respect Row Level Security policies
+  - **Testing**: Comprehensive test suite with contracts defining exact expected behavior
+
 ### Added
 - **[RR-128] Tags Filtering with Proper Architecture** (Saturday, August 9, 2025)
   - **Database**: Added `tags` and `article_tags` tables with many-to-many relationships
