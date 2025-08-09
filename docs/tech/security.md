@@ -66,11 +66,13 @@ This document outlines the security measures and policies implemented in the RSS
 
 **Implementation**:
 
-- **HTML Escaping**: All tag names and user input properly escaped using standard HTML escape functions
-- **Client-Side Rendering**: React's built-in XSS protection utilized for all dynamic content
+- **HTML Entity Decoding**: Tag names are decoded using HTML entity decoder to handle entities like &#x2F; properly
+- **React XSS Protection**: Relies on React's built-in XSS protection for text content rendering instead of double-escaping
 - **API Input Validation**: Tag creation endpoints validate and sanitize input before storage
-- **Database Storage**: Tags stored with original content, escaping applied during display
+- **Database Storage**: Tags stored with original content, HTML entity decoding applied during display
 - **Comprehensive Testing**: XSS attack vectors tested in tag management functionality
+
+**Update (RR-170 - August 2025)**: Removed redundant HTML escaping that was interfering with proper entity decoding. React's automatic XSS protection is sufficient for text content.
 
 **Scope**:
 
@@ -202,7 +204,7 @@ The application implements security headers:
 - [ ] Build validation passes
 - [ ] Security tests pass
 - [ ] XSS protection verified for all user-generated content
-- [ ] HTML escaping implemented for tag names and descriptions
+- [ ] HTML entity decoding implemented for tag names with React XSS protection
 
 ### Regular Security Reviews
 
@@ -212,7 +214,7 @@ The application implements security headers:
 - [ ] Review error messages for information leakage
 - [ ] Test authentication mechanisms
 - [ ] Verify XSS protection in all user input areas
-- [ ] Check HTML escaping in tag management features
+- [ ] Check HTML entity decoding and React XSS protection in tag features
 
 ## Related Documentation
 

@@ -48,7 +48,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Context**: Corrected documentation to reflect actual Inoreader API limits of 200 requests per day total (100 Zone 1 + 100 Zone 2)
   - **Impact**: Documentation now accurately represents API constraints with current usage of 24-30 calls daily staying well within limits
 
-## [0.12.1] - Thursday, August 7, 2025 at 9:21 PM
+## [0.12.1] - Saturday, August 9, 2025 at 7:09 AM
+
+### Fixed
+- **[RR-170] HTML Entity Rendering in Tag Names - Completed** (Saturday, August 9, 2025 at 7:09 AM)
+  - **Problem**: Tags with HTML entities like "India&#x2F;Canada" were displaying encoded entities instead of "India/Canada"
+  - **Root Cause**: The escapeHtml function was over-escaping forward slashes and other characters that React already handles
+  - **Solution**: Removed escapeHtml function and kept only decodeHtmlEntities since React provides automatic XSS protection for text content
+  - **Files Changed**: simple-feed-sidebar.tsx (line 285), article-detail.tsx (line 469)
+  - **Security**: No security impact - React's built-in XSS protection is sufficient for text content rendering
+  - **Impact**: Tag names now display correctly with proper HTML entity decoding while maintaining security
+  - **Example**: Tag "India&#x2F;Canada" now displays as "India/Canada" instead of raw HTML entities
+
+## [0.12.0] - Thursday, August 7, 2025 at 9:21 PM
 
 ### Added
 - **HTML Entity Decoding for Article Titles and Content (RR-154) - Completed** (Thursday, August 7, 2025 at 9:21 PM)

@@ -52,11 +52,11 @@ This directory contains all technical documentation for the RSS News Reader appl
 8. **Tag Architecture**
    - **Description**: Comprehensive tag management system with full CRUD operations and XSS protection
    - **Status**: Implemented ✅ 
-   - **Contents**: Tag creation, filtering, article association, HTML escaping, sidebar integration
+   - **Contents**: Tag creation, filtering, article association, HTML entity decoding, sidebar integration
    - **Key Features**: 
      - Tag API endpoints (`/api/tags`, `/api/articles/[id]/tags`)
      - Database schema with `tags` and `article_tags` tables
-     - XSS protection via HTML escaping
+     - XSS protection via React's built-in safeguards and HTML entity decoding
      - Tag sync from Inoreader categories
      - Sidebar "Topics" section display
      - Comprehensive test coverage

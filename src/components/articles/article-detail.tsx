@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { escapeHtml } from "@/lib/utils/html-escape";
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import DOMPurify from "isomorphic-dompurify";
 import { SummaryButton } from "./summary-button";
 import { StarButton } from "./star-button";
@@ -466,7 +466,7 @@ export function ArticleDetail({
                     borderWidth: tag.color ? '1px' : undefined,
                   }}
                 >
-                  {escapeHtml(tag.name)}
+                  {decodeHtmlEntities(tag.name)}
                 </button>
               ))}
             </div>

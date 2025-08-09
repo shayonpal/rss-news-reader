@@ -169,7 +169,7 @@ This provides a live dashboard showing:
 - Tag creation and validation (`/api/tags POST`)
 - Tag listing with filtering and pagination (`/api/tags GET`)
 - Article tag retrieval (`/api/articles/[id]/tags GET`)
-- HTML escaping and XSS protection in all endpoints
+- HTML entity decoding and React XSS protection in all endpoints
 - Error handling for duplicate tags and invalid input
 
 **Integration Tests:**
@@ -183,11 +183,11 @@ This provides a live dashboard showing:
 - Tag filtering and search functionality
 - Tag creation through UI forms
 - Tag association with articles
-- XSS attack prevention in tag names
+- XSS protection via React's built-in safeguards for tag names
 
 **Unit Tests:**
 - Tag store state management
-- Tag utility functions (slug generation, HTML escaping)
+- Tag utility functions (slug generation, HTML entity decoding)
 - Tag component rendering and interactions
 - Tag validation logic
 
@@ -237,7 +237,7 @@ src/__tests__/
 - Test API endpoints in isolation
 - Limit concurrent database connections
 - Test tag-related API endpoints with proper data isolation (RR-128)
-- Verify HTML escaping in tag creation and retrieval tests
+- Verify HTML entity decoding in tag creation and retrieval tests
 
 **❌ DON'T:**
 - Run integration tests alongside unit tests
@@ -245,7 +245,7 @@ src/__tests__/
 - Test multiple API endpoints simultaneously
 - Create test data without cleanup
 - Mock core application logic (test the real implementation)
-- Test tags functionality without proper XSS protection verification
+- Test tags functionality without verifying React's XSS protection and HTML entity decoding
 
 ### Example: Memory-Safe Test Structure
 

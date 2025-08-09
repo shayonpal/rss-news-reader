@@ -21,7 +21,7 @@ import { CollapsibleFilterSection } from "@/components/ui/collapsible-filter-sec
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { escapeHtml } from "@/lib/utils/html-escape";
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -281,7 +281,7 @@ export function SimpleFeedSidebar({
                                   style={{ backgroundColor: tag.color }}
                                 />
                               )}
-                              {escapeHtml(tag.name)}
+                              {decodeHtmlEntities(tag.name)}
                             </span>
                             <span className={`rounded-full px-1.5 py-0.5 text-xs ${
                               isSelected
