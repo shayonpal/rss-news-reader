@@ -1,0 +1,19 @@
+---
+globs: src/**/*.ts,src/**/*.tsx
+description: TypeScript, React, and code style conventions for this repo
+---
+# TypeScript & React Style
+
+- Always use explicit types for exported functions, public APIs, and complex objects. Avoid `any`.
+- Prefer named functions and descriptive identifiers over abbreviations.
+- Use early returns to reduce nesting. Handle errors and edge-cases first.
+- Keep React components pure; move side-effects and async logic to hooks/services.
+- For server code in App Router, use route handlers under `src/app/api/**/route.ts`. Keep I/O at the edge, domain logic in `src/lib/services`.
+- CSS: Tailwind + local styles in `src/app/globals.css`. Avoid inline style objects for complex styling.
+- Linting and formatting adhere to [.eslintrc.json](mdc:.eslintrc.json) and [.prettierrc](mdc:.prettierrc).
+- Use `fetch`/`Response` APIs provided by Next.js in route handlers; avoid Node-specific APIs in client components.
+
+Testing expectations:
+- Unit tests near domain code under `src/__tests__/unit/**`.
+- Integration tests for API routes and service workflows under `src/__tests__/integration/**`.
+- E2E tests target user flows; run with the dedicated Vitest e2e config.

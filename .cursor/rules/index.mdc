@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+# RSS News Reader – Cursor Rules Index
+
+These rules help Cursor understand and navigate this codebase. Start here, then drill into topic-specific rules:
+
+- [Project Structure](mdc:.cursor/rules/project-structure.mdc)
+- [TypeScript & React Style](mdc:.cursor/rules/typescript-and-react-style.mdc)
+- [Testing (Vitest tiers)](mdc:.cursor/rules/testing.mdc)
+- [API Integrations](mdc:.cursor/rules/api-integrations.mdc)
+- [Security & Validation](mdc:.cursor/rules/security.mdc)
+- [Environment & Config](mdc:.cursor/rules/env-and-config.mdc)
+- [Database & Migrations](mdc:.cursor/rules/database-and-migrations.mdc)
+- [Additional Project Content](mdc:.cursor/rules/project-context.mdc)
+
+Key entry points:
+- App (Next.js App Router): [src/app](mdc:src/app)
+- API routes: [src/app/api](mdc:src/app/api)
+- Shared libs: [src/lib](mdc:src/lib)
+- Tests: [src/__tests__](mdc:src/__tests__)
+- Standalone server (if used): [server/server.js](mdc:server/server.js)
+- Build/test config: [vitest.config.ts](mdc:vitest.config.ts), [tsconfig.json](mdc:tsconfig.json), [.eslintrc.json](mdc:.eslintrc.json), [.prettierrc](mdc:.prettierrc)
+
+Documentation index:
+- Project README: [README.md](mdc:README.md)
+- Technical docs: [docs/tech/README.md](mdc:docs/tech/README.md)
+- API docs: [docs/api/README.md](mdc:docs/api/README.md)
+- Deployment: [docs/deployment/README.md](mdc:docs/deployment/README.md)

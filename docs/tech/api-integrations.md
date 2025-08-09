@@ -174,6 +174,7 @@ POST / reader / api / 0 / edit - tag;
 **Current Limits** (Inoreader Free Tier):
 
 - 100 API calls per day for Zone 1 (basic operations)
+- 100 API calls per day for Zone 2
 - Resets at midnight UTC
 
 **Optimization Approach**:

@@ -65,10 +65,10 @@ pm2 stop all
 
 ### Health Check Endpoints
 
-- **Application Health**: http://100.96.166.53:3000/api/health/app
-- **Database Health**: http://100.96.166.53:3000/api/health/db
-- **Article Freshness**: http://100.96.166.53:3000/api/health/freshness
-- **Cron Service Status**: http://100.96.166.53:3000/api/health/cron
+- **Application Health**: http://100.96.166.53:3000/reader/api/health/app
+- **Database Health**: http://100.96.166.53:3000/reader/api/health/db
+- **Parsing/Content Health**: http://100.96.166.53:3000/reader/api/health/parsing
+- **Cron Service Status**: http://100.96.166.53:3000/reader/api/health/cron
 - **Sync Status**: Check via PM2 logs for `rss-sync-cron`
 
 ### Monitoring
@@ -284,7 +284,7 @@ This ensures your reading progress stays synchronized across all Inoreader clien
 
 ### Important: Server-Client Architecture
 
-**New Architecture (January 2025):**
+**New Architecture (June 2025):**
 
 - **Server**: Handles all Inoreader API communication
 - **Client**: No authentication - reads from Supabase only
@@ -384,6 +384,15 @@ If tests become unresponsive or cause high memory usage:
 For comprehensive testing guidelines, troubleshooting, and best practices, see:
 **[Safe Test Practices Documentation](docs/testing/safe-test-practices.md)**
 
+For a complete list of PM2, npm, and helper script commands, see:
+**[Operations & Commands Reference](docs/operations-and-commands.md)**
+
+For a concise release process (dev → main tagging), see:
+**[Release Process](docs/release-process.md)**
+
+For full API endpoint details (request/response formats, error envelopes), see:
+**[Server API Endpoints](docs/api/server-endpoints.md)**
+
 ## Project Structure
 
 ```
@@ -466,7 +475,7 @@ src/
 - **[Monitoring and Alerting](docs/tech/monitoring-and-alerting.md)**: Multi-layered monitoring system with Discord alerts
 - **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
-- **[Deployment Guide](docs/deployment/caddy-pm2-setup.md)**: Production deployment instructions
+- Deployment docs focus on the dev-only, Tailscale-protected setup. See `docs/deployment/`.
 - **[RR-26 Analysis](docs/issues/RR-26-freshness-perception-analysis.md)**: Article freshness perception issue analysis
 
 ## API Integration

@@ -8,7 +8,7 @@ This directory contains documentation for all API endpoints and server-side func
 
 - **Description**: Comprehensive documentation of all server-side API endpoints including authentication, feed management, article operations, and sync functionality
 - **Status**: Current ✅
-- **Last Updated**: July 2025
+- **Last Updated**: August 2025
 - **Contents**:
   - Inoreader proxy endpoints (`/api/inoreader/*`)
   - Article content operations (`/api/articles/[id]/*`)
@@ -34,13 +34,15 @@ This directory contains documentation for all API endpoints and server-side func
 
 ## Quick Reference
 
-| Category | Primary Endpoints                               | Purpose                           |
-| -------- | ----------------------------------------------- | --------------------------------- |
-| Inoreader| `/api/inoreader/user-info`, `/api/inoreader/subscriptions` | Proxy to Inoreader API |
-| Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize`, `/api/articles/[id]/tags` | Content extraction, AI summaries, and tag management |
-| Tags     | `/api/tags`, `/api/tags/[id]`                   | Tag creation and listing          |
-| Sync     | `/api/sync`, `/api/sync/status`                 | Manual and automatic sync         |
-| Health   | `/api/health/app`, `/api/health/db`             | System health monitoring          |
-| Analytics| `/api/analytics/fetch-stats`                    | Usage analytics                   |
+| Category | Primary Endpoints | Purpose |
+| -------- | ----------------- | ------- |
+| Inoreader | `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/stream-contents`, `/api/inoreader/unread-counts`, `/api/inoreader/edit-tag` | Proxies to Inoreader API |
+| Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize`, `/api/articles/[id]/tags` | Content extraction, AI summaries, tag management |
+| Tags | `/api/tags`, `/api/tags/[id]` | Tag listing and management |
+| Sync | `/api/sync`, `/api/sync/status/{syncId}`, `/api/sync/last-sync`, `/api/sync/refresh-view` | Start sync, poll status, last sync time, refresh views |
+| Health | `/api/health` (alias `/api/health/app`), `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude` | Health checks |
+| Analytics & Logs | `/api/analytics/fetch-stats`, `/api/logs/inoreader` | Usage analytics, API call logging |
 
 **Note**: Feed and article data are accessed directly via Supabase from the client. Base `/api/feeds` and `/api/articles` endpoints don't exist.
+
+For complete endpoint details, request/response formats, and error envelopes, see: `docs/api/server-endpoints.md`.

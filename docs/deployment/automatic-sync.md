@@ -8,8 +8,8 @@ The RSS Reader includes an automatic sync service that runs twice daily to fetch
 
 The sync runs automatically at:
 
-- **2:00 AM** America/Toronto (EST/EDT)
-- **2:00 PM** America/Toronto (EST/EDT)
+- Default (current dev server): **2:00, 6:00, 10:00, 14:00, 18:00, 22:00** America/Toronto (EST/EDT)
+- To change cadence, update `SYNC_CRON_SCHEDULE` in PM2. Example for twice daily: `0 2,14 * * *`.
 
 This schedule ensures fresh content is available for morning and evening reading sessions.
 
@@ -37,7 +37,7 @@ This schedule ensures fresh content is available for morning and evening reading
 
 ## Configuration
 
-### Environment Variables
+### Environment Variables (Dev)
 
 ```bash
 # Enable automatic sync (required)
@@ -49,7 +49,11 @@ SYNC_CRON_SCHEDULE="0 2,14 * * *"
 # Log file path (optional)
 SYNC_LOG_PATH="./logs/sync-cron.jsonl"
 
-# Base URL for API calls (required in production)
+# Browser-facing URL (used by client code)
+NEXT_PUBLIC_APP_URL="http://100.96.166.53:3000"
+
+# Internal URL for PM2 cron to call app APIs
+# (ecosystem.config.js currently uses localhost)
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 
 # Incremental sync configuration (RR-149)
@@ -57,7 +61,7 @@ SYNC_MAX_ARTICLES=500
 ARTICLES_RETENTION_LIMIT=1000
 ```
 
-### New Environment Variables (RR-149)
+### New Environment Variables
 
 - **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per incremental sync (default: 500)
   - Used for incremental syncs to balance freshness with efficiency
@@ -69,7 +73,7 @@ ARTICLES_RETENTION_LIMIT=1000
   - Older articles are automatically cleaned up when limit is exceeded
   - Helps maintain database performance
 
-### PM2 Configuration
+### PM2 Configuration (Dev Only)
 
 The cron service is configured in `ecosystem.config.js`:
 
@@ -80,10 +84,11 @@ The cron service is configured in `ecosystem.config.js`:
   instances: 1,
   max_memory_restart: '256M',
   env: {
-    NODE_ENV: 'production',
+    NODE_ENV: 'development',
     ENABLE_AUTO_SYNC: 'true',
-    SYNC_CRON_SCHEDULE: '0 2,6,10,14,18,22 * * *',
+    SYNC_CRON_SCHEDULE: '0 2,14 * * *',
     SYNC_LOG_PATH: './logs/sync-cron.jsonl',
+    // Internal API base used by the cron job
     NEXT_PUBLIC_BASE_URL: 'http://localhost:3000',
     SYNC_MAX_ARTICLES: '500',
     ARTICLES_RETENTION_LIMIT: '1000'
@@ -96,9 +101,6 @@ The cron service is configured in `ecosystem.config.js`:
 ### Starting the Service
 
 ```bash
-# Start both the app and cron service
-pm2 start ecosystem.config.js
-
 # Start only the cron service
 pm2 start ecosystem.config.js --only rss-sync-cron
 
@@ -270,6 +272,11 @@ Monitor sync performance over time:
 # Average sync duration by day
 cat logs/sync-cron.jsonl | jq 'select(.status == "completed") | {date: .timestamp[0:10], duration: .duration}' | jq -s 'group_by(.date) | map({date: .[0].date, avg_duration: (map(.duration) | add / length / 1000)})'
 ```
+
+## macOS Power Settings
+
+- Ensure the Mac Mini does not sleep during scheduled sync windows.
+- Recommended: System Settings → Displays → Prevent automatic sleeping on power adapter, or use `caffeinate -dimsu` in a background service during sync windows.
 
 ## Best Practices
 

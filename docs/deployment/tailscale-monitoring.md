@@ -2,7 +2,7 @@
 
 ## Overview
 
-This monitoring solution ensures Tailscale stays connected, automatically restarting it if the connection drops. This is critical because without Tailscale, clients cannot access the RSS Reader service.
+This monitoring solution ensures Tailscale stays connected, automatically restarting it if the connection drops. This is critical because without Tailscale, clients cannot access the RSS Reader service. This applies to the current dev-only setup running on the Mac Mini.
 
 ## Components
 

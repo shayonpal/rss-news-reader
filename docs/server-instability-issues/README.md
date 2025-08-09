@@ -95,7 +95,7 @@ A series of detailed investigation reports documenting server crashes and recove
 - **Monitoring Setup**: See `/docs/tech/uptime-kuma-setup.md`
 - **Deployment Config**: See `/docs/deployment/environment-variables.md`
 - **Known Issues**: See `/docs/tech/known-issues.md`
-- **CI/CD Strategy**: See `/docs/deployment/ci-cd-strategy.md`
+<!-- CI/CD strategy doc removed to keep docs focused on current dev-only setup. -->
 
 ## Prevention Measures
 

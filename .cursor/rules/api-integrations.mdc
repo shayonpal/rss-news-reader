@@ -1,0 +1,23 @@
+---
+description: Guidance for Inoreader and Anthropic Claude integrations, rate limits, and sync strategy
+---
+# API Integrations
+
+Primary references:
+- Detailed write-up: [docs/tech/api-integrations.md](mdc:docs/tech/api-integrations.md)
+- Inoreader routes: [src/app/api/inoreader](mdc:src/app/api/inoreader)
+- Sync API: [src/app/api/sync/route.ts](mdc:src/app/api/sync/route.ts)
+- Rate limiter: [src/lib/api/rate-limiter.ts](mdc:src/lib/api/rate-limiter.ts)
+
+Inoreader:
+- OAuth credentials come from environment variables (see Env & Config rule).
+- Minimize calls; target ~4–6 calls per sync. Use incremental sync (RR-149) with `ot` timestamp and `xt=read` when appropriate.
+- Prefer fetching from "All Items" stream for breadth, then feed-specific as needed.
+
+Claude (Anthropic):
+- Server-side only; never expose API key to client.
+- Summarization should prefer `full_content` when available; otherwise fall back to RSS content per current implementation.
+
+Error and rate limit handling:
+- Map 401/403/429/5xx to safe, non-leaky client messages.
+- Backoff and queue long-running operations. Persist usage stats when useful for monitoring.

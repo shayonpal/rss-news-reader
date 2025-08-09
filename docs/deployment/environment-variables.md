@@ -4,7 +4,7 @@ This document explains how environment variables are managed in the RSS News Rea
 
 ## Overview
 
-The RSS News Reader uses environment variables for configuration, with ALL variables being critical for proper application functioning. Missing any variable will cause build or runtime failures.
+The RSS News Reader dev server uses environment variables for configuration. Core variables are validated before build/runtime. Some variables are optional (tooling/monitoring) and won't block builds.
 
 ## Variable Categories
 
@@ -14,8 +14,8 @@ These variables MUST be available at **build time** as they are embedded into th
 
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key for client access
-- `NEXT_PUBLIC_BASE_URL` - Base application URL without port
-- `NEXT_PUBLIC_APP_URL` - Full application URL with port
+- `NEXT_PUBLIC_BASE_URL` - Base application URL without port (dev example: `http://100.96.166.53`)
+- `NEXT_PUBLIC_APP_URL` - Full application URL with port (dev example: `http://100.96.166.53:3000`)
 - `NEXT_PUBLIC_INOREADER_CLIENT_ID` - OAuth client ID
 - `NEXT_PUBLIC_INOREADER_REDIRECT_URI` - OAuth redirect URL
 
@@ -41,16 +41,17 @@ These variables are used at runtime by the server:
 - `TEST_INOREADER_PASSWORD` - Test account password
 - `NODE_ENV` - Environment mode
 
-### 3. Environment-Specific Variables
+### 3. Environment-Specific Variables (Dev Only)
 
-These allow different configurations for production vs development:
+Production environment has been removed (RR-92). Only development overrides remain:
 
-- `PROD_PORT` - Production server port
-- `PROD_NODE_ENV` - Production environment setting
-- `PROD_NEXT_PUBLIC_BASE_URL` - Production base URL
 - `DEV_PORT` - Development server port
 - `DEV_NODE_ENV` - Development environment setting
 - `DEV_NEXT_PUBLIC_BASE_URL` - Development base URL
+
+Additional development/runtime helpers:
+- `PORT` - Port for Next.js dev server (used by PM2 dev app)
+- `NEXT_BUILD_DIR` - Optional Next.js build directory override
 
 ## Loading Order and Precedence
 
@@ -60,17 +61,17 @@ These allow different configurations for production vs development:
    - Next.js automatically handles NEXT*PUBLIC*\* variables
    - Server-side variables available via `process.env`
 
-2. **Production Build (`npm run build`)**:
+2. **Build (`npm run build`, optional for dev)**:
 
    - Pre-build validation runs via `prebuild` script
-   - Environment variables must be loaded before build starts
+   - Environment variables must be loaded before build starts (if you build locally)
    - NEXT*PUBLIC*\* variables are embedded during build
    - Build script exports all required variables
 
-3. **PM2 Production (`pm2 start`)**:
-   - Loads from `.env` file via ecosystem.config.js
-   - Runtime variables injected into process
-   - Note: NEXT*PUBLIC*\* must already be in the build
+3. **PM2-managed Processes (dev)**:
+   - Loads from `.env` via `ecosystem.config.js`
+   - Each app (dev server, cron, sync, monitors) injects its own env
+   - Note: `NEXT_PUBLIC_*` must already be embedded at build time
 
 ## Build-Time vs Runtime Requirements
 
@@ -103,10 +104,8 @@ These allow different configurations for production vs development:
    ./scripts/validate-env.sh
    ```
 
-3. **Production Build & Deploy**:
-   ```bash
-   ./scripts/build-and-start-prod.sh  # Includes validation
-   ```
+3. **PM2 Apps**:
+   - `ecosystem.config.js` loads `.env` and passes vars to each app
 
 ### Validation Features
 
@@ -132,10 +131,10 @@ These allow different configurations for production vs development:
    ./scripts/validate-env.sh
    ```
 
-3. **Production Deployment**:
+3. **Deployment**:
    - Ensure all NEXT*PUBLIC*\* variables are set
    - Run validation before building
-   - Use production URLs and ports
+   - Use environment-appropriate URLs and ports
 
 ## Troubleshooting
 
@@ -182,14 +181,39 @@ pm2 env 0
 4. **Rotate credentials regularly** - Especially after team changes
 5. **Limit access to production `.env`** - Use proper file permissions
 
-## PM2 Integration
+## PM2 Integration (Dev Only)
 
 The `ecosystem.config.js` file:
 
-- Loads `.env` at the top with `require('dotenv').config()`
-- Maps variables to each PM2 app's env section
-- Handles both development and production configs
-- Supports environment-specific overrides
+- Loads `.env` with `require('dotenv').config()`
+- Maps variables to each PM2 app's `env` section
+- Dev-only setup (production removed per RR-92)
+- Adds extra variables for cron/sync/monitoring apps (see next section)
+
+### PM2/Monitoring and Cron Variables
+
+These are used by PM2-managed jobs and monitors (dev):
+
+- `ENABLE_AUTO_SYNC` - Enable scheduled sync in cron job
+- `SYNC_CRON_SCHEDULE` - Cron expression for sync cadence
+- `SYNC_LOG_PATH` - Path for sync log jsonl
+- `SYNC_INTERVAL_MINUTES` - Sync server interval minutes
+- `SYNC_MIN_CHANGES` - Minimum changes before push
+- `SYNC_BATCH_SIZE` - Batch size for sync operations
+- `SYNC_MAX_RETRIES` - Max retries for failed batches
+- `SYNC_RETRY_BACKOFF_MINUTES` - Backoff between retries
+- `HEALTH_URL` - App health endpoint for monitor
+- `DISCORD_WEBHOOK_URL` - Optional webhook for alerts
+- `CHECK_INTERVAL` - Monitor check interval (seconds)
+- `MAX_RESTARTS_PER_HOUR` - Monitor restart rate limit
+- `RESTART_COOLDOWN` - Seconds between restart attempts
+- `LOG_FILE` / `ERROR_LOG` - Monitor log paths
+- `SYNC_PUSH_INTERVAL` - Uptime Kuma push interval for sync health
+- `DB_PUSH_INTERVAL` - Uptime Kuma push interval for DB health
+- `FETCH_PUSH_INTERVAL` - Uptime Kuma push interval for fetch stats
+- `API_PUSH_INTERVAL` - Uptime Kuma push interval for API stats
+
+These variables are app-specific inside `ecosystem.config.js` and are not required for `npm run dev`.
 
 ## Next.js Integration
 
@@ -206,3 +230,13 @@ Regular variables:
 - Can be changed at runtime
 - Not exposed to client code
 - More secure for sensitive data
+
+## Optional / Tooling Variables
+
+These are not required by the app build/runtime, but may be used by tooling or scripts:
+
+- `OPENAI_API_KEY` - Optional, used for code review tooling
+- `SUPABASE_URL` - Optional legacy compatibility (app prefers `NEXT_PUBLIC_SUPABASE_URL`)
+- `INOREADER_OAUTH_REDIRECT_URI` - Optional override used by server OAuth scripts
+
+Refer to `ecosystem.config.js` for PM2-only variables and defaults.

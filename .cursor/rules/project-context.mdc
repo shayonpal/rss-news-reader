@@ -1,0 +1,7 @@
+---
+alwaysApply: false
+---
+
+- This project uses Linear app for project management and issue tracking
+  - Linear Issues can be read/added/modified using the MCP server
+  - My project is part of the team ID `11b90e55-2b59-40d3-a5d3-9e609a89a4f8`.

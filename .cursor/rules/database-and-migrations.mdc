@@ -1,0 +1,21 @@
+---
+description: Database structure, migrations, and cleanup/retention policies
+---
+# Database & Migrations
+
+Locations:
+- App migrations: [src/lib/db/migrations](mdc:src/lib/db/migrations)
+- Supabase migrations: [supabase/migrations](mdc:supabase/migrations)
+- Types: [src/lib/db/types.ts](mdc:src/lib/db/types.ts)
+
+Conventions:
+- Use SQL migrations in `src/lib/db/migrations` for app-level schema changes; keep incremental numbering.
+- Retention and cleanup logic is enforced by services in `src/lib/services` and validated by tests under `src/__tests__/unit|integration/rr-129*` and `rr-150*`.
+- For production operations and one-off scripts, prefer `scripts/*` with clear logging and idempotency.
+
+Key migrations:
+- RR-150: Chunked deletion and retention policy support
+- RR-129: Deleted articles tracking and sync-prevention
+
+Safety:
+- Never run destructive migrations without backups and tests. Reference `scripts/` for validation and rollbacks.

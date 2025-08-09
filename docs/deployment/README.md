@@ -1,6 +1,6 @@
 # Deployment Documentation
 
-This directory contains all documentation related to deploying, configuring, and maintaining the RSS News Reader in production.
+This directory contains all documentation related to deploying, configuring, and maintaining the RSS News Reader dev server on the Mac Mini (Tailscale-only access).
 
 ## Documents
 
@@ -8,23 +8,11 @@ This directory contains all documentation related to deploying, configuring, and
 
 - **Description**: Configuration and setup for automatic feed synchronization using PM2 and cron jobs
 - **Status**: Current ✅
-- **Contents**: Cron schedule (6x daily: 2, 6, 10, 14, 18, 22 Toronto time), PM2 ecosystem configuration, sync process details
-
-### caddy-pm2-setup.md
-
-- **Description**: Production-grade PM2 process management configuration with stability improvements
-- **Status**: Current ✅ (Updated Saturday, July 26, 2025)
-- **Contents**: PM2 ecosystem configuration, stability features, memory management, health check integration
-
-### ci-cd-strategy.md
-
-- **Description**: Continuous integration and deployment strategy including GitHub Actions workflows
-- **Status**: Current ✅
-- **Contents**: Build validation, test automation, deployment pipelines, rollback procedures
+- **Contents**: Cron schedule (6x daily: 2, 6, 10, 14, 18, 22 Toronto time), PM2 configuration, sync process details
 
 ### environment-variables.md
 
-- **Description**: Complete documentation of all environment variables required for production deployment
+- **Description**: Environment variables used by the dev server and supporting jobs
 - **Status**: Current ✅
 - **Contents**: Database credentials, API keys, server configuration, feature flags
 
@@ -45,29 +33,15 @@ This directory contains all documentation related to deploying, configuring, and
 - **Database**: Supabase (PostgreSQL)
 - **Token Storage**: `~/.rss-reader/tokens.json` (server-side only)
 
-### PM2 Services
+### PM2 Services (Dev Only)
 
-1. **rss-reader-dev** (port 3000) - Main Next.js server
-2. **rss-sync-server** (port 3001) - Bidirectional sync service
-3. **rss-sync-cron** - Automatic sync scheduler
+1. **rss-reader-dev** (port 3000) - Main Next.js dev server
+2. **rss-sync-cron** - Automatic Inoreader sync scheduler (cron-driven)
+3. **rss-sync-server** (port 3001) - Bi-directional sync background service
+4. **rss-services-monitor** - Local monitor that watches app/sync health
+5. **kuma-push-monitor** - Uptime Kuma push daemon (local metrics)
 
-### PM2 Stability Features (Updated July 26, 2025)
 
-- **Production-grade configuration** with 99%+ reduction in service restarts
-- **Conservative memory limits**: 512M for Next.js, 256M for support services
-- **Intelligent restart patterns**: Exponential backoff, 50 max restarts
-- **Graceful shutdowns**: Service-specific timeout configurations
-- **Health check integration**: wait_ready coordination with health endpoints
-- **Pre-start validation**: Prevents deployment of broken builds
-
-### Build Validation System (Updated July 26, 2025)
-
-- **Automatic validation** before production startup via PM2 hooks
-- **Critical manifest checks**: prerender-manifest.json, react-loadable-manifest.json
-- **Vendor chunk validation**: Ensures Supabase dependencies are properly bundled
-- **Recovery guidance**: Clear instructions when validation fails
-- **Manual validation**: Run `./scripts/validate-build.sh` to check build integrity
-- **Clean rebuild**: If validation fails, run `rm -rf .next && npm run build`
 
 ## Related Documentation
 
