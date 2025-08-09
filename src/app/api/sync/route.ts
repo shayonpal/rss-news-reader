@@ -227,7 +227,64 @@ async function performServerSync(syncId: string) {
     status.message = `Found ${subscriptions.length} feeds...`;
     await writeSyncStatus(syncId, status);
 
-    // Step 2: Fetch unread counts
+    // Step 2: Build folder list from subscriptions to distinguish from tags (RR-128)
+    // Since Inoreader doesn't always provide type field in tag list,
+    // we identify folders from subscription categories
+    const folderNames = new Set<string>();
+    for (const sub of subscriptions) {
+      if (sub.categories && Array.isArray(sub.categories)) {
+        for (const category of sub.categories) {
+          if (category.label) {
+            folderNames.add(category.label);
+          }
+        }
+      }
+    }
+    console.log(`[Sync] Found ${folderNames.size} folders from subscriptions`);
+
+    // Step 3: Fetch tag list to get all labels
+    const tagListResponse = await tokenManager.makeAuthenticatedRequest(
+      "https://www.inoreader.com/reader/api/0/tag/list"
+    );
+
+    if (!tagListResponse.ok) {
+      console.error(`[Sync] Failed to fetch tag list: ${tagListResponse.statusText}`);
+      // Continue sync even if tag list fails
+    }
+
+    // Get all user labels (both tags and folders)
+    const allLabels = new Set<string>();
+    if (tagListResponse.ok) {
+      const tagListData = await tagListResponse.json();
+      for (const tag of tagListData.tags || []) {
+        if (tag.id && tag.id.includes('/label/')) {
+          const labelName = tag.id.replace(/^user\/[^\/]*\/label\//, '');
+          allLabels.add(labelName);
+        }
+      }
+      console.log(`[Sync] Found ${allLabels.size} total labels (tags + folders)`);
+    }
+
+    // Tags are labels that are NOT folders
+    const pureTags = new Set<string>();
+    for (const label of allLabels) {
+      if (!folderNames.has(label)) {
+        pureTags.add(label);
+      }
+    }
+    console.log(`[Sync] Identified ${pureTags.size} pure tags (excluding folders)`);
+    
+    // Create a map for quick lookup during article processing
+    const tagTypeMap = new Map<string, string>();
+    for (const label of allLabels) {
+      if (folderNames.has(label)) {
+        tagTypeMap.set(label, 'folder');
+      } else {
+        tagTypeMap.set(label, 'tag');
+      }
+    }
+
+    // Step 4: Fetch unread counts
     const countsResponse = await tokenManager.makeAuthenticatedRequest(
       "https://www.inoreader.com/reader/api/0/unread-count"
     );
@@ -534,13 +591,122 @@ async function performServerSync(syncId: string) {
           i += chunkSize
         ) {
           const chunk = articlesWithConflictResolution.slice(i, i + chunkSize);
-          await supabase
+          const { data: upsertedArticles, error: upsertError } = await supabase
             .from("articles")
-            .upsert(chunk, { onConflict: "inoreader_id" });
+            .upsert(chunk, { onConflict: "inoreader_id" })
+            .select("id, inoreader_id");
+
+          if (upsertError) {
+            console.error("[Sync] Error upserting articles:", upsertError);
+          }
 
           status.progress =
             70 + Math.floor((i / articlesWithConflictResolution.length) * 20);
           await writeSyncStatus(syncId, status);
+        }
+
+        // RR-128: Extract and save tags for articles
+        if (tagTypeMap.size > 0) {
+          console.log("[Sync] Processing tags for articles...");
+          
+          // Get all unique tags from articles
+          const allTags = new Set<string>();
+          const articleTagAssociations: Array<{ articleId: string; tagName: string }> = [];
+          
+          for (const article of articles) {
+            if (article.categories && Array.isArray(article.categories)) {
+              for (const category of article.categories) {
+                if (category.includes('/label/')) {
+                  const labelName = category.replace(/^user\/[^\/]*\/label\//, '');
+                  const tagType = tagTypeMap.get(labelName);
+                  
+                  // Only process if it's explicitly a tag (not a folder)
+                  if (tagType === 'tag') {
+                    allTags.add(labelName);
+                    // Store association for later
+                    articleTagAssociations.push({
+                      articleId: article.id, // Inoreader ID
+                      tagName: labelName
+                    });
+                  }
+                }
+              }
+            }
+          }
+          
+          if (allTags.size > 0) {
+            console.log(`[Sync] Found ${allTags.size} unique tags in articles`);
+            
+            // Upsert tags to database
+            const tagsToUpsert = Array.from(allTags).map(tagName => ({
+              name: tagName,
+              slug: tagName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, ''),
+              user_id: userId,
+              article_count: 0 // Will be updated later
+            }));
+            
+            const { data: upsertedTags, error: tagError } = await supabase
+              .from("tags")
+              .upsert(tagsToUpsert, { onConflict: "user_id,slug" })
+              .select("id, name, slug");
+            
+            if (tagError) {
+              console.error("[Sync] Error upserting tags:", tagError);
+            } else if (upsertedTags) {
+              console.log(`[Sync] Upserted ${upsertedTags.length} tags`);
+              
+              // Create tag name to ID map
+              const tagIdMap = new Map(upsertedTags.map(tag => [tag.name, tag.id]));
+              
+              // Get article IDs from database
+              const inoreaderIds = articles.map(a => a.id);
+              const { data: dbArticles, error: articleLookupError } = await supabase
+                .from("articles")
+                .select("id, inoreader_id")
+                .in("inoreader_id", inoreaderIds);
+              
+              if (articleLookupError) {
+                console.error("[Sync] Error looking up article IDs:", articleLookupError);
+              } else if (dbArticles) {
+                // Create Inoreader ID to database ID map
+                const articleIdMap = new Map(dbArticles.map(a => [a.inoreader_id, a.id]));
+                
+                // Create article-tag associations
+                const associationsToInsert = articleTagAssociations
+                  .map(assoc => {
+                    const articleId = articleIdMap.get(assoc.articleId);
+                    const tagId = tagIdMap.get(assoc.tagName);
+                    return articleId && tagId ? { article_id: articleId, tag_id: tagId } : null;
+                  })
+                  .filter(assoc => assoc !== null);
+                
+                if (associationsToInsert.length > 0) {
+                  // Batch insert associations
+                  const assocChunkSize = 100;
+                  for (let i = 0; i < associationsToInsert.length; i += assocChunkSize) {
+                    const assocChunk = associationsToInsert.slice(i, i + assocChunkSize);
+                    const { error: assocError } = await supabase
+                      .from("article_tags")
+                      .upsert(assocChunk, { onConflict: "article_id,tag_id" });
+                    
+                    if (assocError) {
+                      console.error("[Sync] Error creating article-tag associations:", assocError);
+                    }
+                  }
+                  
+                  console.log(`[Sync] Created ${associationsToInsert.length} article-tag associations`);
+                  
+                  // Update tag counts
+                  const { error: updateCountError } = await supabase.rpc("update_tag_counts");
+                  if (updateCountError) {
+                    console.error("[Sync] Error updating tag counts:", updateCountError);
+                  } else {
+                    console.log("[Sync] Updated tag counts");
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -565,6 +731,9 @@ async function performServerSync(syncId: string) {
     }
 
     // Auto-fetch full content for partial feeds
+    // TEMPORARILY DISABLED: Auto-fetch causing sync to hang
+    // TODO: Re-enable after fixing the hanging issue
+    /*
     status.progress = 92;
     status.message = "Checking for partial content feeds...";
     await writeSyncStatus(syncId, status);
@@ -576,6 +745,7 @@ async function performServerSync(syncId: string) {
       console.error("[Sync] Auto-fetch error:", error);
       // Don't fail the sync if auto-fetch fails - just log it
     }
+    */
 
     status.progress = 95;
     status.message = "Updating sync metadata...";

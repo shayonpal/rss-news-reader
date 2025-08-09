@@ -5,6 +5,7 @@ import { useFeedStore } from "@/lib/stores/feed-store";
 import { useSyncStore } from "@/lib/stores/sync-store";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { useArticleStore } from "@/lib/stores/article-store";
+import { useTagStore } from "@/lib/stores/tag-store";
 import {
   Loader2,
   RefreshCw,
@@ -14,21 +15,27 @@ import {
   BarChart3,
   Newspaper,
   Rss,
+  LayoutDashboard,
 } from "lucide-react";
 import { CollapsibleFilterSection } from "@/components/ui/collapsible-filter-section";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { escapeHtml } from "@/lib/utils/html-escape";
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
+  selectedTagId: string | null;
   onFeedSelect: (feedId: string | null) => void;
+  onTagSelect: (tagId: string | null) => void;
   onClose?: () => void;
 }
 
 export function SimpleFeedSidebar({
   selectedFeedId,
+  selectedTagId,
   onFeedSelect,
+  onTagSelect,
 }: SimpleFeedSidebarProps) {
   const router = useRouter();
   const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy } =
@@ -43,12 +50,13 @@ export function SimpleFeedSidebar({
     rateLimit,
     loadLastSyncTime,
   } = useSyncStore();
-  const { theme, setTheme, feedsSectionCollapsed, setFeedsSectionCollapsed } = useUIStore();
+  const { theme, setTheme, feedsSectionCollapsed, setFeedsSectionCollapsed, tagsSectionCollapsed, setTagsSectionCollapsed } = useUIStore();
   const { readStatusFilter } = useArticleStore();
+  const { tags, loadTags, selectTag, selectedTagIds } = useTagStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastScrollPosition = useRef<number>(0);
 
-  // Load feeds when component mounts
+  // Load feeds and tags when component mounts
   useEffect(() => {
     console.log(
       "[SimpleFeedSidebar] Component mounted, loading feeds and sync status..."
@@ -58,13 +66,14 @@ export function SimpleFeedSidebar({
     // Load both feed hierarchy and last sync time
     Promise.all([
       loadFeedHierarchy(),
-      loadLastSyncTime()
+      loadLastSyncTime(),
+      loadTags()
     ]).then(() => {
       console.log(
         `[SimpleFeedSidebar] Initial load completed in ${(performance.now() - startTime).toFixed(2)}ms`
       );
     });
-  }, [loadFeedHierarchy, loadLastSyncTime]);
+  }, [loadFeedHierarchy, loadLastSyncTime, loadTags]);
 
   // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {
@@ -210,11 +219,14 @@ export function SimpleFeedSidebar({
             {/* All Articles */}
             <div
               className={`cursor-pointer px-3 py-2.5 hover:bg-muted/50 transition-colors ${
-                !selectedFeedId 
+                !selectedFeedId && !selectedTagId
                   ? "bg-muted font-semibold border-l-2 border-primary" 
                   : "hover:border-l-2 hover:border-muted-foreground/30"
               }`}
-              onClick={() => onFeedSelect(null)}
+              onClick={() => {
+                onFeedSelect(null);
+                onTagSelect(null);
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -222,7 +234,7 @@ export function SimpleFeedSidebar({
                   <span>All Articles</span>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs ${
-                  !selectedFeedId 
+                  !selectedFeedId && !selectedTagId
                     ? "bg-primary text-primary-foreground" 
                     : "bg-primary/10 text-primary"
                 }`}>
@@ -230,6 +242,61 @@ export function SimpleFeedSidebar({
                 </span>
               </div>
             </div>
+
+            {/* Tags Section */}
+            {Array.from(tags.values()).filter(t => t.articleCount > 0).length > 0 && (
+              <CollapsibleFilterSection
+                title="Topics"
+                count={Array.from(tags.values()).filter(t => t.articleCount > 0).length}
+                defaultOpen={!tagsSectionCollapsed}
+                onToggle={(isOpen) => setTagsSectionCollapsed(!isOpen)}
+                icon={<LayoutDashboard className="h-3.5 w-3.5" />}
+                className="border-t mt-2"
+              >
+                <div className="space-y-0.5 max-h-[30vh] overflow-y-auto scrollbar-hide pl-6 pr-1">
+                  {Array.from(tags.values())
+                    .filter(tag => tag.articleCount > 0)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((tag) => {
+                      const isSelected = selectedTagId === tag.id;
+                      
+                      return (
+                        <div
+                          key={tag.id}
+                          className={`cursor-pointer py-2 px-3 transition-all hover:bg-muted/50 ${
+                            isSelected 
+                              ? "bg-muted font-semibold border-l-2 border-primary -ml-[2px] pl-[14px]" 
+                              : "hover:border-l-2 hover:border-muted-foreground/30"
+                          }`}
+                          onClick={() => {
+                            onTagSelect(isSelected ? null : tag.id);
+                            onFeedSelect(null); // Clear feed selection when tag is selected
+                          }}
+                        >
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="truncate flex items-center gap-2">
+                              {tag.color && (
+                                <div 
+                                  className="w-2 h-2 rounded-full flex-shrink-0" 
+                                  style={{ backgroundColor: tag.color }}
+                                />
+                              )}
+                              {escapeHtml(tag.name)}
+                            </span>
+                            <span className={`rounded-full px-1.5 py-0.5 text-xs ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-primary/10 text-primary"
+                            }`}>
+                              {tag.articleCount > 999 ? "999+" : tag.articleCount}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CollapsibleFilterSection>
+            )}
 
             {/* Empty State */}
             {feeds.size === 0 && !isSyncing && (
@@ -299,7 +366,10 @@ export function SimpleFeedSidebar({
                         ? "opacity-35 hover:opacity-100"
                         : ""
                     }`}
-                    onClick={() => onFeedSelect(feed.id)}
+                    onClick={() => {
+                      onFeedSelect(feed.id);
+                      onTagSelect(null); // Clear tag selection when feed is selected
+                    }}
                   >
                     <div className="flex items-center justify-between text-sm">
                       <span className="truncate">

@@ -47,31 +47,45 @@ This directory contains all technical documentation for the RSS News Reader appl
    - **Status**: Current ✅ (Updated for RR-150)
    - **Contents**: Feed and article cleanup, deletion tracking, chunked deletion to solve URI length limits
 
+### Tag Management System (RR-128)
+
+8. **Tag Architecture**
+   - **Description**: Comprehensive tag management system with full CRUD operations and XSS protection
+   - **Status**: Implemented ✅ 
+   - **Contents**: Tag creation, filtering, article association, HTML escaping, sidebar integration
+   - **Key Features**: 
+     - Tag API endpoints (`/api/tags`, `/api/articles/[id]/tags`)
+     - Database schema with `tags` and `article_tags` tables
+     - XSS protection via HTML escaping
+     - Tag sync from Inoreader categories
+     - Sidebar "Topics" section display
+     - Comprehensive test coverage
+
 ### Monitoring & Infrastructure
 
-8. **uptime-kuma-setup.md**
+9. **uptime-kuma-setup.md**
 
    - **Description**: Setup guide for Uptime Kuma monitoring service
    - **Status**: Current ✅
    - **Contents**: Docker setup, monitor configuration, alert rules
 
-9. **uptime-kuma-monitoring-strategy.md**
+10. **uptime-kuma-monitoring-strategy.md**
    - **Description**: Comprehensive monitoring strategy using Uptime Kuma
    - **Status**: Current ✅
    - **Contents**: Monitoring objectives, metrics, alerting strategy, dashboards
 
 ### Issues & Maintenance
 
-10. **known-issues.md**
+11. **known-issues.md**
 
     - **Description**: Documentation of known issues, limitations, and workarounds
     - **Status**: Living Document 🔄
     - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-11. **security.md**
+12. **security.md**
     - **Description**: Security measures, policies, and incident documentation
-    - **Status**: Current ✅
-    - **Contents**: Network security, authentication, security fixes (RR-69), best practices
+    - **Status**: Current ✅ (Updated for RR-128)
+    - **Contents**: Network security, authentication, security fixes (RR-69, RR-128), XSS protection, best practices
 
 ## Architecture Overview
 

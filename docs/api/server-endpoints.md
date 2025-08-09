@@ -391,6 +391,163 @@ GET /api/health/freshness
 
 ---
 
+### 9. List Tags
+
+**Endpoint:** `GET /api/tags`
+
+**Description:** Retrieves all tags for the user with optional filtering, sorting, and pagination
+
+**Request:**
+
+```
+GET /api/tags?search=tech&sortBy=count&order=desc&limit=20&offset=0&includeEmpty=false
+```
+
+**Query Parameters:**
+
+- `search` (optional): Filter tags by name (case-insensitive partial match)
+- `sortBy` (optional): Sort criteria - `name`, `count`, `recent` (default: `name`)
+- `order` (optional): Sort order - `asc`, `desc` (default: `asc`)
+- `limit` (optional): Number of results per page (default: 50, max: 100)
+- `offset` (optional): Number of results to skip (default: 0)
+- `includeEmpty` (optional): Include tags with 0 articles (default: false)
+
+**Response (Success):**
+
+```json
+{
+  "tags": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Technology",
+      "slug": "technology",
+      "color": "#3b82f6",
+      "description": "Technology and software articles",
+      "article_count": 42,
+      "created_at": "2025-01-08T10:00:00Z",
+      "updated_at": "2025-01-08T15:30:00Z",
+      "user_id": "user-uuid"
+    }
+  ],
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "total": 15,
+    "hasMore": false
+  }
+}
+```
+
+**Status Codes:**
+
+- 200: Success
+- 404: User not found
+- 500: Server error
+
+---
+
+### 10. Create Tag
+
+**Endpoint:** `POST /api/tags`
+
+**Description:** Creates a new tag for the user
+
+**Request:**
+
+```json
+POST /api/tags
+Content-Type: application/json
+
+{
+  "name": "Technology",
+  "color": "#3b82f6",
+  "description": "Technology and software articles"
+}
+```
+
+**Request Body:**
+
+- `name` (required): Tag name (will be trimmed and used to generate slug)
+- `color` (optional): Hex color code for the tag
+- `description` (optional): Tag description
+
+**Response (Success):**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "Technology",
+  "slug": "technology",
+  "color": "#3b82f6",
+  "description": "Technology and software articles",
+  "article_count": 0,
+  "created_at": "2025-01-08T10:00:00Z",
+  "updated_at": "2025-01-08T10:00:00Z",
+  "user_id": "user-uuid"
+}
+```
+
+**Response (Error):**
+
+```json
+{
+  "error": "Tag already exists"
+}
+```
+
+**Status Codes:**
+
+- 201: Tag created successfully
+- 400: Invalid request (missing name)
+- 404: User not found
+- 409: Tag already exists
+- 500: Server error
+
+---
+
+### 11. Get Article Tags
+
+**Endpoint:** `GET /api/articles/:id/tags`
+
+**Description:** Retrieves all tags associated with a specific article
+
+**Request:**
+
+```
+GET /api/articles/550e8400-e29b-41d4-a716-446655440000/tags
+```
+
+**Response (Success):**
+
+```json
+{
+  "tags": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Technology",
+      "slug": "technology",
+      "color": "#3b82f6",
+      "description": "Technology and software articles"
+    },
+    {
+      "id": "660f9511-f3ac-52e5-b827-557766551111",
+      "name": "AI",
+      "slug": "ai",
+      "color": "#ef4444",
+      "description": "Artificial Intelligence articles"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+
+- 200: Success
+- 404: Article not found
+- 500: Server error
+
+---
+
 ## Rate Limiting
 
 ### Inoreader API
@@ -459,6 +616,39 @@ CREATE TABLE sync_metadata (
 );
 ```
 
+### tags
+
+Stores user-created tags for organizing articles:
+
+```sql
+CREATE TABLE tags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) NOT NULL,
+  color VARCHAR(7),
+  description TEXT,
+  article_count INTEGER DEFAULT 0,
+  user_id UUID REFERENCES users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, slug)
+);
+```
+
+### article_tags
+
+Many-to-many relationship between articles and tags:
+
+```sql
+CREATE TABLE article_tags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(article_id, tag_id)
+);
+```
+
 ### articles (extended columns)
 
 ```sql
@@ -510,6 +700,24 @@ curl -X POST http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/fetch-cont
 # Generate AI summary
 curl -X POST http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/summarize \
   -H "Content-Type: application/json"
+
+# Get article tags
+curl http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/tags
+```
+
+#### Tag Operations
+
+```bash
+# List all tags
+curl http://100.96.166.53:3000/reader/api/tags
+
+# List tags with search and filtering
+curl "http://100.96.166.53:3000/reader/api/tags?search=tech&sortBy=count&order=desc&limit=10"
+
+# Create a new tag
+curl -X POST http://100.96.166.53:3000/reader/api/tags \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Technology","color":"#3b82f6","description":"Tech articles"}'
 ```
 
 ---

@@ -23,6 +23,8 @@ const serverArchitecture = {
     "/api/sync/status/:id": "Check sync progress",
     "/api/articles/:id/fetch-content": "Fetch full content",
     "/api/articles/:id/summarize": "Generate AI summary",
+    "/api/tags": "List and create tags (RR-128)",
+    "/api/articles/:id/tags": "Get article tags (RR-128)",
   },
 
   // Background Services

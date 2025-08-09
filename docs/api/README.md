@@ -12,6 +12,7 @@ This directory contains documentation for all API endpoints and server-side func
 - **Contents**:
   - Inoreader proxy endpoints (`/api/inoreader/*`)
   - Article content operations (`/api/articles/[id]/*`)
+  - Tag management endpoints (`/api/tags/*`)
   - Sync endpoints (`/api/sync/*`)
   - Health check endpoints (`/api/health/*`)
   - Analytics endpoints (`/api/analytics/*`)
@@ -36,7 +37,8 @@ This directory contains documentation for all API endpoints and server-side func
 | Category | Primary Endpoints                               | Purpose                           |
 | -------- | ----------------------------------------------- | --------------------------------- |
 | Inoreader| `/api/inoreader/user-info`, `/api/inoreader/subscriptions` | Proxy to Inoreader API |
-| Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize` | Content extraction and AI summaries |
+| Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize`, `/api/articles/[id]/tags` | Content extraction, AI summaries, and tag management |
+| Tags     | `/api/tags`, `/api/tags/[id]`                   | Tag creation and listing          |
 | Sync     | `/api/sync`, `/api/sync/status`                 | Manual and automatic sync         |
 | Health   | `/api/health/app`, `/api/health/db`             | System health monitoring          |
 | Analytics| `/api/analytics/fetch-stats`                    | Usage analytics                   |

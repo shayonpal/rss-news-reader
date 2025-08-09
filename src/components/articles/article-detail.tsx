@@ -14,9 +14,11 @@ import {
   MoreVertical,
   BarChart3,
   ArrowUp,
+  Tag,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { escapeHtml } from "@/lib/utils/html-escape";
 import DOMPurify from "isomorphic-dompurify";
 import { SummaryButton } from "./summary-button";
 import { StarButton } from "./star-button";
@@ -37,6 +39,7 @@ import {
 
 interface ArticleDetailProps {
   article: Article;
+  articleTags?: any[];
   feed?: Feed;
   feedTitle: string;
   onToggleStar: () => void;
@@ -46,6 +49,7 @@ interface ArticleDetailProps {
 
 export function ArticleDetail({
   article,
+  articleTags = [],
   feed,
   feedTitle,
   onToggleStar,
@@ -439,6 +443,34 @@ export function ArticleDetail({
               })}
             </time>
           </div>
+          
+          {/* Tags */}
+          {articleTags && articleTags.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Tag className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+              {articleTags.map((tag) => (
+                <button
+                  key={tag.id}
+                  onClick={() => {
+                    // Set tag filter in session storage and navigate to home
+                    sessionStorage.setItem('articleListTagFilter', tag.id);
+                    // Clear any feed filter to ensure tag filter takes precedence
+                    sessionStorage.setItem('articleListFilter', 'null');
+                    router.push('/');
+                  }}
+                  className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  style={{
+                    backgroundColor: tag.color ? `${tag.color}15` : undefined,
+                    color: tag.color || undefined,
+                    borderColor: tag.color ? `${tag.color}30` : undefined,
+                    borderWidth: tag.color ? '1px' : undefined,
+                  }}
+                >
+                  {escapeHtml(tag.name)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* AI Summary */}

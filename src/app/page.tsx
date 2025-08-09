@@ -45,6 +45,13 @@ export default function HomePage() {
     }
     return null;
   });
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const savedTagFilter = sessionStorage.getItem("articleListTagFilter");
+      return savedTagFilter === "null" ? null : savedTagFilter;
+    }
+    return null;
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const isIOS =
@@ -59,6 +66,16 @@ export default function HomePage() {
     setSelectedFeedId(feedId);
     // Save filter state for restoration
     sessionStorage.setItem("articleListFilter", feedId || "null");
+    // Close sidebar on mobile after selection
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleTagSelect = (tagId: string | null) => {
+    setSelectedTagId(tagId);
+    // Save tag filter state for restoration
+    sessionStorage.setItem("articleListTagFilter", tagId || "null");
     // Close sidebar on mobile after selection
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
@@ -150,7 +167,9 @@ export default function HomePage() {
         >
           <SimpleFeedSidebar
             selectedFeedId={selectedFeedId}
+            selectedTagId={selectedTagId}
             onFeedSelect={handleFeedSelect}
+            onTagSelect={handleTagSelect}
             onClose={() => setIsSidebarOpen(false)}
           />
         </ErrorBoundary>
@@ -186,6 +205,7 @@ export default function HomePage() {
         >
           <ArticleList
             feedId={selectedFeedId || undefined}
+            tagId={selectedTagId || undefined}
             onArticleClick={handleArticleClick}
             scrollContainerRef={articleListRef}
           />

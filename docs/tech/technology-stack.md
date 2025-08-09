@@ -90,7 +90,7 @@ The RSS Reader uses a clean separation of concerns:
 // Store slices
 - articlesStore: Article read operations from Supabase
 - feedsStore: Feed hierarchy from Supabase
-- tagsStore: Tag management from Supabase
+- tagsStore: Tag management and filtering (RR-128)
 - syncStore: Sync status polling
 - settingsStore: User preferences and theme
 ```
@@ -114,17 +114,21 @@ For simpler state requirements, could use React's built-in state management.
 **Tables Used:**
 
 ```sql
--- Existing tables (no schema changes needed)
+-- Existing tables
 - users: Single user record
 - folders: Feed folder hierarchy
 - feeds: Feed metadata and unread counts
 - articles: Article content and metadata
 
--- New tables
-- tags: User tags from Inoreader
-- article_tags: Tag assignments
+-- Tag management tables (RR-128)
+- tags: User tags with names, colors, descriptions
+- article_tags: Many-to-many article-tag relationships
+
+-- Sync and monitoring tables  
 - sync_metadata: Sync timestamps and status
 - sync_errors: Error logging
+- api_usage: API call tracking
+- fetch_logs: Content extraction logs
 ```
 
 ### Secondary Storage: **localStorage**
@@ -159,6 +163,9 @@ For theme preference only.
 - GET /api/sync/status/:syncId - Check sync progress
 - POST /api/articles/:id/fetch-content - Fetch full content
 - POST /api/articles/:id/summarize - Generate AI summary
+- GET /api/tags - List and search tags (RR-128)
+- POST /api/tags - Create new tags (RR-128)
+- GET /api/articles/:id/tags - Get article tags (RR-128)
 ```
 
 ### Server HTTP: **Axios**

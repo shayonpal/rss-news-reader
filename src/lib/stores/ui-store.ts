@@ -17,6 +17,9 @@ interface UIState {
   feedsSectionCollapsed: boolean;
   setFeedsSectionCollapsed: (collapsed: boolean) => void;
   toggleFeedsSection: () => void;
+  tagsSectionCollapsed: boolean;
+  setTagsSectionCollapsed: (collapsed: boolean) => void;
+  toggleTagsSection: () => void;
 
   // Article View
   isArticleOpen: boolean;
@@ -58,6 +61,10 @@ export const useUIStore = create<UIState>()(
       setFeedsSectionCollapsed: (collapsed) => set({ feedsSectionCollapsed: collapsed }),
       toggleFeedsSection: () =>
         set((state) => ({ feedsSectionCollapsed: !state.feedsSectionCollapsed })),
+      tagsSectionCollapsed: false,
+      setTagsSectionCollapsed: (collapsed) => set({ tagsSectionCollapsed: collapsed }),
+      toggleTagsSection: () =>
+        set((state) => ({ tagsSectionCollapsed: !state.tagsSectionCollapsed })),
 
       // Article View
       isArticleOpen: false,

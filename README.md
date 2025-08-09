@@ -159,7 +159,7 @@ The RSS reader includes an automatic sync service that runs 6 times daily to kee
 
 - **Schedule**: Every 4 hours at 2, 6, 10 AM and 2, 6, 10 PM (America/Toronto timezone)
 - **Implementation**: Node.js cron service running as separate PM2 process
-- **API Efficiency**: 24-30 API calls daily (well within 1000-5000 limit)
+- **API Efficiency**: 24-30 API calls daily (well within 200 daily limit - 100 Zone 1 + 100 Zone 2)
 - **Logging**: All sync operations logged to JSONL format for analysis
 - **Error Handling**: Automatic retry with exponential backoff
 

@@ -68,6 +68,18 @@ export interface Summary {
   isRegenerated: boolean;
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+  description?: string;
+  articleCount: number;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface SyncState {
   lastSyncAt?: Date;
   isOnline: boolean;

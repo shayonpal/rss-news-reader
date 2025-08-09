@@ -14,6 +14,7 @@ import type { Article } from "@/types";
 interface ArticleListProps {
   feedId?: string;
   folderId?: string;
+  tagId?: string;
   onArticleClick?: (articleId: string) => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
@@ -21,6 +22,7 @@ interface ArticleListProps {
 export function ArticleList({
   feedId,
   folderId,
+  tagId,
   onArticleClick,
   scrollContainerRef,
 }: ArticleListProps) {
@@ -80,8 +82,8 @@ export function ArticleList({
     if (markAsReadTimer.current) {
       clearTimeout(markAsReadTimer.current);
     }
-    loadArticles(feedId, folderId);
-  }, [feedId, folderId, loadArticles]);
+    loadArticles(feedId, folderId, tagId);
+  }, [feedId, folderId, tagId, loadArticles]);
 
   // Batch mark as read with debounce - now tracking auto-read articles
   const processPendingMarkAsRead = useCallback(() => {

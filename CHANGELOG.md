@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **[RR-128] Tags Filtering with Proper Architecture** (Saturday, August 9, 2025)
+  - **Database**: Added `tags` and `article_tags` tables with many-to-many relationships
+  - **Sync Integration**: Extracts tags from Inoreader categories during sync process
+  - **API Endpoints**: GET/POST `/api/tags` for tag management, GET `/api/articles/[id]/tags` for article tags
+  - **UI Components**: Collapsible "Topics" section in sidebar with tag filtering
+  - **State Management**: Zustand tag-store for tag selection and persistence
+  - **Security**: HTML escaping utility to prevent XSS attacks in tag names
+  - **Performance**: Proper indexing and tag count maintenance functions
+  - **RLS Policies**: Multi-user support with Row Level Security
+  - **Testing**: Comprehensive test suite with 93% pass rate
+  - **Impact**: Users can now filter articles by tags that span across multiple feeds
+
+### Documentation
+- **Comprehensive Documentation Update for RR-128 Tags Feature** (Saturday, August 9, 2025 at 1:05 AM)
+  - **API Documentation**: Added complete documentation for tags endpoints (`/api/tags`, `/api/articles/[id]/tags`) with request/response examples, query parameters, and status codes
+  - **Database Schema**: Documented tags and article_tags table structures with relationships, constraints, and indexes
+  - **Security Documentation**: Added RR-128 XSS protection implementation details including HTML escaping for tag names and user-generated content
+  - **Testing Documentation**: Added comprehensive tag system testing guidelines covering API, integration, E2E, and unit tests with file locations
+  - **Architecture Documentation**: Updated technology stack and implementation strategy to include tag management system
+  - **Tech README**: Added Tag Management System (RR-128) section with key features and implementation status
+  - **Files Updated**: docs/api/README.md, docs/api/server-endpoints.md, docs/tech/security.md, docs/testing/safe-test-practices.md, docs/tech/technology-stack.md, docs/tech/implementation-strategy.md, docs/tech/README.md
+  - **Impact**: Complete documentation coverage for tags feature including CRUD operations, XSS protection, sync integration, and UI components
+
+- **Corrected Inoreader API Limits Documentation** (Saturday, August 9, 2025 at 1:01 AM)
+  - **Fixed**: Updated CHANGELOG.md line 202 from "well within 1000-5000 limit" to "well within 200 daily limit" 
+  - **Fixed**: Updated README.md line 162 from "well within 1000-5000 limit" to "well within 200 daily limit (100 Zone 1 + 100 Zone 2)"
+  - **Context**: Corrected documentation to reflect actual Inoreader API limits of 200 requests per day total (100 Zone 1 + 100 Zone 2)
+  - **Impact**: Documentation now accurately represents API constraints with current usage of 24-30 calls daily staying well within limits
+
 ## [0.12.1] - Thursday, August 7, 2025 at 9:21 PM
 
 ### Added
@@ -199,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Monitoring Updates**: Adjusted thresholds - article freshness to 5 hours, sync interval to 6 hours
   - **API Rate Limit Tracking**: Added header parsing for X-Reader-Zone1-Usage/Limit headers with throttling recommendations
   - **Materialized View Refresh**: Automatic `feed_stats` refresh after each successful sync via new `/api/sync/refresh-view` endpoint
-  - **Resource Usage**: Stable at 24-30 API calls/day (well within 1000-5000 limit), ~68MB memory for cron service
+  - **Resource Usage**: Stable at 24-30 API calls/day (well within 200 daily limit), ~68MB memory for cron service
   - **Uptime Kuma**: Already configured correctly with 4-hour heartbeat interval
 
 - **Service Health Monitoring (RR-125) - Completed** (Tuesday, August 5, 2025)

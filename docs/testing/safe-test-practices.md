@@ -161,6 +161,55 @@ This provides a live dashboard showing:
 3. **Act on red alerts**: Immediately run emergency cleanup if critical levels are reached
 4. **Check after test completion**: Verify no orphaned processes remain
 
+## Tag System Testing (RR-128)
+
+### Test Categories for Tags Feature
+
+**API Tests:**
+- Tag creation and validation (`/api/tags POST`)
+- Tag listing with filtering and pagination (`/api/tags GET`)
+- Article tag retrieval (`/api/articles/[id]/tags GET`)
+- HTML escaping and XSS protection in all endpoints
+- Error handling for duplicate tags and invalid input
+
+**Integration Tests:**
+- Tag sync from Inoreader categories during sync operations
+- Article-tag relationship management in database
+- Tag count maintenance and updates
+- Database constraint validation (unique slugs, foreign keys)
+
+**E2E Tests:**  
+- Tag display in sidebar "Topics" section
+- Tag filtering and search functionality
+- Tag creation through UI forms
+- Tag association with articles
+- XSS attack prevention in tag names
+
+**Unit Tests:**
+- Tag store state management
+- Tag utility functions (slug generation, HTML escaping)
+- Tag component rendering and interactions
+- Tag validation logic
+
+### Tag Test File Locations
+
+```
+src/__tests__/
+├── api/
+│   └── tags.test.ts                    # API endpoint tests
+├── integration/
+│   ├── tags-api.test.ts               # Integration API tests
+│   ├── tags-sync.test.ts              # Tag sync integration  
+│   └── rr-128-tags-e2e.test.ts       # End-to-end tag tests
+├── stores/
+│   └── tag-store.test.ts              # Tag store unit tests
+├── unit/
+│   └── tags-schema.test.ts            # Tag validation tests
+└── e2e/
+    ├── tags-functionality.spec.ts     # E2E tag functionality
+    └── tags-article-detail.spec.ts    # E2E article tag tests
+```
+
 ## Memory-Efficient Test Writing
 
 ### Unit Test Guidelines
@@ -187,6 +236,8 @@ This provides a live dashboard showing:
 - Mock external APIs (Inoreader, Claude)
 - Test API endpoints in isolation
 - Limit concurrent database connections
+- Test tag-related API endpoints with proper data isolation (RR-128)
+- Verify HTML escaping in tag creation and retrieval tests
 
 **❌ DON'T:**
 - Run integration tests alongside unit tests
@@ -194,6 +245,7 @@ This provides a live dashboard showing:
 - Test multiple API endpoints simultaneously
 - Create test data without cleanup
 - Mock core application logic (test the real implementation)
+- Test tags functionality without proper XSS protection verification
 
 ### Example: Memory-Safe Test Structure
 

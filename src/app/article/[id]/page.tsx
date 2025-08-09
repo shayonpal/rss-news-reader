@@ -18,6 +18,7 @@ export default function ArticlePage() {
   const { articles, getArticle, markAsRead, toggleStar } = useArticleStore();
   const { feeds } = useFeedStore();
   const [article, setArticle] = useState<Article | null>(null);
+  const [articleTags, setArticleTags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFoundError, setNotFoundError] = useState(false);
 
@@ -31,6 +32,17 @@ export default function ArticlePage() {
           
           // Track navigation to this article
           navigationHistory.addEntry(`/article/${articleId}`, articleId);
+          
+          // Fetch tags for the article
+          try {
+            const tagsResponse = await fetch(`/reader/api/articles/${articleId}/tags`);
+            if (tagsResponse.ok) {
+              const { tags } = await tagsResponse.json();
+              setArticleTags(tags || []);
+            }
+          } catch (error) {
+            console.error("Error fetching article tags:", error);
+          }
           
           // Mark as read when opened
           if (!fetchedArticle.isRead) {
@@ -110,6 +122,7 @@ export default function ArticlePage() {
   return (
     <ArticleDetail
       article={article}
+      articleTags={articleTags}
       feed={feed}
       feedTitle={feed?.title || "Unknown Feed"}
       onToggleStar={handleToggleStar}

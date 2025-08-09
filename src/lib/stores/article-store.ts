@@ -24,7 +24,7 @@ interface ArticleStoreState {
   loadingMore: boolean;
 
   // Actions
-  loadArticles: (feedId?: string, folderId?: string) => Promise<void>;
+  loadArticles: (feedId?: string, folderId?: string, tagId?: string) => Promise<void>;
   loadMoreArticles: () => Promise<void>;
   getArticle: (id: string) => Promise<Article | null>;
 
@@ -227,7 +227,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   loadingMore: false,
 
   // Load articles with pagination
-  loadArticles: async (feedId?: string, folderId?: string) => {
+  loadArticles: async (feedId?: string, folderId?: string, tagId?: string) => {
     set({ loadingArticles: true, articlesError: null });
 
     try {
@@ -318,6 +318,30 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const filter = get().filter;
       if (filter === "starred") {
         query = query.eq("is_starred", true);
+      }
+
+      // Apply tag filter
+      if (tagId) {
+        // Filter articles that have this tag through the article_tags junction table
+        const { data: taggedArticles } = await supabase
+          .from("article_tags")
+          .select("article_id")
+          .eq("tag_id", tagId);
+        
+        const articleIds = taggedArticles?.map(at => at.article_id) || [];
+        if (articleIds.length > 0) {
+          query = query.in("id", articleIds);
+        } else {
+          // No articles with this tag, return empty result
+          set({
+            articles: new Map(),
+            hasMore: false,
+            loadingArticles: false,
+            selectedFeedId: feedId || null,
+            selectedFolderId: folderId || null,
+          });
+          return;
+        }
       }
 
       // Limit results
