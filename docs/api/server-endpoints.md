@@ -28,14 +28,14 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 ### Sync
 
 - POST `/api/sync`
-  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers background bi-directional sync.
-  - Response 200: `{ success, syncId, message, rateLimit: { remaining, limit, used } }`
+  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers bi-directional queue processing.
+  - Response 200: `{ success, syncId, status, message, metrics: { newArticles, deletedArticles, newTags, failedFeeds }, sidebar: { feedCounts: [[feedId, unreadCount], ...], tags: [{ id, name, count }], lastUpdated } }`
   - Response 429: `{ error: "rate_limit_exceeded", ... }`
   - Response 500: `{ error: "sync_start_failed", message, details }`
 
 - GET `/api/sync/status/{syncId}`
   - Description: Poll sync status; primary source is a temp file with DB fallback.
-  - Response 200: `{ status, progress, message, error?, itemsProcessed, totalItems }`
+  - Response 200: `{ status: "pending"|"running"|"completed"|"partial"|"failed", progress, message, error?, itemsProcessed, totalItems }`
   - Response 404: `{ error: "sync_not_found", message }`
 
 - GET `/api/sync/last-sync`
@@ -143,9 +143,13 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
   - Responses: 200 unread counts; 401; 5xx passthrough.
 
 - POST `/api/inoreader/edit-tag`
-  - Description: Proxies Inoreader edit-tag to update read/star states in batch.
-  - Body: `application/x-www-form-urlencoded` (forwarded as-is)
-  - Responses: 200 `{ success: boolean }` (OK == true); 401; 5xx passthrough.
+  - Description: Proxies Inoreader edit-tag to update read/star states in batch (bi-directional sync).
+  - Body: `application/x-www-form-urlencoded` (forwarded as-is). Includes item IDs and add/remove state labels.
+  - Responses:
+    - 200: `{ success: true }`
+    - 401/403: auth failures (OAuth tokens missing/expired)
+    - 429: rate limited (honor `Retry-After` header)
+    - 5xx: upstream error passthrough
 
 - GET `/api/inoreader/debug`
   - Description: Returns cookie/token presence and expiry diagnostics (for debugging).

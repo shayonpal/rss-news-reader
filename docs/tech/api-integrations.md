@@ -150,14 +150,14 @@ GET / reader / api / 0 / unread - count;
 }
 ```
 
-#### 5. Mark Items as Read/Unread
+#### 5. Mark Items as Read/Unread (Bi-directional)
 
 ```typescript
 POST / reader / api / 0 / edit - tag;
 ```
 
-**Purpose**: Sync read/unread states
-**Frequency**: Every 30 minutes or on app close
+**Purpose**: Sync read/unread/star/unstar states (bi-directional)
+**Frequency**: Batched every ~5 minutes by queue processor, or sooner if thresholds/age conditions are met
 **Rate Limit Impact**: 1 call per batch (up to 100 items)
 **Payload**:
 
@@ -193,6 +193,8 @@ const syncStrategy = {
 // Daily usage: ~24-30 calls (6 incremental syncs + occasional full sync)
 // Leaves 75+ calls for manual operations
 ```
+
+See also: `docs/tech/bidirectional-sync.md` for end-to-end behavior, queue semantics, and conflict handling.
 
 **Rate Limit Management**:
 

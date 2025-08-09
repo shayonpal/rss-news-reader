@@ -17,7 +17,7 @@ A PM2-managed service that continuously monitors the health of all RSS Reader co
 
 The monitor checks these endpoints:
 - `/api/health` - Main application health
-- `/api/health/freshness` - Data freshness check  
+- (retired) `/api/health/freshness` - use `/api/health/parsing` and sync server health instead  
 - `/api/health/cron` - Cron service status
 - `http://localhost:3001/health` - Sync server health
 

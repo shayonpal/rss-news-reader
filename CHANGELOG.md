@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+- **[RR-167] Comprehensive Bi-Directional Sync Documentation** (Saturday, August 9, 2025 at 12:39 PM)
+  - **Technical Architecture**: Created comprehensive technical documentation at `docs/tech/bidirectional-sync.md` covering sync architecture, data flow patterns, conflict resolution, and implementation details
+  - **API Documentation**: Enhanced `docs/api/server-endpoints.md` with detailed bi-directional sync endpoint specifications, request/response formats, and error handling patterns
+  - **README Enhancement**: Updated project README to reference new documentation structure and provide clear navigation to technical resources
+  - **Documentation Archival**: Archived old investigation document `docs/investigations/sync-bidirectional-investigation.md` with proper deprecation notice pointing to new authoritative documentation
+  - **Multi-Audience Content**: Documentation now serves Product Managers (high-level flows), Developers (technical implementation), and QAs (testing scenarios) with appropriate technical depth for each audience
+  - **Cross-References**: Added comprehensive cross-referencing between related documentation sections for improved navigation and context
+  - **Impact**: Complete documentation ecosystem for bi-directional sync feature covering architecture, implementation, and operational aspects
+
 - **API Integrations Documentation Update for RR-163 Dynamic Sidebar Filtering** (Saturday, August 9, 2025 at 11:57 AM)
   - **Enhanced Tag Data Model**: Documented extended Tag interface with `unreadCount` and `totalCount` fields for real-time filtering support
   - **API Enhancements**: Added comprehensive documentation for enhanced `/api/tags` endpoint with per-user unread count calculation and cross-user data prevention

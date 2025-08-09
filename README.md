@@ -203,34 +203,10 @@ For detailed automatic sync documentation, see [docs/deployment/automatic-sync.m
 
 ## Bi-directional Sync
 
-The RSS reader includes bi-directional sync that pushes your reading activity back to Inoreader:
+Bi-directional sync pushes your reading activity back to Inoreader (read/unread, star/unstar) using a durable queue and batch updates. See the full technical guide:
 
-- **Supported Actions**: Read/unread status, star/unstar articles
-- **Sync Interval**: Changes sync every 5 minutes automatically
-- **Batch Processing**: Multiple changes are batched to minimize API calls
-- **Conflict Resolution**: Last-write-wins based on timestamps
-- **Retry Logic**: Failed syncs retry with exponential backoff
-- **Sync Queue**: Local changes queued until successfully synced
-- **Rate Limiting**: Manual sync button includes 30-second cooldown with visual countdown
-- **Concurrency Control**: Single sync guard prevents duplicate operations with 500ms debounce
-
-### How It Works
-
-1. User actions (marking read, starring) are tracked locally
-2. Changes are added to a sync queue with timestamps
-3. Every 5 minutes, the sync service processes the queue
-4. Changes are batched and sent to Inoreader's `/edit-tag` endpoint
-5. Successfully synced items are removed from the queue
-6. Failed items retry up to 3 times with increasing delays
-
-### Sync User Experience
-
-- **Manual Sync**: Triggered by sync button, shows skeleton loading states, displays toast with sync metrics
-- **Background Sync**: Automated 6x daily, silent operation with optional refresh action in info toast
-- **Error Handling**: User-friendly messages for failed sync attempts with retry suggestions
-- **Progress Feedback**: Real-time status updates and visual feedback during sync operations
-
-This ensures your reading progress stays synchronized across all Inoreader clients with clear user feedback.
+- Technical doc: `docs/tech/bidirectional-sync.md`
+- API reference: `docs/api/server-endpoints.md` (Sync and Inoreader sections)
 
 ## Development Setup
 
