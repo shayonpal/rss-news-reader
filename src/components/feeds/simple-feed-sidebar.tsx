@@ -282,10 +282,56 @@ export function SimpleFeedSidebar({
             </div>
 
             {/* Tags Section */}
-            {Array.from(tags.values()).filter(t => t.articleCount > 0).length > 0 && (
+            {Array.from(tags.values()).filter(t => {
+              // RR-163: Filter count based on read status (same logic as below)
+              if (readStatusFilter === "unread") {
+                const hasUnread = (t.unreadCount ?? 0) > 0;
+                const hasArticles = (t.totalCount ?? t.articleCount) > 0;
+                
+                // If tag has unread, show it
+                if (hasUnread) return true;
+                
+                // If system has unread articles but no tags show unread counts,
+                // show all tags with articles (fallback for sync issues)
+                if (totalUnreadCount > 0 && hasArticles) {
+                  const noTagsHaveUnread = Array.from(tags.values()).every(tag => (tag.unreadCount ?? 0) === 0);
+                  return noTagsHaveUnread;
+                }
+                
+                return false;
+              } else if (readStatusFilter === "read") {
+                const totalCount = t.totalCount ?? t.articleCount;
+                const unreadCount = t.unreadCount ?? 0;
+                return totalCount > 0 && unreadCount === 0;
+              }
+              return (t.totalCount ?? t.articleCount) > 0;
+            }).length > 0 && (
               <CollapsibleFilterSection
                 title="Topics"
-                count={Array.from(tags.values()).filter(t => t.articleCount > 0).length}
+                count={Array.from(tags.values()).filter(t => {
+                  // RR-163: Show filtered count in header (same logic as section visibility)
+                  if (readStatusFilter === "unread") {
+                    const hasUnread = (t.unreadCount ?? 0) > 0;
+                    const hasArticles = (t.totalCount ?? t.articleCount) > 0;
+                    
+                    // If tag has unread, show it
+                    if (hasUnread) return true;
+                    
+                    // If system has unread articles but no tags show unread counts,
+                    // show all tags with articles (fallback for sync issues)
+                    if (totalUnreadCount > 0 && hasArticles) {
+                      const noTagsHaveUnread = Array.from(tags.values()).every(tag => (tag.unreadCount ?? 0) === 0);
+                      return noTagsHaveUnread;
+                    }
+                    
+                    return false;
+                  } else if (readStatusFilter === "read") {
+                    const totalCount = t.totalCount ?? t.articleCount;
+                    const unreadCount = t.unreadCount ?? 0;
+                    return totalCount > 0 && unreadCount === 0;
+                  }
+                  return (t.totalCount ?? t.articleCount) > 0;
+                }).length}
                 defaultOpen={!tagsSectionCollapsed}
                 onToggle={(isOpen) => setTagsSectionCollapsed(!isOpen)}
                 icon={<LayoutDashboard className="h-3.5 w-3.5" />}
@@ -306,10 +352,63 @@ export function SimpleFeedSidebar({
                     </>
                   ) : (
                     Array.from(tags.values())
-                    .filter(tag => tag.articleCount > 0)
+                    .filter(tag => {
+                      // RR-163: Filter tags based on read status
+                      // Always show the currently selected tag
+                      if (selectedTagId === tag.id) return true;
+                      
+                      // Filter based on read status filter
+                      if (readStatusFilter === "unread") {
+                        const hasUnread = (tag.unreadCount ?? 0) > 0;
+                        const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
+                        
+                        // If tag has unread, show it
+                        if (hasUnread) return true;
+                        
+                        // If system has unread articles but no tags show unread counts,
+                        // show all tags with articles (fallback for sync issues)
+                        if (totalUnreadCount > 0 && hasArticles) {
+                          const noTagsHaveUnread = Array.from(tags.values()).every(t => (t.unreadCount ?? 0) === 0);
+                          return noTagsHaveUnread;
+                        }
+                        
+                        return false;
+                      } else if (readStatusFilter === "read") {
+                        const totalCount = tag.totalCount ?? tag.articleCount;
+                        const unreadCount = tag.unreadCount ?? 0;
+                        return totalCount > 0 && unreadCount === 0;
+                      } else {
+                        // 'all' - show all non-empty tags
+                        return (tag.totalCount ?? tag.articleCount) > 0;
+                      }
+                    })
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((tag) => {
                       const isSelected = selectedTagId === tag.id;
+                      const hasUnread = (tag.unreadCount ?? 0) > 0;
+                      
+                      // RR-163: Determine which count to show based on filter
+                      let displayCount: number;
+                      if (readStatusFilter === "unread") {
+                        const unreadCount = tag.unreadCount ?? 0;
+                        // If tag has actual unread count, show it
+                        if (unreadCount > 0) {
+                          displayCount = unreadCount;
+                        } else {
+                          // Fallback: if system has unread but this tag shows 0, show total articles
+                          // (indicates unread articles aren't properly tagged)
+                          const noTagsHaveUnread = Array.from(tags.values()).every(t => (t.unreadCount ?? 0) === 0);
+                          displayCount = (totalUnreadCount > 0 && noTagsHaveUnread) 
+                            ? (tag.totalCount ?? tag.articleCount) 
+                            : 0;
+                        }
+                      } else if (readStatusFilter === "read") {
+                        const totalCount = tag.totalCount ?? tag.articleCount;
+                        const unreadCount = tag.unreadCount ?? 0;
+                        displayCount = totalCount - unreadCount;
+                      } else {
+                        displayCount = tag.totalCount ?? tag.articleCount;
+                      }
                       
                       return (
                         <div
@@ -318,6 +417,11 @@ export function SimpleFeedSidebar({
                             isSelected 
                               ? "bg-muted font-semibold border-l-2 border-primary -ml-[2px] pl-[14px]" 
                               : "hover:border-l-2 hover:border-muted-foreground/30"
+                          } ${
+                            // RR-163: Dim tags with no unread in 'all' mode
+                            readStatusFilter === "all" && !hasUnread && !isSelected
+                              ? "opacity-35 hover:opacity-100"
+                              : ""
                           }`}
                           onClick={() => {
                             onTagSelect(isSelected ? null : tag.id);
@@ -334,17 +438,54 @@ export function SimpleFeedSidebar({
                               )}
                               {decodeHtmlEntities(tag.name)}
                             </span>
-                            <span className={`rounded-full px-1.5 py-0.5 text-xs ${
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-primary/10 text-primary"
-                            }`}>
-                              {tag.articleCount > 999 ? "999+" : tag.articleCount}
-                            </span>
+                            {displayCount > 0 && (
+                              <span className={`rounded-full px-1.5 py-0.5 text-xs ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : hasUnread && readStatusFilter !== "read"
+                                  ? "bg-primary/10 text-primary"
+                                  : "bg-muted-foreground/10 text-muted-foreground"
+                              }`}>
+                                {displayCount > 999 ? "999+" : displayCount}
+                              </span>
+                            )}
                           </div>
                         </div>
                       );
                     })
+                  )}
+                  {/* RR-163: Empty state message for filtered tags */}
+                  {!isSkeletonLoading && Array.from(tags.values()).filter(tag => {
+                    if (selectedTagId === tag.id) return true;
+                    if (readStatusFilter === "unread") {
+                      const hasUnread = (tag.unreadCount ?? 0) > 0;
+                      const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
+                      
+                      // If tag has unread, show it
+                      if (hasUnread) return true;
+                      
+                      // If system has unread articles but no tags show unread counts,
+                      // show all tags with articles (fallback for sync issues)
+                      if (totalUnreadCount > 0 && hasArticles) {
+                        const noTagsHaveUnread = Array.from(tags.values()).every(t => (t.unreadCount ?? 0) === 0);
+                        return noTagsHaveUnread;
+                      }
+                      
+                      return false;
+                    } else if (readStatusFilter === "read") {
+                      const totalCount = tag.totalCount ?? tag.articleCount;
+                      const unreadCount = tag.unreadCount ?? 0;
+                      return totalCount > 0 && unreadCount === 0;
+                    }
+                    return (tag.totalCount ?? tag.articleCount) > 0;
+                  }).length === 0 && (
+                    <div className="py-4 px-3 text-center text-sm text-muted-foreground">
+                      {readStatusFilter === "unread" 
+                        ? "No topics with unread articles"
+                        : readStatusFilter === "read"
+                        ? "No topics with only read articles" 
+                        : "No topics found"}
+                    </div>
                   )}
                 </div>
               </CollapsibleFilterSection>

@@ -649,12 +649,30 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         updateStore
       );
 
+      // RR-163: Optimistically update unread count for the currently selected tag (if any)
+      try {
+        const { useTagStore } = await import('./tag-store');
+        const tagState = useTagStore.getState();
+        if (tagState.selectedTagIds.size === 1) {
+          tagState.updateSelectedTagUnreadCount(-1);
+        }
+      } catch (e) {
+        // Non-fatal; sidebar counts will refresh on next sync
+        console.warn('[Articles] Failed to optimistically update tag unread count:', e);
+      }
+
       // Invalidate article count cache
       if (
         typeof window !== "undefined" &&
         (window as any).__articleCountManager
       ) {
         (window as any).__articleCountManager.invalidateCache(article.feedId);
+      }
+
+      // RR-163: Optimistically update selected tag unread count by -1
+      const tagStore = (await import('@/lib/stores/tag-store')).useTagStore.getState();
+      if (tagStore.selectedTagIds.size === 1) {
+        tagStore.updateSelectedTagUnreadCount(-1);
       }
 
       // Queue for sync if offline (legacy offline queue)
@@ -741,6 +759,17 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         updateStore
       );
 
+      // RR-163: Optimistically update unread count for selected tag by the number of articles auto-marked
+      try {
+        const { useTagStore } = await import('./tag-store');
+        const tagState = useTagStore.getState();
+        if (tagState.selectedTagIds.size === 1) {
+          tagState.updateSelectedTagUnreadCount(-articlesToMark.length);
+        }
+      } catch (e) {
+        console.warn('[Articles] Failed to optimistically update tag unread count (batch):', e);
+      }
+
       // Invalidate article count cache
       if (
         typeof window !== "undefined" &&
@@ -765,6 +794,12 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         affectedFeeds.forEach((feedId) => {
           (window as any).__articleCountManager.invalidateCache(feedId);
         });
+      }
+
+      // RR-163: Optimistically update selected tag unread count by -N
+      const tagStore = (await import('@/lib/stores/tag-store')).useTagStore.getState();
+      if (tagStore.selectedTagIds.size === 1) {
+        tagStore.updateSelectedTagUnreadCount(-articlesToMark.length);
       }
 
       console.log(`Marked ${articlesToMark.length} articles as read`);

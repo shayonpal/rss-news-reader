@@ -83,6 +83,9 @@ Verify if other docs need updates:
 - README for new features or setup changes
 - Configuration docs for new env vars
 
+### 2C. Check & Update memory
+If not already done, update the project memory with a brief information about what has been implemented using `memory` MCP server.
+
 ## Step 3: Generate Commit Context for git-expert
 
 Prepare comprehensive context for git-expert:

@@ -16,6 +16,7 @@ export interface ListState {
   filterMode: 'all' | 'unread' | 'read';
   feedId?: string;
   folderId?: string;
+  tagId?: string; // RR-163: Add tagId for state preservation
   visibleRange?: { start: number; end: number };
   totalArticles?: number;
 }

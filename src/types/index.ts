@@ -75,6 +75,8 @@ export interface Tag {
   color?: string;
   description?: string;
   articleCount: number;
+  unreadCount?: number;  // RR-163: Track unread articles per tag
+  totalCount?: number;    // RR-163: Explicit total (alias of articleCount)
   userId: string;
   createdAt: Date;
   updatedAt: Date;

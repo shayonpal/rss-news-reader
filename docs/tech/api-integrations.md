@@ -928,4 +928,286 @@ interface SidebarPayload {
 }
 ```
 
+## RR-163 Dynamic Sidebar Filtering - Tag-Based Article Filtering
+
+### Overview
+
+The RR-163 implementation adds comprehensive tag-based filtering to the sidebar, enabling users to filter articles dynamically based on Read/Unread/All status with real-time unread count tracking.
+
+### Enhanced Tag Data Model
+
+```typescript
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+  description?: string;
+  articleCount: number;       // Total articles with this tag
+  unreadCount?: number;       // RR-163: Unread articles with this tag
+  totalCount?: number;        // RR-163: Explicit total (alias of articleCount)
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### API Enhancements
+
+#### Enhanced GET /api/tags Endpoint
+
+The `/api/tags` endpoint now includes per-user unread count calculation:
+
+```typescript
+// Enhanced response format
+interface TagsResponse {
+  tags: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    article_count: number;
+    unread_count: number;      // RR-163: New field
+    // ... other tag fields
+  }>;
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+```
+
+**Implementation Details:**
+- Scopes unread count calculation to user's subscribed feeds only
+- Prevents cross-user data contamination
+- Uses optimized SQL joins: `articles → article_tags → tags`
+- Returns 0 for tags without unread articles
+
+```typescript
+// Per-user feed scoping query
+const { data: userFeeds } = await supabase
+  .from("feeds")
+  .select("id")
+  .eq("user_id", userData.id);
+
+const feedIds = userFeeds.map(f => f.id);
+
+// Unread articles query scoped to user's feeds
+const { data: unreadCounts } = await supabase
+  .from("articles")
+  .select(`
+    id,
+    article_tags!inner(
+      tag_id,
+      tags!inner(id)
+    )
+  `)
+  .in("feed_id", feedIds)
+  .eq("is_read", false);
+```
+
+### Tag Store Integration
+
+#### Merge Strategy for Sync Updates
+
+```typescript
+// RR-163: Tag store merge logic
+applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => {
+  // Don't reset counts if sync returns no tags
+  if (sidebarTags.length === 0) {
+    console.log('No sidebar tags from sync, keeping existing unread counts');
+    return;
+  }
+  
+  set((state) => {
+    const mergedTags = new Map(state.tags);
+    
+    // Reset all unreadCounts to 0 (tags not in response have 0 unread)
+    mergedTags.forEach(tag => {
+      tag.unreadCount = 0;
+    });
+    
+    // Update with new unread counts from sync
+    sidebarTags.forEach(sidebarTag => {
+      const existing = mergedTags.get(sidebarTag.id);
+      if (existing) {
+        existing.unreadCount = sidebarTag.count;
+      }
+    });
+    
+    return { tags: mergedTags };
+  });
+}
+```
+
+#### Optimistic Updates
+
+```typescript
+// RR-163: Immediate UI updates when articles are marked read
+updateSelectedTagUnreadCount: (delta: number) => {
+  set((state) => {
+    // Only update if single tag selected
+    if (state.selectedTagIds.size !== 1) return state;
+    
+    const tagId = Array.from(state.selectedTagIds)[0];
+    const updatedTags = new Map(state.tags);
+    const tag = updatedTags.get(tagId);
+    
+    if (tag && tag.unreadCount !== undefined) {
+      // Bound at 0 to prevent negative counts
+      tag.unreadCount = Math.max(0, tag.unreadCount + delta);
+    }
+    
+    return { tags: updatedTags };
+  });
+}
+```
+
+### Filtering Logic
+
+#### Three-Mode Filtering System
+
+```typescript
+// Sidebar filtering based on read status
+const filterTags = (tags: Tag[], readStatusFilter: string, totalUnreadCount: number) => {
+  return tags.filter(tag => {
+    // Always show currently selected tag
+    if (selectedTagId === tag.id) return true;
+    
+    if (readStatusFilter === "unread") {
+      const hasUnread = (tag.unreadCount ?? 0) > 0;
+      const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
+      
+      // If tag has unread, show it
+      if (hasUnread) return true;
+      
+      // Fallback: If system has unread but no tags show unread counts,
+      // show all tags with articles (handles sync issues)
+      if (totalUnreadCount > 0 && hasArticles) {
+        const noTagsHaveUnread = tags.every(t => (t.unreadCount ?? 0) === 0);
+        return noTagsHaveUnread;
+      }
+      
+      return false;
+    } else if (readStatusFilter === "read") {
+      const totalCount = tag.totalCount ?? tag.articleCount;
+      const unreadCount = tag.unreadCount ?? 0;
+      return totalCount > 0 && unreadCount === 0;
+    } else {
+      // 'all' - show all non-empty tags
+      return (tag.totalCount ?? tag.articleCount) > 0;
+    }
+  });
+};
+```
+
+#### Smart Fallback Logic
+
+The system includes intelligent fallback behavior for edge cases:
+
+- **Normal Operation**: Shows tags with actual unread counts
+- **Sync Edge Case**: When system has unread articles but all tags show 0 unread count, shows all tags with articles using total counts
+- **Visual Indication**: In 'all' mode, dims tags with no unread articles using opacity
+
+### State Preservation Integration
+
+#### RR-27 Enhancement
+
+The implementation extends RR-27 state preservation to include tag context:
+
+```typescript
+interface UseArticleListStateProps {
+  articles: Map<string, Article>;
+  feedId: string | null;
+  folderId: string | null;
+  tagId?: string;              // RR-163: Added for tag context preservation
+  readStatusFilter: string;
+  scrollContainerRef: React.RefObject<HTMLElement>;
+  onArticleClick: (article: Article) => void;
+  autoMarkObserverRef: React.MutableRefObject<IntersectionObserver | null>;
+}
+```
+
+This ensures that when users navigate back from article detail view, they return to the same tag filter instead of defaulting to "All Articles".
+
+### Mark-as-Read Integration
+
+#### Optimistic UI Updates
+
+Both single and batch mark-as-read operations trigger immediate tag count updates:
+
+```typescript
+// Single article mark-as-read
+await markArticlesAsReadWithSession([articleId], ...);
+
+// RR-163: Optimistically update selected tag unread count by -1
+try {
+  const { useTagStore } = await import('./tag-store');
+  const tagState = useTagStore.getState();
+  if (tagState.selectedTagIds.size === 1) {
+    tagState.updateSelectedTagUnreadCount(-1);
+  }
+} catch (e) {
+  console.warn('Failed to optimistically update tag unread count:', e);
+}
+
+// Batch article mark-as-read (auto-read)
+await markArticlesAsReadWithSession(articlesToMark, ...);
+
+// RR-163: Optimistically update selected tag unread count by -N
+try {
+  const { useTagStore } = await import('./tag-store');
+  const tagState = useTagStore.getState();
+  if (tagState.selectedTagIds.size === 1) {
+    tagState.updateSelectedTagUnreadCount(-articlesToMark.length);
+  }
+} catch (e) {
+  console.warn('Failed to optimistically update tag unread count (batch):', e);
+}
+```
+
+### Data Flow Architecture
+
+```
+User Loads App → Tag Store loads from /api/tags with unread_count → Immediate display with accurate counts
+                                    ↓
+User Marks Article Read → Optimistic UI Update (-1 unread) → Background sync to Inoreader → Sync response updates counts
+                                    ↓
+User Syncs Manually → Fetch from Inoreader → Update database → /api/tags recalculates → Tag store merges new counts
+```
+
+### Performance Considerations
+
+- **Immediate Load**: Tags display with unread counts on initial page load (no sync required)
+- **Optimistic Updates**: UI updates immediately when articles are marked read
+- **Efficient Queries**: Per-user scoping prevents unnecessary data processing
+- **Smart Caching**: Tag store preserves existing tags and only updates counts
+- **Fallback Performance**: Fallback logic executes only when needed
+
+### Error Handling
+
+```typescript
+// Graceful error handling for optimistic updates
+try {
+  tagState.updateSelectedTagUnreadCount(-1);
+} catch (e) {
+  // Non-fatal; sidebar counts will refresh on next sync
+  console.warn('Failed to optimistically update tag unread count:', e);
+}
+```
+
+### Integration Testing
+
+Key test scenarios for RR-163:
+- Tag filtering accuracy across all three modes (unread/read/all)
+- Optimistic update synchronization with actual data
+- Fallback behavior when tag associations are incomplete
+- State preservation during navigation
+- Cross-device sync consistency
+
+This comprehensive tag filtering system provides users with accurate, real-time article filtering capabilities while maintaining optimal performance and reliable data synchronization.
+
+## Conclusion
+
 This comprehensive API integration plan ensures efficient use of both Inoreader and Claude APIs while maintaining good user experience and staying within rate limits.

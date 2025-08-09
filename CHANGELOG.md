@@ -8,12 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+- **API Integrations Documentation Update for RR-163 Dynamic Sidebar Filtering** (Saturday, August 9, 2025 at 11:57 AM)
+  - **Enhanced Tag Data Model**: Documented extended Tag interface with `unreadCount` and `totalCount` fields for real-time filtering support
+  - **API Enhancements**: Added comprehensive documentation for enhanced `/api/tags` endpoint with per-user unread count calculation and cross-user data prevention
+  - **Tag Store Integration**: Documented merge strategy for sync updates and optimistic update patterns for immediate UI feedback
+  - **Filtering Logic**: Added detailed documentation for three-mode filtering system (unread/read/all) with smart fallback behavior
+  - **State Preservation**: Documented RR-27 enhancement with tag context preservation for navigation consistency
+  - **Mark-as-Read Integration**: Added documentation for optimistic UI updates in both single and batch operations
+  - **Performance & Testing**: Documented performance considerations, error handling patterns, and integration testing scenarios
+  - **Impact**: Complete technical documentation for RR-163 tag-based article filtering system with real-time unread count tracking
+
 - **Comprehensive Documentation Update for RR-171 Implementation** (Saturday, August 9, 2025 at 9:18 AM)
   - **README.md**: Updated sync features section to describe immediate UI updates from sidebar payload, skeleton loading during manual sync, background sync info toasts, and rate-limit countdown functionality
   - **API Documentation**: Added detailed POST `/api/sync` response format with metrics and sidebar fields, GET `/api/sync/status/{syncId}` response structure, and 429 response with Retry-After header examples
   - **Technical Architecture**: Updated API integrations documentation with sidebar data phase, concurrency control (single guard + 500ms debounce), Inoreader rate limiting UX, and backend HTML entity decoding for tags
   - **RefreshManager Pattern**: Documented RefreshManager pattern for coordinated UI updates, skeleton states management, sidebar application, and toast formatting guidelines
   - **Impact**: Complete documentation coverage for RR-171 functionality including sync status metrics, sidebar payload architecture, RefreshManager pattern, and user experience enhancements
+
+- **[RR-163] Dynamic Sidebar Filtering - Hide feeds/topics based on Read/Unread filter** (Saturday, August 9, 2025 at 11:52 AM)
+  - **Core Feature**: Dynamic filtering of sidebar feeds and topics based on Read/Unread filter selection
+  - **Tag Interface Extended**: Added `unreadCount` and `totalCount` fields to Tag interface for accurate count tracking
+  - **API Enhancement**: Enhanced `/api/tags` endpoint to calculate and return per-user `unread_count` by scoping unread aggregation to user's feeds before joining article_tags
+  - **Store Enhancements**: 
+    - Modified tag store `loadTags` to get unread counts directly from API
+    - Added `applySidebarTags` merge strategy preserving existing tags and updating unread counts
+    - Added `updateSelectedTagUnreadCount` for optimistic updates after mark-as-read operations
+  - **Filtering Logic**: 
+    - **"Unread Only"**: Shows tags with unread articles OR all tags with articles when system has unread but tag counts are 0 (fallback for sync issues)
+    - **"Read Only"**: Shows tags that have articles but no unread articles  
+    - **"All Articles"**: Shows all tags with articles, dims those with no unread
+  - **State Preservation**: Extended RR-27 state preservation to include `tagId` for maintaining tag context when navigating back from article detail
+  - **Optimistic Updates**: Integrated optimistic unread count updates in both single and batch mark-as-read flows for immediate UI feedback
+  - **Fallback Logic**: Smart fallback that shows total article counts when system has unread articles but tag counts are 0 (handles data sync edge cases)
+  - **Data Flow**: Tags now load from database with unread counts immediately (no sync required), with sync providing real-time updates
+  - **Files Updated**: `src/types/index.ts`, `src/lib/stores/tag-store.ts`, `src/app/api/tags/route.ts`, `src/components/feeds/simple-feed-sidebar.tsx`, `src/components/articles/article-list.tsx`, `src/lib/stores/article-store.ts`
+  - **Impact**: Users can now filter articles by tags with accurate unread counts that update immediately after reading articles, with preserved navigation context
 
 ### Fixed
 - **[RR-171] Sidebar Counts and Tags Not Refreshing After Manual Sync** (Saturday, August 9, 2025 at 9:15 AM)

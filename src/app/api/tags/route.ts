@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Build query
+    // First get all tags
     let query = supabase
       .from("tags")
       .select("*")
@@ -75,9 +75,60 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Get unread counts for all tags in one query scoped to the user's feeds
+    // 1) Fetch all feed IDs for this user
+    const { data: userFeeds, error: feedsError } = await supabase
+      .from("feeds")
+      .select("id")
+      .eq("user_id", userData.id);
+
+    if (feedsError) {
+      console.error("Error fetching user feeds for tag unread counts:", feedsError);
+    }
+
+    const feedIds = (userFeeds || []).map((f: any) => f.id);
+
+    // 2) Fetch unread articles joined with tag associations, filtered by user's feeds
+    const { data: unreadCounts, error: unreadError } = await supabase
+      .from("articles")
+      .select(`
+        id,
+        feed_id,
+        is_read,
+        article_tags!inner(
+          tag_id,
+          tags!inner(id)
+        )
+      `)
+      .in("feed_id", feedIds.length > 0 ? feedIds : ["00000000-0000-0000-0000-000000000000"]) // guard against empty IN
+      .eq("is_read", false);
+
+    if (unreadError) {
+      console.error("Error fetching unread tag counts:", unreadError);
+    }
+
+    // Build unread count map
+    const unreadMap = new Map<string, number>();
+    unreadCounts?.forEach((article: any) => {
+      if (article.article_tags && Array.isArray(article.article_tags)) {
+        article.article_tags.forEach((tagRelation: any) => {
+          const tagId = tagRelation.tags?.id;
+          if (tagId) {
+            unreadMap.set(tagId, (unreadMap.get(tagId) || 0) + 1);
+          }
+        });
+      }
+    });
+
+    // Add unread counts to tags
+    const enrichedTags = (tags || []).map(tag => ({
+      ...tag,
+      unread_count: unreadMap.get(tag.id) || 0
+    }));
     
     return NextResponse.json({
-      tags: tags || [],
+      tags: enrichedTags,
       pagination: {
         limit,
         offset,

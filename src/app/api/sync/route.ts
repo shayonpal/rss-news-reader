@@ -52,36 +52,60 @@ async function gatherSidebarData() {
       [stat.feed_id, stat.unread_count]
     ) || [];
     
-    // Get tags with UNREAD counts - first get unread articles, then their tags
-    const { data: unreadArticleTags } = await supabase
+    // Get the actual user ID first
+    const { data: userData } = await supabase
+      .from("users")
+      .select("id")
+      .eq("inoreader_id", "shayon")
+      .single();
+    
+    const userId = userData?.id;
+    if (!userId) {
+      console.error("[Sync] User not found for sidebar data");
+      return null;
+    }
+    
+    // RR-163: Get tags with UNREAD counts - properly join tags table for names
+    const { data: unreadArticleTags, error: tagError } = await supabase
       .from("articles")
       .select(`
         id,
-        article_tags!inner(tag_id, tag_name)
+        article_tags!inner(
+          tag_id,
+          tags!inner(id, name)
+        )
       `)
-      .eq("user_id", "shayon")
+      .eq("user_id", userId)
       .eq("is_read", false);
+    
+    if (tagError) {
+      console.error("[Sync] Error fetching unread article tags:", tagError);
+    }
+    console.log("[Sync] Unread articles with tags count:", unreadArticleTags?.length || 0);
     
     // Count unread articles per tag
     const tagCounts = new Map<string, { name: string; count: number }>();
     unreadArticleTags?.forEach(article => {
       if (article.article_tags && Array.isArray(article.article_tags)) {
-        article.article_tags.forEach((tag: any) => {
-          const existing = tagCounts.get(tag.tag_id);
-          if (existing) {
-            existing.count++;
-          } else {
-            // Decode HTML entities in tag names
-            const decodedName = tag.tag_name
-              .replace(/&amp;/g, "&")
-              .replace(/&lt;/g, "<")
-              .replace(/&gt;/g, ">")
-              .replace(/&quot;/g, '"')
-              .replace(/&#039;/g, "'")
-              .replace(/&#x27;/g, "'")
-              .replace(/&#x2F;/g, "/");
-            
-            tagCounts.set(tag.tag_id, { name: decodedName, count: 1 });
+        article.article_tags.forEach((tagRelation: any) => {
+          const tag = tagRelation.tags;
+          if (tag) {
+            const existing = tagCounts.get(tag.id);
+            if (existing) {
+              existing.count++;
+            } else {
+              // Decode HTML entities in tag names
+              const decodedName = tag.name
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, '"')
+                .replace(/&#039;/g, "'")
+                .replace(/&#x27;/g, "'")
+                .replace(/&#x2F;/g, "/");
+              
+              tagCounts.set(tag.id, { name: decodedName, count: 1 });
+            }
           }
         });
       }
@@ -92,6 +116,8 @@ async function gatherSidebarData() {
       name: data.name,
       count: data.count
     }));
+    
+    console.log("[Sync] Sidebar tags array:", tagsArray.length, "tags");
     
     return {
       feedCounts,

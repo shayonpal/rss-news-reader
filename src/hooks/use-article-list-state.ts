@@ -11,6 +11,7 @@ interface UseArticleListStateProps {
   articles: Map<string, Article>;
   feedId?: string;
   folderId?: string;
+  tagId?: string; // RR-163: Add tagId for state preservation
   readStatusFilter: 'all' | 'unread' | 'read';
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
   onArticleClick?: (articleId: string) => void;
@@ -30,6 +31,7 @@ export function useArticleListState({
   articles,
   feedId,
   folderId,
+  tagId, // RR-163
   readStatusFilter,
   scrollContainerRef,
   onArticleClick,
@@ -49,23 +51,25 @@ export function useArticleListState({
     }
   }, []);
 
-  // Handle filter changes and feed/folder changes
+  // Handle filter changes and feed/folder/tag changes
   const previousFilter = useRef(readStatusFilter);
   const previousFeed = useRef(feedId);
   const previousFolder = useRef(folderId);
+  const previousTag = useRef(tagId); // RR-163: Track tag changes
   
   useEffect(() => {
     // Check what changed
     const filterChanged = previousFilter.current !== readStatusFilter;
     const feedChanged = previousFeed.current !== feedId;
     const folderChanged = previousFolder.current !== folderId;
+    const tagChanged = previousTag.current !== tagId; // RR-163
     
-    console.log(`🔧 Hook effect: filter ${previousFilter.current}→${readStatusFilter} (changed: ${filterChanged}), feed ${previousFeed.current}→${feedId} (changed: ${feedChanged}), folder ${previousFolder.current}→${folderId} (changed: ${folderChanged})`);
+    console.log(`🔧 Hook effect: filter ${previousFilter.current}→${readStatusFilter} (changed: ${filterChanged}), feed ${previousFeed.current}→${feedId} (changed: ${feedChanged}), folder ${previousFolder.current}→${folderId} (changed: ${folderChanged}), tag ${previousTag.current}→${tagId} (changed: ${tagChanged})`);
     
-    // Clear state on filter changes OR feed/folder changes (per RR-27 test requirements)
-    // This ensures that switching between "All Articles" and specific feeds clears preserved state
-    if ((filterChanged || feedChanged || folderChanged) && 
-        (previousFilter.current !== undefined || previousFeed.current !== undefined || previousFolder.current !== undefined)) {
+    // Clear state on filter changes OR feed/folder/tag changes (per RR-27 & RR-163)
+    // This ensures that switching between "All Articles" and specific feeds/tags clears preserved state
+    if ((filterChanged || feedChanged || folderChanged || tagChanged) && 
+        (previousFilter.current !== undefined || previousFeed.current !== undefined || previousFolder.current !== undefined || previousTag.current !== undefined)) {
       
       if (filterChanged) {
         console.log(`🧹 Clearing state due to filter change: ${previousFilter.current} → ${readStatusFilter}`);
@@ -73,6 +77,8 @@ export function useArticleListState({
         console.log(`🧹 Clearing state due to feed change: ${previousFeed.current} → ${feedId}`);
       } else if (folderChanged) {
         console.log(`🧹 Clearing state due to folder change: ${previousFolder.current} → ${folderId}`);
+      } else if (tagChanged) {
+        console.log(`🧹 Clearing state due to tag change: ${previousTag.current} → ${tagId}`); // RR-163
       }
       
       articleListStateManager.clearState();
@@ -102,7 +108,8 @@ export function useArticleListState({
     previousFilter.current = readStatusFilter;
     previousFeed.current = feedId;
     previousFolder.current = folderId;
-  }, [readStatusFilter, feedId, folderId]);
+    previousTag.current = tagId; // RR-163
+  }, [readStatusFilter, feedId, folderId, tagId]); // RR-163: Add tagId to dependencies
 
   // Save state before navigation
   const saveStateBeforeNavigation = useCallback(() => {
@@ -165,11 +172,12 @@ export function useArticleListState({
       filterMode: readStatusFilter,
       feedId,
       folderId,
+      tagId, // RR-163: Save tagId in state
       visibleRange,
     };
 
     articleListStateManager.saveListState(state);
-  }, [articles, readStatusFilter, feedId, folderId, scrollContainerRef]);
+  }, [articles, readStatusFilter, feedId, folderId, tagId, scrollContainerRef]); // RR-163: Add tagId
 
   // Enhanced article click handler with state preservation
   const handleArticleClick = useCallback((article: Article) => {
@@ -266,8 +274,8 @@ export function useArticleListState({
       return false;
     }
 
-    // Check if we're on the same feed/folder
-    if (savedState.feedId !== feedId || savedState.folderId !== folderId) {
+    // Check if we're on the same feed/folder/tag
+    if (savedState.feedId !== feedId || savedState.folderId !== folderId || savedState.tagId !== tagId) {
       return false;
     }
 

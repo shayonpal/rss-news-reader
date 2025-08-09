@@ -69,6 +69,7 @@ export function ArticleList({
     articles,
     feedId,
     folderId,
+    tagId,                // RR-163: Add tagId for state preservation
     readStatusFilter,
     scrollContainerRef,
     onArticleClick,
@@ -209,7 +210,7 @@ export function ArticleList({
       // Process any pending marks before cleanup
       processPendingMarkAsRead();
     };
-  }, [readStatusFilter, feedId, folderId, processPendingMarkAsRead, scrollContainerRef]);
+  }, [readStatusFilter, feedId, folderId, tagId, processPendingMarkAsRead, scrollContainerRef]);
 
   // Restore scroll position and state after articles load
   useEffect(() => {

@@ -87,7 +87,7 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 ### Tags
 
 - GET `/api/tags`
-  - Description: List tags with filtering, sorting, and pagination.
+  - Description: List tags with filtering, sorting, pagination, and real-time unread counts per user.
   - Query:
     - `search?: string`
     - `sortBy?: "name" | "count" | "recent"` (default `name`)
@@ -95,7 +95,8 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
     - `limit?: number` (default 50)
     - `offset?: number` (default 0)
     - `includeEmpty?: "true" | "false"` (default false)
-  - Response 200: `{ tags: [...], pagination: { limit, offset, total, hasMore } }`
+  - Response 200: `{ tags: [{ ...tag, unread_count: number }], pagination: { limit, offset, total, hasMore } }`
+  - Note: Each tag now includes `unread_count` field calculated from user's feeds to ensure accurate per-user unread article counts
 
 - POST `/api/tags`
   - Description: Create a new tag for the user.

@@ -17,6 +17,7 @@ interface TagState {
   getSelectedTags: () => Tag[];
   refreshTags: () => Promise<void>;
   applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => void;
+  updateSelectedTagUnreadCount: (delta: number) => void; // RR-163: Optimistic updates
 }
 
 export const useTagStore = create<TagState>()(
@@ -45,12 +46,15 @@ export const useTagStore = create<TagState>()(
               color: tag.color,
               description: tag.description,
               articleCount: tag.article_count,
+              totalCount: tag.article_count, // RR-163: Set totalCount as alias
+              unreadCount: tag.unread_count || 0, // RR-163: Use unread count from API
               userId: tag.user_id,
               createdAt: new Date(tag.created_at),
               updatedAt: new Date(tag.updated_at),
             });
           });
           
+          console.log(`[TagStore] Loaded ${tagsMap.size} tags from API`);
           set({ tags: tagsMap, isLoading: false });
         } catch (error) {
           set({ 
@@ -97,23 +101,77 @@ export const useTagStore = create<TagState>()(
         return state.loadTags(state.includeEmpty);
       },
 
-      // Apply sidebar tags from API response (RR-171)
+      // RR-163: Apply sidebar tags from API response with merge strategy
       applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => {
-        const tagMap = new Map<string, Tag>();
+        console.log(`[TagStore] Applying sidebar tags: ${sidebarTags.length} tags with unread counts`);
         
-        sidebarTags.forEach(tag => {
-          tagMap.set(tag.id, {
-            id: tag.id,
-            name: tag.name,
-            articleCount: tag.count,  // Fix: use articleCount not article_count
-            slug: tag.name.toLowerCase().replace(/\s+/g, '-'),
-            userId: 'shayon',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          } as Tag);
+        // Don't reset counts if sync returns no tags - this means no unread articles have tags
+        // The existing counts from the API are still valid
+        if (sidebarTags.length === 0) {
+          console.log(`[TagStore] No sidebar tags from sync, keeping existing unread counts`);
+          return;
+        }
+        
+        set((state) => {
+          const mergedTags = new Map(state.tags);
+          console.log(`[TagStore] Current tags in store: ${mergedTags.size}`);
+          
+          // Reset all unreadCounts to 0 (tags not in response have 0 unread)
+          mergedTags.forEach(tag => {
+            tag.unreadCount = 0;
+          });
+          
+          // Update with new unread counts from sync
+          sidebarTags.forEach(sidebarTag => {
+            const existing = mergedTags.get(sidebarTag.id);
+            if (existing) {
+              // Preserve existing metadata, update counts
+              existing.unreadCount = sidebarTag.count;
+              // Keep totalCount if it exists, otherwise use articleCount
+              if (!existing.totalCount && existing.articleCount) {
+                existing.totalCount = existing.articleCount;
+              }
+              console.log(`[TagStore] Updated ${existing.name}: unreadCount=${sidebarTag.count}`);
+            } else {
+              // New tag from sync
+              console.log(`[TagStore] Adding new tag ${sidebarTag.name} with unreadCount=${sidebarTag.count}`);
+              mergedTags.set(sidebarTag.id, {
+                id: sidebarTag.id,
+                name: sidebarTag.name,
+                slug: sidebarTag.name.toLowerCase().replace(/\s+/g, '-'),
+                articleCount: sidebarTag.count,
+                unreadCount: sidebarTag.count,
+                totalCount: sidebarTag.count,
+                userId: 'shayon',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+            }
+          });
+          
+          console.log(`[TagStore] After merge: ${mergedTags.size} total tags`);
+          return { tags: mergedTags };
         });
-        
-        set({ tags: tagMap });
+      },
+
+      // RR-163: Optimistic unread count updates for selected tag
+      updateSelectedTagUnreadCount: (delta: number) => {
+        set((state) => {
+          // Only update if single tag selected
+          if (state.selectedTagIds.size !== 1) return state;
+          
+          const tagId = Array.from(state.selectedTagIds)[0];
+          const updatedTags = new Map(state.tags);
+          const tag = updatedTags.get(tagId);
+          
+          if (tag && tag.unreadCount !== undefined) {
+            // Bound at 0 to prevent negative counts
+            tag.unreadCount = Math.max(0, tag.unreadCount + delta);
+            updatedTags.set(tagId, { ...tag });
+          }
+          
+          return { tags: updatedTags };
+        });
       },
     }),
     {
