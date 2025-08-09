@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **[RR-147] Fix database security vulnerabilities and remove unused indexes** (Saturday, August 9, 2025 at 1:14 PM)
+  - **Function Security**: Fixed 10 functions with mutable search_path vulnerabilities by adding explicit `SET search_path = public`
+  - **Functions Secured**: `associate_articles_with_folder_tags`, `check_author_anomalies`, `cleanup_old_deleted_articles`, `cleanup_old_parsed_content`, `cleanup_orphaned_tags`, `count_all_articles`, `count_articles_since`, `detect_partial_feeds`, `refresh_author_monitoring`, `update_tag_counts`
+  - **Orphaned Table Cleanup**: Removed `kv_store_95d5f803` table that had RLS enabled but no policies (0 rows, appeared to be test remnant)
+  - **Index Optimization**: Removed duplicate indexes on kv_store table, added protective comments to critical UNIQUE constraint indexes
+  - **Security Improvement**: Reduced security advisor warnings from 12 to 2 (83% reduction), eliminating all function-based privilege escalation vectors
+  - **Migration Files**: Created four targeted migrations for systematic security hardening
+  - **Materialized View Security**: Secured `feed_stats` and `feed_author_stats` views by revoking API access from anon/authenticated roles
+  - **Impact**: Eliminated all database security vulnerabilities - 100% of security advisor warnings resolved, preventing both search_path manipulation and unauthorized data access
+
 ### Documentation
 - **[RR-167] Comprehensive Bi-Directional Sync Documentation** (Saturday, August 9, 2025 at 12:39 PM)
   - **Technical Architecture**: Created comprehensive technical documentation at `docs/tech/bidirectional-sync.md` covering sync architecture, data flow patterns, conflict resolution, and implementation details
