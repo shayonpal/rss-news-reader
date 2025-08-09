@@ -186,7 +186,7 @@ export const useSyncStore = create<SyncState>()(
           if (!response.ok) {
             const error = await response.json();
 
-            // Handle rate limit error specifically
+            // Handle rate limit error specifically - return structured object
             if (
               response.status === 429 &&
               error.error === "rate_limit_exceeded"
@@ -194,9 +194,19 @@ export const useSyncStore = create<SyncState>()(
               const rateInfo = error.limit
                 ? ` (${error.used}/${error.limit} calls used today)`
                 : "";
-              throw new Error(
-                `API rate limit exceeded${rateInfo}. Try again tomorrow.`
-              );
+              
+              // Get retry-after from header or body
+              const retryAfterHeader = response.headers.get('Retry-After');
+              const retryAfter = retryAfterHeader 
+                ? parseInt(retryAfterHeader) 
+                : (error.retryAfter || 300); // Fallback to body or default 5 minutes
+              
+              // Return 429 status with retryAfter for RefreshManager
+              return {
+                status: 429,
+                retryAfter: retryAfter,
+                error: `API rate limit exceeded${rateInfo}. Try again tomorrow.`
+              };
             }
 
             throw new Error(error.message || "Failed to start sync");
@@ -222,6 +232,7 @@ export const useSyncStore = create<SyncState>()(
           let syncComplete = false;
           let pollCount = 0;
           const maxPolls = 60; // 2 minutes max (2s intervals)
+          let finalStatus: any = null;
 
           while (!syncComplete && pollCount < maxPolls) {
             await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
@@ -241,6 +252,7 @@ export const useSyncStore = create<SyncState>()(
 
               if (status.status === "completed") {
                 syncComplete = true;
+                finalStatus = status; // Capture final status with metrics and sidebar
                 console.log("Sync completed successfully");
               } else if (status.status === "failed") {
                 throw new Error(status.error || "Sync failed");
@@ -254,19 +266,8 @@ export const useSyncStore = create<SyncState>()(
             throw new Error("Sync timeout - took too long to complete");
           }
 
-          // Refresh data from Supabase
-          const feedStore = await import("./feed-store").then((m) =>
-            m.useFeedStore.getState()
-          );
-          const articleStore = await import("./article-store").then((m) =>
-            m.useArticleStore.getState()
-          );
-
-          await Promise.all([
-            feedStore.loadFeedHierarchy(),
-            articleStore.refreshArticles(),
-          ]);
-
+          // Don't refresh stores here - RefreshManager will handle it
+          // Just update sync metadata
           const endTime = Date.now();
           const duration = (endTime - startTime) / 1000;
 
@@ -280,6 +281,17 @@ export const useSyncStore = create<SyncState>()(
             setSyncProgress(0);
             setSyncMessage(null);
           }, 2000);
+
+          // Return the final status with metrics and sidebar data
+          return finalStatus || {
+            status: 'completed',
+            metrics: {
+              newArticles: 0,
+              deletedArticles: 0,
+              newTags: 0,
+              failedFeeds: 0
+            }
+          };
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown sync error";
@@ -287,6 +299,12 @@ export const useSyncStore = create<SyncState>()(
           setSyncProgress(0);
           setSyncMessage(null);
           console.error("Sync failed:", error);
+          
+          // Return error status
+          return {
+            status: 'failed',
+            error: errorMessage
+          };
         } finally {
           setSyncing(false);
         }

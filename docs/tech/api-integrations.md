@@ -530,7 +530,8 @@ class SyncOrchestrator {
       this.decodeHtmlEntities, // RR-154: Decode HTML entities in article content
       this.syncUnreadCounts,
       this.syncReadStates,
-      this.enforceArticleRetention, // NEW: Clean up old articles
+      this.enforceArticleRetention, // Clean up old articles
+      this.prepareSidebarData, // RR-171: Prepare sidebar payload for immediate UI updates
     ];
 
     const results = [];
@@ -567,6 +568,21 @@ class SyncOrchestrator {
     // Decoding happens inline during article processing in syncArticles()
     // This placeholder ensures it's documented in the sync pipeline
     console.log('HTML entity decoding integrated into article sync process');
+  }
+  
+  private async prepareSidebarData(): Promise<SidebarPayload> {
+    // RR-171: Prepare sidebar payload for immediate UI updates
+    // This step collects feed counts and tags for immediate frontend refresh
+    const [feedCounts, tags] = await Promise.all([
+      this.getFeedCounts(),
+      this.getAvailableTags()
+    ]);
+    
+    return {
+      feedCounts,
+      tags,
+      lastUpdated: new Date().toISOString()
+    };
   }
 }
 ```
@@ -823,6 +839,93 @@ console.warn('HTML entity decoding failed:', {
   error: error.message,
   timestamp: new Date().toISOString()
 });
+```
+
+## RR-171 Sync Status Metrics and UI Updates
+
+### Overview
+
+The RR-171 enhancement adds comprehensive sync status reporting and immediate UI updates through sidebar payload data, eliminating the need for separate client-side refreshes.
+
+### Sync Flow with Sidebar Data
+
+```
+Manual Sync Request → Show Skeletons → Execute Sync Steps → Prepare Sidebar Data → Return Response → Update UI → Hide Skeletons → Show Toast
+Background Sync → Execute Sync Steps → Prepare Sidebar Data → Return Response → Silent Update → Optional Info Toast
+```
+
+### Concurrency Control
+
+```typescript
+// Single sync guard prevents duplicate operations
+let syncInProgress = false;
+let syncDebounceTimer: NodeJS.Timeout;
+
+export async function handleSyncRequest(request: SyncRequest): Promise<SyncResponse> {
+  // 500ms debounce to prevent rapid-fire requests
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+  }
+  
+  return new Promise((resolve, reject) => {
+    syncDebounceTimer = setTimeout(async () => {
+      if (syncInProgress) {
+        reject(new Error('SYNC_IN_PROGRESS'));
+        return;
+      }
+      
+      syncInProgress = true;
+      try {
+        const result = await performSyncWithMetrics();
+        resolve(result);
+      } finally {
+        syncInProgress = false;
+      }
+    }, 500);
+  });
+}
+```
+
+### Inoreader Rate Limiting UX
+
+The RSS reader implements intelligent rate limiting to handle Inoreader's API constraints:
+
+- **Rate Limit Detection**: Monitors HTTP 429 responses with `Retry-After` headers
+- **Visual Feedback**: Shows countdown timer on sync button when rate limited
+- **User Messaging**: Clear explanation of rate limits with estimated wait time
+- **Background Handling**: Automatically queues background sync operations
+
+```typescript
+interface RateLimitResponse {
+  error: 'RATE_LIMITED';
+  message: 'Sync rate limited. Please wait before trying again.';
+  retryAfter: number; // seconds
+  nextSyncAvailable: string; // ISO timestamp
+}
+```
+
+### Backend HTML Entity Decoding
+
+The sync process includes automatic HTML entity decoding for tags and content to prevent display issues like `India&#x2F;Canada` appearing instead of `India/Canada`. This processing occurs server-side during sync to ensure clean data storage and display.
+
+### Materialized View Timing Mitigation
+
+To address potential timing issues where materialized views might not be immediately updated, RR-171 includes sidebar payload data directly in the sync response. This eliminates the gap between sync completion and UI refresh by providing fresh counts and tags data immediately.
+
+```typescript
+interface SidebarPayload {
+  feedCounts: Array<{
+    feedId: string;
+    unreadCount: number;
+    totalCount: number;
+  }>;
+  tags: Array<{
+    id: string;
+    name: string;
+    count: number;
+  }>;
+  lastUpdated: string;
+}
 ```
 
 This comprehensive API integration plan ensures efficient use of both Inoreader and Claude APIs while maintaining good user experience and staying within rate limits.

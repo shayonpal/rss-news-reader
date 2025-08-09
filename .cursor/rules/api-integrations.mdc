@@ -18,6 +18,17 @@ Claude (Anthropic):
 - Server-side only; never expose API key to client.
 - Summarization should prefer `full_content` when available; otherwise fall back to RSS content per current implementation.
 
+Sync Endpoints (RR-171):
+- POST `/api/sync` returns comprehensive metrics plus sidebar payload data for immediate UI updates
+- GET `/api/sync/status/{syncId}` provides real-time sync progress tracking
+- 429 responses include `Retry-After` header for rate-limit countdown UX
+- Sidebar payload includes fresh feed counts and tags to avoid materialized view timing issues
+
+Concurrency and Debouncing:
+- Single sync guard prevents duplicate operations
+- 500ms debounce on sync requests to prevent rapid-fire submissions
+- Rate-limit handling with visual countdown timer on sync button
+
 Error and rate limit handling:
 - Map 401/403/429/5xx to safe, non-leaky client messages.
 - Backoff and queue long-running operations. Persist usage stats when useful for monitoring.

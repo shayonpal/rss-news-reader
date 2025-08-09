@@ -39,7 +39,7 @@ npm install
 npm run setup:oauth
 
 # Start development server
-npm run dev:network       # Access via http://100.96.166.53:3000
+pm2 restart rss-dev-server       # Access via http://100.96.166.53:3000
 ```
 
 ### Testing & Quality

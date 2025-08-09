@@ -13,6 +13,7 @@ interface FeedStoreState {
   // Loading states
   loadingFeeds: boolean;
   feedsError: string | null;
+  isSkeletonLoading: boolean; // Added for RR-171
 
   // Unread counts
   totalUnreadCount: number;
@@ -52,6 +53,10 @@ interface FeedStoreState {
   // Utility
   clearError: () => void;
   refreshFeeds: () => Promise<void>;
+  
+  // RR-171 additions
+  applySidebarCounts: (feedCounts: Array<[string, number]>) => void;
+  setSkeletonLoading: (loading: boolean) => void;
 }
 
 export const useFeedStore = create<FeedStoreState>((set, get) => ({
@@ -61,6 +66,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   feedsWithCounts: new Map(),
   loadingFeeds: false,
   feedsError: null,
+  isSkeletonLoading: false, // Added for RR-171
   totalUnreadCount: 0,
   folderUnreadCounts: new Map(),
 
@@ -598,5 +604,43 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
 
   refreshFeeds: async () => {
     await get().loadFeedHierarchy();
+  },
+
+  // Apply sidebar counts from API response (RR-171)
+  applySidebarCounts: (feedCounts: Array<[string, number]>) => {
+    const { feeds, feedsWithCounts } = get();
+    const updatedFeeds = new Map(feeds);
+    const updatedFeedsWithCounts = new Map(feedsWithCounts);
+    let newTotalUnread = 0;
+    
+    feedCounts.forEach(([feedId, count]) => {
+      const feed = updatedFeeds.get(feedId);
+      if (feed) {
+        // Update feeds map
+        updatedFeeds.set(feedId, { ...feed, unreadCount: count });
+        
+        // Update feedsWithCounts map for immediate UI update
+        const feedWithCount = updatedFeedsWithCounts.get(feedId);
+        if (feedWithCount) {
+          updatedFeedsWithCounts.set(feedId, { ...feedWithCount, unreadCount: count });
+        } else {
+          // Create entry if it doesn't exist
+          updatedFeedsWithCounts.set(feedId, { ...feed, unreadCount: count } as any);
+        }
+        
+        newTotalUnread += count;
+      }
+    });
+    
+    set({ 
+      feeds: updatedFeeds, 
+      feedsWithCounts: updatedFeedsWithCounts,
+      totalUnreadCount: newTotalUnread
+    });
+  },
+
+  // Set skeleton loading state (RR-171)
+  setSkeletonLoading: (loading: boolean) => {
+    set({ isSkeletonLoading: loading });
   },
 }));

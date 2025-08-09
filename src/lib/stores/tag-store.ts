@@ -7,6 +7,7 @@ interface TagState {
   selectedTagIds: Set<string>;
   isLoading: boolean;
   error: string | null;
+  includeEmpty: boolean;
   
   // Actions
   loadTags: (includeEmpty?: boolean) => Promise<void>;
@@ -14,6 +15,8 @@ interface TagState {
   toggleTag: (tagId: string) => void;
   clearSelectedTags: () => void;
   getSelectedTags: () => Tag[];
+  refreshTags: () => Promise<void>;
+  applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => void;
 }
 
 export const useTagStore = create<TagState>()(
@@ -23,9 +26,10 @@ export const useTagStore = create<TagState>()(
       selectedTagIds: new Set(),
       isLoading: false,
       error: null,
+      includeEmpty: false,
 
       loadTags: async (includeEmpty = false) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, includeEmpty });
         try {
           const response = await fetch(`/reader/api/tags?includeEmpty=${includeEmpty}`);
           if (!response.ok) throw new Error('Failed to load tags');
@@ -85,6 +89,31 @@ export const useTagStore = create<TagState>()(
         return Array.from(state.selectedTagIds)
           .map(id => state.tags.get(id))
           .filter((tag): tag is Tag => tag !== undefined);
+      },
+
+      // Add refresh method for RR-171
+      refreshTags: async () => {
+        const state = get();
+        return state.loadTags(state.includeEmpty);
+      },
+
+      // Apply sidebar tags from API response (RR-171)
+      applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => {
+        const tagMap = new Map<string, Tag>();
+        
+        sidebarTags.forEach(tag => {
+          tagMap.set(tag.id, {
+            id: tag.id,
+            name: tag.name,
+            articleCount: tag.count,  // Fix: use articleCount not article_count
+            slug: tag.name.toLowerCase().replace(/\s+/g, '-'),
+            userId: 'shayon',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          } as Tag);
+        });
+        
+        set({ tags: tagMap });
       },
     }),
     {

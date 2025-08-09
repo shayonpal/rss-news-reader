@@ -20,8 +20,8 @@ This directory contains all technical documentation for the RSS News Reader appl
 
 3. **api-integrations.md**
    - **Description**: Detailed documentation of external API integrations (Inoreader, Claude AI)
-   - **Status**: Current ✅
-   - **Contents**: Authentication flows, rate limits, endpoints, error handling
+   - **Status**: Current ✅ (Updated for RR-171)
+   - **Contents**: Authentication flows, rate limits, endpoints, error handling, sidebar payload, concurrency control
 
 ### Feature-Specific Documentation
 
@@ -115,6 +115,49 @@ This directory contains all technical documentation for the RSS News Reader appl
 3. **PM2 Process Management**: Reliable process management with auto-restart
 4. **Tailscale Access Control**: Network-level security instead of app auth
 5. **PWA Architecture**: Offline-first with service workers
+
+## RR-171 RefreshManager Pattern
+
+### Overview
+
+The RefreshManager pattern coordinates UI updates across multiple store sections after sync operations, ensuring consistent state management and user feedback.
+
+### Implementation
+
+```typescript
+class RefreshManager {
+  async refreshAll(): Promise<void> {
+    await Promise.all([
+      feedStore.refresh(),
+      articleStore.refresh(), 
+      tagStore.refresh()
+    ]);
+  }
+  
+  async handleManualSync(): Promise<void> {
+    showSkeletons();
+    const result = await syncApi.triggerSync();
+    applySidebarData(result.sidebar);
+    hideSkeletons();
+    showToast(formatSyncResult(result));
+  }
+  
+  async handleBackgroundSync(): Promise<void> {
+    const result = await syncApi.triggerSync();
+    applySidebarData(result.sidebar);
+    if (result.metrics.newArticles > 0) {
+      showInfoToast(`${result.metrics.newArticles} new articles available`);
+    }
+  }
+}
+```
+
+### Key Features
+
+- **Skeleton States**: Visual loading feedback during manual sync operations
+- **Sidebar Application**: Direct application of sync response data to avoid timing issues
+- **Toast Formatting**: Consistent user feedback with sync metrics (no emojis)
+- **Background Sync Behavior**: Silent updates with optional refresh action notifications
 
 ## Development Guidelines
 

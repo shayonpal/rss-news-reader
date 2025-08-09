@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useSyncStore } from "@/lib/stores/sync-store";
 import { useUIStore } from "@/lib/stores/ui-store";
@@ -22,6 +22,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
+import { refreshManager } from "@/lib/refresh-manager";
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
@@ -38,7 +39,7 @@ export function SimpleFeedSidebar({
   onTagSelect,
 }: SimpleFeedSidebarProps) {
   const router = useRouter();
-  const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy } =
+  const { feeds, feedsWithCounts, totalUnreadCount, loadFeedHierarchy, isSkeletonLoading } =
     useFeedStore();
   const {
     isSyncing,
@@ -55,6 +56,9 @@ export function SimpleFeedSidebar({
   const { tags, loadTags, selectTag, selectedTagIds } = useTagStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastScrollPosition = useRef<number>(0);
+  
+  // RR-171: Rate limiting countdown state
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
 
   // Load feeds and tags when component mounts
   useEffect(() => {
@@ -74,6 +78,22 @@ export function SimpleFeedSidebar({
       );
     });
   }, [loadFeedHierarchy, loadLastSyncTime, loadTags]);
+
+  // RR-171: Update rate limit countdown every second
+  useEffect(() => {
+    const updateCountdown = () => {
+      const remaining = refreshManager.getRemainingCooldown();
+      setRateLimitCountdown(remaining);
+    };
+    
+    // Initial check
+    updateCountdown();
+    
+    // Update every second if in cooldown
+    const interval = setInterval(updateCountdown, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Remove sync parameter from URL if present (cleanup from old behavior)
   useEffect(() => {
@@ -155,21 +175,35 @@ export function SimpleFeedSidebar({
               <BarChart3 className="h-4 w-4" />
             </button>
             <button
-              onClick={performFullSync}
-              disabled={isSyncing}
+              onClick={async () => {
+                // RR-171: Use RefreshManager for coordinated sync
+                await refreshManager.afterManualSync();
+              }}
+              disabled={isSyncing || rateLimitCountdown > 0}
               className="relative rounded p-2 hover:bg-muted disabled:opacity-50"
-              aria-label={isSyncing ? "Syncing..." : "Sync feeds"}
+              aria-label={
+                rateLimitCountdown > 0
+                  ? refreshManager.formatCountdown(rateLimitCountdown)
+                  : isSyncing 
+                  ? "Syncing..." 
+                  : "Sync feeds"
+              }
             >
               {isSyncing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <RefreshCw className="h-4 w-4" />
               )}
-              {isSyncing && syncProgress > 0 && (
+              {/* Show progress during sync or countdown during rate limit */}
+              {isSyncing && syncProgress > 0 ? (
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 transform text-[10px] font-medium">
                   {syncProgress}%
                 </span>
-              )}
+              ) : rateLimitCountdown > 0 ? (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 transform text-[10px] font-medium whitespace-nowrap">
+                  {refreshManager.formatCountdown(rateLimitCountdown)}
+                </span>
+              ) : null}
             </button>
           </div>
         </div>
@@ -208,8 +242,12 @@ export function SimpleFeedSidebar({
             </p>
             <p className="mb-4 text-xs text-muted-foreground">{syncError}</p>
             <button
-              onClick={performFullSync}
-              className="rounded bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90"
+              onClick={async () => {
+                // RR-171: Use RefreshManager for coordinated sync
+                await refreshManager.afterManualSync();
+              }}
+              disabled={rateLimitCountdown > 0}
+              className="rounded bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               Retry
             </button>
@@ -254,7 +292,20 @@ export function SimpleFeedSidebar({
                 className="border-t mt-2"
               >
                 <div className="space-y-0.5 max-h-[30vh] overflow-y-auto scrollbar-hide pl-6 pr-1">
-                  {Array.from(tags.values())
+                  {/* Skeleton loading state for tags (RR-171) */}
+                  {isSkeletonLoading ? (
+                    <>
+                      {[...Array(4)].map((_, i) => (
+                        <div key={`skeleton-tag-${i}`} className="py-2 px-3">
+                          <div className="flex items-center justify-between">
+                            <div className="h-4 bg-muted rounded animate-pulse" style={{ width: `${50 + Math.random() * 30}%` }} />
+                            <div className="h-4 w-6 bg-muted rounded animate-pulse" />
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    Array.from(tags.values())
                     .filter(tag => tag.articleCount > 0)
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((tag) => {
@@ -293,7 +344,8 @@ export function SimpleFeedSidebar({
                           </div>
                         </div>
                       );
-                    })}
+                    })
+                  )}
                 </div>
               </CollapsibleFilterSection>
             )}
@@ -325,8 +377,21 @@ export function SimpleFeedSidebar({
               className="border-t mt-2"
             >
               <div className="space-y-0.5 max-h-[60vh] overflow-y-auto scrollbar-hide pl-6 pr-1">
-                {/* Individual Feeds */}
-                {Array.from(feeds.values())
+                {/* Skeleton loading state for RR-171 */}
+                {isSkeletonLoading ? (
+                  <>
+                    {[...Array(6)].map((_, i) => (
+                      <div key={`skeleton-feed-${i}`} className="py-2 px-3">
+                        <div className="flex items-center justify-between">
+                          <div className="h-4 bg-muted rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
+                          <div className="h-4 w-8 bg-muted rounded animate-pulse" />
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  /* Individual Feeds */
+                  Array.from(feeds.values())
               .sort((a, b) =>
                 String(a.title || "").localeCompare(
                   String(b.title || ""),
@@ -387,7 +452,8 @@ export function SimpleFeedSidebar({
                     </div>
                   </div>
                 );
-              })}
+              })
+                )}
               </div>
             </CollapsibleFilterSection>
 

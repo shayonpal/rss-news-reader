@@ -165,11 +165,15 @@ The RSS reader includes an automatic sync service that runs 6 times daily to kee
 
 ### Sync Features
 
+- **Manual Sync**: On-demand sync with immediate UI updates from sidebar payload data
+- **Background Sync**: Automated 6x daily sync with unobtrusive info toasts 
+- **Real-time Updates**: Sidebar counts and tags refresh immediately after sync completion
 - **Incremental Sync**: Only fetches articles newer than last sync using 'ot' parameter
 - **Efficiency Optimization**: Excludes read articles from sync using 'xt' parameter
 - **Weekly Full Sync**: Every 7 days performs complete sync for data integrity
 - Fetches up to 500 new articles per sync (configurable via SYNC_MAX_ARTICLES)
 - **Article Retention**: Automatically enforces 1000-article limit during sync
+- **Skeleton Loading**: Visual feedback during manual sync operations with rate-limit countdown
 - Updates read/unread counts
 - Refreshes feed statistics materialized view
 - Tracks success/failure metrics
@@ -207,6 +211,8 @@ The RSS reader includes bi-directional sync that pushes your reading activity ba
 - **Conflict Resolution**: Last-write-wins based on timestamps
 - **Retry Logic**: Failed syncs retry with exponential backoff
 - **Sync Queue**: Local changes queued until successfully synced
+- **Rate Limiting**: Manual sync button includes 30-second cooldown with visual countdown
+- **Concurrency Control**: Single sync guard prevents duplicate operations with 500ms debounce
 
 ### How It Works
 
@@ -217,7 +223,14 @@ The RSS reader includes bi-directional sync that pushes your reading activity ba
 5. Successfully synced items are removed from the queue
 6. Failed items retry up to 3 times with increasing delays
 
-This ensures your reading progress stays synchronized across all Inoreader clients.
+### Sync User Experience
+
+- **Manual Sync**: Triggered by sync button, shows skeleton loading states, displays toast with sync metrics
+- **Background Sync**: Automated 6x daily, silent operation with optional refresh action in info toast
+- **Error Handling**: User-friendly messages for failed sync attempts with retry suggestions
+- **Progress Feedback**: Real-time status updates and visual feedback during sync operations
+
+This ensures your reading progress stays synchronized across all Inoreader clients with clear user feedback.
 
 ## Development Setup
 

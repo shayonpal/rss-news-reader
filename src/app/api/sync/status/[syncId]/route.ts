@@ -14,6 +14,17 @@ interface SyncStatus {
   error?: string;
   startTime: number;
   syncId: string;
+  // RR-171: Add sync metrics and sidebar data
+  metrics?: {
+    newArticles: number;
+    deletedArticles: number;
+    newTags: number;
+    failedFeeds: number;
+  };
+  sidebar?: {
+    feedCounts: Array<[string, number]>;
+    tags: Array<{ id: string; name: string; count: number }>;
+  };
 }
 
 // Get sync status file path
@@ -50,6 +61,9 @@ export async function GET(
       progress: status.progress,
       message: status.message,
       error: status.error,
+      // RR-171: Include metrics and sidebar data
+      metrics: status.metrics,
+      sidebar: status.sidebar,
       // Calculate items processed based on progress
       itemsProcessed: status.progress > 0 ? Math.floor(status.progress) : 0,
       totalItems: 100, // Approximate

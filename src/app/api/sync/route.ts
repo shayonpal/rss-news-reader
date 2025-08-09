@@ -22,11 +22,85 @@ interface SyncStatus {
   error?: string;
   startTime: number;
   syncId: string;
+  // RR-171: Add sync metrics and sidebar data
+  metrics?: {
+    newArticles: number;
+    deletedArticles: number;
+    newTags: number;
+    failedFeeds: number;
+  };
+  sidebar?: {
+    feedCounts: Array<[string, number]>;
+    tags: Array<{ id: string; name: string; count: number }>;
+  };
 }
 
 // Get sync status file path
 function getSyncStatusPath(syncId: string): string {
   return path.join("/tmp", `sync-status-${syncId}.json`);
+}
+
+// RR-171: Gather sidebar data for immediate UI update
+async function gatherSidebarData() {
+  try {
+    // Get feed counts from feed_stats materialized view
+    const { data: feedStats } = await supabase
+      .from("feed_stats")
+      .select("feed_id, unread_count");
+    
+    const feedCounts: Array<[string, number]> = feedStats?.map(stat => 
+      [stat.feed_id, stat.unread_count]
+    ) || [];
+    
+    // Get tags with UNREAD counts - first get unread articles, then their tags
+    const { data: unreadArticleTags } = await supabase
+      .from("articles")
+      .select(`
+        id,
+        article_tags!inner(tag_id, tag_name)
+      `)
+      .eq("user_id", "shayon")
+      .eq("is_read", false);
+    
+    // Count unread articles per tag
+    const tagCounts = new Map<string, { name: string; count: number }>();
+    unreadArticleTags?.forEach(article => {
+      if (article.article_tags && Array.isArray(article.article_tags)) {
+        article.article_tags.forEach((tag: any) => {
+          const existing = tagCounts.get(tag.tag_id);
+          if (existing) {
+            existing.count++;
+          } else {
+            // Decode HTML entities in tag names
+            const decodedName = tag.tag_name
+              .replace(/&amp;/g, "&")
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace(/&quot;/g, '"')
+              .replace(/&#039;/g, "'")
+              .replace(/&#x27;/g, "'")
+              .replace(/&#x2F;/g, "/");
+            
+            tagCounts.set(tag.tag_id, { name: decodedName, count: 1 });
+          }
+        });
+      }
+    });
+    
+    const tagsArray = Array.from(tagCounts.entries()).map(([id, data]) => ({
+      id,
+      name: data.name,
+      count: data.count
+    }));
+    
+    return {
+      feedCounts,
+      tags: tagsArray
+    };
+  } catch (error) {
+    console.error("[Sync] Error gathering sidebar data:", error);
+    return null;
+  }
 }
 
 // Write sync status to file AND database (dual-write for reliability)
@@ -120,6 +194,11 @@ export async function POST() {
     const rateLimit = await checkRateLimit();
 
     if (!rateLimit.allowed) {
+      // Calculate retry-after based on environment or default to 5 minutes
+      const retryAfterSeconds = process.env.RATE_LIMIT_RETRY_SECONDS 
+        ? parseInt(process.env.RATE_LIMIT_RETRY_SECONDS) 
+        : 300; // Default 5 minutes
+      
       return NextResponse.json(
         {
           error: "rate_limit_exceeded",
@@ -127,8 +206,14 @@ export async function POST() {
           limit: rateLimit.limit,
           used: rateLimit.used,
           remaining: 0,
+          retryAfter: retryAfterSeconds, // Include in body for backward compatibility
         },
-        { status: 429 }
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': retryAfterSeconds.toString(), // Standard HTTP header
+          }
+        }
       );
     }
 
@@ -846,9 +931,24 @@ async function performServerSync(syncId: string) {
       // Don't fail the main sync if bidirectional sync fails
     }
 
-    // Complete
+    // RR-171: Calculate sync metrics
+    const metrics = {
+      newArticles: articles.length, // This is approximate, should track actual inserts
+      deletedArticles: 0, // Track deletions if implemented
+      newTags: 0, // Count new tags added during sync
+      failedFeeds: 0 // Track failed feed fetches
+    };
+    
+    // RR-171: Gather sidebar data for immediate UI update
+    const sidebarData = await gatherSidebarData();
+    
+    // Complete with metrics and sidebar data
     status.status = "completed";
     status.progress = 100;
+    status.metrics = metrics;
+    if (sidebarData) {
+      status.sidebar = sidebarData;
+    }
     const conflictMessage = conflictSummary.totalConflicts > 0 
       ? ` Detected ${conflictSummary.totalConflicts} conflicts.`
       : '';

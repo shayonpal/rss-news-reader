@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **Comprehensive Documentation Update for RR-171 Implementation** (Saturday, August 9, 2025 at 9:18 AM)
+  - **README.md**: Updated sync features section to describe immediate UI updates from sidebar payload, skeleton loading during manual sync, background sync info toasts, and rate-limit countdown functionality
+  - **API Documentation**: Added detailed POST `/api/sync` response format with metrics and sidebar fields, GET `/api/sync/status/{syncId}` response structure, and 429 response with Retry-After header examples
+  - **Technical Architecture**: Updated API integrations documentation with sidebar data phase, concurrency control (single guard + 500ms debounce), Inoreader rate limiting UX, and backend HTML entity decoding for tags
+  - **RefreshManager Pattern**: Documented RefreshManager pattern for coordinated UI updates, skeleton states management, sidebar application, and toast formatting guidelines
+  - **Impact**: Complete documentation coverage for RR-171 functionality including sync status metrics, sidebar payload architecture, RefreshManager pattern, and user experience enhancements
+
+### Fixed
+- **[RR-171] Sidebar Counts and Tags Not Refreshing After Manual Sync** (Saturday, August 9, 2025 at 9:15 AM)
+  - **Problem**: Fixed sidebar feed counts and tags not updating immediately after manual sync completion
+  - **Solution**: Implemented RefreshManager for coordinated UI updates across feed counts and tags sections
+  - **Rate Limiting**: Added intelligent rate limiting with 30-second cooldown and visual countdown timer
+  - **Loading States**: Enhanced UI feedback with skeleton loading states during sync operations
+  - **Error Handling**: Improved error handling with user-friendly messages for failed sync attempts
+  - **Debouncing**: Prevented duplicate sync requests with proper state management
+  - **User Experience**: Manual sync button now shows accurate status and prevents spam clicking
+  - **Files Updated**: `refresh-manager.ts`, `simple-feed-sidebar.tsx`, `sync-button.tsx`
+  - **Impact**: Users now see immediate updates to feed counts and tags after manual sync operations
+
 ### Security
 - **[RR-67] Database Security Fixes - SECURITY DEFINER and search_path vulnerabilities** (Saturday, August 9, 2025)
   - **Fixed**: Eliminated 4 SECURITY DEFINER views that bypassed Row Level Security policies
