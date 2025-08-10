@@ -4,6 +4,13 @@ import fs from "fs/promises";
 import path from "path";
 
 export async function GET() {
+  // Define cache prevention headers for all responses
+  const cacheHeaders = {
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  };
+
   try {
     // Prefer database truth for both manual and cron syncs
     const supabase = createClient(
@@ -19,26 +26,35 @@ export async function GET() {
       .single();
 
     if (metaRow?.value) {
-      return NextResponse.json({
-        lastSyncTime: new Date(metaRow.value).toISOString(),
-        source: "sync_metadata"
-      });
+      // Validate the date before trying to convert it
+      const syncTime = new Date(metaRow.value);
+      if (!isNaN(syncTime.getTime())) {
+        return NextResponse.json({
+          lastSyncTime: syncTime.toISOString(),
+          source: "sync_metadata"
+        }, { headers: cacheHeaders });
+      }
+      // If invalid date, fall through to next source
     }
 
     // 2) sync_status table latest completed
-    const { data: statusRows } = await supabase
-      .from("sync_status")
-      .select("completed_at, updated_at, status")
-      .eq("status", "completed")
-      .order("updated_at", { ascending: false })
-      .limit(1);
+    try {
+      const { data: statusRows } = await supabase
+        .from("sync_status")
+        .select("completed_at, updated_at, status")
+        .eq("status", "completed")
+        .order("updated_at", { ascending: false })
+        .limit(1);
 
-    const statusRow = Array.isArray(statusRows) ? statusRows[0] : null;
-    if (statusRow?.completed_at) {
-      return NextResponse.json({
-        lastSyncTime: new Date(statusRow.completed_at).toISOString(),
-        source: "sync_status"
-      });
+      const statusRow = Array.isArray(statusRows) ? statusRows[0] : null;
+      if (statusRow?.completed_at) {
+        return NextResponse.json({
+          lastSyncTime: new Date(statusRow.completed_at).toISOString(),
+          source: "sync_status"
+        }, { headers: cacheHeaders });
+      }
+    } catch {
+      // If sync_status fails, continue to next source
     }
 
     // 3) Fallback to sync-cron log file (older cron-only approach)
@@ -53,7 +69,7 @@ export async function GET() {
             return NextResponse.json({
               lastSyncTime: new Date(entry.timestamp).toISOString(),
               source: "sync-log"
-            });
+            }, { headers: cacheHeaders });
           }
         } catch {
           continue;
@@ -64,13 +80,19 @@ export async function GET() {
     }
 
     // No data found
-    return NextResponse.json({ lastSyncTime: null, source: "none" });
+    return NextResponse.json(
+      { lastSyncTime: null, source: "none" },
+      { headers: cacheHeaders }
+    );
 
   } catch (error) {
     console.error("Error fetching last sync time:", error);
     return NextResponse.json(
       { error: "Failed to fetch last sync time" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: cacheHeaders
+      }
     );
   }
 }

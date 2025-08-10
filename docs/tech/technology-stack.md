@@ -270,6 +270,7 @@ For theme preference only.
 - IndexedDB for application data
 - Memory caching for API responses
 - HTTP cache headers optimization
+- **Anti-Cache Headers**: Time-sensitive endpoints like `/api/sync/last-sync` use cache prevention headers (`Cache-Control: no-store, no-cache, must-revalidate`, `Pragma: no-cache`, `Expires: 0`) to ensure fresh data
 
 ## Development Environment
 

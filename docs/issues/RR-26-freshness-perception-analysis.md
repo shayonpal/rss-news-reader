@@ -68,6 +68,7 @@ const formatTimestamp = (date: Date) => {
 - Syncs only happen at 2 AM and 2 PM Toronto time
 - If user checks at 1 PM, they see articles from 2 AM sync (11 hours old)
 - No indication of when the last sync occurred
+- **Note**: RR-177 has resolved the cache-related issue where sync times appeared stale due to browser caching
 
 ### 5. Feed-Level Timestamps
 

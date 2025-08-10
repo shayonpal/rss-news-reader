@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **[RR-177] Stale Sync Time Display** (Sunday, August 10, 2025 at 6:35 PM)
+  - Fixed stale sync time display by adding cache prevention headers to `/api/sync/last-sync` endpoint
+  - Headers added: `Cache-Control: no-store, no-cache, must-revalidate`, `Pragma: no-cache`, `Expires: 0`
+  - Applied to all response branches: sync_metadata, sync_status, log file, no data found, and error responses
+  - Resolves issue where sync times showed cached "18 hours ago" instead of fresh data
+
 ### Documentation Updated
+- **Sunday, August 10, 2025 at 6:35 PM**: Updated documentation to reflect RR-177 cache header implementation
+  - Enhanced `/api/sync/last-sync` endpoint documentation with cache prevention headers in `docs/api/server-endpoints.md`
+  - Added cache header note to sync endpoints quick reference in `docs/api/README.md`
+  - Updated `docs/issues/RR-26-freshness-perception-analysis.md` to reference RR-177 as the technical solution for cache-related stale time displays
+  - Expanded caching strategy section in `docs/tech/technology-stack.md` to include anti-cache patterns for time-sensitive endpoints
+  - Added comprehensive CHANGELOG entry documenting the cache prevention headers implementation
 - **Sunday, August 10, 2025 at 5:48 PM**: Updated implementation strategy documentation to reflect RR-176 changes
   - Enhanced Performance Optimization section with RR-176 auto-parse content targeting strategy achieving 94% reduction in unnecessary API calls
   - Updated Content Extraction Strategy section to reflect completed implementation with intelligent partial feed targeting

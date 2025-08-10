@@ -39,7 +39,7 @@ This directory contains documentation for all API endpoints and server-side func
 | Inoreader | `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/stream-contents`, `/api/inoreader/unread-counts`, `/api/inoreader/edit-tag` | Proxies to Inoreader API |
 | Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize`, `/api/articles/[id]/tags` | Content extraction, AI summaries, tag management |
 | Tags | `/api/tags`, `/api/tags/[id]` | Tag listing and management |
-| Sync | `/api/sync`, `/api/sync/status/{syncId}`, `/api/sync/last-sync`, `/api/sync/refresh-view` | Start sync with sidebar payload, poll status, last sync time, refresh views |
+| Sync | `/api/sync`, `/api/sync/status/{syncId}`, `/api/sync/last-sync`, `/api/sync/refresh-view` | Start sync with sidebar payload, poll status, last sync time (with cache prevention headers), refresh views |
 | Health | `/api/health` (alias `/api/health/app`), `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude` | Health checks |
 | Analytics & Logs | `/api/analytics/fetch-stats`, `/api/logs/inoreader` | Usage analytics, API call logging |
 

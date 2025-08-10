@@ -40,7 +40,8 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
   - Response 404: `{ error: "sync_not_found", message }`
 
 - GET `/api/sync/last-sync`
-  - Description: Returns last sync time, preferring database truth: `sync_metadata` → `sync_status` → log fallback.
+  - Description: Returns last sync time, preferring database truth: `sync_metadata` → `sync_status` → log fallback. Includes cache prevention headers to ensure fresh data.
+  - Response Headers: `Cache-Control: no-store, no-cache, must-revalidate`, `Pragma: no-cache`, `Expires: 0`
   - Response 200: `{ lastSyncTime: string|null, source: "sync_metadata"|"sync_status"|"sync-log"|"none" }`
 
 - POST `/api/sync/metadata`
