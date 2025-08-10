@@ -160,21 +160,39 @@ export interface Database {
           service: string;
           date: string;
           count: number;
+          zone1_usage: number;
+          zone1_limit: number;
+          zone2_usage: number;
+          zone2_limit: number;
+          reset_after: number;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           service: string;
           date: string;
           count?: number;
+          zone1_usage?: number;
+          zone1_limit?: number;
+          zone2_usage?: number;
+          zone2_limit?: number;
+          reset_after?: number;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           service?: string;
           date?: string;
           count?: number;
+          zone1_usage?: number;
+          zone1_limit?: number;
+          zone2_usage?: number;
+          zone2_limit?: number;
+          reset_after?: number;
           created_at?: string;
+          updated_at?: string;
         };
       };
       sync_metadata: {

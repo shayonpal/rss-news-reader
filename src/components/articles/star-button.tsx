@@ -36,6 +36,7 @@ export function StarButton({
       active={isStarred}
       activeClassName="fill-yellow-500 text-yellow-500"
       label={isStarred ? "Unstar" : "Star"}
+      showLabel={size !== "sm"}
       disabled={disabled}
     />
   );

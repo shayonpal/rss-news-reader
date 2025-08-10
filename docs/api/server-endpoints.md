@@ -10,10 +10,10 @@ This document lists all internal API endpoints implemented in the codebase, cove
 
 | Category | Primary Endpoints |
 | --- | --- |
-| Sync | `POST /api/sync`, `GET /api/sync/status/{syncId}`, `GET /api/sync/last-sync`, `POST /api/sync/metadata`, `POST /api/sync/refresh-view`, `POST /api/sync/bidirectional` |
+| Sync | `POST /api/sync`, `GET /api/sync/status/{syncId}`, `GET /api/sync/last-sync`, `POST /api/sync/metadata`, `POST /api/sync/refresh-view`, `POST /api/sync/bidirectional`, `GET /api/sync/api-usage` |
 | Articles | `POST /api/articles/{id}/fetch-content`, `POST /api/articles/{id}/summarize`, `GET /api/articles/{id}/tags` |
 | Tags | `GET /api/tags`, `POST /api/tags`, `GET /api/tags/{id}`, `PATCH /api/tags/{id}`, `DELETE /api/tags/{id}` |
-| Inoreader Proxy | `GET /api/inoreader/user-info`, `GET /api/inoreader/subscriptions`, `GET /api/inoreader/stream-contents`, `GET /api/inoreader/unread-counts`, `POST /api/inoreader/edit-tag`, `GET /api/inoreader/debug` |
+| Inoreader Proxy | `GET /api/inoreader/user-info`, `GET /api/inoreader/subscriptions`, `GET /api/inoreader/stream-contents`, `GET /api/inoreader/unread-counts`, `POST /api/inoreader/edit-tag`, `GET /api/inoreader/debug`, `GET /api/inoreader/dev` |
 | Health | `GET /api/health` (and alias `/api/health/app`), `GET /api/health/db`, `GET /api/health/cron`, `GET /api/health/parsing`, `GET /api/health/claude` |
 | Analytics & Logs | `GET /api/analytics/fetch-stats`, `POST /api/logs/inoreader` |
 | Auth Status | `GET /api/auth/inoreader/status` |
@@ -39,8 +39,8 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
   - Response 404: `{ error: "sync_not_found", message }`
 
 - GET `/api/sync/last-sync`
-  - Description: Returns last sync time from log file or DB fallback.
-  - Response 200: `{ lastSyncTime: string|null, source: "sync-log"|"database"|"none" }`
+  - Description: Returns last sync time, preferring database truth: `sync_metadata` → `sync_status` → log fallback.
+  - Response 200: `{ lastSyncTime: string|null, source: "sync_metadata"|"sync_status"|"sync-log"|"none" }`
 
 - POST `/api/sync/metadata`
   - Description: Update sync metadata keys; supports direct value or `{ increment: number }`.
@@ -54,6 +54,14 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 - POST `/api/sync/bidirectional`
   - Description: Back-compat placeholder; bi-directional sync runs as separate service.
   - Response 501: `{ error, message }`
+
+- GET `/api/sync/api-usage` (RR-5)
+  - Description: Returns current Inoreader API usage with zone percentages for display in sidebar. Values are sourced from Inoreader response headers captured on every call.
+  - Response 200: `{ zone1: { used, limit, percentage }, zone2: { used, limit, percentage }, resetAfterSeconds, timestamp }`
+  - Cache-Control: 30 seconds (near real-time updates)
+  - Notes:
+    - Free tier limits: 100/day for Zone 1 and 100/day for Zone 2 (limits come from headers and may vary by plan)
+    - To mitigate occasional header lag during bursts, Zone 1 `used` is computed as `max(header_usage, daily_call_count)`, capped at `limit`
 
 ### Articles
 
@@ -154,6 +162,19 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 - GET `/api/inoreader/debug`
   - Description: Returns cookie/token presence and expiry diagnostics (for debugging).
   - Response 200: `{ hasAccessToken, hasRefreshToken, expiresAt, expiresIn, isExpired, cookies: { ... } }`
+
+- GET `/api/inoreader/dev` (RR-5, Development Only)
+  - Description: Development proxy for testing Inoreader API calls and capturing rate limit headers.
+  - Query: `endpoint` (required), `method=GET|POST` (default GET)
+  - Response 200: `{ data, headers, debug: { zone1: { usage, limit }, zone2: { usage, limit }, resetAfter } }`
+  - Response 403: In production environment
+  - Note: Automatically captures and stores rate limit headers in api_usage table
+
+- POST `/api/inoreader/dev` (RR-5, Development Only)
+  - Description: POST variant for write operations testing.
+  - Query: `endpoint` (required)
+  - Body: Raw form data to pass through
+  - Response: Same as GET variant
 
 ### Health
 

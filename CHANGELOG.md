@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### UI/UX – Liquid Glass follow‑ups
+- Article detail view now uses a headerless, floating control scheme
+  - Circular glass back button + clustered glass action toolbar (icon+label on desktop, icon‑only on mobile)
+  - Toolbar is constrained to article content width and is safe‑area aware in PWA
+  - Added collapse behavior: the entire right cluster (including the trigger) disappears when the menu opens, showing only the dropdown content
+  - Restyled dropdown as a glass popover (18px radius, blur, widened min‑width, subtle separators, improved item spacing)
+  - Replaced More label with an ellipsis icon
+- Action labels and consistency
+  - Detail labels: Star/Unstar, Summarize/Re‑summarize, Full Content/Original Content
+  - List cards: actions are icon‑only for tighter density
+- PWA spacing helpers
+  - Introduced `.top-safe-48` (48px + safe area) and applied to floating controls for reliable tap targets across devices
+
+### Fixed
+- **[RR-5] Accurate Inoreader API Usage in Sidebar**
+  - Source of truth: capture `X-Reader-Zone{1,2}-{Usage,Limit}` and `X-Reader-Limits-Reset-After` from every Inoreader response (reads and writes)
+  - Persist only header-provided values; removed hardcoded defaults and legacy count overwrites
+  - Expose `/api/sync/api-usage` with 30s cache; Zone 1 `used = max(header_usage, daily_call_count)` to mitigate header lag; Zone 2 uses header totals
+  - Updated `/api/sync/last-sync` to prefer DB (`sync_metadata` → `sync_status`) before falling back to log file
+  - Sidebar now reflects real-time usage and correct last sync time after manual/auto sync
+
+### UI/UX – Liquid Glass adoption (iOS 26-inspired)
+- Implemented clear liquid-glass navigation panes with scroll-aware contrast
+  - Top headers: `src/components/layout/header.tsx`, article list header via `src/app/page.tsx`, and article detail header `src/components/articles/article-detail.tsx`
+  - Tokens and utilities added to `src/app/globals.css` (`--glass-blur`, `--glass-nav-bg`, `--glass-nav-bg-scrolled`, `.glass-nav`)
+- Converted article detail footer to a floating glass toolbar with slide-away-on-scroll behavior
+  - Added `.glass-footer` styles; footer now mirrors header motion and contrast
+- Unified floating “Scroll to top” button with Liquid Glass tokens for consistent blur/tint
+- Replaced read-status dropdown with a glass segmented pill (3 options: All, Unread, Read)
+  - Icon-only on mobile, icon+label on desktop; sliding indicator; accessible roles
+  - New styles: `.glass-segment`, `.glass-segment-3`, `.glass-segment-indicator`, `.glass-segment-btn`
+  - Changed Unread icon to `MailOpen` for clearer semantics
+- Sidebar improvements
+  - Added fixed, glass-styled bottom info bar showing last sync and API usage
+    - Content scrolls behind it; supports safe‑area insets; tuned mobile spacing/left padding
+  - Removed duplicate “feeds total” from the bottom section (already shown in header)
+
+### Changed
+- Tuned glass to be clearer/less frosty across themes (reduced blur/tint, softer shadows)
+- Removed counts under the main header title (information already available elsewhere)
+- Back button aligned to content width on desktop; increased top offset for better spacing
+- Article detail footer spacing refined for readability
+
+### Fixed
+- Corrected selected-pill alignment on desktop by switching to grid-based indicator sizing
+- Addressed compact pill touch targets to meet 44px minimum while keeping header fit
+- Ensured header and footer glass panes deepen slightly on scroll for legibility
+
 ### Security
 - **[RR-147] Fix database security vulnerabilities and remove unused indexes** (Saturday, August 9, 2025 at 1:14 PM)
   - **Function Security**: Fixed 10 functions with mutable search_path vulnerabilities by adding explicit `SET search_path = public`

@@ -49,7 +49,9 @@ export function SimpleFeedSidebar({
     syncProgress,
     syncMessage,
     rateLimit,
+    apiUsage,
     loadLastSyncTime,
+    updateApiUsage,
   } = useSyncStore();
   const { theme, setTheme, feedsSectionCollapsed, setFeedsSectionCollapsed, tagsSectionCollapsed, setTagsSectionCollapsed } = useUIStore();
   const { readStatusFilter } = useArticleStore();
@@ -107,6 +109,40 @@ export function SimpleFeedSidebar({
       }
     }
   }, []);
+
+  // Fetch API usage on mount and after sync
+  useEffect(() => {
+    const fetchApiUsage = async (bustCache = false) => {
+      try {
+        // Add cache-busting parameter after sync to get fresh data
+        const url = bustCache 
+          ? `/reader/api/sync/api-usage?t=${Date.now()}`
+          : '/reader/api/sync/api-usage';
+        const response = await fetch(url, {
+          headers: bustCache ? { 'Cache-Control': 'no-cache' } : {},
+        });
+        if (response.ok) {
+          const data = await response.json();
+          updateApiUsage({
+            zone1: data.zone1,
+            zone2: data.zone2,
+            resetAfterSeconds: data.resetAfterSeconds,
+            lastUpdated: data.timestamp,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch API usage:', error);
+      }
+    };
+
+    // Fetch with cache-busting if we just finished syncing
+    const justFinishedSyncing = !isSyncing && apiUsage?.zone1;
+    fetchApiUsage(justFinishedSyncing);
+    
+    // Refresh every 5 minutes
+    const interval = setInterval(() => fetchApiUsage(false), 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [updateApiUsage, isSyncing]); // Also refresh when sync completes
 
   // Save and restore scroll position when filter changes
   useEffect(() => {
@@ -213,7 +249,7 @@ export function SimpleFeedSidebar({
       </div>
 
       {/* Feed List */}
-      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+      <div className="relative flex-1 overflow-y-auto" ref={scrollContainerRef}>
         {/* Loading State for Initial Sync */}
         {isSyncing && feeds.size === 0 ? (
           <div className="flex h-full flex-col items-center justify-center p-4">
@@ -598,37 +634,59 @@ export function SimpleFeedSidebar({
               </div>
             </CollapsibleFilterSection>
 
-            {/* Status */}
-            <div className="space-y-1 p-3 text-xs text-muted-foreground">
-              {lastSyncTime && (
-                <div>
-                  Last sync:{" "}
-                  <span suppressHydrationWarning>
-                    {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}
-                  </span>
-                </div>
-              )}
-              <div>{feeds.size} feeds total</div>
-              {rateLimit && (
-                <div
-                  className={
-                    rateLimit.used >= rateLimit.limit * 0.8
-                      ? "text-amber-600"
-                      : ""
-                  }
-                >
-                  API usage: {rateLimit.used}/{rateLimit.limit} calls today
-                  {rateLimit.used >= rateLimit.limit * 0.95 && (
-                    <span className="text-destructive">
-                      {" "}
-                      (Warning: Near limit!)
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Spacer for fixed sidebar info bar (tuned for mobile) */}
+            <div className="h-[96px] md:h-[86px]" />
           </>
         )}
+      </div>
+
+      {/* Fixed bottom sidebar info */}
+      <div className="glass-sidebar-info sticky bottom-0 left-0 right-0 z-10">
+        <div className="text-xs p-4 pl-5 md:p-3 pb-[calc(8px+env(safe-area-inset-bottom))] md:pb-3 space-y-2">
+          {lastSyncTime && (
+            <div className="text-muted-foreground leading-relaxed">
+              Last sync:{" "}
+              <span suppressHydrationWarning>
+                {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}
+              </span>
+            </div>
+          )}
+          {/* API usage (no feeds total; it's already at the top) */}
+          {apiUsage ? (
+            <div className="mt-1 md:mt-1">
+              <span className="font-medium">API Usage:</span>
+              <div className="mt-1 flex items-center gap-3">
+                <span
+                  className={
+                    apiUsage.zone1.percentage >= 95
+                      ? "text-red-500"
+                      : apiUsage.zone1.percentage >= 80
+                      ? "text-yellow-500"
+                      : "text-green-500"
+                  }
+                >
+                  {apiUsage.zone1.percentage.toFixed(1)}% (zone 1)
+                </span>
+                <span className="text-gray-400">|</span>
+                <span
+                  className={
+                    apiUsage.zone2.percentage >= 95
+                      ? "text-red-500"
+                      : apiUsage.zone2.percentage >= 80
+                      ? "text-yellow-500"
+                      : "text-green-500"
+                  }
+                >
+                  {apiUsage.zone2.percentage.toFixed(1)}% (zone 2)
+                </span>
+              </div>
+            </div>
+          ) : rateLimit ? (
+            <div className="mt-1 text-muted-foreground">
+              API usage: {rateLimit.used}/{rateLimit.limit} calls today
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

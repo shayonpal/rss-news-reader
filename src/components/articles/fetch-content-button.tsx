@@ -84,11 +84,12 @@ export function FetchContentButton({
         onPress={handleAction}
         size={size}
         active={false}
-        label={hasFullContent ? "Revert to RSS content" : "Fetch full content"}
+        label={hasFullContent ? "Original Content" : "Full Content"}
         disabled={isLoading}
         loading={isLoading}
         loadingIcon={Loader2}
         className={className}
+        showLabel={size !== "sm"}
       />
     );
   }

@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const fs = require("fs").promises;
 const path = require("path");
+const { captureRateLimitHeaders } = require("./capture-headers");
 require("dotenv").config();
 
 class TokenManager {
@@ -166,6 +167,9 @@ class TokenManager {
       headers,
     });
 
+    // ALWAYS capture rate limit headers after EVERY API call
+    await captureRateLimitHeaders(response.headers);
+
     if (response.status === 401) {
       // Token might be invalid, try refreshing
       console.log("🔄 Received 401, attempting token refresh...");
@@ -175,10 +179,15 @@ class TokenManager {
       const newAccessToken = await this.getAccessToken();
       headers.Authorization = `Bearer ${newAccessToken}`;
 
-      return fetch(url, {
+      const retryResponse = await fetch(url, {
         ...options,
         headers,
       });
+      
+      // Capture headers for retry request too
+      await captureRateLimitHeaders(retryResponse.headers);
+      
+      return retryResponse;
     }
 
     return response;

@@ -15,8 +15,23 @@ export function Header() {
     await performFullSync();
   };
 
+  // Add scroll-aware contrast for the persistent layout header (desktop view)
+  if (typeof window !== "undefined") {
+    // Use a microtask to avoid layout thrash during hydration
+    queueMicrotask(() => {
+      const el = document.getElementById("app-layout-header");
+      if (!el) return;
+      const onScroll = () => {
+        const scrolled = window.scrollY > 8;
+        el.classList.toggle("is-scrolled", scrolled);
+      };
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+    });
+  }
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b glass-nav" id="app-layout-header">
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <Button
           variant="ghost"

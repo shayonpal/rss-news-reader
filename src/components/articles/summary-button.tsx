@@ -55,11 +55,12 @@ export function SummaryButton({
         onPress={handleGenerateSummary}
         size={size}
         active={false}
-        label={hasSummary ? "Regenerate summary" : "Generate AI summary"}
+        label={hasSummary ? "Re-summarize" : "Summarize"}
         disabled={isLoading}
         loading={isLoading}
         loadingIcon={Loader2}
         className={className}
+        showLabel={size !== "sm"}
       />
     );
   }

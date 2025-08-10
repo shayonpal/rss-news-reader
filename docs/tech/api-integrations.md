@@ -169,13 +169,19 @@ POST / reader / api / 0 / edit - tag;
 }
 ```
 
-### Rate Limiting Strategy
+### Rate Limiting Strategy (RR-5)
 
-**Current Limits** (Inoreader Free Tier):
+**Limits Source of Truth**
 
-- 100 API calls per day for Zone 1 (basic operations)
-- 100 API calls per day for Zone 2
-- Resets at midnight UTC
+- Limits and usage come from Inoreader response headers on every call:
+  - `X-Reader-Zone1-Limit`, `X-Reader-Zone2-Limit`
+  - `X-Reader-Zone1-Usage`, `X-Reader-Zone2-Usage`
+  - `X-Reader-Limits-Reset-After`
+- We persist only header-provided values (no hardcoded defaults); partial updates are supported.
+
+**Free Tier Reference**
+
+- Typical free plan limits are 100/day for Zone 1 and 100/day for Zone 2, but the app does not assume these; it reads headers.
 
 **Optimization Approach**:
 
@@ -191,7 +197,7 @@ const syncStrategy = {
 
 // Total per sync: ~4-5 calls
 // Daily usage: ~24-30 calls (6 incremental syncs + occasional full sync)
-// Leaves 75+ calls for manual operations
+// Leaves ~70+ calls for manual operations on free tier
 ```
 
 See also: `docs/tech/bidirectional-sync.md` for end-to-end behavior, queue semantics, and conflict handling.
@@ -199,27 +205,9 @@ See also: `docs/tech/bidirectional-sync.md` for end-to-end behavior, queue seman
 **Rate Limit Management**:
 
 ```typescript
-class RateLimitManager {
-  private callsToday = 0;
-  private lastReset = new Date().toDateString();
-
-  async makeCall<T>(apiCall: () => Promise<T>): Promise<T> {
-    if (this.callsToday >= 95) {
-      throw new Error("API_LIMIT_REACHED");
-    }
-
-    this.callsToday++;
-    return await apiCall();
-  }
-
-  getUsageStats() {
-    return {
-      used: this.callsToday,
-      remaining: 100 - this.callsToday,
-      resetTime: "Midnight UTC",
-    };
-  }
-}
+// RR-5 capture: backend records headers after every request;
+// API usage endpoint returns latest totals with a hybrid for Zone 1 to reduce header lag impact.
+// See `/api/sync/api-usage`.
 ```
 
 ### Error Handling

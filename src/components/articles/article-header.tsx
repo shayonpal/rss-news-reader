@@ -198,7 +198,6 @@ export function ArticleHeader({
           <h1 className="break-words text-lg font-semibold sm:text-xl md:text-2xl">
             {pageTitle}
           </h1>
-          <p className="text-sm text-muted-foreground">{getCountDisplay()}</p>
         </div>
       </div>
 

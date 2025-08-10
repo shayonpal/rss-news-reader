@@ -6,6 +6,7 @@ import { getAdminClient } from "@/lib/db/supabase-admin";
 import { SyncConflictDetector } from "@/lib/sync/conflict-detector";
 import { ArticleCleanupService } from "@/lib/services/cleanup-service";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
+import { captureRateLimitHeaders } from "@/lib/api/capture-rate-limit-headers";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -325,7 +326,17 @@ async function performServerSync(syncId: string) {
       "https://www.inoreader.com/reader/api/0/subscription/list"
     );
 
+    // Capture rate limit headers for RR-5 (even on failure)
+    await captureRateLimitHeaders(subsResponse.headers);
+
     if (!subsResponse.ok) {
+      // Check if it's a rate limit error
+      if (subsResponse.status === 429) {
+        console.error("[Sync] Inoreader API rate limit reached during subscriptions fetch");
+        status.error = "Rate limit exceeded - sync incomplete";
+        status.status = "failed";
+        await writeSyncStatus(syncId, status);
+      }
       throw new Error(
         `Failed to fetch subscriptions: ${subsResponse.statusText}`
       );
@@ -358,9 +369,20 @@ async function performServerSync(syncId: string) {
       "https://www.inoreader.com/reader/api/0/tag/list"
     );
 
+    // Capture rate limit headers for RR-5 (even on failure)
+    await captureRateLimitHeaders(tagListResponse.headers);
+
     if (!tagListResponse.ok) {
+      // Check if it's a rate limit error (RR-5)
+      if (tagListResponse.status === 429) {
+        console.error("[Sync] Inoreader API rate limit reached during tag list fetch");
+        status.error = "Rate limit exceeded - sync incomplete after fetching subscriptions";
+        status.status = "failed";
+        await writeSyncStatus(syncId, status);
+        return; // Exit gracefully with partial data
+      }
       console.error(`[Sync] Failed to fetch tag list: ${tagListResponse.statusText}`);
-      // Continue sync even if tag list fails
+      // Continue sync even if tag list fails for other reasons
     }
 
     // Get all user labels (both tags and folders)
@@ -400,7 +422,18 @@ async function performServerSync(syncId: string) {
       "https://www.inoreader.com/reader/api/0/unread-count"
     );
 
+    // Capture rate limit headers for RR-5 (even on failure)
+    await captureRateLimitHeaders(countsResponse.headers);
+
     if (!countsResponse.ok) {
+      // Check if it's a rate limit error (RR-5)
+      if (countsResponse.status === 429) {
+        console.error("[Sync] Inoreader API rate limit reached during unread counts fetch");
+        status.error = "Rate limit exceeded - sync incomplete after fetching tags";
+        status.status = "failed";
+        await writeSyncStatus(syncId, status);
+        return; // Exit gracefully with partial data
+      }
       throw new Error(
         `Failed to fetch unread counts: ${countsResponse.statusText}`
       );
@@ -528,7 +561,18 @@ async function performServerSync(syncId: string) {
     
     const streamResponse = await tokenManager.makeAuthenticatedRequest(streamUrl);
 
+    // Capture rate limit headers for RR-5 (even on failure)
+    await captureRateLimitHeaders(streamResponse.headers);
+
     if (!streamResponse.ok) {
+      // Check if it's a rate limit error (RR-5)
+      if (streamResponse.status === 429) {
+        console.error("[Sync] Inoreader API rate limit reached during stream contents fetch");
+        status.error = "Rate limit exceeded - sync incomplete after fetching unread counts";
+        status.status = "failed";
+        await writeSyncStatus(syncId, status);
+        return; // Exit gracefully with partial data
+      }
       throw new Error(`Failed to fetch articles: ${streamResponse.statusText}`);
     }
 

@@ -19,6 +19,7 @@ interface ArticleActionButtonProps {
   loading?: boolean;
   loadingIcon?: LucideIcon;
   className?: string;
+  showLabel?: boolean;
 }
 
 const sizeClasses: Record<ArticleActionButtonSize, string> = {
@@ -69,17 +70,17 @@ export function ArticleActionButton({
   loading = false,
   loadingIcon: LoadingIcon,
   className,
+  showLabel = true,
 }: ArticleActionButtonProps) {
   const iconSize = sizeClasses[size];
   const DisplayIcon = loading && LoadingIcon ? LoadingIcon : Icon;
 
   return (
-    <IOSButton
-      variant="ghost"
-      size="icon"
-      onPress={onPress}
+    <button
+      type="button"
+      onClick={onPress}
       disabled={disabled || loading}
-      className={cn("rounded p-1 hover:bg-muted", className)}
+      className={cn("glass-toolbar-btn", className)}
       aria-label={label}
       title={title || label}
     >
@@ -94,6 +95,9 @@ export function ArticleActionButton({
               : "text-muted-foreground"
         )}
       />
-    </IOSButton>
+      {showLabel && (
+        <span className="ml-2 hidden md:inline text-sm">{label}</span>
+      )}
+    </button>
   );
 }

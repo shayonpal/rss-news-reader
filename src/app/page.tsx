@@ -116,6 +116,8 @@ export default function HomePage() {
           }
 
           lastScrollY.current = currentScrollY;
+          // Scroll-aware contrast for Liquid Glass
+          headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
           ticking = false;
         });
 
@@ -180,7 +182,7 @@ export default function HomePage() {
         {/* Enhanced Header with Database Counts */}
         <div
           ref={headerRef}
-          className="fixed left-0 right-0 top-0 z-30 border-b bg-background transition-transform duration-300 ease-in-out md:left-80"
+          className="fixed left-0 right-0 top-0 z-30 border-b glass-nav transition-transform duration-300 ease-in-out md:left-80"
           style={{ transform: "translateY(0)" }}
         >
           <ArticleHeader
@@ -201,7 +203,7 @@ export default function HomePage() {
         {/* Article List Container with its own scroll */}
         <div
           ref={articleListRef}
-          className="ios-scroll-container relative flex-1 overflow-y-auto pt-[70px] pwa-standalone:pt-[calc(50px+env(safe-area-inset-top))]"
+          className="ios-scroll-container scrollbar-hide relative flex-1 overflow-y-auto pt-[70px] pwa-standalone:pt-[calc(50px+env(safe-area-inset-top))]"
         >
           <ArticleList
             feedId={selectedFeedId || undefined}

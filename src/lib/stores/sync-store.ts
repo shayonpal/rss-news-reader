@@ -12,6 +12,20 @@ export interface QueuedAction {
   maxRetries: number;
 }
 
+// API Usage types for zone-based rate limiting
+export interface ZoneUsage {
+  used: number;
+  limit: number;
+  percentage: number;
+}
+
+export interface ApiUsage {
+  zone1: ZoneUsage;
+  zone2: ZoneUsage;
+  resetAfterSeconds?: number;
+  lastUpdated?: string;
+}
+
 export interface SyncState {
   // Sync status
   lastSyncTime: number | null;
@@ -19,7 +33,8 @@ export interface SyncState {
   syncError: string | null;
   syncProgress: number;
   syncMessage: string | null;
-  rateLimit: { used: number; limit: number; remaining: number } | null;
+  rateLimit: { used: number; limit: number; remaining: number } | null; // Legacy support
+  apiUsage: ApiUsage | null; // New zone-based usage
 
   // Offline queue
   actionQueue: QueuedAction[];
@@ -34,6 +49,7 @@ export interface SyncState {
   setRateLimit: (
     rateLimit: { used: number; limit: number; remaining: number } | null
   ) => void;
+  updateApiUsage: (usage: ApiUsage) => void;
 
   // Queue management
   addToQueue: (
@@ -58,6 +74,7 @@ export const useSyncStore = create<SyncState>()(
       syncProgress: 0,
       syncMessage: null,
       rateLimit: null,
+      apiUsage: null,
       actionQueue: [],
 
       // Basic setters
@@ -67,6 +84,7 @@ export const useSyncStore = create<SyncState>()(
       setSyncProgress: (progress) => set({ syncProgress: progress }),
       setSyncMessage: (message) => set({ syncMessage: message }),
       setRateLimit: (rateLimit) => set({ rateLimit }),
+      updateApiUsage: (usage) => set({ apiUsage: usage }),
 
       // Load last sync time from server
       loadLastSyncTime: async () => {

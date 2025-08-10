@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { logInoreaderApiCall } from "@/lib/api/log-api-call";
+import { captureRateLimitHeaders } from "@/lib/api/capture-rate-limit-headers";
 
 const INOREADER_API_BASE = "https://www.inoreader.com/reader/api/0";
 
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest) {
         { status: response.status }
       );
     }
+
+    // Capture rate limit headers for RR-5
+    await captureRateLimitHeaders(response.headers);
 
     // Inoreader returns "OK" as plain text for successful operations
     const result = await response.text();

@@ -1,4 +1,5 @@
 import { rateLimiter } from './rate-limiter';
+import { captureRateLimitHeaders } from './capture-rate-limit-headers';
 
 /**
  * Process Inoreader API response and extract rate limit headers
@@ -8,6 +9,11 @@ export function processInoreaderResponse(response: Response): void {
   try {
     // Update rate limiter with header information
     rateLimiter.updateFromHeaders(response.headers);
+    
+    // Also capture headers to database for RR-5
+    captureRateLimitHeaders(response.headers).catch(err => 
+      console.error('[Inoreader API] Failed to capture headers to DB:', err)
+    );
 
     // Log rate limit status if approaching limits
     const serverInfo = rateLimiter.getServerInfo();

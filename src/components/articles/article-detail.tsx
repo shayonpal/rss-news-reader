@@ -11,7 +11,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  MoreVertical,
+  Ellipsis,
   BarChart3,
   ArrowUp,
   Tag,
@@ -36,6 +36,112 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Reusable toolbar (can be moved to its own file if you prefer)
+function ArticleActionsToolbar({
+  articleId,
+  isStarred,
+  hasSummary,
+  hasFullContent,
+  onToggleStar,
+  onSummarySuccess,
+  onFetchSuccess,
+  onFetchRevert,
+  feed,
+  onTogglePartialFeed,
+  isUpdatingFeed,
+  onShare,
+  articleUrl,
+  onOpenFetchStats,
+}: {
+  articleId: string;
+  isStarred: boolean;
+  hasSummary: boolean;
+  hasFullContent?: boolean;
+  onToggleStar: () => void;
+  onSummarySuccess: () => void;
+  onFetchSuccess: (content: string) => void;
+  onFetchRevert: () => void;
+  feed?: Feed;
+  onTogglePartialFeed: () => void;
+  isUpdatingFeed: boolean;
+  onShare: () => void;
+  articleUrl?: string;
+  onOpenFetchStats: () => void;
+}) {
+  return (
+    <div className="glass-toolbar pointer-events-auto">
+      <div className="toolbar-group">
+        <StarButton onToggleStar={onToggleStar} isStarred={isStarred} size="md" />
+        <SummaryButton
+          articleId={articleId}
+          hasSummary={hasSummary}
+          variant="icon"
+          size="md"
+          onSuccess={onSummarySuccess}
+        />
+        <FetchContentButton
+          articleId={articleId}
+          hasFullContent={!!hasFullContent}
+          variant="icon"
+          size="md"
+          onSuccess={onFetchSuccess}
+          onRevert={onFetchRevert}
+        />
+      </div>
+      <DropdownMenu onOpenChange={(open) => {
+        const root = document.querySelector('.glass-toolbar');
+        if (root) root.classList.toggle('menu-open', open);
+      }}>
+        <DropdownMenuTrigger asChild>
+          <button className="glass-toolbar-btn" aria-label="More options">
+            <Ellipsis className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64 glass-popover p-2">
+          {feed && (
+            <DropdownMenuItem onSelect={onTogglePartialFeed} className="relative">
+              <span
+                className={cn(
+                  "mr-2 text-base transition-opacity duration-200",
+                  isUpdatingFeed && "opacity-50"
+                )}
+              >
+                {feed.isPartialContent ? "☑" : "☐"}
+              </span>
+              <span
+                className={cn(
+                  "transition-opacity duration-200",
+                  isUpdatingFeed && "opacity-50"
+                )}
+              >
+                Partial Feed
+              </span>
+            </DropdownMenuItem>
+          )}
+          <div className="menu-separator my-1" />
+          <DropdownMenuItem onSelect={onShare}>
+            <Share2 className="mr-2 h-4 w-4" />
+            Share
+          </DropdownMenuItem>
+          {articleUrl && (
+            <DropdownMenuItem
+              onSelect={() => window.open(articleUrl, "_blank", "noopener,noreferrer")}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open Original
+            </DropdownMenuItem>
+          )}
+          <div className="menu-separator my-1" />
+          <DropdownMenuItem onSelect={onOpenFetchStats}>
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Fetch Stats
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 interface ArticleDetailProps {
   article: Article;
@@ -193,7 +299,7 @@ export function ArticleDetail({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNavigate, onBack]);
 
-  // Header show/hide on scroll
+  // Header/toolbar show/hide on scroll
   useEffect(() => {
     let ticking = false;
 
@@ -224,6 +330,21 @@ export function ArticleDetail({
           }
 
           lastScrollY.current = currentScrollY;
+          // Scroll-aware contrast for Liquid Glass
+          headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
+
+          // Footer slide + scroll-aware contrast
+          const footer = document.getElementById("article-footer");
+          if (footer) {
+            if (scrollDelta > 0 && currentScrollY > 50) {
+              footer.style.transform = "translateY(100%)";
+            } else if (scrollDelta < 0) {
+              footer.style.transform = "translateY(0)";
+            } else if (currentScrollY < 5) {
+              footer.style.transform = "translateY(0)";
+            }
+            footer.classList.toggle("is-scrolled", currentScrollY > 8);
+          }
           ticking = false;
         });
 
@@ -237,6 +358,20 @@ export function ArticleDetail({
       window.removeEventListener("scroll", handleScroll);
     };
   }, [isIOS]);
+
+  // Hide viewport scrollbar while on detail view (apply to html and body)
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      const body = document.body;
+      root.classList.add("scrollbar-hide");
+      body.classList.add("scrollbar-hide");
+      return () => {
+        root.classList.remove("scrollbar-hide");
+        body.classList.remove("scrollbar-hide");
+      };
+    }
+  }, []);
 
   // Touch handlers for swipe navigation
   const onTouchStart = (e: React.TouchEvent) => {
@@ -307,115 +442,44 @@ export function ArticleDetail({
       onTouchEnd={onTouchEnd}
     >
       {/* Header */}
-      <header
+      {/* Floating controls container (no top pane) */}
+      <div
         ref={headerRef}
-        className="pwa-safe-area-top fixed left-0 right-0 top-0 z-10 border-b border-gray-200 bg-white transition-transform duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900"
-        style={{ transform: "translateY(0)" }}
+        className="fixed left-0 right-0 z-10 transition-transform duration-300 ease-in-out article-header-controls"
+        style={{ transform: "translateY(0)", top: "24px" }}
       >
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <IOSButton
-            variant="ghost"
-            size="icon"
-            onPress={onBack}
-            aria-label="Back to list"
-            className="hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </IOSButton>
-
-          <div className="flex items-center gap-2">
-            <StarButton
-              onToggleStar={onToggleStar}
-              isStarred={currentArticle.tags?.includes("starred") || false}
-              size="md"
-            />
-
-            <SummaryButton
-              articleId={currentArticle.id}
-              hasSummary={!!currentArticle.summary}
-              variant="icon"
-              size="md"
-              onSuccess={handleSummarySuccess}
-            />
-
-            <FetchContentButton
-              articleId={currentArticle.id}
-              hasFullContent={currentArticle.hasFullContent}
-              variant="icon"
-              size="md"
-              onSuccess={handleFetchContentSuccess}
-              onRevert={handleRevertContent}
-            />
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <IOSButton
-                  variant="ghost"
-                  size="icon"
-                  aria-label="More options"
-                  className="hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </IOSButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {feed && (
-                  <DropdownMenuItem
-                    onSelect={handleToggleFeedPartialContent}
-                    disabled={isUpdatingFeed}
-                    className="relative"
-                  >
-                    <span
-                      className={cn(
-                        "mr-2 text-base transition-opacity duration-200",
-                        isUpdatingFeed && "opacity-50"
-                      )}
-                    >
-                      {feed.isPartialContent ? "☑" : "☐"}
-                    </span>
-                    <span
-                      className={cn(
-                        "transition-opacity duration-200",
-                        isUpdatingFeed && "opacity-50"
-                      )}
-                    >
-                      Partial Feed
-                    </span>
-                    {isUpdatingFeed && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
-                      </div>
-                    )}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onSelect={handleShare}>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Share
-                </DropdownMenuItem>
-                {currentArticle.url && (
-                  <DropdownMenuItem
-                    onSelect={() =>
-                      window.open(
-                        currentArticle.url,
-                        "_blank",
-                        "noopener,noreferrer"
-                      )
-                    }
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open Original
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => router.push("/fetch-stats")}>
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Fetch Stats
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 flex items-start justify-between">
+          {/* Back button aligned with content */}
+          <div className="pointer-events-auto">
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Back to list"
+              className="glass-icon-btn"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
           </div>
+
+          {/* Actions toolbar constrained to article width */}
+          <ArticleActionsToolbar
+            articleId={currentArticle.id}
+            isStarred={currentArticle.tags?.includes("starred") || false}
+            hasSummary={!!currentArticle.summary}
+            hasFullContent={currentArticle.hasFullContent}
+            onToggleStar={onToggleStar}
+            onSummarySuccess={handleSummarySuccess}
+            onFetchSuccess={handleFetchContentSuccess}
+            onFetchRevert={handleRevertContent}
+            feed={feed}
+            onTogglePartialFeed={handleToggleFeedPartialContent}
+            isUpdatingFeed={isUpdatingFeed}
+            onShare={handleShare}
+            articleUrl={currentArticle.url}
+          onOpenFetchStats={() => router.push("/fetch-stats")}
+          />
         </div>
-      </header>
+      </div>
 
       {/* Spacer for fixed header */}
       <div className="h-[60px] pwa-standalone:h-[calc(60px+env(safe-area-inset-top))]" />
@@ -520,8 +584,16 @@ export function ArticleDetail({
       </article>
 
       {/* Navigation Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <footer
+        ref={(el) => {
+          // Attach a refless scrolled class toggle synced with window scroll
+          // This will be updated in the scroll handler below
+        }}
+        className="fixed bottom-0 left-0 right-0 z-10 border-t glass-footer transition-transform duration-300 ease-in-out"
+        style={{ transform: "translateY(0)" }}
+        id="article-footer"
+      >
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <IOSButton
             variant="ghost"
             size="sm"
