@@ -14,6 +14,7 @@ interface UseAutoParseContentResult {
   shouldShowRetry: boolean;
   triggerParse: () => Promise<void>;
   clearError: () => void;
+  clearParsedContent: () => void;
 }
 
 export function useAutoParseContent({
@@ -34,11 +35,12 @@ export function useAutoParseContent({
       return false;
     }
 
-    // Check if this is from a partial feed
-    if (feed?.isPartialFeed) {
+    // Check if this is from a partial feed - ALWAYS parse these
+    if (feed?.isPartialContent === true) {
       return true;
     }
 
+    // For non-partial feeds, only parse if content is short or truncated
     // Check if content is suspiciously short (less than 500 chars)
     if (article.content && article.content.length < 500) {
       return true;
@@ -155,6 +157,10 @@ export function useAutoParseContent({
     setParseError(null);
   };
 
+  const clearParsedContent = () => {
+    setParsedContent(null);
+  };
+
   const shouldShowRetry = Boolean(
     parseError && 
     !parseError.includes("permanently") &&
@@ -169,5 +175,6 @@ export function useAutoParseContent({
     shouldShowRetry,
     triggerParse,
     clearError,
+    clearParsedContent,
   };
 }

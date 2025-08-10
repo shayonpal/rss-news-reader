@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation Updated
+- **Sunday, August 10, 2025 at 5:48 PM**: Updated implementation strategy documentation to reflect RR-176 changes
+  - Enhanced Performance Optimization section with RR-176 auto-parse content targeting strategy achieving 94% reduction in unnecessary API calls
+  - Updated Content Extraction Strategy section to reflect completed implementation with intelligent partial feed targeting
+  - Added Database Schema Strategy section documenting successful migration from `is_partial_feed` to `is_partial_content` field
+  - Implemented Unified Content State Management section covering single-button interface and state synchronization improvements
+  - Updated Summary section to highlight RR-176 performance achievements and architectural improvements
+  - Documented strategic decision to target only partial feeds (4/66 total) for auto-processing while maintaining manual fetch for all feeds
+- **Sunday, August 10, 2025 at 5:44 PM**: Updated UI/UX documentation to reflect RR-176 improvements
+  - Added toast notification system color scheme documentation (amber/green/red for loading/success/error states)
+  - Documented enhanced button interaction improvements including unified state management and duplicate button removal
+  - Added content display enhancements section covering improved revert functionality and content state priority system
+  - Created comprehensive user experience patterns guide for RR-176 including toast notifications, button interactions, and content display flow
+  - Updated implementation status to include RR-176 button synchronization and toast notification system
+- **Sunday, August 10, 2025 at 5:41 PM**: Created comprehensive release notes for RR-176 auto-parse content regression fix
+  - Created `docs/release-notes/RELEASE_NOTES_RR-176.md` documenting all 6 major implementation areas of the critical bug fix
+  - Documented 94% reduction in unnecessary auto-fetch operations by targeting only partial feeds (4/66 feeds)  
+  - Covered database consolidation from `is_partial_feed` to `is_partial_content` field with migration details
+  - Documented enhanced button state synchronization, unified content state management, and UI improvements
+  - Added comprehensive coverage of toast notification system with color-coded feedback (amber/green/red)
+  - Included performance impact analysis, user experience improvements, and developer testing strategy
+  - Documented breaking changes, rollback plans, and future enhancement roadmap for the regression fix
+- **Sunday, August 10, 2025 at 5:40 PM**: Updated server API endpoints documentation to reflect RR-176 changes
+  - Updated `/api/articles/{id}/fetch-content` endpoint documentation to reflect performance improvements and auto-parsing logic changes
+  - Added notes about `feeds.is_partial_content` field (replaced deprecated `is_partial_feed`)
+  - Documented missing feed management API endpoint for partial content toggle functionality
+  - Updated sync and parsing health endpoints documentation with RR-176 references
+  - Clarified that manual fetching works for all articles while auto-parsing is now optimized for partial feeds only
+- **Sunday, August 10, 2025 at 5:38 PM**: Updated button architecture documentation with RR-176 fetch/revert improvements
+  - Added comprehensive FetchContentButton section documenting dual-mode operation and state synchronization
+  - Documented unified content state management system using useContentState hook
+  - Explained true content reversion functionality that bypasses stored fullContent to show original RSS
+  - Added RR-176 section covering button state synchronization, UI improvements, and testing strategy
+  - Documented removal of duplicate bottom buttons for cleaner interface architecture
+- **Sunday, August 10, 2025 at 5:36 PM**: Updated PRD.md to reflect RR-176 auto-fetch logic improvements
+  - Updated auto-fetch section (lines 109-124) to clarify that auto-fetch now only applies to feeds marked as partial content (`is_partial_content = true`)
+  - Documented performance improvement achieved by targeting only partial feeds instead of triggering for all articles
+  - Explained that this prevents unnecessary content fetching for feeds that already provide full content in their RSS
+- **Sunday, August 10, 2025 at 5:35 PM**: Updated README.md database schema documentation to reflect RR-176 field consolidation
+  - Added explanatory note about `is_partial_content` field consolidation from previous `is_partial_feed` field
+  - Clarified that this boolean field indicates whether a feed typically provides partial content requiring full content fetching
+
 ### UI/UX – Liquid Glass follow‑ups
 - Article detail view now uses a headerless, floating control scheme
   - Circular glass back button + clustered glass action toolbar (icon+label on desktop, icon‑only on mobile)
@@ -21,6 +63,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Introduced `.top-safe-48` (48px + safe area) and applied to floating controls for reliable tap targets across devices
 
 ### Fixed
+- **[RR-176] Critical Auto-Parse Regression and Button Synchronization Fix**
+  - Fixed critical bug where ALL articles triggered auto-parse instead of only partial feeds (94% reduction in unnecessary API calls)
+  - Corrected field reference bug: `feed.isPartialFeed` (never populated) → `feed.isPartialContent` (properly maintained)
+  - Consolidated database schema: removed confusing dual fields, now single `is_partial_content` field
+  - Fixed fetch/revert content buttons that showed visual changes but didn't actually work
+  - Enhanced button state synchronization - removed duplicate bottom button, unified state management
+  - Implemented force-original content revert that bypasses stored full content to show RSS original
+  - Added toast notifications for user feedback (amber loading, green success, red error)
+  - Only 5/66 feeds now correctly marked as partial (Forbes, BBC, AppleInsider, Ars Technica, Cult of Mac)
 - **[RR-5] Accurate Inoreader API Usage in Sidebar**
   - Source of truth: capture `X-Reader-Zone{1,2}-{Usage,Limit}` and `X-Reader-Limits-Reset-After` from every Inoreader response (reads and writes)
   - Persist only header-provided values; removed hardcoded defaults and legacy count overwrites

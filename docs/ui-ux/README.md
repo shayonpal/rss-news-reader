@@ -2,7 +2,41 @@
 
 This directory contains user interface and user experience documentation, including design research, component specifications, and visual design guidelines.
 
+## Quick Links
+
+- **[Liquid Glass Design Guidelines](./liquid-glass-design-guidelines.md)** 🆕 - Comprehensive design principles and best practices for iOS 26 Liquid Glass
+- **[Liquid Glass Implementation Guide](./liquid-glass-implementation-guide.md)** - Technical guide for implementing Glass components
+- **[iOS 26 Design Research](./iOS-26-design-research/)** - Research and exploration for iOS 26-inspired updates
+- **[Implementation Code](./iOS-26-design-research/liquid-glass-redesign-ideas/figma-mockup-code-files/)** - Ready-to-use component code
+
 ## Directory Structure
+
+### liquid-glass-design-guidelines.md 🆕
+
+**Description**: Comprehensive design guidelines for iOS 26 Liquid Glass design system  
+**Status**: Current ✅  
+**Purpose**: One-stop knowledge base for designers and developers  
+**Contents**:
+- Core principles (morphing, context-aware, spatial continuity)
+- Material properties and visual design specifications
+- Interaction patterns with real examples
+- Implementation references from RSS Reader codebase
+- Accessibility and performance guidelines
+- Browser compatibility and fallback strategies
+- Links to official resources and tools
+
+### liquid-glass-implementation-guide.md ⭐
+
+**Description**: Comprehensive implementation guide for the Liquid Glass design system  
+**Status**: Current ✅  
+**Purpose**: Primary reference for UI engineers working with glass components  
+**Contents**:
+- CSS architecture and design tokens
+- All utility classes with usage examples  
+- Component implementation patterns
+- Accessibility and performance guidelines
+- Migration guide and best practices
+- Browser compatibility matrix
 
 ### iOS-26-design-research/
 
@@ -131,6 +165,11 @@ Complete React/TypeScript implementation of the Figma designs:
 - **Semantic Colors**: Consistent meaning across states
 - **Dark/Light Modes**: Adaptive glass effects
 
+#### Toast Notification Colors (RR-176)
+- **Loading State**: Amber (#f59e0b) - Indicates ongoing processes
+- **Success State**: Green (#10b981) - Confirms successful operations
+- **Error State**: Red (#ef4444) - Highlights errors and failures
+
 ### Typography
 
 - **SF Pro Display**: Headlines and UI
@@ -149,25 +188,62 @@ Complete React/TypeScript implementation of the Figma designs:
 
 ### Completed Components ✅
 
-- Glass morphism base styles
+#### Liquid Glass System (Initial Implementation)
+- **Glass Navigation Headers** - Basic scroll-aware contrast adjustment
+- **Glass Segmented Controls** - Read status filter with sliding indicator
+- **Glass Toolbars** - Article detail floating controls with clustering
+- **Glass Popovers** - Dropdown menus with enhanced blur effects
+- **Glass Footers** - Article navigation with slide-away behavior
+- **Glass Sidebar Info** - Bottom sync status panel
+- **Scroll-to-Top Button** - iOS-specific floating action button
+
+#### Enhanced Button Interactions (RR-176)
+- **Unified Button State Management** - Consolidated fetch/revert button controls
+- **Synchronized Button States** - Elimination of duplicate bottom buttons
+- **Toast Notification System** - Color-coded feedback for user actions
+- **Improved Content Display** - Enhanced revert functionality with true RSS content
+
+#### Traditional UI Components
+- Basic glass morphism styles
 - Article cards with hover effects
-- Bottom navigation with animations
+- Standard navigation elements
 - Filter dropdown with transitions
 - Shimmer loading states
+- PWA safe area support
 
 ### In Progress 🔄
 
-- Feed drill-down navigation
-- Floating filter pill
-- Pull-to-refresh animation
-- Settings panel redesign
+#### Liquid Glass Migration
+- Converting remaining solid components to glass
+- Enhancing existing glass components
+- Standardizing glass token usage across codebase
+- Performance optimization for glass effects
+
+#### Content Interaction Improvements (RR-176)
+- **Enhanced Revert Functionality** - True RSS content display capability
+- **Content State Priority System** - Improved content switching logic
+- **Unified Action Feedback** - Toast notifications for all content operations
+- **Button Synchronization** - Consistent state management across UI elements
+
+#### Specific Components
+- Feed drill-down navigation with glass
+- Floating filter pill refinements
+- Pull-to-refresh with glass indicators
+- Settings panel glass redesign
 
 ### Planned 📅
 
-- Onboarding flow
-- Empty states
-- Error states
-- Success animations
+#### Full Liquid Glass Adoption
+- Complete migration of all overlay elements
+- Advanced glass animations and transitions
+- Unified glass design language
+- Cross-platform glass consistency
+
+#### New Glass Components
+- Onboarding flow with glass elements
+- Empty states with glass containers
+- Error states with glass overlays
+- Success animations with spring physics
 
 ## Development Guidelines
 
@@ -191,6 +267,26 @@ Complete React/TypeScript implementation of the Figma designs:
 2. Leverage GPU acceleration
 3. Implement reduced motion support
 4. Test on lower-end devices
+
+### User Experience Patterns (RR-176)
+
+#### Toast Notifications
+1. **Color Consistency**: Use semantic colors for different notification types
+2. **Timing**: 3-5 second display duration for user feedback
+3. **Positioning**: Non-intrusive placement that doesn't block content
+4. **Accessibility**: Include appropriate ARIA labels and screen reader support
+
+#### Button Interactions
+1. **State Management**: Unified approach to button state across components
+2. **Visual Feedback**: Immediate response to user actions with loading states
+3. **Error Handling**: Clear error states with actionable feedback
+4. **Consistency**: Same interaction patterns across similar functions
+
+#### Content Display Flow
+1. **Content Hierarchy**: Clear priority system for different content types
+2. **State Transitions**: Smooth transitions between content states
+3. **User Control**: Easy access to revert and fetch operations
+4. **Loading States**: Clear indication of content loading progress
 
 ## Related Documentation
 

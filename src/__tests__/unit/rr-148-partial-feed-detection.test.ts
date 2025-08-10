@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
  * Unit Tests for RR-148: Partial Feed Detection
  * 
  * Tests the logic for detecting partial feeds based on content characteristics
- * and implementing the is_partial_feed flag in the feeds table.
+ * and implementing the is_partial_content flag in the feeds table.
  * 
  * These tests are designed to FAIL initially (TDD red phase) until the 
  * actual implementation is created.
@@ -20,7 +20,7 @@ describe('RR-148: Partial Feed Detection', () => {
   });
 
   describe('Database Schema Changes', () => {
-    it('should support is_partial_feed column in feeds table', () => {
+    it('should support is_partial_content column in feeds table', () => {
       // This test documents the expected database schema change
       type FeedRow = {
         id: string;
@@ -30,7 +30,7 @@ describe('RR-148: Partial Feed Detection', () => {
         url: string;
         folder_id: string | null;
         unread_count: number;
-        is_partial_feed: boolean; // NEW COLUMN - will fail until implemented
+        is_partial_content: boolean; // NEW COLUMN - will fail until implemented
         created_at: string;
         updated_at: string;
       };
@@ -43,14 +43,14 @@ describe('RR-148: Partial Feed Detection', () => {
         url: 'http://example.com/rss',
         folder_id: null,
         unread_count: 5,
-        is_partial_feed: true, // This should be supported
+        is_partial_content: true, // This should be supported
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
       // Test type safety and structure
-      expect(typeof mockFeedRow.is_partial_feed).toBe('boolean');
-      expect(mockFeedRow.is_partial_feed).toBe(true);
+      expect(typeof mockFeedRow.is_partial_content).toBe('boolean');
+      expect(mockFeedRow.is_partial_content).toBe(true);
       
       // Ensure all required fields are present
       expect(mockFeedRow.id).toBeTruthy();
@@ -58,32 +58,32 @@ describe('RR-148: Partial Feed Detection', () => {
       expect(mockFeedRow.title).toBeTruthy();
     });
 
-    it('should default is_partial_feed to false for existing feeds', () => {
+    it('should default is_partial_content to false for existing feeds', () => {
       // Test migration behavior - existing feeds should default to false
       const existingFeed = {
         id: 'existing-feed-123',
         title: 'Existing Feed',
-        is_partial_feed: false, // Should be default value
+        is_partial_content: false, // Should be default value
       };
 
-      expect(existingFeed.is_partial_feed).toBe(false);
+      expect(existingFeed.is_partial_content).toBe(false);
     });
 
-    it('should allow nullable is_partial_feed during migration period', () => {
+    it('should allow nullable is_partial_content during migration period', () => {
       // During migration, some feeds might have null values temporarily
       type FeedDuringMigration = {
         id: string;
-        is_partial_feed: boolean | null;
+        is_partial_content: boolean | null;
       };
 
       const feedDuringMigration: FeedDuringMigration = {
         id: 'migration-feed',
-        is_partial_feed: null,
+        is_partial_content: null,
       };
 
       // Should handle null gracefully
-      expect(feedDuringMigration.is_partial_feed === null || 
-             typeof feedDuringMigration.is_partial_feed === 'boolean').toBe(true);
+      expect(feedDuringMigration.is_partial_content === null || 
+             typeof feedDuringMigration.is_partial_content === 'boolean').toBe(true);
     });
   });
 
@@ -228,20 +228,20 @@ describe('RR-148: Partial Feed Detection', () => {
     it('should skip content extraction for partial feeds during sync', () => {
       // Mock sync processor that implements the skip logic - will fail until implemented
       class MockSyncProcessor {
-        shouldExtractContent(feed: { is_partial_feed: boolean }): boolean {
+        shouldExtractContent(feed: { is_partial_content: boolean }): boolean {
           // Skip extraction for partial feeds
-          return !feed.is_partial_feed;
+          return !feed.is_partial_content;
         }
 
-        getProcessingMode(feed: { is_partial_feed: boolean }): 'full' | 'metadata_only' {
-          return feed.is_partial_feed ? 'metadata_only' : 'full';
+        getProcessingMode(feed: { is_partial_content: boolean }): 'full' | 'metadata_only' {
+          return feed.is_partial_content ? 'metadata_only' : 'full';
         }
       }
 
       const processor = new MockSyncProcessor();
       
-      const partialFeed = { is_partial_feed: true };
-      const fullFeed = { is_partial_feed: false };
+      const partialFeed = { is_partial_content: true };
+      const fullFeed = { is_partial_content: false };
 
       // Partial feeds should skip content extraction
       expect(processor.shouldExtractContent(partialFeed)).toBe(false);
@@ -429,13 +429,13 @@ describe('RR-148: Partial Feed Detection', () => {
   });
 
   describe('Feed Update and Maintenance', () => {
-    it('should support updating is_partial_feed flag', () => {
+    it('should support updating is_partial_content flag', () => {
       // Mock function to update feed classification - will fail until implemented
       const updateFeedClassification = async (feedId: string, isPartial: boolean) => {
         // This would update the database
         return {
           id: feedId,
-          is_partial_feed: isPartial,
+          is_partial_content: isPartial,
           updated_at: new Date().toISOString()
         };
       };
@@ -445,13 +445,13 @@ describe('RR-148: Partial Feed Detection', () => {
       // Test updating to partial
       expect(mockUpdate('feed-123', true)).resolves.toMatchObject({
         id: 'feed-123',
-        is_partial_feed: true
+        is_partial_content: true
       });
       
       // Test updating to full
       expect(mockUpdate('feed-456', false)).resolves.toMatchObject({
         id: 'feed-456', 
-        is_partial_feed: false
+        is_partial_content: false
       });
     });
 

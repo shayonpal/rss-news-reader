@@ -607,6 +607,8 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 - Unique index on `inoreader_id`
 - Index on `folder_id`
 
+**Note**: The `is_partial_content` field was consolidated from the previous `is_partial_feed` field as part of RR-176 implementation to standardize content fetching behavior across all feeds.
+
 #### 3. Articles Table
 
 **Purpose**: Store individual articles from feeds

@@ -17,6 +17,7 @@ import {
   Tag,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import DOMPurify from "isomorphic-dompurify";
@@ -28,6 +29,7 @@ import { FetchContentButton } from "./fetch-content-button";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
+import { useContentState } from "@/hooks/use-content-state";
 import { ContentParsingIndicator, ContentLoadingSkeleton } from "./content-parsing-indicator";
 import {
   DropdownMenu,
@@ -169,6 +171,8 @@ export function ArticleDetail({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentArticle, setCurrentArticle] = useState(article);
+  const [fetchedContent, setFetchedContent] = useState<string | null>(null);
+  const [forceOriginalContent, setForceOriginalContent] = useState(false);
   const { getArticle } = useArticleStore();
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
@@ -188,6 +192,7 @@ export function ArticleDetail({
     shouldShowRetry,
     triggerParse,
     clearError,
+    clearParsedContent,
   } = useAutoParseContent({
     article: currentArticle,
     feed,
@@ -197,7 +202,16 @@ export function ArticleDetail({
   // Update current article when it changes or summary is updated
   useEffect(() => {
     setCurrentArticle(article);
+    // Reset states when article changes
+    setFetchedContent(null);
+    setForceOriginalContent(false);
   }, [article]);
+
+  // Force button state update when auto-parsing completes
+  useEffect(() => {
+    // Button should reflect state after auto-parse completes
+    // The hasFullContentState will automatically update due to reactive dependency on parsedContent
+  }, [parsedContent]);
 
   // Handle summary success
   const handleSummarySuccess = async () => {
@@ -210,12 +224,9 @@ export function ArticleDetail({
 
   // Handle fetch content success
   const handleFetchContentSuccess = async (content: string) => {
-    // Update the current article with the full content
-    setCurrentArticle({
-      ...currentArticle,
-      fullContent: content,
-      hasFullContent: true,
-    });
+    // Set the manually fetched content and disable force original
+    setFetchedContent(content);
+    setForceOriginalContent(false);
     // Also refresh from store to ensure consistency
     const updatedArticle = await getArticle(article.id);
     if (updatedArticle) {
@@ -225,19 +236,29 @@ export function ArticleDetail({
 
   // Handle revert to RSS content
   const handleRevertContent = () => {
-    // Clear full content to show RSS content
-    setCurrentArticle({
-      ...currentArticle,
-      fullContent: undefined,
-      hasFullContent: false,
-    });
+    // Clear ALL enhanced content to show original RSS content
+    // Clear both manually fetched and auto-parsed content
+    setFetchedContent(null);
+    if (parsedContent) {
+      clearParsedContent();
+    }
+    // Force showing original RSS content even if fullContent exists in DB
+    setForceOriginalContent(true);
   };
 
-  // Clean and sanitize HTML content - prioritize parsed content, then full content, then RSS content
-  const contentToDisplay = parsedContent || currentArticle.fullContent || currentArticle.content;
+  // Use unified content state management
+  const { contentSource, displayContent, hasEnhancedContent } = useContentState(
+    currentArticle,
+    parsedContent,
+    fetchedContent,
+    forceOriginalContent
+  );
+
+  // Use the unified state for button
+  const hasFullContentState = hasEnhancedContent;
 
   // Process links BEFORE sanitization to ensure attributes are preserved
-  const processedContent = processArticleLinksSSR(contentToDisplay);
+  const processedContent = processArticleLinksSSR(displayContent);
 
   const cleanContent = DOMPurify.sanitize(processedContent, {
     ALLOWED_TAGS: [
@@ -422,13 +443,56 @@ export function ArticleDetail({
   const handleToggleFeedPartialContent = async () => {
     if (!feed || !article.feedId) return;
 
+    const newState = !feed.isPartialContent;
+    const feedName = feed.title || "Feed";
+    const toastId = `partial-feed-${article.feedId}`;
+
+    // Show loading toast with amber styling
+    toast.loading(
+      `${newState ? 'Marking' : 'Unmarking'} ${feedName} as partial feed...`,
+      { 
+        id: toastId,
+        style: {
+          background: '#f59e0b', // amber-500
+          color: 'white',
+        }
+      }
+    );
+
     setIsUpdatingFeed(true);
     try {
       // Toggle the partial content setting
-      await updateFeedPartialContent(article.feedId, !feed.isPartialContent);
+      await updateFeedPartialContent(article.feedId, newState);
+      
+      // Show success toast with green styling
+      toast.success(
+        `${feedName} ${newState ? 'marked' : 'unmarked'} as partial feed`,
+        { 
+          id: toastId,
+          duration: 3000,
+          style: {
+            background: '#10b981', // green-500
+            color: 'white',
+          }
+        }
+      );
+      
       // The UI will update automatically when the feed store updates
     } catch (error) {
-      // Could show a toast notification here for error feedback
+      console.error('Failed to update feed partial content setting:', error);
+      
+      // Show error toast with red styling
+      toast.error(
+        `Failed to update ${feedName}. Please try again.`,
+        { 
+          id: toastId,
+          duration: 0, // Manual dismiss for errors
+          style: {
+            background: '#ef4444', // red-500
+            color: 'white',
+          }
+        }
+      );
     } finally {
       setIsUpdatingFeed(false);
     }
@@ -466,7 +530,7 @@ export function ArticleDetail({
             articleId={currentArticle.id}
             isStarred={currentArticle.tags?.includes("starred") || false}
             hasSummary={!!currentArticle.summary}
-            hasFullContent={currentArticle.hasFullContent}
+            hasFullContent={hasFullContentState}
             onToggleStar={onToggleStar}
             onSummarySuccess={handleSummarySuccess}
             onFetchSuccess={handleFetchContentSuccess}
@@ -569,23 +633,11 @@ export function ArticleDetail({
           />
         )}
 
-        {/* Fetch/Revert Full Content button at bottom - only show if not auto-parsing */}
-        {!isParsing && (
-          <div className="mb-8 mt-8 flex justify-center">
-            <FetchContentButton
-              articleId={currentArticle.id}
-              hasFullContent={currentArticle.hasFullContent || !!parsedContent}
-              variant="button"
-              onSuccess={handleFetchContentSuccess}
-              onRevert={handleRevertContent}
-            />
-          </div>
-        )}
       </article>
 
       {/* Navigation Footer */}
       <footer
-        ref={(el) => {
+        ref={() => {
           // Attach a refless scrolled class toggle synced with window scroll
           // This will be updated in the scroll handler below
         }}

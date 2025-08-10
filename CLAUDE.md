@@ -243,6 +243,14 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 
 - Before you decide that your code implementation is complete, as a developer, always ask the `qa-engineer` agent to test your implementation. If any issues are found, address them before proceeding.
 
+## Proof of Concepts (POCs)
+
+- All POC exercises must be created in `src/app/pocs/` directory
+- Organize POCs by feature name (not technology domain)  
+- Each POC should include a README.md with decisions and rationale
+- POCs are accessible via web routes: `http://100.96.166.53:3000/reader/pocs/[feature-name]`
+- Reference completed POCs in related Linear issues for implementation guidance
+
 ## Memories
 
 - This project uses Linear app to manage issues and tasks. You can access them using the Linear MCP Server.

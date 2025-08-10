@@ -277,9 +277,20 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         updatedFeeds.set(feedId, { ...feed, isPartialContent });
         set({ feeds: updatedFeeds });
       }
+      
+      // Also update feedsWithCounts map
+      const { feedsWithCounts } = get();
+      const feedWithCount = feedsWithCounts.get(feedId);
+      if (feedWithCount) {
+        const updatedFeedsWithCounts = new Map(feedsWithCounts);
+        updatedFeedsWithCounts.set(feedId, { ...feedWithCount, isPartialContent });
+        set({ feedsWithCounts: updatedFeedsWithCounts });
+      }
     } catch (error) {
       console.error("Failed to update feed partial content setting:", error);
       set({ feedsError: `Failed to update feed setting: ${error}` });
+      // Re-throw the error so the component can handle it
+      throw error;
     }
   },
 

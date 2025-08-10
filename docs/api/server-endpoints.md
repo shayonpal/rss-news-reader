@@ -4,7 +4,7 @@ This document lists all internal API endpoints implemented in the codebase, cove
 
 - Access model: Internal only; app is reachable via Tailscale network. Client holds no public secrets.
 - Authentication: Inoreader OAuth is handled server-side or via secure cookies where applicable.
-- Last Updated: 2025-08-09
+- Last Updated: 2025-08-10
 
 ## Quick Reference
 
@@ -27,11 +27,12 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 
 ### Sync
 
-- POST `/api/sync`
-  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers bi-directional queue processing.
+- POST `/api/sync` (RR-176)
+  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers bi-directional queue processing. As of RR-176, auto-fetch logic is optimized to only trigger for partial feeds during user navigation.
   - Response 200: `{ success, syncId, status, message, metrics: { newArticles, deletedArticles, newTags, failedFeeds }, sidebar: { feedCounts: [[feedId, unreadCount], ...], tags: [{ id, name, count }], lastUpdated } }`
   - Response 429: `{ error: "rate_limit_exceeded", ... }`
   - Response 500: `{ error: "sync_start_failed", message, details }`
+  - Note: Sync process now maintains `feeds.is_partial_content` field for auto-parse targeting
 
 - GET `/api/sync/status/{syncId}`
   - Description: Poll sync status; primary source is a temp file with DB fallback.
@@ -65,8 +66,8 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 
 ### Articles
 
-- POST `/api/articles/{id}/fetch-content`
-  - Description: Fetches article URL, extracts full content via Readability, stores `full_content`, marks parsing metadata, and logs attempts in `fetch_logs`.
+- POST `/api/articles/{id}/fetch-content` (RR-176)
+  - Description: Fetches article URL, extracts full content via Readability, stores `full_content`, marks parsing metadata, and logs attempts in `fetch_logs`. As of RR-176, auto-triggering is now limited to feeds marked with `is_partial_content = true` to improve performance.
   - Request JSON (optional): `{ forceRefresh?: boolean }`
   - Responses:
     - 200: `{ success: true, content, title?, excerpt?, byline?, length?, siteName?, parsedAt }`
@@ -75,6 +76,9 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
     - 404: `{ error: "article_not_found", ... }`
     - 408: `{ error: "timeout", ... }`
     - 500: `{ error: "extraction_failed" | "unexpected_error", ... }`
+  - Notes:
+    - Auto-parsing logic (RR-176): Only triggered for feeds with `is_partial_content = true` OR content <500 chars OR truncation indicators
+    - Manual fetching via UI buttons works for all articles regardless of feed type
 
 - POST `/api/articles/{id}/summarize`
   - Description: Generates AI summary using Claude; caches summary in `articles.ai_summary`.
@@ -91,6 +95,11 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 - GET `/api/articles/{id}/tags`
   - Description: Returns tags linked to the article.
   - Response 200: `{ tags: [{ id, name, slug, color, description }] }`
+
+### Feeds
+
+**Note (RR-176)**: Feed management operations are currently handled through the client-side store (`updateFeedPartialContent`). A future API endpoint may be added for:
+- `PATCH /api/feeds/{id}` - Update feed settings including `is_partial_content` toggle
 
 ### Tags
 
@@ -193,8 +202,8 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
   - Description: Cron service health by reading `logs/cron-health.jsonl`; test env returns healthy skip.
   - Responses: 200 healthy; 503 unknown/unhealthy; includes `{ lastCheck, ageMinutes, lastRun, nextRun, recentRuns, uptime }`
 
-- GET `/api/health/parsing`
-  - Description: Parsing/fetching health metrics and recommendations, using `articles`, `fetch_logs`, `feeds`, and `system_config`.
+- GET `/api/health/parsing` (RR-176)
+  - Description: Parsing/fetching health metrics and recommendations, using `articles`, `fetch_logs`, `feeds`, and `system_config`. Uses `feeds.is_partial_content` field to identify partial feeds (updated from deprecated `is_partial_feed`).
   - Response 200: `{ status, timestamp, metrics: { parsing: {...}, fetch: {...}, configuration: {...} }, recommendations: string[] }`
 
 - GET `/api/health/claude`

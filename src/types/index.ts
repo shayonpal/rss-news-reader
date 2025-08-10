@@ -39,8 +39,7 @@ export interface Feed {
   folderId?: string | null;
   unreadCount: number;
   isActive: boolean;
-  isPartialContent?: boolean; // Whether feed typically has partial content
-  isPartialFeed?: boolean; // Flag for feeds with incomplete content requiring on-demand parsing
+  isPartialContent?: boolean; // Whether feed typically has partial content requiring on-demand parsing
   lastFetchedAt?: Date;
   inoreaderId?: string; // Inoreader's feed ID
   createdAt: Date;
