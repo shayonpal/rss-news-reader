@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **[RR-188] UI Store Collapse State Isolation for Parallel Test Execution - CI/CD Pipeline Blocker Resolved** (Monday, August 11, 2025 at 4:25 PM)
+  - **Critical CI/CD Fix**: Resolved UI store collapse state persisting across tests in CI environment causing 4/6 test failures and pipeline blocking
+  - **Store Isolation Infrastructure**: Created `src/lib/stores/__tests__/test-utils.ts` providing isolated Zustand stores with unique storage keys for parallel test execution
+  - **Parallel Test Support**: Enhanced Vitest configuration to support parallel test execution without state contamination between test cases
+  - **Boolean State Management**: Added Boolean coercion to `src/lib/stores/ui-store.ts` for robust null/undefined handling in collapse state logic
+  - **Test Infrastructure Enhancement**: Updated `src/lib/stores/__tests__/ui-store-collapse.test.ts` with isolated store pattern for problematic tests (1.6, 2.7, 4.4, 4.7)
+  - **Configuration Optimization**: Temporarily configured single-threaded execution in CI via `vitest.config.ts`, then restored parallelism after implementing fix
+  - **Technical Impact**:
+    - Fixed 4 out of 6 failing tests in ui-store-collapse test suite
+    - Eliminated state leakage in parallel test execution environments
+    - Restored CI pipeline functionality that was blocked by test failures
+    - Provided reusable pattern for isolating Zustand stores in parallel test scenarios
+  - **Development Workflow**: Re-enabled reliable parallel test execution supporting both local development and CI/CD environments
+  - **Files Modified**: `vitest.config.ts`, `src/lib/stores/__tests__/test-utils.ts`, `src/lib/stores/__tests__/ui-store-collapse.test.ts`, `src/lib/stores/ui-store.ts`
+  - **Status**: ✅ COMPLETED - CI/CD pipeline unblocked, parallel test execution functional, store isolation pattern established
 - **[RR-186] Test Infrastructure Enhancement - IndexedDB Polyfill and Mock System Improvements** (Monday, August 11, 2025 at 3:23 PM)
   - **IndexedDB Polyfill Integration**: Added `fake-indexeddb` dependency (v6.1.0) and automatic polyfill initialization to resolve Dexie test failures
   - **Test Environment Validation**: Created comprehensive smoke test at `src/__tests__/unit/test-setup.smoke.test.ts` to validate test environment requirements

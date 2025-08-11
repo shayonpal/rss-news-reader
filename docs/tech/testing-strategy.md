@@ -32,6 +32,11 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 - **Environment Validation**: Smoke test at `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment setup before test execution
 - **Mock Infrastructure**: Comprehensive mock helpers for browser APIs (localStorage, sessionStorage) and external services (Supabase)
 
+**Store Isolation Patterns (RR-188):**
+- **Zustand Store Isolation**: Isolated store creation utilities at `src/lib/stores/__tests__/test-utils.ts` prevent state leakage in parallel test execution
+- **Parallel Test Support**: Enhanced Vitest configuration supports concurrent test execution without cross-test state contamination
+- **Unique Storage Keys**: Each test gets unique storage identifiers to prevent shared state between test cases
+
 ### 2. Integration Testing
 
 **Framework**: Vitest with Supertest  
@@ -222,6 +227,31 @@ npx playwright test --ui
 - **IndexedDB Failures**: Ensure `fake-indexeddb` is imported before any Dexie usage in tests
 - **Storage Mock Crashes**: Use provided mock helpers instead of manual mock configuration
 - **Test Environment**: Run smoke test (`src/__tests__/unit/test-setup.smoke.test.ts`) to validate setup
+- **Store State Leakage**: Use isolated stores from `test-utils.ts` for Zustand tests in parallel environments
+
+### Zustand Store Testing Patterns
+
+**Store Isolation (RR-188):**
+- **Isolated Store Creation**: Use `createIsolatedUIStore()` from `src/lib/stores/__tests__/test-utils.ts` for tests requiring clean state
+- **Parallel Test Safety**: Each test gets unique storage keys preventing cross-test contamination
+- **State Management**: Boolean coercion ensures robust null/undefined handling in store logic
+
+**Example Usage:**
+```typescript
+import { createIsolatedUIStore } from './test-utils';
+
+describe('UI Store Tests', () => {
+  let store: ReturnType<typeof createIsolatedUIStore>;
+  
+  beforeEach(() => {
+    store = createIsolatedUIStore();
+  });
+  
+  it('should manage collapse state independently', () => {
+    // Test implementation with isolated store
+  });
+});
+```
 
 ### Test Fixtures
 

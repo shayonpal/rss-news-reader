@@ -58,11 +58,11 @@ export const useUIStore = create<UIState>()(
 
       // Collapsible Sections (session-only, not persisted)
       feedsSectionCollapsed: false,
-      setFeedsSectionCollapsed: (collapsed) => set({ feedsSectionCollapsed: collapsed }),
+      setFeedsSectionCollapsed: (collapsed) => set({ feedsSectionCollapsed: Boolean(collapsed) }),
       toggleFeedsSection: () =>
         set((state) => ({ feedsSectionCollapsed: !state.feedsSectionCollapsed })),
       tagsSectionCollapsed: false,
-      setTagsSectionCollapsed: (collapsed) => set({ tagsSectionCollapsed: collapsed }),
+      setTagsSectionCollapsed: (collapsed) => set({ tagsSectionCollapsed: Boolean(collapsed) }),
       toggleTagsSection: () =>
         set((state) => ({ tagsSectionCollapsed: !state.tagsSectionCollapsed })),
 

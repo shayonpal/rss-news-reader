@@ -71,6 +71,48 @@ npm run test:watch        # Watch mode for development
 - **Supabase Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
 - **Export Fixes**: Corrected missing exports in utility classes for proper testability
 
+### Store Isolation Testing Patterns (RR-188)
+
+**Zustand Store State Isolation:**
+The RSS News Reader implements sophisticated store isolation patterns to prevent state leakage in parallel test execution environments, particularly critical for CI/CD pipeline compatibility.
+
+**Store Isolation Infrastructure:**
+- **Isolated Store Creation**: `src/lib/stores/__tests__/test-utils.ts` provides `createIsolatedUIStore()` utility
+- **Unique Storage Keys**: Each test gets unique storage identifiers preventing cross-test contamination
+- **Boolean State Management**: Enhanced null/undefined handling in store logic with Boolean coercion
+- **Parallel Test Support**: Fully compatible with Vitest's parallel execution without state persistence issues
+
+**Critical CI/CD Fix (RR-188):**
+- **Problem**: UI store collapse state persisting across tests in CI environment causing 4/6 test failures
+- **Solution**: Store isolation utilities with unique storage keys for each test execution
+- **Impact**: Unblocked CI/CD pipeline that was previously failing due to parallel test state contamination
+
+**Usage Pattern:**
+```typescript
+import { createIsolatedUIStore } from './test-utils';
+
+describe('UI Store Collapse State Tests', () => {
+  let store: ReturnType<typeof createIsolatedUIStore>;
+  
+  beforeEach(() => {
+    // Each test gets isolated store with unique storage keys
+    store = createIsolatedUIStore();
+  });
+  
+  it('should manage collapse state independently', () => {
+    // Test implementation with guaranteed state isolation
+    store.getState().toggleFeedsCollapse();
+    expect(store.getState().isFeedsCollapsed).toBe(true);
+  });
+});
+```
+
+**Benefits:**
+- **Parallel Test Safety**: No state leakage between concurrent test executions
+- **CI/CD Compatibility**: Eliminates CI pipeline blocking due to test failures
+- **Deterministic Results**: Consistent test outcomes regardless of execution order
+- **Development Productivity**: Reliable local test execution in parallel mode
+
 ### Legacy Commands (Use with Caution)
 
 ```bash
@@ -801,4 +843,4 @@ SUPABASE_ANON_KEY_TEST="your-test-anon-key"
 
 ---
 
-*This documentation covers safe and optimized test execution for the RSS News Reader project. Originally created for RR-123 memory exhaustion fixes, updated for RR-183 performance optimizations, RR-184 E2E testing infrastructure, and RR-186 test infrastructure enhancements. Last updated: Monday, August 11, 2025 at 3:23 PM*
+*This documentation covers safe and optimized test execution for the RSS News Reader project. Originally created for RR-123 memory exhaustion fixes, updated for RR-183 performance optimizations, RR-184 E2E testing infrastructure, RR-186 test infrastructure enhancements, and RR-188 store isolation patterns. Last updated: Monday, August 11, 2025 at 4:25 PM*

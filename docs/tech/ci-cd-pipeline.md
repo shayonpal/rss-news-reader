@@ -55,6 +55,7 @@ The main pipeline consists of five progressive stages:
 - Thread pool configuration with 4 max threads
 - Automatic cleanup hooks preventing memory leaks
 - Optimized test runner with real-time progress tracking
+- Store isolation patterns preventing state leakage in parallel execution (RR-188)
 
 #### Stage 3: End-to-End Testing (5-15 minutes)
 **Purpose**: Cross-browser user workflow validation
@@ -338,6 +339,7 @@ npm run build            # Production build validation
 2. **Reproduce Locally**: Use `npm run test:parallel` to reproduce
 3. **Check Dependencies**: Verify all required services are running
 4. **Network Issues**: Validate Tailscale connectivity for E2E tests
+5. **State Isolation Issues**: For Zustand store tests, ensure isolated stores are used to prevent parallel test contamination
 
 **Performance Issues**:
 1. **Review Baseline**: Check `performance-baseline.json` for expected values

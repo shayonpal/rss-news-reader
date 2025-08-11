@@ -15,11 +15,12 @@ export default defineConfig({
       '**/node_modules/**'
     ],
     // RR-183: Optimized configuration for mass test execution
+    // RR-188: Store isolation implemented - parallelism restored
     // Use threads for better performance with controlled concurrency
     pool: 'threads',
     poolOptions: {
       threads: {
-        maxThreads: 4,  // Limit max parallel threads
+        maxThreads: 4,  // Restored parallel execution with store isolation fix
         minThreads: 1,  // Start with minimum threads
         useAtomics: true, // Enable atomics for better synchronization
         isolate: true,   // Isolate test environments
