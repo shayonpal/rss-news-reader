@@ -31,7 +31,7 @@ export default function ArticlePage() {
           setArticle(fetchedArticle);
           
           // Track navigation to this article
-          navigationHistory.addEntry(`/article/${articleId}`, articleId);
+          navigationHistory.addEntry(`/article/${articleId}`, parseInt(articleId));
           
           // Fetch tags for the article
           try {

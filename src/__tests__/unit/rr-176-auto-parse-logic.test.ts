@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useAutoParseContent } from '@/hooks/use-auto-parse-content';
 import type { Article, Feed } from '@/types';
 
@@ -327,17 +327,28 @@ describe('RR-176: useAutoParseContent Hook - Auto-Parse Logic', () => {
         })
       );
 
-      // Trigger multiple times rapidly
-      result.current.triggerParse();
-      result.current.triggerParse();
-      result.current.triggerParse();
-
-      await waitFor(() => {
-        expect(result.current.isParsing).toBe(true);
+      // First trigger should start parsing
+      await act(async () => {
+        result.current.triggerParse();
       });
 
-      // Should only call fetch once
+      // Verify parsing has started
+      expect(result.current.isParsing).toBe(true);
+
+      // Additional triggers should be ignored while parsing
+      await act(async () => {
+        result.current.triggerParse();
+        result.current.triggerParse();
+      });
+
+      // Wait for the parsing to complete
+      await waitFor(() => {
+        expect(result.current.isParsing).toBe(false);
+      });
+
+      // Should only call fetch once due to duplicate prevention
       expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(result.current.parsedContent).toBe('<p>Content</p>');
     });
   });
 
@@ -345,9 +356,14 @@ describe('RR-176: useAutoParseContent Hook - Auto-Parse Logic', () => {
     it('should handle fetch failures gracefully', async () => {
       (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
 
+      const articleWithParseAttempts = {
+        ...mockArticle,
+        parseAttempts: 1 // Mock parseAttempts so shouldShowRetry logic works
+      };
+
       const { result } = renderHook(() =>
         useAutoParseContent({
-          article: mockArticle,
+          article: articleWithParseAttempts,
           feed: { isPartialContent: true } as Feed,
           enabled: true,
         })
@@ -466,14 +482,16 @@ describe('RR-176: useAutoParseContent Hook - Auto-Parse Logic', () => {
         expect(result.current.parsedContent).toBe('<p>Content 1</p>');
       });
 
-      // Change article
-      rerender({
-        article: { ...mockArticle, id: 'article-2' },
+      // Change article within act()
+      await act(async () => {
+        rerender({
+          article: { ...mockArticle, id: 'article-2' },
+        });
       });
 
       await waitFor(() => {
         expect(result.current.parsedContent).toBe('<p>Content 2</p>');
-      });
+      }, { timeout: 2000 });
 
       expect(fetchCount).toBe(2);
     });

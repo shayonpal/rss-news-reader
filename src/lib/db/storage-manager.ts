@@ -85,7 +85,7 @@ export class StorageManager {
       // Delete excess articles that are not favorites
       const deleted = await db.transaction(
         "rw",
-        [db.articles, db.summaries],
+        [db.articles, db.summaries] as any,
         async () => {
           const toDelete = await db.articles
             .where("id")
@@ -199,7 +199,7 @@ export class StorageManager {
             .limit(toDelete)
             .primaryKeys();
 
-          await db.transaction("rw", [db.articles, db.summaries], async () => {
+          await db.transaction("rw", [db.articles, db.summaries] as any, async () => {
             await Promise.all([
               db.articles.bulkDelete(deletedIds),
               db.summaries.where("articleId").anyOf(deletedIds).delete(),

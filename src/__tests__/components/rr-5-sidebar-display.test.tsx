@@ -286,7 +286,7 @@ describe('RR-5: Sidebar API Usage Display - Component Tests', () => {
       const { rerender } = render(<ApiUsageDisplay />);
 
       let apiUsage = screen.getByTestId('api-usage');
-      let greenTexts = apiUsage.querySelectorAll('.text-green-500');
+      const greenTexts = apiUsage.querySelectorAll('.text-green-500');
       expect(greenTexts).toHaveLength(2);
 
       // Test at exactly 80% (should be yellow)

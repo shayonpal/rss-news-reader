@@ -109,10 +109,11 @@ async function markArticlesAsReadWithSession(
         autoReadArticles: [],
         manualReadArticles: [],
         scrollPosition: 0,
-        timestamp: Date.now(),
+        timestamp: Date.now().toString(),
         filterMode: context.filterMode,
         feedId: context.feedId,
         folderId: context.folderId,
+        expiresAt: (Date.now() + (30 * 60 * 1000)).toString(), // 30 minutes from now
       };
     }
 
@@ -174,7 +175,7 @@ async function markArticlesAsReadWithSession(
           // Merge with existing, keeping newer timestamps
           const existingMap = new Map(parsed.map((item: any) => [
             typeof item === 'string' ? item : item.id,
-            item
+            typeof item === 'string' ? { id: item, timestamp: Date.now() } : item
           ]));
           
           // Add new items
@@ -182,7 +183,7 @@ async function markArticlesAsReadWithSession(
             existingMap.set(item.id, item);
           });
           
-          allPreserved = Array.from(existingMap.values());
+          allPreserved = Array.from(existingMap.values()) as { id: string; timestamp: number; }[];
         }
         
         // Clean up old entries (>30 minutes) and limit to 50 most recent

@@ -1227,6 +1227,45 @@ class TailscaleMonitor {
 
 ## Testing Strategy
 
+### GitHub Actions CI/CD Integration (RR-185)
+
+The RSS Reader implements comprehensive CI/CD testing with progressive testing strategy:
+
+```typescript
+const cicdTestingStrategy = {
+  // Progressive pipeline stages
+  stages: {
+    smokeTests: {
+      duration: "2-3 minutes",
+      validation: ["TypeScript", "ESLint", "critical tests", "build"],
+      purpose: "Fast feedback for developers"
+    },
+    
+    fullTestSuite: {
+      duration: "8-10 minutes", 
+      matrix: ["Node 18", "Node 20"],
+      sharding: "4-way parallel execution",
+      coverage: ["unit", "integration", "performance"]
+    },
+    
+    e2eTests: {
+      duration: "5-15 minutes",
+      browsers: ["Chromium", "Firefox", "WebKit", "Mobile Safari"],
+      devices: ["iPhone 14", "iPad", "Android Pixel 5"],
+      validation: ["user journeys", "touch compliance", "PWA functionality"]
+    }
+  },
+  
+  // Quality gates
+  qualityGates: {
+    unitTests: "100% pass rate required",
+    e2eTests: "95% pass rate (allows network flakiness)",
+    security: "No high/critical vulnerabilities",
+    performance: "Within baseline thresholds"
+  }
+};
+```
+
 ### Playwright MCP for Development Testing
 
 ```typescript

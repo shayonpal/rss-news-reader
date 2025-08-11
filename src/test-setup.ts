@@ -1,9 +1,42 @@
-import { vi } from 'vitest'
+import { vi, expect, beforeEach, afterEach, afterAll } from 'vitest'
 
-// Mock environment - handle read-only NODE_ENV
+// Mock environment - ensure NODE_ENV is set
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = 'test';
 }
+
+// RR-183: Global test cleanup hooks for resource management
+beforeEach(() => {
+  // Clear all mocks before each test
+  vi.clearAllMocks();
+  
+  // Reset fetch mock
+  if (global.fetch) {
+    (global.fetch as any).mockClear();
+  }
+  
+  // Clear storage mocks
+  if (window.localStorage) {
+    window.localStorage.clear();
+  }
+  if (window.sessionStorage) {
+    window.sessionStorage.clear();
+  }
+});
+
+afterEach(() => {
+  // Restore all mocks after each test
+  vi.restoreAllMocks();
+  
+  // Clear any pending timers
+  vi.clearAllTimers();
+});
+
+// Global cleanup after all tests
+afterAll(() => {
+  // Final cleanup of any resources
+  vi.resetAllMocks();
+});
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -43,11 +76,16 @@ if (!window.sessionStorage) {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
+  root = null
+  rootMargin = '0px'
+  thresholds = [0]
+  
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
-}
+  takeRecords() { return [] }
+} as any
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -56,3 +94,32 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
 }
+
+// Extend Vitest expect with custom matchers
+expect.extend({
+  /**
+   * Custom matcher to check if a value is one of several possible values
+   * @param received - The value to test
+   * @param expected - Array of possible values
+   * @returns AssertionResult
+   */
+  toBeOneOf(received: any, expected: any[]) {
+    if (!Array.isArray(expected)) {
+      throw new Error('Expected value must be an array')
+    }
+    
+    const pass = expected.includes(received)
+    
+    if (pass) {
+      return {
+        message: () => `expected ${this.utils.printReceived(received)} not to be one of ${this.utils.printExpected(expected)}`,
+        pass: true,
+      }
+    } else {
+      return {
+        message: () => `expected ${this.utils.printReceived(received)} to be one of ${this.utils.printExpected(expected)}`,
+        pass: false,
+      }
+    }
+  },
+})

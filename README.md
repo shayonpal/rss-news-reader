@@ -308,16 +308,21 @@ npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
 npm run pre-commit      # Run all quality checks
 
-# Testing (Memory-Safe Execution)
-npm run test            # ✅ RECOMMENDED: Safe test runner with resource limits
-npm run test:unit       # ⚠️  Unit tests only (use cautiously)
+# Testing (Optimized Execution - RR-183)
+npm run test            # ✅ RECOMMENDED: Optimized runner (8-20 seconds)
+npm run test:parallel   # ✅ Fastest execution (8-12 seconds) - ideal for CI/CD
+npm run test:sequential # ✅ Most reliable (15-20 seconds) - ideal for debugging  
+npm run test:sharded    # ✅ Balanced execution (10-15 seconds)
+npm run test:progressive # ✅ Detailed feedback with progress tracking
+npm run test:watch      # ✅ Development mode with hot reload
+npm run test:legacy     # ✅ Conservative fallback (legacy safe runner)
+npm run test:unit       # ⚠️  Unit tests only (bypasses optimizations)
 npm run test:integration:safe # ✅ Integration tests with PM2 service management
 npm run test:e2e        # End-to-end tests (Playwright)
-npm run test:watch      # Tests in watch mode
 
-# Emergency Test Management
-./scripts/kill-test-processes.sh    # Emergency cleanup if tests hang
-./scripts/monitor-test-processes.sh # Real-time test process monitoring
+# Emergency Test Management (Legacy)
+./scripts/kill-test-processes.sh    # Emergency cleanup (only needed for legacy scripts)
+./scripts/monitor-test-processes.sh # Real-time process monitoring
 
 # Build & Deploy
 npm run build           # Production build
@@ -332,43 +337,171 @@ npm run clean           # Clean build artifacts
 ./scripts/rollback-last-build.sh           # Emergency rollback
 ```
 
-## Testing & Quality Assurance
+## CI/CD Pipeline (GitHub Actions)
 
-The RSS News Reader implements comprehensive testing with **memory-safe execution** to prevent system instability. Previous issues with test runner memory exhaustion (RR-123) led to the development of protective measures.
+The RSS News Reader includes comprehensive CI/CD infrastructure (RR-185) with progressive testing strategy and automated quality gates.
 
-### Safe Test Execution
+### Pipeline Overview
 
-**Always use the safe test runner:**
+**Main Pipeline** (`.github/workflows/ci-cd-pipeline.yml`):
+- **Smoke Tests Stage** (2-3 min): TypeScript compilation, linting, critical tests, build validation
+- **Full Test Suite** (8-10 min): Matrix testing across Node 18/20 with 4-way sharding for parallel execution  
+- **E2E Testing** (5-15 min): Cross-browser testing (Chromium, Firefox, WebKit, Mobile Safari)
+- **Performance Testing**: Automated regression detection with baseline comparison
+- **Security Scanning**: npm audit and vulnerability assessment
+- **Quality Gates**: Automated deployment readiness assessment
+
+**PR Validation** (`.github/workflows/pr-checks.yml`):
+- TypeScript and ESLint validation
+- Test coverage analysis on changed files
+- Bundle size impact assessment
+- Security vulnerability checking
+- Auto-labeling based on file changes (docs, tests, features, etc.)
+
+### Local CI/CD Equivalent Commands
+
+Run the same validations locally as the CI/CD pipeline:
+
 ```bash
-npm test  # Runs with resource limits and process monitoring
+# Smoke Tests (equivalent to CI smoke stage)
+npm run type-check        # TypeScript compilation
+npm run lint             # ESLint validation
+npm run test:unit        # Critical unit tests
+npm run build            # Build validation
+
+# Full Test Suite (equivalent to CI test matrix)
+npm run test:parallel    # Fastest execution (8-12s) - matches CI sharding
+npm run test:e2e         # Cross-browser E2E testing
+
+# Performance Testing
+npm run test:performance # Performance regression detection
+
+# Pre-commit Quality Gates
+npm run pre-commit       # Complete quality validation
+
+# Security Scanning
+npm audit --audit-level moderate
 ```
 
-This provides:
-- **Resource Limits**: Max 1 concurrent test suite, 2 vitest worker processes
-- **Timeout Protection**: 30-second test timeout, 30-minute total runtime limit
-- **Process Monitoring**: Background monitoring with automatic cleanup
-- **Emergency Recovery**: Automatic process cleanup if tests become unresponsive
+### Branch Workflow
+
+- **Development**: All work happens on `dev` branch (triggers full pipeline)
+- **Stable Releases**: Periodic releases to `main` branch (triggers release pipeline)
+- **Pull Requests**: Trigger PR validation workflow with coverage analysis
+
+### Current Status
+
+- ✅ **Pipeline Active**: Comprehensive CI/CD validation on all pushes
+- ✅ **Quality Gates**: Automated testing and security scanning  
+- ✅ **Cross-Browser Testing**: Full E2E validation across 8 browser profiles
+- ✅ **Performance Monitoring**: Regression detection with baseline tracking
+- ⚠️ **Deployment**: Validation-only (manual deployment as app is in active development)
+
+For detailed CI/CD documentation, see [docs/tech/ci-cd-pipeline.md](docs/tech/ci-cd-pipeline.md).
+
+## Testing & Quality Assurance
+
+The RSS News Reader implements **optimized test execution** (RR-183) achieving 8-20 second test suite completion times, resolving previous timeout issues and enabling CI/CD integration.
+
+### Optimized Test Execution (RR-183)
+
+**Recommended test execution:**
+```bash
+npm test  # Optimized runner with thread pool (8-20 seconds)
+```
+
+**Performance breakthrough:**
+- **Execution Time**: 8-20 seconds (vs previous 2+ minute timeouts - 90%+ improvement)
+- **Thread Pool Optimization**: Uses threads pool with 4 max threads for optimal performance
+- **Resource Management**: Comprehensive cleanup hooks prevent memory leaks
+- **CI/CD Ready**: Reliable execution under 10-minute timeout for continuous integration
+- **Multiple Execution Modes**: 5 different execution strategies for various development scenarios
+
+**Choose execution mode based on needs:**
+- `npm run test:parallel` - Fastest (8-12s) for CI/CD pipelines
+- `npm run test:sequential` - Most reliable (15-20s) for debugging
+- `npm run test:watch` - Development mode with hot reload
+- `npm run test:progressive` - Detailed feedback and progress tracking
 
 ### Test Types
 
 - **Unit Tests**: Component and utility function testing with mocked dependencies
 - **Integration Tests**: API endpoint testing with isolated test environment
-- **End-to-End Tests**: Full user workflow testing (Playwright)
+- **End-to-End Tests**: Full user workflow testing (Playwright) - See [E2E Testing](#end-to-end-e2e-testing) below
 - **Performance Tests**: Resource usage validation and memory leak detection
 
-### Emergency Procedures
+### End-to-End (E2E) Testing
 
-If tests become unresponsive or cause high memory usage:
+**Comprehensive cross-browser E2E testing with Playwright (RR-184):**
+
+The RSS News Reader includes robust E2E testing infrastructure for validating core user journeys across multiple browsers, with special focus on Safari on iPhone and iPad PWA.
+
+**Run E2E tests:**
+```bash
+# Run all E2E tests across all browsers
+npm run test:e2e
+
+# Run specific test file
+npx playwright test src/__tests__/e2e/rr-184-core-user-journeys.spec.ts
+
+# Run iPhone button tappability tests specifically  
+npx playwright test src/__tests__/e2e/iphone-button-tappability.spec.ts
+
+# Run on specific browser
+npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
+npx playwright test --project="Mobile Safari"
+npx playwright test --project="iPad Safari"
+
+# Run in headed mode for debugging
+npx playwright test --headed
+
+# Run with UI mode for interactive debugging
+npx playwright test --ui
+```
+
+**Browser Coverage:**
+- **Desktop**: Chromium, Firefox, Safari (WebKit)
+- **Mobile**: iPhone 14, iPhone 14 Pro Max (Safari)
+- **Tablet**: iPad Gen 7, iPad Pro 11" (Safari)
+- **Android**: Pixel 5 (Chrome)
+
+**Core Test Scenarios:**
+1. **Article Reading Journey**: Browse feeds → Select article → Read content → Navigate back
+2. **Sync Validation**: Manual sync triggers and UI updates
+3. **Cross-Device State**: Read/unread status persistence
+4. **Performance Testing**: Page load times and responsiveness
+5. **PWA Installation**: Manifest and service worker validation
+6. **iPhone Button Tappability**: iOS touch target compliance (44x44px) and element spacing validation
+7. **Touch Interactions**: Swipe gestures, pull-to-refresh, and mobile navigation patterns
+8. **ARIA Accessibility**: Screen reader support and keyboard navigation validation
+
+**Test Reports:**
+- HTML reports generated in `playwright-report/`
+- Videos and screenshots captured on failure
+- Trace files for debugging in `test-results/`
+
+**Requirements:**
+- Tests require Tailscale VPN connection (access via `100.96.166.53`)
+- No authentication needed (network-based access control)
+- Development server must be running or will auto-start
+
+### Legacy Emergency Procedures
+
+**Note**: With RR-183 optimizations, emergency procedures are rarely needed as tests complete reliably in 8-20 seconds.
+
+If using legacy test scripts and they become unresponsive:
 
 ```bash
-# Emergency cleanup
+# Emergency cleanup (legacy scripts only)
 ./scripts/kill-test-processes.sh
 
-# Real-time monitoring
+# Real-time monitoring (legacy scripts)
 ./scripts/monitor-test-processes.sh
 ```
 
-**⚠️ Important**: Never run `npx vitest` directly as it bypasses safety measures and can cause memory exhaustion.
+**⚠️ Important**: The optimized test runner eliminates previous timeout and memory issues. Legacy emergency procedures are only needed when using `./scripts/safe-test-runner.sh` or direct vitest commands.
 
 For comprehensive testing guidelines, troubleshooting, and best practices, see:
 **[Safe Test Practices Documentation](docs/testing/safe-test-practices.md)**

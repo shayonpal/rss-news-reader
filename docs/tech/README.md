@@ -12,44 +12,50 @@ This directory contains all technical documentation for the RSS News Reader appl
    - **Status**: Current ✅
    - **Contents**: Next.js 14, TypeScript, Supabase, PM2, Tailwind CSS, and all dependencies
 
-2. **implementation-strategy.md**
+2. **ci-cd-pipeline.md**
+
+   - **Description**: Comprehensive GitHub Actions CI/CD pipeline documentation with progressive testing strategy
+   - **Status**: Current ✅ (Added for RR-185)
+   - **Contents**: Pipeline architecture, quality gates, test matrix, performance monitoring, security scanning
+
+3. **implementation-strategy.md**
 
    - **Description**: High-level implementation approach and architectural decisions
    - **Status**: Current ✅
    - **Contents**: Project phases, development workflow, testing strategy, deployment approach
 
-3. **api-integrations.md**
+4. **api-integrations.md**
    - **Description**: Detailed documentation of external API integrations (Inoreader, Claude AI)
    - **Status**: Current ✅ (Updated for RR-171)
    - **Contents**: Authentication flows, rate limits, endpoints, error handling, sidebar payload, concurrency control
 
 ### Feature-Specific Documentation
 
-4. **bidirectional-sync-investigation.md**
+5. **bidirectional-sync-investigation.md**
 
    - **Description**: Investigation and implementation of two-way sync with Inoreader
    - **Status**: Completed ✅
    - **Contents**: Sync architecture, conflict resolution, implementation details
 
-5. **button-architecture.md**
+6. **button-architecture.md**
 
    - **Description**: Standardized button component architecture and design system
    - **Status**: Current ✅
    - **Contents**: Button variants, states, accessibility, usage guidelines
 
-6. **sync-progress-tracking-architecture.md**
+7. **sync-progress-tracking-architecture.md**
    - **Description**: Dual-write sync progress tracking system with file system and database storage
    - **Status**: Current ✅
    - **Contents**: Architecture patterns, implementation details, API endpoints, monitoring
 
-7. **cleanup-architecture.md**
+8. **cleanup-architecture.md**
    - **Description**: Database cleanup system with chunked deletion for handling large datasets
    - **Status**: Current ✅ (Updated for RR-150)
    - **Contents**: Feed and article cleanup, deletion tracking, chunked deletion to solve URI length limits
 
 ### Tag Management System (RR-128)
 
-8. **Tag Architecture**
+9. **Tag Architecture**
    - **Description**: Comprehensive tag management system with full CRUD operations and XSS protection
    - **Status**: Implemented ✅ 
    - **Contents**: Tag creation, filtering, article association, HTML entity decoding, sidebar integration
@@ -63,26 +69,26 @@ This directory contains all technical documentation for the RSS News Reader appl
 
 ### Monitoring & Infrastructure
 
-9. **uptime-kuma-setup.md**
+10. **uptime-kuma-setup.md**
 
    - **Description**: Setup guide for Uptime Kuma monitoring service
    - **Status**: Current ✅
    - **Contents**: Docker setup, monitor configuration, alert rules
 
-10. **uptime-kuma-monitoring-strategy.md**
+11. **uptime-kuma-monitoring-strategy.md**
    - **Description**: Comprehensive monitoring strategy using Uptime Kuma
    - **Status**: Current ✅
    - **Contents**: Monitoring objectives, metrics, alerting strategy, dashboards
 
 ### Issues & Maintenance
 
-11. **known-issues.md**
+12. **known-issues.md**
 
     - **Description**: Documentation of known issues, limitations, and workarounds
     - **Status**: Living Document 🔄
     - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-12. **security.md**
+13. **security.md**
     - **Description**: Security measures, policies, and incident documentation
     - **Status**: Current ✅ (Updated for RR-128)
     - **Contents**: Network security, authentication, security fixes (RR-69, RR-128), XSS protection, best practices

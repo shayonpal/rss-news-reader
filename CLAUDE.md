@@ -268,3 +268,15 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 - All services auto-restart on crash via PM2
 - Startup sequence handled by LaunchAgent → startup-sequence.sh → PM2
 - The app has a base path of `/reader`
+
+### Testing Infrastructure (RR-145 Resolved)
+- **Crisis Resolved (2025-08-11)**: Fixed major testing infrastructure failure that was causing 118/120 test suite failures
+- **Root Causes Fixed**: 
+  - TypeScript JSX configuration missing (`jsx: "react-jsx"`, `allowSyntheticDefaultImports`)
+  - Test setup sessionStorage redefinition crashes in `src/__tests__/test-setup.ts`
+  - Missing custom Vitest matcher definitions (`toBeOneOf`)
+- **Current Status**: Test discovery functional, individual test files execute successfully
+- **Infrastructure Health**: Mandatory validation before any new test development
+- **Remaining**: 100+ legacy TypeScript errors in test files (technical debt, non-blocking)
+- **Impact**: AI-assisted development workflow restored, quality gates operational
+- **Agents Updated**: test-expert with infrastructure validation requirements, infra-expert with emergency authority

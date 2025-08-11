@@ -655,8 +655,8 @@ test.describe('RR-129: Full Cleanup Cycle E2E', () => {
 
   test.describe('Database Size and Storage Impact', () => {
     test('should demonstrate database size reduction after cleanup', async ({ page }) => {
-      let beforeCleanupSize = 0;
-      let afterCleanupSize = 0;
+      const beforeCleanupSize = 0;
+      const afterCleanupSize = 0;
 
       // Mock database size reporting
       await page.route('**/api/analytics/storage-stats', async (route) => {

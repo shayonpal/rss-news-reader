@@ -410,7 +410,7 @@ describe('RR-171: Sync API Contract', () => {
     });
 
     it('should track sync state correctly', async () => {
-      let syncState = {
+      const syncState = {
         isActive: false,
         startTime: null as Date | null,
         syncId: null as string | null

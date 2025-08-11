@@ -69,7 +69,7 @@ describe('RR-150: Error Handling and Recovery', () => {
         const chunk = chunks[i];
         let success = false;
         let retryCount = 0;
-        let currentChunkSize = chunk.length;
+        const currentChunkSize = chunk.length;
 
         while (!success && retryCount < maxRetries) {
           try {

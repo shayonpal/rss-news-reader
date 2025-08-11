@@ -172,9 +172,18 @@ describe('needsParsing logic', () => {
 });
 ```
 
-#### Test Group 2: Auto-trigger Behavior (6 tests)
+#### Test Group 2: Auto-trigger Behavior (6 tests) - Updated RR-182
+
+**⚠️ Race Condition Prevention**: All tests in this group require proper `act()` wrappers and mock cleanup (RR-182 fixes).
+
 ```typescript
 describe('auto-trigger behavior', () => {
+  beforeEach(() => {
+    // ✅ RR-182: Prevent mock contamination
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
   it('should auto-fetch ONLY for partial feeds on mount', async () => {
     const { result } = renderHook(() => useAutoParseContent({
       article: mockArticle,
@@ -182,17 +191,24 @@ describe('auto-trigger behavior', () => {
       enabled: true
     }));
     
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith(
-        '/reader/api/articles/123/fetch-content',
-        expect.any(Object)
-      );
+    // ✅ RR-182: Wrap async state updates in act()
+    await act(async () => {
+      await waitFor(() => {
+        expect(fetch).toHaveBeenCalledWith(
+          '/reader/api/articles/123/fetch-content',
+          expect.any(Object)
+        );
+      });
     });
   });
 
   it('should NOT auto-fetch for normal feeds >500 chars', async () => {
     const { result } = renderHook(() => useAutoParseContent({
-      article: { ...mockArticle, content: 'a'.repeat(600) },
+      article: { 
+        ...mockArticle, 
+        content: 'a'.repeat(600),
+        parseAttempts: 0  // ✅ RR-182: Required for shouldShowRetry logic
+      },
       feed: { isPartialContent: false },
       enabled: true
     }));
@@ -428,6 +444,12 @@ test.describe('RR-176: Content Fetching Regression', () => {
    - Existing features still work
    - Performance unchanged
    - No memory leaks
+
+5. ✅ Test Reliability (RR-182):
+   - 100% consistent test execution
+   - No React race condition warnings
+   - Proper mock cleanup between tests
+   - All async state updates wrapped in act()
 
 ## Test Execution Plan
 

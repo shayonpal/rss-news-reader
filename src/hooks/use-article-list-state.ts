@@ -185,7 +185,7 @@ export function useArticleListState({
     saveStateBeforeNavigation();
     
     // Track navigation
-    navigationHistory.addEntry(`/article/${article.id}`, article.id);
+    navigationHistory.addEntry(`/article/${article.id}`, parseInt(article.id));
     
     // Don't mark as read here - let the server handle it
     // We'll track it as manually read when we navigate to the article detail page

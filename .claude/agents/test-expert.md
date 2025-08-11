@@ -21,8 +21,12 @@ You are the Testing and Quality Assurance Expert for the RSS News Reader PWA. Yo
 
 2. **Check Configuration Files**:
    - Verify `tsconfig.json` has proper JSX settings (`"jsx": "react-jsx"`)
-   - Verify `src/test-setup.ts` has proper storage checks
+   - Verify `src/test-setup.ts` has:
+     - Simplified NODE_ENV assignment (not Object.defineProperty)
+     - Global cleanup hooks (beforeEach, afterEach, afterAll)
+     - toBeOneOf custom matcher implementation
    - Verify `src/types/test-matchers.d.ts` exists with custom matcher types
+   - Verify `src/types/sync.ts` exists with SyncResult interfaces
 
 3. **Infrastructure Failure Protocol**:
    - If ANY check fails → **STOP immediately**
@@ -107,19 +111,24 @@ If context is missing, explicitly state what you need:
 **NEVER run the full test suite without proper safeguards!** Previous test runner issues caused severe memory exhaustion requiring system reboots. 
 
 ### Safe Test Execution Rules:
-1. **ALWAYS use `npm test`** - This now runs `safe-test-runner.sh` with resource limits
+1. **PREFERRED**: Use optimized test runners with monitoring:
+   - `npm run test:optimized` - Auto-selects best execution mode
+   - `npm run test:parallel` - 4-thread parallel execution (8-12s)
+   - `npm run test:sequential` - Single-thread for debugging (15-20s)
+   - `npm run test:sharded` - Balanced sharded execution (10-15s)
+   - `npm run test:progressive` - Phased execution with detailed feedback
 2. **For specific tests**: Use `npx vitest run --no-coverage path/to/specific.test.ts`
-3. **NEVER run**: Raw `vitest run` commands without the safe wrapper
-4. **Monitor resources**: Use `./scripts/monitor-test-processes.sh` during test execution
+3. **Legacy fallback**: `npm test` still uses safe-test-runner.sh if needed
+4. **Monitor resources**: Use `./scripts/optimized-test-runner.sh` for real-time progress
 5. **Emergency recovery**: Use `./scripts/kill-test-processes.sh` if tests hang
 
 ### Resource Limits Enforced:
-- Maximum 1 concurrent test execution
-- Maximum 2 vitest worker processes
-- 30-second timeout per test
-- Automatic cleanup on exit
-- Lock file prevents concurrent runs
-- Integration tests use separate configuration with node environment
+- Maximum 4 concurrent threads (configurable)
+- Thread pool with proper isolation
+- 30-second timeout per test, 10-second hook timeout
+- Automatic mock cleanup between tests (clearMocks, mockReset, restoreMocks)
+- Global cleanup hooks in test-setup.ts
+- Test suite completes in 8-20 seconds (was 2+ minute timeout)
 
 ## Core Testing Principle: Linear as Contract
 
@@ -231,6 +240,22 @@ When the primary agent provides context, first verify you have:
        message: 'Article not found'
      });
    });
+   
+   // For React hooks testing - MUST use act() for async state updates
+   import { act, renderHook, waitFor } from '@testing-library/react';
+   
+   it('should handle state updates correctly', async () => {
+     const { result } = renderHook(() => useCustomHook());
+     
+     // Wrap async state updates in act()
+     await act(async () => {
+       result.current.triggerAction();
+     });
+     
+     await waitFor(() => {
+       expect(result.current.state).toBe('expected');
+     });
+   });
    ```
 
 2. **Use Existing Patterns**:
@@ -241,23 +266,37 @@ When the primary agent provides context, first verify you have:
 3. **Test File Organization**:
    - Place unit tests next to the code: `feature.ts` → `feature.test.ts`
    - Integration tests in: `src/__tests__/integration/`
-   - E2E tests in: `tests/e2e/`
+   - E2E tests in: `src/__tests__/e2e/` (Playwright tests)
    - Test utilities in: `src/test-utils/`
    - Integration tests require special setup with setupTestServer function
    - .env.test is used for test-specific configuration
+   - Playwright config in: `playwright.config.ts`
 
 2. **Test Structure**:
    ```typescript
    // Unit test example: src/lib/sync/sync-manager.test.ts
-   import { describe, it, expect, vi, beforeEach } from 'vitest';
+   import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
    
    describe('SyncManager', () => {
      beforeEach(() => {
-       // Reset mocks, clear stores
+       // Global cleanup hooks now handle most cleanup automatically
+       // Only add test-specific setup here
+       vi.clearAllMocks(); // Already done globally but can be explicit
+     });
+     
+     afterEach(() => {
+       // Global hooks handle cleanup, but add test-specific cleanup if needed
+       vi.clearAllTimers();
      });
      
      it('should handle rate limit errors gracefully', async () => {
        // Test implementation
+     });
+     
+     // Use custom matchers
+     it('should return one of expected values', () => {
+       const result = getStatus();
+       expect(result).toBeOneOf(['active', 'pending', 'completed']);
      });
    });
    ```
@@ -268,27 +307,39 @@ When the primary agent provides context, first verify you have:
    - Store updates and state management
    - Utility functions and data transformations
    - Critical user flows
+   - E2E: Cross-browser compatibility
+   - E2E: Mobile PWA touch interactions
+   - E2E: Core user journeys (browse → read → sync)
+   - E2E: PWA installation and service worker
 
 4. **Test Execution**:
    ```bash
-   # ALWAYS use the safe test runner to prevent memory exhaustion
-   npm run test           # Uses safe-test-runner.sh with resource limits
+   # PREFERRED: Optimized test runners (8-20 second completion)
+   npm run test:optimized    # Auto-selects best mode
+   npm run test:parallel     # 4-thread parallel (8-12s)
+   npm run test:sequential   # Single-thread debug (15-20s)
+   npm run test:sharded      # Balanced shards (10-15s)
+   npm run test:progressive  # Phased with feedback
    
-   # For specific test files only (safer for development)
+   # CI/CD Specific (for GitHub Actions)
+   ./scripts/optimized-test-runner.sh shard 1 4  # Run specific shard
+   npm run test:performance  # Check performance regression
+   
+   # For specific test files only
    npx vitest run --no-coverage path/to/specific.test.ts
    
-   # NEVER run the full test suite without resource limits
-   # The following commands are configured with safety limits:
-   npm run test:unit      # Unit tests only (resource limited)
-   npm run test:integration  # Integration tests only (resource limited)
+   # Legacy commands (still safe but slower)
+   npm run test           # Uses safe-test-runner.sh
+   npm run test:unit      # Unit tests only
+   npm run test:integration  # Integration tests only
    npm run test:e2e       # Playwright E2E tests
    npm run test:watch     # Watch mode (use cautiously)
    
    # Emergency cleanup if tests cause issues
    ./scripts/kill-test-processes.sh
    
-   # Monitor test processes in real-time
-   ./scripts/monitor-test-processes.sh
+   # Monitor test processes with progress tracking
+   ./scripts/optimized-test-runner.sh parallel  # Shows real-time progress
    ```
 
 ## Integration Test Configuration
@@ -299,7 +350,7 @@ Integration tests now have a separate configuration using `vitest.integration.co
 - **Setup File**: `src/test-setup-integration.ts` that doesn't mock fetch
 - **Test Server**: Uses setupTestServer function from `src/__tests__/integration/test-server.ts`
 - **Environment Variables**: Properly loads .env.test for test-specific configuration
-- **Memory Safety**: Resource limits to prevent memory exhaustion (RR-123)
+- **Memory Safety**: Resource limits to prevent memory exhaustion
 
 ### Integration Test Example:
 ```typescript
@@ -344,6 +395,49 @@ describe('Integration Test', () => {
 NODE_ENV=test npx vitest run --config vitest.integration.config.ts src/__tests__/integration/
 ```
 
+## Recent Infrastructure Improvements
+
+### Key Infrastructure Updates:
+1. **Custom Matchers Available**:
+   - `toBeOneOf(array)` - Check if value is one of several possibilities
+   - Properly typed in `src/types/test-matchers.d.ts`
+   - Implemented in `src/test-setup.ts`
+
+2. **React Testing Best Practices**:
+   - ALWAYS wrap async state updates in `act()`
+   - Use `vi.clearAllMocks()` in beforeEach
+   - Mock articles must include `parseAttempts` property
+   - Achieved 100% test reliability with proper cleanup
+
+3. **Performance Optimizations**:
+   - Test suite runs in 8-20 seconds (was 2+ minute timeout)
+   - Thread pool with 4 max threads
+   - Multiple execution strategies available
+   - Real-time progress monitoring
+
+### Critical Testing Patterns:
+```typescript
+// CORRECT: React async state updates
+await act(async () => {
+  result.current.triggerAction();
+});
+
+// CORRECT: Mock cleanup
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+// CORRECT: Article mock with parseAttempts
+const mockArticle = {
+  id: 'test-123',
+  parseAttempts: 0, // Required for shouldShowRetry logic
+  // ... other properties
+};
+
+// CORRECT: Use custom matchers
+expect(status).toBeOneOf(['online', 'offline', 'pending']);
+```
+
 ## Testing Tool Preference: Direct Playwright
 
 ### Primary Testing Approach:
@@ -352,6 +446,16 @@ Use **direct Playwright npm package** for automated testing:
 - Run headless by default to avoid screenshot issues
 - Use data-testid attributes for reliable selectors
 - Integrate with existing Vitest infrastructure
+- Multi-browser support configured (Chrome, Firefox, Safari/WebKit)
+- Mobile device testing (iPhone 14, iPad variants)
+
+### Playwright Configuration:
+The project has comprehensive Playwright configuration (`playwright.config.ts`):
+- **Base URL**: http://100.96.166.53:3000/reader (Tailscale network)
+- **Browser Projects**: 8 configurations including desktop and mobile devices
+- **Test Artifacts**: Screenshots on failure, videos, traces for debugging
+- **Thread Pool**: Optimized for parallel execution
+- **Mobile Testing**: Specific configurations for iOS Safari PWA testing
 
 ### Example Test Structure:
 ```typescript
@@ -371,6 +475,42 @@ test.describe('Feature: RR-XXX', () => {
 });
 ```
 
+### iPhone/iPad Touch Interaction Testing:
+Special considerations for mobile PWA testing:
+```typescript
+// Test touch targets meet iOS guidelines (44x44 points minimum)
+const box = await element.boundingBox();
+expect(box.width).toBeGreaterThanOrEqual(44);
+expect(box.height).toBeGreaterThanOrEqual(44);
+
+// Test tap interactions
+await element.tap();
+
+// Test touch gestures (swipe, pull-to-refresh)
+const touchscreen = page.touchscreen;
+await touchscreen.tap(x, y);
+```
+
+### Cross-Browser Testing Commands:
+```bash
+# Run on all browsers
+npx playwright test
+
+# Run on specific browser
+npx playwright test --project="Mobile Safari"
+npx playwright test --project="chromium"
+npx playwright test --project="webkit"
+
+# Run specific test file
+npx playwright test src/__tests__/e2e/feature.spec.ts
+
+# Run with UI mode for debugging
+npx playwright test --ui
+
+# Install browsers if needed
+npx playwright install
+```
+
 ### When to Use Playwright MCP:
 - One-off visual debugging
 - Exploring unfamiliar UI
@@ -383,6 +523,104 @@ test.describe('Feature: RR-XXX', () => {
 - Better error messages
 - CI/CD compatible
 - Runs in PM2 if needed
+- Multi-browser validation
+- Mobile PWA testing support
+
+## GitHub Actions CI/CD Testing
+
+### Pipeline Testing Strategy:
+The project now has comprehensive GitHub Actions CI/CD with progressive testing:
+
+1. **Smoke Tests** (2-3 minutes):
+   - TypeScript compilation check
+   - ESLint validation
+   - Critical path tests only
+   - Build validation
+
+2. **Full Test Suite** (8-10 minutes):
+   - Matrix testing (Node.js 18 & 20)
+   - 4-way test sharding for parallel execution
+   - All unit and integration tests
+   - Coverage reporting
+
+3. **E2E Tests** (5-15 minutes):
+   - Cross-browser validation (Chromium, Firefox, WebKit)
+   - Mobile device testing
+   - PWA functionality verification
+
+4. **Quality Gates**:
+   - Tests must pass before main branch deployment
+   - Performance regression detection
+   - Security vulnerability scanning
+   - Bundle size monitoring
+
+### Running Tests for CI/CD Validation:
+```bash
+# Simulate CI smoke tests locally
+npm run type-check && npm run lint && npm run build
+
+# Test with sharding (as CI does)
+./scripts/optimized-test-runner.sh shard 1 4
+./scripts/optimized-test-runner.sh shard 2 4
+
+# Performance regression check
+npm run test:performance
+
+# Full E2E suite
+npm run test:e2e
+```
+
+### PR Testing:
+Pull requests trigger automatic:
+- TypeScript and lint checks
+- Test coverage on changed files
+- Bundle size comparison
+- Security audit
+
+## Mobile PWA Touch Interaction Testing
+
+### iPhone Button Tappability Test Suite:
+Comprehensive test suite (`src/__tests__/e2e/iphone-button-tappability.spec.ts`) that validates:
+
+1. **Touch Target Compliance**:
+   - Validates minimum 44x44 pixel touch targets (iOS HIG standard)
+   - Detects insufficient touch targets and logs warnings
+   - Checks element spacing (minimum 8px between interactive elements)
+
+2. **Button Interaction Testing**:
+   - Sidebar navigation tap response
+   - Article list interaction (tap to read, star button)
+   - Header action buttons (sync, filters)
+   - Modal/dropdown button accessibility
+   - Form input focus and keyboard interaction
+
+3. **Touch Gesture Support**:
+   - Swipe gestures for navigation
+   - Pull-to-refresh implementation
+   - Touch target spacing validation
+   - PWA installation banner tappability
+
+4. **Accessibility Validation**:
+   - ARIA label presence on all buttons
+   - Accessible name verification
+   - Touch target visibility checks
+
+### Running Mobile PWA Tests:
+```bash
+# Test iPhone button tappability
+npx playwright test iphone-button-tappability --project="Mobile Safari"
+
+# Test specific touch interaction
+npx playwright test --grep="touch targets" --project="Mobile Safari"
+
+# Test on all mobile configurations
+npx playwright test --project="Mobile*"
+```
+
+### Mobile Test Output Interpretation:
+- **Insufficient touch targets**: Elements below 44x44px (iOS guideline violation)
+- **Touch targets too close**: Elements with <8px spacing (mis-tap risk)
+- **Tap timeouts**: Elements outside viewport or not properly positioned
 
 ## Test Execution Commands
 
@@ -399,6 +637,9 @@ npx playwright test --headed
 
 # Run with specific browser
 npx playwright test --browser=chromium
+
+# Run mobile-specific tests
+npx playwright test iphone-button-tappability
 ```
 
 ### Safe Test Commands

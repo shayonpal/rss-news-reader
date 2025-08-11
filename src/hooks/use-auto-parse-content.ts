@@ -138,7 +138,12 @@ export function useAutoParseContent({
 
   // Auto-trigger parsing when component mounts if needed
   useEffect(() => {
-    if (enabled && needsParsing() && !parseAttempted && !article.parseFailed) {
+    // Clear previous parsed content when article changes
+    setParsedContent(null);
+    setParseError(null);
+    setParseAttempted(false);
+    
+    if (enabled && needsParsing() && !article.parseFailed) {
       triggerParse();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

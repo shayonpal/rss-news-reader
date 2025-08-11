@@ -136,7 +136,7 @@ export function SimpleFeedSidebar({
     };
 
     // Fetch with cache-busting if we just finished syncing
-    const justFinishedSyncing = !isSyncing && apiUsage?.zone1;
+    const justFinishedSyncing = !isSyncing && !!apiUsage?.zone1;
     fetchApiUsage(justFinishedSyncing);
     
     // Refresh every 5 minutes

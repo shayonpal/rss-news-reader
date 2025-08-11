@@ -332,11 +332,18 @@ async function performParsing(
       });
 
       // Also update parse_failed flag
+      // First get current parse_attempts
+      const { data: article } = await supabase
+        .from("articles")
+        .select("parse_attempts")
+        .eq("id", articleId)
+        .single();
+      
       await supabase
         .from("articles")
         .update({
           parse_failed: true,
-          parse_attempts: supabase.raw("parse_attempts + 1"),
+          parse_attempts: (article?.parse_attempts || 0) + 1,
         })
         .eq("id", articleId);
     }
