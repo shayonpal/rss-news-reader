@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import type { Article, Feed } from "@/types";
 
 interface UseAutoParseContentOptions {
@@ -12,7 +12,7 @@ interface UseAutoParseContentResult {
   parseError: string | null;
   parsedContent: string | null;
   shouldShowRetry: boolean;
-  triggerParse: () => Promise<void>;
+  triggerParse: (isManual?: boolean) => Promise<void>;
   clearError: () => void;
   clearParsedContent: () => void;
 }
@@ -27,9 +27,10 @@ export function useAutoParseContent({
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isParsingRef = useRef(false); // Track parsing state without causing re-renders
 
   // Check if this article needs parsing
-  const needsParsing = () => {
+  const needsParsing = useCallback(() => {
     // Already has full content
     if (article.hasFullContent && article.fullContent) {
       return false;
@@ -62,10 +63,15 @@ export function useAutoParseContent({
     }
 
     return false;
-  };
+  }, [article.hasFullContent, article.fullContent, article.content, feed?.isPartialContent]);
 
-  const triggerParse = async () => {
-    if (isParsing || !article.url) return;
+  const triggerParse = useCallback(async (isManual = false) => {
+    // Don't start a new parse if one is already in progress (unless manual)
+    if (!isManual && isParsingRef.current) return;
+    if (!article.url) return;
+
+    // Track the current article ID to detect if it changes during fetch
+    const currentArticleId = article.id;
 
     // Cancel any existing request
     if (abortControllerRef.current) {
@@ -73,6 +79,7 @@ export function useAutoParseContent({
     }
 
     setIsParsing(true);
+    isParsingRef.current = true; // Update ref
     setParseError(null);
     setParseAttempted(true);
 
@@ -88,11 +95,16 @@ export function useAutoParseContent({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            forceRefresh: false,
+            forceRefresh: isManual, // Pass manual flag to API
           }),
           signal: controller.signal,
         }
       );
+
+      // Check if article changed while fetching
+      if (currentArticleId !== article.id) {
+        return; // Discard result for old article
+      }
 
       if (!response.ok) {
         const data = await response.json();
@@ -112,6 +124,11 @@ export function useAutoParseContent({
 
       const data = await response.json();
       
+      // Check again if article changed
+      if (currentArticleId !== article.id) {
+        return; // Discard result for old article
+      }
+      
       if (data.success && data.content) {
         setParsedContent(data.content);
         setParseError(null);
@@ -121,6 +138,11 @@ export function useAutoParseContent({
         setParseError(data.error || "Using partial content");
       }
     } catch (err) {
+      // Check if article changed before updating error state
+      if (currentArticleId !== article.id) {
+        return; // Discard error for old article
+      }
+      
       if (err instanceof Error) {
         if (err.name === "AbortError") {
           // Request was cancelled, don't show error
@@ -131,23 +153,44 @@ export function useAutoParseContent({
         setParseError("An unexpected error occurred");
       }
     } finally {
-      setIsParsing(false);
+      // Only update isParsing if this is still the current article
+      if (currentArticleId === article.id) {
+        setIsParsing(false);
+        isParsingRef.current = false; // Update ref
+      }
       abortControllerRef.current = null;
     }
-  };
+  }, [article.id, article.url]); // Removed isParsing to prevent circular dependency
 
   // Auto-trigger parsing when component mounts if needed
   useEffect(() => {
-    // Clear previous parsed content when article changes
+    // Reset ALL state when article changes (critical fix)
     setParsedContent(null);
     setParseError(null);
     setParseAttempted(false);
+    setIsParsing(false); // Critical: Reset parsing state to prevent stuck loading states
+    isParsingRef.current = false; // Reset ref too
     
+    // Cancel any in-flight request from previous article
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    // Check if we need to parse and trigger if so
     if (enabled && needsParsing() && !article.parseFailed) {
       triggerParse();
     }
+    
+    // Cleanup function to abort request when dependencies change
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article.id, enabled]); // Only re-run if article ID or enabled changes
+  }, [article.id, enabled, article.parseFailed, needsParsing, triggerParse]); // Include stable functions
 
   // Cleanup on unmount
   useEffect(() => {

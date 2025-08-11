@@ -4,6 +4,11 @@ import type { StateCreator } from 'zustand';
 
 export type Theme = "light" | "dark" | "system";
 
+// Extend the store type to include the destroy method
+interface StoreWithDestroy {
+  destroy?: () => void;
+}
+
 interface UIState {
   // Theme
   theme: Theme;
@@ -132,8 +137,8 @@ export const createIsolatedUIStore = () => {
     });
 
     // Clear all subscriptions by calling destroy if it exists
-    if (typeof store.destroy === 'function') {
-      store.destroy();
+    if (typeof (store as any).destroy === 'function') {
+      (store as any).destroy();
     }
   };
 
@@ -158,7 +163,7 @@ export const createTestStoreHook = () => {
   useTestStore.getState = store.getState;
   useTestStore.setState = store.setState;
   useTestStore.subscribe = store.subscribe;
-  useTestStore.destroy = store.destroy || (() => {});
+  useTestStore.destroy = (store as any).destroy || (() => {});
   
   return {
     useTestStore,

@@ -588,6 +588,12 @@ html.reduce-transparency .liquid-glass-btn {
   top: calc(16px + env(safe-area-inset-top)) !important; 
 }
 
+.article-header-controls.is-hidden {
+  transform: translateY(calc(-100% - 24px));
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Accessibility: Reduce transparency fallback */
 html.reduce-transparency .glass-nav {
   -webkit-backdrop-filter: none;

@@ -304,15 +304,11 @@ export function ArticleDetail({
 
           // Scrolling down - hide header after scrolling 50px down
           if (scrollDelta > 0 && currentScrollY > 50) {
-            headerRef.current.style.transform = "translateY(-100%)";
+            headerRef.current.classList.add("is-hidden");
           }
-          // Scrolling up - show header immediately (even 1px scroll up)
-          else if (scrollDelta < 0) {
-            headerRef.current.style.transform = "translateY(0)";
-          }
-          // At very top - ensure header is visible
-          else if (currentScrollY < 5) {
-            headerRef.current.style.transform = "translateY(0)";
+          // Scrolling up or at the top - show header
+          else if (scrollDelta < 0 || currentScrollY < 5) {
+            headerRef.current.classList.remove("is-hidden");
           }
 
           // Show/hide scroll to top button on iOS
@@ -452,8 +448,8 @@ export function ArticleDetail({
       {/* Floating controls container (no top pane) */}
       <div
         ref={headerRef}
-        className="fixed left-0 right-0 z-10 transition-transform duration-300 ease-in-out article-header-controls"
-        style={{ transform: "translateY(0)", top: "24px" }}
+        className="fixed left-0 right-0 z-10 transition-transform transition-opacity duration-300 ease-in-out article-header-controls"
+        style={{ top: "24px" }}
       >
         <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 flex items-start justify-between">
           {/* Back button aligned with content */}
