@@ -1,0 +1,898 @@
+Run echo "Running critical path tests..."
+Running critical path tests...
+Running environment smoke test...
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /home/runner/work/rss-news-reader/rss-news-reader
+
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have IndexedDB available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have localStorage available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have sessionStorage available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have fetch available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have IntersectionObserver available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have ResizeObserver available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should have matchMedia available
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should be able to use storage APIs
+ ✓ src/__tests__/unit/test-setup.smoke.test.ts > Test Environment Smoke Test > should be able to clear storage
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  21:19:35
+   Duration  842ms (transform 53ms, setup 45ms, collect 12ms, tests 6ms, environment 377ms, prepare 61ms)
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /home/runner/work/rss-news-reader/rss-news-reader
+
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 1: Database Open/Close Behavior (6 tests) > 1.1 should open database successfully
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 1: Database Open/Close Behavior (6 tests) > 1.2 should handle opening already-open database
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 1: Database Open/Close Behavior (6 tests) > 1.3 should close and reopen database (close → open sequence)
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 1: Database Open/Close Behavior (6 tests) > 1.4 should handle simultaneous close calls without errors
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 1: Database Open/Close Behavior (6 tests) > 1.5 should perform read/write operations after open-close-reopen cycle
+stdout | src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should load articles correctly
+Initializing database...
+
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should trigger auto-parse for partial feed regardless of content length
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should trigger for ANY feed when content < 500 chars
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should trigger for truncation indicators in normal feeds
+stderr | src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.2 should handle deleting database that is still open
+Database version changed by another tab. Reloading...
+Another connection wants to delete database 'test_db_delete_open_test_1754947178775_8820py'. Closing db now to resume the delete request.
+
+stdout | src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should filter articles by feed
+Initialized default user preferences
+
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should detect all truncation indicator patterns
+stdout | src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should filter articles by feed
+stderr | src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should filter articles by feed
+📊 Database query - preservedArticles: 0, readStatusFilter: unread
+Database validation failed: [DexieError [DatabaseClosedError]: DatabaseClosedError Database has been closed] {
+
+  inner: [DexieError [DatabaseClosedError]: Database has been closed] {
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 1: Database Open/Close Behavior (6 tests) > 1.6 should handle multiple database instances in parallel
+    inner: null
+  }
+}
+
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.1 should close and delete database successfully (close → delete sequence)
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.2 should handle deleting database that is still open
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.3 should handle close → delete → open sequence creating new clean database
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.4 should handle deleting non-existent database
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.5 should handle rapid close → delete sequence
+stdout | src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests
+📊 Database query - preservedArticles: 0, readStatusFilter: unread
+
+stderr | src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests
+Database validation failed: TypeError: Cannot read properties of undefined (reading 'filter')
+    at Function.validateDatabaseIntegrity (/home/runner/work/rss-news-reader/rss-news-reader/src/lib/db/migrations.ts:257:10)
+    at runNextTicks (node:internal/process/task_queues:60:5)
+    at processImmediate (node:internal/timers:454:9)
+    at Object.initializeDatabase (/home/runner/work/rss-news-reader/rss-news-reader/src/lib/stores/data-store.ts:86:13)
+    at /home/runner/work/rss-news-reader/rss-news-reader/src/lib/stores/__tests__/data-stores.test.ts:185:22
+ ✓ src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Database Initialization > should create all required tables
+ ✓ src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Database Initialization > should handle database corruption gracefully
+ × src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should load articles correctly
+   → expected +0 to be 1 // Object.is equality
+ × src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Database Initialization > should initialize database with correct schema
+   → expected false to be true // Object.is equality
+ × src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should filter articles by feed
+   → expected +0 to be 1 // Object.is equality
+ × src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should mark article as read
+   → DatabaseClosedError Database has been closed
+    at file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:533:5
+    at runTest (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1056:11)
+    at async Promise.all (index 0)
+    at runSuite (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1191:13)
+    at async Promise.all (index 0)
+Failed to initialize database: TypeError: __vite_ssr_import_2__.db.getVersion is not a function
+    at Object.initializeDatabase (/home/runner/work/rss-news-reader/rss-news-reader/src/lib/stores/data-store.ts:88:36)
+    at runNextTicks (node:internal/process/task_queues:60:5)
+    at processImmediate (node:internal/timers:454:9)
+    at /home/runner/work/rss-news-reader/rss-news-reader/src/lib/stores/__tests__/data-stores.test.ts:185:22
+    at file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:533:5
+    at runTest (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1056:11)
+    at async Promise.all (index 0)
+    at runSuite (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1191:13)
+    at async Promise.all (index 0)
+    at runSuite (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1191:13)
+Attempting to recover from database corruption...
+Failed to recover from database corruption: TypeError: __vite_ssr_import_0__.db.recordCorruption is not a function
+    at Function.handleCorruptedDatabase (/home/runner/work/rss-news-reader/rss-news-reader/src/lib/db/migrations.ts:126:16)
+    at Object.initializeDatabase (/home/runner/work/rss-news-reader/rss-news-reader/src/lib/stores/data-store.ts:113:54)
+    at runNextTicks (node:internal/process/task_queues:60:5)
+    at processImmediate (node:internal/timers:454:9)
+    at /home/runner/work/rss-news-reader/rss-news-reader/src/lib/stores/__tests__/data-stores.test.ts:185:22
+    at file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:533:5
+    at runTest (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1056:11)
+    at async Promise.all (index 0)
+    at runSuite (file:///home/runner/work/rss-news-reader/rss-news-reader/node_modules/@vitest/runner/dist/index.js:1191:13)
+    at async Promise.all (index 0)
+
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should NOT trigger auto-parse for non-partial feed with content >= 500 chars
+ ✓ src/lib/stores/__tests__/database-lifecycle.test.ts > RR-112: Database Lifecycle Management and Race Condition Tests > Category 2: Deletion Edge Cases (6 tests) > 2.6 should handle delete with simulated slow file removal
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should NOT trigger when article already has full content
+ ✓ src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > needsParsing Logic - Critical Regression Fix > should handle undefined feed gracefully (treat as non-partial)
+stderr | src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.4 should maintain separate state from sidebar open state
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+
+stderr | src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.8 should batch multiple state updates efficiently
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+
+stderr | src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+
+stderr | src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.7 should initialize correctly with corrupted localStorage
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+
+stderr | src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.2 should not trigger unnecessary re-renders
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+Warning: An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at TestComponent (/home/runner/work/rss-news-reader/rss-news-reader/node_modules/@testing-library/react/dist/pure.js:329:5)
+
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.1 should initialize feedsSectionCollapsed to false by default
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.2 should update feedsSectionCollapsed state via setter
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.3 should toggle feedsSectionCollapsed state
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.4 should maintain separate state from sidebar open state
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.5 should not affect other UI store states
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.6 should handle rapid state changes
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.7 should provide correct state to multiple hook instances
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 1. State Management (8 tests) > 1.8 should batch multiple state updates efficiently
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.1 should NOT persist feedsSectionCollapsed to localStorage
+ × src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.2 should reset feedsSectionCollapsed on page refresh
+   → expected false to be true // Object.is equality
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.3 should maintain session state during component remounts
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.4 should persist theme but not collapse state
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.5 should not store in sessionStorage
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.6 should handle localStorage errors gracefully
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.7 should initialize correctly with corrupted localStorage
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.8 should not persist across different browser tabs
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.1 should handle rapid toggles without performance degradation
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.2 should not trigger unnecessary re-renders
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.3 should batch synchronous updates
+ ✓ src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.4 should handle concurrent access from multiple components
+ × src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.5 should not leak memory on unmount
+   → Cannot read properties of null (reading 'setFeedsSectionCollapsed')
+ × src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.6 should optimize selector usage
+   → expected "spy" to be called 1 times, but got 4 times
+ × src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > Manual Trigger Behavior > should allow manual trigger via triggerParse function 1113ms
+   → expected null to be '<p>Manually fetched content</p>' // Object.is equality
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body />
+</html>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/unit/rr-176-auto-parse-logic.test.ts > RR-176: useAutoParseContent Hook - Auto-Parse Logic > Manual Trigger Behavior > should allow manual trigger via triggerParse function
+AssertionError: expected null to be '<p>Manually fetched content</p>' // Object.is equality
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body />
+</html>
+
+- Expected:
+"<p>Manually fetched content</p>"
+
++ Received:
+null
+
+ ❯ src/__tests__/unit/rr-176-auto-parse-logic.test.ts:300:46
+    298|
+    299|       await waitFor(() => {
+    300|         expect(result.current.parsedContent).toBe('<p>Manually fetched…
+       |                                              ^
+    301|       });
+    302|     });
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Database Initialization > should initialize database with correct schema
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/lib/stores/__tests__/data-stores.test.ts:187:22
+    185|       const result = await dataStore.initializeDatabase();
+    186|
+    187|       expect(result).toBe(true);
+       |                      ^
+    188|       expect(dataStore.dbStatus.isInitialized).toBe(true);
+    189|       expect(dataStore.dbStatus.isHealthy).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should load articles correctly
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/lib/stores/__tests__/data-stores.test.ts:228:42
+    226|       await articleStore.loadArticles();
+    227|
+    228|       expect(articleStore.articles.size).toBe(1);
+       |                                          ^
+    229|       expect(articleStore.articles.get("test-article-1")).toBeDefined(…
+    230|       expect(articleStore.loadingArticles).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should filter articles by feed
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/lib/stores/__tests__/data-stores.test.ts:238:42
+    236|       await articleStore.loadArticles("test-feed-1");
+    237|
+    238|       expect(articleStore.articles.size).toBe(1);
+       |                                          ^
+    239|       expect(articleStore.selectedFeedId).toBe("test-feed-1");
+    240|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/lib/stores/__tests__/data-stores.test.ts > Data Stores Integration Tests > Article Store Tests > should mark article as read
+DatabaseClosedError: DatabaseClosedError Database has been closed
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { inner: { name: 'DatabaseClosedError', message: 'Database has been closed', inner: null, constructor: 'Function<DexieError>', toString: 'Function<toString>' } }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 2. Session Persistence (8 tests) > 2.2 should reset feedsSectionCollapsed on page refresh
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/lib/stores/__tests__/ui-store-collapse.test.ts:192:52
+    190|       });
+    191|
+    192|       expect(result.current.feedsSectionCollapsed).toBe(true);
+       |                                                    ^
+    193|
+    194|       // Simulate page refresh by unmounting and creating new store
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.5 should not leak memory on unmount
+TypeError: Cannot read properties of null (reading 'setFeedsSectionCollapsed')
+ ❯ src/lib/stores/__tests__/ui-store-collapse.test.ts:404:33
+    402|
+    403|       act(() => {
+    404|         (result.current as any).setFeedsSectionCollapsed(true);
+       |                                 ^
+    405|       });
+    406|
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ act node_modules/react/cjs/react.development.js:2512:16
+ ❯ Proxy.<anonymous> node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/lib/stores/__tests__/ui-store-collapse.test.ts:403:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/lib/stores/__tests__/ui-store-collapse.test.ts > UI Store Collapse State - RR-146 Specification > 3. Performance & Optimization (7 tests) > 3.6 should optimize selector usage
+AssertionError: expected "spy" to be called 1 times, but got 4 times
+ ❯ src/lib/stores/__tests__/ui-store-collapse.test.ts:428:32
+    426|
+    427|       // Selectors should not re-run for unrelated changes
+    428|       expect(collapseSelector).toHaveBeenCalledTimes(1);
+       |                                ^
+    429|       expect(themeSelector).toHaveBeenCalledTimes(1);
+    430|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+ Test Files  3 failed | 1 passed (8)
+      Tests  8 failed | 40 passed (101)
+   Start at  21:19:37
+   Duration  2.79s (transform 688ms, setup 292ms, collect 1.40s, tests 1.67s, environment 2.57s, prepare 406ms)
+
+Error: Process completed with exit code 1.

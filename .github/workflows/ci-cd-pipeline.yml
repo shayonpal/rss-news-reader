@@ -65,12 +65,10 @@ jobs:
               --reporter=verbose || echo "Smoke test not found, skipping..."
           fi
           
-          # Run only critical tests for smoke validation
-          npx vitest run --no-coverage \
-            src/__tests__/unit/rr-176-auto-parse-logic.test.ts \
-            src/lib/stores/__tests__/*.test.ts \
-            src/lib/health/__tests__/*.test.ts \
-            --reporter=verbose
+          # Use the isolation script for critical tests to prevent cross-test interference
+          echo "Running critical tests with proper isolation..."
+          chmod +x scripts/run-critical-tests.sh
+          ./scripts/run-critical-tests.sh
           echo "Critical path tests passed ✅"
 
       - name: 🏗️ Build Validation
