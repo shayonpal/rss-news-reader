@@ -57,6 +57,11 @@ jobs:
       - name: 🎯 Critical Path Tests
         run: |
           echo "Running critical path tests..."
+          # First run environment smoke test to validate setup
+          npx vitest run --no-coverage \
+            src/__tests__/unit/test-setup.smoke.test.ts \
+            --reporter=verbose
+          
           # Run only critical tests for smoke validation
           npx vitest run --no-coverage \
             src/__tests__/unit/rr-176-auto-parse-logic.test.ts \
