@@ -315,13 +315,15 @@ button:not(:disabled) {
   }
 
   /* Hover state */
-  .liquid-glass-btn:hover {
-    background: var(--glass-nav-bg-scrolled);
-    transform: translateZ(0) scale(1.05);
-    box-shadow:
-      0 12px 48px rgba(0, 0, 0, 0.15),
-      0 2px 4px rgba(0, 0, 0, 0.04),
-      inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  @media (hover: hover) and (pointer: fine) {
+    .liquid-glass-btn:hover {
+      background: var(--glass-nav-bg-scrolled);
+      transform: translateZ(0) scale(1.05);
+      box-shadow:
+        0 12px 48px rgba(0, 0, 0, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    }
   }
 
   /* Active/pressed state */
@@ -415,49 +417,54 @@ html.reduce-transparency .liquid-glass-btn {
 /* Liquid Glass Navigation (iOS 26-inspired) */
 @layer base {
   :root {
-    /* Light theme – clearer/less frosty */
-    --glass-blur: 14px;
-    --glass-nav-bg: rgba(255, 255, 255, 0.16);
-    --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.20);
-    --glass-nav-border: rgba(0, 0, 0, 0.06);
+    /* RR-180: Enhanced iOS 26 Liquid Glass */
+    --glass-blur: 16px; /* Increased from 14px */
+    --glass-saturation: 180%; /* Increased from 140% */
+    --glass-nav-bg: rgba(255, 255, 255, 0.18);
+    --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.22);
+    --glass-nav-border: rgba(0, 0, 0, 0.04);
     --opaque-nav-bg: rgba(255, 255, 255, 0.95);
     /* Segmented control (clear glass) */
-    --glass-chip-bg: rgba(255, 255, 255, 0.10);
-    --glass-chip-indicator: rgba(255, 255, 255, 0.18);
+    --glass-chip-bg: rgba(255, 255, 255, 0.12);
+    --glass-chip-indicator: rgba(255, 255, 255, 0.20);
+    /* Animation timing functions */
+    --spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    /* Dark theme – clearer/less frosty */
-    --glass-blur: 10px;
-    --glass-nav-bg: rgba(255, 255, 255, 0.10);
-    --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.14);
-    --glass-nav-border: rgba(255, 255, 255, 0.12);
+    /* RR-180: Enhanced iOS 26 Liquid Glass */
+    --glass-blur: 16px; /* Increased from 10px */
+    --glass-saturation: 180%; /* Increased from 140% */
+    --glass-nav-bg: rgba(10, 10, 10, 0.18);
+    --glass-nav-bg-scrolled: rgba(10, 10, 10, 0.22);
+    --glass-nav-border: rgba(255, 255, 255, 0.08);
     --opaque-nav-bg: rgba(0, 0, 0, 0.9);
     /* Segmented control (clear glass) */
-    --glass-chip-bg: rgba(255, 255, 255, 0.06);
-    --glass-chip-indicator: rgba(255, 255, 255, 0.10);
+    --glass-chip-bg: rgba(10, 10, 10, 0.12);
+    --glass-chip-indicator: rgba(10, 10, 10, 0.20);
   }
 }
 
 @layer components {
   .glass-nav {
     /* Translucent background that lenses content underneath */
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-nav-bg);
     border-bottom: 1px solid var(--glass-nav-border);
-    transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 200ms var(--ease-smooth),
+      box-shadow 200ms var(--ease-smooth);
   }
 
   /* Glass toolbar container (clustered capsule) */
   .glass-toolbar {
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-chip-bg);
     border: 1px solid var(--glass-nav-border);
-    border-radius: 9999px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.10), inset 0 1px 1px rgba(255,255,255,0.18);
+    border-radius: 22px; /* Updated to 22px for consistency */
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
     padding: 4px;
     display: inline-flex;
     gap: 4px;
@@ -492,35 +499,39 @@ html.reduce-transparency .liquid-glass-btn {
     transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
   }
 
-  .glass-toolbar-btn:hover { background: var(--glass-chip-indicator); }
+  @media (hover: hover) and (pointer: fine) {
+    .glass-toolbar-btn:hover { background: var(--glass-chip-indicator); }
+  }
   .glass-toolbar-btn:active { transform: scale(0.98); }
 
   /* Circular icon button (e.g., back button) */
   .glass-icon-btn {
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-nav-bg);
     border: 1px solid var(--glass-nav-border);
-    width: 44px;
-    height: 44px;
+    width: 48px; /* Increased from 44px for iOS HIG */
+    height: 48px; /* Increased from 44px for iOS HIG */
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.10), inset 0 1px 1px rgba(255,255,255,0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
     transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
   }
 
-  .glass-icon-btn:hover { background: var(--glass-nav-bg-scrolled); }
-  .glass-icon-btn:active { transform: scale(0.98); }
+  @media (hover: hover) and (pointer: fine) {
+    .glass-icon-btn:hover { background: var(--glass-nav-bg-scrolled); }
+  }
+  .glass-icon-btn:active { transform: scale(0.96); } /* Changed to 0.96 per spec */
 
   /* Glass popover menu */
   .glass-popover {
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-nav-bg);
     border: 1px solid var(--glass-nav-border);
-    border-radius: 18px;
+    border-radius: 22px; /* Updated to 22px for consistency */
   box-shadow: 0 24px 60px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.12);
     overflow: hidden;
   }

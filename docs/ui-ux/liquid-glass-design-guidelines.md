@@ -212,16 +212,17 @@ Liquid Glass is Apple's revolutionary design language introduced with iOS 26 (co
 
 ## Implementation in RSS Reader
 
-### Completed Glass Components
+### Completed Glass Components (Updated with RR-180)
 
-| Component | Location | Features |
-|-----------|----------|----------|
-| Navigation Header | `components/layout/header.tsx` | Scroll-aware opacity |
-| Segmented Control | `components/articles/filter-controls.tsx` | Sliding indicator |
-| Floating Toolbar | `components/articles/article-detail.tsx` | Action clustering |
-| Dropdown Menus | All `DropdownMenuContent` | Enhanced blur |
-| Sidebar Info | `components/layout/sidebar.tsx` | Fixed bottom panel |
-| Scroll-to-Top | `components/common/scroll-to-top.tsx` | iOS-specific |
+| Component | Location | Features | Status |
+|-----------|----------|----------|---------|
+| Navigation Header | `components/layout/header.tsx` | Scroll-aware opacity | ✅ Complete |
+| Segmented Control | `components/articles/filter-controls.tsx` | Sliding indicator | ✅ Complete |
+| **Morphing Dropdown** | `components/ui/morphing-dropdown.tsx` | **iOS 26 morphing animation, spring easing** | ✅ **RR-180 Enhanced** |
+| **Article Detail Toolbar** | `components/articles/article-detail.tsx` | **iOS touch optimization, 48px targets** | ✅ **RR-180 Enhanced** |
+| **Glass Buttons** | `components/ui/glass-button.tsx` | **Enhanced glass effects, touch compliance** | ✅ **RR-180 Enhanced** |
+| Sidebar Info | `components/layout/sidebar.tsx` | Fixed bottom panel | ✅ Complete |
+| Scroll-to-Top | `components/common/scroll-to-top.tsx` | iOS-specific | ✅ Complete |
 
 ### Migration Checklist
 

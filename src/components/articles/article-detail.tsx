@@ -31,13 +31,8 @@ import { useFeedStore } from "@/lib/stores/feed-store";
 import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
 import { useContentState } from "@/hooks/use-content-state";
 import { ContentParsingIndicator, ContentLoadingSkeleton } from "./content-parsing-indicator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { GlassToolbarButton, GlassIconButton } from "@/components/ui/glass-button";
+import { MorphingDropdown, type DropdownItem } from "@/components/ui/morphing-dropdown";
 
 // Reusable toolbar (can be moved to its own file if you prefer)
 function ArticleActionsToolbar({
@@ -54,7 +49,6 @@ function ArticleActionsToolbar({
   isUpdatingFeed,
   onShare,
   articleUrl,
-  onOpenFetchStats,
 }: {
   articleId: string;
   isStarred: boolean;
@@ -69,79 +63,60 @@ function ArticleActionsToolbar({
   isUpdatingFeed: boolean;
   onShare: () => void;
   articleUrl?: string;
-  onOpenFetchStats: () => void;
 }) {
+  // Build toolbar elements (keep original functionality, style inline to match POC)
+  const toolbarElements = [
+    <StarButton key="star" onToggleStar={onToggleStar} isStarred={isStarred} size="lg" />,
+    <SummaryButton
+      key="summary"
+      articleId={articleId}
+      hasSummary={hasSummary}
+      variant="icon"
+      size="lg"
+      onSuccess={onSummarySuccess}
+    />,
+    <FetchContentButton
+      key="fetch"
+      articleId={articleId}
+      hasFullContent={!!hasFullContent}
+      variant="icon"
+      size="lg"
+      onSuccess={onFetchSuccess}
+      onRevert={onFetchRevert}
+    />,
+  ];
+
+  // Build dropdown items dynamically
+  const dropdownItems: DropdownItem[] = [
+    ...(feed ? [{
+      id: "partial-feed",
+      label: "Partial Feed",
+      checked: feed.isPartialContent,
+      onClick: onTogglePartialFeed,
+      disabled: isUpdatingFeed,
+      separator: true,
+    }] : []),
+    {
+      id: "share",
+      label: "Share",
+      icon: <Share2 className="w-5 h-5" />,
+      onClick: onShare,
+    },
+    ...(articleUrl ? [{
+      id: "open-original",
+      label: "Open Original",
+      icon: <ExternalLink className="w-5 h-5" />,
+      onClick: () => window.open(articleUrl, "_blank", "noopener,noreferrer"),
+    }] : []),
+  ];
+
   return (
-    <div className="glass-toolbar pointer-events-auto">
-      <div className="toolbar-group">
-        <StarButton onToggleStar={onToggleStar} isStarred={isStarred} size="md" />
-        <SummaryButton
-          articleId={articleId}
-          hasSummary={hasSummary}
-          variant="icon"
-          size="md"
-          onSuccess={onSummarySuccess}
-        />
-        <FetchContentButton
-          articleId={articleId}
-          hasFullContent={!!hasFullContent}
-          variant="icon"
-          size="md"
-          onSuccess={onFetchSuccess}
-          onRevert={onFetchRevert}
-        />
-      </div>
-      <DropdownMenu onOpenChange={(open) => {
-        const root = document.querySelector('.glass-toolbar');
-        if (root) root.classList.toggle('menu-open', open);
-      }}>
-        <DropdownMenuTrigger asChild>
-          <button className="glass-toolbar-btn" aria-label="More options">
-            <Ellipsis className="h-5 w-5 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64 glass-popover p-2">
-          {feed && (
-            <DropdownMenuItem onSelect={onTogglePartialFeed} className="relative">
-              <span
-                className={cn(
-                  "mr-2 text-base transition-opacity duration-200",
-                  isUpdatingFeed && "opacity-50"
-                )}
-              >
-                {feed.isPartialContent ? "☑" : "☐"}
-              </span>
-              <span
-                className={cn(
-                  "transition-opacity duration-200",
-                  isUpdatingFeed && "opacity-50"
-                )}
-              >
-                Partial Feed
-              </span>
-            </DropdownMenuItem>
-          )}
-          <div className="menu-separator my-1" />
-          <DropdownMenuItem onSelect={onShare}>
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </DropdownMenuItem>
-          {articleUrl && (
-            <DropdownMenuItem
-              onSelect={() => window.open(articleUrl, "_blank", "noopener,noreferrer")}
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Open Original
-            </DropdownMenuItem>
-          )}
-          <div className="menu-separator my-1" />
-          <DropdownMenuItem onSelect={onOpenFetchStats}>
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Fetch Stats
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <MorphingDropdown
+      toolbarElements={toolbarElements}
+      items={dropdownItems}
+      animationMode="sequential"
+      easingMode="spring"
+    />
   );
 }
 
@@ -168,8 +143,6 @@ export function ArticleDetail({
   const contentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentArticle, setCurrentArticle] = useState(article);
   const [fetchedContent, setFetchedContent] = useState<string | null>(null);
   const [forceOriginalContent, setForceOriginalContent] = useState(false);
@@ -180,9 +153,6 @@ export function ArticleDetail({
   const isIOS =
     typeof window !== "undefined" &&
     /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  // Minimum swipe distance (in px)
-  const minSwipeDistance = 50;
 
   // Auto-parse content for partial feeds
   const {
@@ -394,30 +364,6 @@ export function ArticleDetail({
     }
   }, []);
 
-  // Touch handlers for swipe navigation
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
-      onNavigate("next");
-    } else if (isRightSwipe) {
-      onNavigate("prev");
-    }
-  };
-
   const handleShare = async () => {
     if (navigator.share && currentArticle.url) {
       try {
@@ -501,9 +447,6 @@ export function ArticleDetail({
   return (
     <div
       className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
     >
       {/* Header */}
       {/* Floating controls container (no top pane) */}
@@ -526,7 +469,8 @@ export function ArticleDetail({
           </div>
 
           {/* Actions toolbar constrained to article width */}
-          <ArticleActionsToolbar
+          <div className="pointer-events-auto" style={{ touchAction: "manipulation" }}>
+            <ArticleActionsToolbar
             articleId={currentArticle.id}
             isStarred={currentArticle.tags?.includes("starred") || false}
             hasSummary={!!currentArticle.summary}
@@ -540,8 +484,8 @@ export function ArticleDetail({
             isUpdatingFeed={isUpdatingFeed}
             onShare={handleShare}
             articleUrl={currentArticle.url}
-          onOpenFetchStats={() => router.push("/fetch-stats")}
-          />
+            />
+          </div>
         </div>
       </div>
 

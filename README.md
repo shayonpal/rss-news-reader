@@ -10,7 +10,8 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 
 - **Server-Client Architecture**: Server handles all external APIs, client is presentation only
 - **No Client Authentication**: Access controlled by Tailscale network
-- **Progressive Web App**: Install on mobile and desktop devices
+- **Progressive Web App**: Install on mobile and desktop devices with iOS touch-optimized interface
+- **iOS 26 Liquid Glass Design**: Advanced morphing animations with spring easing and enhanced glass effects
 - **Full Content Extraction**: Extract complete articles beyond RSS snippets (v0.6.0)
   - Manual fetch button for any article
   - Automatic fetching for partial content feeds
