@@ -24,21 +24,40 @@ const generateUniqueDbName = (testName: string): string => {
   return `test_db_${testName}_${timestamp}_${random}`;
 };
 
-// Track all database instances for cleanup
-const activeDatabases = new Set<AppDatabase>();
-const databaseNames = new Set<string>();
+// Track database instances per test to prevent cross-test pollution
+const testDatabases = new Map<string, Set<AppDatabase>>();
+const testDatabaseNames = new Map<string, Set<string>>();
+
+// Get or create a Set for current test
+const getTestDatabases = (testId: string): Set<AppDatabase> => {
+  if (!testDatabases.has(testId)) {
+    testDatabases.set(testId, new Set());
+  }
+  return testDatabases.get(testId)!;
+};
+
+const getTestDatabaseNames = (testId: string): Set<string> => {
+  if (!testDatabaseNames.has(testId)) {
+    testDatabaseNames.set(testId, new Set());
+  }
+  return testDatabaseNames.get(testId)!;
+};
 
 // Enhanced database class for testing with proper lifecycle management
 class TestAppDatabase extends AppDatabase {
   private _dbName: string;
+  private _testId: string;
   
-  constructor(dbName?: string) {
+  constructor(dbName?: string, testId?: string) {
     const name = dbName || generateUniqueDbName("default");
     super();
     this._dbName = name;
     this.name = name;
-    activeDatabases.add(this);
-    databaseNames.add(name);
+    this._testId = testId || "global";
+    
+    // Track this database for its specific test
+    getTestDatabases(this._testId).add(this);
+    getTestDatabaseNames(this._testId).add(name);
   }
 
   async safeClose(): Promise<void> {
@@ -55,7 +74,8 @@ class TestAppDatabase extends AppDatabase {
     try {
       await this.safeClose();
       await Dexie.delete(this._dbName);
-      databaseNames.delete(this._dbName);
+      getTestDatabaseNames(this._testId).delete(this._dbName);
+      getTestDatabases(this._testId).delete(this);
     } catch (error) {
       console.warn(`Error deleting database ${this._dbName}:`, error);
     }
@@ -75,8 +95,12 @@ const simulateSlowOperation = (ms: number = 100): Promise<void> => waitFor(ms);
 
 describe("RR-112: Database Lifecycle Management and Race Condition Tests", () => {
   let testDb: TestAppDatabase;
+  let currentTestId: string;
 
   beforeEach(async () => {
+    // Generate unique test ID for each test
+    currentTestId = `test_${Date.now()}_${Math.random()}`;
+    
     // Ensure clean state - should NOT auto-initialize stores in test environment
     vi.clearAllMocks();
     
@@ -86,37 +110,48 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
   });
 
   afterEach(async () => {
-    // Cleanup all test databases
-    const cleanupPromises = Array.from(activeDatabases).map(async (db) => {
-      await db.safeDelete();
-    });
+    // Cleanup only databases from current test
+    const currentTestDatabases = getTestDatabases(currentTestId);
+    const currentTestDbNames = getTestDatabaseNames(currentTestId);
     
-    await Promise.all(cleanupPromises);
-    activeDatabases.clear();
+    if (currentTestDatabases.size > 0) {
+      const cleanupPromises = Array.from(currentTestDatabases).map(async (db) => {
+        await db.safeDelete();
+      });
+      
+      await Promise.all(cleanupPromises);
+      currentTestDatabases.clear();
+    }
     
-    // Clean up any remaining databases by name
-    const remainingCleanup = Array.from(databaseNames).map(async (name) => {
-      try {
-        await Dexie.delete(name);
-      } catch (error) {
-        console.warn(`Cleanup error for ${name}:`, error);
-      }
-    });
+    // Clean up any remaining databases by name for this test
+    if (currentTestDbNames.size > 0) {
+      const remainingCleanup = Array.from(currentTestDbNames).map(async (name) => {
+        try {
+          await Dexie.delete(name);
+        } catch (error) {
+          console.warn(`Cleanup error for ${name}:`, error);
+        }
+      });
+      
+      await Promise.all(remainingCleanup);
+      currentTestDbNames.clear();
+    }
     
-    await Promise.all(remainingCleanup);
-    databaseNames.clear();
+    // Remove this test's tracking
+    testDatabases.delete(currentTestId);
+    testDatabaseNames.delete(currentTestId);
   });
 
-  describe("Category 1: Database Open/Close Behavior (6 tests)", () => {
+  describe.sequential("Category 1: Database Open/Close Behavior (6 tests)", () => {
     test("1.1 should open database successfully", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("open_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("open_test"), currentTestId);
       
       await expect(testDb.open()).resolves.not.toThrow();
       expect(testDb.isOpen()).toBe(true);
     });
 
     test("1.2 should handle opening already-open database", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("reopen_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("reopen_test"), currentTestId);
       
       await testDb.open();
       expect(testDb.isOpen()).toBe(true);
@@ -127,7 +162,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("1.3 should close and reopen database (close → open sequence)", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("close_reopen_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("close_reopen_test"), currentTestId);
       
       // Open, verify, close, verify, reopen, verify
       await testDb.open();
@@ -141,7 +176,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("1.4 should handle simultaneous close calls without errors", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("simultaneous_close_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("simultaneous_close_test"), currentTestId);
       
       await testDb.open();
       expect(testDb.isOpen()).toBe(true);
@@ -158,7 +193,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("1.5 should perform read/write operations after open-close-reopen cycle", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("rw_cycle_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("rw_cycle_test"), currentTestId);
       
       // Open and write data
       await testDb.open();
@@ -179,9 +214,9 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("1.6 should handle multiple database instances in parallel", async () => {
-      const db1 = new TestAppDatabase(generateUniqueDbName("parallel_1"));
-      const db2 = new TestAppDatabase(generateUniqueDbName("parallel_2"));
-      const db3 = new TestAppDatabase(generateUniqueDbName("parallel_3"));
+      const db1 = new TestAppDatabase(generateUniqueDbName("parallel_1"), currentTestId);
+      const db2 = new TestAppDatabase(generateUniqueDbName("parallel_2"), currentTestId);
+      const db3 = new TestAppDatabase(generateUniqueDbName("parallel_3"), currentTestId);
       
       // Open all in parallel
       await Promise.all([
@@ -214,9 +249,9 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
   });
 
-  describe("Category 2: Deletion Edge Cases (6 tests)", () => {
+  describe.sequential("Category 2: Deletion Edge Cases (6 tests)", () => {
     test("2.1 should close and delete database successfully (close → delete sequence)", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("close_delete_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("close_delete_test"), currentTestId);
       
       await testDb.open();
       await testDb.dbInfo.add({ version: 1, createdAt: new Date(), corruptionCount: 0 });
@@ -227,7 +262,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("2.2 should handle deleting database that is still open", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("delete_open_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("delete_open_test"), currentTestId);
       
       await testDb.open();
       
@@ -248,7 +283,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
 
     test("2.3 should handle close → delete → open sequence creating new clean database", async () => {
       const dbName = generateUniqueDbName("clean_recreate_test");
-      testDb = new TestAppDatabase(dbName);
+      testDb = new TestAppDatabase(dbName, currentTestId);
       
       // Open, add data, close, delete
       await testDb.open();
@@ -257,7 +292,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       await Dexie.delete(dbName);
       
       // Create new instance with same name - should be clean
-      const newDb = new TestAppDatabase(dbName);
+      const newDb = new TestAppDatabase(dbName, currentTestId);
       await newDb.open();
       
       const count = await newDb.dbInfo.count();
@@ -274,7 +309,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("2.5 should handle rapid close → delete sequence", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("rapid_close_delete_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("rapid_close_delete_test"), currentTestId);
       
       await testDb.open();
       
@@ -287,7 +322,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("2.6 should handle delete with simulated slow file removal", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("slow_delete_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("slow_delete_test"), currentTestId);
       
       await testDb.open();
       await testDb.dbInfo.add({ version: 1, createdAt: new Date(), corruptionCount: 0 });
@@ -301,9 +336,9 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
   });
 
-  describe("Category 3: Concurrency/Race Conditions (8 tests)", () => {
+  describe.sequential("Category 3: Concurrency/Race Conditions (8 tests)", () => {
     test("3.1 should handle concurrent close and delete from separate async routines", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("concurrent_close_delete_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("concurrent_close_delete_test"), currentTestId);
       
       await testDb.open();
       
@@ -329,7 +364,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       // Create multiple databases with same name pattern
       for (let i = 0; i < 3; i++) {
         operations.push((async () => {
-          const db = new TestAppDatabase(`${dbName}_${i}`);
+          const db = new TestAppDatabase(`${dbName}_${i}`, currentTestId);
           await db.open();
           await simulateSlowOperation(Math.random() * 50);
           await db.close();
@@ -342,8 +377,8 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
 
     test("3.3 should handle two connections to same database with concurrent cleanup", async () => {
       const dbName = generateUniqueDbName("dual_connection_test");
-      const db1 = new TestAppDatabase(dbName);
-      const db2 = new TestAppDatabase(dbName);
+      const db1 = new TestAppDatabase(dbName, currentTestId);
+      const db2 = new TestAppDatabase(dbName, currentTestId);
       
       await Promise.all([db1.open(), db2.open()]);
       
@@ -372,7 +407,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("3.4 should handle database deletion while transaction is pending", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("pending_transaction_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("pending_transaction_test"), currentTestId);
       
       await testDb.open();
       
@@ -405,7 +440,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       // 5 rapid open/close cycles
       for (let i = 0; i < 5; i++) {
         operations.push((async () => {
-          const db = new TestAppDatabase(`${dbName}_cycle_${i}`);
+          const db = new TestAppDatabase(`${dbName}_cycle_${i}`, currentTestId);
           await db.open();
           await db.close();
           await db.open();
@@ -418,8 +453,8 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("3.6 should handle interleaved open/close operations from multiple databases", async () => {
-      const db1 = new TestAppDatabase(generateUniqueDbName("interleave_1"));
-      const db2 = new TestAppDatabase(generateUniqueDbName("interleave_2"));
+      const db1 = new TestAppDatabase(generateUniqueDbName("interleave_1"), currentTestId);
+      const db2 = new TestAppDatabase(generateUniqueDbName("interleave_2"), currentTestId);
       
       // Interleaved operations
       await db1.open();
@@ -443,12 +478,12 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       
       // Delete and recreate rapidly
       const operations = Array.from({ length: 3 }, (_, i) => (async () => {
-        const db = new TestAppDatabase(`${dbName}_${i}`);
+        const db = new TestAppDatabase(`${dbName}_${i}`, currentTestId);
         await db.open();
         await db.safeDelete();
         
         // Recreate immediately
-        const newDb = new TestAppDatabase(`${dbName}_new_${i}`);
+        const newDb = new TestAppDatabase(`${dbName}_new_${i}`, currentTestId);
         await newDb.open();
         await newDb.safeDelete();
       })());
@@ -457,7 +492,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("3.8 should prevent DatabaseClosedError during concurrent operations", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("closed_error_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("closed_error_test"), currentTestId);
       
       await testDb.open();
       
@@ -479,13 +514,13 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
   });
 
-  describe("Category 4: Resource Management (5 tests)", () => {
+  describe.sequential("Category 4: Resource Management (5 tests)", () => {
     test("4.1 should handle open/close in tight loop without resource leaks", async () => {
       const dbName = generateUniqueDbName("tight_loop_test");
       
       // 10 rapid open/close cycles
       for (let i = 0; i < 10; i++) {
-        const db = new TestAppDatabase(`${dbName}_${i}`);
+        const db = new TestAppDatabase(`${dbName}_${i}`, currentTestId);
         await db.open();
         expect(db.isOpen()).toBe(true);
         await db.close();
@@ -502,7 +537,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       
       for (let i = 1; i <= 3; i++) {
         operations.push((async () => {
-          const db = new TestAppDatabase(generateUniqueDbName(`complex_${i}`));
+          const db = new TestAppDatabase(generateUniqueDbName(`complex_${i}`), currentTestId);
           await db.open();
           
           // Add increasing amounts of data
@@ -521,7 +556,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("4.3 should verify no lingering IndexedDB connections after cleanup", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("lingering_connections_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("lingering_connections_test"), currentTestId);
       
       await testDb.open();
       await testDb.dbInfo.add({ version: 1, createdAt: new Date(), corruptionCount: 0 });
@@ -533,7 +568,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       await Dexie.delete(dbName);
       
       // Try to open new database with same name - should be clean
-      const newDb = new TestAppDatabase(dbName);
+      const newDb = new TestAppDatabase(dbName, currentTestId);
       await newDb.open();
       
       const count = await newDb.dbInfo.count();
@@ -548,7 +583,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       for (let i = 0; i < 5; i++) {
         operations.push((async () => {
           const dbName = generateUniqueDbName(`create_drop_${i}`);
-          const db = new TestAppDatabase(dbName);
+          const db = new TestAppDatabase(dbName, currentTestId);
           
           await db.open();
           await db.dbInfo.add({ version: 1, createdAt: new Date(), corruptionCount: 0 });
@@ -556,7 +591,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
           await Dexie.delete(dbName);
           
           // Verify deletion
-          const checkDb = new TestAppDatabase(dbName);
+          const checkDb = new TestAppDatabase(dbName, currentTestId);
           await checkDb.open();
           const count = await checkDb.dbInfo.count();
           expect(count).toBe(0);
@@ -568,7 +603,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("4.5 should handle resource cleanup after operation timeout/abort", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("timeout_cleanup_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("timeout_cleanup_test"), currentTestId);
       
       await testDb.open();
       
@@ -599,7 +634,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
   });
 
-  describe("Category 5: Multi-Test Isolation (5 tests)", () => {
+  describe.sequential("Category 5: Multi-Test Isolation (5 tests)", () => {
     test("5.1 should use unique database names per test preventing cross-test pollution", async () => {
       const dbName1 = generateUniqueDbName("isolation_1");
       const dbName2 = generateUniqueDbName("isolation_2");
@@ -608,8 +643,8 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       expect(dbName1).toContain("isolation_1");
       expect(dbName2).toContain("isolation_2");
       
-      const db1 = new TestAppDatabase(dbName1);
-      const db2 = new TestAppDatabase(dbName2);
+      const db1 = new TestAppDatabase(dbName1, currentTestId);
+      const db2 = new TestAppDatabase(dbName2, currentTestId);
       
       await Promise.all([db1.open(), db2.open()]);
       
@@ -629,7 +664,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
 
     test("5.2 should verify database no longer exists after cleanup", async () => {
       const dbName = generateUniqueDbName("cleanup_verification_test");
-      testDb = new TestAppDatabase(dbName);
+      testDb = new TestAppDatabase(dbName, currentTestId);
       
       await testDb.open();
       await testDb.dbInfo.add({ version: 1, createdAt: new Date(), corruptionCount: 0 });
@@ -637,7 +672,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       await Dexie.delete(dbName);
       
       // Verify database is gone by opening fresh instance
-      const verifyDb = new TestAppDatabase(dbName);
+      const verifyDb = new TestAppDatabase(dbName, currentTestId);
       await verifyDb.open();
       
       const count = await verifyDb.dbInfo.count();
@@ -649,7 +684,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     test("5.3 should run parallel tests with different DB names without interference", async () => {
       const parallelTests = Array.from({ length: 3 }, (_, i) => (async () => {
         const dbName = generateUniqueDbName(`parallel_test_${i}`);
-        const db = new TestAppDatabase(dbName);
+        const db = new TestAppDatabase(dbName, currentTestId);
         
         await db.open();
         await db.dbInfo.add({ version: i, createdAt: new Date(), corruptionCount: 0 });
@@ -672,14 +707,14 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       const sharedDbName = generateUniqueDbName("shared_name_test");
       
       // First run
-      const db1 = new TestAppDatabase(sharedDbName);
+      const db1 = new TestAppDatabase(sharedDbName, currentTestId);
       await db1.open();
       await db1.dbInfo.add({ version: 1, createdAt: new Date(), corruptionCount: 0 });
       await db1.close();
       await Dexie.delete(sharedDbName);
       
       // Second run with same name - should be clean
-      const db2 = new TestAppDatabase(sharedDbName);
+      const db2 = new TestAppDatabase(sharedDbName, currentTestId);
       await db2.open();
       
       const count = await db2.dbInfo.count();
@@ -702,7 +737,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       expect(dataStore.apiUsage).toBeNull();
       
       // Manual initialization should work
-      testDb = new TestAppDatabase(generateUniqueDbName("manual_init_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("manual_init_test"), currentTestId);
       await testDb.open();
       
       // But it shouldn't affect the store
@@ -710,10 +745,10 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
   });
 
-  describe("Integration Tests: Complete Lifecycle Scenarios", () => {
+  describe.sequential("Integration Tests: Complete Lifecycle Scenarios", () => {
     test("should handle complete application startup/shutdown cycle", async () => {
       const dbName = generateUniqueDbName("app_lifecycle_test");
-      testDb = new TestAppDatabase(dbName);
+      testDb = new TestAppDatabase(dbName, currentTestId);
       
       // Simulate app startup
       await testDb.open();
@@ -738,7 +773,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
     });
 
     test("should handle database corruption recovery scenario", async () => {
-      testDb = new TestAppDatabase(generateUniqueDbName("corruption_recovery_test"));
+      testDb = new TestAppDatabase(generateUniqueDbName("corruption_recovery_test"), currentTestId);
       
       await testDb.open();
       await testDb.initialize();
@@ -754,7 +789,7 @@ describe("RR-112: Database Lifecycle Management and Race Condition Tests", () =>
       await testDb.close();
       await Dexie.delete(testDb.getDatabaseName());
       
-      const recoveredDb = new TestAppDatabase(testDb.getDatabaseName());
+      const recoveredDb = new TestAppDatabase(testDb.getDatabaseName(), currentTestId);
       await recoveredDb.open();
       await recoveredDb.initialize();
       

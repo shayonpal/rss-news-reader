@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **[RR-187] Database Lifecycle Tests Failing in CI Due to Test Isolation Issues** (Monday, August 11, 2025 at 5:01 PM)
+  - **CI/CD Pipeline Blocker Resolved**: Fixed database lifecycle tests that were failing in CI with `DatabaseClosedError` due to parallel test execution race conditions
+  - **Test Isolation Fix**: Implemented test-specific cleanup system where each test only manages its own database instances, preventing cross-test pollution
+  - **Sequential Execution**: Made all database lifecycle test categories run sequentially using `describe.sequential()` to eliminate thread contention in CI environment (maxThreads=4)
+  - **Database Cleanup Enhancement**: Enhanced `TestAppDatabase` class with test ID tracking and proper resource cleanup scoped to individual tests
+  - **Test Infrastructure Improvement**: Added test-specific database registry system that maps test IDs to their database instances for isolated cleanup
+  - **Technical Impact**:
+    - All 32 database lifecycle tests now pass consistently in both local and CI environments
+    - Eliminated `DatabaseClosedError: Database has been closed` failures that were blocking CI/CD pipeline
+    - Restored reliable parallel test execution for CI with proper isolation for database-dependent tests
+    - Fixed 4 originally failing tests (1.2, 1.3, 1.4, 1.5) that were caused by afterEach cleanup closing databases from other parallel tests
+  - **Development Workflow**: CI/CD pipeline unblocked, allowing deployments to proceed from dev branch to full test suite execution
+  - **Files Modified**: `src/lib/stores/__tests__/database-lifecycle.test.ts`
+  - **Status**: ✅ COMPLETED - CI pipeline functional, database test isolation implemented, all 32 tests passing
+
+### Fixed
 - **[HOTFIX] Article Header Animation Jitter and Visibility** (Monday, August 11, 2025 at 5:05 PM)
   - **Animation Smoothing**: Fixed jerky animation by switching from direct style manipulation to a CSS class (`is-hidden`) toggle, allowing the browser to handle transitions smoothly.
   - **Visibility Correction**: Ensured the header slides completely out of view by accounting for its initial `24px` top offset in the CSS transform (`translateY(calc(-100% - 24px))`).
