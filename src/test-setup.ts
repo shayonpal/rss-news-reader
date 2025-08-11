@@ -1,7 +1,9 @@
 import { vi } from 'vitest'
 
-// Mock environment
-process.env.NODE_ENV = 'test';
+// Mock environment - handle read-only NODE_ENV
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'test';
+}
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -31,8 +33,13 @@ const createStorage = () => {
   }
 }
 
-Object.defineProperty(window, 'localStorage', { value: createStorage() })
-Object.defineProperty(window, 'sessionStorage', { value: createStorage() })
+// Only define if not already present
+if (!window.localStorage) {
+  Object.defineProperty(window, 'localStorage', { value: createStorage() })
+}
+if (!window.sessionStorage) {
+  Object.defineProperty(window, 'sessionStorage', { value: createStorage() })
+}
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {

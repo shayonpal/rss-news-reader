@@ -16,18 +16,36 @@ Check $ARGUMENTS:
 - If Linear URL → Extract project/issue ID and continue
 - If empty or other text → Error: "Please provide a Linear issue ID (e.g., RR-123). Use /capture-idea for new ideas."
 
-## 2. Parallel Context Gathering
+## 2. Infrastructure Health Check (MANDATORY)
+
+**Before any feature analysis, validate infrastructure:**
+
+```bash
+# Run these checks in parallel - ALL must pass to continue
+1. npm run type-check (must exit 0)
+2. npx vitest run --no-coverage --reporter=verbose src/__tests__/unit/rr-176-auto-parse-logic.test.ts (test discovery validation)
+3. Check test-setup.ts, tsconfig.json for configuration issues
+```
+
+**If ANY infrastructure check fails:**
+- 🛑 STOP analysis immediately
+- Use infra-expert agent or escalate to user
+- DO NOT proceed with feature analysis on broken foundation
+
+**If all checks pass:** ✅ Continue to Context Gathering
+
+## 3. Parallel Context Gathering
 
 **Execute ALL of these IN PARALLEL using agents:**
 
-### 2A. Linear Issue Context
+### 3A. Linear Issue Context
 Use `linear-expert` to:
 - Get full issue with ALL comments and sub-issues
 - Check parent/child issues and dependencies
 - Extract description, labels, priority
 - Remember: Issue + comments = living specification
 
-### 2B. Project Memory Context
+### 3B. Project Memory Context
 Use memory MCP in two steps:
 1. **Search for relevant nodes** using `mcp__memory__search_nodes`:
    - Search with query "RSS Reader" OR "RSS News Reader" for project context
@@ -39,32 +57,32 @@ Use memory MCP in two steps:
    - Historical context about architectural choices
    - Any observations related to the current issue topic
 
-### 2C. Recent Work Context
+### 3C. Recent Work Context
 Use `doc-search` and `git-expert` to:
 - Check CHANGELOG.md for recently shipped features
 - Review last 20 git commits to understand recent changes
 - Identify patterns from completed work
 
-### 2D. Database Context
+### 3D. Database Context
 Use `db-expert-readonly` to:
 - Get complete database schema and table structures
 - Understand existing columns, indexes, and relationships
 - Check RLS policies and security advisories
 - Identify what data structures already exist
 
-### 2E. Existing Code Context
+### 3E. Existing Code Context
 Use `doc-search` to find:
 - **API Endpoints**: Search for "app.get", "app.post", "router.get", "router.post", "export async function GET", "export async function POST" patterns
 - **Similar Features**: Search for related functionality already implemented
 - **Test Patterns**: Identify existing test approaches
 - Review docs/api/server-endpoints.md for documented endpoints
 
-## 3. Update Linear Status
+## 4. Update Linear Status
 
 Use `linear-expert` to:
 - Move issue to "In Progress" 
 
-## 4. Deep Technical Analysis
+## 5. Deep Technical Analysis
 
 Based on gathered context, ultrathink and analyze:
 
@@ -85,7 +103,7 @@ Based on gathered context, ultrathink and analyze:
 - Performance implications?
 - Security considerations?
 
-## 5. Pragmatic Assessment
+## 6. Pragmatic Assessment
 
 **Challenge Everything:**
 - Does this actually solve the stated problem?
@@ -99,7 +117,7 @@ Based on gathered context, ultrathink and analyze:
 - "Consider X instead because..."
 - "This might cause Y issue..."
 
-## 6. Implementation Strategy
+## 7. Implementation Strategy
 
 Create detailed strategy based on issue type:
 
@@ -141,7 +159,7 @@ Create detailed strategy based on issue type:
 - [Any ambiguities]
 ```
 
-## 7. Interactive Refinement
+## 8. Interactive Refinement
 
 Ask:
 ```
@@ -172,11 +190,11 @@ Continue to step 8
 - Iterate and return to options again
 - Continue until the user has provided an option
 
-## 8. Mandatory Documentation
+## 9. Mandatory Documentation
 
 **These steps are REQUIRED - do not skip:**
 
-### 8A. Generate Concrete Test Contracts
+### 9A. Generate Concrete Test Contracts
 Based on the approved strategy, create explicit contracts:
 
 ```
@@ -204,7 +222,7 @@ State Transitions:
 - After: [exact expected state]
 ```
 
-### 8B. Update Linear with Strategy and Contracts
+### 9B. Update Linear with Strategy and Contracts
 Use `linear-expert` to add comment:
 ```
 **Implementation Strategy (Approved)**
@@ -216,7 +234,7 @@ Use `linear-expert` to add comment:
 Timestamp: [current time]
 ```
 
-### 8C. Gather Complete Context for test-expert
+### 9C. Gather Complete Context for test-expert
 Before invoking test-expert, gather ALL necessary context:
 
 1. **Database Schema** (from db-expert-readonly):
@@ -234,12 +252,12 @@ Before invoking test-expert, gather ALL necessary context:
    - Similar database operations
    - Error handling patterns
 
-### 8D. Generate Test Cases with Full Context
+### 9D. Generate Test Cases with Full Context
 Use `test-expert` providing COMPLETE context package:
 ```
 Linear Issue: [full details including all comments]
-Implementation Strategy: [from 8A]
-Test Contracts: [from 8A]
+Implementation Strategy: [from 9A]
+Test Contracts: [from 9A]
 
 Database Context:
 [Complete schema for relevant tables]
@@ -253,7 +271,7 @@ Existing Code Patterns:
 IMPORTANT: These tests are the SPECIFICATION. Write them to define exact behavior that implementation must conform to. Tests should NOT be modified later to match implementation.
 ```
 
-### 8E. Update Linear with Test Cases
+### 9E. Update Linear with Test Cases
 Use `linear-expert` to add comment:
 ```
 **Test Cases (Specification)**
@@ -262,7 +280,7 @@ Use `linear-expert` to add comment:
 Note: These tests define the specification. Implementation must conform to these tests.
 ```
 
-## 9. Final Summary
+## 10. Final Summary
 
 ```
 ✅ Analysis Complete for RR-XXX
