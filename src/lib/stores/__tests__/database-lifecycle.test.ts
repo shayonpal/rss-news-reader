@@ -93,7 +93,7 @@ const waitFor = (ms: number): Promise<void> =>
 // Helper to simulate slow operations for race condition testing
 const simulateSlowOperation = (ms: number = 100): Promise<void> => waitFor(ms);
 
-describe("RR-112: Database Lifecycle Management and Race Condition Tests", () => {
+describe.sequential("RR-112: Database Lifecycle Management and Race Condition Tests", () => {
   let testDb: TestAppDatabase;
   let currentTestId: string;
 
