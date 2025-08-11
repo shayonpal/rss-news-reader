@@ -494,7 +494,7 @@ describe('RR-148: Retention Policy Configuration', () => {
 
       const fullContentJobId = scheduler.addJob({
         type: 'full_content_cache',
-        schedule: '0 3 * * *', // 3 AM daily
+        schedule: '0 4 * * *', // 4 AM daily (no longer conflicts with removed 3 AM cleanup)
         enabled: true
       });
 

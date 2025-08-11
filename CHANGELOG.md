@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **feat(cleanup): remove auto-cleanup of fetched full content [RR-168]** (Sunday, August 10, 2025 at 8:43 PM)
+  - Removed deprecated 3 AM auto-cleanup job for fetched full content
+  - Deleted `scripts/cleanup-parsed-content.js` script file
+  - Removed `rss-content-cleanup` app from PM2 ecosystem configuration
+  - Removed `cleanupOldContent()` function from `content-parsing-service.ts`
+  - Updated health endpoint to exclude content retention configuration
+  - Article cap/retention is now solely enforced by RR-129 (1000-article limit)
+  - Full content is now preserved indefinitely within existing articles
+
 ### Fixed
 - **[RR-177] Stale Sync Time Display** (Sunday, August 10, 2025 at 6:35 PM)
   - Fixed stale sync time display by adding cache prevention headers to `/api/sync/last-sync` endpoint

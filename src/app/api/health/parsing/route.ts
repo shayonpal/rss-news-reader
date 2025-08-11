@@ -74,7 +74,6 @@ export async function GET() {
       .from("system_config")
       .select("key, value")
       .in("key", [
-        "content_retention_days",
         "parse_timeout_seconds",
         "max_concurrent_parses",
         "max_parse_attempts",
@@ -117,7 +116,6 @@ export async function GET() {
           note: "Success rate excludes auto-fetch operations (content parsing)",
         },
         configuration: {
-          retentionDays: parseInt(configMap.content_retention_days || "30"),
           timeoutSeconds: parseInt(configMap.parse_timeout_seconds || "30"),
           maxConcurrent: parseInt(configMap.max_concurrent_parses || "5"),
           maxAttempts: parseInt(configMap.max_parse_attempts || "3"),

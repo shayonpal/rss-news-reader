@@ -180,32 +180,5 @@ module.exports = {
       out_file: "./logs/kuma-push-out.log",
       time: true,
     },
-
-    // Parsed Content Cleanup Job (RR-148)
-    {
-      name: "rss-content-cleanup",
-      script: "./scripts/cleanup-parsed-content.js",
-      instances: 1,
-      exec_mode: "fork",
-      cron_restart: "0 3 * * *", // Run daily at 3 AM
-      autorestart: false, // Don't restart on exit - it's a cron job
-      min_uptime: 10000, // 10 seconds
-      kill_timeout: 30000, // 30 seconds - allow cleanup to complete
-      max_restarts: 3, // Conservative for cleanup job
-      restart_delay: 3600000, // 1 hour delay if it fails
-      wait_ready: false, // Cleanup doesn't need ready signal
-      max_memory_restart: "256M", // Conservative memory limit
-      env: {
-        NODE_ENV: "development",
-        // Database configuration
-        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        NEXT_PUBLIC_SUPABASE_ANON_KEY:
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      },
-      error_file: "./logs/cleanup-error.log",
-      out_file: "./logs/cleanup-out.log",
-      time: true,
-    },
   ],
 };

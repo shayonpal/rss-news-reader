@@ -245,22 +245,4 @@ export class ContentParsingService {
     }
   }
 
-  async cleanupOldContent(retentionDays: number = 30): Promise<void> {
-    try {
-      const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
-      
-      await supabase
-        .from("articles")
-        .update({
-          full_content: null,
-          parsed_at: null,
-        })
-        .lt("parsed_at", cutoffDate.toISOString())
-        .eq("is_read", true)
-        .eq("is_starred", false)
-        .not("full_content", "is", null);
-    } catch (error) {
-      console.error("Error cleaning up old content:", error);
-    }
-  }
 }
