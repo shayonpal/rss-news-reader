@@ -18,7 +18,37 @@ vi.mock("@/lib/db/database", async () => {
         // Access the variable through globalThis to avoid initialization issues
         const mockedDb = (globalThis as any).mockDbInstance;
         if (mockedDb && prop in mockedDb) {
-          return mockedDb[prop];
+          const value = mockedDb[prop];
+          // If it's a function, bind it to the mockDb instance
+          if (typeof value === 'function') {
+            return value.bind(mockedDb);
+          }
+          return value;
+        }
+        // Provide default implementations for common database methods
+        if (prop === 'getVersion') {
+          return vi.fn().mockResolvedValue(1);
+        }
+        if (prop === 'recordCorruption') {
+          return vi.fn().mockResolvedValue(undefined);
+        }
+        if (prop === 'isOpen') {
+          return vi.fn().mockReturnValue(true);
+        }
+        if (prop === 'open') {
+          return vi.fn().mockResolvedValue(undefined);
+        }
+        if (prop === 'close') {
+          return vi.fn().mockResolvedValue(undefined);
+        }
+        if (prop === 'initialize') {
+          return vi.fn().mockResolvedValue(undefined);
+        }
+        if (prop === 'vacuum') {
+          return vi.fn().mockResolvedValue(undefined);
+        }
+        if (prop === 'getStorageInfo') {
+          return vi.fn().mockResolvedValue({ counts: { articles: 0 } });
         }
         return undefined;
       }
@@ -151,9 +181,9 @@ describe("Data Stores Integration Tests", () => {
     mockDb = testDb; // Set the mock to use our test database
     (globalThis as any).mockDbInstance = testDb; // Also set global reference
     
-    // Clear any existing database and open fresh instance
-    await testDb.safeDelete();
+    // Just open the database - no need to delete first since it's a unique name
     await testDb.open();
+    await testDb.initialize();
   });
 
   afterEach(async () => {
