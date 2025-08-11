@@ -54,6 +54,23 @@ npm run test:watch        # Watch mode for development
 ./scripts/safe-test-runner.sh
 ```
 
+### Test Infrastructure Requirements (RR-186)
+
+**Browser API Polyfills:**
+- **IndexedDB Polyfill**: `fake-indexeddb` v6.1.0 automatically provides IndexedDB compatibility for Node.js test environment
+- **Auto-import**: Automatically initialized in `src/test-setup.ts` via `import 'fake-indexeddb/auto';`
+- **Use Case**: Essential for testing Dexie database operations, offline queues, and browser storage functionality
+
+**Environment Validation:**
+- **Smoke Test**: `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment setup
+- **Mock Validation**: Ensures localStorage/sessionStorage mocks are properly configured
+- **Polyfill Verification**: Confirms IndexedDB polyfill is available and functional
+
+**Mock System Improvements:**
+- **Storage Mocks**: Fixed localStorage/sessionStorage configuration with `writable: true, configurable: true`
+- **Supabase Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
+- **Export Fixes**: Corrected missing exports in utility classes for proper testability
+
 ### Legacy Commands (Use with Caution)
 
 ```bash
@@ -634,6 +651,70 @@ JavaScript heap out of memory
 3. Restart development environment: `pm2 restart all`
 4. Increase Node memory if needed: `export NODE_OPTIONS="--max-old-space-size=4096"`
 
+### IndexedDB Test Failures (RR-186)
+
+**Problem**: Tests fail with "IDBDatabase is not defined" or similar IndexedDB-related errors
+
+**Error Messages:**
+```
+ReferenceError: IDBDatabase is not defined
+TypeError: Cannot read properties of undefined (reading 'open')
+Error: Dexie: TypeError: IDBKeyRange is undefined
+```
+
+**Diagnosis:**
+```bash
+# Check if fake-indexeddb is installed
+npm list fake-indexeddb
+
+# Verify test setup imports polyfill
+grep -n "fake-indexeddb" src/test-setup.ts
+
+# Run smoke test to validate environment
+npm test src/__tests__/unit/test-setup.smoke.test.ts
+```
+
+**Solution:**
+1. Ensure `fake-indexeddb` dependency is installed: `npm install --save-dev fake-indexeddb@^6.1.0`
+2. Verify polyfill import in `src/test-setup.ts`: `import 'fake-indexeddb/auto';`
+3. Run environment validation: `npm test src/__tests__/unit/test-setup.smoke.test.ts`
+4. If issues persist, manually import in test file: `import 'fake-indexeddb/auto';`
+
+**Prevention:**
+- Always run smoke test before developing new storage-dependent tests
+- Use provided Supabase mock helper instead of manual mocking
+- Import `fake-indexeddb/auto` at the top of any test file using Dexie or IndexedDB
+
+### localStorage/sessionStorage Mock Crashes (RR-186)
+
+**Problem**: Tests crash when accessing browser storage APIs
+
+**Error Messages:**
+```
+TypeError: Cannot redefine property: localStorage
+TypeError: Cannot define property sessionStorage, object is not extensible
+```
+
+**Solution:**
+1. Use properly configured mocks from test setup (automatically applied)
+2. Avoid manual redefinition of storage APIs in individual tests
+3. If custom mocking needed, use the provided mock helpers
+
+**Correct Usage:**
+```javascript
+// ✅ Uses automatically configured mocks from test setup
+test('storage functionality', () => {
+  localStorage.setItem('key', 'value');
+  expect(localStorage.getItem('key')).toBe('value');
+});
+```
+
+**Avoid:**
+```javascript
+// ❌ Don't manually redefine storage APIs
+Object.defineProperty(window, 'localStorage', { ... });
+```
+
 ## Configuration Reference
 
 ### Test Scripts in package.json (RR-183 Updated)
@@ -720,4 +801,4 @@ SUPABASE_ANON_KEY_TEST="your-test-anon-key"
 
 ---
 
-*This documentation covers safe and optimized test execution for the RSS News Reader project. Originally created for RR-123 memory exhaustion fixes, updated for RR-183 performance optimizations and RR-184 E2E testing infrastructure. Last updated: Monday, August 11, 2025 at 12:16 AM*
+*This documentation covers safe and optimized test execution for the RSS News Reader project. Originally created for RR-123 memory exhaustion fixes, updated for RR-183 performance optimizations, RR-184 E2E testing infrastructure, and RR-186 test infrastructure enhancements. Last updated: Monday, August 11, 2025 at 3:23 PM*

@@ -77,6 +77,34 @@ The Inoreader API limit of 100 calls per day constrains how often users can manu
 
 The PWA can be installed over HTTP (required for Tailscale network) but some features like push notifications are unavailable without HTTPS.
 
+### Test Environment Browser API Compatibility
+
+**Status:** 🟢 Resolved (August 11, 2025)  
+**Severity:** High
+
+#### Description
+
+Node.js test environment lacks browser APIs like IndexedDB, causing failures in tests that depend on client-side storage functionality (Dexie database operations, offline queues).
+
+#### Root Cause
+
+- Node.js runtime doesn't provide IndexedDB API by default
+- Test environment required polyfill for browser storage APIs
+- Dexie library depends on IndexedDB for database operations
+
+#### Solution (RR-186)
+
+1. **IndexedDB Polyfill**: Added `fake-indexeddb` v6.1.0 dependency with automatic polyfill initialization
+2. **Test Setup Enhancement**: Added `import 'fake-indexeddb/auto';` to `src/test-setup.ts`
+3. **Environment Validation**: Created smoke test to verify polyfill availability
+4. **Storage Mock Fix**: Properly configured localStorage/sessionStorage mocks with writable properties
+
+#### Prevention
+
+- **Smoke Test**: `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment before execution
+- **Mock Helpers**: Reusable mock system at `src/__tests__/helpers/supabase-mock.ts`
+- **Documentation**: Comprehensive troubleshooting guide for common test environment issues
+
 ## Production Deployment Issues (Resolved)
 
 ### Manual Sync Failure - Missing Build Manifests

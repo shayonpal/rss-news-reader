@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto';
 import { vi, expect, beforeEach, afterEach, afterAll } from 'vitest'
 
 // Mock environment - ensure NODE_ENV is set
@@ -68,10 +69,18 @@ const createStorage = () => {
 
 // Only define if not already present
 if (!window.localStorage) {
-  Object.defineProperty(window, 'localStorage', { value: createStorage() })
+  Object.defineProperty(window, 'localStorage', { 
+    value: createStorage(),
+    writable: true,
+    configurable: true
+  })
 }
 if (!window.sessionStorage) {
-  Object.defineProperty(window, 'sessionStorage', { value: createStorage() })
+  Object.defineProperty(window, 'sessionStorage', { 
+    value: createStorage(),
+    writable: true,
+    configurable: true
+  })
 }
 
 // Mock IntersectionObserver

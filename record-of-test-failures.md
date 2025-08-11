@@ -2,6 +2,121 @@
 
 This document tracks test failures encountered during development to identify patterns and systemic issues.
 
+## Entry: Monday, August 11, 2025 at 03:18 PM EDT
+
+### Context
+- **Linear Issue**: RR-186 - Test Infrastructure: Fix 68 failing tests blocking git workflow
+- **Task**: Investigating and fixing smoke test failures preventing commits
+- **Environment**: Development (Mac Mini, local)
+- **Workflow**: Git workflow smoke tests failing, blocking all development
+
+### What I Was Trying to Do
+1. Run pre-commit checks to validate code changes
+2. Execute `npm run test` to run test suite
+3. Commit and push code changes
+4. Tests were blocking git workflow entirely
+
+### Test Commands Executed
+```bash
+# Initial test run showing failures
+npm run test
+
+# Pre-commit validation attempt
+npm run pre-commit
+# Which runs: npm run type-check && npm run lint && npm run format:check
+
+# Specific test investigations
+npx vitest run src/__tests__/unit/test-setup.smoke.test.ts
+npx vitest run src/lib/stores/__tests__/database-lifecycle.test.ts
+npx vitest run src/__tests__/edge-cases/rr-27-comprehensive-edge-cases.test.ts
+```
+
+### Failures Encountered
+
+#### Test Suite Failures (68 total across 12+ test files):
+```
+❯ src/__tests__/unit/rr-148-retention-policy.test.ts (10 tests | 6 failed)
+   × should identify articles eligible for cleanup based on age and status
+     → expected false to be true // Object.is equality
+   × should handle full content cache cleanup separately
+     → expected false to be true // Object.is equality
+   × should implement batch processing for large datasets
+     → Cannot read properties of undefined (reading 'mockResolvedValue')
+
+❯ src/__tests__/unit/rr-115-health-service-startup-dependencies.test.ts (18 tests | 4 failed)
+   × should provide detailed error information for troubleshooting
+     → window.localStorage.clear is not a function
+   × should handle multiple simultaneous errors correctly
+     → window.localStorage.clear is not a function
+
+❯ src/lib/stores/__tests__/database-lifecycle.test.ts (32 tests | 32 failed)
+   × should open database successfully
+     → promise rejected "DexieError" instead of resolving
+   × should handle opening already-open database
+     → IndexedDB API missing. Please visit https://tinyurl.com/y2uuvskb
+
+❯ src/__tests__/edge-cases/rr-27-comprehensive-edge-cases.test.ts (21 tests | 21 failed)
+   × should handle storage quota exceeded error gracefully
+     → ArticleListStateManager is not a constructor
+   × should limit article count to MAX_ARTICLES (200)
+     → ArticleListStateManager is not a constructor
+
+❯ src/__tests__/unit/rr-148-content-parsing-service.test.ts (13 tests | 3 failed)
+   × should extract content when not cached
+     → mockSupabase.from(...).update(...).eq is not a function
+
+❯ src/__tests__/performance/rr-27-performance.test.ts (13 tests | 5 failed)
+   × should batch article updates efficiently
+     → expected 0 to be greater than or equal to 50
+```
+
+#### Pre-commit Warnings (Non-blocking but present):
+```
+./src/components/articles/read-status-filter.tsx
+38:7  Warning: The attribute aria-pressed is not supported by the role tab.
+49:7  Warning: The attribute aria-pressed is not supported by the role tab.
+60:7  Warning: The attribute aria-pressed is not supported by the role tab.
+
+./src/components/feeds/simple-feed-sidebar.tsx
+145:6  Warning: React Hook useEffect has a missing dependency: 'apiUsage?.zone1'.
+
+./src/hooks/use-article-list-state.ts
+304:6  Warning: React Hook useCallback has a missing dependency: 'tagId'.
+```
+
+#### Prettier Formatting Warnings:
+```
+Code style issues found in 423 files. Run Prettier with --write to fix.
+```
+
+### Root Causes
+1. **IndexedDB Missing**: No polyfill for IndexedDB in test environment (jsdom)
+2. **Storage Mock Issues**: localStorage.clear and sessionStorage.clear not defined as functions
+3. **Supabase Mock Chains**: Missing method chaining support (.update().eq().select())
+4. **Export Issues**: ArticleListStateManager class not exported, only instance
+5. **Test Environment**: No validation to catch environment setup issues early
+
+### Pattern Identified
+- **Infrastructure Failure**: Test environment not properly configured for browser APIs
+- **Mock Incompleteness**: Mocks missing critical method implementations
+- **Missing Polyfills**: Browser APIs like IndexedDB need polyfills in jsdom
+- **Export/Import Mismatches**: Classes used in tests not properly exported
+
+### Resolution Applied
+- ✅ Installed `fake-indexeddb@6.1.0` package
+- ✅ Added `import 'fake-indexeddb/auto'` to test-setup.ts
+- ✅ Fixed storage mock implementations with proper function definitions
+- ✅ Created Supabase mock helper with full chaining support
+- ✅ Exported ArticleListStateManager class
+- ✅ Created test-setup.smoke.test.ts for environment validation
+
+### Impact
+- **Before**: 68 test failures blocking all commits
+- **After**: Most tests passing, git workflow restored
+- **Lesson**: Always validate test environment setup with smoke tests
+
+---
+
 ## 🎉 RESOLVED: RR-182 - React Testing Race Conditions Fixed (Sunday, August 11, 2025 at 11:08 PM)
 
 **Major Testing Infrastructure Achievement**: RR-182 successfully resolved the systematic React testing race conditions that were causing unreliable test execution across the project.

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **[RR-186] Test Infrastructure Enhancement - IndexedDB Polyfill and Mock System Improvements** (Monday, August 11, 2025 at 3:23 PM)
+  - **IndexedDB Polyfill Integration**: Added `fake-indexeddb` dependency (v6.1.0) and automatic polyfill initialization to resolve Dexie test failures
+  - **Test Environment Validation**: Created comprehensive smoke test at `src/__tests__/unit/test-setup.smoke.test.ts` to validate test environment requirements
+  - **localStorage/sessionStorage Mock Fix**: Resolved crash issues in test setup by properly configuring mock properties as writable and configurable
+  - **Supabase Mock Helper**: Implemented reusable mock helper at `src/__tests__/helpers/supabase-mock.ts` with proper method chaining support
+  - **Export Fix**: Corrected missing export of `ArticleListStateManager` class in `src/lib/utils/article-list-state-manager.ts` for testability
+  - **Infrastructure Reliability**: Enhanced test environment stability with proper polyfills and mock systems for complex browser APIs
+  - **Development Workflow**: Restored reliable test execution for all browser API-dependent test cases
+  - **Technical Impact**:
+    - Eliminated IndexedDB-related test failures in browser storage tests
+    - Fixed localStorage/sessionStorage redefinition crashes during test initialization
+    - Provided robust mock infrastructure for Supabase client testing
+    - Enhanced export consistency for utility classes requiring test coverage
+  - **Files Modified**: `package.json`, `src/test-setup.ts`, `src/__tests__/unit/test-setup.smoke.test.ts`, `src/__tests__/helpers/supabase-mock.ts`, `src/lib/utils/article-list-state-manager.ts`
+  - **Status**: ✅ COMPLETED - Test infrastructure enhanced with browser API polyfills and improved mock system for reliable test execution
+
 ### Added
 - **[RR-180] iOS 26 Liquid Glass Morphing Animation with Critical iOS PWA Touch Optimization** (Monday, August 11, 2025 at 2:44 PM)
   - **Critical iOS PWA Touch Fixes**: Resolved critical touch interaction issues that prevented buttons from being tappable on iOS PWA installations

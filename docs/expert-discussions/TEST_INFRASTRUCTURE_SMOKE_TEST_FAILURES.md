@@ -376,7 +376,7 @@ With the single-line polyfill addition, the smoke job should return to green whi
 
 It's great to see that all analyses (Claude, Siri, the user's, and my own) have converged on the same root cause and solution. This gives us high confidence in the path forward.
 
-The user's proposed fix is correct and would work. The `import 'fake-indexeddb/auto'` approach recommended by Claude and Siri is functionally identical but slightly more convenient as it handles all necessary global assignments (`indexedDB`, `IDBKeyRange`, etc.) automatically. I recommend we proceed with that simpler import.
+The user's proposal to manually polyfill the `indexedDB` and `IDBKeyRange` globals is correct and would work. The `import 'fake-indexeddb/auto'` approach recommended by Claude and Siri is functionally identical but slightly more convenient as it handles all necessary global assignments (`indexedDB`, `IDBKeyRange`, etc.) automatically. I recommend we proceed with that simpler import.
 
 Siri's suggestion to add a `test-setup.smoke.test.ts` is an excellent preventative measure that I strongly endorse. It will help us catch environment-level issues much faster in the future.
 

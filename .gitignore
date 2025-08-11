@@ -58,6 +58,9 @@ docs/revised-priority.md
 # Claude settings
 .claude/settings.local.json
 
+# Gemini CLI Instructions
+*GEMINI*.md
+
 # Token files
 ~/.rss-reader/tokens.json
 documentation-analysis-report.json

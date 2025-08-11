@@ -431,6 +431,11 @@ npm test  # Optimized runner with thread pool (8-20 seconds)
 - **End-to-End Tests**: Full user workflow testing (Playwright) - See [E2E Testing](#end-to-end-e2e-testing) below
 - **Performance Tests**: Resource usage validation and memory leak detection
 
+**Test Environment Requirements (RR-186):**
+- **IndexedDB Polyfill**: `fake-indexeddb` library provides browser API compatibility for storage tests
+- **Environment Validation**: Smoke test validates polyfill setup before test execution
+- **Mock Infrastructure**: Comprehensive mocks for browser APIs and external services
+
 ### End-to-End (E2E) Testing
 
 **Comprehensive cross-browser E2E testing with Playwright (RR-184):**

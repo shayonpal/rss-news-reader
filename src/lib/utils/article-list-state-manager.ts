@@ -29,7 +29,7 @@ export interface ArticleUpdate {
   };
 }
 
-class ArticleListStateManager {
+export class ArticleListStateManager {
   private static instance: ArticleListStateManager;
   private readonly SESSION_KEY = 'rss_reader_list_state';
   private readonly EXPIRY_MINUTES = 30;

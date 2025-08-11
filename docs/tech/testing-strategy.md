@@ -27,6 +27,11 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 - Mock system supporting complex selector patterns
 - Custom matchers for enhanced assertions
 
+**Test Environment Requirements (RR-186):**
+- **IndexedDB Polyfill**: `fake-indexeddb` library provides browser API compatibility for Dexie and other storage-dependent tests
+- **Environment Validation**: Smoke test at `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment setup before test execution
+- **Mock Infrastructure**: Comprehensive mock helpers for browser APIs (localStorage, sessionStorage) and external services (Supabase)
+
 ### 2. Integration Testing
 
 **Framework**: Vitest with Supertest  
@@ -193,6 +198,30 @@ npx playwright test --ui
 - Mocked Inoreader API responses
 - Mocked Claude API interactions
 - Stubbed network requests in E2E tests
+
+**Browser API Compatibility (RR-186):**
+- **IndexedDB**: `fake-indexeddb` polyfill for database storage tests
+- **localStorage/sessionStorage**: Properly configured mocks with writable properties
+- **Environment Validation**: Automated smoke tests verify polyfill availability and API compatibility
+
+### Test Infrastructure (RR-186)
+
+**IndexedDB Polyfill Requirements:**
+- **Dependency**: `fake-indexeddb` v6.1.0 automatically polyfills IndexedDB for Node.js test environment
+- **Auto-import**: Added `import 'fake-indexeddb/auto';` to `src/test-setup.ts` for automatic polyfill activation
+- **Compatibility**: Resolves Dexie and other storage-dependent test failures in headless test environment
+- **Use Cases**: Essential for testing browser storage features, offline queues, and local data persistence
+
+**Mock System Improvements:**
+- **Storage Mocks**: Fixed localStorage/sessionStorage mocks with proper `writable: true, configurable: true` properties
+- **Supabase Mock Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
+- **Environment Validation**: Smoke test validates that all required polyfills and mocks are properly initialized
+- **Export Consistency**: Fixed missing exports in utility classes to ensure proper testability
+
+**Troubleshooting Common Issues:**
+- **IndexedDB Failures**: Ensure `fake-indexeddb` is imported before any Dexie usage in tests
+- **Storage Mock Crashes**: Use provided mock helpers instead of manual mock configuration
+- **Test Environment**: Run smoke test (`src/__tests__/unit/test-setup.smoke.test.ts`) to validate setup
 
 ### Test Fixtures
 
