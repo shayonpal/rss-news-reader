@@ -97,6 +97,17 @@ export default function LiquidGlassPOC() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Add custom styles for this POC */}
       <style jsx global>{`
+        /* 
+         * ENHANCED LIQUID GLASS UPDATES (2025-08-10):
+         * - Increased blur from 14px to 16px for deeper glass effect
+         * - Boosted saturation from 140% to 180% for richer colors
+         * - Updated backgrounds with better tinting (rgba(10,10,10) for dark)
+         * - Added layered box shadows for depth perception
+         * - Refined borders for more subtlety (0.04 light, 0.08 dark)
+         * - Updated all transitions to spring curve: cubic-bezier(0.34, 1.56, 0.64, 1)
+         * - Enhanced hover states with subtle lift effect
+         * - Improved pulse animation with scale transform
+         */
         /* CSS Custom Properties for standardized heights */
         :root {
           --glass-control-height: 44px;
@@ -119,7 +130,7 @@ export default function LiquidGlassPOC() {
           border-radius: var(--glass-control-border-radius);
           font-size: 0.875rem;
           font-weight: 500;
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
           background: transparent;
           cursor: pointer;
           transform: translateZ(0);
@@ -129,7 +140,7 @@ export default function LiquidGlassPOC() {
         }
         
         .glass-mark-all-read-btn:active:not(:disabled) {
-          transform: scale(0.95);
+          transform: scale(0.98);
         }
         
         /* Fixed width for desktop to prevent jarring */
@@ -139,14 +150,17 @@ export default function LiquidGlassPOC() {
           }
         }
         
-        /* Purple variations - FINALIZED: Light purple for light mode, muted for dark mode */
+        /* Purple variations - Enhanced with better hover states */
         .glass-mark-all-read-btn.purple-light {
           color: ${darkMode ? 'rgb(167, 139, 250)' : 'rgb(139, 92, 246)'};
           border: 1px solid ${darkMode ? 'rgba(167, 139, 250, 0.3)' : 'rgba(139, 92, 246, 0.3)'};
+          box-shadow: 0 4px 16px rgba(139, 92, 246, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         .glass-mark-all-read-btn.purple-light:hover:not(:disabled) {
-          background: ${darkMode ? 'rgba(167, 139, 250, 0.12)' : 'rgba(139, 92, 246, 0.1)'};
+          background: ${darkMode ? 'rgba(167, 139, 250, 0.18)' : 'rgba(139, 92, 246, 0.15)'};
           border-color: ${darkMode ? 'rgba(167, 139, 250, 0.5)' : 'rgba(139, 92, 246, 0.4)'};
+          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          transform: translateY(-1px);
         }
         
         .glass-mark-all-read-btn.purple-medium {
@@ -226,38 +240,43 @@ export default function LiquidGlassPOC() {
         @keyframes pulse {
           0%, 100% {
             opacity: 1;
+            transform: scale(1);
           }
           50% {
-            opacity: 0.8;
+            opacity: 0.85;
+            transform: scale(1.02);
           }
         }
 
-        /* Enhanced glass nav for POC */
+        /* Enhanced glass nav for POC - Updated with improved liquid glass */
         .glass-nav-poc {
-          backdrop-filter: blur(14px) saturate(140%);
-          -webkit-backdrop-filter: blur(14px) saturate(140%);
-          background: rgba(255, 255, 255, 0.16);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-          transition: all 200ms ease;
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          background: rgba(255, 255, 255, 0.18);
+          border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+          transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         .glass-nav-poc.is-scrolled {
-          background: rgba(255, 255, 255, 0.20);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          background: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
         
         .dark .glass-nav-poc {
-          background: rgba(0, 0, 0, 0.16);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          background: rgba(10, 10, 10, 0.18);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
         
         .dark .glass-nav-poc.is-scrolled {
-          background: rgba(0, 0, 0, 0.20);
+          background: rgba(10, 10, 10, 0.25);
+          box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
-        /* Segmented control collapse animation */
+        /* Segmented control collapse animation - Updated spring timing */
         .segmented-control-wrapper {
-          transition: all 320ms cubic-bezier(0.2, 0, 0.2, 1);
+          transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
           overflow: hidden;
         }
         
@@ -265,7 +284,7 @@ export default function LiquidGlassPOC() {
           width: 0;
           opacity: 0;
           margin-right: 0;
-          transform: scale(0.9);
+          transform: scale(0.95);
         }
         
       `}</style>
