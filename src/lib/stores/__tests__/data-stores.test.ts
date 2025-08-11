@@ -8,51 +8,19 @@ import { vi, beforeEach, afterEach, describe, test, expect } from "vitest";
 // Mock the database module first before any imports
 let mockDb: any;
 
-vi.mock("@/lib/db/database", async () => {
-  const actual = await vi.importActual("@/lib/db/database");
+vi.mock("@/lib/db/database", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/db/database")>();
+  
+  // Return a mock object where the 'db' export is a getter.
+  // This ensures that the test-specific database instance is used whenever 'db' is accessed.
   return {
     ...actual,
-    AppDatabase: actual.AppDatabase,
-    db: new Proxy({}, {
-      get(target, prop) {
-        // Access the variable through globalThis to avoid initialization issues
-        const mockedDb = (globalThis as any).mockDbInstance;
-        if (mockedDb && prop in mockedDb) {
-          const value = mockedDb[prop];
-          // If it's a function, bind it to the mockDb instance
-          if (typeof value === 'function') {
-            return value.bind(mockedDb);
-          }
-          return value;
-        }
-        // Provide default implementations for common database methods
-        if (prop === 'getVersion') {
-          return vi.fn().mockResolvedValue(1);
-        }
-        if (prop === 'recordCorruption') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        if (prop === 'isOpen') {
-          return vi.fn().mockReturnValue(true);
-        }
-        if (prop === 'open') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        if (prop === 'close') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        if (prop === 'initialize') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        if (prop === 'vacuum') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        if (prop === 'getStorageInfo') {
-          return vi.fn().mockResolvedValue({ counts: { articles: 0 } });
-        }
-        return undefined;
-      }
-    })
+    get db() {
+      const mockedDb = (globalThis as any).mockDbInstance;
+      // If a mock instance is available on globalThis, return it.
+      // Otherwise, fall back to the original db instance.
+      return mockedDb || actual.db;
+    },
   };
 });
 
@@ -178,12 +146,15 @@ describe("Data Stores Integration Tests", () => {
     // Create a new database instance with unique name for each test
     const dbName = generateUniqueDbName("data_stores");
     testDb = new AppDatabase(dbName);
-    mockDb = testDb; // Set the mock to use our test database
-    (globalThis as any).mockDbInstance = testDb; // Also set global reference
     
-    // Just open the database - no need to delete first since it's a unique name
+    // Open and initialize the database BEFORE setting it as the mock
+    // This ensures all tables are properly created
     await testDb.open();
     await testDb.initialize();
+    
+    // Now set the mock references AFTER the database is fully initialized
+    mockDb = testDb; // Set the mock to use our test database
+    (globalThis as any).mockDbInstance = testDb; // Also set global reference
   });
 
   afterEach(async () => {
