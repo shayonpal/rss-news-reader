@@ -18,18 +18,20 @@ Run these automated checks IN SEQUENCE on the `dev` branch:
 1. **Git Status Check**:
    - Verify on `dev` branch: `git branch --show-current`
    - Check for uncommitted changes: `git status --porcelain`
-   - If changes exist, list them and ask user to commit or stash
 
-2. **Code Quality Checks**:
-   - `npm run lint` - Fix any linting errors first
-   - `npm run type-check` - Check TypeScript compilation
-   - `npm run test` (if test script exists in package.json)
-   - `npm run pre-commit` (if available - combines multiple checks)
+2. **Infrastructure Health**:
+   - `npm run type-check` - TypeScript compilation
+   - `npm run lint` - Code quality
+   - `npm test` - Test suite (<20s target)
+   - `npm run pre-commit` - Combined checks
 
-3. **Build Validation**:
+3. **Performance & E2E Testing**:
+   - `node scripts/check-performance-regression.js`
+   - `npx playwright test` - Cross-browser validation
+
+4. **Build Validation**:
    - `NODE_ENV=production SKIP_ENV_VALIDATION=true npm run build --no-lint`
-   - Verify build completes without errors
-   - Check build output size and warnings
+   - Verify build size and check for warnings
 
 Stop immediately if any check fails. For each failure:
 - Show the specific error
@@ -58,16 +60,14 @@ Before specialist reviews, gather release information:
    - Draft release notes for CHANGELOG.md
 
 ## Phase 3: Specialist Reviews
-If automated checks pass, use these read-only agents IN PARALLEL for review:
-- `test-expert` - Check for bugs, test coverage, and feature completeness
-- `db-expert-readonly` - Review database schema, migrations, and performance
-- `devops-expert-readonly` - Verify sync pipeline integrity and monitoring
-- `ui-expert` - Check PWA functionality and iOS compatibility
+If automated checks pass, use these agents IN PARALLEL:
+- `test-expert` - Validate test coverage and quality
+- `db-expert-readonly` - Review schema and performance
+- `devops-expert-readonly` - Check deployment readiness
+- `ui-expert` - Verify PWA and cross-browser compatibility
+- `code-reviewer` - Final code quality assessment
 
-Each agent returns structured data on:
-1. Critical issues (release blockers)
-2. High-priority concerns (should fix before release)
-3. Low-priority suggestions (can be addressed later)
+Each returns structured data on critical/high/low priority issues.
 
 ## Phase 4: Release Decision & Creation
 Based on the consolidated report, present a release summary:
@@ -76,9 +76,12 @@ Based on the consolidated report, present a release summary:
 RELEASE READINESS REPORT
 ========================
 Version: current → proposed
-Quality: ✅ All checks passed / ❌ Issues found
-Security: ✅ No vulnerabilities / ⚠️ X vulnerabilities
-Reviews: X critical, Y high, Z low priority issues
+Infrastructure: ✅ Healthy
+Tests: ✅ Passing in Xs / ❌ X failures
+E2E: ✅ All browsers / ⚠️ Issues on [browsers]
+Performance: ✅ No regression / ❌ X% slower
+Security: ✅ Clean / ⚠️ X vulnerabilities
+Reviews: X critical, Y high, Z low issues
 
 Recommendation: PROCEED / HOLD / ABORT
 ```
@@ -130,8 +133,9 @@ Generate deployment checklist:
 3. **Post-Deployment**:
    - [ ] Verify app loads at http://100.96.166.53:3000/reader
    - [ ] Check health endpoints
-   - [ ] Test critical user flows
-   - [ ] Monitor logs for errors
+   - [ ] Run E2E smoke tests: `npx playwright test --grep @smoke`
+   - [ ] Monitor performance metrics
+   - [ ] Check PM2 logs for errors
 
 ## Success Criteria
 - ✅ All quality checks pass

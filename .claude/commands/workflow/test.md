@@ -9,7 +9,7 @@ Test the implementation for Linear issue $ARGUMENTS against its documented requi
 
 ## ⚠️ CRITICAL WARNING: Memory-Safe Test Execution Required
 
-**Previous test runner issues caused severe memory exhaustion requiring system reboots (RR-123).** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
+**Previous test runner issues caused severe memory exhaustion requiring system reboots.** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
 
 If you must run a test command that might hang the activity, ask me to run it on your behalf instead. Just give me the entire command to run, along with a way to pipe the output to a file so that you can read it easily. `tee` command will be preferred wherever possible.
 
@@ -146,11 +146,20 @@ If contracts don't match:
 - Determine if it's a test issue or implementation issue
 - Note: Implementation should match contracts, not vice versa
 
-### C. Integration Testing
-Test based on feature type:
-- **Sync**: Manual sync via API, check sync_metadata, verify bi-directional sync, monitor API usage
-- **Database**: Schema changes, migrations, query performance, RLS policies, transactions
-- **UI**: Development environment, responsive design, iOS PWA, offline functionality, accessibility
+### C. Integration & E2E Testing
+
+**Integration Tests**: Based on feature type:
+- **Sync**: Manual sync via API, check sync_metadata, verify bi-directional sync
+- **Database**: Schema changes, migrations, query performance, RLS policies
+- **UI**: Development environment, responsive design, offline functionality
+
+**E2E Tests**: For UI features, run Playwright:
+```bash
+# Run all browser profiles
+npx playwright test
+# Or specific: chrome, firefox, safari, iphone, ipad
+npx playwright test --project=iphone
+```
 
 ### D. Acceptance Criteria Testing
 Test each criterion from Linear issue. Document as:
@@ -188,11 +197,16 @@ This gives you expert assessment without losing visibility of test execution.
 
 ## 3. Performance Validation
 
-Measure: page load times, sync completion, memory usage, database queries, API efficiency.
+Check against baselines:
 ```bash
+# Test suite performance (target: <20s)
+node scripts/check-performance-regression.js
+
+# Runtime memory usage
 pm2 show rss-reader-dev | grep memory
-# Monitor for memory leaks during 5-minute active use
-# Run EXPLAIN on new database queries
+
+# Database query performance
+# Use db-expert-readonly to run EXPLAIN on new queries
 ```
 
 ## 4. Security Review
@@ -217,12 +231,12 @@ Severity: Critical (data loss, security, crashes) → High (major features) → 
 📋 Test Report for RR-XXX: [Title]
 
 📊 Test Summary:
-- Unit Tests: X/Y passed (Z% coverage)
+- Unit Tests: X/Y passed (execution time: Xs)
 - Test Contracts: ✅ Match | ⚠️ Deviations [list]
 - Integration: Tested [components]
+- E2E Tests: [browsers tested]
 - Acceptance Criteria: X/Y met
-- Edge Cases: X/Y handled
-- Regression: ✅ Pass | ❌ Issues found
+- Performance: ✅ Within baseline | ❌ Regression detected
 
 ✅ Working:
 - [List verified features]

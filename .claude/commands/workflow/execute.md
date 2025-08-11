@@ -43,6 +43,13 @@ Minor work that doesn't require Linear backing includes:
 
 ## 1. Pre-Implementation Verification
 
+### Infrastructure Health
+```bash
+# Quick health check before coding
+npm run type-check && npm run lint
+```
+If fails → Use `infra-expert` for emergency fixes
+
 ### Verify Gates Are Passed
 Check that Linear issue has:
 1. **Status**: Must be "In Progress"
@@ -52,7 +59,6 @@ Check that Linear issue has:
 
 If any gate fails:
 - 🛑 **STOP** - Do not write any files
-- Explain what's missing
 - Suggest next steps (e.g., "Run /analyze RR-XXX first")
 
 ### Add Implementation Start Comment
@@ -117,14 +123,15 @@ Ensure test-expert has written tests that:
 ### Step 2: Implementation
 1. Implement the solution to make tests pass
 2. Follow the implementation plan from Linear comments
-3. Commit frequently with descriptive messages referencing RR-XXX
+3. Track performance: Keep test execution under 20s baseline
 4. Update Linear with progress if implementation takes multiple sessions
 
 ### Step 3: Test & Refine
 1. Run tests continuously during development
 2. Ensure all tests pass (green phase)
-3. Refactor code while keeping tests green
-4. Add any additional tests discovered during implementation
+3. Check performance: `node scripts/check-performance-regression.js`
+4. For UI changes: Run Playwright tests `npx playwright test --project=chrome`
+5. Refactor code while keeping tests green
 
 ## 3. Specialist Reviews
 
@@ -142,11 +149,12 @@ Each review should check:
 ## 4. Quality Checks
 
 Run comprehensive checks:
-1. Full test suite: `npm test`
+1. Full test suite: `npm test` (should complete in <20s)
 2. Type check: `npm run type-check`
 3. Linter: `npm run lint`
 4. Build verification: `npm run build`
-5. Manual testing in dev environment
+5. E2E tests (if UI): `npx playwright test`
+6. Performance check: `node scripts/check-performance-regression.js`
 
 ## 5. Update Linear
 

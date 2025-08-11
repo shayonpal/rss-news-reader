@@ -18,21 +18,20 @@ Check $ARGUMENTS:
 
 ## 2. Infrastructure Health Check (MANDATORY)
 
-**Before any feature analysis, validate infrastructure:**
+**Validate testing infrastructure before analysis:**
 
 ```bash
-# Run these checks in parallel - ALL must pass to continue
-1. npm run type-check (must exit 0)
-2. npx vitest run --no-coverage --reporter=verbose src/__tests__/unit/rr-176-auto-parse-logic.test.ts (test discovery validation)
-3. Check test-setup.ts, tsconfig.json for configuration issues
+# Critical checks - ALL must pass
+npm run type-check  # TypeScript compilation
+npm run lint  # Code quality
+npx vitest run --no-coverage src/__tests__/unit/rr-176-auto-parse-logic.test.ts  # Test discovery
 ```
 
-**If ANY infrastructure check fails:**
-- 🛑 STOP analysis immediately
-- Use infra-expert agent or escalate to user
-- DO NOT proceed with feature analysis on broken foundation
+**If ANY check fails:**
+- 🛑 STOP - Use `infra-expert` agent for emergency fixes
+- DO NOT proceed on broken foundation
 
-**If all checks pass:** ✅ Continue to Context Gathering
+**If all pass:** ✅ Continue to Context Gathering
 
 ## 3. Parallel Context Gathering
 
@@ -84,7 +83,7 @@ Use `linear-expert` to:
 
 ## 5. Deep Technical Analysis
 
-Based on gathered context, ultrathink and analyze:
+Based on gathered context, analyze:
 
 ### Implementation Requirements:
 - Can this use existing API endpoints? (prefer extending over creating new)
@@ -93,15 +92,13 @@ Based on gathered context, ultrathink and analyze:
 - Which files will need modification?
 
 ### Technical Validation:
-- Use `web-researcher` agent to research if proposed solution will work
-- Verify technical feasibility with external documentation
-- Check for potential gotchas or limitations
+- Use `web-researcher` agent to verify feasibility
+- Check performance baselines: Will this impact 8-20s test execution?
+- For UI features: Plan E2E tests using Playwright
 
-### Impact Analysis:
-- Which existing tests need updating?
-- Which documentation needs updating?
-- Performance implications?
-- Security considerations?
+### Code Quality Review:
+- Use `code-reviewer` agent to validate proposed approach
+- Check for security implications and best practices
 
 ## 6. Pragmatic Assessment
 
@@ -147,10 +144,11 @@ Create detailed strategy based on issue type:
 
 ⚠️ Considerations:
 - [Technical constraint or risk]
-- [Dependencies or blockers]
+- Performance impact on test suite (target: <20s)
 
 📝 Tests Required:
-- [Specific test scenarios]
+- Unit tests: [scenarios]
+- E2E tests: [Playwright scenarios if UI]
 
 📚 Documentation Updates:
 - [Files needing updates]

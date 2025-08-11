@@ -16,6 +16,15 @@ Parse $ARGUMENTS for component specification:
 
 ## Required Checks
 
+### 0. Testing Infrastructure Health
+Quick validation of test infrastructure:
+```bash
+npm run type-check  # Should exit 0
+npm run lint  # Should pass
+npx vitest run --no-coverage src/__tests__/unit/rr-176-auto-parse-logic.test.ts  # Test discovery
+```
+If any fail → Infrastructure issue detected, use `infra-expert` for fixes
+
 ### 1. Service Status
 Use `devops-expert-readonly` to check PM2 service status:
 - Verify all RSS reader services are running
@@ -62,6 +71,16 @@ Use `devops-expert-readonly` to analyze:
 - Sync log error patterns in logs/sync-cron.jsonl
 - Service restart frequencies
 - Resource constraint warnings
+
+### 8. Performance Metrics
+Check test suite and runtime performance:
+```bash
+# Test execution baseline
+npm test  # Should complete in <20s
+
+# Performance regression check
+node scripts/check-performance-regression.js
+```
 
 ## How to Report
 

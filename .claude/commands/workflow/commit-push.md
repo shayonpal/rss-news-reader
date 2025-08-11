@@ -50,16 +50,19 @@ git diff --cached
 # Run pre-commit checks (REQUIRED)
 npm run pre-commit
 
-# Verify no debug code or console.logs
-git diff --cached | grep -E "console\.(log|debug|warn|error)" || echo "✅ No console statements"
+# Verify tests pass (optimized runner)
+npm test  # Should complete in <20s
 
-# Check for sensitive data
-git diff --cached | grep -E "(API_KEY|SECRET|TOKEN|PASSWORD)" || echo "✅ No exposed secrets"
+# Check for performance regression
+node scripts/check-performance-regression.js
+
+# Verify no debug code
+git diff --cached | grep -E "console\.(log|debug|warn|error)" || echo "✅ No console statements"
 ```
 
 If any checks fail:
 - 🛑 STOP - Fix issues before committing
-- Document what needs fixing
+- Use appropriate agent for fixes
 
 ## Step 2: Documentation Verification
 
@@ -152,19 +155,22 @@ Confirm with git-expert response:
 - Message: [commit message]
 - Files: X changed, Y insertions, Z deletions
 
+✅ Quality Checks:
+- Tests: Passing (execution: Xs)
+- Performance: No regression
+- Type-check: Clean
+
 📚 Documentation:
 - CHANGELOG: ✅ Updated
-- Other Docs: [list if updated]
+- Memory: ✅ Updated
 
 🔗 Linear:
 - Issue: RR-XXX
 - Status: [current status]
-- Ready for: [next step]
 
 🚀 Next Steps:
-- [Manual verification if needed]
-- [Deployment if ready]
-- [Follow-up tasks]
+- CI/CD pipeline will validate on push
+- [Deployment readiness]
 ```
 
 ## Important Notes
