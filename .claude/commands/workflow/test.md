@@ -9,14 +9,16 @@ Test the implementation for Linear issue $ARGUMENTS against its documented requi
 
 ## ⚠️ CRITICAL WARNING: Memory-Safe Test Execution Required
 
-**Previous test runner issues caused severe memory exhaustion requiring system reboots.** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
+**Previous test runner issues caused severe memory exhaustion requiring system reboots.** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands.
 
 If you must run a test command that might hang the activity, ask me to run it on your behalf instead. Just give me the entire command to run, along with a way to pipe the output to a file so that you can read it easily. `tee` command will be preferred wherever possible.
 
 ## Step 0: Linear Validation & Context Recovery
 
 ### Verify Issue Status
+
 Use `linear-expert` agent to:
+
 1. Verify issue exists and is in "In Review" status
 2. If not in review:
    - If "In Progress": Suggest completing implementation first
@@ -31,6 +33,7 @@ Use `linear-expert` agent to:
    - Any spec clarifications in comments
 
 ### Rebuild Context (Since Cleared)
+
 Gather context to understand what was implemented:
 
 1. **Database Context** (db-expert-readonly):
@@ -52,20 +55,25 @@ Gather context to understand what was implemented:
    - Identify all files changed
 
 ### Pre-Test Verification
+
 Check for:
+
 1. **Implementation comment**: Look for implementation summary
 2. **Test Contracts**: Verify contracts are documented (from /analyze)
 3. **Test documentation**: Verify test cases are documented
 4. **Files changed**: Note which files were modified
 
 If missing critical information:
+
 - 🛑 STOP and explain what's needed
 - Suggest running `/execute` if implementation incomplete
 
 ## 1. Environment Preparation & Test Planning
 
 ### Create Test Checklist
+
 Use TodoWrite to track testing progress:
+
 ```
 - [ ] Environment verification
 - [ ] Unit tests execution
@@ -80,11 +88,13 @@ Use TodoWrite to track testing progress:
 ```
 
 ### Verify Testing Environment
+
 ```bash
 pm2 status | grep -E "rss-reader|sync"
 curl -s http://localhost:3000/api/health/app | jq .status
 curl -s http://localhost:3000/api/health/db | jq .database
 ```
+
 Clear test artifacts and ensure clean state for testing.
 
 **Note about Integration Test Setup**: Integration tests now properly load environment variables from .env.test and use the test-server.ts setup for integration tests with real API endpoints.
@@ -94,6 +104,7 @@ Clear test artifacts and ensure clean state for testing.
 ### A. Unit Test Verification
 
 ⚠️ **CRITICAL: Use Memory-Safe Test Execution**
+
 ```bash
 # SAFE - Uses safe-test-runner.sh with resource limits
 npm test
@@ -109,8 +120,9 @@ npm test
 ```
 
 **Resource Limits Enforced:**
+
 - Max 1 concurrent test execution
-- Max 2 vitest worker processes  
+- Max 2 vitest worker processes
 - 120-second timeout per test
 - Automatic cleanup on exit
 
@@ -119,9 +131,11 @@ Document: total tests, pass/fail counts, coverage % (if run), failing test detai
 **Note**: Integration tests should use `vitest.integration.config.ts` and fetch is no longer mocked in integration tests.
 
 ### B. Test Contract Validation
+
 **Validate implementation matches the Test Contracts from /analyze:**
 
 Compare actual implementation against documented contracts:
+
 ```
 📝 Test Contract Validation:
 
@@ -142,6 +156,7 @@ State Transitions:
 ```
 
 If contracts don't match:
+
 - Document the deviation
 - Determine if it's a test issue or implementation issue
 - Note: Implementation should match contracts, not vice versa
@@ -149,11 +164,13 @@ If contracts don't match:
 ### C. Integration & E2E Testing
 
 **Integration Tests**: Based on feature type:
+
 - **Sync**: Manual sync via API, check sync_metadata, verify bi-directional sync
 - **Database**: Schema changes, migrations, query performance, RLS policies
 - **UI**: Development environment, responsive design, offline functionality
 
 **E2E Tests**: For UI features, run Playwright:
+
 ```bash
 # Run all browser profiles
 npx playwright test
@@ -162,13 +179,16 @@ npx playwright test --project=iphone
 ```
 
 ### D. Acceptance Criteria Testing
+
 Test each criterion from Linear issue. Document as:
+
 ```
 ✅ Criterion: [Description] - PASS - [Evidence]
 ❌ Criterion: [Description] - FAIL - [Issue + Log/Screenshot]
 ```
 
 ### E. Edge Case & Regression Testing
+
 Test edge cases: boundary conditions, error scenarios, concurrent operations, network failures, memory constraints.
 Verify core functionality: article reading, sync pipeline, OAuth, performance, critical user paths.
 
@@ -177,6 +197,7 @@ Verify core functionality: article reading, sync pipeline, OAuth, performance, c
 **When you want a second opinion on implementation quality:**
 
 Use `test-expert` agent for implementation review (not test execution):
+
 ```
 Task: Review the implementation for RR-XXX
 Context:
@@ -198,6 +219,7 @@ This gives you expert assessment without losing visibility of test execution.
 ## 3. Performance Validation
 
 Check against baselines:
+
 ```bash
 # Test suite performance (target: <20s)
 node scripts/check-performance-regression.js
@@ -216,6 +238,7 @@ Verify: no exposed secrets, proper error handling, input validation, XSS/SQL inj
 ## 5. Bug Documentation
 
 Document bugs as:
+
 ```
 🐛 [Title] - Severity: Critical|High|Medium|Low
 Description: [What's wrong]
@@ -223,6 +246,7 @@ Reproduce: [Steps] → Expected vs Actual
 Evidence: [Screenshot/Logs/Test output]
 Fix: [If obvious]
 ```
+
 Severity: Critical (data loss, security, crashes) → High (major features) → Medium (minor issues) → Low (cosmetic).
 
 ## 6. Test Report Generation
@@ -285,35 +309,49 @@ Ready for manual verification and issue closure.
 ```
 
 ### Wait for Manual Verification
+
 Wait for manual testing, address concerns, make adjustments if needed.
 
 ### Update Documentation (After Manual Verification)
+
 Update relevant project documentation:
-- **API Documentation**: New/changed endpoints with examples and schemas  
+
+- **API Documentation**: New/changed endpoints with examples and schemas
 - **Configuration**: Environment variables, PM2 services, monitoring, OAuth
 - **Development**: Build scripts, testing requirements, troubleshooting
 
 #### Update CHANGELOG.md
+
 ```markdown
 ## [Unreleased]
+
 ### Added
+
 - [RR-XXX features]
-### Changed  
+
+### Changed
+
 - [RR-XXX modifications]
+
 ### Fixed
+
 - [Bugs fixed]
+
 ### Technical
+
 - [Internal improvements]
 ```
+
 Include: date, Linear reference, user impact, breaking changes (⚠️), migration steps.
 
 ### Close Linear Issue using `linear-expert` agent
+
 After confirmation: Change status to "Done", add final comment with timestamp, ensure linked issues resolved, confirm deployment readiness, note follow-ups.
 
 ## Important Notes
 
 - Never close without manual verification
-- Iterate until ALL bugs fixed  
+- Iterate until ALL bugs fixed
 - Test after every fix to prevent regressions
 - Update documentation and CHANGELOG
 - Fix new issues discovered during testing

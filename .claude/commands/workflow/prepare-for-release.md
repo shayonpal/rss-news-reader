@@ -3,7 +3,9 @@
 I need you to prepare a production release from `dev` to `main` branch, then deploy it as a separate step.
 
 ## Pre-Flight Checklist
+
 Before starting, ensure:
+
 - [ ] You're on `dev` branch
 - [ ] All feature branches are merged
 - [ ] Local dev is up to date: `git pull origin dev`
@@ -13,6 +15,7 @@ Before starting, ensure:
 - [ ] Current production is stable
 
 ## Phase 1: Pre-Release Quality Checks
+
 Run these automated checks IN SEQUENCE on the `dev` branch:
 
 1. **Git Status Check**:
@@ -34,11 +37,13 @@ Run these automated checks IN SEQUENCE on the `dev` branch:
    - Verify build size and check for warnings
 
 Stop immediately if any check fails. For each failure:
+
 - Show the specific error
 - Suggest fixes (e.g., "Run `npm run lint:fix` for auto-fixable issues")
 - Ask if user wants you to fix it automatically
 
 ## Phase 2: Pre-Release Analysis
+
 Before specialist reviews, gather release information:
 
 1. **Version Determination**:
@@ -60,7 +65,9 @@ Before specialist reviews, gather release information:
    - Draft release notes for CHANGELOG.md
 
 ## Phase 3: Specialist Reviews
+
 If automated checks pass, use these agents IN PARALLEL:
+
 - `test-expert` - Validate test coverage and quality
 - `db-expert-readonly` - Review schema and performance
 - `devops-expert-readonly` - Check deployment readiness
@@ -70,6 +77,7 @@ If automated checks pass, use these agents IN PARALLEL:
 Each returns structured data on critical/high/low priority issues.
 
 ## Phase 4: Release Decision & Creation
+
 Based on the consolidated report, present a release summary:
 
 ```
@@ -87,6 +95,7 @@ Recommendation: PROCEED / HOLD / ABORT
 ```
 
 If user approves, use `release-manager` agent to coordinate:
+
 1. Create release branch: `git checkout -b release/vX.Y.Z`
 2. Update version in package.json
 3. Update CHANGELOG.md with finalized release notes
@@ -98,6 +107,7 @@ If user approves, use `release-manager` agent to coordinate:
 9. Clean up: `git branch -d release/vX.Y.Z`
 
 ## Phase 5: Post-Release Verification
+
 After the release is created, verify:
 
 1. **Git State**:
@@ -116,6 +126,7 @@ After the release is created, verify:
    - README.md version badge is updated (if applicable)
 
 ## Phase 6: Deployment Preparation
+
 Generate deployment checklist:
 
 1. **Pre-Deployment**:
@@ -138,6 +149,7 @@ Generate deployment checklist:
    - [ ] Check PM2 logs for errors
 
 ## Success Criteria
+
 - ✅ All quality checks pass
 - ✅ No critical issues from reviews
 - ✅ Clean merge to main with proper tag
@@ -146,7 +158,9 @@ Generate deployment checklist:
 - ✅ Deployment checklist ready
 
 ## Rollback Plan
+
 If issues arise post-release:
+
 ```bash
 # Quick rollback to previous release
 git checkout main
@@ -157,26 +171,31 @@ git push --force-with-lease origin main
 ## Common Issues & Solutions
 
 ### Linting Errors
+
 - **Auto-fix**: Try `npm run lint:fix` first
 - **Manual fixes**: Focus on production code first, tests can be addressed later
 - **Type errors in tests**: Can use `--no-lint` flag for production build if needed
 
 ### Build Failures
+
 - **ENV validation**: Use `SKIP_ENV_VALIDATION=true` for local builds
 - **Memory issues**: `NODE_OPTIONS="--max-old-space-size=4096" npm run build`
 - **Module errors**: Clear node_modules and reinstall: `rm -rf node_modules && npm install`
 
 ### Git Conflicts
+
 - **Dev-Main divergence**: Rebase dev on main first: `git rebase main`
 - **Tag conflicts**: Use `git tag -d <tag>` locally, then recreate
 - **Protected branch**: Ensure you have push permissions to main
 
 ### PM2 Issues
+
 - **Services not starting**: Check logs with `pm2 logs`
 - **Port conflicts**: Ensure port 3000 is free: `lsof -i :3000`
 - **Ecosystem file**: Validate with `pm2 start ecosystem.config.js --dry-run`
 
 ## Context
+
 - Dev branch: Active development
 - Main branch: Release-ready code
 - Versioning: Semantic (vX.Y.Z)

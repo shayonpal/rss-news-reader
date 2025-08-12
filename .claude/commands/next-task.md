@@ -24,9 +24,9 @@ Use `linear-expert` to get:
 - Look into all the incomplete issues, sub-issues, and comments
 - Analyze if they are still valid.
 - Look for:
-   - Potential duplicates
-   - Potential refactoring opportunities
-   - Potential order of execution
+  - Potential duplicates
+  - Potential refactoring opportunities
+  - Potential order of execution
 - Ignore priorities mentioned in the issues themselves for this analysis.
 
 ### Task Selection Criteria

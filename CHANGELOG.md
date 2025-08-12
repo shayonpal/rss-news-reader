@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
+- **[RR-102] API Base Path Smart Redirects for Development Environment** (Monday, August 12, 2025 at 8:18 PM)
+  - **Development Workflow Enhancement**: Added automatic 307 redirects in development environment for API calls missing the `/reader` prefix
+  - **Smart Redirect System**: Configured Next.js redirects in `next.config.mjs` to handle missing base path - both `/api/health/app` and `/reader/api/health/app` now work in development
+  - **HTTP Method Preservation**: Redirects preserve original HTTP methods (GET, POST, PUT, DELETE, PATCH) ensuring API functionality remains intact
+  - **Catch-all Error Handling**: Created `/api/[...catch]/route.ts` providing helpful error messages for malformed API requests with debugging information
+  - **Production Safety**: Redirects only active in development environment (`NODE_ENV !== 'production'`) - production continues to require proper `/reader` prefix
+  - **Developer Experience**: Eliminates 404 errors during development and testing when base path is accidentally omitted from API calls
+  - **Testing Infrastructure Support**: Improves reliability of test suites by handling path variations automatically in development
+  - **Technical Implementation**:
+    - Added redirect rules for all `/api/*` paths to `/reader/api/*` in development
+    - Implemented status code 307 (Temporary Redirect) to preserve request methods and body
+    - Created comprehensive error handler with request details for debugging
+  - **Impact**: Significantly improved development workflow by removing common 404 errors while maintaining production URL structure requirements
+  - **Files Modified**: `next.config.mjs`, `src/app/api/[...catch]/route.ts`
+  - **Status**: ✅ COMPLETED - Development environment now handles API paths gracefully while maintaining production compatibility
+
+### Fixed
+
 - **[RR-187] Database Lifecycle Tests Failing in CI Due to Test Isolation Issues** (Monday, August 11, 2025 at 5:01 PM)
   - **CI/CD Pipeline Blocker Resolved**: Fixed database lifecycle tests that were failing in CI with `DatabaseClosedError` due to parallel test execution race conditions
   - **Test Isolation Fix**: Implemented test-specific cleanup system where each test only manages its own database instances, preventing cross-test pollution
@@ -24,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Status**: ✅ COMPLETED - CI pipeline functional, database test isolation implemented, all 32 tests passing
 
 ### Fixed
+
 - **[HOTFIX] Article Header Animation Jitter and Visibility** (Monday, August 11, 2025 at 5:05 PM)
   - **Animation Smoothing**: Fixed jerky animation by switching from direct style manipulation to a CSS class (`is-hidden`) toggle, allowing the browser to handle transitions smoothly.
   - **Visibility Correction**: Ensured the header slides completely out of view by accounting for its initial `24px` top offset in the CSS transform (`translateY(calc(-100% - 24px))`).
@@ -32,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Status**: ✅ COMPLETED - Header animation is now smooth and visually correct.
 
 ### Fixed
+
 - **[RR-189] Critical Bug Fix in useAutoParseContent Hook - React Patterns Violations Resolved** (Monday, August 11, 2025 at 4:37 PM)
   - **React Hook Patterns Fix**: Wrapped `needsParsing` and `triggerParse` functions in `useCallback` to prevent stale closures and unnecessary re-renders
   - **State Management Fix**: Added critical `isParsing` state reset when article changes, preventing stuck loading states that caused poor UX
@@ -42,11 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Memory Optimization**: Used `useRef` for parsing state tracking to prevent circular dependencies and reduce re-renders
   - **Technical Impact**:
     - Eliminated unnecessary API calls for articles that already have full content
-    - Fixed race conditions that could display wrong content when switching articles quickly  
+    - Fixed race conditions that could display wrong content when switching articles quickly
     - Resolved memory leaks from uncancelled fetch requests
     - Improved from complete test failure (memory overflow) to 9/14 tests passing (64% success rate)
     - Remaining test failures are test isolation issues, not implementation bugs
-  - **Test Results**: 
+  - **Test Results**:
     - Core functionality working correctly (partial feed detection, short content triggers, truncation detection)
     - React patterns properly implemented (useCallback, proper dependencies, cleanup)
     - Performance optimized (no memory overflows, reduced re-renders)
@@ -54,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Status**: ✅ COMPLETED - React patterns violations resolved, state management fixed, race conditions eliminated. Production-ready implementation.
 
 ### Fixed
+
 - **[RR-188] UI Store Collapse State Isolation for Parallel Test Execution - CI/CD Pipeline Blocker Resolved** (Monday, August 11, 2025 at 4:25 PM)
   - **Critical CI/CD Fix**: Resolved UI store collapse state persisting across tests in CI environment causing 4/6 test failures and pipeline blocking
   - **Store Isolation Infrastructure**: Created `src/lib/stores/__tests__/test-utils.ts` providing isolated Zustand stores with unique storage keys for parallel test execution
@@ -86,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Status**: ✅ COMPLETED - Test infrastructure enhanced with browser API polyfills and improved mock system for reliable test execution
 
 ### Added
+
 - **[RR-180] iOS 26 Liquid Glass Morphing Animation with Critical iOS PWA Touch Optimization** (Monday, August 11, 2025 at 2:44 PM)
   - **Critical iOS PWA Touch Fixes**: Resolved critical touch interaction issues that prevented buttons from being tappable on iOS PWA installations
   - **Root Cause Resolution**: Fixed swipe gesture handlers in article-detail.tsx that were intercepting touch events, causing buttons to appear non-responsive
@@ -137,13 +160,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Performance Optimized**: Parallel test execution completing in 8-20 seconds with thread pool optimization and test artifacts (screenshots, videos, traces)
   - **Touch Target Compliance**: Automated validation detecting 4 buttons below iOS guidelines and multiple elements with insufficient spacing
   - **Network Integration**: Full integration with Tailscale network (100.96.166.53) requiring no authentication for realistic production testing
-  - **Test Files Created**: 
+  - **Test Files Created**:
     - `src/__tests__/e2e/rr-184-core-user-journeys.spec.ts` - 5 comprehensive user workflow scenarios
     - `src/__tests__/e2e/iphone-button-tappability.spec.ts` - 10 iPhone-specific touch interaction tests
     - `playwright.config.ts` - Complete browser configuration with mobile device profiles
-  - **Browser Support**: 
+  - **Browser Support**:
     - Desktop: Chromium, Firefox, Safari (WebKit)
-    - Mobile: iPhone 14 (Safari), iPhone 14 Pro Max (Safari)  
+    - Mobile: iPhone 14 (Safari), iPhone 14 Pro Max (Safari)
     - Tablet: iPad Gen 7 (Safari), iPad Pro 11" (Safari)
     - Android: Pixel 5 (Chrome)
   - **Test Scenarios Covered**:
@@ -157,6 +180,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Complete E2E testing infrastructure enabling comprehensive cross-browser and mobile PWA validation with iOS-specific touch interaction compliance testing
 
 ### Fixed
+
 - **[RR-145] Complete Testing Infrastructure Crisis Resolution and TypeScript Strictness Management** (Monday, August 11, 2025 at 1:13 AM)
   - **Critical Infrastructure Restoration**: Successfully resolved complete testing infrastructure failure that was preventing 118/120 test suites from compiling and executing
   - **Root Cause Resolution**: Fixed fundamental TypeScript JSX configuration issues by updating `tsconfig.json` with `jsx: "react-jsx"` and `allowSyntheticDefaultImports: true`
@@ -184,7 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **NODE_ENV Fix**: Resolved critical NODE_ENV read-only property violation using Object.defineProperty approach
   - **Mock Cleanup Enhancement**: Implemented automatic mock cleanup in test setup to prevent state contamination between tests
   - **CI/CD Ready**: Test suite now completes well under 10-minute target, enabling reliable continuous integration
-  - **Files Modified**: 
+  - **Files Modified**:
     - `vitest.config.ts` - Thread pool optimization and performance tuning
     - `src/test-setup.ts` - Fixed NODE_ENV and added global cleanup hooks
     - `scripts/optimized-test-runner.sh` - New optimized test execution with monitoring
@@ -198,6 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Status**: ✅ COMPLETED - Test infrastructure now optimized for development and CI/CD integration
 
 ### Removed
+
 - **feat(cleanup): remove auto-cleanup of fetched full content [RR-168]** (Sunday, August 10, 2025 at 8:43 PM)
   - Removed deprecated 3 AM auto-cleanup job for fetched full content
   - Deleted `scripts/cleanup-parsed-content.js` script file
@@ -208,17 +233,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full content is now preserved indefinitely within existing articles
 
 ### Fixed
+
 - **[RR-182] React Testing Race Conditions and Mock Reliability Improvements** (Sunday, August 11, 2025 at 11:08 PM)
   - **100% Test Reliability Achieved**: Fixed critical React race conditions in rr-176-auto-parse-logic.test.ts
   - **React State Management**: Added proper `act()` wrappers around async state updates to eliminate race condition warnings
   - **Mock Reliability Enhancement**: Fixed fetch timing inconsistencies that caused "expected 1 call, got 3" errors
   - **Article Mock Enhancement**: Added missing `parseAttempts` property to article mocks enabling shouldShowRetry logic testing
   - **Mock Cleanup**: Implemented `vi.clearAllMocks()` in beforeEach hooks for consistent test state between runs
-  - **Test Results**: 
+  - **Test Results**:
     - ✅ 5 consecutive test runs: 14/14 tests passing (100% success rate)
     - ✅ Eliminated all React race condition warnings
     - ✅ Achieved consistent, reliable test execution without flaky failures
-  - **Technical Impact**: 
+  - **Technical Impact**:
     - Fixed systematic race conditions in React Testing Library test execution
     - Eliminated mock state contamination between test cases
     - Enhanced test reliability for future React component testing
@@ -230,20 +256,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Implemented proper Vitest expect.extend() functionality with error messaging
     - Resolved "Property 'toBeOneOf' does not exist" TypeScript errors
     - Added utils.printReceived/printExpected for detailed test failure output
-  - **Test Infrastructure Repair**: 
+  - **Test Infrastructure Repair**:
     - Fixed NODE_ENV read-only property violation using Object.defineProperty approach
     - Completed IntersectionObserver mock with missing properties (root, rootMargin, thresholds, takeRecords)
     - Resolved health check mock type mismatches in src/test-utils/health-check-mocks.ts
-  - **TypeScript Configuration**: 
+  - **TypeScript Configuration**:
     - Updated tsconfig.json to exclude test files from strict compilation
     - Added react-jsx compilation and noImplicitAny: false for test compatibility
     - Created missing src/types/sync.ts with proper SyncResult interfaces
-  - **Pre-commit Validation**: 
+  - **Pre-commit Validation**:
     - Reduced TypeScript compilation errors from 100+ to manageable levels
     - Enabled development workflow to proceed without infrastructure blocking
-  - **Impact**: 
+  - **Impact**:
     - ✅ Individual test execution now works (78% success rate achieved)
-    - ✅ Custom matchers functional (toBeOneOf working properly)  
+    - ✅ Custom matchers functional (toBeOneOf working properly)
     - ✅ Test discovery operational (14 tests found and executed)
     - ✅ Development workflow restored for AI-assisted testing
     - ⚠️ Pre-commit validation improved but still requires legacy test cleanup
@@ -270,6 +296,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Resolves issue where sync times showed cached "18 hours ago" instead of fresh data
 
 ### Added
+
 - **[RR-180] Enhanced Dropdown POC with iOS 26 Liquid Glass Morphing Animation** (Sunday, August 11, 2025 at 8:20 PM)
   - Created advanced proof-of-concept for dropdown component with iOS 26-inspired liquid glass morphing animation
   - Implemented smooth morphing transition where trigger button transforms into expanded dropdown content
@@ -279,6 +306,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Located at `/reader/pocs/enhanced-dropdown` for development team evaluation and reference
 
 ### Documentation Updated
+
 - **Sunday, August 10, 2025 at 6:35 PM**: Updated documentation to reflect RR-177 cache header implementation
   - Enhanced `/api/sync/last-sync` endpoint documentation with cache prevention headers in `docs/api/server-endpoints.md`
   - Added cache header note to sync endpoints quick reference in `docs/api/README.md`
@@ -300,7 +328,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated implementation status to include RR-176 button synchronization and toast notification system
 - **Sunday, August 10, 2025 at 5:41 PM**: Created comprehensive release notes for RR-176 auto-parse content regression fix
   - Created `docs/release-notes/RELEASE_NOTES_RR-176.md` documenting all 6 major implementation areas of the critical bug fix
-  - Documented 94% reduction in unnecessary auto-fetch operations by targeting only partial feeds (4/66 feeds)  
+  - Documented 94% reduction in unnecessary auto-fetch operations by targeting only partial feeds (4/66 feeds)
   - Covered database consolidation from `is_partial_feed` to `is_partial_content` field with migration details
   - Documented enhanced button state synchronization, unified content state management, and UI improvements
   - Added comprehensive coverage of toast notification system with color-coded feedback (amber/green/red)
@@ -327,6 +355,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clarified that this boolean field indicates whether a feed typically provides partial content requiring full content fetching
 
 ### UI/UX – Liquid Glass follow‑ups
+
 - Article detail view now uses a headerless, floating control scheme
   - Circular glass back button + clustered glass action toolbar (icon+label on desktop, icon‑only on mobile)
   - Toolbar is constrained to article content width and is safe‑area aware in PWA
@@ -340,6 +369,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Introduced `.top-safe-48` (48px + safe area) and applied to floating controls for reliable tap targets across devices
 
 ### Fixed
+
 - **[RR-176] Critical Auto-Parse Regression and Button Synchronization Fix**
   - Fixed critical bug where ALL articles triggered auto-parse instead of only partial feeds (94% reduction in unnecessary API calls)
   - Corrected field reference bug: `feed.isPartialFeed` (never populated) → `feed.isPartialContent` (properly maintained)
@@ -357,6 +387,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sidebar now reflects real-time usage and correct last sync time after manual/auto sync
 
 ### UI/UX – Liquid Glass adoption (iOS 26-inspired)
+
 - Implemented clear liquid-glass navigation panes with scroll-aware contrast
   - Top headers: `src/components/layout/header.tsx`, article list header via `src/app/page.tsx`, and article detail header `src/components/articles/article-detail.tsx`
   - Tokens and utilities added to `src/app/globals.css` (`--glass-blur`, `--glass-nav-bg`, `--glass-nav-bg-scrolled`, `.glass-nav`)
@@ -373,17 +404,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed duplicate “feeds total” from the bottom section (already shown in header)
 
 ### Changed
+
 - Tuned glass to be clearer/less frosty across themes (reduced blur/tint, softer shadows)
 - Removed counts under the main header title (information already available elsewhere)
 - Back button aligned to content width on desktop; increased top offset for better spacing
 - Article detail footer spacing refined for readability
 
 ### Fixed
+
 - Corrected selected-pill alignment on desktop by switching to grid-based indicator sizing
 - Addressed compact pill touch targets to meet 44px minimum while keeping header fit
 - Ensured header and footer glass panes deepen slightly on scroll for legibility
 
 ### Security
+
 - **[RR-147] Fix database security vulnerabilities and remove unused indexes** (Saturday, August 9, 2025 at 1:14 PM)
   - **Function Security**: Fixed 10 functions with mutable search_path vulnerabilities by adding explicit `SET search_path = public`
   - **Functions Secured**: `associate_articles_with_folder_tags`, `check_author_anomalies`, `cleanup_old_deleted_articles`, `cleanup_old_parsed_content`, `cleanup_orphaned_tags`, `count_all_articles`, `count_articles_since`, `detect_partial_feeds`, `refresh_author_monitoring`, `update_tag_counts`
@@ -395,6 +429,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Eliminated all database security vulnerabilities - 100% of security advisor warnings resolved, preventing both search_path manipulation and unauthorized data access
 
 ### Documentation
+
 - **[RR-167] Comprehensive Bi-Directional Sync Documentation** (Saturday, August 9, 2025 at 12:39 PM)
   - **Technical Architecture**: Created comprehensive technical documentation at `docs/tech/bidirectional-sync.md` covering sync architecture, data flow patterns, conflict resolution, and implementation details
   - **API Documentation**: Enhanced `docs/api/server-endpoints.md` with detailed bi-directional sync endpoint specifications, request/response formats, and error handling patterns
@@ -425,13 +460,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Core Feature**: Dynamic filtering of sidebar feeds and topics based on Read/Unread filter selection
   - **Tag Interface Extended**: Added `unreadCount` and `totalCount` fields to Tag interface for accurate count tracking
   - **API Enhancement**: Enhanced `/api/tags` endpoint to calculate and return per-user `unread_count` by scoping unread aggregation to user's feeds before joining article_tags
-  - **Store Enhancements**: 
+  - **Store Enhancements**:
     - Modified tag store `loadTags` to get unread counts directly from API
     - Added `applySidebarTags` merge strategy preserving existing tags and updating unread counts
     - Added `updateSelectedTagUnreadCount` for optimistic updates after mark-as-read operations
-  - **Filtering Logic**: 
+  - **Filtering Logic**:
     - **"Unread Only"**: Shows tags with unread articles OR all tags with articles when system has unread but tag counts are 0 (fallback for sync issues)
-    - **"Read Only"**: Shows tags that have articles but no unread articles  
+    - **"Read Only"**: Shows tags that have articles but no unread articles
     - **"All Articles"**: Shows all tags with articles, dims those with no unread
   - **State Preservation**: Extended RR-27 state preservation to include `tagId` for maintaining tag context when navigating back from article detail
   - **Optimistic Updates**: Integrated optimistic unread count updates in both single and batch mark-as-read flows for immediate UI feedback
@@ -441,6 +476,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Users can now filter articles by tags with accurate unread counts that update immediately after reading articles, with preserved navigation context
 
 ### Fixed
+
 - **[RR-171] Sidebar Counts and Tags Not Refreshing After Manual Sync** (Saturday, August 9, 2025 at 9:15 AM)
   - **Problem**: Fixed sidebar feed counts and tags not updating immediately after manual sync completion
   - **Solution**: Implemented RefreshManager for coordinated UI updates across feed counts and tags sections
@@ -453,6 +489,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Users now see immediate updates to feed counts and tags after manual sync operations
 
 ### Security
+
 - **[RR-67] Database Security Fixes - SECURITY DEFINER and search_path vulnerabilities** (Saturday, August 9, 2025)
   - **Fixed**: Eliminated 4 SECURITY DEFINER views that bypassed Row Level Security policies
   - **Fixed**: Added search_path protection to 7 critical functions to prevent SQL injection attacks
@@ -464,6 +501,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Testing**: Comprehensive test suite with contracts defining exact expected behavior
 
 ### Added
+
 - **[RR-128] Tags Filtering with Proper Architecture** (Saturday, August 9, 2025)
   - **Database**: Added `tags` and `article_tags` tables with many-to-many relationships
   - **Sync Integration**: Extracts tags from Inoreader categories during sync process
@@ -477,6 +515,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Users can now filter articles by tags that span across multiple feeds
 
 ### Documentation
+
 - **Comprehensive Documentation Update for RR-128 Tags Feature** (Saturday, August 9, 2025 at 1:05 AM)
   - **API Documentation**: Added complete documentation for tags endpoints (`/api/tags`, `/api/articles/[id]/tags`) with request/response examples, query parameters, and status codes
   - **Database Schema**: Documented tags and article_tags table structures with relationships, constraints, and indexes
@@ -488,7 +527,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Complete documentation coverage for tags feature including CRUD operations, XSS protection, sync integration, and UI components
 
 - **Corrected Inoreader API Limits Documentation** (Saturday, August 9, 2025 at 1:01 AM)
-  - **Fixed**: Updated CHANGELOG.md line 202 from "well within 1000-5000 limit" to "well within 200 daily limit" 
+  - **Fixed**: Updated CHANGELOG.md line 202 from "well within 1000-5000 limit" to "well within 200 daily limit"
   - **Fixed**: Updated README.md line 162 from "well within 1000-5000 limit" to "well within 200 daily limit (100 Zone 1 + 100 Zone 2)"
   - **Context**: Corrected documentation to reflect actual Inoreader API limits of 200 requests per day total (100 Zone 1 + 100 Zone 2)
   - **Impact**: Documentation now accurately represents API constraints with current usage of 24-30 calls daily staying well within limits
@@ -496,6 +535,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.1] - Saturday, August 9, 2025 at 7:09 AM
 
 ### Fixed
+
 - **[RR-170] HTML Entity Rendering in Tag Names - Completed** (Saturday, August 9, 2025 at 7:09 AM)
   - **Problem**: Tags with HTML entities like "India&#x2F;Canada" were displaying encoded entities instead of "India/Canada"
   - **Root Cause**: The escapeHtml function was over-escaping forward slashes and other characters that React already handles
@@ -508,6 +548,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.0] - Thursday, August 7, 2025 at 9:21 PM
 
 ### Added
+
 - **HTML Entity Decoding for Article Titles and Content (RR-154) - Completed** (Thursday, August 7, 2025 at 9:21 PM)
   - **Feature**: Implemented standards-compliant HTML entity decoding for article titles and content during sync
   - **Library**: Added 'he' library for reliable decoding of HTML entities like &rsquo;, &amp;, &lsquo;, &quot;, &#8217;, &ndash;
@@ -522,7 +563,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Testing**: Comprehensive test coverage including unit, integration, and E2E tests for all decoding scenarios
 
 ### Documentation
-- **Updated Documentation for RR-129 Database Cleanup Implementation** (Wednesday, August 6, 2025 at 11:07 PM)  
+
+- **Updated Documentation for RR-129 Database Cleanup Implementation** (Wednesday, August 6, 2025 at 11:07 PM)
   - **API Docs**: Updated `/api/sync` endpoint documentation to include cleanup response fields
   - **Monitoring Docs**: Added comprehensive database cleanup monitoring section to service-monitoring.md
   - **Known Issues**: Added resolved status for RR-150 URI length limits issue with detailed solution
@@ -532,9 +574,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Complete documentation coverage for RR-129/RR-150 cleanup functionality
 
 ### Fixed
+
 - **Monitoring Infrastructure False Status Fixes - Completed** (Thursday, August 7, 2025 at 6:37 PM)
   - **Problem**: Fixed rss-services-monitor restart loops caused by incorrect health endpoint URLs missing /reader prefix
-  - **Problem**: Fixed Fetch Success Rate monitor showing false "Down" status by updating to use corrected /api/health/parsing endpoint from RR-151  
+  - **Problem**: Fixed Fetch Success Rate monitor showing false "Down" status by updating to use corrected /api/health/parsing endpoint from RR-151
   - **Problem**: Fixed API Usage monitor showing low uptime by implementing actual health endpoint checking instead of placeholder
   - **Files Updated**: ecosystem.config.js, scripts/monitor-services-pm2.sh, scripts/push-to-kuma.sh
   - **Impact**: All monitoring services now report accurate health status in Uptime Kuma with corrected endpoint URLs
@@ -570,6 +613,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Eliminated false monitoring alerts while maintaining full debugging visibility
 
 ### Added
+
 - **[RR-146] Collapsible Feeds section in sidebar navigation with session-only state persistence**
   - Added reusable CollapsibleFilterSection component with Radix UI
   - Implemented "Shayon's News" branding with RSS icon
@@ -593,6 +637,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Dramatically improved sync efficiency while maintaining data integrity and user experience
 
 ### Added
+
 - **Database Cleanup for Deleted Feeds and Read Articles (RR-129) - Completed** (Wednesday, August 6, 2025 at 9:15 PM)
   - **Feature**: Implemented automatic cleanup of deleted feeds and read articles during sync
   - **Database**: Added `deleted_articles` tracking table to prevent re-import of deleted items
@@ -607,6 +652,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Reduces database bloat from orphaned feeds and successfully handles large article cleanup batches
 
 ### Added
+
 - **On-Demand Content Parsing for Partial Feeds (RR-148) - Completed** (Thursday, January 8, 2025)
   - **Feature**: Implemented on-demand content parsing to replace sync-time batch parsing
   - **Performance**: Reduced sync time by 30-50% by skipping content extraction during sync
@@ -648,6 +694,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.0] - Wednesday, August 6, 2025 at 3:12 AM
 
 ### Fixed
+
 - **Critical SSR Error in Navigation History** (Wednesday, August 6, 2025 at 3:08 AM)
   - Fixed sessionStorage access during server-side rendering that was causing page load failures
   - Added proper browser environment checks to navigation-history.ts
@@ -655,6 +702,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Essential fix for RR-27 article list state preservation feature
 
 ### Removed
+
 - **Redundant Freshness API (RR-106) - Completed** (Tuesday, August 5, 2025 at 7:28 PM)
   - **API Removal**: Completely removed `/api/health/freshness` endpoint that wasn't solving its intended purpose
   - **Monitoring Consolidation**: Reduced from 4 to 3 health endpoints (app, db, cron) for clearer monitoring
@@ -666,6 +714,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Note**: Original UI freshness perception issue (RR-26) remains unsolved and needs UI/UX improvements
 
 ### Changed
+
 - **Monitoring Scripts Update After Freshness API Removal (RR-124) - Completed** (Tuesday, August 6, 2025 at 1:50 AM)
   - **Fixed Critical UI Bug**: Last sync time now displays correctly on initial page load (previously showed "never synced")
   - **New API Endpoint**: Added `/api/sync/last-sync` to reliably fetch last sync time from logs or database
@@ -678,6 +727,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Significantly improved user experience with accurate sync status and enhanced monitoring capabilities
 
 ### Added
+
 - **Author Display in Articles (RR-140) - Completed** (Wednesday, January 8, 2025 at 2:44 AM)
   - **Feature Implementation**: Added author names to both article listing and detail view pages
   - **API Integration**: Extract author field from Inoreader API during sync with 81% capture rate
@@ -732,6 +782,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improves consistency with production-like development environment
 
 ### Changed
+
 - **Package Dependency Updates** (Monday, August 4, 2025 at 12:56 PM)
   - Removed unused `punycode` package (still available via transitive dependencies)
   - Removed unused `@radix-ui/react-toast` package (replaced by sonner)
@@ -757,6 +808,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.11.0] - 2025-08-04
 
 ### Added
+
 - **Production Build Optimizations** (Monday, August 4, 2025 at 11:53 AM)
   - Added `type-check:prod` script with production-specific TypeScript configuration
   - Created `tsconfig.prod.json` for optimized production type checking
@@ -770,6 +822,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created comprehensive test plan documentation
 
 ### Fixed
+
 - **[RR-115]** Cleaned up health service implementation (Monday, August 4, 2025 at 11:53 AM)
   - Removed unnecessary `queryTime` property from health check responses
   - Fixed variable declarations in tests (const instead of let)
@@ -807,6 +860,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All 45 integration tests now pass (21 + 24 test files)
 
 ### Changed
+
 - **[RR-115]** Health endpoints now return proper HTTP status codes (200 for healthy/degraded, 503 for unhealthy)
 - **[RR-120]** Standardized health endpoint response format with consistent timestamp field
 - **[RR-119]** Added graceful degradation for health endpoints in test environments
@@ -814,6 +868,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[RR-121]** Test server now properly initializes with dependencies from test-server.ts
 
 ### Added
+
 - **[RR-117]** Auth status endpoint at `/api/auth/inoreader/status` for integration test requirements
 - **[RR-127]** ConfigurableHealthCheckMock system for flexible test scenarios
 - **[RR-123]** Memory-safe test runner with resource limits to prevent system exhaustion
@@ -821,6 +876,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[RR-112]** Fixed database cleanup race conditions in test lifecycle management
 
 ### Technical
+
 - **[RR-127]** Major test infrastructure overhaul fixing 45+ failing test files
 - **[RR-110]** Comprehensive test infrastructure improvements with proper documentation
 - Mock system now supports dynamic imports and complex selector patterns
@@ -829,43 +885,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.10.1] - 2025-08-03
 
 ### Fixed
+
 - Database cleanup race conditions and variable reference bug (RR-112)
-- Health endpoint property mismatches in integration tests (RR-114) 
+- Health endpoint property mismatches in integration tests (RR-114)
 - Health endpoints returning 503 status codes instead of 200 (RR-115)
 
 ### Added
+
 - Comprehensive test infrastructure overhaul (RR-110)
 - Test server initialization with proper dependencies (RR-121)
 
 ## [0.10.0] - 2025-07-30
 
 ### Added
+
 - Bidirectional sync server infrastructure improvements (RR-66)
 - Automated health monitoring and alerting system
 - PM2 ecosystem configuration for process management
 
 ### Changed
+
 - Migrated from Caddy to PM2 for process management
 - Improved sync reliability and error handling
 
 ### Fixed
+
 - Memory leaks in long-running sync processes
 - OAuth token refresh reliability issues
 
 ## [0.9.0] - 2025-07-25
 
 ### Added
+
 - Full content extraction using Mozilla Readability
 - AI-powered article summaries with Claude API
 - Offline queue for read/star state changes
 - PWA functionality with service worker
 
 ### Changed
+
 - Improved mobile responsiveness for iOS devices
 - Enhanced error handling and retry logic
 - Optimized database queries for better performance
 
 ### Fixed
+
 - Race conditions in concurrent sync operations
 - Memory usage in content extraction process
 - iOS PWA installation issues
@@ -873,34 +937,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.8.0] - 2025-07-20
 
 ### Added
+
 - Server-side OAuth implementation
 - Encrypted token storage
 - Automatic token refresh
 - Comprehensive health check endpoints
 
 ### Changed
+
 - Moved all Inoreader API calls to server-side
 - Client no longer requires authentication
 - Improved security model with Tailscale-only access
 
 ### Removed
+
 - Client-side OAuth flow
 - Direct API access from browser
 
 ## [0.7.0] - 2025-07-15
 
 ### Added
+
 - Supabase PostgreSQL integration
 - Row Level Security policies
 - Materialized view for feed statistics
 - Database migration system
 
 ### Changed
+
 - Migrated from IndexedDB to PostgreSQL
 - Improved data consistency and reliability
 - Better multi-device sync support
 
 ### Fixed
+
 - Data persistence issues
 - Sync conflicts between devices
 - Performance bottlenecks in data queries

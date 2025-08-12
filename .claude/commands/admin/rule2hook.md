@@ -7,7 +7,7 @@ You are an expert at converting natural language project rules into Claude Code 
 1. If rules are provided as arguments, analyze those rules
 2. If no arguments are provided, read and analyze the CLAUDE.md file from these locations:
    - `./CLAUDE.md` (project memory)
-   - `./CLAUDE.local.md` (local project memory)  
+   - `./CLAUDE.local.md` (local project memory)
    - `~/.claude/CLAUDE.md` (user memory)
 
 3. For each rule, determine:
@@ -22,9 +22,10 @@ You are an expert at converting natural language project rules into Claude Code 
 ## Hook Events
 
 ### PreToolUse
+
 - **When**: Runs BEFORE a tool is executed
 - **Common Keywords**: "before", "check", "validate", "prevent", "scan", "verify"
-- **Available Tool Matchers**: 
+- **Available Tool Matchers**:
   - `Task` - Before launching agent tasks
   - `Bash` - Before running shell commands
   - `Glob` - Before file pattern matching
@@ -40,18 +41,21 @@ You are an expert at converting natural language project rules into Claude Code 
 - **Special Feature**: Can block tool execution if command returns non-zero exit code
 
 ### PostToolUse
+
 - **When**: Runs AFTER a tool completes successfully
 - **Common Keywords**: "after", "following", "once done", "when finished"
 - **Available Tool Matchers**: Same as PreToolUse
 - **Common Uses**: Formatting, linting, building, testing after file changes
 
 ### Stop
+
 - **When**: Runs when Claude Code finishes responding
 - **Common Keywords**: "finish", "complete", "end task", "done", "wrap up"
 - **No matcher needed**: Applies to all completions
 - **Common Uses**: Final status checks, summaries, cleanup
 
 ### Notification
+
 - **When**: Runs when Claude Code sends notifications
 - **Common Keywords**: "notify", "alert", "inform", "message"
 - **Special**: Rarely used for rule conversion
@@ -86,8 +90,10 @@ You are an expert at converting natural language project rules into Claude Code 
 ## Examples with Analysis
 
 ### Example 1: Python Formatting
+
 **Rule**: "Format Python files with black after editing"
-**Analysis**: 
+**Analysis**:
+
 - Keyword "after" → PostToolUse
 - "editing" → Edit|MultiEdit|Write tools
 - "Python files" → command should target .py files
@@ -95,59 +101,77 @@ You are an expert at converting natural language project rules into Claude Code 
 ```json
 {
   "hooks": {
-    "PostToolUse": [{
-      "matcher": "Edit|MultiEdit|Write",
-      "hooks": [{
-        "type": "command",
-        "command": "black . --quiet 2>/dev/null || true"
-      }]
-    }]
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "black . --quiet 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
 ### Example 2: Git Status Check
+
 **Rule**: "Run git status when finishing a task"
 **Analysis**:
+
 - "finishing" → Stop event
 - No specific tool mentioned → no matcher needed
 
 ```json
 {
   "hooks": {
-    "Stop": [{
-      "hooks": [{
-        "type": "command",
-        "command": "git status"
-      }]
-    }]
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
 ### Example 3: Security Scan
+
 **Rule**: "Check for hardcoded secrets before saving any file"
 **Analysis**:
+
 - "before" → PreToolUse
 - "saving any file" → Write|Edit|MultiEdit
 
 ```json
 {
   "hooks": {
-    "PreToolUse": [{
-      "matcher": "Write|Edit|MultiEdit",
-      "hooks": [{
-        "type": "command",
-        "command": "git secrets --scan 2>/dev/null || echo 'No secrets found'"
-      }]
-    }]
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git secrets --scan 2>/dev/null || echo 'No secrets found'"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
 ### Example 4: Test Runner
+
 **Rule**: "Run npm test after modifying files in tests/ directory"
 **Analysis**:
+
 - "after modifying" → PostToolUse
 - "files" → Edit|MultiEdit|Write
 - Note: Path filtering happens in the command, not the matcher
@@ -155,33 +179,43 @@ You are an expert at converting natural language project rules into Claude Code 
 ```json
 {
   "hooks": {
-    "PostToolUse": [{
-      "matcher": "Edit|MultiEdit|Write",
-      "hooks": [{
-        "type": "command",
-        "command": "npm test 2>/dev/null || echo 'Tests need attention'"
-      }]
-    }]
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm test 2>/dev/null || echo 'Tests need attention'"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
 
 ### Example 5: Command Logging
+
 **Rule**: "Log all bash commands before execution"
 **Analysis**:
+
 - "before execution" → PreToolUse
 - "bash commands" → Bash tool specifically
 
 ```json
 {
   "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{
-        "type": "command",
-        "command": "echo \"[$(date)] Executing bash command\" >> ~/.claude/command.log"
-      }]
-    }]
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date)] Executing bash command\" >> ~/.claude/command.log"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
@@ -213,4 +247,5 @@ You are an expert at converting natural language project rules into Claude Code 
 5. Commands run with full user permissions - be careful with destructive operations
 
 ## User Input
+
 $ARGUMENTS

@@ -8,6 +8,7 @@ argument_hint: [linear-issue-id] [additional-context]
 ## Step 0: Linear Validation
 
 ### Check for Linear Issue ID
+
 1. Check if a Linear issue ID is provided as argument
 2. If not provided, check if the request mentions minor fixes:
    - Documentation updates
@@ -17,12 +18,15 @@ argument_hint: [linear-issue-id] [additional-context]
    - Emergency hotfixes (create issue after)
 
 ### For Non-Minor Work Without Linear ID
+
 - **STOP** and ask me for Linear issue ID
 - Explain that all significant work must be tracked in Linear
 - Suggest creating an issue if one doesn't exist
 
 ### If Linear ID Provided
+
 Use `linear-expert` to:
+
 1. Verify issue exists and get full specification (description + all comments)
 2. Check for required documentation in comments:
    - Look for "Implementation Plan" or "Approach" in any comment
@@ -34,7 +38,9 @@ Use `linear-expert` to:
 4. If both exist, verify issue is in "In Progress" status
 
 ### What Constitutes "Minor Work"
+
 Minor work that doesn't require Linear backing includes:
+
 - **Documentation updates**: README, CHANGELOG, code comments
 - **Configuration changes**: .env examples, config files, build settings
 - **Formatting/linting fixes**: Code style, import organization
@@ -44,25 +50,32 @@ Minor work that doesn't require Linear backing includes:
 ## 1. Pre-Implementation Verification
 
 ### Infrastructure Health
+
 ```bash
 # Quick health check before coding
 npm run type-check && npm run lint
 ```
+
 If fails → Use `infra-expert` for emergency fixes
 
 ### Verify Gates Are Passed
+
 Check that Linear issue has:
+
 1. **Status**: Must be "In Progress"
 2. **Plan**: Implementation approach documented in comments
 3. **Tests**: Test scenarios documented in comments
 4. **Analysis**: Shows `/analyze` was run (look for analysis comment)
 
 If any gate fails:
+
 - 🛑 **STOP** - Do not write any files
 - Suggest next steps (e.g., "Run /analyze RR-XXX first")
 
 ### Add Implementation Start Comment
+
 Use `linear-expert` to add comment:
+
 - "Starting implementation - [timestamp]"
 - Note any spec changes discovered since analysis
 
@@ -71,6 +84,7 @@ Use `linear-expert` to add comment:
 ### Step 1: Rebuild Context and Write Tests FIRST
 
 #### 1A. Gather Complete Context (Since context was cleared)
+
 Use agents IN PARALLEL to rebuild understanding:
 
 1. **Linear Context** (linear-expert):
@@ -84,7 +98,7 @@ Use agents IN PARALLEL to rebuild understanding:
    - Check existing data patterns
 
 3. **Code Context** (doc-search):
-   - Find similar test files (*.test.ts)
+   - Find similar test files (\*.test.ts)
    - Identify test utilities and helpers
    - Find similar API implementations
    - Check existing error handling patterns
@@ -94,7 +108,9 @@ Use agents IN PARALLEL to rebuild understanding:
    - Retrieve any stored testing approaches
 
 #### 1B. Invoke test-expert with FULL Context
+
 Provide test-expert with complete context package:
+
 ```
 Linear Issue: [full details]
 Test Contracts: [from Linear comments]
@@ -113,7 +129,9 @@ CRITICAL: These tests are the SPECIFICATION. They define what the implementation
 ```
 
 #### 1C. Validate Tests Are Specifications
+
 Ensure test-expert has written tests that:
+
 1. Match the Test Contracts exactly
 2. Use existing test patterns from codebase
 3. Test behavior, not implementation details
@@ -121,12 +139,14 @@ Ensure test-expert has written tests that:
 5. Run tests to confirm they fail (red phase)
 
 ### Step 2: Implementation
+
 1. Implement the solution to make tests pass
 2. Follow the implementation plan from Linear comments
 3. Track performance: Keep test execution under 20s baseline
 4. Update Linear with progress if implementation takes multiple sessions
 
 ### Step 3: Test & Refine
+
 1. Run tests continuously during development
 2. Ensure all tests pass (green phase)
 3. Check performance: `node scripts/check-performance-regression.js`
@@ -136,11 +156,13 @@ Ensure test-expert has written tests that:
 ## 3. Specialist Reviews
 
 Based on implementation type, get reviews from read-only agents:
+
 - **Database changes**: Use `db-expert-readonly` to verify schema/queries
 - **Infrastructure changes**: Use `devops-expert-readonly` to check deployment impact
 - **UI changes**: Use `ui-expert` to review user experience
 
 Each review should check:
+
 - Does implementation match Linear requirements?
 - Are there any security concerns?
 - Is error handling adequate?
@@ -149,6 +171,7 @@ Each review should check:
 ## 4. Quality Checks
 
 Run comprehensive checks:
+
 1. Full test suite: `npm test` (should complete in <20s)
 2. Type check: `npm run type-check`
 3. Linter: `npm run lint`
@@ -159,6 +182,7 @@ Run comprehensive checks:
 ## 5. Update Linear
 
 Use `linear-expert` to:
+
 1. Change status to "In Review"
 2. Add implementation summary as comment:
    - List all files changed
@@ -169,6 +193,7 @@ Use `linear-expert` to:
 ## 6. Implementation Report
 
 Provide summary:
+
 ```
 📋 Implementation Complete: RR-XXX
 

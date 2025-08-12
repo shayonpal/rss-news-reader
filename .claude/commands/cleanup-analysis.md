@@ -10,6 +10,7 @@ Perform a comprehensive read-only analysis of the codebase and think hard to ide
 ## Analysis Scope
 
 Parse $ARGUMENTS for focus area:
+
 - **docs**: Focus on documentation files
 - **code**: Focus on source code and components
 - **config**: Focus on configuration files
@@ -19,6 +20,7 @@ Parse $ARGUMENTS for focus area:
 ## 1. Documentation Analysis
 
 Use `doc-search` to examine:
+
 - Outdated documentation that no longer matches implementation
 - Duplicate information across multiple files
 - Empty or placeholder documentation files
@@ -26,6 +28,7 @@ Use `doc-search` to examine:
 - Missing critical documentation
 
 Check for:
+
 - Files with last modified dates > 1 month ago
 - Documentation referencing deprecated features
 - Overlap between README.md, docs/, and inline comments
@@ -34,6 +37,7 @@ Check for:
 ## 2. Code Structure Analysis
 
 Use `git-expert` to analyze:
+
 - Unused files (no imports/exports)
 - Dead code branches
 - Duplicate implementations
@@ -41,17 +45,19 @@ Use `git-expert` to analyze:
 - Temporary or experimental files
 
 Look for patterns:
+
 - Components with no references
 - Utility functions that duplicate built-in methods
 - Old API routes that are no longer used
 - Commented-out code blocks that should be removed
-- Test pages/routes that shouldn't exist in production (e.g., /test-*)
+- Test pages/routes that shouldn't exist in production (e.g., /test-\*)
 - Debug endpoints exposing internal information
 - Deprecated code still being imported
 
 ## 3. Configuration Redundancy
 
 Examine configuration files for:
+
 - Duplicate configuration across files
 - Development configs in production
 - Obsolete environment variables
@@ -61,6 +67,7 @@ Examine configuration files for:
 ## 4. Database & Migration Analysis
 
 Use `db-expert-readonly` to check:
+
 - Unused database tables or columns
 - Old migration files that could be consolidated
 - Orphaned data relationships
@@ -71,6 +78,7 @@ Use `db-expert-readonly` to check:
 ## 5. Test Coverage Gaps
 
 Analyze test structure:
+
 - Test files for deleted components
 - Duplicate test scenarios
 - Missing test coverage for critical paths
@@ -79,6 +87,7 @@ Analyze test structure:
 ## 6. Asset & Resource Review
 
 Check static assets and resources:
+
 - Unused images, fonts, or icons
 - Duplicate assets with different names
 - Large files that could be optimized
@@ -87,6 +96,7 @@ Check static assets and resources:
 ## 7. Dependency Analysis
 
 Review project dependencies:
+
 - Unused npm packages
 - Duplicate functionality across packages
 - Outdated packages with security issues

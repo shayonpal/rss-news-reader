@@ -10,16 +10,20 @@ Prepare, validate, and commit changes for Linear issue $ARGUMENTS (or current wo
 ## Step 1: Context Recovery & Validation
 
 ### 1A. Gather Context
+
 If Linear issue provided in $ARGUMENTS:
+
 - Use `linear-expert` to get issue details and status
 - Verify issue is in "Done" or ready for commit
 - Extract implementation summary from comments
 
 If no Linear issue:
+
 - Use `git-expert` to check staged changes
 - Determine if changes require Linear tracking
 
 ### 1B. Branch Verification
+
 Ensure we're on the correct branch:
 
 ```bash
@@ -35,11 +39,13 @@ fi
 ```
 
 **Branch Rules:**
+
 - Primary development: Push to `dev` branch
 - Feature work: Push to feature branch, if work was done on a feature branch (e.g., `feature/RR-XXX-description`)
 - NEVER push directly to `main` (only via PR/merge from dev)
 
 ### 1C. Pre-Commit Checks
+
 Run validation to ensure code is ready:
 
 ```bash
@@ -61,19 +67,23 @@ git diff --cached | grep -E "console\.(log|debug|warn|error)" || echo "✅ No co
 ```
 
 If any checks fail:
+
 - 🛑 STOP - Fix issues before committing
 - Use appropriate agent for fixes
 
 ## Step 2: Documentation Verification
 
 ### 2A. Check CHANGELOG Status
+
 Review if CHANGELOG.md needs updating:
+
 - For features: REQUIRED (Added section)
-- For bug fixes: REQUIRED (Fixed section)  
+- For bug fixes: REQUIRED (Fixed section)
 - For refactoring: Optional (Changed section)
 - For docs/chores: Usually not needed
 
 If CHANGELOG needs updating and isn't:
+
 - Use `doc-admin` to update CHANGELOG.md with:
   - Current date and time
   - Linear issue reference
@@ -81,12 +91,15 @@ If CHANGELOG needs updating and isn't:
   - User impact
 
 ### 2B. Check Other Documentation
+
 Verify if other docs need updates:
+
 - API documentation for new endpoints
 - README for new features or setup changes
 - Configuration docs for new env vars
 
 ### 2C. Check & Update memory
+
 If not already done, update the project memory with a brief information about what has been implemented using `memory` MCP server.
 
 ## Step 3: Generate Commit Context for git-expert
@@ -114,6 +127,7 @@ Special Instructions:
 ## Step 4: Execute Commit with git-expert
 
 Use `git-expert` agent with full context:
+
 - Provide Linear issue details
 - Confirm documentation is updated
 - Specify target branch explicitly (dev or feature/RR-XXX)
@@ -125,6 +139,7 @@ Use `git-expert` agent with full context:
   - Push to specified branch (NOT main)
 
 **Example context for git-expert:**
+
 ```
 Push to: dev branch (or feature/RR-XXX if on feature branch)
 IMPORTANT: Never push to main branch directly
@@ -133,13 +148,17 @@ IMPORTANT: Never push to main branch directly
 ## Step 5: Post-Commit Actions
 
 ### 5A. Update Linear Issue
+
 If Linear issue was referenced:
+
 - Use `linear-expert` to add comment with commit SHA
 - Update status if needed (In Review → Done if all tests passed)
 - Note deployment readiness
 
 ### 5B. Verify Push Success
+
 Confirm with git-expert response:
+
 - Commit SHA recorded
 - Push successful
 - No conflicts

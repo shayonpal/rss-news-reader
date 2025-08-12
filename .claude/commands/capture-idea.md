@@ -20,6 +20,7 @@ Ask these questions ONE AT A TIME, waiting for my response between each:
 **Important**: After each question, also mention: "(or type 'done' to skip remaining questions)"
 
 If I type 'done', 'skip', 'quit', or similar:
+
 - Stop asking questions
 - Use the information gathered so far
 - Make intelligent assumptions for missing data
