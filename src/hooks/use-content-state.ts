@@ -22,17 +22,21 @@ export function useContentState(
   const contentSource: ContentSource = forceOriginalContent
     ? "rss" // User explicitly wants original RSS content
     : fetchedContent
-    ? "manual" // User manually fetched content
-    : parsedContent
-    ? "auto" // Auto-parsed from partial feed
-    : article.fullContent
-    ? "stored" // Previously fetched and stored in DB
-    : "rss"; // Original RSS content
+      ? "manual" // User manually fetched content
+      : parsedContent
+        ? "auto" // Auto-parsed from partial feed
+        : article.fullContent
+          ? "stored" // Previously fetched and stored in DB
+          : "rss"; // Original RSS content
 
   // Get the actual content to display based on priority
   const displayContent = forceOriginalContent
     ? article.content || "" // Force original RSS content
-    : fetchedContent || parsedContent || article.fullContent || article.content || "";
+    : fetchedContent ||
+      parsedContent ||
+      article.fullContent ||
+      article.content ||
+      "";
 
   // Check if we have any enhanced content (not just RSS)
   const hasEnhancedContent = forceOriginalContent

@@ -9,21 +9,18 @@ The RSS News Reader includes a comprehensive health check system that monitors t
 ### Core Components
 
 1. **Health Check Service** (`/src/lib/health/health-check-service.ts`)
-
    - Singleton service that performs health checks
    - Monitors database, APIs, cache, authentication, and network
    - Tracks metrics and response times
    - Calculates overall system health status
 
 2. **Health Store** (`/src/lib/stores/health-store.ts`)
-
    - Zustand store for health state management
    - Manages check history, alerts, and settings
    - Persists configuration and critical data
    - Provides health trend analysis
 
 3. **Health Scheduler** (`/src/lib/health/health-scheduler.ts`)
-
    - Automated health check scheduling
    - Respects app visibility and network status
    - Configurable check intervals
@@ -193,19 +190,16 @@ import { HealthStatusWidget } from "@/components/health/health-status-widget";
 ### Common Issues
 
 1. **High Storage Usage**
-
    - Run database vacuum to clean orphaned data
    - Reduce article retention period
    - Clear old API usage records
 
 2. **API Rate Limits**
-
    - Reduce sync frequency
    - Batch API operations
    - Monitor usage patterns
 
 3. **Authentication Failures**
-
    - Check token expiration
    - Verify OAuth configuration
    - Re-authenticate if needed

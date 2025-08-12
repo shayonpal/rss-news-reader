@@ -31,7 +31,10 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b glass-nav" id="app-layout-header">
+    <header
+      className="glass-nav sticky top-0 z-50 w-full border-b"
+      id="app-layout-header"
+    >
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <Button
           variant="ghost"

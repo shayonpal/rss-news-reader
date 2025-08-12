@@ -127,13 +127,11 @@ tail -20 logs/sync-conflicts.jsonl | jq .
 ### Common Issues
 
 1. **404 Errors** - API endpoint mismatch
-
    - Check `NEXT_PUBLIC_BASE_URL` in ecosystem.config.js
    - Verify production app is on port 3147
    - Check API route handlers exist
 
 2. **500 Errors** - Server errors
-
    - Check OAuth tokens: `~/.rss-reader/tokens.json`
    - Verify Inoreader API limits (100/day)
    - Check server logs: `pm2 logs rss-sync-cron`

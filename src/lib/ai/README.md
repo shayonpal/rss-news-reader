@@ -53,14 +53,12 @@ SUMMARY_STYLE=journalistic
 ## Prompt Engineering Best Practices
 
 1. **Word Count**:
-
    - Use ranges (e.g., "150-175") for flexibility
    - Consider the typical length of your content sources
    - Shorter summaries (75-125 words) for quick scanning
    - Longer summaries (200-300 words) for detailed analysis
 
 2. **Focus Areas**:
-
    - Be specific about what information to extract
    - List multiple aspects separated by commas
    - Consider your audience's information needs

@@ -42,7 +42,8 @@ export async function POST(
       return NextResponse.json(
         {
           error: "rate_limit",
-          message: "Too many concurrent parse requests. Please try again later.",
+          message:
+            "Too many concurrent parse requests. Please try again later.",
         },
         { status: 429 }
       );
@@ -62,7 +63,8 @@ export async function POST(
     return NextResponse.json(
       {
         error: "unexpected_error",
-        message: error instanceof Error ? error.message : "Unexpected error occurred",
+        message:
+          error instanceof Error ? error.message : "Unexpected error occurred",
       },
       { status: 500 }
     );
@@ -338,7 +340,7 @@ async function performParsing(
         .select("parse_attempts")
         .eq("id", articleId)
         .single();
-      
+
       await supabase
         .from("articles")
         .update({

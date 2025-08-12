@@ -23,14 +23,18 @@ The issue was caused by the `escapeHtml` function being applied after HTML entit
 
 ```javascript
 // Before (problematic)
-{escapeHtml(decodeHtmlEntities(tag.name))}
+{
+  escapeHtml(decodeHtmlEntities(tag.name));
+}
 ```
 
 ### Solution Implementation
 
 ```javascript
 // After (fixed)
-{decodeHtmlEntities(tag.name)}
+{
+  decodeHtmlEntities(tag.name);
+}
 ```
 
 ### Files Changed
@@ -63,22 +67,26 @@ The change does **not** introduce security vulnerabilities because:
 ## Testing Performed
 
 ### Manual Testing
+
 - Verified tags with HTML entities now display correctly
 - Confirmed no XSS vulnerabilities in tag display
 - Tested consistency between sidebar and article detail views
 
 ### Examples Tested
+
 - **Before**: "India&#x2F;Canada" displayed as raw entities
 - **After**: "India/Canada" displays correctly as intended
 
 ## User Impact
 
 ### Positive Impact
+
 - ✅ Tags now display with proper formatting
 - ✅ Improved readability of tag names with special characters
 - ✅ Consistent tag display across all UI components
 
 ### No Negative Impact
+
 - ✅ No security vulnerabilities introduced
 - ✅ No performance impact
 - ✅ No breaking changes to existing functionality
@@ -96,4 +104,4 @@ The change does **not** introduce security vulnerabilities because:
 
 ---
 
-*This fix resolves tag display issues while maintaining security through React's built-in XSS protection.*
+_This fix resolves tag display issues while maintaining security through React's built-in XSS protection._

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         .delete()
         .eq("service", "inoreader")
         .eq("date", today);
-      
+
       return NextResponse.json({
         success: true,
         message: "Rate limit data reset for testing",
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
 
     // Simulate different rate limit scenarios
     const zone1Limit = 5000; // Zone 1 (read operations)
-    const zone2Limit = 100;  // Zone 2 (write operations)
-    
+    const zone2Limit = 100; // Zone 2 (write operations)
+
     // Ensure values don't exceed limits
     const actualZone1 = Math.min(zone1Usage || 0, zone1Limit);
     const actualZone2 = Math.min(zone2Usage || 0, zone2Limit);
@@ -60,18 +60,16 @@ export async function POST(request: Request) {
       }
     } else {
       // Insert new record
-      const { error } = await supabase
-        .from("api_usage")
-        .insert({
-          service: "inoreader",
-          date: today,
-          zone1_usage: actualZone1,
-          zone1_limit: zone1Limit,
-          zone2_usage: actualZone2,
-          zone2_limit: zone2Limit,
-          reset_after: 86400,
-          count: actualZone1, // Legacy support
-        });
+      const { error } = await supabase.from("api_usage").insert({
+        service: "inoreader",
+        date: today,
+        zone1_usage: actualZone1,
+        zone1_limit: zone1Limit,
+        zone2_usage: actualZone2,
+        zone2_limit: zone2Limit,
+        reset_after: 86400,
+        count: actualZone1, // Legacy support
+      });
 
       if (error) {
         throw error;
@@ -109,7 +107,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const today = new Date().toISOString().split("T")[0];
-    
+
     const { data, error } = await supabase
       .from("api_usage")
       .select("*")
@@ -133,12 +131,16 @@ export async function GET() {
       zone1: {
         usage: data.zone1_usage || 0,
         limit: data.zone1_limit || 5000,
-        percentage: data.zone1_limit ? ((data.zone1_usage / data.zone1_limit) * 100).toFixed(1) : 0,
+        percentage: data.zone1_limit
+          ? ((data.zone1_usage / data.zone1_limit) * 100).toFixed(1)
+          : 0,
       },
       zone2: {
         usage: data.zone2_usage || 0,
         limit: data.zone2_limit || 100,
-        percentage: data.zone2_limit ? ((data.zone2_usage / data.zone2_limit) * 100).toFixed(1) : 0,
+        percentage: data.zone2_limit
+          ? ((data.zone2_usage / data.zone2_limit) * 100).toFixed(1)
+          : 0,
       },
       lastUpdated: data.updated_at,
     });

@@ -94,7 +94,10 @@ export const useSyncStore = create<SyncState>()(
             const data = await response.json();
             if (data.lastSyncTime) {
               set({ lastSyncTime: new Date(data.lastSyncTime).getTime() });
-              console.log(`Loaded last sync time from ${data.source}:`, data.lastSyncTime);
+              console.log(
+                `Loaded last sync time from ${data.source}:`,
+                data.lastSyncTime
+              );
             }
           }
         } catch (error) {
@@ -212,18 +215,18 @@ export const useSyncStore = create<SyncState>()(
               const rateInfo = error.limit
                 ? ` (${error.used}/${error.limit} calls used today)`
                 : "";
-              
+
               // Get retry-after from header or body
-              const retryAfterHeader = response.headers.get('Retry-After');
-              const retryAfter = retryAfterHeader 
-                ? parseInt(retryAfterHeader) 
-                : (error.retryAfter || 300); // Fallback to body or default 5 minutes
-              
+              const retryAfterHeader = response.headers.get("Retry-After");
+              const retryAfter = retryAfterHeader
+                ? parseInt(retryAfterHeader)
+                : error.retryAfter || 300; // Fallback to body or default 5 minutes
+
               // Return 429 status with retryAfter for RefreshManager
               return {
                 status: 429,
                 retryAfter: retryAfter,
-                error: `API rate limit exceeded${rateInfo}. Try again tomorrow.`
+                error: `API rate limit exceeded${rateInfo}. Try again tomorrow.`,
               };
             }
 
@@ -301,15 +304,17 @@ export const useSyncStore = create<SyncState>()(
           }, 2000);
 
           // Return the final status with metrics and sidebar data
-          return finalStatus || {
-            status: 'completed',
-            metrics: {
-              newArticles: 0,
-              deletedArticles: 0,
-              newTags: 0,
-              failedFeeds: 0
+          return (
+            finalStatus || {
+              status: "completed",
+              metrics: {
+                newArticles: 0,
+                deletedArticles: 0,
+                newTags: 0,
+                failedFeeds: 0,
+              },
             }
-          };
+          );
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown sync error";
@@ -317,11 +322,11 @@ export const useSyncStore = create<SyncState>()(
           setSyncProgress(0);
           setSyncMessage(null);
           console.error("Sync failed:", error);
-          
+
           // Return error status
           return {
-            status: 'failed',
-            error: errorMessage
+            status: "failed",
+            error: errorMessage,
           };
         } finally {
           setSyncing(false);

@@ -96,7 +96,7 @@ export function ArticleActionButton({
         )}
       />
       {showLabel && (
-        <span className="ml-2 hidden md:inline text-sm">{label}</span>
+        <span className="ml-2 hidden text-sm md:inline">{label}</span>
       )}
     </button>
   );

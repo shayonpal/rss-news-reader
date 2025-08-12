@@ -38,7 +38,7 @@
         "category": "Integration Tests - Incremental Sync Flow",
         "tests": [
           "Test complete incremental sync with recent articles only",
-          "Test sync metadata persistence across syncs", 
+          "Test sync metadata persistence across syncs",
           "Test API call reduction vs baseline sync",
           "Test sync with mixed read/unread articles",
           "Test sync after retention cleanup"
@@ -106,7 +106,7 @@
     "summary": {
       "total_tests": 40,
       "passed": 0,
-      "failed": 0, 
+      "failed": 0,
       "skipped": 0,
       "confidence_level": "high"
     },
@@ -191,7 +191,7 @@
         ]
       },
       "timestamp_parameters": {
-        "test_file": "src/__tests__/unit/rr-149-timestamp-params.test.ts", 
+        "test_file": "src/__tests__/unit/rr-149-timestamp-params.test.ts",
         "test_cases": [
           {
             "name": "should generate 'ot' parameter from last sync timestamp",
@@ -218,7 +218,7 @@
             ]
           },
           {
-            "name": "should combine multiple parameters correctly", 
+            "name": "should combine multiple parameters correctly",
             "description": "Test parameter combination in API URL",
             "setup": "Last sync timestamp + max articles limit",
             "action": "Build complete API URL",
@@ -233,7 +233,7 @@
             "name": "should handle missing last sync timestamp",
             "description": "First sync should not include ot parameter",
             "setup": "Empty sync_metadata table",
-            "action": "Generate sync parameters", 
+            "action": "Generate sync parameters",
             "expected": "Only xt and n parameters included",
             "assertions": [
               "ot parameter is undefined/null",
@@ -277,7 +277,7 @@
             "name": "should persist sync metadata across syncs",
             "description": "Metadata should survive multiple sync cycles",
             "setup": "Run initial sync",
-            "action": "Run second incremental sync", 
+            "action": "Run second incremental sync",
             "expected": "Second sync uses timestamp from first sync",
             "assertions": [
               "last_sync_time from first sync is used",
@@ -293,7 +293,7 @@
             "expected": "Incremental sync uses same number of setup calls",
             "assertions": [
               "Same subscription/folder API calls",
-              "Same unread-count API calls", 
+              "Same unread-count API calls",
               "Stream API returns fewer articles",
               "Overall processing time reduced"
             ]
@@ -333,7 +333,7 @@
             "name": "should trigger full sync after 7 days",
             "description": "Weekly full sync overrides incremental logic",
             "setup": "Set last_full_sync_time to 8 days ago",
-            "action": "Trigger sync", 
+            "action": "Trigger sync",
             "expected": "Full sync executed instead of incremental",
             "assertions": [
               "ot parameter not used in API call",
@@ -418,11 +418,11 @@
             "name": "should handle clock skew scenarios",
             "description": "Future timestamps should not break sync",
             "setup": "Set last_sync_time to future date",
-            "action": "Run incremental sync", 
+            "action": "Run incremental sync",
             "expected": "Future timestamp handled gracefully",
             "assertions": [
               "ot parameter uses future timestamp",
-              "API call succeeds (returns no results)", 
+              "API call succeeds (returns no results)",
               "Sync completes without errors",
               "Metadata updated to current time"
             ]
@@ -481,7 +481,7 @@
             "expected": "Duplicate processing reduced by >80%",
             "metrics": [
               "Baseline duplicate percentage",
-              "Incremental duplicate percentage", 
+              "Incremental duplicate percentage",
               "Processing time per article",
               "Total sync time improvement"
             ]
@@ -563,7 +563,7 @@
             "description": "Verify only unread articles enter processing pipeline",
             "setup": "Database with existing articles, Inoreader with new unread",
             "action": "Run sync and trace article processing",
-            "expected": "Processing pipeline only sees unread articles", 
+            "expected": "Processing pipeline only sees unread articles",
             "verification": [
               "Article filter applied before database operations",
               "Conflict resolution only for unread articles",
@@ -592,7 +592,7 @@
             "expected": "Only unread articles imported regardless of star status",
             "verification": [
               "read+starred: excluded",
-              "read+unstarred: excluded", 
+              "read+unstarred: excluded",
               "unread+starred: included",
               "unread+unstarred: included"
             ]
@@ -623,7 +623,7 @@
             "scenario": [
               "Start with clean database",
               "Run initial full sync (no ot parameter)",
-              "Add new articles to Inoreader", 
+              "Add new articles to Inoreader",
               "Run incremental sync (with ot parameter)",
               "Verify only new articles imported"
             ],
@@ -638,7 +638,7 @@
             "name": "should handle multi-day incremental sync scenario",
             "description": "Simulate several days of incremental syncs",
             "scenario": [
-              "Day 1: Initial full sync", 
+              "Day 1: Initial full sync",
               "Day 2: Incremental sync with few new articles",
               "Day 3: Incremental sync with no new articles",
               "Day 4: Incremental sync with many new articles"
@@ -651,7 +651,7 @@
             ]
           },
           {
-            "name": "should enforce retention limit in production scenario", 
+            "name": "should enforce retention limit in production scenario",
             "description": "Retention limit enforcement with real article volumes",
             "scenario": [
               "Import 900 articles via multiple syncs",
@@ -668,7 +668,7 @@
           },
           {
             "name": "should trigger and execute weekly full sync",
-            "description": "Weekly full sync trigger and execution", 
+            "description": "Weekly full sync trigger and execution",
             "scenario": [
               "Set last_full_sync_time to 8 days ago",
               "Run sync (should be full)",
@@ -686,7 +686,7 @@
             "name": "should recover from sync failures gracefully",
             "description": "Error recovery and sync resumption",
             "scenario": [
-              "Start incremental sync", 
+              "Start incremental sync",
               "Simulate API failure mid-sync",
               "Verify partial progress not corrupted",
               "Retry sync should recover cleanly"
@@ -694,7 +694,7 @@
             "verification": [
               "Partial import rolled back on failure",
               "Metadata not corrupted by failed sync",
-              "Retry sync starts from correct state", 
+              "Retry sync starts from correct state",
               "No duplicate processing on recovery"
             ]
           }
@@ -705,7 +705,7 @@
   "test_execution_commands": {
     "unit_tests": [
       "npx vitest run src/__tests__/unit/rr-149-retention-limit.test.ts",
-      "npx vitest run src/__tests__/unit/rr-149-timestamp-params.test.ts", 
+      "npx vitest run src/__tests__/unit/rr-149-timestamp-params.test.ts",
       "npx vitest run src/__tests__/unit/rr-149-timestamp-edge-cases.test.ts"
     ],
     "integration_tests": [
@@ -731,7 +731,7 @@
     ],
     "database_changes": [
       "Add last_full_sync_time to sync_metadata",
-      "Add articles_retained_count to sync_metadata", 
+      "Add articles_retained_count to sync_metadata",
       "Ensure sync_metadata has proper indexing"
     ],
     "environment_variables": [
@@ -749,7 +749,7 @@
     ],
     "secondary": [
       "Sync time improvement with fewer articles",
-      "API call count remains constant", 
+      "API call count remains constant",
       "Memory usage stable during retention cleanup",
       "Database query performance maintained"
     ]

@@ -27,6 +27,7 @@ The solution involves:
 **Purpose**: Test core state management functions in isolation
 
 **Test Coverage**:
+
 - `ArticleListStateManager` class functionality
 - Session storage save/retrieve operations
 - State expiry after 30 minutes
@@ -35,22 +36,23 @@ The solution involves:
 - Data validation and error handling
 
 **Key Test Scenarios**:
-```typescript
-describe('ArticleListStateManager', () => {
-  it('should save list state to sessionStorage')
-  it('should return null when no saved state exists')
-  it('should return null and clear state when expired (> 30 minutes)')
-  it('should handle corrupted state data gracefully')
-  it('should update specific article state')
-  it('should return only session-preserved articles')
-})
 
-describe('NavigationHistory', () => {
-  it('should add navigation entries with timestamps')
-  it('should maintain circular buffer with max size')
-  it('should handle back/forward navigation correctly')
-  it('should remove forward history when navigating to new path')
-})
+```typescript
+describe("ArticleListStateManager", () => {
+  it("should save list state to sessionStorage");
+  it("should return null when no saved state exists");
+  it("should return null and clear state when expired (> 30 minutes)");
+  it("should handle corrupted state data gracefully");
+  it("should update specific article state");
+  it("should return only session-preserved articles");
+});
+
+describe("NavigationHistory", () => {
+  it("should add navigation entries with timestamps");
+  it("should maintain circular buffer with max size");
+  it("should handle back/forward navigation correctly");
+  it("should remove forward history when navigating to new path");
+});
 ```
 
 ### 2. Integration Tests (`/src/__tests__/integration/rr-27-navigation-flows.test.ts`)
@@ -58,6 +60,7 @@ describe('NavigationHistory', () => {
 **Purpose**: Test component interactions and complete navigation flows
 
 **Test Coverage**:
+
 - Article list and detail component integration
 - Router navigation with state preservation
 - Intersection observer setup and cleanup
@@ -65,18 +68,19 @@ describe('NavigationHistory', () => {
 - Error handling across component boundaries
 
 **Key Test Scenarios**:
-```typescript
-describe('Basic Navigation Flow', () => {
-  it('should save scroll position when navigating to article detail')
-  it('should restore scroll position when navigating back from article detail')
-  it('should handle back navigation from article detail')
-})
 
-describe('State Preservation in Unread Only Mode', () => {
-  it('should preserve auto-read articles in session storage')
-  it('should handle intersection observer for auto-read detection')
-  it('should differentiate between auto-read and manually read articles')
-})
+```typescript
+describe("Basic Navigation Flow", () => {
+  it("should save scroll position when navigating to article detail");
+  it("should restore scroll position when navigating back from article detail");
+  it("should handle back navigation from article detail");
+});
+
+describe("State Preservation in Unread Only Mode", () => {
+  it("should preserve auto-read articles in session storage");
+  it("should handle intersection observer for auto-read detection");
+  it("should differentiate between auto-read and manually read articles");
+});
 ```
 
 ### 3. Edge Case Tests (`/src/__tests__/edge-cases/rr-27-navigation-edge-cases.test.ts`)
@@ -84,6 +88,7 @@ describe('State Preservation in Unread Only Mode', () => {
 **Purpose**: Test boundary conditions and error scenarios
 
 **Test Coverage**:
+
 - Storage quota exceeded scenarios
 - Corrupted session data recovery
 - Network connectivity changes
@@ -92,18 +97,19 @@ describe('State Preservation in Unread Only Mode', () => {
 - Memory pressure and performance limits
 
 **Key Test Scenarios**:
-```typescript
-describe('Storage Quota and Memory Management', () => {
-  it('should handle session storage quota exceeded gracefully')
-  it('should limit article count to prevent memory bloat')
-  it('should handle navigation history storage failures')
-})
 
-describe('Browser Environment Edge Cases', () => {
-  it('should handle iOS Safari quirks')
-  it('should handle private browsing mode restrictions')
-  it('should handle disabled JavaScript storage')
-})
+```typescript
+describe("Storage Quota and Memory Management", () => {
+  it("should handle session storage quota exceeded gracefully");
+  it("should limit article count to prevent memory bloat");
+  it("should handle navigation history storage failures");
+});
+
+describe("Browser Environment Edge Cases", () => {
+  it("should handle iOS Safari quirks");
+  it("should handle private browsing mode restrictions");
+  it("should handle disabled JavaScript storage");
+});
 ```
 
 ### 4. Acceptance Tests (`/src/__tests__/acceptance/rr-27-acceptance.test.ts`)
@@ -121,16 +127,19 @@ describe('Browser Environment Edge Cases', () => {
 7. **AC7**: Auto-read detection works correctly during scroll restoration
 
 **Key Test Scenarios**:
-```typescript
-describe('AC1: Auto-read articles remain visible in Unread Only mode', () => {
-  it('should preserve auto-read articles in session storage when navigating back')
-  it('should differentiate between auto-read and manually read articles')
-})
 
-describe('Integration: Complete user flow acceptance', () => {
-  it('should pass complete user scenario: scroll, auto-read, navigate, return')
-  it('should handle edge case: user navigates rapidly between articles')
-})
+```typescript
+describe("AC1: Auto-read articles remain visible in Unread Only mode", () => {
+  it(
+    "should preserve auto-read articles in session storage when navigating back"
+  );
+  it("should differentiate between auto-read and manually read articles");
+});
+
+describe("Integration: Complete user flow acceptance", () => {
+  it("should pass complete user scenario: scroll, auto-read, navigate, return");
+  it("should handle edge case: user navigates rapidly between articles");
+});
 ```
 
 ### 5. Performance Tests (`/src/__tests__/performance/rr-27-performance.test.ts`)
@@ -138,6 +147,7 @@ describe('Integration: Complete user flow acceptance', () => {
 **Purpose**: Ensure performance characteristics meet requirements
 
 **Performance Requirements**:
+
 - Save operations: < 50ms for 1000 articles
 - Retrieval operations: < 30ms
 - Batch updates: < 30ms for 50 articles
@@ -145,21 +155,23 @@ describe('Integration: Complete user flow acceptance', () => {
 - Intersection observer: < 50ms for 500 elements
 
 **Key Test Scenarios**:
-```typescript
-describe('Large Dataset Performance', () => {
-  it('should handle 1000 articles with acceptable performance')
-  it('should handle 5000 articles with compression and chunking')
-})
 
-describe('Real-world Performance Scenarios', () => {
-  it('should maintain performance during heavy user interaction')
-  it('should handle concurrent operations without performance degradation')
-})
+```typescript
+describe("Large Dataset Performance", () => {
+  it("should handle 1000 articles with acceptable performance");
+  it("should handle 5000 articles with compression and chunking");
+});
+
+describe("Real-world Performance Scenarios", () => {
+  it("should maintain performance during heavy user interaction");
+  it("should handle concurrent operations without performance degradation");
+});
 ```
 
 ## Test Execution Strategy
 
 ### Development Phase
+
 ```bash
 # Run unit tests during development
 npm run test:unit -- src/__tests__/unit/rr-27-state-preservation-unit.test.ts
@@ -169,6 +181,7 @@ npm run test:integration -- src/__tests__/integration/rr-27-navigation-flows.tes
 ```
 
 ### Pre-Commit Phase
+
 ```bash
 # Run all RR-27 related tests
 npm run test -- --testNamePattern="RR-27"
@@ -178,6 +191,7 @@ npm run test -- src/__tests__/acceptance/rr-27-acceptance.test.ts
 ```
 
 ### Performance Validation
+
 ```bash
 # Run performance tests separately
 npm run test -- src/__tests__/performance/rr-27-performance.test.ts
@@ -187,28 +201,31 @@ npm run test:perf
 ```
 
 ### E2E Testing (Optional with Playwright)
+
 ```typescript
 // tests/e2e/rr-27-navigation.spec.ts
-test('should preserve article list state during navigation', async ({ page }) => {
-  await page.goto('http://100.96.166.53:3000/reader');
-  
+test("should preserve article list state during navigation", async ({
+  page,
+}) => {
+  await page.goto("http://100.96.166.53:3000/reader");
+
   // Scroll to trigger auto-read
   await page.evaluate(() => window.scrollTo(0, 1000));
   await page.waitForTimeout(1000);
-  
+
   // Click article to navigate
   await page.click('[data-testid="article-1"]');
-  await page.waitForLoadState('networkidle');
-  
+  await page.waitForLoadState("networkidle");
+
   // Navigate back
   await page.goBack();
-  await page.waitForLoadState('networkidle');
-  
+  await page.waitForLoadState("networkidle");
+
   // Verify preserved state
   const scrollPosition = await page.evaluate(() => window.scrollY);
   expect(scrollPosition).toBeCloseTo(1000, -1); // Within 10px
-  
-  const preservedArticles = await page.locator('.session-preserved').count();
+
+  const preservedArticles = await page.locator(".session-preserved").count();
   expect(preservedArticles).toBeGreaterThan(0);
 });
 ```
@@ -216,6 +233,7 @@ test('should preserve article list state during navigation', async ({ page }) =>
 ## Success Criteria
 
 ### Functional Requirements
+
 - ✅ All acceptance criteria tests pass
 - ✅ Auto-read articles remain visible in Unread Only mode
 - ✅ Visual differentiation implemented correctly
@@ -223,12 +241,14 @@ test('should preserve article list state during navigation', async ({ page }) =>
 - ✅ State expires after 30 minutes as expected
 
 ### Performance Requirements
+
 - ✅ Operations complete within specified time limits
 - ✅ Memory usage remains stable during extended use
 - ✅ No performance regression with large article lists
 - ✅ Smooth user experience during navigation
 
 ### Reliability Requirements
+
 - ✅ All edge cases handled gracefully
 - ✅ Storage quota exceeded scenarios work
 - ✅ Browser compatibility maintained
@@ -237,12 +257,14 @@ test('should preserve article list state during navigation', async ({ page }) =>
 ## Risk Assessment and Mitigation
 
 ### High Risk Areas
+
 1. **Session Storage Quota**: Mitigated by implementing compression and fallback strategies
 2. **Performance with Large Lists**: Mitigated by pagination, virtual scrolling, and batch operations
 3. **Browser Compatibility**: Mitigated by comprehensive environment testing
 4. **Race Conditions**: Mitigated by proper state management and locking mechanisms
 
 ### Medium Risk Areas
+
 1. **State Corruption**: Mitigated by data validation and recovery procedures
 2. **Memory Leaks**: Mitigated by proper cleanup and caching strategies
 3. **Navigation Conflicts**: Mitigated by navigation history management
@@ -250,16 +272,19 @@ test('should preserve article list state during navigation', async ({ page }) =>
 ## Monitoring and Maintenance
 
 ### Performance Monitoring
+
 - Implement performance benchmarks as regression tests
 - Monitor session storage usage in production
 - Track user navigation patterns and performance metrics
 
 ### Error Monitoring
+
 - Log state preservation failures
 - Monitor session storage quota exceeded events
 - Track navigation flow completion rates
 
 ### Maintenance Tasks
+
 - Regular performance benchmark updates
 - Browser compatibility testing with new versions
 - Session storage cleanup optimization

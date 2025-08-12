@@ -9,6 +9,7 @@ This report documents the complete test specification for RR-5: Display accurate
 ## Test Philosophy
 
 ### Test-Driven Development (TDD) Approach
+
 1. **Tests ARE the Specification**: These 73 tests define exactly what the code must do
 2. **Red-Green-Refactor**: Tests should fail initially (red), then implementation makes them pass (green)
 3. **Behavior Focus**: Tests verify behavior (inputs/outputs), not implementation details
@@ -21,9 +22,10 @@ This report documents the complete test specification for RR-5: Display accurate
 #### 1. Unit Tests (28 tests) - `rr-5-sync-status-display.test.ts`
 
 **Header Parsing (8 tests)**
+
 - ✅ Parse valid zone headers correctly
 - ✅ Return null when zone1 headers missing
-- ✅ Return null when zone2 headers missing  
+- ✅ Return null when zone2 headers missing
 - ✅ Handle zero values in headers
 - ✅ Handle maximum values in headers
 - ✅ Handle non-numeric values gracefully
@@ -31,6 +33,7 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Case-insensitive header name parsing
 
 **Percentage Calculations (5 tests)**
+
 - ✅ Calculate percentage for normal values
 - ✅ Handle zero usage (0%)
 - ✅ Handle zero limit without division error
@@ -38,6 +41,7 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Round percentages to nearest integer
 
 **Color Determination (6 tests)**
+
 - ✅ Return green for usage below 80%
 - ✅ Return amber for usage 80-94%
 - ✅ Return red for usage 95% and above
@@ -46,6 +50,7 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Provide accessible color values
 
 **Database Operations (5 tests)**
+
 - ✅ Store zone usage data with upsert
 - ✅ Retrieve latest zone usage data
 - ✅ Handle missing zone data gracefully
@@ -53,6 +58,7 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Handle database connection errors
 
 **Error Handling (4 tests)**
+
 - ✅ Return default values when headers missing
 - ✅ Handle network failures gracefully
 - ✅ Log errors without throwing to UI
@@ -61,18 +67,21 @@ This report documents the complete test specification for RR-5: Display accurate
 #### 2. Integration Tests (12 tests) - `rr-5-sync-status-integration.test.ts`
 
 **Sync Endpoint with Headers (4 tests)**
+
 - ✅ Capture and store zone usage from sync
 - ✅ Update database with zone usage data
 - ✅ Handle missing headers gracefully
 - ✅ Handle rate limit exceeded scenario
 
 **API Usage Endpoint (4 tests)**
+
 - ✅ Return current zone usage from database
 - ✅ Return default values when no data exists
 - ✅ Track increasing usage across API calls
 - ✅ Handle zone limit changes
 
 **Database Persistence (4 tests)**
+
 - ✅ Store zone data correctly
 - ✅ Update existing records
 - ✅ Handle database errors
@@ -81,6 +90,7 @@ This report documents the complete test specification for RR-5: Display accurate
 #### 3. Component Tests (20 tests) - `rr-5-sidebar-display.test.tsx`
 
 **Sidebar Rendering (8 tests)**
+
 - ✅ Display "API Usage: X% (zone 1) | Y% (zone 2)" format
 - ✅ Show loading state when data unavailable
 - ✅ Display zero usage correctly
@@ -91,6 +101,7 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Handle undefined/null values gracefully
 
 **Color Styling (6 tests)**
+
 - ✅ Display green for usage below 80%
 - ✅ Display yellow for usage 80-94%
 - ✅ Display red for usage 95% and above
@@ -99,24 +110,28 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Maintain readability with color coding
 
 **Loading/Error States (4 tests)**
+
 - ✅ Show loading state initially
 - ✅ Transition from loading to loaded
 - ✅ Update display when store changes
 - ✅ Handle error states gracefully
 
 **Accessibility (2 tests)**
+
 - ✅ Proper semantic structure
 - ✅ Screen reader compatible
 
 #### 4. E2E Tests (13 tests) - `rr-5-sync-status-e2e.spec.ts`
 
 **Full Sync Flow (4 tests)**
+
 - ✅ Display API usage on page load
 - ✅ Update usage after manual sync
 - ✅ Handle API errors gracefully
 - ✅ Maintain display during network issues
 
 **UI Updates (5 tests)**
+
 - ✅ Show green color for low usage
 - ✅ Show yellow color for medium usage
 - ✅ Show red color for high usage
@@ -124,6 +139,7 @@ This report documents the complete test specification for RR-5: Display accurate
 - ✅ Display maximum usage correctly
 
 **Mobile Responsiveness (4 tests)**
+
 - ✅ Display correctly on mobile viewport
 - ✅ Handle text wrapping on small screens
 - ✅ Show in mobile menu if needed
@@ -132,6 +148,7 @@ This report documents the complete test specification for RR-5: Display accurate
 ## Test Contracts
 
 ### API Response Contract
+
 ```typescript
 interface ApiUsageResponse {
   zone1: {
@@ -149,6 +166,7 @@ interface ApiUsageResponse {
 ```
 
 ### Header Contract
+
 ```
 X-Reader-Zone1-Usage: <number>
 X-Reader-Zone1-Limit: <number>
@@ -157,16 +175,21 @@ X-Reader-Zone2-Limit: <number>
 ```
 
 ### Display Contract
+
 ```
 API Usage: X% (zone 1) | Y% (zone 2)
 ```
+
 With color coding:
+
 - Green: < 80%
 - Amber: 80-94%
 - Red: ≥ 95%
 
 ### Database Contract
+
 New columns required in `api_usage` table:
+
 - `zone1_usage` (INTEGER)
 - `zone1_limit` (INTEGER)
 - `zone2_usage` (INTEGER)
@@ -177,30 +200,35 @@ New columns required in `api_usage` table:
 Based on these tests, the implementation MUST:
 
 ### 1. Header Parsing
+
 - Extract zone headers from Inoreader API responses
 - Parse integer values from header strings
 - Handle missing/invalid headers gracefully
 - Be case-insensitive for header names
 
 ### 2. Data Storage
+
 - Add zone columns to api_usage table
 - Store zone data with each sync operation
 - Update existing records (upsert) for today's date
 - Handle database errors without crashing
 
 ### 3. API Endpoint
+
 - Create `/api/sync/api-usage` endpoint
 - Return zone usage with calculated percentages
 - Provide default values when no data exists
 - Include lastUpdated timestamp
 
 ### 4. UI Display
+
 - Show format: "API Usage: X% (zone 1) | Y% (zone 2)"
 - Apply color coding based on thresholds
 - Show loading state initially
 - Update in real-time when data changes
 
 ### 5. Store Updates
+
 - Add apiUsage property to sync store
 - Include zone1 and zone2 sub-objects
 - Calculate percentages on retrieval
@@ -209,11 +237,13 @@ Based on these tests, the implementation MUST:
 ## Test Execution
 
 ### Run All Tests
+
 ```bash
 ./scripts/test-rr-5.sh
 ```
 
 ### Run Individual Suites
+
 ```bash
 # Unit tests (28)
 npx vitest run src/__tests__/unit/rr-5-sync-status-display.test.ts
@@ -232,6 +262,7 @@ npx playwright test src/__tests__/e2e/rr-5-sync-status-e2e.spec.ts
 ## Success Criteria
 
 ### For Implementation to be Complete:
+
 1. ✅ All 73 tests must pass
 2. ✅ No test modifications allowed
 3. ✅ Type checking must pass
@@ -239,6 +270,7 @@ npx playwright test src/__tests__/e2e/rr-5-sync-status-e2e.spec.ts
 5. ✅ Manual verification confirms display
 
 ### Current Status
+
 - **Tests Written**: 73/73 ✅
 - **Tests Passing**: 17/73 (partial - only some unit tests run)
 - **Implementation**: Not started (expected)
@@ -255,6 +287,7 @@ npx playwright test src/__tests__/e2e/rr-5-sync-status-e2e.spec.ts
 ## Notes for Developers
 
 ### DO:
+
 - ✅ Follow the test specifications exactly
 - ✅ Implement only what tests require
 - ✅ Keep tests green during refactoring
@@ -262,6 +295,7 @@ npx playwright test src/__tests__/e2e/rr-5-sync-status-e2e.spec.ts
 - ✅ Use existing patterns from codebase
 
 ### DON'T:
+
 - ❌ Modify tests to match your implementation
 - ❌ Skip tests that are "too hard"
 - ❌ Add features not covered by tests
@@ -273,6 +307,7 @@ npx playwright test src/__tests__/e2e/rr-5-sync-status-e2e.spec.ts
 These 73 tests form the complete specification for RR-5. The implementation must conform to these tests, not the other way around. Any deviation from test specifications should be considered a bug in the implementation.
 
 The tests are comprehensive, covering:
+
 - All happy paths
 - Error scenarios
 - Edge cases
@@ -284,5 +319,5 @@ With these tests as the guide, implementation can proceed with confidence that a
 
 ---
 
-*Generated by Test Expert on 2025-01-09*
-*Tests define the specification - Implementation must conform*
+_Generated by Test Expert on 2025-01-09_
+_Tests define the specification - Implementation must conform_

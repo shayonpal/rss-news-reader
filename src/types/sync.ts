@@ -1,7 +1,7 @@
 // Sync operation types
 
 export interface SyncResult {
-  status: 'completed' | 'partial' | 'failed';
+  status: "completed" | "partial" | "failed";
   metrics: SyncMetrics;
   sidebar?: SidebarData;
   retryAfter?: number; // For rate limiting

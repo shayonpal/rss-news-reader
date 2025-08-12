@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * RR-180: iOS 26 Liquid Glass Button Components
- * 
+ *
  * Implementation Requirements:
  * - 48px minimum touch targets (iOS HIG)
  * - Glass effects: blur(16px) saturate(180%)
@@ -89,9 +89,20 @@ export interface GlassButtonProps
 }
 
 const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
-  ({ className, variant, size, asChild = false, springAnimation = true, style, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      springAnimation = true,
+      style,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button";
-    
+
     return (
       <Comp
         className={cn(glassButtonVariants({ variant, size, className }))}
@@ -118,8 +129,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
 );
 GlassButton.displayName = "GlassButton";
 
-export interface GlassIconButtonProps
-  extends Omit<GlassButtonProps, "size"> {
+export interface GlassIconButtonProps extends Omit<GlassButtonProps, "size"> {
   "aria-label": string; // Required for accessibility
 }
 
@@ -127,8 +137,21 @@ export interface GlassIconButtonProps
  * Icon-only glass button with enforced 48x48px dimensions
  * Requires aria-label for accessibility
  */
-const GlassIconButton = React.forwardRef<HTMLButtonElement, GlassIconButtonProps>(
-  ({ className, variant, asChild = false, springAnimation = true, style, ...props }, ref) => {
+const GlassIconButton = React.forwardRef<
+  HTMLButtonElement,
+  GlassIconButtonProps
+>(
+  (
+    {
+      className,
+      variant,
+      asChild = false,
+      springAnimation = true,
+      style,
+      ...props
+    },
+    ref
+  ) => {
     return (
       <GlassButton
         ref={ref}
@@ -156,36 +179,40 @@ export interface GlassToolbarButtonProps extends GlassButtonProps {
  * Toolbar-optimized glass button with icon and label support
  * Designed for horizontal layouts with consistent spacing
  */
-const GlassToolbarButton = React.forwardRef<HTMLButtonElement, GlassToolbarButtonProps>(
-  ({ 
-    className, 
-    variant, 
-    size = "toolbar",
-    icon,
-    iconPosition = "left",
-    hideOnMobile = false,
-    children,
-    springAnimation = true,
-    style,
-    asChild = false,
-    ...props 
-  }, ref) => {
+const GlassToolbarButton = React.forwardRef<
+  HTMLButtonElement,
+  GlassToolbarButtonProps
+>(
+  (
+    {
+      className,
+      variant,
+      size = "toolbar",
+      icon,
+      iconPosition = "left",
+      hideOnMobile = false,
+      children,
+      springAnimation = true,
+      style,
+      asChild = false,
+      ...props
+    },
+    ref
+  ) => {
     const content = (
       <>
         {icon && iconPosition === "left" && (
-          <span className="flex-shrink-0 w-6 h-6" aria-hidden="true">
+          <span className="h-6 w-6 flex-shrink-0" aria-hidden="true">
             {icon}
           </span>
         )}
         {children && (
-          <span className={cn(
-            hideOnMobile && "hidden md:inline"
-          )}>
+          <span className={cn(hideOnMobile && "hidden md:inline")}>
             {children}
           </span>
         )}
         {icon && iconPosition === "right" && (
-          <span className="flex-shrink-0 w-6 h-6" aria-hidden="true">
+          <span className="h-6 w-6 flex-shrink-0" aria-hidden="true">
             {icon}
           </span>
         )}
@@ -226,4 +253,9 @@ const GlassToolbarButton = React.forwardRef<HTMLButtonElement, GlassToolbarButto
 );
 GlassToolbarButton.displayName = "GlassToolbarButton";
 
-export { GlassButton, GlassIconButton, GlassToolbarButton, glassButtonVariants };
+export {
+  GlassButton,
+  GlassIconButton,
+  GlassToolbarButton,
+  glassButtonVariants,
+};

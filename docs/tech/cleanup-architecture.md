@@ -17,6 +17,7 @@ The RSS News Reader implements a comprehensive cleanup system to manage database
 The core cleanup service (`src/lib/services/cleanup-service.ts`) handles all cleanup operations with configurable parameters and safety mechanisms.
 
 #### Key Features
+
 - Configurable deletion thresholds and batch sizes
 - Safety mechanisms to prevent accidental mass deletion
 - Deletion tracking to prevent re-import of intentionally deleted articles
@@ -26,14 +27,14 @@ The core cleanup service (`src/lib/services/cleanup-service.ts`) handles all cle
 
 Cleanup behavior is controlled through the `system_config` table:
 
-| Configuration Key | Default Value | Description |
-|-------------------|---------------|-------------|
-| `deletion_tracking_enabled` | `true` | Enable/disable deletion tracking |
-| `cleanup_read_articles_enabled` | `true` | Enable/disable read article cleanup |
-| `feed_deletion_safety_threshold` | `0.5` | Maximum percentage of feeds to delete in single operation |
-| `max_articles_per_cleanup_batch` | `1000` | Maximum articles to process in single cleanup |
-| `deletion_tracking_retention_days` | `90` | Days to retain deletion tracking records |
-| `max_ids_per_delete_operation` | `200` | **RR-150**: Maximum IDs per database delete operation |
+| Configuration Key                  | Default Value | Description                                               |
+| ---------------------------------- | ------------- | --------------------------------------------------------- |
+| `deletion_tracking_enabled`        | `true`        | Enable/disable deletion tracking                          |
+| `cleanup_read_articles_enabled`    | `true`        | Enable/disable read article cleanup                       |
+| `feed_deletion_safety_threshold`   | `0.5`         | Maximum percentage of feeds to delete in single operation |
+| `max_articles_per_cleanup_batch`   | `1000`        | Maximum articles to process in single cleanup             |
+| `deletion_tracking_retention_days` | `90`          | Days to retain deletion tracking records                  |
+| `max_ids_per_delete_operation`     | `200`         | **RR-150**: Maximum IDs per database delete operation     |
 
 ### Deletion Tracking
 
@@ -69,24 +70,32 @@ for (let i = 0; i < articlesToDelete.length; i += DELETE_CHUNK_SIZE) {
   const chunk = articlesToDelete.slice(i, i + DELETE_CHUNK_SIZE);
   const chunkNumber = Math.floor(i / DELETE_CHUNK_SIZE) + 1;
   const totalChunks = Math.ceil(articlesToDelete.length / DELETE_CHUNK_SIZE);
-  
-  console.log(`[Cleanup] Deleting chunk ${chunkNumber}/${totalChunks} (${chunk.length} articles)`);
-  
+
+  console.log(
+    `[Cleanup] Deleting chunk ${chunkNumber}/${totalChunks} (${chunk.length} articles)`
+  );
+
   const { error: deleteError } = await this.supabase
-    .from('articles')
+    .from("articles")
     .delete()
-    .in('id', chunk.map(a => a.id));
-    
+    .in(
+      "id",
+      chunk.map((a) => a.id)
+    );
+
   if (deleteError) {
     deleteErrors.push(`Chunk ${chunkNumber}: ${deleteError.message}`);
-    console.error(`[Cleanup] Failed to delete chunk ${chunkNumber}:`, deleteError);
+    console.error(
+      `[Cleanup] Failed to delete chunk ${chunkNumber}:`,
+      deleteError
+    );
   } else {
     totalDeleted += chunk.length;
   }
-  
+
   // Add delay between chunks to avoid overwhelming the database
   if (i + DELETE_CHUNK_SIZE < articlesToDelete.length) {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 }
 ```
@@ -122,7 +131,7 @@ for (let i = 0; i < articlesToDelete.length; i += DELETE_CHUNK_SIZE) {
 The chunk size is controlled by the `max_ids_per_delete_operation` system configuration:
 
 ```sql
-INSERT INTO system_config (key, value, description) VALUES 
+INSERT INTO system_config (key, value, description) VALUES
 ('max_ids_per_delete_operation', '200', 'Maximum number of article IDs to include in a single delete operation to avoid URI length limits');
 ```
 
@@ -160,7 +169,7 @@ Based on testing with 1000+ article deletions:
 ### Monitoring Metrics
 
 - **Total Articles Processed**: Sum across all chunks
-- **Chunk Success Rate**: Percentage of successful chunk deletions  
+- **Chunk Success Rate**: Percentage of successful chunk deletions
 - **Processing Duration**: Time from start to completion
 - **Error Rate**: Failed operations per cleanup cycle
 
@@ -202,8 +211,9 @@ CREATE OR REPLACE FUNCTION cleanup_articles_chunked(
 ```
 
 **Decision**: Kept TypeScript implementation for:
+
 - Better error handling and logging
-- Easier testing and debugging  
+- Easier testing and debugging
 - Consistent with existing codebase patterns
 - More flexible configuration management
 
@@ -255,7 +265,7 @@ Cleanup health can be monitored through:
 - **Configuration Handling**: System config validation
 - **Error Scenarios**: Individual chunk failure handling
 
-### Integration Tests  
+### Integration Tests
 
 - **End-to-End Cleanup**: `rr-150-chunked-cleanup-integration.test.ts`
 - **Large Dataset Processing**: Performance validation with 1000+ articles

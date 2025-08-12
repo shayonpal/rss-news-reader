@@ -512,7 +512,7 @@ class SyncOrchestrator {
   async performSync(): Promise<SyncResult> {
     // Determine sync type (incremental vs full)
     const syncType = await this.determineSyncType();
-    
+
     const steps = [
       this.syncUserInfo,
       this.syncSubscriptions,
@@ -537,41 +537,42 @@ class SyncOrchestrator {
 
     // Update sync metadata with appropriate timestamps
     await this.updateSyncMetadata(syncType);
-    
+
     return this.consolidateResults(results);
   }
-  
-  private async determineSyncType(): Promise<'incremental' | 'full'> {
-    const lastFullSync = await getSyncMetadata('last_full_sync_time');
-    if (!lastFullSync) return 'full';
-    
-    const daysSince = (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24);
-    return daysSince >= 7 ? 'full' : 'incremental';
+
+  private async determineSyncType(): Promise<"incremental" | "full"> {
+    const lastFullSync = await getSyncMetadata("last_full_sync_time");
+    if (!lastFullSync) return "full";
+
+    const daysSince =
+      (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7 ? "full" : "incremental";
   }
-  
+
   private async decodeHtmlEntities(): Promise<void> {
     // RR-154: Decode HTML entities during sync
     // This step runs after article sync but before unread counts
     // to ensure decoded content is available for display
-    const { decodeHtmlEntities } = await import('@/lib/utils/html-decoder');
-    
+    const { decodeHtmlEntities } = await import("@/lib/utils/html-decoder");
+
     // Decoding happens inline during article processing in syncArticles()
     // This placeholder ensures it's documented in the sync pipeline
-    console.log('HTML entity decoding integrated into article sync process');
+    console.log("HTML entity decoding integrated into article sync process");
   }
-  
+
   private async prepareSidebarData(): Promise<SidebarPayload> {
     // RR-171: Prepare sidebar payload for immediate UI updates
     // This step collects feed counts and tags for immediate frontend refresh
     const [feedCounts, tags] = await Promise.all([
       this.getFeedCounts(),
-      this.getAvailableTags()
+      this.getAvailableTags(),
     ]);
-    
+
     return {
       feedCounts,
       tags,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
   }
 }
@@ -700,30 +701,35 @@ The incremental sync implementation significantly improves efficiency by:
 const buildSyncQuery = async (userId: string): Promise<string> => {
   const baseUrl = `/reader/api/0/stream/contents/user/${userId}/state/com.google/reading-list`;
   const params = new URLSearchParams({
-    n: process.env.SYNC_MAX_ARTICLES || '500',
-    r: 'n', // Newest first
-    xt: 'read' // Exclude read articles
+    n: process.env.SYNC_MAX_ARTICLES || "500",
+    r: "n", // Newest first
+    xt: "read", // Exclude read articles
   });
-  
+
   // Check if we need a full sync (weekly)
-  const lastFullSync = await getSyncMetadata('last_full_sync_time');
-  const daysSinceFullSync = lastFullSync ? 
-    (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24) : 7;
-    
+  const lastFullSync = await getSyncMetadata("last_full_sync_time");
+  const daysSinceFullSync = lastFullSync
+    ? (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24)
+    : 7;
+
   if (daysSinceFullSync < 7) {
     // Incremental sync - add timestamp filter
-    const lastIncSync = await getSyncMetadata('last_incremental_sync_timestamp');
+    const lastIncSync = await getSyncMetadata(
+      "last_incremental_sync_timestamp"
+    );
     if (lastIncSync) {
-      params.set('ot', Math.floor(lastIncSync.getTime() / 1000).toString());
+      params.set("ot", Math.floor(lastIncSync.getTime() / 1000).toString());
     }
   }
-  
+
   return `${baseUrl}?${params.toString()}`;
 };
 
 // Article retention enforcement
 const enforceArticleRetention = async (): Promise<void> => {
-  const retentionLimit = parseInt(process.env.ARTICLES_RETENTION_LIMIT || '1000');
+  const retentionLimit = parseInt(
+    process.env.ARTICLES_RETENTION_LIMIT || "1000"
+  );
   await ArticleCleanupService.enforceRetentionLimit(retentionLimit);
 };
 ```
@@ -745,6 +751,7 @@ New metadata keys for tracking incremental sync state:
 ### Fallback Strategy
 
 Weekly full syncs ensure data integrity by:
+
 - Catching any articles missed due to timestamp issues
 - Synchronizing read states that may have drifted
 - Providing a complete data refresh
@@ -759,16 +766,18 @@ HTML entity decoding is seamlessly integrated into the sync pipeline to ensure a
 
 ```typescript
 // Integration point in sync process
-import { decodeHtmlEntities } from '@/lib/utils/html-decoder';
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 
 // During article processing in /api/sync/route.ts
 const processedArticle = {
   ...article,
-  title: decodeHtmlEntities(article.title) || 'Untitled',
-  content: decodeHtmlEntities(article.content?.content || article.summary?.content || ''),
+  title: decodeHtmlEntities(article.title) || "Untitled",
+  content: decodeHtmlEntities(
+    article.content?.content || article.summary?.content || ""
+  ),
   // URLs are never decoded to preserve query parameters
   url: article.url, // Always preserved as-is
-  canonical_url: article.canonical_url // Always preserved as-is
+  canonical_url: article.canonical_url, // Always preserved as-is
 };
 ```
 
@@ -788,11 +797,13 @@ Critical requirement: URLs are never decoded to prevent breaking query parameter
 ```typescript
 // URL detection patterns
 function isSafeUrl(text: string): boolean {
-  return text.startsWith('http://') || 
-         text.startsWith('https://') ||
-         text.startsWith('feed://') ||
-         text.includes('://') ||
-         text.includes('?') && text.includes('&amp;');
+  return (
+    text.startsWith("http://") ||
+    text.startsWith("https://") ||
+    text.startsWith("feed://") ||
+    text.includes("://") ||
+    (text.includes("?") && text.includes("&amp;"))
+  );
 }
 ```
 
@@ -813,8 +824,9 @@ Two migration scripts are provided for existing data:
 ### Integration Testing
 
 Comprehensive test coverage includes:
+
 - Unit tests for decoder functions
-- Integration tests for sync pipeline integration  
+- Integration tests for sync pipeline integration
 - E2E tests for user experience validation
 - Performance tests for large article batches
 
@@ -824,10 +836,10 @@ Decoding failures are logged but don't block sync operations:
 
 ```typescript
 // Error tracking for production monitoring
-console.warn('HTML entity decoding failed:', {
+console.warn("HTML entity decoding failed:", {
   input: text.substring(0, 100), // Limited for privacy
   error: error.message,
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 });
 ```
 
@@ -851,19 +863,21 @@ Background Sync → Execute Sync Steps → Prepare Sidebar Data → Return Respo
 let syncInProgress = false;
 let syncDebounceTimer: NodeJS.Timeout;
 
-export async function handleSyncRequest(request: SyncRequest): Promise<SyncResponse> {
+export async function handleSyncRequest(
+  request: SyncRequest
+): Promise<SyncResponse> {
   // 500ms debounce to prevent rapid-fire requests
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
   }
-  
+
   return new Promise((resolve, reject) => {
     syncDebounceTimer = setTimeout(async () => {
       if (syncInProgress) {
-        reject(new Error('SYNC_IN_PROGRESS'));
+        reject(new Error("SYNC_IN_PROGRESS"));
         return;
       }
-      
+
       syncInProgress = true;
       try {
         const result = await performSyncWithMetrics();
@@ -887,8 +901,8 @@ The RSS reader implements intelligent rate limiting to handle Inoreader's API co
 
 ```typescript
 interface RateLimitResponse {
-  error: 'RATE_LIMITED';
-  message: 'Sync rate limited. Please wait before trying again.';
+  error: "RATE_LIMITED";
+  message: "Sync rate limited. Please wait before trying again.";
   retryAfter: number; // seconds
   nextSyncAvailable: string; // ISO timestamp
 }
@@ -933,9 +947,9 @@ interface Tag {
   slug: string;
   color?: string;
   description?: string;
-  articleCount: number;       // Total articles with this tag
-  unreadCount?: number;       // RR-163: Unread articles with this tag
-  totalCount?: number;        // RR-163: Explicit total (alias of articleCount)
+  articleCount: number; // Total articles with this tag
+  unreadCount?: number; // RR-163: Unread articles with this tag
+  totalCount?: number; // RR-163: Explicit total (alias of articleCount)
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -956,7 +970,7 @@ interface TagsResponse {
     name: string;
     slug: string;
     article_count: number;
-    unread_count: number;      // RR-163: New field
+    unread_count: number; // RR-163: New field
     // ... other tag fields
   }>;
   pagination: {
@@ -969,6 +983,7 @@ interface TagsResponse {
 ```
 
 **Implementation Details:**
+
 - Scopes unread count calculation to user's subscribed feeds only
 - Prevents cross-user data contamination
 - Uses optimized SQL joins: `articles → article_tags → tags`
@@ -981,18 +996,20 @@ const { data: userFeeds } = await supabase
   .select("id")
   .eq("user_id", userData.id);
 
-const feedIds = userFeeds.map(f => f.id);
+const feedIds = userFeeds.map((f) => f.id);
 
 // Unread articles query scoped to user's feeds
 const { data: unreadCounts } = await supabase
   .from("articles")
-  .select(`
+  .select(
+    `
     id,
     article_tags!inner(
       tag_id,
       tags!inner(id)
     )
-  `)
+  `
+  )
   .in("feed_id", feedIds)
   .eq("is_read", false);
 ```
@@ -1003,32 +1020,34 @@ const { data: unreadCounts } = await supabase
 
 ```typescript
 // RR-163: Tag store merge logic
-applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => {
+applySidebarTags: (
+  sidebarTags: Array<{ id: string; name: string; count: number }>
+) => {
   // Don't reset counts if sync returns no tags
   if (sidebarTags.length === 0) {
-    console.log('No sidebar tags from sync, keeping existing unread counts');
+    console.log("No sidebar tags from sync, keeping existing unread counts");
     return;
   }
-  
+
   set((state) => {
     const mergedTags = new Map(state.tags);
-    
+
     // Reset all unreadCounts to 0 (tags not in response have 0 unread)
-    mergedTags.forEach(tag => {
+    mergedTags.forEach((tag) => {
       tag.unreadCount = 0;
     });
-    
+
     // Update with new unread counts from sync
-    sidebarTags.forEach(sidebarTag => {
+    sidebarTags.forEach((sidebarTag) => {
       const existing = mergedTags.get(sidebarTag.id);
       if (existing) {
         existing.unreadCount = sidebarTag.count;
       }
     });
-    
+
     return { tags: mergedTags };
   });
-}
+};
 ```
 
 #### Optimistic Updates
@@ -1039,19 +1058,19 @@ updateSelectedTagUnreadCount: (delta: number) => {
   set((state) => {
     // Only update if single tag selected
     if (state.selectedTagIds.size !== 1) return state;
-    
+
     const tagId = Array.from(state.selectedTagIds)[0];
     const updatedTags = new Map(state.tags);
     const tag = updatedTags.get(tagId);
-    
+
     if (tag && tag.unreadCount !== undefined) {
       // Bound at 0 to prevent negative counts
       tag.unreadCount = Math.max(0, tag.unreadCount + delta);
     }
-    
+
     return { tags: updatedTags };
   });
-}
+};
 ```
 
 ### Filtering Logic
@@ -1060,25 +1079,29 @@ updateSelectedTagUnreadCount: (delta: number) => {
 
 ```typescript
 // Sidebar filtering based on read status
-const filterTags = (tags: Tag[], readStatusFilter: string, totalUnreadCount: number) => {
-  return tags.filter(tag => {
+const filterTags = (
+  tags: Tag[],
+  readStatusFilter: string,
+  totalUnreadCount: number
+) => {
+  return tags.filter((tag) => {
     // Always show currently selected tag
     if (selectedTagId === tag.id) return true;
-    
+
     if (readStatusFilter === "unread") {
       const hasUnread = (tag.unreadCount ?? 0) > 0;
       const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
-      
+
       // If tag has unread, show it
       if (hasUnread) return true;
-      
+
       // Fallback: If system has unread but no tags show unread counts,
       // show all tags with articles (handles sync issues)
       if (totalUnreadCount > 0 && hasArticles) {
-        const noTagsHaveUnread = tags.every(t => (t.unreadCount ?? 0) === 0);
+        const noTagsHaveUnread = tags.every((t) => (t.unreadCount ?? 0) === 0);
         return noTagsHaveUnread;
       }
-      
+
       return false;
     } else if (readStatusFilter === "read") {
       const totalCount = tag.totalCount ?? tag.articleCount;
@@ -1111,7 +1134,7 @@ interface UseArticleListStateProps {
   articles: Map<string, Article>;
   feedId: string | null;
   folderId: string | null;
-  tagId?: string;              // RR-163: Added for tag context preservation
+  tagId?: string; // RR-163: Added for tag context preservation
   readStatusFilter: string;
   scrollContainerRef: React.RefObject<HTMLElement>;
   onArticleClick: (article: Article) => void;
@@ -1183,13 +1206,14 @@ try {
   tagState.updateSelectedTagUnreadCount(-1);
 } catch (e) {
   // Non-fatal; sidebar counts will refresh on next sync
-  console.warn('Failed to optimistically update tag unread count:', e);
+  console.warn("Failed to optimistically update tag unread count:", e);
 }
 ```
 
 ### Integration Testing
 
 Key test scenarios for RR-163:
+
 - Tag filtering accuracy across all three modes (unread/read/all)
 - Optimistic update synchronization with actual data
 - Fallback behavior when tag associations are incomplete

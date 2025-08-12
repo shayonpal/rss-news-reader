@@ -8,31 +8,32 @@ export async function GET() {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
     // Get parsing statistics
-    const [totalStats, recentStats, failureStats, partialFeeds] = await Promise.all([
-      // Total parsing statistics
-      supabase
-        .from("articles")
-        .select("*", { count: "exact", head: true })
-        .not("parsed_at", "is", null),
-      
-      // Recent parsing activity (last hour)
-      supabase
-        .from("articles")
-        .select("*", { count: "exact", head: true })
-        .gte("parsed_at", oneHourAgo.toISOString()),
-      
-      // Failed parses
-      supabase
-        .from("articles")
-        .select("*", { count: "exact", head: true })
-        .eq("parse_failed", true),
-      
-      // Partial feeds count
-      supabase
-        .from("feeds")
-        .select("*", { count: "exact", head: true })
-        .eq("is_partial_feed", true),
-    ]);
+    const [totalStats, recentStats, failureStats, partialFeeds] =
+      await Promise.all([
+        // Total parsing statistics
+        supabase
+          .from("articles")
+          .select("*", { count: "exact", head: true })
+          .not("parsed_at", "is", null),
+
+        // Recent parsing activity (last hour)
+        supabase
+          .from("articles")
+          .select("*", { count: "exact", head: true })
+          .gte("parsed_at", oneHourAgo.toISOString()),
+
+        // Failed parses
+        supabase
+          .from("articles")
+          .select("*", { count: "exact", head: true })
+          .eq("parse_failed", true),
+
+        // Partial feeds count
+        supabase
+          .from("feeds")
+          .select("*", { count: "exact", head: true })
+          .eq("is_partial_feed", true),
+      ]);
 
     // Get fetch logs statistics for the last 24 hours
     const { data: fetchLogs } = await supabase
@@ -41,18 +42,21 @@ export async function GET() {
       .gte("created_at", oneDayAgo.toISOString());
 
     // Calculate fetch statistics (exclude auto-fetch for API health metrics)
-    const manualFetchLogs = fetchLogs?.filter(log => log.fetch_type !== "auto") || [];
-    const autoFetchLogs = fetchLogs?.filter(log => log.fetch_type === "auto") || [];
-    
+    const manualFetchLogs =
+      fetchLogs?.filter((log) => log.fetch_type !== "auto") || [];
+    const autoFetchLogs =
+      fetchLogs?.filter((log) => log.fetch_type === "auto") || [];
+
     const fetchStats = {
       total: manualFetchLogs.length,
-      success: manualFetchLogs.filter(log => log.status === "success").length,
-      failure: manualFetchLogs.filter(log => log.status === "failure").length,
-      manual: fetchLogs?.filter(log => log.fetch_type === "manual").length || 0,
+      success: manualFetchLogs.filter((log) => log.status === "success").length,
+      failure: manualFetchLogs.filter((log) => log.status === "failure").length,
+      manual:
+        fetchLogs?.filter((log) => log.fetch_type === "manual").length || 0,
       auto: {
         total: autoFetchLogs.length,
-        success: autoFetchLogs.filter(log => log.status === "success").length,
-        failure: autoFetchLogs.filter(log => log.status === "failure").length,
+        success: autoFetchLogs.filter((log) => log.status === "success").length,
+        failure: autoFetchLogs.filter((log) => log.status === "failure").length,
       },
     };
 
@@ -66,7 +70,8 @@ export async function GET() {
       .limit(100);
 
     const avgDuration = recentLogs?.length
-      ? recentLogs.reduce((sum, log) => sum + (log.duration_ms || 0), 0) / recentLogs.length
+      ? recentLogs.reduce((sum, log) => sum + (log.duration_ms || 0), 0) /
+        recentLogs.length
       : 0;
 
     // Get system config for parsing
@@ -79,17 +84,27 @@ export async function GET() {
         "max_parse_attempts",
       ]);
 
-    const configMap = configs?.reduce((acc, cfg) => {
-      acc[cfg.key] = cfg.value;
-      return acc;
-    }, {} as Record<string, string>) || {};
+    const configMap =
+      configs?.reduce(
+        (acc, cfg) => {
+          acc[cfg.key] = cfg.value;
+          return acc;
+        },
+        {} as Record<string, string>
+      ) || {};
 
     // Calculate health status
-    const successRate = fetchStats.total > 0 
-      ? (fetchStats.success / fetchStats.total) * 100 
-      : 100;
-    
-    const status = successRate >= 90 ? "healthy" : successRate >= 70 ? "degraded" : "unhealthy";
+    const successRate =
+      fetchStats.total > 0
+        ? (fetchStats.success / fetchStats.total) * 100
+        : 100;
+
+    const status =
+      successRate >= 90
+        ? "healthy"
+        : successRate >= 70
+          ? "degraded"
+          : "unhealthy";
 
     return NextResponse.json({
       status,
@@ -121,7 +136,11 @@ export async function GET() {
           maxAttempts: parseInt(configMap.max_parse_attempts || "3"),
         },
       },
-      recommendations: getRecommendations(successRate, avgDuration, failureStats.count || 0),
+      recommendations: getRecommendations(
+        successRate,
+        avgDuration,
+        failureStats.count || 0
+      ),
     });
   } catch (error) {
     console.error("Parsing health check error:", error);
@@ -136,26 +155,38 @@ export async function GET() {
   }
 }
 
-function getRecommendations(successRate: number, avgDuration: number, failedCount: number): string[] {
+function getRecommendations(
+  successRate: number,
+  avgDuration: number,
+  failedCount: number
+): string[] {
   const recommendations: string[] = [];
 
   if (successRate < 90) {
-    recommendations.push("API success rate below 90% - investigate manual fetch failure reasons");
+    recommendations.push(
+      "API success rate below 90% - investigate manual fetch failure reasons"
+    );
   }
 
   if (avgDuration > 10000) {
-    recommendations.push("Average parse time exceeds 10 seconds - consider timeout adjustments");
+    recommendations.push(
+      "Average parse time exceeds 10 seconds - consider timeout adjustments"
+    );
   }
 
   if (failedCount > 100) {
-    recommendations.push(`${failedCount} failed parses - consider manual review or cleanup`);
+    recommendations.push(
+      `${failedCount} failed parses - consider manual review or cleanup`
+    );
   }
 
   if (avgDuration > 0 && avgDuration < 1000) {
-    recommendations.push("Very fast parse times detected - verify content extraction quality");
+    recommendations.push(
+      "Very fast parse times detected - verify content extraction quality"
+    );
   }
 
-  return recommendations.length > 0 
-    ? recommendations 
+  return recommendations.length > 0
+    ? recommendations
     : ["All parsing metrics within normal ranges"];
 }

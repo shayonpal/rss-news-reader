@@ -1,24 +1,24 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { ArticleDetail } from '@/components/articles/article-detail';
-import type { Article, Feed } from '@/types';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ArticleDetail } from "@/components/articles/article-detail";
+import type { Article, Feed } from "@/types";
 
 // Mock dependencies
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
     back: vi.fn(),
   }),
 }));
 
-vi.mock('@/lib/stores/article-store', () => ({
+vi.mock("@/lib/stores/article-store", () => ({
   useArticleStore: () => ({
     getArticle: vi.fn().mockResolvedValue(null),
   }),
 }));
 
-vi.mock('@/lib/stores/feed-store', () => ({
+vi.mock("@/lib/stores/feed-store", () => ({
   useFeedStore: () => ({
     updateFeedPartialContent: vi.fn(),
   }),
@@ -28,21 +28,24 @@ vi.mock('@/lib/stores/feed-store', () => ({
 global.fetch = vi.fn();
 
 // Mock DOMPurify
-vi.mock('isomorphic-dompurify', () => ({
+vi.mock("isomorphic-dompurify", () => ({
   default: {
     sanitize: (content: string) => content,
   },
 }));
 
-describe('RR-176: Content State Management - Integration Tests', () => {
+describe("RR-176: Content State Management - Integration Tests", () => {
   const mockArticle: Article = {
-    id: 'article-123',
-    feedId: 'feed-123',
-    title: 'Test Article Title',
-    content: '<p>Original RSS content that is quite long to avoid auto-fetch</p>'.repeat(20),
-    url: 'https://example.com/article',
+    id: "article-123",
+    feedId: "feed-123",
+    title: "Test Article Title",
+    content:
+      "<p>Original RSS content that is quite long to avoid auto-fetch</p>".repeat(
+        20
+      ),
+    url: "https://example.com/article",
     publishedAt: new Date().toISOString(),
-    author: 'Test Author',
+    author: "Test Author",
     isRead: false,
     isStarred: false,
     hasFullContent: false,
@@ -51,18 +54,18 @@ describe('RR-176: Content State Management - Integration Tests', () => {
   };
 
   const mockPartialFeed: Feed = {
-    id: 'feed-123',
-    title: 'Partial Feed',
-    url: 'https://partialfeed.com',
+    id: "feed-123",
+    title: "Partial Feed",
+    url: "https://partialfeed.com",
     isPartialContent: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
   const mockNormalFeed: Feed = {
-    id: 'feed-456',
-    title: 'Normal Feed',
-    url: 'https://normalfeed.com',
+    id: "feed-456",
+    title: "Normal Feed",
+    url: "https://normalfeed.com",
     isPartialContent: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -77,20 +80,20 @@ describe('RR-176: Content State Management - Integration Tests', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Content Display Priority', () => {
-    it('should prioritize manually fetched content over auto-parsed content', async () => {
+  describe("Content Display Priority", () => {
+    it("should prioritize manually fetched content over auto-parsed content", async () => {
       // Setup auto-parse to succeed
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Auto-parsed content from partial feed</p>',
+          content: "<p>Auto-parsed content from partial feed</p>",
         }),
       });
 
       const { container } = render(
         <ArticleDetail
-          article={{ ...mockArticle, content: 'Short' }} // Trigger auto-parse
+          article={{ ...mockArticle, content: "Short" }} // Trigger auto-parse
           feed={mockPartialFeed}
           feedTitle="Test Feed"
           onToggleStar={vi.fn()}
@@ -101,8 +104,10 @@ describe('RR-176: Content State Management - Integration Tests', () => {
 
       // Wait for auto-parse to complete
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Auto-parsed content from partial feed');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain(
+          "Auto-parsed content from partial feed"
+        );
       });
 
       // Now manually fetch content
@@ -110,35 +115,37 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Manually fetched full content</p>',
+          content: "<p>Manually fetched full content</p>",
         }),
       });
 
       // Find and click the fetch button (there might be multiple)
-      const fetchButtons = screen.getAllByRole('button', { name: /full content/i });
+      const fetchButtons = screen.getAllByRole("button", {
+        name: /full content/i,
+      });
       await userEvent.click(fetchButtons[0]);
 
       // Manual content should take priority
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Manually fetched full content');
-        expect(content?.innerHTML).not.toContain('Auto-parsed content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Manually fetched full content");
+        expect(content?.innerHTML).not.toContain("Auto-parsed content");
       });
     });
 
-    it('should revert to auto-parsed content when manual content cleared', async () => {
+    it("should revert to auto-parsed content when manual content cleared", async () => {
       // Setup with auto-parsed content
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Auto-parsed content</p>',
+          content: "<p>Auto-parsed content</p>",
         }),
       });
 
       const { container } = render(
         <ArticleDetail
-          article={{ ...mockArticle, content: 'Short' }}
+          article={{ ...mockArticle, content: "Short" }}
           feed={mockPartialFeed}
           feedTitle="Test Feed"
           onToggleStar={vi.fn()}
@@ -148,8 +155,8 @@ describe('RR-176: Content State Management - Integration Tests', () => {
       );
 
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Auto-parsed content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Auto-parsed content");
       });
 
       // Manually fetch different content
@@ -157,31 +164,35 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Manual content</p>',
+          content: "<p>Manual content</p>",
         }),
       });
 
-      const fetchButtons = screen.getAllByRole('button', { name: /full content/i });
+      const fetchButtons = screen.getAllByRole("button", {
+        name: /full content/i,
+      });
       await userEvent.click(fetchButtons[0]);
 
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Manual content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Manual content");
       });
 
       // Click revert button
-      const revertButtons = screen.getAllByRole('button', { name: /original content/i });
+      const revertButtons = screen.getAllByRole("button", {
+        name: /original content/i,
+      });
       await userEvent.click(revertButtons[0]);
 
       // Should show auto-parsed content, not original RSS
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Auto-parsed content');
-        expect(content?.innerHTML).not.toContain('Manual content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Auto-parsed content");
+        expect(content?.innerHTML).not.toContain("Manual content");
       });
     });
 
-    it('should show original RSS content when no parsed or fetched content', async () => {
+    it("should show original RSS content when no parsed or fetched content", async () => {
       const { container } = render(
         <ArticleDetail
           article={mockArticle} // Long content, won't auto-parse
@@ -194,17 +205,17 @@ describe('RR-176: Content State Management - Integration Tests', () => {
       );
 
       // Should show original content immediately
-      const content = container.querySelector('.article-content');
-      expect(content?.innerHTML).toContain('Original RSS content');
+      const content = container.querySelector(".article-content");
+      expect(content?.innerHTML).toContain("Original RSS content");
 
       // Verify no auto-fetch triggered
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       expect(global.fetch).not.toHaveBeenCalled();
     });
   });
 
-  describe('Button Synchronization', () => {
-    it('should synchronize state between header and footer buttons', async () => {
+  describe("Button Synchronization", () => {
+    it("should synchronize state between header and footer buttons", async () => {
       render(
         <ArticleDetail
           article={mockArticle}
@@ -217,9 +228,9 @@ describe('RR-176: Content State Management - Integration Tests', () => {
       );
 
       // Get both button instances
-      const allButtons = screen.getAllByRole('button');
+      const allButtons = screen.getAllByRole("button");
       const fetchButtons = allButtons.filter(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
+        (btn) => btn.getAttribute("aria-label") === "Full Content"
       );
 
       // Should have at least 2 fetch buttons (header and footer)
@@ -230,7 +241,7 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Fetched content</p>',
+          content: "<p>Fetched content</p>",
         }),
       });
 
@@ -239,28 +250,30 @@ describe('RR-176: Content State Management - Integration Tests', () => {
 
       // Both buttons should update to show "Original Content"
       await waitFor(() => {
-        const revertButtons = screen.getAllByRole('button').filter(
-          btn => btn.getAttribute('aria-label') === 'Original Content'
-        );
+        const revertButtons = screen
+          .getAllByRole("button")
+          .filter(
+            (btn) => btn.getAttribute("aria-label") === "Original Content"
+          );
         expect(revertButtons.length).toBeGreaterThanOrEqual(2);
       });
 
       // Click the second (footer) button to revert
-      const revertButtons = screen.getAllByRole('button').filter(
-        btn => btn.getAttribute('aria-label') === 'Original Content'
-      );
+      const revertButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.getAttribute("aria-label") === "Original Content");
       await userEvent.click(revertButtons[1]);
 
       // Both should revert back to "Full Content"
       await waitFor(() => {
-        const fetchButtonsAfter = screen.getAllByRole('button').filter(
-          btn => btn.getAttribute('aria-label') === 'Full Content'
-        );
+        const fetchButtonsAfter = screen
+          .getAllByRole("button")
+          .filter((btn) => btn.getAttribute("aria-label") === "Full Content");
         expect(fetchButtonsAfter.length).toBeGreaterThanOrEqual(2);
       });
     });
 
-    it('should prevent desync during rapid clicks', async () => {
+    it("should prevent desync during rapid clicks", async () => {
       render(
         <ArticleDetail
           article={mockArticle}
@@ -272,21 +285,21 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         />
       );
 
-      const fetchButtons = screen.getAllByRole('button').filter(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
-      );
+      const fetchButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.getAttribute("aria-label") === "Full Content");
 
       // Mock a slow fetch
       (global.fetch as any).mockImplementation(
         () =>
-          new Promise(resolve =>
+          new Promise((resolve) =>
             setTimeout(
               () =>
                 resolve({
                   ok: true,
                   json: async () => ({
                     success: true,
-                    content: '<p>Fetched</p>',
+                    content: "<p>Fetched</p>",
                   }),
                 }),
               100
@@ -303,16 +316,18 @@ describe('RR-176: Content State Management - Integration Tests', () => {
 
       // Wait for completion
       await waitFor(() => {
-        const revertButtons = screen.getAllByRole('button').filter(
-          btn => btn.getAttribute('aria-label') === 'Original Content'
-        );
+        const revertButtons = screen
+          .getAllByRole("button")
+          .filter(
+            (btn) => btn.getAttribute("aria-label") === "Original Content"
+          );
         expect(revertButtons.length).toBeGreaterThanOrEqual(2);
       });
     });
   });
 
-  describe('State Persistence', () => {
-    it('should maintain fetched content when summary is generated', async () => {
+  describe("State Persistence", () => {
+    it("should maintain fetched content when summary is generated", async () => {
       const { container } = render(
         <ArticleDetail
           article={mockArticle}
@@ -329,32 +344,32 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Fetched full content</p>',
+          content: "<p>Fetched full content</p>",
         }),
       });
 
-      const fetchButton = screen.getAllByRole('button').find(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
-      );
+      const fetchButton = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-label") === "Full Content");
       await userEvent.click(fetchButton!);
 
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Fetched full content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Fetched full content");
       });
 
       // Simulate summary generation (would normally update article)
       // The fetched content should remain
-      const summaryButton = screen.getAllByRole('button').find(
-        btn => btn.getAttribute('aria-label')?.includes('Summary')
-      );
-      
+      const summaryButton = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-label")?.includes("Summary"));
+
       if (summaryButton) {
         (global.fetch as any).mockResolvedValueOnce({
           ok: true,
           json: async () => ({
             success: true,
-            summary: 'Article summary',
+            summary: "Article summary",
           }),
         });
 
@@ -362,16 +377,16 @@ describe('RR-176: Content State Management - Integration Tests', () => {
 
         // Content should still show fetched content
         await waitFor(() => {
-          const content = container.querySelector('.article-content');
-          expect(content?.innerHTML).toContain('Fetched full content');
+          const content = container.querySelector(".article-content");
+          expect(content?.innerHTML).toContain("Fetched full content");
         });
       }
     });
 
-    it('should clear temporary states on article change', async () => {
+    it("should clear temporary states on article change", async () => {
       const { rerender, container } = render(
         <ArticleDetail
-          article={{ ...mockArticle, id: 'article-1' }}
+          article={{ ...mockArticle, id: "article-1" }}
           feed={mockNormalFeed}
           feedTitle="Test Feed"
           onToggleStar={vi.fn()}
@@ -385,18 +400,18 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Article 1 fetched content</p>',
+          content: "<p>Article 1 fetched content</p>",
         }),
       });
 
-      const fetchButton = screen.getAllByRole('button').find(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
-      );
+      const fetchButton = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-label") === "Full Content");
       await userEvent.click(fetchButton!);
 
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Article 1 fetched content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Article 1 fetched content");
       });
 
       // Change to different article
@@ -404,8 +419,8 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         <ArticleDetail
           article={{
             ...mockArticle,
-            id: 'article-2',
-            content: '<p>Article 2 RSS content</p>',
+            id: "article-2",
+            content: "<p>Article 2 RSS content</p>",
           }}
           feed={mockNormalFeed}
           feedTitle="Test Feed"
@@ -417,21 +432,21 @@ describe('RR-176: Content State Management - Integration Tests', () => {
 
       // Should show new article's RSS content, not previous fetched content
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Article 2 RSS content');
-        expect(content?.innerHTML).not.toContain('Article 1 fetched content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Article 2 RSS content");
+        expect(content?.innerHTML).not.toContain("Article 1 fetched content");
       });
 
       // Buttons should reset to initial state
-      const newFetchButtons = screen.getAllByRole('button').filter(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
-      );
+      const newFetchButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.getAttribute("aria-label") === "Full Content");
       expect(newFetchButtons.length).toBeGreaterThanOrEqual(2);
     });
   });
 
-  describe('Error Recovery', () => {
-    it('should maintain previous content on fetch error', async () => {
+  describe("Error Recovery", () => {
+    it("should maintain previous content on fetch error", async () => {
       const { container } = render(
         <ArticleDetail
           article={mockArticle}
@@ -444,29 +459,29 @@ describe('RR-176: Content State Management - Integration Tests', () => {
       );
 
       // Initial content
-      expect(container.querySelector('.article-content')?.innerHTML).toContain(
-        'Original RSS content'
+      expect(container.querySelector(".article-content")?.innerHTML).toContain(
+        "Original RSS content"
       );
 
       // Mock fetch failure
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
-      const fetchButton = screen.getAllByRole('button').find(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
-      );
+      const fetchButton = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-label") === "Full Content");
       await userEvent.click(fetchButton!);
 
       // Should still show original content after error
       await waitFor(() => {
-        const content = container.querySelector('.article-content');
-        expect(content?.innerHTML).toContain('Original RSS content');
+        const content = container.querySelector(".article-content");
+        expect(content?.innerHTML).toContain("Original RSS content");
       });
 
       // Error message should be displayed
       expect(screen.getByText(/network error/i)).toBeInTheDocument();
     });
 
-    it('should allow retry after fetch failure', async () => {
+    it("should allow retry after fetch failure", async () => {
       render(
         <ArticleDetail
           article={mockArticle}
@@ -479,11 +494,11 @@ describe('RR-176: Content State Management - Integration Tests', () => {
       );
 
       // First attempt fails
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
-      const fetchButton = screen.getAllByRole('button').find(
-        btn => btn.getAttribute('aria-label') === 'Full Content'
-      );
+      const fetchButton = screen
+        .getAllByRole("button")
+        .find((btn) => btn.getAttribute("aria-label") === "Full Content");
       await userEvent.click(fetchButton!);
 
       await waitFor(() => {
@@ -495,7 +510,7 @@ describe('RR-176: Content State Management - Integration Tests', () => {
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Successfully fetched</p>',
+          content: "<p>Successfully fetched</p>",
         }),
       });
 

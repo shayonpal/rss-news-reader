@@ -1,13 +1,16 @@
 # RR-5: Sync Status Display - Test Contracts
 
 ## Overview
+
 This document defines the test contracts for RR-5: Display accurate API usage percentages from Inoreader API response headers.
 
 ## API Contracts
 
 ### 1. Sync Endpoint Header Capture
+
 **Endpoint**: `POST /api/sync`
 **Headers to Capture**:
+
 ```
 X-Reader-Zone1-Usage: <number>
 X-Reader-Zone1-Limit: <number>
@@ -16,6 +19,7 @@ X-Reader-Zone2-Limit: <number>
 ```
 
 **Expected Response**:
+
 ```json
 {
   "success": true,
@@ -35,8 +39,10 @@ X-Reader-Zone2-Limit: <number>
 ```
 
 ### 2. API Usage Endpoint
+
 **Endpoint**: `GET /api/sync/api-usage`
 **Response**:
+
 ```json
 {
   "zone1": {
@@ -56,6 +62,7 @@ X-Reader-Zone2-Limit: <number>
 ## Database Contracts
 
 ### api_usage Table Schema
+
 ```sql
 CREATE TABLE api_usage (
   id UUID PRIMARY KEY,
@@ -72,6 +79,7 @@ CREATE TABLE api_usage (
 ```
 
 ### Storage Contract
+
 - Store zone data with each sync operation
 - Update existing record for today's date
 - Calculate percentages on retrieval
@@ -79,16 +87,19 @@ CREATE TABLE api_usage (
 ## Component Contracts
 
 ### Sidebar Display Format
+
 ```
 API Usage: X% (zone 1) | Y% (zone 2)
 ```
 
 ### Color Coding Rules
+
 - Green: < 80%
 - Amber: 80-94%
 - Red: ≥ 95%
 
 ### Display States
+
 1. **Loading**: "API Usage: Loading..."
 2. **No Data**: "API Usage: No data"
 3. **Error**: "API Usage: Error"
@@ -97,6 +108,7 @@ API Usage: X% (zone 1) | Y% (zone 2)
 ## Store Contracts
 
 ### SyncStore Structure
+
 ```typescript
 interface ApiUsageData {
   zone1: {
@@ -122,6 +134,7 @@ interface SyncStore {
 ## Test Coverage Requirements
 
 ### Unit Tests (28)
+
 1. Header parsing (8 tests)
 2. Percentage calculations (5 tests)
 3. Color determination (6 tests)
@@ -129,17 +142,20 @@ interface SyncStore {
 5. Error handling (4 tests)
 
 ### Integration Tests (12)
+
 1. Sync endpoint with headers (4 tests)
 2. API usage endpoint (4 tests)
 3. Database persistence (4 tests)
 
 ### Component Tests (20)
+
 1. Sidebar rendering (8 tests)
 2. Color styling (6 tests)
 3. Loading/error states (4 tests)
 4. Accessibility (2 tests)
 
 ### E2E Tests (13)
+
 1. Full sync flow (4 tests)
 2. UI updates (5 tests)
 3. Mobile responsiveness (4 tests)

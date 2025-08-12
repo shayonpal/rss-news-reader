@@ -12,8 +12,9 @@ export async function GET(request: NextRequest) {
     const isPing = url.searchParams.get("ping") === "true";
 
     if (isPing) {
-      // Ping response should be minimal - no version or timestamp
-      return NextResponse.json({ status: "ok", ping: true });
+      // RR-114: Version should be returned even with ping=true
+      const version = await getAppVersion();
+      return NextResponse.json({ status: "ok", ping: true, version });
     }
 
     // Perform comprehensive health check
@@ -26,29 +27,29 @@ export async function GET(request: NextRequest) {
     const healthWithTimestamp = {
       ...health,
       version,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Determine HTTP status code based on health
     // RR-115: Improve status code determination based on service states
     let statusCode = 200;
-    
+
     // Check if critical dependencies are unhealthy
-    const isCriticallyUnhealthy = health.dependencies && (
-      health.dependencies.database === "unhealthy" ||
-      health.dependencies.database === "failed" ||
-      health.dependencies.database === "error"
-    );
-    
+    const isCriticallyUnhealthy =
+      health.dependencies &&
+      (health.dependencies.database === "unhealthy" ||
+        health.dependencies.database === "failed" ||
+        health.dependencies.database === "error");
+
     if (health.status === "unhealthy" || isCriticallyUnhealthy) {
       statusCode = 503; // Service Unavailable
     } else if (health.status === "degraded") {
       // Check if degraded due to initialization
-      const isInitializing = health.dependencies && (
-        health.dependencies.database === "initializing" ||
-        health.dependencies.oauth === "initializing"
-      );
-      
+      const isInitializing =
+        health.dependencies &&
+        (health.dependencies.database === "initializing" ||
+          health.dependencies.oauth === "initializing");
+
       // Return 200 for degraded states (including initialization)
       statusCode = 200;
     }

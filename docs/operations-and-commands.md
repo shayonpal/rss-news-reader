@@ -143,5 +143,3 @@ Example:
 ```bash
 curl -s http://localhost:3000/reader/api/health/app | jq .
 ```
-
-

@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
+import {
   ArrowLeft,
   Ellipsis,
-  ExternalLink, 
+  ExternalLink,
   Share2,
   BarChart3,
   Star,
   BookOpen,
   Download,
   Sun,
-  Moon
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,10 +33,10 @@ export default function ArticleDropdownLiquidGlassPOC() {
   const handleActionClick = (action: string) => {
     setSelectedAction(action);
     setIsDropdownOpen(false);
-    
+
     // Clear the selection after showing feedback
     setTimeout(() => setSelectedAction(null), 2000);
-    
+
     // Handle Partial Feed toggle
     if (action === "partial-feed") {
       setIsPartialFeed(!isPartialFeed);
@@ -46,15 +46,20 @@ export default function ArticleDropdownLiquidGlassPOC() {
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
-          triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
-    
+
     if (isDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isDropdownOpen]);
 
@@ -65,7 +70,7 @@ export default function ArticleDropdownLiquidGlassPOC() {
         setIsDropdownOpen(false);
       }
     };
-    
+
     if (isDropdownOpen) {
       document.addEventListener("keydown", handleKeyDown);
       return () => document.removeEventListener("keydown", handleKeyDown);
@@ -75,9 +80,9 @@ export default function ArticleDropdownLiquidGlassPOC() {
   // Handle theme toggle
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   }, [isDarkMode]);
 
@@ -85,19 +90,19 @@ export default function ArticleDropdownLiquidGlassPOC() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Hide header when scrolling down, show when scrolling up
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setHeaderVisible(false);
       } else {
         setHeaderVisible(true);
       }
-      
+
       lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const mockArticle = {
@@ -230,21 +235,26 @@ element.animate({
       <p>As developers and designers, we have the opportunity to embrace these principles and create applications that don't just function well, but feel incredible to use. The key is to start small – implement glass effects on a few key components, perfect the animations, and gradually expand from there.</p>
       
       <p>Remember: great design is invisible when done right. Users shouldn't notice the glass effects explicitly; they should simply feel that the interface is more responsive, more alive, and more delightful to use.</p>
-    `
+    `,
   };
 
   return (
-    <div className={cn("min-h-screen bg-gray-50 dark:bg-gray-900", isDarkMode && "dark")}>
+    <div
+      className={cn(
+        "min-h-screen bg-gray-50 dark:bg-gray-900",
+        isDarkMode && "dark"
+      )}
+    >
       {/* Header Bar */}
-      <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
+      <div className="sticky top-0 z-50 border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-2 flex items-center justify-between">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Article Dropdown POC - Current Implementation
             </h1>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="rounded-lg bg-gray-200 p-2 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
               aria-label="Toggle theme"
             >
               {isDarkMode ? (
@@ -255,9 +265,9 @@ element.animate({
             </button>
           </div>
           <div className="text-sm">
-            <a 
-              href="/reader/pocs/article-dropdown-liquid-glass/enhanced" 
-              className="text-blue-500 hover:text-blue-600 underline"
+            <a
+              href="/reader/pocs/article-dropdown-liquid-glass/enhanced"
+              className="text-blue-500 underline hover:text-blue-600"
             >
               → View Enhanced Liquid Glass Version
             </a>
@@ -267,8 +277,8 @@ element.animate({
 
       {/* Feedback Display */}
       {selectedAction && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+        <div className="fixed left-1/2 top-20 z-50 -translate-x-1/2 transform">
+          <div className="rounded-lg bg-green-500 px-4 py-2 text-white shadow-lg">
             Action triggered: {selectedAction}
           </div>
         </div>
@@ -277,15 +287,15 @@ element.animate({
       {/* Article Detail View - Exact Implementation */}
       <div className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900">
         {/* Floating controls container - with scroll hide/show behavior */}
-        <div 
+        <div
           ref={headerRef}
-          className="fixed left-0 right-0 z-10 transition-transform duration-300 ease-in-out article-header-controls"
-          style={{ 
-            transform: headerVisible ? "translateY(0)" : "translateY(-100%)", 
-            top: "80px" 
+          className="article-header-controls fixed left-0 right-0 z-10 transition-transform duration-300 ease-in-out"
+          style={{
+            transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
+            top: "80px",
           }}
         >
-          <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 flex items-start justify-between">
+          <div className="mx-auto flex w-full max-w-4xl items-start justify-between px-4 sm:px-6 lg:px-8">
             {/* Back button - using exact glass-icon-btn class */}
             <div className="pointer-events-auto">
               <button
@@ -299,9 +309,14 @@ element.animate({
             </div>
 
             {/* Actions toolbar - using exact glass-toolbar class */}
-            <div className={cn("glass-toolbar pointer-events-auto", isDropdownOpen && "menu-open")}>
+            <div
+              className={cn(
+                "glass-toolbar pointer-events-auto",
+                isDropdownOpen && "menu-open"
+              )}
+            >
               <div className="toolbar-group">
-                <button 
+                <button
                   className="glass-toolbar-btn"
                   onClick={() => {
                     setIsStarred(!isStarred);
@@ -310,37 +325,40 @@ element.animate({
                   aria-label={isStarred ? "Unstar" : "Star"}
                   title={isStarred ? "Unstar" : "Star"}
                 >
-                  <Star className={cn("h-5 w-5", isStarred && "fill-yellow-500 text-yellow-500")} />
-                  <span className="ml-2 hidden md:inline text-sm">
+                  <Star
+                    className={cn(
+                      "h-5 w-5",
+                      isStarred && "fill-yellow-500 text-yellow-500"
+                    )}
+                  />
+                  <span className="ml-2 hidden text-sm md:inline">
                     {isStarred ? "Unstar" : "Star"}
                   </span>
                 </button>
-                <button 
+                <button
                   className="glass-toolbar-btn"
                   onClick={() => setSelectedAction("summary")}
                   aria-label="Summarize"
                   title="Summarize"
                 >
                   <BookOpen className="h-5 w-5 text-muted-foreground" />
-                  <span className="ml-2 hidden md:inline text-sm">
+                  <span className="ml-2 hidden text-sm md:inline">
                     Summarize
                   </span>
                 </button>
-                <button 
+                <button
                   className="glass-toolbar-btn"
                   onClick={() => setSelectedAction("fetch-content")}
                   aria-label="Fetch"
                   title="Fetch"
                 >
                   <Download className="h-5 w-5 text-muted-foreground" />
-                  <span className="ml-2 hidden md:inline text-sm">
-                    Fetch
-                  </span>
+                  <span className="ml-2 hidden text-sm md:inline">Fetch</span>
                 </button>
               </div>
-              
+
               {/* Dropdown trigger - exact implementation */}
-              <button 
+              <button
                 ref={triggerRef}
                 className="glass-toolbar-btn"
                 aria-label="More options"
@@ -352,9 +370,9 @@ element.animate({
 
               {/* Dropdown Content - using exact glass-popover class */}
               {isDropdownOpen && (
-                <div 
+                <div
                   ref={dropdownRef}
-                  className="absolute right-0 top-full mt-2 w-64 glass-popover p-2"
+                  className="glass-popover absolute right-0 top-full mt-2 w-64 p-2"
                   role="menu"
                 >
                   {/* Partial Feed Option */}
@@ -370,9 +388,9 @@ element.animate({
                       Partial Feed
                     </span>
                   </button>
-                  
+
                   <div className="menu-separator my-1" />
-                  
+
                   {/* Share */}
                   <button
                     onClick={() => handleActionClick("share")}
@@ -382,7 +400,7 @@ element.animate({
                     <Share2 className="mr-2 h-4 w-4" />
                     Share
                   </button>
-                  
+
                   {/* Open Original */}
                   <button
                     onClick={() => handleActionClick("open-original")}
@@ -392,9 +410,9 @@ element.animate({
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Open Original
                   </button>
-                  
+
                   <div className="menu-separator my-1" />
-                  
+
                   {/* Fetch Stats */}
                   <button
                     onClick={() => handleActionClick("fetch-stats")}
@@ -428,7 +446,7 @@ element.animate({
               <span>•</span>
               <time>{mockArticle.publishedAt}</time>
             </div>
-            
+
             {/* Tags */}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {mockArticle.tags.map((tag) => (
@@ -443,7 +461,7 @@ element.animate({
           </div>
 
           {/* Article Body - Now with much longer content */}
-          <div 
+          <div
             className="prose prose-gray max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: mockArticle.content }}
           />

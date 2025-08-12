@@ -67,7 +67,11 @@ export class AppDatabase extends Dexie {
     this.on("versionchange", () => {
       console.warn("Database version changed by another tab. Reloading...");
       // Only reload in browser environment, not in tests
-      if (typeof window !== "undefined" && window.location && typeof window.location.reload === "function") {
+      if (
+        typeof window !== "undefined" &&
+        window.location &&
+        typeof window.location.reload === "function"
+      ) {
         try {
           window.location.reload();
         } catch (error) {

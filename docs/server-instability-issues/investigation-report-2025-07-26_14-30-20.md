@@ -163,7 +163,6 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
    ```
 
 2. **Fix PM2 Configuration**
-
    - Change rss-sync-cron to fork mode
    - Increase max_restarts to 50
    - Add min_uptime: '10s'
@@ -182,13 +181,11 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### Short-term Fixes (This Week)
 
 1. **Implement Startup Health Checks**
-
    - Wait for services to be truly ready
    - Verify all endpoints respond correctly
    - Only then allow traffic
 
 2. **Add Monitoring Alerts**
-
    - Alert after 3 restarts in 5 minutes
    - Alert when memory > 80% of limit
    - Alert when health endpoints fail
@@ -201,19 +198,16 @@ The RSS News Reader PWA has been experiencing severe stability issues with frequ
 ### Long-term Solutions (This Month)
 
 1. **Blue-Green Deployment**
-
    - Build new version in separate directory
    - Test thoroughly before switching
    - Keep previous version for rollback
 
 2. **Proper CI/CD Pipeline**
-
    - Automated tests before deployment
    - Build validation as part of pipeline
    - Automated rollback on failures
 
 3. **Centralized Monitoring**
-
    - Implement Uptime Kuma (already planned)
    - Add application performance monitoring
    - Create unified dashboard

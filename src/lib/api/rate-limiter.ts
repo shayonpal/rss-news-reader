@@ -132,21 +132,26 @@ export class RateLimiter {
 
   // Update rate limit info from API response headers
   updateFromHeaders(headers: Headers): void {
-    const usage = headers.get('X-Reader-Zone1-Usage');
-    const limit = headers.get('X-Reader-Zone1-Limit');
-    const resetAfter = headers.get('X-Reader-Limits-Reset-After');
+    const usage = headers.get("X-Reader-Zone1-Usage");
+    const limit = headers.get("X-Reader-Zone1-Limit");
+    const resetAfter = headers.get("X-Reader-Limits-Reset-After");
 
     if (usage || limit || resetAfter) {
       this.serverInfo = {
-        usage: parseInt(usage?.trim().replace(/,/g, '') || '0'),
-        limit: parseInt(limit?.trim().replace(/,/g, '') || '5000'),
-        resetAfterSeconds: parseInt(resetAfter?.trim().replace(/\.\d+$/, '') || '86400'),
+        usage: parseInt(usage?.trim().replace(/,/g, "") || "0"),
+        limit: parseInt(limit?.trim().replace(/,/g, "") || "5000"),
+        resetAfterSeconds: parseInt(
+          resetAfter?.trim().replace(/\.\d+$/, "") || "86400"
+        ),
         lastUpdated: Date.now(),
       };
 
       // Log warning if server usage differs significantly from local tracking
-      if (this.serverInfo.usage && Math.abs(this.serverInfo.usage - this.usage.calls) > 10) {
-        console.warn('Rate limit mismatch detected', {
+      if (
+        this.serverInfo.usage &&
+        Math.abs(this.serverInfo.usage - this.usage.calls) > 10
+      ) {
+        console.warn("Rate limit mismatch detected", {
           local: this.usage.calls,
           server: this.serverInfo.usage,
           difference: Math.abs(this.serverInfo.usage - this.usage.calls),
@@ -155,14 +160,18 @@ export class RateLimiter {
 
       // Update reset time based on server info
       if (resetAfter) {
-        const newResetTime = Date.now() + (this.serverInfo.resetAfterSeconds * 1000);
+        const newResetTime =
+          Date.now() + this.serverInfo.resetAfterSeconds * 1000;
         this.usage.resetTime = newResetTime;
         this.saveUsage();
       }
 
       // Save server info to localStorage
       if (typeof window !== "undefined") {
-        localStorage.setItem(this.HEADER_INFO_KEY, JSON.stringify(this.serverInfo));
+        localStorage.setItem(
+          this.HEADER_INFO_KEY,
+          JSON.stringify(this.serverInfo)
+        );
       }
     }
   }

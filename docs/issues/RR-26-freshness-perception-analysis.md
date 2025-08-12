@@ -80,12 +80,10 @@ const formatTimestamp = (date: Date) => {
 ### 1. Immediate Improvements
 
 1. **Add Actual Timestamp on Hover**
-
    - Show full date/time on hover over relative time
    - Format: "Monday, December 2, 2024 at 3:45 PM EST"
 
 2. **Visual Freshness Indicators**
-
    - Add "NEW" badge for articles < 2 hours old
    - Use color coding: green for < 6h, normal for < 24h, muted for older
    - Add subtle animation for very fresh content (< 30 minutes)
@@ -97,14 +95,12 @@ const formatTimestamp = (date: Date) => {
 ### 2. Medium-term Improvements
 
 1. **Enhanced Time Display**
-
    - For today: "Today at 3:45 PM"
    - For yesterday: "Yesterday at 10:30 AM"
    - For this week: "Tuesday at 2:15 PM"
    - Older: Current format
 
 2. **Feed Freshness Indicators**
-
    - Show "Last updated" timestamp for each feed
    - Visual indicator for "active" vs "dormant" feeds
 
@@ -115,12 +111,10 @@ const formatTimestamp = (date: Date) => {
 ### 3. Long-term Improvements
 
 1. **User Timezone Preferences**
-
    - Store user's preferred timezone
    - Convert all timestamps to user's timezone consistently
 
 2. **Customizable Freshness Settings**
-
    - Let users define what "fresh" means to them
    - Customizable highlighting thresholds
 

@@ -183,10 +183,10 @@ class TokenManager {
         ...options,
         headers,
       });
-      
+
       // Capture headers for retry request too
       await captureRateLimitHeaders(retryResponse.headers);
-      
+
       return retryResponse;
     }
 

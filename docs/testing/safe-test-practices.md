@@ -1,6 +1,6 @@
 # Safe Test Practices for RSS News Reader
 
-*Documentation for RR-123 memory exhaustion fix*
+_Documentation for RR-123 memory exhaustion fix_
 
 ## Overview
 
@@ -9,6 +9,7 @@ The RSS News Reader project experienced critical memory exhaustion issues during
 ### The Memory Exhaustion Problem
 
 **Symptoms observed:**
+
 - Vitest spawning excessive worker processes (6-8+ concurrent forks)
 - Memory usage climbing to 4-8GB+ during test runs
 - System freezing requiring hard reboot
@@ -16,6 +17,7 @@ The RSS News Reader project experienced critical memory exhaustion issues during
 - PM2 services crashing due to resource starvation
 
 **Root causes identified:**
+
 - Vitest's default pooling strategy spawning too many worker processes
 - No resource limits on test execution time or memory usage
 - Integration tests running alongside unit tests without isolation
@@ -45,7 +47,7 @@ npm test
 
 # Alternative execution strategies
 npm run test:parallel     # Maximum parallelization (fastest, ~8-12 seconds)
-npm run test:sequential   # Sequential execution (most reliable, ~15-20 seconds)  
+npm run test:sequential   # Sequential execution (most reliable, ~15-20 seconds)
 npm run test:sharded      # Sharded execution (balanced, ~10-15 seconds)
 npm run test:progressive  # Progressive execution (detailed feedback)
 npm run test:watch        # Watch mode for development
@@ -57,16 +59,25 @@ npm run test:watch        # Watch mode for development
 ### Test Infrastructure Requirements (RR-186)
 
 **Browser API Polyfills:**
+
 - **IndexedDB Polyfill**: `fake-indexeddb` v6.1.0 automatically provides IndexedDB compatibility for Node.js test environment
 - **Auto-import**: Automatically initialized in `src/test-setup.ts` via `import 'fake-indexeddb/auto';`
 - **Use Case**: Essential for testing Dexie database operations, offline queues, and browser storage functionality
 
 **Environment Validation:**
+
 - **Smoke Test**: `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment setup
 - **Mock Validation**: Ensures localStorage/sessionStorage mocks are properly configured
 - **Polyfill Verification**: Confirms IndexedDB polyfill is available and functional
 
+**API Testing Improvements (RR-102):**
+
+- **Path Flexibility**: Development environment supports both `/api/*` and `/reader/api/*` paths via automatic redirects
+- **Test Reliability**: Tests no longer fail due to missing `/reader` prefix in API calls - automatic 307 redirects handle path variations
+- **HTTP Method Preservation**: All test requests (GET, POST, PUT, DELETE, PATCH) work correctly regardless of path format used
+
 **Mock System Improvements:**
+
 - **Storage Mocks**: Fixed localStorage/sessionStorage configuration with `writable: true, configurable: true`
 - **Supabase Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
 - **Export Fixes**: Corrected missing exports in utility classes for proper testability
@@ -77,29 +88,32 @@ npm run test:watch        # Watch mode for development
 The RSS News Reader implements sophisticated store isolation patterns to prevent state leakage in parallel test execution environments, particularly critical for CI/CD pipeline compatibility.
 
 **Store Isolation Infrastructure:**
+
 - **Isolated Store Creation**: `src/lib/stores/__tests__/test-utils.ts` provides `createIsolatedUIStore()` utility
 - **Unique Storage Keys**: Each test gets unique storage identifiers preventing cross-test contamination
 - **Boolean State Management**: Enhanced null/undefined handling in store logic with Boolean coercion
 - **Parallel Test Support**: Fully compatible with Vitest's parallel execution without state persistence issues
 
 **Critical CI/CD Fix (RR-188):**
+
 - **Problem**: UI store collapse state persisting across tests in CI environment causing 4/6 test failures
 - **Solution**: Store isolation utilities with unique storage keys for each test execution
 - **Impact**: Unblocked CI/CD pipeline that was previously failing due to parallel test state contamination
 
 **Usage Pattern:**
-```typescript
-import { createIsolatedUIStore } from './test-utils';
 
-describe('UI Store Collapse State Tests', () => {
+```typescript
+import { createIsolatedUIStore } from "./test-utils";
+
+describe("UI Store Collapse State Tests", () => {
   let store: ReturnType<typeof createIsolatedUIStore>;
-  
+
   beforeEach(() => {
     // Each test gets isolated store with unique storage keys
     store = createIsolatedUIStore();
   });
-  
-  it('should manage collapse state independently', () => {
+
+  it("should manage collapse state independently", () => {
     // Test implementation with guaranteed state isolation
     store.getState().toggleFeedsCollapse();
     expect(store.getState().isFeedsCollapsed).toBe(true);
@@ -108,6 +122,7 @@ describe('UI Store Collapse State Tests', () => {
 ```
 
 **Benefits:**
+
 - **Parallel Test Safety**: No state leakage between concurrent test executions
 - **CI/CD Compatibility**: Eliminates CI pipeline blocking due to test failures
 - **Deterministic Results**: Consistent test outcomes regardless of execution order
@@ -133,6 +148,7 @@ npx vitest run  # ⚠️ Can cause memory exhaustion
 ### Vitest Configuration Limits (RR-183 Optimized)
 
 **Optimized Configuration (`vitest.config.ts`):**
+
 ```javascript
 pool: 'threads',          // ✅ Switched from forks to threads for better performance
 poolOptions: {
@@ -142,18 +158,20 @@ poolOptions: {
   },
 },
 testTimeout: 5000,        // ✅ Reduced from 30s to 5s for faster execution
-hookTimeout: 5000,        // ✅ Reduced hook timeout for efficiency  
+hookTimeout: 5000,        // ✅ Reduced hook timeout for efficiency
 fileParallelism: true,    // ✅ Enable file-level parallelism
 testConcurrency: 5,       // ✅ Multiple tests per thread
 ```
 
 **Performance Improvements:**
+
 - **Execution Time**: 8-20 seconds (vs previous 2+ minute timeouts)
 - **Thread Pool**: Optimized threading prevents process accumulation
 - **Memory Usage**: Stable usage with comprehensive cleanup hooks
 - **Timeout Handling**: Faster timeouts catch hanging tests quickly
 
 **Integration Tests (`vitest.config.integration.ts`):**
+
 ```javascript
 // Same limits as unit tests
 // Separate configuration for isolation
@@ -164,12 +182,14 @@ include: ['**/src/__tests__/integration/**']
 ### Safe Test Runner Limits
 
 **Process Management:**
+
 - **Lock File**: `/tmp/rss-reader-test.lock` prevents concurrent test runs
 - **Process Monitoring**: Background monitor kills tests if >4 vitest processes detected
 - **Memory Monitoring**: Warns when system memory <1GB free
 - **Runtime Limit**: 30-minute maximum execution time with automatic termination
 
 **Execution Flow:**
+
 1. Pre-execution cleanup (kill existing vitest processes)
 2. Create lock file with current PID
 3. Start background resource monitoring
@@ -183,12 +203,14 @@ include: ['**/src/__tests__/integration/**']
 ### When Tests Go Wrong
 
 **Immediate Response:**
+
 ```bash
 # Emergency test process killer
 ./scripts/kill-test-processes.sh
 ```
 
 This script performs aggressive cleanup:
+
 - Kills all vitest and node test processes (SIGTERM then SIGKILL)
 - Removes test lock files
 - Cleans up zombie processes
@@ -196,6 +218,7 @@ This script performs aggressive cleanup:
 - Restarts any crashed PM2 services
 
 **System Recovery Steps:**
+
 1. Run the emergency killer script
 2. Wait 10-15 seconds for cleanup completion
 3. Check system memory usage: `vm_stat` (macOS) or `free -h` (Linux)
@@ -208,11 +231,13 @@ This script performs aggressive cleanup:
 If the emergency script doesn't work because the system is too overloaded:
 
 **macOS:**
+
 1. Force quit Terminal: `Cmd+Option+Esc` → Terminal → Force Quit
 2. Open Activity Monitor and force quit vitest/node processes
 3. If completely frozen: Hold power button for hard restart
 
 **Linux:**
+
 1. Switch to TTY: `Ctrl+Alt+F2`
 2. Login and run: `sudo pkill -9 vitest && sudo pkill -9 node`
 3. If unresponsive: `sudo reboot`
@@ -226,6 +251,7 @@ If the emergency script doesn't work because the system is too overloaded:
 ```
 
 This provides a live dashboard showing:
+
 - **Memory Usage**: Current system memory with color-coded warnings
 - **Process Count**: Number of active vitest processes
 - **Process Details**: PID, memory usage, CPU%, runtime for each test process
@@ -233,6 +259,7 @@ This provides a live dashboard showing:
 - **Test Lock Status**: Whether tests are currently running
 
 **Status Indicators:**
+
 - 🟢 **Green**: Normal operation (memory <3GB, processes <3)
 - 🟡 **Yellow**: Warning levels (memory 3-4GB, processes 3-4)
 - 🔴 **Red**: Critical levels (memory >4GB, processes >4)
@@ -249,6 +276,7 @@ This provides a live dashboard showing:
 ### Test Categories for Tags Feature
 
 **API Tests:**
+
 - Tag creation and validation (`/api/tags POST`)
 - Tag listing with filtering and pagination (`/api/tags GET`)
 - Article tag retrieval (`/api/articles/[id]/tags GET`)
@@ -256,12 +284,14 @@ This provides a live dashboard showing:
 - Error handling for duplicate tags and invalid input
 
 **Integration Tests:**
+
 - Tag sync from Inoreader categories during sync operations
 - Article-tag relationship management in database
 - Tag count maintenance and updates
 - Database constraint validation (unique slugs, foreign keys)
 
-**E2E Tests:**  
+**E2E Tests:**
+
 - Tag display in sidebar "Topics" section
 - Tag filtering and search functionality
 - Tag creation through UI forms
@@ -269,6 +299,7 @@ This provides a live dashboard showing:
 - XSS protection via React's built-in safeguards for tag names
 
 **Unit Tests:**
+
 - Tag store state management
 - Tag utility functions (slug generation, HTML entity decoding)
 - Tag component rendering and interactions
@@ -281,6 +312,7 @@ The RSS News Reader implements comprehensive E2E testing using Playwright with f
 ### E2E Test Guidelines
 
 **✅ DO:**
+
 - Use the optimized Playwright configuration with 8 browser profiles
 - Test across desktop browsers (Chromium, Firefox, WebKit) and mobile devices (iPhone, iPad, Android)
 - Validate touch target compliance (44x44px iOS guidelines) in iPhone tests
@@ -291,6 +323,7 @@ The RSS News Reader implements comprehensive E2E testing using Playwright with f
 - Test touch interactions and gesture support on mobile devices
 
 **❌ DON'T:**
+
 - Run E2E tests without Tailscale VPN connection
 - Mock Supabase or core application APIs in E2E tests
 - Test on browsers not included in the configuration
@@ -320,56 +353,61 @@ npx playwright test --ui
 The iPhone button tappability test suite validates iOS Human Interface Guidelines compliance:
 
 **Touch Target Size Validation:**
+
 ```javascript
-test('All buttons meet iOS 44px minimum touch target', async ({ page }) => {
-  await page.goto('/reader');
-  
+test("All buttons meet iOS 44px minimum touch target", async ({ page }) => {
+  await page.goto("/reader");
+
   const buttons = await page.locator('button, [role="button"], a').all();
   const violations = [];
-  
+
   for (const button of buttons) {
     const box = await button.boundingBox();
     if (box && (box.width < 44 || box.height < 44)) {
       violations.push({
-        element: await button.textContent() || 'unlabeled',
-        size: `${box.width}x${box.height}`
+        element: (await button.textContent()) || "unlabeled",
+        size: `${box.width}x${box.height}`,
       });
     }
   }
-  
+
   expect(violations).toEqual([]);
 });
 ```
 
 **Element Spacing Validation:**
+
 - Minimum 8px spacing between interactive elements
 - Automated detection of spacing violations
 - Visual feedback validation for touch interactions
 
 ### Cross-Browser Testing Matrix
 
-| Test Scenario | Chrome | Firefox | Safari | Mobile Safari | iPad Safari | Android |
-|---------------|--------|---------|--------|---------------|-------------|---------|
-| Core User Journeys | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Button Tappability | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PWA Installation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Touch Gestures | N/A | N/A | N/A | ✅ | ✅ | ✅ |
-| ARIA Accessibility | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test Scenario      | Chrome | Firefox | Safari | Mobile Safari | iPad Safari | Android |
+| ------------------ | ------ | ------- | ------ | ------------- | ----------- | ------- |
+| Core User Journeys | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
+| Button Tappability | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
+| PWA Installation   | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
+| Touch Gestures     | N/A    | N/A     | N/A    | ✅            | ✅          | ✅      |
+| ARIA Accessibility | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
 
 ### Mobile PWA Testing Requirements
 
 **Network Requirements:**
+
 - Tailscale VPN connection required
 - Base URL: `http://100.96.166.53:3000/reader`
 - No authentication needed (network-based access control)
 
 **Touch Interaction Testing:**
+
 - Swipe gesture recognition (left, right, up, down)
 - Pull-to-refresh functionality validation
 - Touch response time testing (< 100ms requirement)
 - Modal and dropdown accessibility via touch
 
 **PWA Functionality Testing:**
+
 - Web App Manifest validation
 - Service Worker registration and offline capabilities
 - Installation banner tappability
@@ -379,18 +417,18 @@ test('All buttons meet iOS 44px minimum touch target', async ({ page }) => {
 
 ```javascript
 // Core user journey test structure
-test('Article reading workflow', async ({ page }) => {
+test("Article reading workflow", async ({ page }) => {
   // Network connectivity verification
   await expect(page).toHaveURL(/\/reader/);
-  
+
   // Navigate through feeds
   await page.click('[data-testid="feed-item"]:first-child');
-  await page.waitForLoadState('networkidle');
-  
+  await page.waitForLoadState("networkidle");
+
   // Select and read article
   await page.click('[data-testid="article-item"]:first-child');
   await expect(page.locator('[data-testid="article-title"]')).toBeVisible();
-  
+
   // Validate navigation back
   await page.click('[data-testid="back-button"]');
   await expect(page).toHaveURL(/\/reader\/feeds\//);
@@ -400,11 +438,13 @@ test('Article reading workflow', async ({ page }) => {
 ### E2E Test Debugging
 
 **Visual Debugging:**
+
 - Use `--headed` flag for browser UI
 - Use `--debug` flag for step-by-step execution
 - Use `--ui` flag for Playwright UI mode
 
 **Artifact Analysis:**
+
 - Screenshots captured on failure
 - Video recordings for complete test execution
 - Network traces for API call analysis
@@ -413,27 +453,29 @@ test('Article reading workflow', async ({ page }) => {
 ### Performance Testing in E2E
 
 **Load Time Validation:**
+
 ```javascript
-test('Page load performance', async ({ page }) => {
+test("Page load performance", async ({ page }) => {
   const startTime = Date.now();
-  await page.goto('/reader');
-  await page.waitForLoadState('networkidle');
+  await page.goto("/reader");
+  await page.waitForLoadState("networkidle");
   const loadTime = Date.now() - startTime;
-  
+
   expect(loadTime).toBeLessThan(2000); // 2-second target
 });
 ```
 
 **Touch Response Time:**
+
 ```javascript
-test('Touch interactions respond quickly', async ({ page }) => {
-  test.skip(browserName === 'chromium', 'Mobile only');
-  
+test("Touch interactions respond quickly", async ({ page }) => {
+  test.skip(browserName === "chromium", "Mobile only");
+
   const startTime = Date.now();
   await page.tap('[data-testid="sidebar-toggle"]');
-  await page.waitForSelector('[data-testid="sidebar"]', { state: 'visible' });
+  await page.waitForSelector('[data-testid="sidebar"]', { state: "visible" });
   const responseTime = Date.now() - startTime;
-  
+
   expect(responseTime).toBeLessThan(100); // iOS responsiveness requirement
 });
 ```
@@ -443,7 +485,7 @@ test('Touch interactions respond quickly', async ({ page }) => {
 ```
 src/__tests__/e2e/
 ├── rr-184-core-user-journeys.spec.ts     # Main user workflow tests
-├── iphone-button-tappability.spec.ts     # iOS touch compliance tests  
+├── iphone-button-tappability.spec.ts     # iOS touch compliance tests
 ├── pwa-installation.spec.ts              # PWA functionality tests
 ├── cross-browser-validation.spec.ts      # Browser compatibility tests
 └── performance-validation.spec.ts        # Load time and response tests
@@ -457,7 +499,7 @@ src/__tests__/
 │   └── tags.test.ts                    # API endpoint tests
 ├── integration/
 │   ├── tags-api.test.ts               # Integration API tests
-│   ├── tags-sync.test.ts              # Tag sync integration  
+│   ├── tags-sync.test.ts              # Tag sync integration
 │   └── rr-128-tags-e2e.test.ts       # End-to-end tag tests
 ├── stores/
 │   └── tag-store.test.ts              # Tag store unit tests
@@ -473,6 +515,7 @@ src/__tests__/
 ### Unit Test Guidelines
 
 **✅ DO:**
+
 - Mock external dependencies (Supabase, APIs)
 - Use `vi.clearAllMocks()` in `afterEach` hooks to prevent mock contamination (RR-182)
 - Wrap async React state updates in `act()` to prevent race conditions (RR-182)
@@ -482,6 +525,7 @@ src/__tests__/
 - Include all required properties in article mocks (e.g., `parseAttempts`) (RR-182)
 
 **❌ DON'T:**
+
 - Make real database connections in unit tests
 - Load large JSON fixtures (>100KB)
 - Create multiple instances of React components simultaneously
@@ -492,6 +536,7 @@ src/__tests__/
 ### Integration Test Guidelines
 
 **✅ DO:**
+
 - Use separate test database for integration tests
 - Clean up test data in `afterAll` hooks
 - Mock external APIs (Inoreader, Claude)
@@ -501,6 +546,7 @@ src/__tests__/
 - Verify HTML entity decoding in tag creation and retrieval tests
 
 **❌ DON'T:**
+
 - Run integration tests alongside unit tests
 - Use production database
 - Test multiple API endpoints simultaneously
@@ -511,31 +557,29 @@ src/__tests__/
 ### Example: Memory-Safe Test Structure
 
 ```javascript
-describe('Article Store', () => {
+describe("Article Store", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.clearAllMocks();
     // Reset any singleton state
-  })
+  });
 
   afterEach(() => {
     // Clean up any test-specific state
-    cleanup()
-  })
+    cleanup();
+  });
 
-  test('should fetch articles safely', async () => {
+  test("should fetch articles safely", async () => {
     // Small, focused test with mocked data
-    const mockArticles = [
-      { id: 1, title: 'Test', content: 'Brief content' }
-    ]
+    const mockArticles = [{ id: 1, title: "Test", content: "Brief content" }];
     vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockResolvedValue({ data: mockArticles })
-    })
-    
+      select: vi.fn().mockResolvedValue({ data: mockArticles }),
+    });
+
     // Test single functionality
-    const result = await articleStore.fetchArticles()
-    expect(result).toEqual(mockArticles)
-  })
-})
+    const result = await articleStore.fetchArticles();
+    expect(result).toEqual(mockArticles);
+  });
+});
 ```
 
 ### React Testing Race Conditions (RR-182)
@@ -543,69 +587,73 @@ describe('Article Store', () => {
 **⚠️ Race Condition Prevention**: React Testing Library tests can fail intermittently due to race conditions in async state updates. The RR-182 fixes established best practices:
 
 **✅ DO:**
-```javascript
-import { act } from '@testing-library/react';
 
-test('async state updates', async () => {
+```javascript
+import { act } from "@testing-library/react";
+
+test("async state updates", async () => {
   const { result } = renderHook(() => useAutoParseContent(article));
-  
+
   // ✅ Wrap async state changes in act()
   await act(async () => {
     await result.current.triggerParse();
   });
-  
+
   expect(result.current.parsedContent).toBeDefined();
 });
 ```
 
 **❌ DON'T:**
+
 ```javascript
-test('async state updates - RACE CONDITION', async () => {
+test("async state updates - RACE CONDITION", async () => {
   const { result } = renderHook(() => useAutoParseContent(article));
-  
+
   // ❌ Missing act() wrapper causes race conditions
   await result.current.triggerParse();
-  
+
   // ❌ May fail due to timing issues
   expect(result.current.parsedContent).toBeDefined();
 });
 ```
 
 **Mock Cleanup Best Practices (RR-182):**
+
 ```javascript
-describe('Component Tests', () => {
+describe("Component Tests", () => {
   beforeEach(() => {
     // ✅ Clear all mocks to prevent contamination
     vi.clearAllMocks();
-    
+
     // ✅ Reset fetch mocks with consistent responses
     global.fetch = vi.fn();
   });
-  
-  test('should handle fetch calls consistently', async () => {
+
+  test("should handle fetch calls consistently", async () => {
     // ✅ Mock returns expected values every time
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ content: 'test' })
+      json: () => Promise.resolve({ content: "test" }),
     });
-    
+
     // Test execution...
   });
 });
 ```
 
 **Complete Article Mock Example (RR-182):**
+
 ```javascript
 const mockArticle = {
-  id: 'test-id',
-  title: 'Test Article',
-  content: '<p>Short content</p>',
+  id: "test-id",
+  title: "Test Article",
+  content: "<p>Short content</p>",
   full_content: null,
-  parseAttempts: 0,        // ✅ Required for shouldShowRetry logic
-  parseFailed: false,      // ✅ Required for retry state
+  parseAttempts: 0, // ✅ Required for shouldShowRetry logic
+  parseFailed: false, // ✅ Required for retry state
   feed: {
-    isPartialContent: true // ✅ Required for auto-parse logic
-  }
+    isPartialContent: true, // ✅ Required for auto-parse logic
+  },
 };
 ```
 
@@ -616,6 +664,7 @@ const mockArticle = {
 **Problem**: Lock file exists from previous crashed test run
 
 **Solution:**
+
 ```bash
 # Check if tests are actually running
 ps aux | grep vitest
@@ -632,6 +681,7 @@ npm test
 **Problem**: System memory usage approaching critical levels
 
 **Actions:**
+
 1. Stop current tests: `Ctrl+C` in test terminal
 2. Run emergency cleanup: `./scripts/kill-test-processes.sh`
 3. Check for other memory-heavy processes: `Activity Monitor` (macOS) or `htop` (Linux)
@@ -643,12 +693,14 @@ npm test
 **Problem**: RSS reader services stop working during test execution
 
 **Diagnosis:**
+
 ```bash
 pm2 status
 pm2 logs rss-reader-dev --lines 20
 ```
 
 **Solution:**
+
 ```bash
 # Restart all services
 pm2 restart all
@@ -663,6 +715,7 @@ pm2 start ecosystem.config.js
 **Problem**: Tests start but never complete, no output for >5 minutes
 
 **Immediate Action:**
+
 ```bash
 # Emergency kill
 ./scripts/kill-test-processes.sh
@@ -672,6 +725,7 @@ ps aux | grep vitest
 ```
 
 **Prevention:**
+
 - Always use `npm test` instead of direct vitest commands
 - Monitor resource usage during test development
 - Write smaller, focused tests
@@ -682,12 +736,14 @@ ps aux | grep vitest
 **Problem**: Node.js heap allocation failures
 
 **Error Messages:**
+
 ```
 FATAL ERROR: Ineffective mark-compacts near heap limit
 JavaScript heap out of memory
 ```
 
 **Recovery:**
+
 1. Force kill all Node processes: `pkill -9 node`
 2. Clear Node modules cache: `npm run clean`
 3. Restart development environment: `pm2 restart all`
@@ -698,6 +754,7 @@ JavaScript heap out of memory
 **Problem**: Tests fail with "IDBDatabase is not defined" or similar IndexedDB-related errors
 
 **Error Messages:**
+
 ```
 ReferenceError: IDBDatabase is not defined
 TypeError: Cannot read properties of undefined (reading 'open')
@@ -705,6 +762,7 @@ Error: Dexie: TypeError: IDBKeyRange is undefined
 ```
 
 **Diagnosis:**
+
 ```bash
 # Check if fake-indexeddb is installed
 npm list fake-indexeddb
@@ -717,12 +775,14 @@ npm test src/__tests__/unit/test-setup.smoke.test.ts
 ```
 
 **Solution:**
+
 1. Ensure `fake-indexeddb` dependency is installed: `npm install --save-dev fake-indexeddb@^6.1.0`
 2. Verify polyfill import in `src/test-setup.ts`: `import 'fake-indexeddb/auto';`
 3. Run environment validation: `npm test src/__tests__/unit/test-setup.smoke.test.ts`
 4. If issues persist, manually import in test file: `import 'fake-indexeddb/auto';`
 
 **Prevention:**
+
 - Always run smoke test before developing new storage-dependent tests
 - Use provided Supabase mock helper instead of manual mocking
 - Import `fake-indexeddb/auto` at the top of any test file using Dexie or IndexedDB
@@ -732,26 +792,30 @@ npm test src/__tests__/unit/test-setup.smoke.test.ts
 **Problem**: Tests crash when accessing browser storage APIs
 
 **Error Messages:**
+
 ```
 TypeError: Cannot redefine property: localStorage
 TypeError: Cannot define property sessionStorage, object is not extensible
 ```
 
 **Solution:**
+
 1. Use properly configured mocks from test setup (automatically applied)
 2. Avoid manual redefinition of storage APIs in individual tests
 3. If custom mocking needed, use the provided mock helpers
 
 **Correct Usage:**
+
 ```javascript
 // ✅ Uses automatically configured mocks from test setup
-test('storage functionality', () => {
-  localStorage.setItem('key', 'value');
-  expect(localStorage.getItem('key')).toBe('value');
+test("storage functionality", () => {
+  localStorage.setItem("key", "value");
+  expect(localStorage.getItem("key")).toBe("value");
 });
 ```
 
 **Avoid:**
+
 ```javascript
 // ❌ Don't manually redefine storage APIs
 Object.defineProperty(window, 'localStorage', { ... });
@@ -764,20 +828,21 @@ Object.defineProperty(window, 'localStorage', { ... });
 ```json
 {
   "scripts": {
-    "test": "./scripts/optimized-test-runner.sh",        // ✅ Optimized execution (8-20s)
+    "test": "./scripts/optimized-test-runner.sh", // ✅ Optimized execution (8-20s)
     "test:parallel": "vitest run --pool=threads --poolOptions.threads.maxThreads=4", // ✅ Fastest (8-12s)
     "test:sequential": "vitest run --pool=threads --poolOptions.threads.maxThreads=1", // ✅ Most reliable (15-20s)
     "test:sharded": "vitest run --pool=threads --shard=1/2", // ✅ Balanced (10-15s)
-    "test:progressive": "vitest run --reporter=verbose",  // ✅ Detailed feedback
-    "test:watch": "vitest watch --pool=threads",         // ✅ Development mode
-    "test:legacy": "./scripts/safe-test-runner.sh",     // ✅ Conservative fallback
-    "test:unit": "vitest",                               // ⚠️ Bypasses optimizations
+    "test:progressive": "vitest run --reporter=verbose", // ✅ Detailed feedback
+    "test:watch": "vitest watch --pool=threads", // ✅ Development mode
+    "test:legacy": "./scripts/safe-test-runner.sh", // ✅ Conservative fallback
+    "test:unit": "vitest", // ⚠️ Bypasses optimizations
     "test:integration:safe": "pm2 stop rss-reader-dev && npm run test:integration && pm2 start rss-reader-dev" // ✅ Integration only
   }
 }
 ```
 
 **Script Recommendations:**
+
 - **Default**: `npm test` - Optimized runner with monitoring (8-20s)
 - **Development**: `npm run test:watch` - Real-time feedback during coding
 - **CI/CD**: `npm run test:parallel` - Fastest execution for pipelines
@@ -806,6 +871,7 @@ SUPABASE_ANON_KEY_TEST="your-test-anon-key"
 ## Best Practices Summary (Updated for RR-184)
 
 ### Unit and Integration Testing (RR-183)
+
 1. **Always use `npm test`** for optimized execution (8-20 seconds)
 2. **Choose appropriate test mode** based on your needs:
    - `npm run test:parallel` - Fastest for CI/CD
@@ -821,6 +887,7 @@ SUPABASE_ANON_KEY_TEST="your-test-anon-key"
 10. **Keep test data small** and clean up thoroughly
 
 ### End-to-End Testing (RR-184)
+
 11. **Use `npm run test:e2e`** for comprehensive cross-browser validation
 12. **Test on all configured browsers and devices** (8 profiles total)
 13. **Validate iPhone touch target compliance** (44x44px minimum)
@@ -843,4 +910,4 @@ SUPABASE_ANON_KEY_TEST="your-test-anon-key"
 
 ---
 
-*This documentation covers safe and optimized test execution for the RSS News Reader project. Originally created for RR-123 memory exhaustion fixes, updated for RR-183 performance optimizations, RR-184 E2E testing infrastructure, RR-186 test infrastructure enhancements, and RR-188 store isolation patterns. Last updated: Monday, August 11, 2025 at 4:25 PM*
+_This documentation covers safe and optimized test execution for the RSS News Reader project. Originally created for RR-123 memory exhaustion fixes, updated for RR-183 performance optimizations, RR-184 E2E testing infrastructure, RR-186 test infrastructure enhancements, and RR-188 store isolation patterns. Last updated: Monday, August 11, 2025 at 4:25 PM_

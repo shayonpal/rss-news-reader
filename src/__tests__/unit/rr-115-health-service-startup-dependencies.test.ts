@@ -1,17 +1,17 @@
 /**
  * Unit Tests for RR-115: Health Endpoints Service Startup Dependencies
- * 
+ *
  * These tests verify that health endpoints properly handle:
  * 1. Service startup dependencies and initialization order
  * 2. Database connection state validation during startup
  * 3. Service availability detection with proper timeouts
  * 4. Race conditions during service initialization
  * 5. Error response validation with proper HTTP status codes
- * 
+ *
  * IMPORTANT: This file mocks the HealthCheckService directly to avoid singleton
  * conflicts. Database mocks are not needed since we're testing the service's
  * response behavior, not its internal implementation.
- * 
+ *
  * Updated as part of RR-127 to fix unhandled promise rejections.
  */
 
@@ -26,8 +26,8 @@ const healthMock = new ConfigurableHealthCheckMock();
 vi.mock("@/lib/health/health-check-service", () => {
   return {
     HealthCheckService: {
-      getInstance: () => healthMock.getService()
-    }
+      getInstance: () => healthMock.getService(),
+    },
   };
 });
 
@@ -45,16 +45,16 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     // Reset all mocks for clean tests
     vi.clearAllMocks();
     healthMock.reset();
-    
+
     // Setup browser environment mocks
-    if (typeof window !== 'undefined') {
-      Object.defineProperty(window, 'navigator', {
+    if (typeof window !== "undefined") {
+      Object.defineProperty(window, "navigator", {
         writable: true,
         value: { onLine: true },
-        configurable: true
+        configurable: true,
       });
     }
-    
+
     global.caches = {
       keys: vi.fn().mockResolvedValue(["cache-v1"]),
     } as any;
@@ -68,61 +68,65 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should detect when database is not yet initialized during startup", async () => {
       // Mock unhealthy database response
       service.checkHealth.mockResolvedValueOnce({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 1,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'unhealthy',
+            name: "database",
+            status: "unhealthy",
             checks: [
               {
-                name: 'connection',
-                status: 'unhealthy',
-                message: 'Database connection failed',
-                error: 'Database not initialized'
-              }
-            ]
+                name: "connection",
+                status: "unhealthy",
+                message: "Database connection failed",
+                error: "Database not initialized",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
+            name: "network",
+            status: "healthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'healthy',
-                message: 'Network connectivity verified'
-              }
-            ]
+                name: "connectivity",
+                status: "healthy",
+                message: "Network connectivity verified",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'healthy',
+            name: "cache",
+            status: "healthy",
             checks: [
               {
-                name: 'service-worker',
-                status: 'healthy',
-                message: 'Service worker registered'
-              }
-            ]
-          }
-        ]
+                name: "service-worker",
+                status: "healthy",
+                message: "Service worker registered",
+              },
+            ],
+          },
+        ],
       });
 
       const result = await service.checkHealth();
 
       expect(result.status).toBe("unhealthy");
-      
-      const databaseService = result.services.find(s => s.name === "database");
+
+      const databaseService = result.services.find(
+        (s) => s.name === "database"
+      );
       expect(databaseService?.status).toBe("unhealthy");
-      
+
       // Should have connection check that failed
-      const connectionCheck = databaseService?.checks.find(c => c.name === "connection");
+      const connectionCheck = databaseService?.checks.find(
+        (c) => c.name === "connection"
+      );
       expect(connectionCheck?.status).toBe("unhealthy");
       expect(connectionCheck?.message).toContain("Database connection failed");
     });
@@ -133,63 +137,63 @@ describe("RR-115: Health Service Startup Dependencies", () => {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({
-              status: 'healthy',
+              status: "healthy",
               timestamp: new Date(),
               services: [
                 {
-                  name: 'database',
-                  displayName: 'Database',
-                  status: 'healthy',
+                  name: "database",
+                  displayName: "Database",
+                  status: "healthy",
                   lastCheck: new Date(),
-                  message: 'Database operational',
+                  message: "Database operational",
                   checks: [
                     {
-                      name: 'connection',
-                      status: 'healthy',
-                      message: 'Database connection established'
-                    }
-                  ]
+                      name: "connection",
+                      status: "healthy",
+                      message: "Database connection established",
+                    },
+                  ],
                 },
                 {
-                  name: 'network',
-                  displayName: 'Network',
-                  status: 'healthy',
+                  name: "network",
+                  displayName: "Network",
+                  status: "healthy",
                   lastCheck: new Date(),
-                  message: 'Network available',
+                  message: "Network available",
                   checks: [
                     {
-                      name: 'connectivity',
-                      status: 'healthy',
-                      message: 'Network connectivity verified'
-                    }
-                  ]
+                      name: "connectivity",
+                      status: "healthy",
+                      message: "Network connectivity verified",
+                    },
+                  ],
                 },
                 {
-                  name: 'cache',
-                  displayName: 'Cache',
-                  status: 'healthy',
+                  name: "cache",
+                  displayName: "Cache",
+                  status: "healthy",
                   lastCheck: new Date(),
-                  message: 'Cache operational',
+                  message: "Cache operational",
                   checks: [
                     {
-                      name: 'service-worker',
-                      status: 'healthy',
-                      message: 'Service worker registered'
+                      name: "service-worker",
+                      status: "healthy",
+                      message: "Service worker registered",
                     },
                     {
-                      name: 'local-storage',
-                      status: 'healthy',
-                      message: 'Local storage available'
-                    }
-                  ]
-                }
+                      name: "local-storage",
+                      status: "healthy",
+                      message: "Local storage available",
+                    },
+                  ],
+                },
               ],
               metrics: {
                 uptime: 3600,
                 totalChecks: 1,
                 failedChecks: 0,
-                avgResponseTime: 100
-              }
+                avgResponseTime: 100,
+              },
             });
           }, 100);
         });
@@ -201,27 +205,31 @@ describe("RR-115: Health Service Startup Dependencies", () => {
 
       expect(result.status).toBe("healthy");
       expect(duration).toBeGreaterThan(90); // Should take at least 100ms due to mock delay
-      
+
       // Database should be healthy but with noted response time
-      const databaseService = result.services.find(s => s.name === "database");
+      const databaseService = result.services.find(
+        (s) => s.name === "database"
+      );
       expect(databaseService?.status).toBe("healthy");
     });
 
     it("should detect missing service dependencies during health check", async () => {
       // Mock scenario where IndexedDB is completely unavailable
-      Object.defineProperty(window, 'indexedDB', {
+      Object.defineProperty(window, "indexedDB", {
         value: undefined,
-        configurable: true
+        configurable: true,
       });
-      
+
       // Mock unhealthy response when IndexedDB is unavailable
       healthMock.simulateDatabaseFailure();
 
       const result = await service.checkHealth();
 
       expect(result.status).toBe("unhealthy");
-      
-      const databaseService = result.services.find(s => s.name === "database");
+
+      const databaseService = result.services.find(
+        (s) => s.name === "database"
+      );
       expect(databaseService?.status).toBe("unhealthy");
       expect(databaseService?.message).toContain("Database connection failed");
     });
@@ -231,75 +239,95 @@ describe("RR-115: Health Service Startup Dependencies", () => {
       const scenarios = [
         {
           name: "database-first-failure",
-          expectedStatus: "unhealthy"
+          expectedStatus: "unhealthy",
         },
         {
-          name: "storage-only-failure", 
-          expectedStatus: "degraded" // Only storage check failed
+          name: "storage-only-failure",
+          expectedStatus: "degraded", // Only storage check failed
         },
         {
           name: "all-services-ready",
-          expectedStatus: "healthy"
-        }
+          expectedStatus: "healthy",
+        },
       ];
 
       for (const scenario of scenarios) {
         // Reset mocks for each scenario
         vi.clearAllMocks();
-        
+
         // Mock the appropriate response for each scenario
         const mockResponse = {
           status: scenario.expectedStatus,
           timestamp: new Date().toISOString(),
           metrics: {
             totalChecks: 1,
-            failedChecks: scenario.expectedStatus === 'unhealthy' ? 1 : 0,
+            failedChecks: scenario.expectedStatus === "unhealthy" ? 1 : 0,
             lastCheck: new Date().toISOString(),
-            avgResponseTime: 50
+            avgResponseTime: 50,
           },
           services: [
             {
-              name: 'database',
-              status: scenario.name === 'database-first-failure' ? 'unhealthy' : 'healthy',
+              name: "database",
+              status:
+                scenario.name === "database-first-failure"
+                  ? "unhealthy"
+                  : "healthy",
               checks: [
                 {
-                  name: 'connection',
-                  status: scenario.name === 'database-first-failure' ? 'unhealthy' : 'healthy',
-                  message: scenario.name === 'database-first-failure' ? 'DB not ready' : 'Database connection established'
-                }
-              ]
+                  name: "connection",
+                  status:
+                    scenario.name === "database-first-failure"
+                      ? "unhealthy"
+                      : "healthy",
+                  message:
+                    scenario.name === "database-first-failure"
+                      ? "DB not ready"
+                      : "Database connection established",
+                },
+              ],
             },
             {
-              name: 'storage',
-              status: scenario.name === 'storage-only-failure' ? 'unhealthy' : 'healthy',
+              name: "storage",
+              status:
+                scenario.name === "storage-only-failure"
+                  ? "unhealthy"
+                  : "healthy",
               checks: [
                 {
-                  name: 'capacity',
-                  status: scenario.name === 'storage-only-failure' ? 'unhealthy' : 'healthy',
-                  message: scenario.name === 'storage-only-failure' ? 'Storage check failed' : 'Storage available'
-                }
-              ]
+                  name: "capacity",
+                  status:
+                    scenario.name === "storage-only-failure"
+                      ? "unhealthy"
+                      : "healthy",
+                  message:
+                    scenario.name === "storage-only-failure"
+                      ? "Storage check failed"
+                      : "Storage available",
+                },
+              ],
             },
             {
-              name: 'network',
-              status: 'healthy',
+              name: "network",
+              status: "healthy",
               checks: [
                 {
-                  name: 'connectivity',
-                  status: 'healthy',
-                  message: 'Network connectivity verified'
-                }
-              ]
-            }
-          ]
+                  name: "connectivity",
+                  status: "healthy",
+                  message: "Network connectivity verified",
+                },
+              ],
+            },
+          ],
         };
-        
+
         service.checkHealth.mockResolvedValueOnce(mockResponse);
 
         const result = await service.checkHealth();
-        
+
         expect(result.status).toBe(scenario.expectedStatus as HealthStatus);
-        console.log(`✓ Scenario ${scenario.name}: Expected ${scenario.expectedStatus}, got ${result.status}`);
+        console.log(
+          `✓ Scenario ${scenario.name}: Expected ${scenario.expectedStatus}, got ${result.status}`
+        );
       }
     });
   });
@@ -309,78 +337,81 @@ describe("RR-115: Health Service Startup Dependencies", () => {
       const connectionStates = [
         {
           name: "connected",
-          expectedStatus: "healthy"
+          expectedStatus: "healthy",
         },
         {
           name: "connection-timeout",
-          expectedStatus: "unhealthy"
+          expectedStatus: "unhealthy",
         },
         {
           name: "intermittent-connection",
-          expectedStatus: "degraded"
-        }
+          expectedStatus: "degraded",
+        },
       ];
 
       for (const state of connectionStates) {
         vi.clearAllMocks();
-        
+
         // Mock the health check response based on the scenario
         const mockResponse = {
           status: state.expectedStatus,
           timestamp: new Date().toISOString(),
           metrics: {
             totalChecks: 1,
-            failedChecks: state.expectedStatus === 'unhealthy' ? 1 : 0,
+            failedChecks: state.expectedStatus === "unhealthy" ? 1 : 0,
             lastCheck: new Date().toISOString(),
-            avgResponseTime: 50
+            avgResponseTime: 50,
           },
           services: [
             {
-              name: 'database',
+              name: "database",
               status: state.expectedStatus,
               checks: [
                 {
-                  name: 'connection',
+                  name: "connection",
                   status: state.expectedStatus,
-                  message: state.name === 'connection-timeout' ? 'Connection timeout' : 'Database connection established'
-                }
-              ]
+                  message:
+                    state.name === "connection-timeout"
+                      ? "Connection timeout"
+                      : "Database connection established",
+                },
+              ],
             },
             {
-              name: 'network',
-              status: 'healthy',
+              name: "network",
+              status: "healthy",
               checks: [
                 {
-                  name: 'connectivity',
-                  status: 'healthy',
-                  message: 'Network connectivity verified'
-                }
-              ]
+                  name: "connectivity",
+                  status: "healthy",
+                  message: "Network connectivity verified",
+                },
+              ],
             },
             {
-              name: 'cache',
-              status: 'healthy',
+              name: "cache",
+              status: "healthy",
               checks: [
                 {
-                  name: 'service-worker',
-                  status: 'healthy',
-                  message: 'Service worker registered'
-                }
-              ]
-            }
-          ]
+                  name: "service-worker",
+                  status: "healthy",
+                  message: "Service worker registered",
+                },
+              ],
+            },
+          ],
         };
-        
+
         service.checkHealth.mockResolvedValueOnce(mockResponse);
 
         const result = await service.checkHealth();
-        
+
         expect(result.status).toBe(state.expectedStatus as HealthStatus);
-        
-        const dbService = result.services.find(s => s.name === "database");
+
+        const dbService = result.services.find((s) => s.name === "database");
         expect(dbService).toBeDefined();
         expect(dbService?.status).toBe(state.expectedStatus as HealthStatus);
-        
+
         console.log(`✓ Connection state ${state.name}: ${result.status}`);
       }
     });
@@ -388,103 +419,103 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should track database connection recovery after initial failure", async () => {
       // First check fails
       service.checkHealth.mockResolvedValueOnce({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 1,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'unhealthy',
+            name: "database",
+            status: "unhealthy",
             checks: [
               {
-                name: 'connection',
-                status: 'unhealthy',
-                message: 'Connection failed'
-              }
-            ]
+                name: "connection",
+                status: "unhealthy",
+                message: "Connection failed",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
+            name: "network",
+            status: "healthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'healthy',
-                message: 'Network connectivity verified'
-              }
-            ]
+                name: "connectivity",
+                status: "healthy",
+                message: "Network connectivity verified",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'healthy',
+            name: "cache",
+            status: "healthy",
             checks: [
               {
-                name: 'service-worker',
-                status: 'healthy',
-                message: 'Service worker registered'
-              }
-            ]
-          }
-        ]
+                name: "service-worker",
+                status: "healthy",
+                message: "Service worker registered",
+              },
+            ],
+          },
+        ],
       });
-      
+
       const result1 = await service.checkHealth();
       expect(result1.status).toBe("unhealthy");
       expect(result1.metrics.failedChecks).toBe(1);
-      
+
       // Reset and simulate recovery
       vi.clearAllMocks();
       service.checkHealth.mockResolvedValueOnce({
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 2,
           failedChecks: 1, // Previous failure should be tracked
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
+            name: "database",
+            status: "healthy",
             checks: [
               {
-                name: 'connection',
-                status: 'healthy',
-                message: 'Database connection established'
-              }
-            ]
+                name: "connection",
+                status: "healthy",
+                message: "Database connection established",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
+            name: "network",
+            status: "healthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'healthy',
-                message: 'Network connectivity verified'
-              }
-            ]
+                name: "connectivity",
+                status: "healthy",
+                message: "Network connectivity verified",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'healthy',
+            name: "cache",
+            status: "healthy",
             checks: [
               {
-                name: 'service-worker',
-                status: 'healthy',
-                message: 'Service worker registered'
-              }
-            ]
-          }
-        ]
+                name: "service-worker",
+                status: "healthy",
+                message: "Service worker registered",
+              },
+            ],
+          },
+        ],
       });
-      
+
       const result2 = await service.checkHealth();
       expect(result2.status).toBe("healthy");
       expect(result2.metrics.totalChecks).toBe(2);
@@ -494,49 +525,49 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should validate database state consistency across multiple checks", async () => {
       // Setup consistent healthy state
       const healthyResponse = {
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 0,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
+            name: "database",
+            status: "healthy",
             checks: [
               {
-                name: 'connection',
-                status: 'healthy',
-                message: 'Database connection established'
-              }
-            ]
+                name: "connection",
+                status: "healthy",
+                message: "Database connection established",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
+            name: "network",
+            status: "healthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'healthy',
-                message: 'Network connectivity verified'
-              }
-            ]
+                name: "connectivity",
+                status: "healthy",
+                message: "Network connectivity verified",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'healthy',
+            name: "cache",
+            status: "healthy",
             checks: [
               {
-                name: 'service-worker',
-                status: 'healthy',
-                message: 'Service worker registered'
-              }
-            ]
-          }
-        ]
+                name: "service-worker",
+                status: "healthy",
+                message: "Service worker registered",
+              },
+            ],
+          },
+        ],
       };
 
       // Perform multiple checks
@@ -546,10 +577,10 @@ describe("RR-115: Health Service Startup Dependencies", () => {
           ...healthyResponse,
           metrics: {
             ...healthyResponse.metrics,
-            totalChecks: i + 1
-          }
+            totalChecks: i + 1,
+          },
         });
-        
+
         const result = await service.checkHealth();
         results.push(result);
       }
@@ -557,13 +588,15 @@ describe("RR-115: Health Service Startup Dependencies", () => {
       // All checks should be consistent
       results.forEach((result, index) => {
         expect(result.status).toBe("healthy");
-        
-        const dbService = result.services.find(s => s.name === "database");
+
+        const dbService = result.services.find((s) => s.name === "database");
         expect(dbService?.status).toBe("healthy");
-        
-        const connectionCheck = dbService?.checks.find(c => c.name === "connection");
+
+        const connectionCheck = dbService?.checks.find(
+          (c) => c.name === "connection"
+        );
         expect(connectionCheck?.status).toBe("healthy");
-        
+
         console.log(`✓ Check ${index + 1}: Database consistently healthy`);
       });
 
@@ -576,158 +609,164 @@ describe("RR-115: Health Service Startup Dependencies", () => {
   describe("Service Availability Detection", () => {
     it("should detect when services are unavailable during startup", async () => {
       // Simulate browser environment where services might not be available
-      Object.defineProperty(window, 'caches', {
+      Object.defineProperty(window, "caches", {
         value: undefined,
-        configurable: true
+        configurable: true,
       });
-      
+
       global.caches = undefined as any;
-      
+
       service.checkHealth.mockResolvedValueOnce({
-        status: 'degraded',
+        status: "degraded",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 0,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
+            name: "database",
+            status: "healthy",
             checks: [
               {
-                name: 'connection',
-                status: 'healthy',
-                message: 'Database connection established'
-              }
-            ]
+                name: "connection",
+                status: "healthy",
+                message: "Database connection established",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
+            name: "network",
+            status: "healthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'healthy',
-                message: 'Network connectivity verified'
-              }
-            ]
+                name: "connectivity",
+                status: "healthy",
+                message: "Network connectivity verified",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'unhealthy',
+            name: "cache",
+            status: "unhealthy",
             checks: [
               {
-                name: 'service-worker',
-                status: 'unhealthy',
-                message: 'Service worker not available'
-              }
-            ]
-          }
-        ]
+                name: "service-worker",
+                status: "unhealthy",
+                message: "Service worker not available",
+              },
+            ],
+          },
+        ],
       });
-      
+
       const result = await service.checkHealth();
-      
-      const cacheService = result.services.find(s => s.name === "cache");
+
+      const cacheService = result.services.find((s) => s.name === "cache");
       expect(cacheService).toBeDefined();
-      
-      const swCheck = cacheService?.checks.find(c => c.name === "service-worker");
+
+      const swCheck = cacheService?.checks.find(
+        (c) => c.name === "service-worker"
+      );
       expect(swCheck?.status).toBe("unhealthy");
       expect(swCheck?.message).toContain("not available");
     });
 
     it("should handle network availability changes during health checks", async () => {
       // Start with network online
-      Object.defineProperty(window, 'navigator', {
+      Object.defineProperty(window, "navigator", {
         writable: true,
         value: { onLine: true },
-        configurable: true
+        configurable: true,
       });
-      
+
       service.checkHealth.mockResolvedValueOnce({
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 0,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
-            checks: []
+            name: "database",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'network',
-            status: 'healthy',
+            name: "network",
+            status: "healthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'healthy',
-                message: 'Network is online'
-              }
-            ]
+                name: "connectivity",
+                status: "healthy",
+                message: "Network is online",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'healthy',
-            checks: []
-          }
-        ]
+            name: "cache",
+            status: "healthy",
+            checks: [],
+          },
+        ],
       });
-      
+
       const result1 = await service.checkHealth();
-      const networkService1 = result1.services.find(s => s.name === "network");
+      const networkService1 = result1.services.find(
+        (s) => s.name === "network"
+      );
       expect(networkService1?.status).toBe("healthy");
-      
+
       // Simulate network going offline
-      Object.defineProperty(window, 'navigator', {
+      Object.defineProperty(window, "navigator", {
         writable: true,
         value: { onLine: false },
-        configurable: true
+        configurable: true,
       });
-      
+
       service.checkHealth.mockResolvedValueOnce({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 2,
           failedChecks: 1,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
-            checks: []
+            name: "database",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'network',
-            status: 'unhealthy',
+            name: "network",
+            status: "unhealthy",
             checks: [
               {
-                name: 'connectivity',
-                status: 'unhealthy',
-                message: 'Network is offline'
-              }
-            ]
+                name: "connectivity",
+                status: "unhealthy",
+                message: "Network is offline",
+              },
+            ],
           },
           {
-            name: 'cache',
-            status: 'healthy',
-            checks: []
-          }
-        ]
+            name: "cache",
+            status: "healthy",
+            checks: [],
+          },
+        ],
       });
-      
+
       const result2 = await service.checkHealth();
-      const networkService2 = result2.services.find(s => s.name === "network");
+      const networkService2 = result2.services.find(
+        (s) => s.name === "network"
+      );
       expect(networkService2?.status).toBe("unhealthy");
     });
 
@@ -736,53 +775,55 @@ describe("RR-115: Health Service Startup Dependencies", () => {
       const timeoutResponse = new Promise((resolve) => {
         setTimeout(() => {
           resolve({
-            status: 'degraded',
+            status: "degraded",
             timestamp: new Date().toISOString(),
             metrics: {
               totalChecks: 1,
               failedChecks: 0,
               lastCheck: new Date().toISOString(),
-              avgResponseTime: 100
+              avgResponseTime: 100,
             },
             services: [
               {
-                name: 'database',
-                status: 'healthy',
-                checks: []
+                name: "database",
+                status: "healthy",
+                checks: [],
               },
               {
-                name: 'network',
-                status: 'degraded',
+                name: "network",
+                status: "degraded",
                 checks: [
                   {
-                    name: 'external',
-                    status: 'degraded',
-                    message: 'External connectivity issues detected'
-                  }
-                ]
+                    name: "external",
+                    status: "degraded",
+                    message: "External connectivity issues detected",
+                  },
+                ],
               },
               {
-                name: 'cache',
-                status: 'healthy',
-                checks: []
-              }
-            ]
+                name: "cache",
+                status: "healthy",
+                checks: [],
+              },
+            ],
           });
         }, 100);
       });
-      
+
       service.checkHealth.mockReturnValueOnce(timeoutResponse);
-      
+
       const startTime = Date.now();
       const result = await service.checkHealth();
       const duration = Date.now() - startTime;
-      
+
       // Should not hang indefinitely
       expect(duration).toBeLessThan(10000); // 10 second max
-      
-      const networkService = result.services.find(s => s.name === "network");
-      const externalCheck = networkService?.checks.find(c => c.name === "external");
-      
+
+      const networkService = result.services.find((s) => s.name === "network");
+      const externalCheck = networkService?.checks.find(
+        (c) => c.name === "external"
+      );
+
       // External check should show degraded due to timeout
       if (externalCheck) {
         expect(externalCheck.status).toBe("degraded");
@@ -795,31 +836,31 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should handle concurrent health checks without race conditions", async () => {
       // Setup mock for concurrent responses
       const concurrentResponse = {
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 0,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
-            checks: []
+            name: "database",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'network',
-            status: 'healthy',
-            checks: []
+            name: "network",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'cache',
-            status: 'healthy',
-            checks: []
-          }
-        ]
+            name: "cache",
+            status: "healthy",
+            checks: [],
+          },
+        ],
       };
 
       // Mock multiple concurrent calls
@@ -828,13 +869,15 @@ describe("RR-115: Health Service Startup Dependencies", () => {
           ...concurrentResponse,
           metrics: {
             ...concurrentResponse.metrics,
-            totalChecks: i + 1
-          }
+            totalChecks: i + 1,
+          },
         });
       }
 
       // Start multiple concurrent health checks
-      const promises = Array(5).fill(null).map(() => service.checkHealth());
+      const promises = Array(5)
+        .fill(null)
+        .map(() => service.checkHealth());
       const results = await Promise.all(promises);
 
       // All should succeed
@@ -852,31 +895,31 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should maintain state consistency during rapid sequential checks", async () => {
       // Setup consistent mock responses
       const baseResponse = {
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 0,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'healthy',
-            checks: []
+            name: "database",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'network',
-            status: 'healthy',
-            checks: []
+            name: "network",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'cache',
-            status: 'healthy',
-            checks: []
-          }
-        ]
+            name: "cache",
+            status: "healthy",
+            checks: [],
+          },
+        ],
       };
 
       // Perform rapid sequential checks
@@ -886,15 +929,15 @@ describe("RR-115: Health Service Startup Dependencies", () => {
           ...baseResponse,
           metrics: {
             ...baseResponse.metrics,
-            totalChecks: i + 1
-          }
+            totalChecks: i + 1,
+          },
         });
-        
+
         const result = await service.checkHealth();
         results.push(result);
-        
+
         // Small delay to allow state updates
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
       // Check that metrics are consistently increasing
@@ -910,66 +953,66 @@ describe("RR-115: Health Service Startup Dependencies", () => {
 
     it("should handle service state changes during health check execution", async () => {
       let callCount = 0;
-      
+
       // Mock that changes behavior mid-execution
       service.checkHealth.mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
           return Promise.resolve({
-            status: 'healthy',
+            status: "healthy",
             timestamp: new Date().toISOString(),
             metrics: {
               totalChecks: 1,
               failedChecks: 0,
               lastCheck: new Date().toISOString(),
-              avgResponseTime: 50
+              avgResponseTime: 50,
             },
             services: [
               {
-                name: 'database',
-                status: 'healthy',
-                checks: []
+                name: "database",
+                status: "healthy",
+                checks: [],
               },
               {
-                name: 'network',
-                status: 'healthy',
-                checks: []
+                name: "network",
+                status: "healthy",
+                checks: [],
               },
               {
-                name: 'cache',
-                status: 'healthy',
-                checks: []
-              }
-            ]
+                name: "cache",
+                status: "healthy",
+                checks: [],
+              },
+            ],
           });
         } else {
           return Promise.resolve({
-            status: 'unhealthy',
+            status: "unhealthy",
             timestamp: new Date().toISOString(),
             metrics: {
               totalChecks: 2,
               failedChecks: 1,
               lastCheck: new Date().toISOString(),
-              avgResponseTime: 50
+              avgResponseTime: 50,
             },
             services: [
               {
-                name: 'database',
-                status: 'unhealthy',
-                message: 'Service became unavailable',
-                checks: []
+                name: "database",
+                status: "unhealthy",
+                message: "Service became unavailable",
+                checks: [],
               },
               {
-                name: 'network',
-                status: 'healthy',
-                checks: []
+                name: "network",
+                status: "healthy",
+                checks: [],
               },
               {
-                name: 'cache',
-                status: 'healthy',
-                checks: []
-              }
-            ]
+                name: "cache",
+                status: "healthy",
+                checks: [],
+              },
+            ],
           });
         }
       });
@@ -981,7 +1024,7 @@ describe("RR-115: Health Service Startup Dependencies", () => {
       // Second check should fail due to state change
       const result2 = await service.checkHealth();
       expect(result2.status).toBe("unhealthy");
-      
+
       // Should track the failure
       expect(result2.metrics.failedChecks).toBeGreaterThan(0);
     });
@@ -993,89 +1036,98 @@ describe("RR-115: Health Service Startup Dependencies", () => {
         {
           name: "critical-database-failure",
           expectedStatus: "unhealthy",
-          expectedHttpEquivalent: 503 // Service Unavailable
+          expectedHttpEquivalent: 503, // Service Unavailable
         },
         {
           name: "degraded-performance",
           expectedStatus: "degraded",
-          expectedHttpEquivalent: 200 // OK but with warnings
+          expectedHttpEquivalent: 200, // OK but with warnings
         },
         {
           name: "unknown-state",
           expectedStatus: "unknown",
-          expectedHttpEquivalent: 200 // OK but status unknown
-        }
+          expectedHttpEquivalent: 200, // OK but status unknown
+        },
       ];
 
       for (const scenario of errorScenarios) {
         vi.clearAllMocks();
-        
+
         // Mock server-side environment for unknown state
-        if (scenario.name === 'unknown-state') {
-          Object.defineProperty(global, 'window', {
+        if (scenario.name === "unknown-state") {
+          Object.defineProperty(global, "window", {
             value: undefined,
-            configurable: true
+            configurable: true,
           });
         }
-        
+
         const mockResponse = {
           status: scenario.expectedStatus,
           timestamp: new Date().toISOString(),
           metrics: {
             totalChecks: 1,
-            failedChecks: scenario.expectedStatus === 'unhealthy' ? 1 : 0,
+            failedChecks: scenario.expectedStatus === "unhealthy" ? 1 : 0,
             lastCheck: new Date().toISOString(),
-            avgResponseTime: 50
+            avgResponseTime: 50,
           },
           services: [
             {
-              name: 'database',
-              status: scenario.name === 'critical-database-failure' ? 'unhealthy' : 
-                     scenario.name === 'degraded-performance' ? 'degraded' : 'unknown',
-              checks: []
+              name: "database",
+              status:
+                scenario.name === "critical-database-failure"
+                  ? "unhealthy"
+                  : scenario.name === "degraded-performance"
+                    ? "degraded"
+                    : "unknown",
+              checks: [],
             },
             {
-              name: 'network',
-              status: 'healthy',
-              checks: []
+              name: "network",
+              status: "healthy",
+              checks: [],
             },
             {
-              name: 'cache',
-              status: 'healthy',
-              checks: []
-            }
-          ]
+              name: "cache",
+              status: "healthy",
+              checks: [],
+            },
+          ],
         };
-        
+
         service.checkHealth.mockResolvedValueOnce(mockResponse);
 
         const result = await service.checkHealth();
-        
+
         expect(result.status).toBe(scenario.expectedStatus as HealthStatus);
-        
+
         // Verify that the result contains proper error information for failing scenarios
         if (scenario.expectedStatus === "unhealthy") {
           expect(result.metrics.failedChecks).toBeGreaterThan(0);
-          
-          const failedServices = result.services.filter(s => s.status === "unhealthy");
+
+          const failedServices = result.services.filter(
+            (s) => s.status === "unhealthy"
+          );
           expect(failedServices.length).toBeGreaterThan(0);
         }
-        
-        console.log(`✓ Error scenario ${scenario.name}: ${result.status} (HTTP equivalent: ${scenario.expectedHttpEquivalent})`);
-        
+
+        console.log(
+          `✓ Error scenario ${scenario.name}: ${result.status} (HTTP equivalent: ${scenario.expectedHttpEquivalent})`
+        );
+
         // Restore window for other tests
-        if (scenario.name === 'unknown-state') {
-          Object.defineProperty(global, 'window', {
+        if (scenario.name === "unknown-state") {
+          Object.defineProperty(global, "window", {
             value: {
               navigator: { onLine: true },
               caches: { keys: vi.fn().mockResolvedValue([]) },
               localStorage: {
                 setItem: vi.fn(),
                 removeItem: vi.fn(),
-                getItem: vi.fn()
-              }
+                getItem: vi.fn(),
+                clear: vi.fn(),
+              },
             },
-            configurable: true
+            configurable: true,
           });
         }
       }
@@ -1084,7 +1136,7 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should provide detailed error information for troubleshooting", async () => {
       // Setup failure scenario with specific error
       service.checkHealth.mockResolvedValueOnce({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
@@ -1092,48 +1144,52 @@ describe("RR-115: Health Service Startup Dependencies", () => {
           lastCheck: new Date().toISOString(),
           avgResponseTime: 50,
           lastError: {
-            service: 'system',
-            error: 'Connection pool exhausted',
-            timestamp: new Date().toISOString()
-          }
+            service: "system",
+            error: "Connection pool exhausted",
+            timestamp: new Date().toISOString(),
+          },
         },
         services: [
           {
-            name: 'database',
-            status: 'unhealthy',
+            name: "database",
+            status: "unhealthy",
             checks: [
               {
-                name: 'connection',
-                status: 'unhealthy',
-                message: 'Database connection failed',
-                error: 'Connection pool exhausted'
-              }
-            ]
+                name: "connection",
+                status: "unhealthy",
+                message: "Database connection failed",
+                error: "Connection pool exhausted",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
-            checks: []
+            name: "network",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'cache',
-            status: 'healthy',
-            checks: []
-          }
-        ]
+            name: "cache",
+            status: "healthy",
+            checks: [],
+          },
+        ],
       });
-      
+
       const result = await service.checkHealth();
-      
+
       expect(result.status).toBe("unhealthy");
-      
-      const databaseService = result.services.find(s => s.name === "database");
+
+      const databaseService = result.services.find(
+        (s) => s.name === "database"
+      );
       expect(databaseService?.status).toBe("unhealthy");
-      
-      const connectionCheck = databaseService?.checks.find(c => c.name === "connection");
+
+      const connectionCheck = databaseService?.checks.find(
+        (c) => c.name === "connection"
+      );
       expect(connectionCheck?.status).toBe("unhealthy");
       expect(connectionCheck?.error).toContain("Connection pool exhausted");
-      
+
       // Should track the error in metrics
       expect(result.metrics.lastError).toBeDefined();
       expect(result.metrics.lastError?.service).toBe("system");
@@ -1142,55 +1198,57 @@ describe("RR-115: Health Service Startup Dependencies", () => {
     it("should handle multiple simultaneous errors correctly", async () => {
       // Setup multiple services failing
       service.checkHealth.mockResolvedValueOnce({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
         metrics: {
           totalChecks: 1,
           failedChecks: 2,
           lastCheck: new Date().toISOString(),
-          avgResponseTime: 50
+          avgResponseTime: 50,
         },
         services: [
           {
-            name: 'database',
-            status: 'unhealthy',
+            name: "database",
+            status: "unhealthy",
             checks: [
               {
-                name: 'connection',
-                status: 'unhealthy',
-                message: 'Database error',
-                error: 'Connection failed'
-              }
-            ]
+                name: "connection",
+                status: "unhealthy",
+                message: "Database error",
+                error: "Connection failed",
+              },
+            ],
           },
           {
-            name: 'network',
-            status: 'healthy',
-            checks: []
+            name: "network",
+            status: "healthy",
+            checks: [],
           },
           {
-            name: 'cache',
-            status: 'unhealthy',
+            name: "cache",
+            status: "unhealthy",
             checks: [
               {
-                name: 'storage',
-                status: 'unhealthy',
-                message: 'LocalStorage quota exceeded',
-                error: 'Storage full'
-              }
-            ]
-          }
-        ]
+                name: "storage",
+                status: "unhealthy",
+                message: "LocalStorage quota exceeded",
+                error: "Storage full",
+              },
+            ],
+          },
+        ],
       });
-      
+
       const result = await service.checkHealth();
-      
+
       expect(result.status).toBe("unhealthy");
-      
+
       // Multiple services should be unhealthy
-      const unhealthyServices = result.services.filter(s => s.status === "unhealthy");
+      const unhealthyServices = result.services.filter(
+        (s) => s.status === "unhealthy"
+      );
       expect(unhealthyServices.length).toBeGreaterThan(1);
-      
+
       // Should track multiple failures
       expect(result.metrics.failedChecks).toBeGreaterThan(0);
     });
@@ -1199,16 +1257,16 @@ describe("RR-115: Health Service Startup Dependencies", () => {
   describe("Test Environment Configuration", () => {
     it("should handle test environment gracefully", async () => {
       // Simulate test environment where some services are mocked
-      process.env.NODE_ENV = 'test';
-      
+      process.env.NODE_ENV = "test";
+
       const result = await service.checkHealth();
-      
+
       // Should still return a valid health result
       expect(result).toBeDefined();
       expect(result.status).toMatch(/^(healthy|degraded|unhealthy|unknown)$/);
       expect(result.services).toHaveLength(3);
       expect(result.metrics).toBeDefined();
-      
+
       // Clean up
       delete process.env.NODE_ENV;
     });
@@ -1219,91 +1277,105 @@ describe("RR-115: Health Service Startup Dependencies", () => {
         {
           name: "browser-full-capabilities",
           setup: () => {
-            Object.defineProperty(window, 'navigator', {
+            Object.defineProperty(window, "navigator", {
               value: { onLine: true },
-              configurable: true
+              configurable: true,
             });
-            global.caches = { keys: vi.fn().mockResolvedValue(["cache1"]) } as any;
+            global.caches = {
+              keys: vi.fn().mockResolvedValue(["cache1"]),
+            } as any;
           },
           expectNetworkCheck: true,
-          expectCacheCheck: true
+          expectCacheCheck: true,
         },
         {
           name: "limited-browser",
           setup: () => {
-            Object.defineProperty(window, 'navigator', {
+            Object.defineProperty(window, "navigator", {
               value: undefined,
-              configurable: true
+              configurable: true,
             });
             global.caches = undefined as any;
           },
           expectNetworkCheck: false,
-          expectCacheCheck: false
-        }
+          expectCacheCheck: false,
+        },
       ];
 
       for (const env of environments) {
         vi.clearAllMocks();
-        
+
         env.setup();
-        
+
         // Mock response based on environment capabilities
         const mockResponse = {
-          status: 'healthy',
+          status: "healthy",
           timestamp: new Date().toISOString(),
           metrics: {
             totalChecks: 1,
             failedChecks: 0,
             lastCheck: new Date().toISOString(),
-            avgResponseTime: 50
+            avgResponseTime: 50,
           },
           services: [
             {
-              name: 'database',
-              status: 'healthy',
-              checks: []
+              name: "database",
+              status: "healthy",
+              checks: [],
             },
             {
-              name: 'network',
-              status: env.expectNetworkCheck ? 'healthy' : 'unknown',
-              checks: env.expectNetworkCheck ? [
-                {
-                  name: 'connectivity',
-                  status: 'healthy',
-                  message: 'Network available'
-                }
-              ] : []
+              name: "network",
+              status: env.expectNetworkCheck ? "healthy" : "unknown",
+              checks: env.expectNetworkCheck
+                ? [
+                    {
+                      name: "connectivity",
+                      status: "healthy",
+                      message: "Network available",
+                    },
+                  ]
+                : [],
             },
             {
-              name: 'cache',
-              status: env.expectCacheCheck ? 'healthy' : 'unknown',
-              checks: env.expectCacheCheck ? [
-                {
-                  name: 'service-worker',
-                  status: 'healthy',
-                  message: 'Cache available'
-                }
-              ] : []
-            }
-          ]
+              name: "cache",
+              status: env.expectCacheCheck ? "healthy" : "unknown",
+              checks: env.expectCacheCheck
+                ? [
+                    {
+                      name: "service-worker",
+                      status: "healthy",
+                      message: "Cache available",
+                    },
+                  ]
+                : [],
+            },
+          ],
         };
-        
+
         service.checkHealth.mockResolvedValueOnce(mockResponse);
-        
+
         const result = await service.checkHealth();
-        
-        const networkService = result.services.find(s => s.name === "network");
-        const cacheService = result.services.find(s => s.name === "cache");
-        
+
+        const networkService = result.services.find(
+          (s) => s.name === "network"
+        );
+        const cacheService = result.services.find((s) => s.name === "cache");
+
         if (env.expectNetworkCheck) {
-          expect(networkService?.checks.some(c => c.name === "connectivity")).toBe(true);
+          expect(
+            networkService?.checks.some((c) => c.name === "connectivity")
+          ).toBe(true);
         }
-        
+
         if (env.expectCacheCheck) {
-          expect(cacheService?.checks.some(c => c.name === "service-worker")).toBe(true);
+          expect(
+            cacheService?.checks.some((c) => c.name === "service-worker")
+          ).toBe(true);
         }
-        
-        console.log(`✓ Environment ${env.name}: Network=${!!networkService}, Cache=${!!cacheService}`);
+
+        console.log(
+          `✓ Environment ${env.name}: Network=${!!networkService}, Cache=${!!cacheService}`
+        );
       }
     });
   });

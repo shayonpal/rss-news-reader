@@ -265,20 +265,17 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
 ## User Experience Flow
 
 1. **User taps folder row**
-
    - Navigate to Articles tab
    - Show all articles from that folder's feeds
    - Header shows folder name
    - Read status filter persists
 
 2. **User taps chevron**
-
    - Folder expands/collapses
    - Stay on Feeds tab
    - Smooth height animation
 
 3. **User taps feed row**
-
    - Navigate to Articles tab
    - Show only that feed's articles
    - Header shows feed name
@@ -336,13 +333,11 @@ const handleNavigation = async (filter: FilterState) => {
 ## Accessibility
 
 1. **Keyboard Navigation**
-
    - Tab through folders and feeds
    - Space/Enter to select
    - Arrow keys for expand/collapse
 
 2. **Screen Readers**
-
    - Announce folder/feed names
    - State changes (expanded/collapsed)
    - Navigation announcements
@@ -355,13 +350,11 @@ const handleNavigation = async (filter: FilterState) => {
 ## Best Practices
 
 1. **Performance**
-
    - Virtualize long feed lists
    - Debounce rapid clicks
    - Preload article data
 
 2. **State Persistence**
-
    - Remember expansion state
    - Preserve filter selections
    - Cache navigation history

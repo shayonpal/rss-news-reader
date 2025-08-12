@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { StateCreator } from 'zustand';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { StateCreator } from "zustand";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -56,7 +56,7 @@ interface UIState {
 export const createIsolatedUIStore = () => {
   // Generate unique storage key for this test instance
   const storageKey = `ui-store-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   const storeCreator: StateCreator<UIState> = (set) => ({
     // Theme
     theme: "system",
@@ -70,11 +70,13 @@ export const createIsolatedUIStore = () => {
 
     // Collapsible Sections (session-only, not persisted)
     feedsSectionCollapsed: false,
-    setFeedsSectionCollapsed: (collapsed) => set({ feedsSectionCollapsed: Boolean(collapsed) }),
+    setFeedsSectionCollapsed: (collapsed) =>
+      set({ feedsSectionCollapsed: Boolean(collapsed) }),
     toggleFeedsSection: () =>
       set((state) => ({ feedsSectionCollapsed: !state.feedsSectionCollapsed })),
     tagsSectionCollapsed: false,
-    setTagsSectionCollapsed: (collapsed) => set({ tagsSectionCollapsed: Boolean(collapsed) }),
+    setTagsSectionCollapsed: (collapsed) =>
+      set({ tagsSectionCollapsed: Boolean(collapsed) }),
     toggleTagsSection: () =>
       set((state) => ({ tagsSectionCollapsed: !state.tagsSectionCollapsed })),
 
@@ -102,17 +104,14 @@ export const createIsolatedUIStore = () => {
 
   // Create store with persist middleware using unique storage key
   const store = create<UIState>()(
-    persist(
-      storeCreator,
-      {
-        name: storageKey,
-        partialize: (state) => ({
-          theme: state.theme,
-          // Don't persist temporary UI state like sidebar open/loading
-          // feedsSectionCollapsed is intentionally not persisted
-        }),
-      }
-    )
+    persist(storeCreator, {
+      name: storageKey,
+      partialize: (state) => ({
+        theme: state.theme,
+        // Don't persist temporary UI state like sidebar open/loading
+        // feedsSectionCollapsed is intentionally not persisted
+      }),
+    })
   );
 
   // Cleanup function to destroy store and clear storage
@@ -123,7 +122,7 @@ export const createIsolatedUIStore = () => {
     } catch (e) {
       // Ignore errors during cleanup
     }
-    
+
     // Reset store to initial state
     store.setState({
       theme: "system",
@@ -137,7 +136,7 @@ export const createIsolatedUIStore = () => {
     });
 
     // Clear all subscriptions by calling destroy if it exists
-    if (typeof (store as any).destroy === 'function') {
+    if (typeof (store as any).destroy === "function") {
       (store as any).destroy();
     }
   };
@@ -155,16 +154,16 @@ export const createIsolatedUIStore = () => {
  */
 export const createTestStoreHook = () => {
   const { store, cleanup, storageKey } = createIsolatedUIStore();
-  
+
   // Create a hook function that returns the store state
   const useTestStore = () => store.getState();
-  
+
   // Attach store methods to the hook for compatibility
   useTestStore.getState = store.getState;
   useTestStore.setState = store.setState;
   useTestStore.subscribe = store.subscribe;
   useTestStore.destroy = (store as any).destroy || (() => {});
-  
+
   return {
     useTestStore,
     cleanup,

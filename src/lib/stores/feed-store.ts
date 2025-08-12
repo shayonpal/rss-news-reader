@@ -53,7 +53,7 @@ interface FeedStoreState {
   // Utility
   clearError: () => void;
   refreshFeeds: () => Promise<void>;
-  
+
   // RR-171 additions
   applySidebarCounts: (feedCounts: Array<[string, number]>) => void;
   setSkeletonLoading: (loading: boolean) => void;
@@ -277,13 +277,16 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         updatedFeeds.set(feedId, { ...feed, isPartialContent });
         set({ feeds: updatedFeeds });
       }
-      
+
       // Also update feedsWithCounts map
       const { feedsWithCounts } = get();
       const feedWithCount = feedsWithCounts.get(feedId);
       if (feedWithCount) {
         const updatedFeedsWithCounts = new Map(feedsWithCounts);
-        updatedFeedsWithCounts.set(feedId, { ...feedWithCount, isPartialContent });
+        updatedFeedsWithCounts.set(feedId, {
+          ...feedWithCount,
+          isPartialContent,
+        });
         set({ feedsWithCounts: updatedFeedsWithCounts });
       }
     } catch (error) {
@@ -623,30 +626,36 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
     const updatedFeeds = new Map(feeds);
     const updatedFeedsWithCounts = new Map(feedsWithCounts);
     let newTotalUnread = 0;
-    
+
     feedCounts.forEach(([feedId, count]) => {
       const feed = updatedFeeds.get(feedId);
       if (feed) {
         // Update feeds map
         updatedFeeds.set(feedId, { ...feed, unreadCount: count });
-        
+
         // Update feedsWithCounts map for immediate UI update
         const feedWithCount = updatedFeedsWithCounts.get(feedId);
         if (feedWithCount) {
-          updatedFeedsWithCounts.set(feedId, { ...feedWithCount, unreadCount: count });
+          updatedFeedsWithCounts.set(feedId, {
+            ...feedWithCount,
+            unreadCount: count,
+          });
         } else {
           // Create entry if it doesn't exist
-          updatedFeedsWithCounts.set(feedId, { ...feed, unreadCount: count } as any);
+          updatedFeedsWithCounts.set(feedId, {
+            ...feed,
+            unreadCount: count,
+          } as any);
         }
-        
+
         newTotalUnread += count;
       }
     });
-    
-    set({ 
-      feeds: updatedFeeds, 
+
+    set({
+      feeds: updatedFeeds,
       feedsWithCounts: updatedFeedsWithCounts,
-      totalUnreadCount: newTotalUnread
+      totalUnreadCount: newTotalUnread,
     });
   },
 

@@ -12,7 +12,11 @@ import path from "path";
 const execAsync = promisify(exec);
 
 describe("Health Check Webpack Error Monitoring - RR-110", () => {
-  const healthCheckPath = path.join(process.cwd(), "scripts", "startup-health-check.sh");
+  const healthCheckPath = path.join(
+    process.cwd(),
+    "scripts",
+    "startup-health-check.sh"
+  );
   let healthCheckContent: string;
   let originalEnv: NodeJS.ProcessEnv;
 
@@ -30,8 +34,10 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should check rss-reader-dev service health", () => {
       // Verify the service is included in health checks
       expect(healthCheckContent).toContain('"rss-reader-dev"');
-      expect(healthCheckContent).toContain("http://localhost:3000/reader/api/health/app");
-      
+      expect(healthCheckContent).toContain(
+        "http://localhost:3000/reader/api/health/app"
+      );
+
       // Check for ping parameter support (quick health check)
       expect(healthCheckContent).toContain("ping=true");
     });
@@ -40,7 +46,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check maximum wait time allows for webpack compilation
       expect(healthCheckContent).toContain("MAX_WAIT_TIME=30");
       expect(healthCheckContent).toContain("CHECK_INTERVAL=2");
-      
+
       // 30 seconds should be sufficient for webpack builds
       // 2-second intervals provide reasonable granularity
     });
@@ -49,20 +55,24 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for wait_for_service function
       expect(healthCheckContent).toContain("wait_for_service");
       expect(healthCheckContent).toContain("start_time=$(date +%s)");
-      
+
       // Should track elapsed time
-      expect(healthCheckContent).toContain("elapsed=$(($(date +%s) - start_time))");
+      expect(healthCheckContent).toContain(
+        "elapsed=$(($(date +%s) - start_time))"
+      );
     });
   });
 
   describe("Health Endpoint Integration", () => {
     it("should use appropriate health endpoints for webpack monitoring", () => {
       // Check health endpoint URLs
-      expect(healthCheckContent).toContain("http://localhost:3000/reader/api/health/app");
-      
+      expect(healthCheckContent).toContain(
+        "http://localhost:3000/reader/api/health/app"
+      );
+
       // Should support quick ping for rapid checks
       expect(healthCheckContent).toContain("ping=true");
-      
+
       // Should not use test endpoints (removed in RR-69)
       expect(healthCheckContent).not.toContain("test-supabase");
       expect(healthCheckContent).not.toContain("debug");
@@ -72,7 +82,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for curl response handling
       expect(healthCheckContent).toContain("curl -s -m 1");
       expect(healthCheckContent).toContain('"%{http_code}"');
-      
+
       // Should check for 200 response
       expect(healthCheckContent).toContain('"200"');
     });
@@ -80,7 +90,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should handle network timeouts during webpack builds", () => {
       // Check for appropriate curl timeout
       expect(healthCheckContent).toContain("-m 1"); // 1 second timeout
-      
+
       // Should handle curl failures
       expect(healthCheckContent).toContain("2>/dev/null");
       expect(healthCheckContent).toContain('"000"'); // Default for curl failures
@@ -92,7 +102,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for logging function
       expect(healthCheckContent).toContain("log_event");
       expect(healthCheckContent).toContain("startup-health.jsonl");
-      
+
       // Should log structured events
       expect(healthCheckContent).toContain("jq -c -n");
       expect(healthCheckContent).toContain('"event":');
@@ -102,8 +112,10 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should track service readiness timing", () => {
       // Check for timing measurements
       expect(healthCheckContent).toContain("wait_time_seconds");
-      expect(healthCheckContent).toContain("duration=$(($(date +%s) - start_time))");
-      
+      expect(healthCheckContent).toContain(
+        "duration=$(($(date +%s) - start_time))"
+      );
+
       // Should log service_ready events
       expect(healthCheckContent).toContain('"event": "service_ready"');
     });
@@ -112,7 +124,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for timeout detection
       expect(healthCheckContent).toContain("service_timeout");
       expect(healthCheckContent).toContain("elapsed_seconds");
-      
+
       // Should occur when MAX_WAIT_TIME is exceeded
       expect(healthCheckContent).toContain("$elapsed -ge $MAX_WAIT_TIME");
     });
@@ -123,7 +135,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for Discord webhook integration
       expect(healthCheckContent).toContain("DISCORD_WEBHOOK");
       expect(healthCheckContent).toContain("discord.com/api/webhooks");
-      
+
       // Should send alert for startup failures
       expect(healthCheckContent).toContain("RSS Reader Startup Failed");
       expect(healthCheckContent).toContain("Some services failed to start");
@@ -134,7 +146,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       expect(healthCheckContent).toContain('"embeds":');
       expect(healthCheckContent).toContain('"Failed Services"');
       expect(healthCheckContent).toContain('"Action Required"');
-      
+
       // Should reference PM2 logs for troubleshooting
       expect(healthCheckContent).toContain("Check PM2 logs for details");
     });
@@ -143,7 +155,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for silent webhook calls
       expect(healthCheckContent).toContain("curl -s");
       expect(healthCheckContent).toContain("> /dev/null");
-      
+
       // Should not fail health check if webhook fails
       expect(healthCheckContent).toMatch(/curl.*discord.*> \/dev\/null/);
     });
@@ -154,25 +166,29 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Check for monitor service integration
       expect(healthCheckContent).toContain("--start-monitor");
       expect(healthCheckContent).toContain("monitor-services.sh start");
-      
+
       // Should start monitoring after successful health check
-      expect(healthCheckContent).toContain("Starting health monitoring service");
+      expect(healthCheckContent).toContain(
+        "Starting health monitoring service"
+      );
     });
 
     it("should provide actionable error information", () => {
       // Check for helpful error messages
       expect(healthCheckContent).toContain("Some services failed to start");
       expect(healthCheckContent).toContain("unhealthy_services");
-      
+
       // Should list specific failed services
-      expect(healthCheckContent).toContain('printf \'%s\\n\' "${unhealthy_services[@]}"');
+      expect(healthCheckContent).toContain(
+        "printf '%s\\n' \"${unhealthy_services[@]}\""
+      );
     });
 
     it("should exit with appropriate status codes", () => {
       // Check for proper exit codes
       expect(healthCheckContent).toContain("exit 0"); // Success
       expect(healthCheckContent).toContain("exit 1"); // Failure
-      
+
       // Should pass through health check status
       expect(healthCheckContent).toContain("all_healthy=true");
     });
@@ -189,9 +205,11 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should use health endpoints that can detect webpack issues", () => {
       // Health endpoint should reflect webpack build status
       expect(healthCheckContent).toContain("/reader/api/health/app");
-      
+
       // Should not rely on simple ping if webpack is building
-      const healthUrls = healthCheckContent.match(/http:\/\/localhost:3000\/reader\/api\/health\/app[^"']*/g);
+      const healthUrls = healthCheckContent.match(
+        /http:\/\/localhost:3000\/reader\/api\/health\/app[^"']*/g
+      );
       expect(healthUrls).toBeTruthy();
     });
 
@@ -210,7 +228,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Should verify PM2 is running before checking services
       expect(healthCheckContent).toContain("check_pm2");
       expect(healthCheckContent).toContain("pm2 pid > /dev/null 2>&1");
-      
+
       // Should fail fast if PM2 is not running
       expect(healthCheckContent).toContain("PM2 not running!");
       expect(healthCheckContent).toContain("pm2_not_running");
@@ -218,9 +236,11 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
 
     it("should handle different service types appropriately", () => {
       // Should handle HTTP services differently from cron
-      expect(healthCheckContent).toContain('if [ "$service" = "rss-sync-cron" ]');
+      expect(healthCheckContent).toContain(
+        'if [ "$service" = "rss-sync-cron" ]'
+      );
       expect(healthCheckContent).toContain("Check cron via health file");
-      
+
       // Should check HTTP endpoints for web services
       expect(healthCheckContent).toContain("Check HTTP endpoint");
       expect(healthCheckContent).toContain("curl -s -m 1");
@@ -228,9 +248,9 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
 
     it("should track individual service health", () => {
       // Should check each service individually
-      expect(healthCheckContent).toContain("for i in \"${!services[@]}\"");
+      expect(healthCheckContent).toContain('for i in "${!services[@]}"');
       expect(healthCheckContent).toContain("wait_for_service");
-      
+
       // Should track which services are unhealthy
       expect(healthCheckContent).toContain("unhealthy_services+=");
     });
@@ -247,7 +267,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
       // Should log start and completion events
       expect(healthCheckContent).toContain("startup_check_begin");
       expect(healthCheckContent).toContain("startup_check_complete");
-      
+
       // Should include relevant metadata
       expect(healthCheckContent).toContain("max_wait_seconds");
     });
@@ -255,7 +275,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should support continuous monitoring integration", () => {
       // Should integrate with ongoing monitoring
       expect(healthCheckContent).toContain("sync-health-monitor.sh daemon");
-      
+
       // Should start monitoring after successful startup
       expect(healthCheckContent).toContain("--start-monitor");
     });
@@ -265,7 +285,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should have reasonable check intervals", () => {
       // 2-second intervals provide good balance
       expect(healthCheckContent).toContain("CHECK_INTERVAL=2");
-      
+
       // Should sleep between checks
       expect(healthCheckContent).toContain("sleep $CHECK_INTERVAL");
     });
@@ -273,7 +293,7 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
     it("should handle concurrent health checks", () => {
       // Should be safe to run multiple health checks
       expect(healthCheckContent).toContain("curl -s -m 1");
-      
+
       // Should not create lock files or state conflicts
       expect(healthCheckContent).not.toContain(".lock");
       expect(healthCheckContent).not.toContain("lockf");
@@ -281,9 +301,9 @@ describe("Health Check Webpack Error Monitoring - RR-110", () => {
 
     it("should provide timely feedback", () => {
       // Should provide immediate feedback for each service
-      expect(healthCheckContent).toContain("echo -n \"Checking $service...\"");
-      expect(healthCheckContent).toContain("echo \"✅\"");
-      expect(healthCheckContent).toContain("echo \"❌\"");
+      expect(healthCheckContent).toContain('echo -n "Checking $service..."');
+      expect(healthCheckContent).toContain('echo "✅"');
+      expect(healthCheckContent).toContain('echo "❌"');
     });
   });
 });

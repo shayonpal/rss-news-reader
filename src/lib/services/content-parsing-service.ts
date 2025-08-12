@@ -198,25 +198,35 @@ export class ContentParsingService {
       const { data: articles } = await supabase
         .from("articles")
         .select("feed_id, content")
-        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte(
+          "created_at",
+          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        )
         .order("created_at", { ascending: false });
 
       if (!articles) return;
 
       // Group by feed and calculate metrics
-      const feedMetrics = new Map<string, { totalLength: number; count: number; truncated: number }>();
-      
+      const feedMetrics = new Map<
+        string,
+        { totalLength: number; count: number; truncated: number }
+      >();
+
       for (const article of articles) {
         if (!feedMetrics.has(article.feed_id)) {
-          feedMetrics.set(article.feed_id, { totalLength: 0, count: 0, truncated: 0 });
+          feedMetrics.set(article.feed_id, {
+            totalLength: 0,
+            count: 0,
+            truncated: 0,
+          });
         }
-        
+
         const metrics = feedMetrics.get(article.feed_id)!;
         const contentLength = article.content?.length || 0;
-        
+
         metrics.totalLength += contentLength;
         metrics.count++;
-        
+
         // Check for truncation indicators
         if (
           contentLength < 500 ||
@@ -232,9 +242,9 @@ export class ContentParsingService {
       for (const [feedId, metrics] of feedMetrics) {
         const avgLength = metrics.totalLength / metrics.count;
         const truncationRatio = metrics.truncated / metrics.count;
-        
+
         const isPartial = avgLength < 500 || truncationRatio > 0.5;
-        
+
         await supabase
           .from("feeds")
           .update({ is_partial_feed: isPartial })
@@ -244,5 +254,4 @@ export class ContentParsingService {
       console.error("Error detecting partial feeds:", error);
     }
   }
-
 }

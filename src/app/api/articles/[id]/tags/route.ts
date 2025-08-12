@@ -15,11 +15,12 @@ export async function GET(
 ) {
   try {
     const articleId = params.id;
-    
+
     // Get tags for this article
     const { data: articleTags, error } = await supabase
       .from("article_tags")
-      .select(`
+      .select(
+        `
         tag:tags(
           id,
           name,
@@ -27,9 +28,10 @@ export async function GET(
           color,
           description
         )
-      `)
+      `
+      )
       .eq("article_id", articleId);
-      
+
     if (error) {
       console.error("Error fetching article tags:", error);
       return NextResponse.json(
@@ -37,15 +39,18 @@ export async function GET(
         { status: 500 }
       );
     }
-    
+
     // Flatten the response to just return the tags
-    const tags = articleTags?.map(at => at.tag).filter(Boolean) || [];
-    
+    const tags = articleTags?.map((at) => at.tag).filter(Boolean) || [];
+
     return NextResponse.json({ tags });
   } catch (error) {
     console.error("Article tags API error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

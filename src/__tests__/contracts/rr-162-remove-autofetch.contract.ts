@@ -1,16 +1,16 @@
 /**
  * Test Contracts for RR-162: Remove Auto-Fetch Functionality
- * 
+ *
  * These contracts define the exact behavior expected after removing auto-fetch
- * functionality from the sync process. These tests ARE the specification - 
+ * functionality from the sync process. These tests ARE the specification -
  * the implementation must conform to these contracts.
- * 
+ *
  * Context:
  * - Auto-fetch causes sync to hang at 92% progress
  * - 507 auto-fetch failures recorded before disabling
  * - Manual fetch must remain fully functional
  * - Sync must complete to 100% without hanging
- * 
+ *
  * Linear Issue: RR-162
  * Target: Complete removal of auto-fetch while preserving manual fetch
  */
@@ -61,7 +61,8 @@ export interface HealthParsingResponse {
           failure: number;
           manual: number;
         };
-        auto?: {  // Should be undefined after removal
+        auto?: {
+          // Should be undefined after removal
           total: number;
           success: number;
           failure: number;
@@ -100,7 +101,7 @@ export const SyncBehaviorContracts = {
     verifyWith: async (syncId: string): Promise<boolean> => {
       // This will be implemented in the actual test
       return true;
-    }
+    },
   },
 
   /**
@@ -116,7 +117,7 @@ export const SyncBehaviorContracts = {
       noAutoFetchProgressStep: true,
       noAutoFetchLogMessages: true,
       noCommentedAutoFetchCode: true,
-    }
+    },
   },
 
   /**
@@ -134,8 +135,8 @@ export const SyncBehaviorContracts = {
       hasFullContentIsTrue: true,
       fetchLogCreatedWithTypeManual: true,
       responseStatus: 200,
-    }
-  }
+    },
+  },
 };
 
 // ============================================================================
@@ -145,7 +146,7 @@ export const SyncBehaviorContracts = {
 export interface FetchLogEntry {
   id: string;
   article_id: string;
-  fetch_type: "manual" | "auto";  // "auto" should never appear in new entries
+  fetch_type: "manual" | "auto"; // "auto" should never appear in new entries
   status: "success" | "failure";
   error_message?: string;
   duration_ms?: number;
@@ -186,8 +187,8 @@ export const DatabaseBehaviorContracts = {
       partialContentPreserved: true,
       manualFetchStillUpdatesContent: true,
       hasFullContentFlagCorrect: true,
-    }
-  }
+    },
+  },
 };
 
 // ============================================================================
@@ -217,13 +218,11 @@ export const TypeSystemContracts = {
     },
     expectedFields: [
       "theme",
-      "syncFrequency", 
+      "syncFrequency",
       "maxArticles",
-      "enableNotifications"
+      "enableNotifications",
     ],
-    prohibitedFields: [
-      "autoFetchFullContent"
-    ]
+    prohibitedFields: ["autoFetchFullContent"],
   },
 
   /**
@@ -237,8 +236,8 @@ export const TypeSystemContracts = {
       loadsWithoutError: true,
       ignoresRemovedField: true,
       preservesOtherSettings: true,
-    }
-  }
+    },
+  },
 };
 
 // ============================================================================
@@ -263,8 +262,8 @@ export const HealthEndpointContracts = {
     verify: (response: HealthParsingResponse) => {
       // Auto-fetch stats may exist for historical data but shouldn't grow
       return response.status !== "error";
-    }
-  }
+    },
+  },
 };
 
 // ============================================================================
@@ -283,7 +282,7 @@ export const MonitoringContracts = {
       noAutoFetchMetricsCollected: true,
       dashboardsUpdated: true,
       alertsReconfigured: true,
-    }
+    },
   },
 
   /**
@@ -297,8 +296,8 @@ export const MonitoringContracts = {
       noAutoFetchReferences: true,
       manualFetchDocumentationIntact: true,
       syncProcessDocumentationUpdated: true,
-    }
-  }
+    },
+  },
 };
 
 // ============================================================================
@@ -323,7 +322,7 @@ export const RegressionPreventionContracts = {
       maxSyncDurationSeconds: 30,
       expectedProgressSteps: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100],
       prohibitedProgressValue: 92, // Should never stop at 92%
-    }
+    },
   },
 
   /**
@@ -338,8 +337,8 @@ export const RegressionPreventionContracts = {
       syncFailsGracefully: true,
       statusUpdatedCorrectly: true,
       noUnhandledRejections: true,
-    }
-  }
+    },
+  },
 };
 
 // ============================================================================
@@ -402,7 +401,7 @@ export const ValidationUtilities = {
       /AUTO_FETCH_RATE_LIMIT/i,
       /AUTO_FETCH_TIME_WINDOW/i,
     ];
-    return patterns.some(pattern => pattern.test(code));
+    return patterns.some((pattern) => pattern.test(code));
   },
 
   /**

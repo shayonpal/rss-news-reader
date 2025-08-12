@@ -36,23 +36,31 @@ This document contains the complete test specification for RR-170, which address
 **Line**: 284
 
 **Current Code**:
+
 ```typescript
-{escapeHtml(tag.name)}
+{
+  escapeHtml(tag.name);
+}
 ```
 
 **Required Change**:
+
 ```typescript
-{escapeHtml(decodeHtmlEntities(tag.name))}
+{
+  escapeHtml(decodeHtmlEntities(tag.name));
+}
 ```
 
 **Import Required**:
+
 ```typescript
-import { decodeHtmlEntities } from '@/lib/utils/html-decoder';
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 ```
 
 ### Processing Pipeline
 
 The implementation MUST follow this exact processing order:
+
 1. **Decode**: HTML entities → readable text
 2. **Escape**: Dangerous HTML → safe entities
 3. **Render**: Display in UI
@@ -61,44 +69,44 @@ The implementation MUST follow this exact processing order:
 
 ### Core Decoding Requirements
 
-| Input | Expected Output | Test Coverage |
-|-------|----------------|---------------|
-| `India&#x2F;Canada` | `India/Canada` | ✅ Unit, Integration, Component |
-| `Tech &amp; Science` | `Tech & Science` | ✅ Unit, Integration, Component |
-| `News&#8211;Updates` | `News–Updates` | ✅ Unit, Integration |
-| `Q&amp;A` | `Q&A` | ✅ Unit, Integration, Component |
-| `normal-tag` | `normal-tag` | ✅ Unit, Integration, Component |
-| `C&#x2B;&#x2B;` | `C++` | ✅ Unit |
-| `&lt;Tech&gt;` | `<Tech>` (then escaped) | ✅ Unit, Component |
-| `&quot;Breaking News&quot;` | `"Breaking News"` | ✅ Unit |
-| `100&#37; News` | `100% News` | ✅ Unit |
-| `AT&amp;T` | `AT&T` | ✅ Unit |
+| Input                       | Expected Output         | Test Coverage                   |
+| --------------------------- | ----------------------- | ------------------------------- |
+| `India&#x2F;Canada`         | `India/Canada`          | ✅ Unit, Integration, Component |
+| `Tech &amp; Science`        | `Tech & Science`        | ✅ Unit, Integration, Component |
+| `News&#8211;Updates`        | `News–Updates`          | ✅ Unit, Integration            |
+| `Q&amp;A`                   | `Q&A`                   | ✅ Unit, Integration, Component |
+| `normal-tag`                | `normal-tag`            | ✅ Unit, Integration, Component |
+| `C&#x2B;&#x2B;`             | `C++`                   | ✅ Unit                         |
+| `&lt;Tech&gt;`              | `<Tech>` (then escaped) | ✅ Unit, Component              |
+| `&quot;Breaking News&quot;` | `"Breaking News"`       | ✅ Unit                         |
+| `100&#37; News`             | `100% News`             | ✅ Unit                         |
+| `AT&amp;T`                  | `AT&T`                  | ✅ Unit                         |
 
 ### Security Requirements
 
-| Scenario | Requirement | Test Coverage |
-|----------|------------|---------------|
-| XSS Prevention | HTML tags must be escaped after decoding | ✅ Unit, Component |
-| Script Injection | `<script>` tags must not execute | ✅ Unit, Component |
-| URL Preservation | URLs must NOT be decoded | ✅ Unit, Integration |
-| Onclick Injection | Event handlers must be sanitized | ✅ Component |
+| Scenario          | Requirement                              | Test Coverage        |
+| ----------------- | ---------------------------------------- | -------------------- |
+| XSS Prevention    | HTML tags must be escaped after decoding | ✅ Unit, Component   |
+| Script Injection  | `<script>` tags must not execute         | ✅ Unit, Component   |
+| URL Preservation  | URLs must NOT be decoded                 | ✅ Unit, Integration |
+| Onclick Injection | Event handlers must be sanitized         | ✅ Component         |
 
 ### Performance Requirements
 
-| Metric | Requirement | Test Coverage |
-|--------|------------|---------------|
-| Single Tag | < 1ms decoding time | ✅ Unit |
-| Batch (100 tags) | < 50ms total time | ✅ Unit |
-| Component Render (50 tags) | < 500ms | ✅ Component |
-| API Response (100 tags) | < 1000ms | ✅ Integration |
+| Metric                     | Requirement         | Test Coverage  |
+| -------------------------- | ------------------- | -------------- |
+| Single Tag                 | < 1ms decoding time | ✅ Unit        |
+| Batch (100 tags)           | < 50ms total time   | ✅ Unit        |
+| Component Render (50 tags) | < 500ms             | ✅ Component   |
+| API Response (100 tags)    | < 1000ms            | ✅ Integration |
 
 ### Database Preservation
 
-| Requirement | Description | Test Coverage |
-|-------------|------------|---------------|
-| No DB Writes | Display-only change, no database updates | ✅ Integration |
+| Requirement     | Description                               | Test Coverage  |
+| --------------- | ----------------------------------------- | -------------- |
+| No DB Writes    | Display-only change, no database updates  | ✅ Integration |
 | Original Values | Database values remain with HTML entities | ✅ Integration |
-| Tag IDs | Selection uses tag IDs, not names | ✅ Integration |
+| Tag IDs         | Selection uses tag IDs, not names         | ✅ Integration |
 
 ## Test Execution Commands
 
@@ -141,12 +149,15 @@ npm test -- src/__tests__/unit/rr-170 src/__tests__/integration/rr-170 src/compo
 ### From Linear Issue RR-170
 
 ✅ **Requirement**: Tags render HTML entities in UI
+
 - **Test**: Component tests verify decoded display
 
 ✅ **Requirement**: Database stores correct decoded values
+
 - **Test**: Integration tests verify DB preservation
 
 ✅ **Requirement**: Must follow RR-154 approach
+
 - **Test**: Uses same `decodeHtmlEntities` function
 
 ### Additional Requirements Tested

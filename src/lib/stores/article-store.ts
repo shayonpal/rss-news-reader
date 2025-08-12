@@ -24,7 +24,11 @@ interface ArticleStoreState {
   loadingMore: boolean;
 
   // Actions
-  loadArticles: (feedId?: string, folderId?: string, tagId?: string) => Promise<void>;
+  loadArticles: (
+    feedId?: string,
+    folderId?: string,
+    tagId?: string
+  ) => Promise<void>;
   loadMoreArticles: () => Promise<void>;
   getArticle: (id: string) => Promise<Article | null>;
 
@@ -63,8 +67,8 @@ const ARTICLES_PER_PAGE = 50;
 interface MarkAsReadContext {
   feedId?: string;
   folderId?: string;
-  currentView: 'all' | 'feed' | 'folder';
-  filterMode: 'all' | 'unread' | 'read';
+  currentView: "all" | "feed" | "folder";
+  filterMode: "all" | "unread" | "read";
 }
 
 // Get initial read status filter from localStorage (client-side only)
@@ -78,7 +82,7 @@ async function markArticlesAsReadWithSession(
   articleIds: string[],
   articles: Map<string, Article>,
   context: MarkAsReadContext,
-  markType: 'manual' | 'auto' | 'bulk',
+  markType: "manual" | "auto" | "bulk",
   updateDatabase: (ids: string[]) => Promise<void>,
   updateStore: (updatedArticles: Map<string, Article>) => void
 ): Promise<void> {
@@ -90,7 +94,7 @@ async function markArticlesAsReadWithSession(
 
     // 2. Update store
     const updatedArticles = new Map(articles);
-    articleIds.forEach(id => {
+    articleIds.forEach((id) => {
       const article = updatedArticles.get(id);
       if (article) {
         updatedArticles.set(id, { ...article, isRead: true });
@@ -100,7 +104,7 @@ async function markArticlesAsReadWithSession(
 
     // 3. Ensure session state exists with proper context
     let state = articleListStateManager.getListState();
-    
+
     // Create new state if none exists
     if (!state) {
       state = {
@@ -113,34 +117,43 @@ async function markArticlesAsReadWithSession(
         filterMode: context.filterMode,
         feedId: context.feedId,
         folderId: context.folderId,
-        expiresAt: (Date.now() + (30 * 60 * 1000)).toString(), // 30 minutes from now
+        expiresAt: (Date.now() + 30 * 60 * 1000).toString(), // 30 minutes from now
       };
     }
 
     // 4. Add articles to appropriate session arrays based on markType
     // Update session state
-    if (markType === 'auto') {
-      state.autoReadArticles = [...new Set([...state.autoReadArticles, ...articleIds])];
+    if (markType === "auto") {
+      state.autoReadArticles = [
+        ...new Set([...state.autoReadArticles, ...articleIds]),
+      ];
     } else {
-      state.manualReadArticles = [...new Set([...state.manualReadArticles, ...articleIds])];
+      state.manualReadArticles = [
+        ...new Set([...state.manualReadArticles, ...articleIds]),
+      ];
     }
 
     // Limit session state to prevent unbounded growth
     const MAX_SESSION_ARTICLES = 50;
     if (state.autoReadArticles.length > MAX_SESSION_ARTICLES) {
-      state.autoReadArticles = state.autoReadArticles.slice(-MAX_SESSION_ARTICLES);
+      state.autoReadArticles =
+        state.autoReadArticles.slice(-MAX_SESSION_ARTICLES);
     }
     if (state.manualReadArticles.length > MAX_SESSION_ARTICLES) {
-      state.manualReadArticles = state.manualReadArticles.slice(-MAX_SESSION_ARTICLES);
+      state.manualReadArticles =
+        state.manualReadArticles.slice(-MAX_SESSION_ARTICLES);
     }
 
     // Update read states - only keep states for articles we're tracking
-    const trackedArticles = new Set([...state.autoReadArticles, ...state.manualReadArticles]);
+    const trackedArticles = new Set([
+      ...state.autoReadArticles,
+      ...state.manualReadArticles,
+    ]);
     const newReadStates: Record<string, boolean> = {};
-    trackedArticles.forEach(id => {
+    trackedArticles.forEach((id) => {
       newReadStates[id] = true;
     });
-    articleIds.forEach(id => {
+    articleIds.forEach((id) => {
       newReadStates[id] = true;
     });
     state.readStates = newReadStates;
@@ -153,62 +166,77 @@ async function markArticlesAsReadWithSession(
 
     // 5. Also store article IDs separately for the hybrid query
     // This ensures they can be loaded from the database even when filtered
-    const allPreservedIds = [...new Set([
-      ...(state.autoReadArticles || []),
-      ...(state.manualReadArticles || [])
-    ])];
-    
+    const allPreservedIds = [
+      ...new Set([
+        ...(state.autoReadArticles || []),
+        ...(state.manualReadArticles || []),
+      ]),
+    ];
+
     if (allPreservedIds.length > 0) {
       try {
         // Store with timestamps for expiry management
-        const preservedWithTimestamps = allPreservedIds.map(id => ({
+        const preservedWithTimestamps = allPreservedIds.map((id) => ({
           id,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         }));
-        
+
         // Get existing preserved IDs
-        const existingPreserved = sessionStorage.getItem('preserved_article_ids');
+        const existingPreserved = sessionStorage.getItem(
+          "preserved_article_ids"
+        );
         let allPreserved = preservedWithTimestamps;
-        
+
         if (existingPreserved) {
           const parsed = JSON.parse(existingPreserved);
           // Merge with existing, keeping newer timestamps
-          const existingMap = new Map(parsed.map((item: any) => [
-            typeof item === 'string' ? item : item.id,
-            typeof item === 'string' ? { id: item, timestamp: Date.now() } : item
-          ]));
-          
+          const existingMap = new Map(
+            parsed.map((item: any) => [
+              typeof item === "string" ? item : item.id,
+              typeof item === "string"
+                ? { id: item, timestamp: Date.now() }
+                : item,
+            ])
+          );
+
           // Add new items
-          preservedWithTimestamps.forEach(item => {
+          preservedWithTimestamps.forEach((item) => {
             existingMap.set(item.id, item);
           });
-          
-          allPreserved = Array.from(existingMap.values()) as { id: string; timestamp: number; }[];
+
+          allPreserved = Array.from(existingMap.values()) as {
+            id: string;
+            timestamp: number;
+          }[];
         }
-        
+
         // Clean up old entries (>30 minutes) and limit to 50 most recent
         const now = Date.now();
         const validPreserved = allPreserved
           .filter((item: any) => {
-            const timestamp = typeof item === 'string' ? now : item.timestamp;
-            return (now - timestamp) < 30 * 60 * 1000;
+            const timestamp = typeof item === "string" ? now : item.timestamp;
+            return now - timestamp < 30 * 60 * 1000;
           })
           .sort((a: any, b: any) => {
-            const aTime = typeof a === 'string' ? 0 : a.timestamp;
-            const bTime = typeof b === 'string' ? 0 : b.timestamp;
+            const aTime = typeof a === "string" ? 0 : a.timestamp;
+            const bTime = typeof b === "string" ? 0 : b.timestamp;
             return bTime - aTime;
           })
           .slice(0, 50);
-        
-        sessionStorage.setItem('preserved_article_ids', JSON.stringify(validPreserved));
-        console.log(`💾 Stored ${validPreserved.length} preserved article IDs for hybrid query`);
+
+        sessionStorage.setItem(
+          "preserved_article_ids",
+          JSON.stringify(validPreserved)
+        );
+        console.log(
+          `💾 Stored ${validPreserved.length} preserved article IDs for hybrid query`
+        );
       } catch (e) {
-        console.error('Failed to store preserved article IDs:', e);
+        console.error("Failed to store preserved article IDs:", e);
       }
     }
-
   } catch (error) {
-    console.error('Failed to mark articles as read with session:', error);
+    console.error("Failed to mark articles as read with session:", error);
     throw error;
   }
 }
@@ -260,52 +288,61 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       // Apply read status filter
       const readStatusFilter = get().readStatusFilter;
-      
+
       // Get preserved article IDs for hybrid query
       const getPreservedArticleIds = (): string[] => {
         try {
           // First check the dedicated preserved IDs storage
-          const preservedIds = sessionStorage.getItem('preserved_article_ids');
+          const preservedIds = sessionStorage.getItem("preserved_article_ids");
           if (preservedIds) {
             const parsed = JSON.parse(preservedIds);
             // Clean up expired IDs (older than 30 minutes)
             const now = Date.now();
-            const validIds = parsed.filter((item: any) => {
-              if (typeof item === 'string') return true; // Legacy format
-              return item.timestamp && (now - item.timestamp < 30 * 60 * 1000);
-            }).map((item: any) => typeof item === 'string' ? item : item.id);
+            const validIds = parsed
+              .filter((item: any) => {
+                if (typeof item === "string") return true; // Legacy format
+                return item.timestamp && now - item.timestamp < 30 * 60 * 1000;
+              })
+              .map((item: any) => (typeof item === "string" ? item : item.id));
             return validIds;
           }
-          
+
           // Fallback: extract from session state
-          const state = sessionStorage.getItem('rss_reader_list_state');
+          const state = sessionStorage.getItem("rss_reader_list_state");
           if (!state) return [];
           const parsed = JSON.parse(state);
-          const isNotExpired = parsed.expiresAt && (new Date(parsed.expiresAt) > new Date());
+          const isNotExpired =
+            parsed.expiresAt && new Date(parsed.expiresAt) > new Date();
           if (!isNotExpired) return [];
-          
+
           // Combine auto-read and manual-read articles
           const allPreserved = [
             ...(parsed.autoReadArticles || []),
-            ...(parsed.manualReadArticles || [])
+            ...(parsed.manualReadArticles || []),
           ];
           return [...new Set(allPreserved)]; // Remove duplicates
         } catch {
           return [];
         }
       };
-      
+
       const preservedArticleIds = getPreservedArticleIds();
       const hasPreservedArticles = preservedArticleIds.length > 0;
-      
+
       // Apply hybrid query for unread filter with preserved articles
-      console.log(`📊 Database query - preservedArticles: ${preservedArticleIds.length}, readStatusFilter: ${readStatusFilter}`);
-      
+      console.log(
+        `📊 Database query - preservedArticles: ${preservedArticleIds.length}, readStatusFilter: ${readStatusFilter}`
+      );
+
       if (readStatusFilter === "unread" && hasPreservedArticles) {
         // Hybrid query: load unread articles + specific preserved read articles
         // Use Supabase's OR operator for optimal performance
-        query = query.or(`is_read.eq.false,id.in.(${preservedArticleIds.join(',')})`);
-        console.log(`🔀 Using hybrid query: unread + ${preservedArticleIds.length} preserved articles`);
+        query = query.or(
+          `is_read.eq.false,id.in.(${preservedArticleIds.join(",")})`
+        );
+        console.log(
+          `🔀 Using hybrid query: unread + ${preservedArticleIds.length} preserved articles`
+        );
       } else if (readStatusFilter === "unread") {
         // Standard unread filter
         query = query.eq("is_read", false);
@@ -328,8 +365,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           .from("article_tags")
           .select("article_id")
           .eq("tag_id", tagId);
-        
-        const articleIds = taggedArticles?.map(at => at.article_id) || [];
+
+        const articleIds = taggedArticles?.map((at) => at.article_id) || [];
         if (articleIds.length > 0) {
           query = query.in("id", articleIds);
         } else {
@@ -450,42 +487,47 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const getPreservedArticleIds = (): string[] => {
         try {
           // First check the dedicated preserved IDs storage
-          const preservedIds = sessionStorage.getItem('preserved_article_ids');
+          const preservedIds = sessionStorage.getItem("preserved_article_ids");
           if (preservedIds) {
             const parsed = JSON.parse(preservedIds);
             // Clean up expired IDs (older than 30 minutes)
             const now = Date.now();
-            const validIds = parsed.filter((item: any) => {
-              if (typeof item === 'string') return true; // Legacy format
-              return item.timestamp && (now - item.timestamp < 30 * 60 * 1000);
-            }).map((item: any) => typeof item === 'string' ? item : item.id);
+            const validIds = parsed
+              .filter((item: any) => {
+                if (typeof item === "string") return true; // Legacy format
+                return item.timestamp && now - item.timestamp < 30 * 60 * 1000;
+              })
+              .map((item: any) => (typeof item === "string" ? item : item.id));
             return validIds;
           }
-          
+
           // Fallback: extract from session state
-          const state = sessionStorage.getItem('rss_reader_list_state');
+          const state = sessionStorage.getItem("rss_reader_list_state");
           if (!state) return [];
           const parsed = JSON.parse(state);
-          const isNotExpired = parsed.expiresAt && (new Date(parsed.expiresAt) > new Date());
+          const isNotExpired =
+            parsed.expiresAt && new Date(parsed.expiresAt) > new Date();
           if (!isNotExpired) return [];
-          
+
           // Combine auto-read and manual-read articles
           const allPreserved = [
             ...(parsed.autoReadArticles || []),
-            ...(parsed.manualReadArticles || [])
+            ...(parsed.manualReadArticles || []),
           ];
           return [...new Set(allPreserved)]; // Remove duplicates
         } catch {
           return [];
         }
       };
-      
+
       const preservedArticleIds = getPreservedArticleIds();
       const hasPreservedArticles = preservedArticleIds.length > 0;
-      
+
       if (readStatusFilter === "unread" && hasPreservedArticles) {
         // Hybrid query for pagination: unread + preserved articles
-        query = query.or(`is_read.eq.false,id.in.(${preservedArticleIds.join(',')})`);
+        query = query.or(
+          `is_read.eq.false,id.in.(${preservedArticleIds.join(",")})`
+        );
       } else if (readStatusFilter === "unread") {
         query = query.eq("is_read", false);
       } else if (readStatusFilter === "read") {
@@ -592,7 +634,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark as read
   markAsRead: async (articleId: string) => {
     try {
-      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } = get();
+      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } =
+        get();
       const article = articles.get(articleId);
       if (!article || article.isRead) return;
 
@@ -614,11 +657,14 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         for (const id of ids) {
           const art = articles.get(id);
           if (art?.inoreaderItemId) {
-            const { error: rpcError } = await supabase.rpc("add_to_sync_queue", {
-              p_article_id: id,
-              p_inoreader_id: art.inoreaderItemId,
-              p_action_type: "read",
-            });
+            const { error: rpcError } = await supabase.rpc(
+              "add_to_sync_queue",
+              {
+                p_article_id: id,
+                p_inoreader_id: art.inoreaderItemId,
+                p_action_type: "read",
+              }
+            );
 
             if (rpcError) {
               console.error("Failed to add to sync queue:", rpcError);
@@ -636,7 +682,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const context: MarkAsReadContext = {
         feedId: selectedFeedId || article.feedId,
         folderId: selectedFolderId || undefined,
-        currentView: selectedFeedId ? 'feed' : selectedFolderId ? 'folder' : 'all',
+        currentView: selectedFeedId
+          ? "feed"
+          : selectedFolderId
+            ? "folder"
+            : "all",
         filterMode: readStatusFilter,
       };
 
@@ -645,21 +695,24 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         [articleId],
         articles,
         context,
-        'manual',
+        "manual",
         updateDatabase,
         updateStore
       );
 
       // RR-163: Optimistically update unread count for the currently selected tag (if any)
       try {
-        const { useTagStore } = await import('./tag-store');
+        const { useTagStore } = await import("./tag-store");
         const tagState = useTagStore.getState();
         if (tagState.selectedTagIds.size === 1) {
           tagState.updateSelectedTagUnreadCount(-1);
         }
       } catch (e) {
         // Non-fatal; sidebar counts will refresh on next sync
-        console.warn('[Articles] Failed to optimistically update tag unread count:', e);
+        console.warn(
+          "[Articles] Failed to optimistically update tag unread count:",
+          e
+        );
       }
 
       // Invalidate article count cache
@@ -671,7 +724,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       }
 
       // RR-163: Optimistically update selected tag unread count by -1
-      const tagStore = (await import('@/lib/stores/tag-store')).useTagStore.getState();
+      const tagStore = (
+        await import("@/lib/stores/tag-store")
+      ).useTagStore.getState();
       if (tagStore.selectedTagIds.size === 1) {
         tagStore.updateSelectedTagUnreadCount(-1);
       }
@@ -695,7 +750,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     if (articleIds.length === 0) return;
 
     try {
-      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } = get();
+      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } =
+        get();
 
       // Filter out articles that are already read
       const articlesToMark = articleIds.filter((id) => {
@@ -723,11 +779,14 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         for (const id of ids) {
           const article = articles.get(id);
           if (article?.inoreaderItemId) {
-            const { error: rpcError } = await supabase.rpc("add_to_sync_queue", {
-              p_article_id: id,
-              p_inoreader_id: article.inoreaderItemId,
-              p_action_type: "read",
-            });
+            const { error: rpcError } = await supabase.rpc(
+              "add_to_sync_queue",
+              {
+                p_article_id: id,
+                p_inoreader_id: article.inoreaderItemId,
+                p_action_type: "read",
+              }
+            );
 
             if (rpcError) {
               console.error("Failed to add to sync queue:", rpcError);
@@ -746,7 +805,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const context: MarkAsReadContext = {
         feedId: selectedFeedId || firstArticle?.feedId,
         folderId: selectedFolderId || undefined,
-        currentView: selectedFeedId ? 'feed' : selectedFolderId ? 'folder' : 'all',
+        currentView: selectedFeedId
+          ? "feed"
+          : selectedFolderId
+            ? "folder"
+            : "all",
         filterMode: readStatusFilter,
       };
 
@@ -755,20 +818,23 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         articlesToMark,
         articles,
         context,
-        'auto', // markMultipleAsRead is typically used for auto-mark-as-read
+        "auto", // markMultipleAsRead is typically used for auto-mark-as-read
         updateDatabase,
         updateStore
       );
 
       // RR-163: Optimistically update unread count for selected tag by the number of articles auto-marked
       try {
-        const { useTagStore } = await import('./tag-store');
+        const { useTagStore } = await import("./tag-store");
         const tagState = useTagStore.getState();
         if (tagState.selectedTagIds.size === 1) {
           tagState.updateSelectedTagUnreadCount(-articlesToMark.length);
         }
       } catch (e) {
-        console.warn('[Articles] Failed to optimistically update tag unread count (batch):', e);
+        console.warn(
+          "[Articles] Failed to optimistically update tag unread count (batch):",
+          e
+        );
       }
 
       // Invalidate article count cache
@@ -777,7 +843,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         (window as any).__articleCountManager &&
         firstArticle?.feedId
       ) {
-        (window as any).__articleCountManager.invalidateCache(firstArticle.feedId);
+        (window as any).__articleCountManager.invalidateCache(
+          firstArticle.feedId
+        );
       }
 
       // Invalidate article count cache for affected feeds
@@ -798,7 +866,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       }
 
       // RR-163: Optimistically update selected tag unread count by -N
-      const tagStore = (await import('@/lib/stores/tag-store')).useTagStore.getState();
+      const tagStore = (
+        await import("@/lib/stores/tag-store")
+      ).useTagStore.getState();
       if (tagStore.selectedTagIds.size === 1) {
         tagStore.updateSelectedTagUnreadCount(-articlesToMark.length);
       }
@@ -1017,7 +1087,12 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   // Mark all as read - marks ALL articles in database, not just loaded ones
   markAllAsRead: async (feedId?: string) => {
     try {
-      const { articles: storeArticles, selectedFeedId, selectedFolderId, readStatusFilter } = get();
+      const {
+        articles: storeArticles,
+        selectedFeedId,
+        selectedFolderId,
+        readStatusFilter,
+      } = get();
       const timestamp = new Date().toISOString();
 
       if (!feedId) {
@@ -1044,7 +1119,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         return;
       }
 
-      console.log(`Marked ${markedArticles.length} articles as read in feed ${feedId}`);
+      console.log(
+        `Marked ${markedArticles.length} articles as read in feed ${feedId}`
+      );
 
       // Step 2: Add ALL marked articles to sync queue
       for (const article of markedArticles) {
@@ -1064,11 +1141,14 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       // Step 3: Update store for any loaded articles
       const updatedArticles = new Map(storeArticles);
       const loadedArticleIds: string[] = [];
-      
+
       markedArticles.forEach((markedArticle) => {
         const storeArticle = updatedArticles.get(markedArticle.id);
         if (storeArticle) {
-          updatedArticles.set(markedArticle.id, { ...storeArticle, isRead: true });
+          updatedArticles.set(markedArticle.id, {
+            ...storeArticle,
+            isRead: true,
+          });
           loadedArticleIds.push(markedArticle.id);
         }
       });
@@ -1082,12 +1162,12 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const context: MarkAsReadContext = {
         feedId,
         folderId: selectedFolderId || undefined,
-        currentView: 'feed',
+        currentView: "feed",
         filterMode: readStatusFilter,
       };
 
       // Extract all article IDs that were marked
-      const allMarkedIds = markedArticles.map(a => a.id);
+      const allMarkedIds = markedArticles.map((a) => a.id);
 
       // Use centralized function to update session state
       // Note: We pass empty update functions since we already handled database/store updates
@@ -1095,9 +1175,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         allMarkedIds,
         storeArticles,
         context,
-        'bulk',
+        "bulk",
         async () => {}, // Database already updated
-        updateStore     // Store update
+        updateStore // Store update
       );
 
       // Invalidate article count cache

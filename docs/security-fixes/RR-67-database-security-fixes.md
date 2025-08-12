@@ -15,8 +15,9 @@ This document details the comprehensive database security fixes implemented to a
 Views with SECURITY DEFINER bypass Row Level Security (RLS) policies, allowing users to see data they shouldn't have access to. This creates a privilege escalation vulnerability.
 
 **Affected Views**:
+
 - `sync_queue_stats` - Sync monitoring view
-- `author_quality_report` - Author coverage analysis  
+- `author_quality_report` - Author coverage analysis
 - `author_statistics` - Author metrics view
 - `sync_author_health` - Sync health monitoring
 
@@ -27,6 +28,7 @@ Views with SECURITY DEFINER bypass Row Level Security (RLS) policies, allowing u
 Functions without explicit search_path are vulnerable to search_path manipulation attacks, where an attacker could create malicious objects in another schema to hijack function execution.
 
 **Affected Functions**:
+
 - `get_unread_counts_by_feed(uuid)` - Core unread count functionality
 - `get_articles_optimized(uuid, uuid, boolean, integer, integer)` - Main article fetching
 - `refresh_feed_stats()` - Post-sync statistics update
@@ -46,6 +48,7 @@ Functions without explicit search_path are vulnerable to search_path manipulatio
 The migration is structured in three sections:
 
 #### Section 1: Fix SECURITY DEFINER Views
+
 ```sql
 -- Drop existing views with SECURITY DEFINER
 DROP VIEW IF EXISTS public.sync_queue_stats CASCADE;
@@ -59,6 +62,7 @@ CREATE VIEW public.sync_queue_stats WITH (security_invoker = true) AS
 ```
 
 #### Section 2: Add search_path to Functions
+
 ```sql
 -- Protect each function with explicit search_path
 ALTER FUNCTION public.get_unread_counts_by_feed(uuid) SET search_path = public;
@@ -67,11 +71,13 @@ ALTER FUNCTION public.get_articles_optimized(uuid, uuid, boolean, integer, integ
 ```
 
 #### Section 3: Validation Queries
+
 The migration includes commented validation queries to verify the fixes were applied correctly.
 
 ### Test Implementation
 
 **Test Files**:
+
 - `src/__tests__/contracts/rr-67-security-fixes.contract.ts` - Behavior contracts
 - `src/__tests__/unit/rr-67-security-validation.test.ts` - Unit tests
 - `src/__tests__/integration/rr-67-security-fixes.test.ts` - Integration tests
@@ -81,11 +87,13 @@ The migration includes commented validation queries to verify the fixes were app
 ## Security Improvements
 
 ### Before Migration
+
 - **ERROR-level issues**: 4 (SECURITY DEFINER views)
 - **WARN-level issues**: 20 (including search_path and others)
 - **Total security issues**: 24
 
 ### After Migration
+
 - **ERROR-level issues**: 0 ✅
 - **WARN-level issues**: 13
 - **Total security issues**: 13
@@ -96,11 +104,13 @@ The migration includes commented validation queries to verify the fixes were app
 ### SECURITY INVOKER vs SECURITY DEFINER
 
 **SECURITY DEFINER** (vulnerable):
+
 - View/function executes with the privileges of the user who created it
 - Bypasses RLS policies
 - Can lead to privilege escalation
 
 **SECURITY INVOKER** (secure):
+
 - View/function executes with the privileges of the user calling it
 - Respects RLS policies
 - Follows principle of least privilege
@@ -108,6 +118,7 @@ The migration includes commented validation queries to verify the fixes were app
 ### search_path Protection
 
 **Without search_path** (vulnerable):
+
 ```sql
 -- Attacker could create malicious objects in user schema
 CREATE SCHEMA evil;
@@ -116,6 +127,7 @@ CREATE TABLE evil.articles AS SELECT * FROM public.articles;
 ```
 
 **With search_path = public** (secure):
+
 ```sql
 ALTER FUNCTION get_articles_optimized SET search_path = public;
 -- Function always uses public schema, ignoring any hijacking attempts
@@ -135,8 +147,9 @@ However, rollback would reintroduce all security vulnerabilities and should only
 ### Post-Migration Checks
 
 1. **Verify no SECURITY DEFINER views**:
+
 ```sql
-SELECT COUNT(*) FROM pg_views 
+SELECT COUNT(*) FROM pg_views
 WHERE schemaname = 'public'
 AND viewname IN ('sync_queue_stats', 'author_quality_report', 'author_statistics', 'sync_author_health')
 AND definition ILIKE '%SECURITY DEFINER%';
@@ -144,6 +157,7 @@ AND definition ILIKE '%SECURITY DEFINER%';
 ```
 
 2. **Verify functions have search_path**:
+
 ```sql
 SELECT COUNT(*) FROM pg_proc p
 JOIN pg_namespace n ON p.pronamespace = n.oid
@@ -154,6 +168,7 @@ AND p.proconfig::text LIKE '%search_path=public%';
 ```
 
 3. **Run Supabase Security Advisor**:
+
 - Should show 0 ERROR-level issues
 - Significant reduction in WARN-level issues
 

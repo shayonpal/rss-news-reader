@@ -19,7 +19,7 @@ This guide provides comprehensive manual testing procedures for validating the R
 
 2. **Required Tools**
    - `curl` for API testing
-   - `jq` for JSON parsing  
+   - `jq` for JSON parsing
    - `pm2` command line tool
    - Browser access to application
 
@@ -45,6 +45,7 @@ curl -s "http://100.96.166.53:3000/reader/api/sync/last-sync" | jq '.'
 ```
 
 **Expected Results:**
+
 - `last_sync_time`: Recent ISO timestamp
 - `last_incremental_sync_timestamp`: Unix timestamp (seconds)
 - Timestamps should be within expected sync intervals (6x daily)
@@ -65,6 +66,7 @@ pm2 logs rss-sync-server --lines 10
 ```
 
 **Expected Results:**
+
 - All services showing "online" status
 - Memory usage within normal ranges (<800MB each)
 - Recent log activity indicating healthy operation
@@ -80,6 +82,7 @@ tail -20 /Users/shayon/DevProjects/rss-news-reader/logs/inoreader-api-calls.json
 ```
 
 **Expected Results:**
+
 - API calls < 90 per day (staying within 100 call limit)
 - Recent calls distributed across sync intervals
 - No rate limit errors in logs
@@ -101,6 +104,7 @@ echo "Sync ID: $SYNC_ID"
 ```
 
 **Expected Results:**
+
 - HTTP 200 response
 - Valid UUID sync ID returned
 - Rate limit information showing remaining calls
@@ -117,6 +121,7 @@ curl -s "http://100.96.166.53:3000/reader/api/sync/status/$SYNC_ID" | jq '.'
 ```
 
 **Expected Progress Stages:**
+
 1. `status: "pending"` (0-10%)
 2. `status: "running"` with increasing progress:
    - 10%: "Loading server tokens..."
@@ -145,11 +150,13 @@ tail -50 /Users/shayon/DevProjects/rss-news-reader/logs/sync-cron.jsonl | jq -r 
 ```
 
 **Incremental Sync Indicators:**
+
 - Log message: "Performing incremental sync (articles newer than [timestamp])"
 - API URL contains `&ot=` parameter
 - Typically processes fewer articles
 
 **Full Sync Indicators:**
+
 - Log message: "Performing full sync (weekly refresh OR no previous timestamp)"
 - API URL does NOT contain `&ot=` parameter
 - Processes more articles (up to `SYNC_MAX_ARTICLES` limit)
@@ -202,12 +209,14 @@ tail -20 /Users/shayon/DevProjects/rss-news-reader/logs/inoreader-api-calls.json
 ```
 
 **Expected API Call Pattern (per sync):**
+
 1. **Token Refresh** (if needed): `POST /oauth2/access_token`
 2. **Subscriptions**: `GET /reader/api/0/subscription/list`
 3. **Unread Counts**: `GET /reader/api/0/unread-count`
 4. **Stream Contents**: `GET /reader/api/0/stream/contents/user/-/state/com.google/reading-list`
 
 **Key Verification Points:**
+
 - Total calls per sync: ~4-5 calls
 - Stream contents URL includes `xt=user/-/state/com.google/read` (exclude read)
 - For incremental sync: URL includes `&ot=[timestamp]`
@@ -224,6 +233,7 @@ tail -100 /Users/shayon/DevProjects/rss-news-reader/logs/sync-cron.jsonl | jq -r
 ```
 
 **Parameter Verification:**
+
 - `n=[number]`: Article limit (default: 100)
 - `xt=user/-/state/com.google/read`: Exclude already read articles
 - `ot=[timestamp]`: Only for incremental sync, timestamp in seconds
@@ -246,6 +256,7 @@ curl -s "http://100.96.166.53:3000/reader/api/sync/last-sync" | jq '.'
 ```
 
 **Expected Results:**
+
 - `last_sync_time` updated to recent timestamp
 - `last_incremental_sync_timestamp` updated to sync start time
 - Article counts reflect new articles (if any)
@@ -257,7 +268,7 @@ curl -s "http://100.96.166.53:3000/reader/api/sync/last-sync" | jq '.'
 
 1. **Open Application**: Navigate to http://100.96.166.53:3000/reader
 2. **Check Feed List**: Verify feeds display with current unread counts
-3. **Check Articles**: 
+3. **Check Articles**:
    - New articles appear in article list
    - Read status matches Inoreader state
    - Star status matches Inoreader state
@@ -279,8 +290,9 @@ pm2 logs rss-sync-server --lines 20 | grep -i "sync triggered"
 ```
 
 **Expected Conflict Behaviors:**
+
 - Local changes newer than last sync: **Local wins**
-- Remote changes newer than local: **Remote wins**  
+- Remote changes newer than local: **Remote wins**
 - Conflicts logged to `sync-conflicts.jsonl`
 - Bidirectional sync triggered to push local changes
 
@@ -297,6 +309,7 @@ watch -n 5 "pm2 list | grep -E 'rss-reader|rss-sync'"
 ```
 
 **Performance Benchmarks:**
+
 - **Incremental Sync**: 30-60 seconds, <50 articles typically
 - **Full Sync**: 60-120 seconds, up to 100 articles
 - **Memory Usage**: Should stay <800MB during sync
@@ -316,7 +329,8 @@ curl -s "http://100.96.166.53:3000/reader/api/health/app" | jq '.errors'
 ```
 
 **Common Error Patterns to Watch:**
-- **Rate Limit**: "rate_limit_exceeded" 
+
+- **Rate Limit**: "rate_limit_exceeded"
 - **Token Issues**: "Failed to refresh token"
 - **Network**: "ETIMEDOUT", "ECONNREFUSED"
 - **Database**: "Failed to connect to Supabase"
@@ -334,6 +348,7 @@ pm2 list | grep cron
 ```
 
 **Expected Schedule:**
+
 - **Cron Pattern**: `0 2,6,10,14,18,22 * * *`
 - **Sync Times**: 2 AM, 6 AM, 10 AM, 2 PM, 6 PM, 10 PM (Toronto time)
 - **Service Status**: Online with restart schedule
@@ -391,6 +406,7 @@ tail -5 /Users/shayon/DevProjects/rss-news-reader/logs/sync-cron.jsonl | jq -r '
 ### Common Issues
 
 **Sync Stuck in "running" state:**
+
 ```bash
 # Check for hanging sync processes
 ps aux | grep -i sync
@@ -400,6 +416,7 @@ pm2 restart rss-sync-cron
 ```
 
 **No incremental sync timestamp:**
+
 ```bash
 # Manually set recent timestamp
 curl -X POST "http://100.96.166.53:3000/reader/api/sync/metadata" \
@@ -408,6 +425,7 @@ curl -X POST "http://100.96.166.53:3000/reader/api/sync/metadata" \
 ```
 
 **API rate limit exceeded:**
+
 ```bash
 # Check current usage
 curl -s "http://100.96.166.53:3000/reader/api/logs/inoreader" | jq '.usage'
@@ -416,6 +434,7 @@ curl -s "http://100.96.166.53:3000/reader/api/logs/inoreader" | jq '.usage'
 ```
 
 **Memory issues during sync:**
+
 ```bash
 # Check memory usage
 pm2 list
@@ -444,30 +463,30 @@ pm2 restart ecosystem.config.js
 
 The RR-149 implementation is working correctly when:
 
-1. **Incremental Sync Logic**: 
+1. **Incremental Sync Logic**:
    - Recent syncs use `ot=` parameter with last sync timestamp
    - Full syncs occur weekly or when no previous timestamp exists
 
-2. **API Efficiency**: 
+2. **API Efficiency**:
    - Total API calls remain at ~4-5 per sync
    - No unnecessary duplicate calls
 
-3. **Data Integrity**: 
+3. **Data Integrity**:
    - All new articles since last sync are imported
    - Read/star states sync correctly in both directions
    - Conflict resolution preserves user intent
 
-4. **System Stability**: 
+4. **System Stability**:
    - Sync completes within reasonable time (30-120 seconds)
    - Memory usage remains under limits
    - Services auto-recover from failures
 
-5. **Monitoring & Observability**: 
+5. **Monitoring & Observability**:
    - Sync type (incremental/full) is clearly logged
    - API calls are tracked and visible
    - Conflicts are detected and logged appropriately
 
 ---
 
-*This testing guide covers the comprehensive validation of RR-149 incremental sync implementation. For issues or questions, refer to the main project documentation or monitoring dashboards.*
+_This testing guide covers the comprehensive validation of RR-149 incremental sync implementation. For issues or questions, refer to the main project documentation or monitoring dashboards._
 EOF < /dev/null

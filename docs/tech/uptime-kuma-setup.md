@@ -42,19 +42,16 @@ Uptime Kuma has been deployed as an external monitoring solution for the RSS New
 ### HTTP Monitors
 
 1. **RSS Reader - Production App**
-
    - URL: `http://100.96.166.53:3147/reader/api/health/app?ping=true`
    - Interval: 60 seconds
    - Retry: 3 times with 20s interval
 
 2. **RSS Reader - Sync Server**
-
    - URL: `http://localhost:3001/server/health`
    - Interval: 60 seconds
    - Retry: 3 times with 20s interval
 
 3. **RSS Reader - Dev App**
-
    - URL: `http://100.96.166.53:3000/reader/api/health/app?ping=true`
    - Interval: 300 seconds (less critical)
    - Retry: 2 times with 60s interval
@@ -67,7 +64,6 @@ Uptime Kuma has been deployed as an external monitoring solution for the RSS New
 ### Port Monitors
 
 5. **RSS Reader - Production Port**
-
    - Host: 100.96.166.53
    - Port: 3147
    - Interval: 300 seconds
@@ -184,13 +180,11 @@ docker volume rm uptime-kuma-data
 ## Monitoring Strategy
 
 1. **Uptime Kuma**: External monitoring and alerting
-
    - Tracks service availability
    - Sends Discord notifications
    - Provides uptime statistics
 
 2. **monitor-services.sh**: Internal recovery
-
    - Faster response time (checks every 2 min)
    - Automatic restart attempts
    - Rate-limited recovery

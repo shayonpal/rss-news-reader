@@ -1,18 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { FetchContentButton } from '@/components/articles/fetch-content-button';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { FetchContentButton } from "@/components/articles/fetch-content-button";
 
 // Mock fetch
 global.fetch = vi.fn();
 
-describe('RR-176: FetchContentButton - State Synchronization', () => {
+describe("RR-176: FetchContentButton - State Synchronization", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (global.fetch as any).mockClear();
   });
 
-  describe('Button State Display', () => {
+  describe("Button State Display", () => {
     it('should show Download icon and "Full Content" label when no full content', () => {
       render(
         <FetchContentButton
@@ -23,9 +23,9 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button', { name: /full content/i });
+      const button = screen.getByRole("button", { name: /full content/i });
       expect(button).toBeInTheDocument();
-      expect(button).toHaveAttribute('aria-label', 'Full Content');
+      expect(button).toHaveAttribute("aria-label", "Full Content");
     });
 
     it('should show Undo2 icon and "Original Content" label when has full content', () => {
@@ -38,12 +38,12 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button', { name: /original content/i });
+      const button = screen.getByRole("button", { name: /original content/i });
       expect(button).toBeInTheDocument();
-      expect(button).toHaveAttribute('aria-label', 'Original Content');
+      expect(button).toHaveAttribute("aria-label", "Original Content");
     });
 
-    it('should display correct text in button variant', () => {
+    it("should display correct text in button variant", () => {
       const { rerender } = render(
         <FetchContentButton
           articleId="test-123"
@@ -52,7 +52,7 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      expect(screen.getByText('Fetch Full Content')).toBeInTheDocument();
+      expect(screen.getByText("Fetch Full Content")).toBeInTheDocument();
 
       rerender(
         <FetchContentButton
@@ -62,14 +62,14 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      expect(screen.getByText('Revert to RSS Content')).toBeInTheDocument();
+      expect(screen.getByText("Revert to RSS Content")).toBeInTheDocument();
     });
   });
 
-  describe('Fetch Operation', () => {
-    it('should call onSuccess with fetched content on successful fetch', async () => {
+  describe("Fetch Operation", () => {
+    it("should call onSuccess with fetched content on successful fetch", async () => {
       const onSuccess = vi.fn();
-      const mockContent = '<p>This is the full article content</p>';
+      const mockContent = "<p>This is the full article content</p>";
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
@@ -88,7 +88,7 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       await waitFor(() => {
@@ -96,24 +96,24 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        '/reader/api/articles/test-123/fetch-content',
+        "/reader/api/articles/test-123/fetch-content",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
         })
       );
     });
 
-    it('should show loading state during fetch', async () => {
+    it("should show loading state during fetch", async () => {
       (global.fetch as any).mockImplementation(
         () =>
-          new Promise(resolve =>
+          new Promise((resolve) =>
             setTimeout(
               () =>
                 resolve({
                   ok: true,
                   json: async () => ({
                     success: true,
-                    content: '<p>Content</p>',
+                    content: "<p>Content</p>",
                   }),
                 }),
               100
@@ -129,19 +129,21 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       // Should show loading text
       expect(screen.getByText(/fetching full content/i)).toBeInTheDocument();
 
       await waitFor(() => {
-        expect(screen.queryByText(/fetching full content/i)).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/fetching full content/i)
+        ).not.toBeInTheDocument();
       });
     });
 
-    it('should display error message on fetch failure', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+    it("should display error message on fetch failure", async () => {
+      (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
       render(
         <FetchContentButton
@@ -151,7 +153,7 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       await waitFor(() => {
@@ -159,13 +161,13 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
       });
     });
 
-    it('should handle API error responses correctly', async () => {
+    it("should handle API error responses correctly", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 404,
         json: async () => ({
-          message: 'Article not found',
-          details: 'The article could not be fetched',
+          message: "Article not found",
+          details: "The article could not be fetched",
         }),
       });
 
@@ -177,7 +179,7 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       await waitFor(() => {
@@ -186,8 +188,8 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
     });
   });
 
-  describe('Revert Operation', () => {
-    it('should call onRevert when clicking button with full content', async () => {
+  describe("Revert Operation", () => {
+    it("should call onRevert when clicking button with full content", async () => {
       const onRevert = vi.fn();
 
       render(
@@ -199,21 +201,21 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       expect(onRevert).toHaveBeenCalled();
       expect(global.fetch).not.toHaveBeenCalled(); // Should not fetch
     });
 
-    it('should not call onRevert when hasFullContent is false', async () => {
+    it("should not call onRevert when hasFullContent is false", async () => {
       const onRevert = vi.fn();
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Content</p>',
+          content: "<p>Content</p>",
         }),
       });
 
@@ -226,14 +228,14 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       expect(onRevert).not.toHaveBeenCalled();
       expect(global.fetch).toHaveBeenCalled();
     });
 
-    it('should show correct loading text when reverting', async () => {
+    it("should show correct loading text when reverting", async () => {
       const onRevert = vi.fn();
 
       render(
@@ -245,22 +247,22 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
-      
+      const button = screen.getByRole("button");
+
       // Initial state
-      expect(screen.getByText('Revert to RSS Content')).toBeInTheDocument();
-      
+      expect(screen.getByText("Revert to RSS Content")).toBeInTheDocument();
+
       // Note: Since revert is synchronous, we won't see "Reverting..." text
       await userEvent.click(button);
-      
+
       expect(onRevert).toHaveBeenCalled();
     });
   });
 
-  describe('Disabled State', () => {
-    it('should disable button while loading', async () => {
+  describe("Disabled State", () => {
+    it("should disable button while loading", async () => {
       (global.fetch as any).mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100))
       );
 
       render(
@@ -271,22 +273,22 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       // Button should be disabled during fetch
-      expect(button).toHaveAttribute('disabled');
+      expect(button).toHaveAttribute("disabled");
 
       // Should not allow another click
       await userEvent.click(button);
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('should prevent multiple rapid clicks', async () => {
+    it("should prevent multiple rapid clicks", async () => {
       let resolvePromise: any;
       (global.fetch as any).mockImplementation(
         () =>
-          new Promise(resolve => {
+          new Promise((resolve) => {
             resolvePromise = resolve;
           })
       );
@@ -299,8 +301,8 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
-      
+      const button = screen.getByRole("button");
+
       // Click multiple times rapidly
       await userEvent.click(button);
       await userEvent.click(button);
@@ -312,13 +314,13 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
       // Resolve the promise
       resolvePromise({
         ok: true,
-        json: async () => ({ success: true, content: '<p>Content</p>' }),
+        json: async () => ({ success: true, content: "<p>Content</p>" }),
       });
     });
   });
 
-  describe('Size Variants', () => {
-    it('should render correct size for sm variant', () => {
+  describe("Size Variants", () => {
+    it("should render correct size for sm variant", () => {
       render(
         <FetchContentButton
           articleId="test-123"
@@ -328,13 +330,13 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       expect(button).toBeInTheDocument();
       // Small size should not show label
-      expect(screen.queryByText('Full Content')).not.toBeInTheDocument();
+      expect(screen.queryByText("Full Content")).not.toBeInTheDocument();
     });
 
-    it('should show label for md and lg sizes', () => {
+    it("should show label for md and lg sizes", () => {
       const { rerender } = render(
         <FetchContentButton
           articleId="test-123"
@@ -346,7 +348,10 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
       );
 
       // MD size with showLabel
-      expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Full Content');
+      expect(screen.getByRole("button")).toHaveAttribute(
+        "aria-label",
+        "Full Content"
+      );
 
       rerender(
         <FetchContentButton
@@ -359,17 +364,20 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
       );
 
       // LG size
-      expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Full Content');
+      expect(screen.getByRole("button")).toHaveAttribute(
+        "aria-label",
+        "Full Content"
+      );
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle missing onSuccess callback gracefully', async () => {
+  describe("Edge Cases", () => {
+    it("should handle missing onSuccess callback gracefully", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          content: '<p>Content</p>',
+          content: "<p>Content</p>",
         }),
       });
 
@@ -381,13 +389,13 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
-      
+      const button = screen.getByRole("button");
+
       // Should not throw error without onSuccess
       await expect(userEvent.click(button)).resolves.not.toThrow();
     });
 
-    it('should handle missing onRevert callback gracefully', async () => {
+    it("should handle missing onRevert callback gracefully", async () => {
       render(
         <FetchContentButton
           articleId="test-123"
@@ -396,13 +404,13 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
-      
+      const button = screen.getByRole("button");
+
       // Should not throw error without onRevert
       await expect(userEvent.click(button)).resolves.not.toThrow();
     });
 
-    it('should handle empty content response', async () => {
+    it("should handle empty content response", async () => {
       const onSuccess = vi.fn();
 
       (global.fetch as any).mockResolvedValueOnce({
@@ -422,7 +430,7 @@ describe('RR-176: FetchContentButton - State Synchronization', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       await waitFor(() => {

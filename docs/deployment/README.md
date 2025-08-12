@@ -41,8 +41,6 @@ This directory contains all documentation related to deploying, configuring, and
 4. **rss-services-monitor** - Local monitor that watches app/sync health
 5. **kuma-push-monitor** - Uptime Kuma push daemon (local metrics)
 
-
-
 ## Related Documentation
 
 - **Health Monitoring**: See `/docs/tech/uptime-kuma-setup.md` for monitoring configuration

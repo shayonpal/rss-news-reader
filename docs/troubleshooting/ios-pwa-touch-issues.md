@@ -9,11 +9,13 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ### Issue 1: Buttons Not Responding to Taps
 
 **Symptoms:**
+
 - Buttons appear visually but don't respond to touch
 - Works in Safari browser but fails in PWA mode
 - Inconsistent behavior across different buttons
 
 **Root Causes:**
+
 1. **Gesture Handler Interference**: Parent containers with touch event handlers
 2. **Pointer Events Conflicts**: Overlapping layers with `pointer-events` toggling
 3. **Stacking Context Issues**: Complex CSS transforms and filters causing hit-testing problems
@@ -21,11 +23,12 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 **Solutions:**
 
 #### Remove Interfering Gesture Handlers
+
 ```tsx
 // BEFORE (problematic)
-<div 
+<div
   onTouchStart={handleTouchStart}
-  onTouchMove={handleTouchMove} 
+  onTouchMove={handleTouchMove}
   onTouchEnd={handleTouchEnd}
 >
   <button>Action</button>
@@ -38,6 +41,7 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ```
 
 #### Fix Pointer Events Management
+
 ```tsx
 // BEFORE (problematic)
 <div style={{ pointerEvents: isOpen ? 'none' : 'auto' }}>
@@ -53,14 +57,17 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ### Issue 2: First Tap Shows Hover State Instead of Activating
 
 **Symptoms:**
+
 - First tap triggers hover state
 - Second tap required to activate button
 - Common on touch devices
 
 **Root Cause:**
+
 - Hover styles not scoped to hover-capable devices
 
 **Solution:**
+
 ```css
 /* BEFORE (problematic) */
 .button:hover {
@@ -78,18 +85,21 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ### Issue 3: Touch Targets Too Small
 
 **Symptoms:**
+
 - Difficulty tapping buttons accurately
 - Users miss buttons frequently
 - Accessibility issues
 
 **Root Cause:**
+
 - Touch targets smaller than iOS 44px minimum requirement
 
 **Solution:**
+
 ```css
 /* Ensure minimum touch targets */
 .touch-button {
-  min-height: 48px;  /* iOS recommendation is 44px, we use 48px */
+  min-height: 48px; /* iOS recommendation is 44px, we use 48px */
   min-width: 48px;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -99,24 +109,29 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ### Issue 4: Animation Stuttering During Touch
 
 **Symptoms:**
+
 - Jerky animations on touch interactions
 - Poor performance during morphing
 - Frame drops
 
 **Root Cause:**
+
 - Missing GPU acceleration
 - Non-optimized CSS properties
 
 **Solution:**
+
 ```css
 .animated-element {
   /* Force GPU acceleration */
   transform: translateZ(0);
   will-change: transform, opacity;
-  
+
   /* Use only GPU-accelerated properties */
-  transition: transform 300ms, opacity 300ms;
-  
+  transition:
+    transform 300ms,
+    opacity 300ms;
+
   /* Avoid animating these properties */
   /* transition: width 300ms, height 300ms; ❌ */
 }
@@ -127,21 +142,25 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ### 1. Safari Web Inspector Method
 
 **Setup:**
+
 1. Connect iOS device to Mac
 2. Enable Web Inspector in iOS Settings > Safari > Advanced
 3. Open Safari on Mac > Develop > [Your Device] > [PWA Page]
 
 **Debug Steps:**
+
 1. **Check Element Layers**:
+
    ```javascript
    // In console, highlight element
-   $0.style.border = '2px solid red';
+   $0.style.border = "2px solid red";
    ```
 
 2. **Test Pointer Events**:
+
    ```javascript
    // Check if element receives events
-   $0.addEventListener('touchstart', (e) => console.log('Touch detected:', e));
+   $0.addEventListener("touchstart", (e) => console.log("Touch detected:", e));
    ```
 
 3. **Verify Touch Targets**:
@@ -173,11 +192,13 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ### 3. iOS-Specific Tests
 
 **PWA vs Safari Comparison:**
+
 1. Test same URL in Safari browser
 2. Test in PWA mode (Add to Home Screen)
 3. Compare behavior differences
 
 **iOS Version Testing:**
+
 - Test on iOS 15+, 16+, 17+ if available
 - Check for version-specific quirks
 - Verify safe area handling
@@ -185,24 +206,26 @@ This guide provides comprehensive troubleshooting steps for iOS Progressive Web 
 ## Quick Fixes for Common Scenarios
 
 ### Fix 1: Emergency Button Unresponsiveness
+
 ```typescript
 // Add this temporarily to identify the issue
 const debugTouch = (element: HTMLElement) => {
-  element.addEventListener('touchstart', (e) => {
-    console.log('Touch start detected');
+  element.addEventListener("touchstart", (e) => {
+    console.log("Touch start detected");
     e.stopPropagation(); // Prevent parent handlers
   });
-  
-  element.addEventListener('click', (e) => {
-    console.log('Click detected');
+
+  element.addEventListener("click", (e) => {
+    console.log("Click detected");
   });
 };
 
 // Apply to problematic button
-debugTouch(document.querySelector('.problematic-button'));
+debugTouch(document.querySelector(".problematic-button"));
 ```
 
 ### Fix 2: Immediate Hover Scoping
+
 ```css
 /* Add this CSS rule immediately */
 @media (hover: hover) and (pointer: fine) {
@@ -218,6 +241,7 @@ debugTouch(document.querySelector('.problematic-button'));
 ```
 
 ### Fix 3: Touch Target Emergency Fix
+
 ```css
 /* Quick touch target fix */
 .small-button {
@@ -225,7 +249,7 @@ debugTouch(document.querySelector('.problematic-button'));
 }
 
 .small-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -240,24 +264,27 @@ debugTouch(document.querySelector('.problematic-button'));
 ## Prevention Guidelines
 
 ### 1. Touch-First Development
+
 - Always test on actual iOS devices
 - Use minimum 48px touch targets
 - Scope hover styles from the start
 
 ### 2. Event Handling Best Practices
+
 ```tsx
 // Good: Use click events, avoid touch event conflicts
 <button onClick={handleClick}>Action</button>
 
 // Avoid: Complex touch event handling
-<div 
-  onTouchStart={...} 
-  onTouchMove={...} 
+<div
+  onTouchStart={...}
+  onTouchMove={...}
   onTouchEnd={...}
 >
 ```
 
 ### 3. CSS Architecture
+
 ```css
 /* Good: Simple, GPU-accelerated */
 .button {
@@ -281,6 +308,7 @@ debugTouch(document.querySelector('.problematic-button'));
 ### 4. Testing Checklist
 
 **Pre-Deployment:**
+
 - [ ] Test on iPhone and iPad PWA
 - [ ] Verify 48px minimum touch targets
 - [ ] Check hover style scoping
@@ -289,6 +317,7 @@ debugTouch(document.querySelector('.problematic-button'));
 - [ ] Test in both orientations
 
 **Post-Deployment:**
+
 - [ ] Monitor user feedback for touch issues
 - [ ] Test on different iOS versions
 - [ ] Verify performance on older devices
@@ -296,32 +325,37 @@ debugTouch(document.querySelector('.problematic-button'));
 ## Performance Considerations
 
 ### GPU Acceleration
+
 ```css
 /* Ensure smooth animations */
 .touch-interactive {
   transform: translateZ(0);
   will-change: transform, opacity;
-  
+
   /* Contain paint for performance */
   contain: layout style paint;
 }
 ```
 
 ### Memory Management
+
 ```typescript
 // Clean up event listeners
 useEffect(() => {
-  const handleTouch = (e) => { /* ... */ };
-  
-  element.addEventListener('touchstart', handleTouch);
-  
+  const handleTouch = (e) => {
+    /* ... */
+  };
+
+  element.addEventListener("touchstart", handleTouch);
+
   return () => {
-    element.removeEventListener('touchstart', handleTouch);
+    element.removeEventListener("touchstart", handleTouch);
   };
 }, []);
 ```
 
 ### Reduced Motion Support
+
 ```css
 @media (prefers-reduced-motion: reduce) {
   .animated-button {
@@ -334,15 +368,16 @@ useEffect(() => {
 ## Advanced Debugging
 
 ### JavaScript Touch Event Logging
+
 ```typescript
 const logTouchEvents = (element: HTMLElement, label: string) => {
-  ['touchstart', 'touchmove', 'touchend', 'click'].forEach(eventType => {
+  ["touchstart", "touchmove", "touchend", "click"].forEach((eventType) => {
     element.addEventListener(eventType, (e) => {
       console.log(`${label} - ${eventType}:`, {
         target: e.target,
         currentTarget: e.currentTarget,
         timestamp: Date.now(),
-        touches: e.touches?.length || 0
+        touches: e.touches?.length || 0,
       });
     });
   });
@@ -350,18 +385,24 @@ const logTouchEvents = (element: HTMLElement, label: string) => {
 ```
 
 ### CSS Stacking Context Analysis
+
 ```javascript
 // Check stacking contexts
 const analyzeStackingContext = (element) => {
   const styles = getComputedStyle(element);
   const stackingProps = [
-    'position', 'zIndex', 'opacity', 'transform', 
-    'filter', 'backdropFilter', 'isolation'
+    "position",
+    "zIndex",
+    "opacity",
+    "transform",
+    "filter",
+    "backdropFilter",
+    "isolation",
   ];
-  
-  stackingProps.forEach(prop => {
+
+  stackingProps.forEach((prop) => {
     const value = styles[prop];
-    if (value !== 'none' && value !== 'auto' && value !== 'static') {
+    if (value !== "none" && value !== "auto" && value !== "static") {
       console.log(`${prop}: ${value}`);
     }
   });
@@ -388,6 +429,7 @@ The complete solution implemented in RR-180 addressed all these issues through:
 - [WebKit Blog - Touch Events](https://webkit.org/blog/5610/more-responsive-tapping-on-ios/)
 
 For project-specific issues, refer to:
+
 - [RR-180 Implementation Details](../expert-discussions/RR-180_MOBILE_TOUCH_ISSUE.md)
 - [Liquid Glass Component Documentation](../ui-ux/ios-liquid-glass-components.md)
 - [Implementation Guide](../ui-ux/liquid-glass-implementation-guide.md)

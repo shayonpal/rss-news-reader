@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from "fs";
+import { join } from "path";
 
 let cachedVersion: string | null = null;
 
@@ -15,10 +15,10 @@ export async function getAppVersion(): Promise<string> {
 
   try {
     // Try to read from package.json in project root
-    const packageJsonPath = join(process.cwd(), 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-    
-    if (packageJson.version && typeof packageJson.version === 'string') {
+    const packageJsonPath = join(process.cwd(), "package.json");
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+
+    if (packageJson.version && typeof packageJson.version === "string") {
       // Validate semantic versioning format
       const versionRegex = /^\d+\.\d+\.\d+(-[\w.-]+)?(\+[\w.-]+)?$/;
       if (versionRegex.test(packageJson.version)) {
@@ -26,14 +26,20 @@ export async function getAppVersion(): Promise<string> {
         return packageJson.version;
       }
     }
-    
+
     // Invalid version format
-    console.warn('Invalid version format in package.json:', packageJson.version);
-    return '0.0.0-invalid';
+    console.warn(
+      "Invalid version format in package.json:",
+      packageJson.version
+    );
+    return "0.0.0-invalid";
   } catch (error) {
     // Handle file read errors gracefully
-    console.warn('Could not read version from package.json:', error instanceof Error ? error.message : 'Unknown error');
-    return '0.0.0-unknown';
+    console.warn(
+      "Could not read version from package.json:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+    return "0.0.0-unknown";
   }
 }
 
@@ -48,22 +54,28 @@ export function getAppVersionSync(): string {
   }
 
   try {
-    const packageJsonPath = join(process.cwd(), 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-    
-    if (packageJson.version && typeof packageJson.version === 'string') {
+    const packageJsonPath = join(process.cwd(), "package.json");
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+
+    if (packageJson.version && typeof packageJson.version === "string") {
       const versionRegex = /^\d+\.\d+\.\d+(-[\w.-]+)?(\+[\w.-]+)?$/;
       if (versionRegex.test(packageJson.version)) {
         cachedVersion = packageJson.version;
         return packageJson.version;
       }
     }
-    
-    console.warn('Invalid version format in package.json:', packageJson.version);
-    return '0.0.0-invalid';
+
+    console.warn(
+      "Invalid version format in package.json:",
+      packageJson.version
+    );
+    return "0.0.0-invalid";
   } catch (error) {
-    console.warn('Could not read version from package.json:', error instanceof Error ? error.message : 'Unknown error');
-    return '0.0.0-unknown';
+    console.warn(
+      "Could not read version from package.json:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+    return "0.0.0-unknown";
   }
 }
 

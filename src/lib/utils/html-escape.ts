@@ -4,15 +4,15 @@
  * @returns The escaped string safe for rendering
  */
 export function escapeHtml(unsafe: string): string {
-  if (!unsafe) return '';
-  
+  if (!unsafe) return "";
+
   return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+    .replace(/\//g, "&#x2F;");
 }
 
 /**
@@ -21,9 +21,9 @@ export function escapeHtml(unsafe: string): string {
  * @returns The unescaped string
  */
 export function unescapeHtml(escaped: string): string {
-  if (!escaped) return '';
-  
-  const div = document.createElement('div');
+  if (!escaped) return "";
+
+  const div = document.createElement("div");
   div.innerHTML = escaped;
-  return div.textContent || div.innerText || '';
+  return div.textContent || div.innerText || "";
 }

@@ -15,6 +15,7 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 **Execution Time**: 8-20 seconds (optimized with thread pool configuration)
 
 **Coverage Areas:**
+
 - React component behavior and rendering
 - Utility functions and data transformations
 - Store management (Zustand)
@@ -22,17 +23,20 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 - API service layer logic
 
 **Key Features:**
+
 - Thread pool optimization with 4 max threads
 - Comprehensive cleanup hooks preventing memory leaks
 - Mock system supporting complex selector patterns
 - Custom matchers for enhanced assertions
 
 **Test Environment Requirements (RR-186):**
+
 - **IndexedDB Polyfill**: `fake-indexeddb` library provides browser API compatibility for Dexie and other storage-dependent tests
 - **Environment Validation**: Smoke test at `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment setup before test execution
 - **Mock Infrastructure**: Comprehensive mock helpers for browser APIs (localStorage, sessionStorage) and external services (Supabase)
 
 **Store Isolation Patterns (RR-188):**
+
 - **Zustand Store Isolation**: Isolated store creation utilities at `src/lib/stores/__tests__/test-utils.ts` prevent state leakage in parallel test execution
 - **Parallel Test Support**: Enhanced Vitest configuration supports concurrent test execution without cross-test state contamination
 - **Unique Storage Keys**: Each test gets unique storage identifiers to prevent shared state between test cases
@@ -44,6 +48,7 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 **Environment**: Isolated test environment with mocked dependencies
 
 **Coverage Areas:**
+
 - API endpoint functionality and error handling
 - Database integration and data persistence
 - Service layer interactions
@@ -51,6 +56,7 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 - External API integration points
 
 **Test Database:**
+
 - Isolated test environment
 - Automatic cleanup between tests
 - Row Level Security policy validation
@@ -64,11 +70,13 @@ The RSS News Reader implements a multi-layered testing approach optimized for re
 #### Browser Coverage
 
 **Desktop Browsers:**
+
 - **Chromium**: Latest stable version
-- **Firefox**: Latest stable version  
+- **Firefox**: Latest stable version
 - **Safari (WebKit)**: Latest stable version
 
 **Mobile Devices:**
+
 - **iPhone 14**: Safari mobile browser
 - **iPhone 14 Pro Max**: Safari mobile browser
 - **iPad Gen 7**: Safari tablet browser
@@ -125,27 +133,30 @@ npx playwright test --ui
 
 ### Compatibility Matrix
 
-| Test Type | Chrome | Firefox | Safari | Mobile Safari | iPad Safari | Android |
-|-----------|--------|---------|--------|---------------|-------------|---------|
-| Core User Journeys | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Button Tappability | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PWA Features | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Touch Gestures | N/A | N/A | N/A | ✅ | ✅ | ✅ |
+| Test Type          | Chrome | Firefox | Safari | Mobile Safari | iPad Safari | Android |
+| ------------------ | ------ | ------- | ------ | ------------- | ----------- | ------- |
+| Core User Journeys | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
+| Button Tappability | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
+| PWA Features       | ✅     | ✅      | ✅     | ✅            | ✅          | ✅      |
+| Touch Gestures     | N/A    | N/A     | N/A    | ✅            | ✅          | ✅      |
 
 ### Platform-Specific Testing
 
 **iOS Devices:**
+
 - Touch target size compliance (44x44px iOS guidelines)
 - Safe area handling for PWA installation
 - Gesture recognition and response times
 - Safari-specific PWA behaviors
 
 **Android Devices:**
+
 - Chrome PWA installation flow
 - Touch interaction patterns
 - Responsive design validation
 
 **Desktop Browsers:**
+
 - Keyboard navigation accessibility
 - Mouse interaction patterns
 - Responsive breakpoint testing
@@ -155,11 +166,13 @@ npx playwright test --ui
 ### Touch Target Compliance
 
 **iOS Standards (Apple HIG):**
+
 - Minimum touch target size: 44x44 points
 - Minimum spacing between touch targets: 8 points
 - Clear visual feedback on touch interactions
 
 **Implementation:**
+
 - Automated validation in `iphone-button-tappability.spec.ts`
 - Detection of non-compliant elements
 - Spacing validation between interactive elements
@@ -167,6 +180,7 @@ npx playwright test --ui
 ### PWA Installation Testing
 
 **Validation Points:**
+
 - Web App Manifest correctness
 - Service Worker registration
 - Installation banner appearance
@@ -175,6 +189,7 @@ npx playwright test --ui
 - Splash screen configuration
 
 **Test Coverage:**
+
 - Installation flow across different browsers
 - Post-installation functionality
 - Offline queue behavior
@@ -183,6 +198,7 @@ npx playwright test --ui
 ### Gesture Support Testing
 
 **Touch Interactions:**
+
 - Tap, double-tap, long-press recognition
 - Swipe gestures (left, right, up, down)
 - Pull-to-refresh functionality
@@ -194,17 +210,20 @@ npx playwright test --ui
 ### Test Environment
 
 **Database:**
+
 - Isolated test database instance
 - Automatic cleanup between test runs
 - Seed data for consistent test scenarios
 - Row Level Security policy validation
 
 **External Dependencies:**
+
 - Mocked Inoreader API responses
 - Mocked Claude API interactions
 - Stubbed network requests in E2E tests
 
 **Browser API Compatibility (RR-186):**
+
 - **IndexedDB**: `fake-indexeddb` polyfill for database storage tests
 - **localStorage/sessionStorage**: Properly configured mocks with writable properties
 - **Environment Validation**: Automated smoke tests verify polyfill availability and API compatibility
@@ -212,18 +231,21 @@ npx playwright test --ui
 ### Test Infrastructure (RR-186)
 
 **IndexedDB Polyfill Requirements:**
+
 - **Dependency**: `fake-indexeddb` v6.1.0 automatically polyfills IndexedDB for Node.js test environment
 - **Auto-import**: Added `import 'fake-indexeddb/auto';` to `src/test-setup.ts` for automatic polyfill activation
 - **Compatibility**: Resolves Dexie and other storage-dependent test failures in headless test environment
 - **Use Cases**: Essential for testing browser storage features, offline queues, and local data persistence
 
 **Mock System Improvements:**
+
 - **Storage Mocks**: Fixed localStorage/sessionStorage mocks with proper `writable: true, configurable: true` properties
 - **Supabase Mock Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
 - **Environment Validation**: Smoke test validates that all required polyfills and mocks are properly initialized
 - **Export Consistency**: Fixed missing exports in utility classes to ensure proper testability
 
 **Troubleshooting Common Issues:**
+
 - **IndexedDB Failures**: Ensure `fake-indexeddb` is imported before any Dexie usage in tests
 - **Storage Mock Crashes**: Use provided mock helpers instead of manual mock configuration
 - **Test Environment**: Run smoke test (`src/__tests__/unit/test-setup.smoke.test.ts`) to validate setup
@@ -232,22 +254,24 @@ npx playwright test --ui
 ### Zustand Store Testing Patterns
 
 **Store Isolation (RR-188):**
+
 - **Isolated Store Creation**: Use `createIsolatedUIStore()` from `src/lib/stores/__tests__/test-utils.ts` for tests requiring clean state
 - **Parallel Test Safety**: Each test gets unique storage keys preventing cross-test contamination
 - **State Management**: Boolean coercion ensures robust null/undefined handling in store logic
 
 **Example Usage:**
-```typescript
-import { createIsolatedUIStore } from './test-utils';
 
-describe('UI Store Tests', () => {
+```typescript
+import { createIsolatedUIStore } from "./test-utils";
+
+describe("UI Store Tests", () => {
   let store: ReturnType<typeof createIsolatedUIStore>;
-  
+
   beforeEach(() => {
     store = createIsolatedUIStore();
   });
-  
-  it('should manage collapse state independently', () => {
+
+  it("should manage collapse state independently", () => {
     // Test implementation with isolated store
   });
 });
@@ -256,12 +280,14 @@ describe('UI Store Tests', () => {
 ### Test Fixtures
 
 **Article Data:**
+
 - Sample articles with various content types
 - Different publication dates and authors
 - Read/unread state variations
 - Starred/unstarred combinations
 
 **Feed Data:**
+
 - Multiple feed categories
 - Various folder structures
 - Different unread count scenarios
@@ -271,12 +297,14 @@ describe('UI Store Tests', () => {
 ### Metrics Tracked
 
 **Load Time Performance:**
+
 - Initial page load (< 2 seconds target)
 - Feed list rendering (< 500ms target)
 - Article detail display (< 300ms target)
 - Sync operation completion (< 5 seconds target)
 
 **Resource Usage:**
+
 - Memory consumption during test execution
 - Network request efficiency
 - Database query optimization
@@ -286,7 +314,7 @@ describe('UI Store Tests', () => {
 
 ```javascript
 // Example performance measurement
-await page.waitForLoadState('networkidle');
+await page.waitForLoadState("networkidle");
 const loadTime = await page.evaluate(() => performance.now());
 expect(loadTime).toBeLessThan(2000);
 ```
@@ -298,6 +326,7 @@ The RSS News Reader implements comprehensive CI/CD testing integration (RR-185) 
 ### CI/CD Testing Architecture
 
 **Progressive Testing Pipeline**:
+
 1. **Smoke Tests** (2-3 min): TypeScript, linting, critical tests, build validation
 2. **Full Test Suite** (8-10 min): Matrix testing across Node 18/20 with 4-way sharding
 3. **E2E Testing** (5-15 min): Cross-browser testing with Playwright
@@ -307,11 +336,12 @@ The RSS News Reader implements comprehensive CI/CD testing integration (RR-185) 
 ### CI/CD Test Commands
 
 **Smoke Tests Stage**:
+
 ```bash
 # TypeScript compilation validation
 npm run type-check
 
-# Code quality validation  
+# Code quality validation
 npm run lint
 
 # Critical unit tests (subset)
@@ -322,6 +352,7 @@ npm run build
 ```
 
 **Full Test Suite Stage**:
+
 ```bash
 # Optimized parallel execution (matches CI sharding)
 npm run test:parallel
@@ -334,6 +365,7 @@ npm run test:integration:safe
 ```
 
 **E2E Testing Stage**:
+
 ```bash
 # Cross-browser E2E testing
 npm run test:e2e
@@ -347,11 +379,13 @@ npx playwright test --project=firefox
 ### Test Matrix Configuration
 
 **Node.js Matrix**:
+
 - **Versions**: Node 18.x and 20.x
 - **OS**: ubuntu-latest
 - **Parallel Execution**: 4-way test sharding
 
 **Browser Matrix** (E2E):
+
 - **Desktop**: Chromium, Firefox, WebKit
 - **Mobile**: iPhone 14, iPhone 14 Pro Max (Safari)
 - **Tablet**: iPad Gen 7, iPad Pro 11" (Safari)
@@ -360,6 +394,7 @@ npx playwright test --project=firefox
 ### PR Testing Automation
 
 **Pull Request Validation**:
+
 - **Change Impact Analysis**: Focus testing on modified files
 - **Coverage Analysis**: Track test coverage changes
 - **Bundle Size Impact**: Monitor JavaScript bundle changes
@@ -367,6 +402,7 @@ npx playwright test --project=firefox
 - **Auto-Labeling**: Automatic PR categorization based on changes
 
 **Quality Gates**:
+
 - Unit/Integration: 100% pass rate required
 - E2E Tests: 95% pass rate (allows network flakiness)
 - Security: No high/critical vulnerabilities
@@ -375,6 +411,7 @@ npx playwright test --project=firefox
 ### Sharding Strategy
 
 **4-Way Test Sharding**:
+
 ```yaml
 strategy:
   matrix:
@@ -385,6 +422,7 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ```
 
 **Shard Distribution**:
+
 - **Shard 1**: Unit tests (components, utilities)
 - **Shard 2**: Integration tests (API, database)
 - **Shard 3**: Store and hook tests
@@ -393,12 +431,14 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ### Performance Regression Testing
 
 **Baseline Comparison**:
+
 - **Reference File**: `performance-baseline.json`
 - **Automated Detection**: Script `check-performance-regression.js`
 - **Thresholds**: Configurable regression limits
 - **Reporting**: Detailed performance impact analysis
 
 **Metrics Tracked**:
+
 - Test execution time
 - Memory usage patterns
 - Bundle size changes
@@ -416,12 +456,14 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ### Parallel Execution
 
 **Unit/Integration Tests:**
+
 - Thread pool with 4 max threads
 - Resource management and cleanup
 - 8-20 second total execution time
 - 4-way sharding for CI/CD optimization
 
 **E2E Tests:**
+
 - Parallel browser execution across 8 profiles
 - Device-specific test distribution
 - Artifact collection (screenshots, videos, traces)
@@ -432,6 +474,7 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ### Test Failure Analysis
 
 **Artifact Collection:**
+
 - Screenshots on test failure
 - Video recordings of test execution
 - Network request traces
@@ -439,6 +482,7 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 - Performance metrics
 
 **Debugging Tools:**
+
 - Playwright UI mode for interactive debugging
 - Headed browser mode for visual inspection
 - Step-by-step execution capabilities
@@ -447,16 +491,19 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ### Common Failure Patterns
 
 **Network Issues:**
+
 - Tailscale connectivity problems
 - Service unavailability
 - Rate limiting responses
 
 **Touch Target Issues:**
+
 - iOS compliance violations
 - Element spacing problems
 - Touch response delays
 
 **PWA Installation Issues:**
+
 - Manifest validation failures
 - Service Worker registration problems
 - Installation banner timing
@@ -466,12 +513,14 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ### Test Suite Maintenance
 
 **Regular Updates:**
+
 - Browser version compatibility testing
 - New device profile additions
 - Test scenario expansion
 - Performance benchmark updates
 
 **Monitoring:**
+
 - Test execution time tracking
 - Failure rate monitoring
 - Performance regression detection
@@ -480,6 +529,7 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 ### Documentation Updates
 
 This testing strategy document is updated with:
+
 - New test scenarios and requirements
 - Browser support matrix changes
 - Performance target adjustments
@@ -490,17 +540,20 @@ This testing strategy document is updated with:
 ### Pre-Deployment Requirements
 
 **All Tests Must Pass:**
+
 - Unit tests: 100% passing
-- Integration tests: 100% passing  
+- Integration tests: 100% passing
 - E2E tests: 95% passing (allowing for flaky network conditions)
 
 **Performance Thresholds:**
+
 - Test execution: < 30 seconds total
 - Page load times: < 2 seconds
 - Touch response: < 100ms
 - Sync operations: < 5 seconds
 
 **Accessibility Requirements:**
+
 - ARIA compliance validation
 - Keyboard navigation support
 - Touch target size compliance

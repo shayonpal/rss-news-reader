@@ -179,15 +179,16 @@ label={hasFullContent ? "Original Content" : "Full Content"}
 The button integrates with the unified content state system:
 
 - **Manual Content** (`fetchedContent`): User-triggered fetch operations
-- **Auto-Parsed Content** (`parsedContent`): Automatically parsed from partial feeds  
+- **Auto-Parsed Content** (`parsedContent`): Automatically parsed from partial feeds
 - **Stored Content** (`article.fullContent`): Previously fetched content in database
 - **Force Original** (`forceOriginalContent`): Override to show original RSS content
 
 **Revert Behavior:**
 
 When reverting, the button:
+
 1. Clears all enhanced content sources (`fetchedContent`, `parsedContent`)
-2. Sets `forceOriginalContent` to true to bypass stored `fullContent`  
+2. Sets `forceOriginalContent` to true to bypass stored `fullContent`
 3. Forces display of original RSS content even when enhanced content exists in database
 4. Updates button state to show fetch option again
 
@@ -227,8 +228,8 @@ The `useContentState` hook provides a single source of truth for all content sta
 ```tsx
 interface UseContentStateResult {
   contentSource: ContentSource; // "manual" | "auto" | "stored" | "rss"
-  displayContent: string;       // The actual content to display
-  hasEnhancedContent: boolean;  // Whether enhanced content is available
+  displayContent: string; // The actual content to display
+  hasEnhancedContent: boolean; // Whether enhanced content is available
 }
 ```
 
@@ -267,11 +268,11 @@ const hasEnhancedContent = forceOriginalContent
 ```tsx
 // Revert handler in ArticleDetail
 const handleRevertContent = () => {
-  setFetchedContent(null);           // Clear manually fetched content
+  setFetchedContent(null); // Clear manually fetched content
   if (parsedContent) {
-    clearParsedContent();            // Clear auto-parsed content  
+    clearParsedContent(); // Clear auto-parsed content
   }
-  setForceOriginalContent(true);     // Force original RSS content
+  setForceOriginalContent(true); // Force original RSS content
 };
 ```
 
@@ -304,7 +305,7 @@ const { contentSource, displayContent, hasEnhancedContent } = useContentState(
   hasFullContent={hasEnhancedContent}
   onSuccess={handleFetchContentSuccess}
   onRevert={handleRevertContent}
-/>
+/>;
 ```
 
 **Auto-Parse Integration:**
@@ -324,6 +325,7 @@ The RR-176 implementation includes comprehensive test coverage:
 - **E2E Tests**: Full fetch/revert user workflows
 
 **Test Files:**
+
 - `src/__tests__/unit/rr-176-fetch-button-state.test.tsx`
 - `src/__tests__/integration/rr-176-content-state-management.test.tsx`
 - `src/__tests__/e2e/rr-176-content-fetching.spec.ts`
@@ -584,21 +586,25 @@ The RR-180 implementation introduced critical fixes for iOS PWA touch interactio
 ### Enhanced Components
 
 #### IOSButton Enhancements
+
 - **Touch Optimization**: Added `touch-action: manipulation` and `-webkit-tap-highlight-color: transparent`
 - **GPU Acceleration**: Applied `transform: translateZ(0)` for smooth 60fps performance
 - **Event Handling**: Improved touch event sequence management
 
 #### ArticleActionButton Enhancements
+
 - **Touch Targets**: Upgraded to 48px minimum touch targets with 24px icons
 - **Glass Effects**: Enhanced with `backdrop-filter: blur(16px) saturate(180%)`
 - **Accessibility**: Full ARIA compliance with proper labeling
 
 #### MorphingDropdown Integration
+
 - **iOS 26 Animation**: Sophisticated morphing animation with spring easing (`cubic-bezier(0.34, 1.56, 0.64, 1)`)
 - **Touch Reliability**: Fixed pointer-events toggling that caused button unresponsiveness
 - **Visual Enhancement**: 22px consistent border radius with liquid glass effects
 
 ### Testing Verification
+
 - ✅ All unit tests passing (17/17)
 - ✅ All E2E tests passing (16/16)
 - ✅ Verified on actual iPhone and iPad PWA installations

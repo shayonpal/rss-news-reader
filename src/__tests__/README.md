@@ -18,6 +18,7 @@ src/__tests__/
 ## Test Environment Configuration
 
 ### Unit Tests (Default)
+
 - **Environment**: `jsdom` (browser-like environment)
 - **Config**: `vitest.config.ts`
 - **Setup**: `src/test-setup.ts`
@@ -28,6 +29,7 @@ src/__tests__/
   - Fast execution
 
 ### Integration Tests
+
 - **Environment**: `node` (server environment)
 - **Config**: `vitest.config.integration.ts`
 - **Setup**: `src/test-setup-integration.ts`
@@ -61,18 +63,19 @@ npm test -- path/to/test.test.ts
 
 ## Key Differences
 
-| Feature | Unit Tests | Integration Tests |
-|---------|------------|-------------------|
-| Environment | jsdom | node |
-| Fetch API | Mocked | Real |
-| Database | Mocked | Real (test DB) |
-| External APIs | Mocked | Real or test endpoints |
-| Speed | Fast | Slower |
-| Isolation | Complete | Requires services |
+| Feature       | Unit Tests | Integration Tests      |
+| ------------- | ---------- | ---------------------- |
+| Environment   | jsdom      | node                   |
+| Fetch API     | Mocked     | Real                   |
+| Database      | Mocked     | Real (test DB)         |
+| External APIs | Mocked     | Real or test endpoints |
+| Speed         | Fast       | Slower                 |
+| Isolation     | Complete   | Requires services      |
 
 ## Writing Tests
 
 ### Unit Test Example
+
 ```typescript
 // src/__tests__/unit/components/ArticleCard.test.tsx
 import { render, screen } from '@testing-library/react';
@@ -85,13 +88,14 @@ test('renders article title', () => {
 ```
 
 ### Integration Test Example
+
 ```typescript
 // src/__tests__/integration/api-health.test.ts
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('Health API', () => {
-  it('should return 200 from health endpoint', async () => {
-    const response = await fetch('http://localhost:3000/api/health');
+describe("Health API", () => {
+  it("should return 200 from health endpoint", async () => {
+    const response = await fetch("http://localhost:3000/reader/api/health");
     expect(response.status).toBe(200);
   });
 });

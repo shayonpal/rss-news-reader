@@ -50,19 +50,18 @@ Production environment has been removed (RR-92). Only development overrides rema
 - `DEV_NEXT_PUBLIC_BASE_URL` - Development base URL
 
 Additional development/runtime helpers:
+
 - `PORT` - Port for Next.js dev server (used by PM2 dev app)
 - `NEXT_BUILD_DIR` - Optional Next.js build directory override
 
 ## Loading Order and Precedence
 
 1. **Development Server (`npm run dev`)**:
-
    - Loads from `.env` file
    - Next.js automatically handles NEXT*PUBLIC*\* variables
    - Server-side variables available via `process.env`
 
 2. **Build (`npm run build`, optional for dev)**:
-
    - Pre-build validation runs via `prebuild` script
    - Environment variables must be loaded before build starts (if you build locally)
    - NEXT*PUBLIC*\* variables are embedded during build
@@ -141,13 +140,11 @@ Additional development/runtime helpers:
 ### Common Issues
 
 1. **"Missing NEXT*PUBLIC*\* variable" during build**:
-
    - Variable not exported before build
    - Check `.env` file has the variable
    - Run validation script to verify
 
 2. **"Internal Server Error" in production**:
-
    - Database credentials missing or incorrect
    - Run validation on production server
    - Check PM2 logs for specific errors

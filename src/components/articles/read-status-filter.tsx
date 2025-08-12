@@ -23,8 +23,8 @@ export function ReadStatusFilter() {
     readStatusFilter === "unread"
       ? "unread"
       : readStatusFilter === "read"
-      ? "read"
-      : "all";
+        ? "read"
+        : "all";
 
   return (
     <div

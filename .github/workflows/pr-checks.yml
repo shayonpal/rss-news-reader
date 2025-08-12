@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
   CI: true
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline --no-audit
@@ -62,7 +62,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline
@@ -71,7 +71,7 @@ jobs:
         run: |
           # Get list of changed files
           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(ts|tsx|js|jsx)$' | grep -v test | tr '\n' ' ')
-          
+
           if [ -n "$CHANGED_FILES" ]; then
             echo "Running coverage for changed files: $CHANGED_FILES"
             npx vitest run --coverage --coverage.include="$CHANGED_FILES" || true
@@ -132,11 +132,11 @@ jobs:
         run: |
           BASE_SIZE=$(cat base-size.txt | awk '{print $1}')
           PR_SIZE=$(cat pr-size.txt | awk '{print $1}')
-          
+
           echo "### 📦 Bundle Size Comparison" >> $GITHUB_STEP_SUMMARY
           echo "- Base: $BASE_SIZE" >> $GITHUB_STEP_SUMMARY
           echo "- PR: $PR_SIZE" >> $GITHUB_STEP_SUMMARY
-          
+
           # Simple size comparison (would need more sophisticated logic for real comparison)
           if [[ "$PR_SIZE" > "$BASE_SIZE" ]]; then
             echo "- Change: ⚠️ Size increased" >> $GITHUB_STEP_SUMMARY
@@ -164,9 +164,9 @@ jobs:
       - name: 🔍 Run npm audit
         run: |
           npm audit --audit-level=high --json > audit-report.json || true
-          
+
           VULNS=$(cat audit-report.json | jq '.metadata.vulnerabilities.high + .metadata.vulnerabilities.critical' || echo "0")
-          
+
           echo "### 🔒 Security Check" >> $GITHUB_STEP_SUMMARY
           if [ "$VULNS" -gt "0" ]; then
             echo "- ⚠️ Found $VULNS high/critical vulnerabilities" >> $GITHUB_STEP_SUMMARY
@@ -193,38 +193,38 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             const labels = [];
-            
+
             // Get changed files
             const { data: files } = await github.rest.pulls.listFiles({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number
             });
-            
+
             // Determine labels based on files
             const hasTests = files.some(f => f.filename.includes('.test.') || f.filename.includes('.spec.'));
             const hasDocs = files.some(f => f.filename.includes('.md') || f.filename.startsWith('docs/'));
             const hasCI = files.some(f => f.filename.includes('.github/workflows'));
             const hasDB = files.some(f => f.filename.includes('supabase') || f.filename.includes('migration'));
             const hasUI = files.some(f => f.filename.includes('components/') || f.filename.includes('.css'));
-            
+
             if (hasTests) labels.push('tests');
             if (hasDocs) labels.push('documentation');
             if (hasCI) labels.push('ci/cd');
             if (hasDB) labels.push('database');
             if (hasUI) labels.push('ui');
-            
+
             // Apply size label
             const additions = pr.additions || 0;
             const deletions = pr.deletions || 0;
             const total = additions + deletions;
-            
+
             if (total < 10) labels.push('size/XS');
             else if (total < 50) labels.push('size/S');
             else if (total < 200) labels.push('size/M');
             else if (total < 500) labels.push('size/L');
             else labels.push('size/XL');
-            
+
             // Apply labels
             if (labels.length > 0) {
               await github.rest.issues.addLabels({
@@ -253,10 +253,10 @@ jobs:
           echo "| Bundle Analysis | ${{ needs.bundle-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Security | ${{ needs.security-check.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "${{ needs.pr-validation.result }}" != "success" ]]; then
             echo "❌ PR validation failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          
+
           echo "✅ All required checks passed" >> $GITHUB_STEP_SUMMARY

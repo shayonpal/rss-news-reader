@@ -28,7 +28,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 **Touchpoints**:
 
 1. **Opening the App via Tailscale**
-
    - _Context_: Just woke up, checking phone while coffee brews
    - _Emotion_: Routine, comfortable
    - _Action_: Opens browser, navigates to http://100.96.166.53/reader
@@ -36,7 +35,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Good, straight to my news"
 
 2. **Checking Last Sync Time**
-
    - _Context_: Automatic sync ran overnight
    - _Emotion_: Curious about new content
    - _Action_: Glances at "Last sync: 3 hours ago"
@@ -44,7 +42,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Perfect amount to catch up on"
 
 3. **Browsing with Tabs**
-
    - _Context_: Wants to check specific tech feeds
    - _Emotion_: Focused, selective
    - _Action_: Switches to Feeds tab, expands Tech folder
@@ -77,7 +74,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 **Touchpoints**:
 
 1. **Tag-Based Filtering**
-
    - _Context_: Needs AI/ML specific articles
    - _Emotion_: Focused, professional
    - _Action_: Switches to Tags tab, taps "artificial-intelligence"
@@ -85,7 +81,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Much faster than searching"
 
 2. **Fetching Full Content**
-
    - _Context_: RSS snippet isn't enough
    - _Emotion_: Slightly impatient
    - _Action_: Opens article, taps "Fetch Full Content"
@@ -93,7 +88,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "No more jumping to websites"
 
 3. **Generating Fresh Summary**
-
    - _Context_: Long technical article
    - _Emotion_: Time-conscious
    - _Action_: Taps "Summarize" button
@@ -126,7 +120,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 **Touchpoints**:
 
 1. **Accessing via Tailscale**
-
    - _Context_: On train, phone connected to Tailscale
    - _Emotion_: Routine
    - _Action_: Opens PWA from home screen
@@ -134,7 +127,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Good thing Tailscale is stable"
 
 2. **Reading Cached Articles**
-
    - _Context_: Supabase connection intermittent
    - _Emotion_: Focused on content
    - _Action_: Reads already-loaded articles
@@ -142,7 +134,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "At least I can read what's here"
 
 3. **Marking Read States**
-
    - _Context_: Going through articles
    - _Emotion_: Organized
    - _Action_: Marks articles as read
@@ -175,7 +166,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 **Touchpoints**:
 
 1. **Leisurely Opening**
-
    - _Context_: No rush, coffee in hand
    - _Emotion_: Relaxed, curious
    - _Action_: Opens reader on tablet
@@ -183,7 +173,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "This design is so calming"
 
 2. **Exploring Feed Hierarchy**
-
    - _Context_: Time to explore different topics
    - _Emotion_: Curious, open
    - _Action_: Browses folders: Tech, Politics, Culture
@@ -191,7 +180,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Let's see what's in Culture today"
 
 3. **Theme Adjustment**
-
    - _Context_: Bright morning light
    - _Emotion_: Comfortable
    - _Action_: Toggles to light theme
@@ -224,7 +212,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 **Touchpoints**:
 
 1. **Breaking News Event**
-
    - _Context_: Major tech announcement
    - _Emotion_: Excited, urgent
    - _Action_: Opens reader, hits sync
@@ -232,7 +219,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Wow, everyone's covering this"
 
 2. **Multiple Syncs**
-
    - _Context_: Checking for updates hourly
    - _Emotion_: Engaged, following story
    - _Action_: Manual sync throughout day
@@ -240,7 +226,6 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Good, getting all perspectives"
 
 3. **API Limit Warning**
-
    - _Context_: 5th manual sync of the day
    - _Emotion_: Surprised
    - _Action_: Tries to sync again

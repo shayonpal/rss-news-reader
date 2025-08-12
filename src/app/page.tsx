@@ -16,19 +16,19 @@ export default function HomePage() {
   const router = useRouter();
   // Fix hydration issues with localStorage
   useHydrationFix();
-  
+
   // Clear preserved article state on page unload (browser refresh, tab close, etc.)
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Only clear if user is refreshing or closing tab, not navigating within app
       articleListStateManager.clearState();
     };
-    
+
     // Listen for page unload events (browser refresh, tab close, etc.)
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 
@@ -182,7 +182,7 @@ export default function HomePage() {
         {/* Enhanced Header with Database Counts */}
         <div
           ref={headerRef}
-          className="fixed left-0 right-0 top-0 z-30 border-b glass-nav transition-transform duration-300 ease-in-out md:left-80"
+          className="glass-nav fixed left-0 right-0 top-0 z-30 border-b transition-transform duration-300 ease-in-out md:left-80"
           style={{ transform: "translateY(0)" }}
         >
           <ArticleHeader

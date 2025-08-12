@@ -1,6 +1,7 @@
 # RR-171 Test Specification Report
 
 ## Issue Summary
+
 **Linear Issue RR-171**: Sidebar counts/tags not refreshing after manual sync
 
 **Problem**: After manual sync, new articles and article_tags are present in DB, but sidebar doesn't update unread counts or show newly available tags.
@@ -50,16 +51,18 @@ This comprehensive test suite defines the specification for implementing the sid
 ## Key Implementation Requirements
 
 ### 1. RefreshManager Class
+
 ```typescript
 class RefreshManager {
   // Coordinates all refresh operations
-  refreshAll(): Promise<void>
-  handleManualSync(): Promise<SyncResult>
-  handleBackgroundSync(): Promise<SyncResult>
+  refreshAll(): Promise<void>;
+  handleManualSync(): Promise<SyncResult>;
+  handleBackgroundSync(): Promise<SyncResult>;
 }
 ```
 
 ### 2. Sync API Response
+
 ```json
 {
   "syncId": "uuid",
@@ -74,6 +77,7 @@ class RefreshManager {
 ```
 
 ### 3. Toast Messages (NO EMOJIS)
+
 - Success: `"Sync complete • 10 new articles • 5 removed"`
 - No changes: `"Already up to date"`
 - Error: `"Sync failed • Check your connection"`
@@ -81,11 +85,13 @@ class RefreshManager {
 - Background: `"3 new articles available"` (info toast only)
 
 ### 4. Skeleton Behavior
+
 - **Manual Sync**: Show skeletons on all components
 - **Background Sync**: NO skeletons, silent data update
 - **Error**: Hide skeletons immediately
 
 ### 5. RR-27 Compatibility
+
 - 2-second auto-mark timer MUST NOT be affected by refresh
 - Feed switch still cancels auto-mark
 - Article selection behavior unchanged
@@ -96,6 +102,7 @@ class RefreshManager {
 Total tests created: **138 tests** across 6 files
 
 ### Test Coverage Areas:
+
 - ✅ Refresh coordination logic
 - ✅ API response contracts
 - ✅ Store update mechanisms
@@ -152,6 +159,7 @@ npx vitest watch src/__tests__/contracts/rr-171-*.test.ts
 ## Acceptance Criteria Validation
 
 From Linear Issue RR-171:
+
 - [x] Sidebar unread counts refresh after manual sync
 - [x] New tags appear after sync completes
 - [x] Toast notifications show sync results

@@ -1,11 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2015",
-      "es2017"
-    ],
+    "lib": ["dom", "dom.iterable", "es2015", "es2017"],
     "target": "es2015",
     "types": [
       "vitest/globals",
@@ -34,30 +29,14 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/types/*": [
-        "./src/types/*"
-      ],
-      "@/hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@/constants/*": [
-        "./src/constants/*"
-      ],
-      "@/stores/*": [
-        "./src/lib/stores/*"
-      ],
-      "@/utils/*": [
-        "./src/lib/utils/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/constants/*": ["./src/constants/*"],
+      "@/stores/*": ["./src/lib/stores/*"],
+      "@/utils/*": ["./src/lib/utils/*"]
     }
   },
   "include": [
@@ -72,7 +51,8 @@
     "src/types/**/*.ts",
     "src/constants/**/*.ts",
     ".next/types/**/*.ts",
-    ".next-test/types/**/*.ts"
+    ".next-test/types/**/*.ts",
+    ".next-test-rr102/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -115,25 +115,45 @@
       "path": "src/__tests__/unit/rr-180-glass-morphing.test.ts",
       "type": "unit",
       "test_count": 24,
-      "categories": ["Component specs", "Animation", "Interactions", "Integration"]
+      "categories": [
+        "Component specs",
+        "Animation",
+        "Interactions",
+        "Integration"
+      ]
     },
     {
       "path": "src/__tests__/e2e/rr-180-iphone-glass-morphing.spec.ts",
       "type": "e2e",
       "test_count": 18,
-      "categories": ["Touch targets", "Performance", "Safe area", "Accessibility"]
+      "categories": [
+        "Touch targets",
+        "Performance",
+        "Safe area",
+        "Accessibility"
+      ]
     },
     {
       "path": "src/__tests__/performance/rr-180-glass-performance.test.ts",
       "type": "performance",
       "test_count": 10,
-      "categories": ["Render speed", "Animation fps", "Memory usage", "Touch response"]
+      "categories": [
+        "Render speed",
+        "Animation fps",
+        "Memory usage",
+        "Touch response"
+      ]
     },
     {
       "path": "src/__tests__/accessibility/rr-180-glass-a11y.test.ts",
       "type": "accessibility",
       "test_count": 16,
-      "categories": ["WCAG compliance", "Keyboard nav", "Screen readers", "Focus management"]
+      "categories": [
+        "WCAG compliance",
+        "Keyboard nav",
+        "Screen readers",
+        "Focus management"
+      ]
     }
   ],
   "implementation_requirements": {

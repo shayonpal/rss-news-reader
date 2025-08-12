@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const startTime = Date.now();
   const envInfo = getEnvironmentInfo();
-  
+
   // Set cache headers
   const headers = {
     "Cache-Control": "no-store, max-age=0",

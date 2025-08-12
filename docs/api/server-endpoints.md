@@ -4,26 +4,55 @@ This document lists all internal API endpoints implemented in the codebase, cove
 
 - Access model: Internal only; app is reachable via Tailscale network. Client holds no public secrets.
 - Authentication: Inoreader OAuth is handled server-side or via secure cookies where applicable.
-- Last Updated: 2025-08-10
+- **API Base Path (RR-102)**: All endpoints use `/reader` prefix. Development environment automatically redirects `/api/*` → `/reader/api/*` with 307 status.
+- Last Updated: 2025-08-12
 
 ## Quick Reference
 
-| Category | Primary Endpoints |
-| --- | --- |
-| Sync | `POST /api/sync`, `GET /api/sync/status/{syncId}`, `GET /api/sync/last-sync`, `POST /api/sync/metadata`, `POST /api/sync/refresh-view`, `POST /api/sync/bidirectional`, `GET /api/sync/api-usage` |
-| Articles | `POST /api/articles/{id}/fetch-content`, `POST /api/articles/{id}/summarize`, `GET /api/articles/{id}/tags` |
-| Tags | `GET /api/tags`, `POST /api/tags`, `GET /api/tags/{id}`, `PATCH /api/tags/{id}`, `DELETE /api/tags/{id}` |
-| Inoreader Proxy | `GET /api/inoreader/user-info`, `GET /api/inoreader/subscriptions`, `GET /api/inoreader/stream-contents`, `GET /api/inoreader/unread-counts`, `POST /api/inoreader/edit-tag`, `GET /api/inoreader/debug`, `GET /api/inoreader/dev` |
-| Health | `GET /api/health` (and alias `/api/health/app`), `GET /api/health/db`, `GET /api/health/cron`, `GET /api/health/parsing`, `GET /api/health/claude` |
-| Analytics & Logs | `GET /api/analytics/fetch-stats`, `POST /api/logs/inoreader` |
-| Auth Status | `GET /api/auth/inoreader/status` |
-| Express Service | `POST /server/sync/trigger`, `GET /server/sync/stats`, `POST /server/sync/clear-failed`, `POST /server/mark-all-read`, `GET /server/health` |
+| Category         | Primary Endpoints                                                                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sync             | `POST /api/sync`, `GET /api/sync/status/{syncId}`, `GET /api/sync/last-sync`, `POST /api/sync/metadata`, `POST /api/sync/refresh-view`, `POST /api/sync/bidirectional`, `GET /api/sync/api-usage`                                  |
+| Articles         | `POST /api/articles/{id}/fetch-content`, `POST /api/articles/{id}/summarize`, `GET /api/articles/{id}/tags`                                                                                                                        |
+| Tags             | `GET /api/tags`, `POST /api/tags`, `GET /api/tags/{id}`, `PATCH /api/tags/{id}`, `DELETE /api/tags/{id}`                                                                                                                           |
+| Inoreader Proxy  | `GET /api/inoreader/user-info`, `GET /api/inoreader/subscriptions`, `GET /api/inoreader/stream-contents`, `GET /api/inoreader/unread-counts`, `POST /api/inoreader/edit-tag`, `GET /api/inoreader/debug`, `GET /api/inoreader/dev` |
+| Health           | `GET /api/health` (and alias `/api/health/app`), `GET /api/health/db`, `GET /api/health/cron`, `GET /api/health/parsing`, `GET /api/health/claude`                                                                                 |
+| Analytics & Logs | `GET /api/analytics/fetch-stats`, `POST /api/logs/inoreader`                                                                                                                                                                       |
+| Auth Status      | `GET /api/auth/inoreader/status`                                                                                                                                                                                                   |
+| Express Service  | `POST /server/sync/trigger`, `GET /server/sync/stats`, `POST /server/sync/clear-failed`, `POST /server/mark-all-read`, `GET /server/health`                                                                                        |
 
 Note: Previous reference to `/api/health/freshness` has been retired; use `/api/health/parsing` and other health endpoints below.
 
+## API Base Path Handling (RR-102)
+
+The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102 implementation provides smart redirects in development to improve developer experience:
+
+### Production Behavior
+
+- **Requires** the `/reader` prefix: `/reader/api/health/app`
+- Missing prefix returns 404 error
+
+### Development Behavior (Smart Redirects)
+
+- **Both paths work**: `/api/health/app` OR `/reader/api/health/app`
+- Automatic 307 redirects: `/api/*` → `/reader/api/*`
+- **HTTP Method Preservation**: GET, POST, PUT, DELETE, PATCH methods preserved
+- **Request Body Preservation**: POST/PUT request bodies maintained during redirect
+
+### Error Handling
+
+- Malformed requests (non-API paths) handled by catch-all route: `/api/[...catch]`
+- Provides helpful error messages with debugging information
+- Example: `/api/invalid/path` returns clear error with available endpoints
+
+### Implementation Details
+
+- Redirect rules configured in `next.config.mjs` (development only)
+- Catch-all error handler at `src/app/api/[...catch]/route.ts`
+- Zero production impact - redirects disabled when `NODE_ENV === 'production'`
+
 ---
 
-## Next.js App Router Endpoints (/api/*)
+## Next.js App Router Endpoints (/api/\*)
 
 ### Sync
 
@@ -100,6 +129,7 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 ### Feeds
 
 **Note (RR-176)**: Feed management operations are currently handled through the client-side store (`updateFeedPartialContent`). A future API endpoint may be added for:
+
 - `PATCH /api/feeds/{id}` - Update feed settings including `is_partial_content` toggle
 
 ### Tags
@@ -231,7 +261,7 @@ Note: Previous reference to `/api/health/freshness` has been retired; use `/api/
 
 ---
 
-## Express Service Endpoints (/server/*)
+## Express Service Endpoints (/server/\*)
 
 These run in the auxiliary Express server (`server/server.js`).
 
@@ -266,11 +296,17 @@ These run in the auxiliary Express server (`server/server.js`).
 ## Error Handling
 
 Standard error envelope:
+
 ```json
-{ "error": "error_code", "message": "Human-readable message", "details": "optional" }
+{
+  "error": "error_code",
+  "message": "Human-readable message",
+  "details": "optional"
+}
 ```
 
 Common codes:
+
 - `rate_limit_exceeded`, `sync_start_failed`, `article_not_found`, `extraction_failed`, `timeout`, `api_not_configured`, `invalid_api_key`, `summarization_failed`
 
 ## Testing

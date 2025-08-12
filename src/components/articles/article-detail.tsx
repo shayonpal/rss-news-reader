@@ -30,9 +30,18 @@ import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
 import { useContentState } from "@/hooks/use-content-state";
-import { ContentParsingIndicator, ContentLoadingSkeleton } from "./content-parsing-indicator";
-import { GlassToolbarButton, GlassIconButton } from "@/components/ui/glass-button";
-import { MorphingDropdown, type DropdownItem } from "@/components/ui/morphing-dropdown";
+import {
+  ContentParsingIndicator,
+  ContentLoadingSkeleton,
+} from "./content-parsing-indicator";
+import {
+  GlassToolbarButton,
+  GlassIconButton,
+} from "@/components/ui/glass-button";
+import {
+  MorphingDropdown,
+  type DropdownItem,
+} from "@/components/ui/morphing-dropdown";
 
 // Reusable toolbar (can be moved to its own file if you prefer)
 function ArticleActionsToolbar({
@@ -66,7 +75,12 @@ function ArticleActionsToolbar({
 }) {
   // Build toolbar elements (keep original functionality, style inline to match POC)
   const toolbarElements = [
-    <StarButton key="star" onToggleStar={onToggleStar} isStarred={isStarred} size="lg" />,
+    <StarButton
+      key="star"
+      onToggleStar={onToggleStar}
+      isStarred={isStarred}
+      size="lg"
+    />,
     <SummaryButton
       key="summary"
       articleId={articleId}
@@ -88,26 +102,35 @@ function ArticleActionsToolbar({
 
   // Build dropdown items dynamically
   const dropdownItems: DropdownItem[] = [
-    ...(feed ? [{
-      id: "partial-feed",
-      label: "Partial Feed",
-      checked: feed.isPartialContent,
-      onClick: onTogglePartialFeed,
-      disabled: isUpdatingFeed,
-      separator: true,
-    }] : []),
+    ...(feed
+      ? [
+          {
+            id: "partial-feed",
+            label: "Partial Feed",
+            checked: feed.isPartialContent,
+            onClick: onTogglePartialFeed,
+            disabled: isUpdatingFeed,
+            separator: true,
+          },
+        ]
+      : []),
     {
       id: "share",
       label: "Share",
-      icon: <Share2 className="w-5 h-5" />,
+      icon: <Share2 className="h-5 w-5" />,
       onClick: onShare,
     },
-    ...(articleUrl ? [{
-      id: "open-original",
-      label: "Open Original",
-      icon: <ExternalLink className="w-5 h-5" />,
-      onClick: () => window.open(articleUrl, "_blank", "noopener,noreferrer"),
-    }] : []),
+    ...(articleUrl
+      ? [
+          {
+            id: "open-original",
+            label: "Open Original",
+            icon: <ExternalLink className="h-5 w-5" />,
+            onClick: () =>
+              window.open(articleUrl, "_blank", "noopener,noreferrer"),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -391,13 +414,13 @@ export function ArticleDetail({
 
     // Show loading toast with amber styling
     toast.loading(
-      `${newState ? 'Marking' : 'Unmarking'} ${feedName} as partial feed...`,
-      { 
+      `${newState ? "Marking" : "Unmarking"} ${feedName} as partial feed...`,
+      {
         id: toastId,
         style: {
-          background: '#f59e0b', // amber-500
-          color: 'white',
-        }
+          background: "#f59e0b", // amber-500
+          color: "white",
+        },
       }
     );
 
@@ -405,53 +428,48 @@ export function ArticleDetail({
     try {
       // Toggle the partial content setting
       await updateFeedPartialContent(article.feedId, newState);
-      
+
       // Show success toast with green styling
       toast.success(
-        `${feedName} ${newState ? 'marked' : 'unmarked'} as partial feed`,
-        { 
+        `${feedName} ${newState ? "marked" : "unmarked"} as partial feed`,
+        {
           id: toastId,
           duration: 3000,
           style: {
-            background: '#10b981', // green-500
-            color: 'white',
-          }
+            background: "#10b981", // green-500
+            color: "white",
+          },
         }
       );
-      
+
       // The UI will update automatically when the feed store updates
     } catch (error) {
-      console.error('Failed to update feed partial content setting:', error);
-      
+      console.error("Failed to update feed partial content setting:", error);
+
       // Show error toast with red styling
-      toast.error(
-        `Failed to update ${feedName}. Please try again.`,
-        { 
-          id: toastId,
-          duration: 0, // Manual dismiss for errors
-          style: {
-            background: '#ef4444', // red-500
-            color: 'white',
-          }
-        }
-      );
+      toast.error(`Failed to update ${feedName}. Please try again.`, {
+        id: toastId,
+        duration: 0, // Manual dismiss for errors
+        style: {
+          background: "#ef4444", // red-500
+          color: "white",
+        },
+      });
     } finally {
       setIsUpdatingFeed(false);
     }
   };
 
   return (
-    <div
-      className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900"
-    >
+    <div className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900">
       {/* Header */}
       {/* Floating controls container (no top pane) */}
       <div
         ref={headerRef}
-        className="fixed left-0 right-0 z-10 transition-transform transition-opacity duration-300 ease-in-out article-header-controls"
+        className="article-header-controls fixed left-0 right-0 z-10 transition-opacity transition-transform duration-300 ease-in-out"
         style={{ top: "24px" }}
       >
-        <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 flex items-start justify-between">
+        <div className="mx-auto flex w-full max-w-4xl items-start justify-between px-4 sm:px-6 lg:px-8">
           {/* Back button aligned with content */}
           <div className="pointer-events-auto">
             <button
@@ -465,21 +483,24 @@ export function ArticleDetail({
           </div>
 
           {/* Actions toolbar constrained to article width */}
-          <div className="pointer-events-auto" style={{ touchAction: "manipulation" }}>
+          <div
+            className="pointer-events-auto"
+            style={{ touchAction: "manipulation" }}
+          >
             <ArticleActionsToolbar
-            articleId={currentArticle.id}
-            isStarred={currentArticle.tags?.includes("starred") || false}
-            hasSummary={!!currentArticle.summary}
-            hasFullContent={hasFullContentState}
-            onToggleStar={onToggleStar}
-            onSummarySuccess={handleSummarySuccess}
-            onFetchSuccess={handleFetchContentSuccess}
-            onFetchRevert={handleRevertContent}
-            feed={feed}
-            onTogglePartialFeed={handleToggleFeedPartialContent}
-            isUpdatingFeed={isUpdatingFeed}
-            onShare={handleShare}
-            articleUrl={currentArticle.url}
+              articleId={currentArticle.id}
+              isStarred={currentArticle.tags?.includes("starred") || false}
+              hasSummary={!!currentArticle.summary}
+              hasFullContent={hasFullContentState}
+              onToggleStar={onToggleStar}
+              onSummarySuccess={handleSummarySuccess}
+              onFetchSuccess={handleFetchContentSuccess}
+              onFetchRevert={handleRevertContent}
+              feed={feed}
+              onTogglePartialFeed={handleToggleFeedPartialContent}
+              isUpdatingFeed={isUpdatingFeed}
+              onShare={handleShare}
+              articleUrl={currentArticle.url}
             />
           </div>
         </div>
@@ -511,7 +532,7 @@ export function ArticleDetail({
               })}
             </time>
           </div>
-          
+
           {/* Tags */}
           {articleTags && articleTags.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -521,17 +542,17 @@ export function ArticleDetail({
                   key={tag.id}
                   onClick={() => {
                     // Set tag filter in session storage and navigate to home
-                    sessionStorage.setItem('articleListTagFilter', tag.id);
+                    sessionStorage.setItem("articleListTagFilter", tag.id);
                     // Clear any feed filter to ensure tag filter takes precedence
-                    sessionStorage.setItem('articleListFilter', 'null');
-                    router.push('/');
+                    sessionStorage.setItem("articleListFilter", "null");
+                    router.push("/");
                   }}
                   className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                   style={{
                     backgroundColor: tag.color ? `${tag.color}15` : undefined,
                     color: tag.color || undefined,
                     borderColor: tag.color ? `${tag.color}30` : undefined,
-                    borderWidth: tag.color ? '1px' : undefined,
+                    borderWidth: tag.color ? "1px" : undefined,
                   }}
                 >
                   {decodeHtmlEntities(tag.name)}
@@ -572,7 +593,6 @@ export function ArticleDetail({
             dangerouslySetInnerHTML={{ __html: cleanContent }}
           />
         )}
-
       </article>
 
       {/* Navigation Footer */}
@@ -581,7 +601,7 @@ export function ArticleDetail({
           // Attach a refless scrolled class toggle synced with window scroll
           // This will be updated in the scroll handler below
         }}
-        className="fixed bottom-0 left-0 right-0 z-10 border-t glass-footer transition-transform duration-300 ease-in-out"
+        className="glass-footer fixed bottom-0 left-0 right-0 z-10 border-t transition-transform duration-300 ease-in-out"
         style={{ transform: "translateY(0)" }}
         id="article-footer"
       >

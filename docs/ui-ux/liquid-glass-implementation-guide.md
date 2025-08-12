@@ -9,12 +9,14 @@ This guide documents the Liquid Glass design system implementation in the RSS Ne
 ## Core Principles
 
 ### Material Hierarchy
+
 - **Glass elements** float above content, never inside it
 - **Primary content** remains fully opaque for readability
 - **Navigation and controls** use glass effects exclusively
 - **Single glass layer** per element (avoid stacking glass on glass)
 
 ### Visual Characteristics
+
 - **Lensing effect**: Dynamic backdrop blur with saturation
 - **Scroll-aware contrast**: Background opacity increases on scroll
 - **Adaptive themes**: Different intensities for light/dark modes
@@ -28,39 +30,47 @@ All glass-related design tokens are defined in `src/app/globals.css` (lines 417-
 
 ```css
 /* Core glass variables */
---glass-blur: 14px;                    /* Backdrop blur intensity */
---glass-nav-bg: rgba(255,255,255,0.16); /* Base glass background */
---glass-nav-bg-scrolled: rgba(255,255,255,0.20); /* Scrolled state */
---glass-nav-border: rgba(0,0,0,0.06);   /* Border color */
---opaque-nav-bg: rgba(255,255,255,0.95); /* Fallback for reduced transparency */
+--glass-blur: 14px; /* Backdrop blur intensity */
+--glass-nav-bg: rgba(255, 255, 255, 0.16); /* Base glass background */
+--glass-nav-bg-scrolled: rgba(255, 255, 255, 0.2); /* Scrolled state */
+--glass-nav-border: rgba(0, 0, 0, 0.06); /* Border color */
+--opaque-nav-bg: rgba(
+  255,
+  255,
+  255,
+  0.95
+); /* Fallback for reduced transparency */
 
 /* Segmented control specific */
---glass-chip-bg: rgba(255,255,255,0.10);
---glass-chip-indicator: rgba(255,255,255,0.18);
+--glass-chip-bg: rgba(255, 255, 255, 0.1);
+--glass-chip-indicator: rgba(255, 255, 255, 0.18);
 ```
 
 ### Utility Classes
 
 #### `.glass-nav` - Navigation Headers
+
 Primary glass navigation style for headers and top bars.
 
 **Usage:**
+
 ```tsx
-<header className="glass-nav">
-  {/* Navigation content */}
-</header>
+<header className="glass-nav">{/* Navigation content */}</header>
 ```
 
 **Features:**
+
 - Backdrop blur with 140% saturation
 - Dynamic `is-scrolled` class on scroll > 8px
 - Subtle border and shadow layers
 - Automatic reduced-transparency fallback
 
 #### `.glass-footer` - Bottom Navigation
+
 Floating footer with slide-away behavior.
 
 **Usage:**
+
 ```tsx
 <footer className="glass-footer" data-visible="true">
   {/* Footer controls */}
@@ -68,15 +78,18 @@ Floating footer with slide-away behavior.
 ```
 
 **Features:**
+
 - Mirrors header scroll behavior
 - Auto-hide on scroll down
 - GPU-accelerated transforms
 - Safe area inset support
 
 #### `.glass-segment` - Segmented Controls
+
 Three-option pill selector with sliding indicator.
 
 **Usage:**
+
 ```tsx
 <div className="glass-segment glass-segment-3" data-value="unread">
   <div className="glass-segment-indicator" />
@@ -87,18 +100,22 @@ Three-option pill selector with sliding indicator.
 ```
 
 **Modifiers:**
+
 - `.glass-segment-sm` - Compact size (36px height)
 - `.glass-segment-3` - Three-segment variant
 
 **Features:**
+
 - Animated sliding indicator
 - 44px minimum touch targets
 - Icon + label on desktop, icon-only on mobile
 
 #### `.glass-toolbar` - Action Clusters
+
 Clustered capsule design for grouped actions.
 
 **Usage:**
+
 ```tsx
 <div className="glass-toolbar">
   <div className="toolbar-group">
@@ -110,15 +127,18 @@ Clustered capsule design for grouped actions.
 ```
 
 **Features:**
+
 - Capsule-shaped container
 - Collapse animation for dropdown menus
 - Grouped button clustering
 - Pointer-events management
 
 #### `.glass-popover` - Dropdown Menus
+
 Enhanced glass style for dropdown and popover content.
 
 **Usage:**
+
 ```tsx
 <DropdownMenuContent className="glass-popover">
   {/* Menu items */}
@@ -126,15 +146,18 @@ Enhanced glass style for dropdown and popover content.
 ```
 
 **Features:**
+
 - 18px border radius
 - Enhanced blur and shadows
 - Subtle item separators
 - Minimum width constraints
 
 #### `.glass-sidebar-info` - Fixed Info Panels
+
 Bottom-fixed information bars in sidebars.
 
 **Usage:**
+
 ```tsx
 <div className="glass-sidebar-info">
   <div>Last sync: 3 hours ago</div>
@@ -143,15 +166,18 @@ Bottom-fixed information bars in sidebars.
 ```
 
 **Features:**
+
 - Fixed positioning
 - Content scrolls behind
 - Safe area aware
 - Responsive padding
 
 #### `.liquid-glass-btn` - Floating Actions
+
 Glossy circular floating action buttons (iOS only).
 
 **Usage:**
+
 ```tsx
 <button className="liquid-glass-btn">
   <ArrowUp />
@@ -159,6 +185,7 @@ Glossy circular floating action buttons (iOS only).
 ```
 
 **Features:**
+
 - Glossy highlight overlay
 - Scale animations on interaction
 - iOS-specific rendering
@@ -171,15 +198,15 @@ Glossy circular floating action buttons (iOS only).
 ```tsx
 // src/components/layout/header.tsx
 useEffect(() => {
-  const header = document.querySelector('.glass-nav');
-  
+  const header = document.querySelector(".glass-nav");
+
   const handleScroll = () => {
     const scrolled = window.scrollY > 8;
-    header?.classList.toggle('is-scrolled', scrolled);
+    header?.classList.toggle("is-scrolled", scrolled);
   };
-  
-  window.addEventListener('scroll', handleScroll, { passive: true });
-  return () => window.removeEventListener('scroll', handleScroll);
+
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  return () => window.removeEventListener("scroll", handleScroll);
 }, []);
 ```
 
@@ -187,14 +214,13 @@ useEffect(() => {
 
 ```tsx
 // Article detail floating controls
-<div className="fixed top-safe-48 right-4 z-20">
-  <div className="glass-toolbar">
-    {/* Actions */}
-  </div>
+<div className="top-safe-48 fixed right-4 z-20">
+  <div className="glass-toolbar">{/* Actions */}</div>
 </div>
 ```
 
 **Safe Area Classes:**
+
 - `.top-safe-48` - 48px + safe area top
 - `.bottom-safe-20` - 20px + safe area bottom
 
@@ -212,7 +238,7 @@ useEffect(() => {
       onClick={() => setReadStatus(option.value)}
     >
       <Icon className="block sm:hidden" />
-      <span className="hidden sm:inline-flex items-center gap-1.5">
+      <span className="hidden items-center gap-1.5 sm:inline-flex">
         <Icon />
         {option.label}
       </span>
@@ -261,16 +287,12 @@ All interactive glass elements maintain 44px minimum touch targets:
 Glass components include proper ARIA attributes:
 
 ```tsx
-<div 
+<div
   role="tablist"
   aria-label="Filter articles by read status"
   className="glass-segment"
 >
-  <button
-    role="tab"
-    aria-selected={isSelected}
-    aria-controls="article-list"
-  >
+  <button role="tab" aria-selected={isSelected} aria-controls="article-list">
     {label}
   </button>
 </div>
@@ -301,11 +323,13 @@ Glass effects are conditionally applied based on device capabilities:
 // iOS-specific glass button
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-{isIOS && (
-  <button className="liquid-glass-btn">
-    <ArrowUp />
-  </button>
-)}
+{
+  isIOS && (
+    <button className="liquid-glass-btn">
+      <ArrowUp />
+    </button>
+  );
+}
 ```
 
 ### Blur Intensity Management
@@ -336,13 +360,15 @@ Different blur values for performance optimization:
 ### Example Migration
 
 **Before:**
+
 ```tsx
-<header className="bg-white border-b">
+<header className="border-b bg-white">
   <nav>...</nav>
 </header>
 ```
 
 **After:**
+
 ```tsx
 <header className="glass-nav">
   <nav>...</nav>
@@ -352,6 +378,7 @@ Different blur values for performance optimization:
 ## Best Practices
 
 ### Do's
+
 - ✅ Use glass for navigation and floating controls
 - ✅ Maintain single glass layer per element
 - ✅ Apply to overlay elements only
@@ -360,6 +387,7 @@ Different blur values for performance optimization:
 - ✅ Use GPU-accelerated animations
 
 ### Don'ts
+
 - ❌ Stack glass on glass
 - ❌ Apply glass to content areas
 - ❌ Mix Regular and Clear variants
@@ -380,12 +408,12 @@ Different blur values for performance optimization:
 
 ## Browser Compatibility
 
-| Feature | Chrome | Safari | Firefox | Edge | iOS Safari |
-|---------|--------|--------|---------|------|------------|
-| Backdrop Filter | ✅ 76+ | ✅ 9+ | ✅ 103+ | ✅ 17+ | ✅ 9+ |
-| Safe Area Insets | ✅ | ✅ | ✅ | ✅ | ✅ 11+ |
-| CSS Variables | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Grid Layout | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Feature          | Chrome | Safari | Firefox | Edge   | iOS Safari |
+| ---------------- | ------ | ------ | ------- | ------ | ---------- |
+| Backdrop Filter  | ✅ 76+ | ✅ 9+  | ✅ 103+ | ✅ 17+ | ✅ 9+      |
+| Safe Area Insets | ✅     | ✅     | ✅      | ✅     | ✅ 11+     |
+| CSS Variables    | ✅     | ✅     | ✅      | ✅     | ✅         |
+| Grid Layout      | ✅     | ✅     | ✅      | ✅     | ✅         |
 
 ## Related Documentation
 
@@ -397,6 +425,7 @@ Different blur values for performance optimization:
 ## Implementation Status
 
 ### Phase 1: Initial Implementation (Completed)
+
 - ✅ Basic glass navigation headers with scroll detection
 - ✅ Read status segmented control with sliding indicator
 - ✅ Article detail floating toolbar with action clustering
@@ -406,6 +435,7 @@ Different blur values for performance optimization:
 - ✅ Article footer with slide-away behavior
 
 ### Phase 2: iOS 26 Liquid Glass Enhancement (Completed - RR-180)
+
 - ✅ **Critical iOS PWA Touch Optimization**: Fixed touch interaction issues preventing buttons from being tappable on iOS PWA
 - ✅ **iOS 26 Morphing Animation**: Implemented sophisticated morphing where dropdown trigger transforms into expanded content
 - ✅ **Spring Easing System**: Added 300ms cubic-bezier(0.34, 1.56, 0.64, 1) natural spring animations
@@ -416,10 +446,12 @@ Different blur values for performance optimization:
 - ✅ **Pointer Events Management**: Fixed pointer-events toggling that was causing touch interaction failures
 
 ### Phase 3: Advanced Features (In Progress)
+
 - 🔄 Standardizing glass token usage across remaining components
 - 🔄 Performance optimization for lower-end devices
 
 ### Phase 3: Full Migration (Planned)
+
 - 📅 Complete conversion of all overlay elements to glass
 - 📅 Advanced spring animations and physics
 - 📅 Unified glass design language across all platforms

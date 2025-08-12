@@ -53,8 +53,10 @@ All health endpoints return standardized JSON responses with the following struc
 - **Heartbeat Interval**: 300 seconds (5 minutes)
 - **Retries**: 2
 - **Retry Interval**: 60 seconds
-- **Accepted Status Codes**: 200-299
+- **Accepted Status Codes**: 200-299, 307 (redirect)
 - **Tags**: development, app
+
+**Note (RR-102)**: Development environment supports flexible API paths. Both `/api/health/app` and `/reader/api/health/app` work via automatic redirects.
 
 **Advanced Settings**:
 
@@ -87,8 +89,10 @@ All health endpoints return standardized JSON responses with the following struc
 - **Heartbeat Interval**: 300 seconds (5 minutes)
 - **Retries**: 2
 - **Retry Interval**: 60 seconds
-- **Accepted Status Codes**: 200-299
+- **Accepted Status Codes**: 200-299, 307 (redirect)
 - **Tags**: cron, sync
+
+**Note (RR-102)**: Development environment supports both `/api/health/cron` and `/reader/api/health/cron` via automatic redirects.
 
 **Advanced Settings**:
 
@@ -109,7 +113,6 @@ Based on our implementation, the following monitors should be removed as they're
 For critical failures that the monitor-services.sh script can't handle:
 
 1. Create a webhook notification:
-
    - **Webhook URL**: `http://localhost:3000/reader/api/webhooks/uptime-kuma-recovery`
    - **Request Method**: POST
    - **Content Type**: application/json
@@ -142,12 +145,10 @@ The cron service already sends push notifications to Uptime Kuma. Ensure the pus
 Create a status page with the following groups:
 
 1. **Core Services**
-
    - RSS Reader Production
    - RSS Sync Server
 
 2. **Development**
-
    - RSS Reader Development
 
 3. **Background Jobs**
@@ -156,13 +157,11 @@ Create a status page with the following groups:
 ## Monitoring Best Practices
 
 1. **Response Time Alerts**: Set up notifications if response time exceeds:
-
    - App endpoints: > 1000ms
    - Sync server: > 500ms
    - Cron endpoint: > 200ms
 
 2. **Error Count Monitoring**: Use JSON parsing to alert when:
-
    - `json.errorCount > 10` (last hour)
    - `json.dependencies.database === "unhealthy"`
    - `json.performance.avgDbQueryTime > 500`

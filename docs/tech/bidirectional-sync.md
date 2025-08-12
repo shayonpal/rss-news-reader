@@ -33,30 +33,39 @@ On failure: retry with backoff → keep rows until success or max retries
 
 ```ts
 // Client: queue local change
-await supabase.rpc('add_to_sync_queue', {
+await supabase.rpc("add_to_sync_queue", {
   p_article_id: articleId,
   p_inoreader_id: inoreaderId,
-  p_action_type: action /* 'read'|'unread'|'star'|'unstar' */
+  p_action_type: action /* 'read'|'unread'|'star'|'unstar' */,
 });
 
 // Server: periodic processor
 const pending = await supabase
-  .from('sync_queue')
-  .select('*')
-  .order('created_at');
+  .from("sync_queue")
+  .select("*")
+  .order("created_at");
 
 const groups = groupByActionType(pending);
 for (const [action, items] of Object.entries(groups)) {
   const batches = chunk(items, 100); // Inoreader batch guidance
   for (const batch of batches) {
-    const response = await fetch('/api/inoreader/edit-tag', {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: buildEditTagForm(action, batch.map(b => b.inoreader_id))
+    const response = await fetch("/api/inoreader/edit-tag", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: buildEditTagForm(
+        action,
+        batch.map((b) => b.inoreader_id)
+      ),
     });
 
     if (response.ok) {
-      await supabase.from('sync_queue').delete().in('id', batch.map(b => b.id));
+      await supabase
+        .from("sync_queue")
+        .delete()
+        .in(
+          "id",
+          batch.map((b) => b.id)
+        );
     } else if (response.status === 429) {
       // honor Retry-After; backoff & try later
       scheduleRetryWithDelay(batch, parseRetryAfter(response));
@@ -119,22 +128,28 @@ The client applies the sidebar payload immediately (no materialized-view timing 
 
 ## Scenarios (what happens)
 
-1) Few reads, then pause (below batch threshold)
+1. Few reads, then pause (below batch threshold)
+
 - Behavior: Changes queue immediately. If fewer than the batch minimum, they will still sync when the oldest queued change passes the age threshold (e.g., ~15 minutes) or when additional actions accumulate to reach the batch size. No user action required.
 
-2) Mark star/unstar while offline or briefly disconnected
+2. Mark star/unstar while offline or briefly disconnected
+
 - Behavior: RPC insert succeeds when client is online with DB; the change persists in `sync_queue`. Processor retries on network/API failures with exponential backoff until the `edit-tag` call succeeds, then dequeues.
 
-3) Inoreader rate limiting (HTTP 429)
+3. Inoreader rate limiting (HTTP 429)
+
 - Behavior: Manual `POST /api/sync` responds with a structured 429 and `Retry-After` seconds. UI shows a cooldown timer on the sync button. The queue processor defers batches until the window elapses, then resumes.
 
-4) Remote/local disagreement (conflict)
+4. Remote/local disagreement (conflict)
+
 - Behavior: Remote wins. The conflict is recorded with both local and remote values plus resolution for analysis. The app continues with the resolved state.
 
-5) Manual sync just completed; counts and tags stale in DB views
+5. Manual sync just completed; counts and tags stale in DB views
+
 - Behavior: The `/api/sync` response includes `sidebar` counts/tags. The UI applies them immediately (no wait for materialized views), ensuring the sidebar reflects current state.
 
-6) OAuth token missing/expired on server
+6. OAuth token missing/expired on server
+
 - Behavior: `edit-tag` proxy returns 401/403; queue entries remain with incremented retries. Monitoring shows auth errors; once tokens are restored, the next processor run clears the queue.
 
 ## References
@@ -145,5 +160,3 @@ The client applies the sidebar payload immediately (no materialized-view timing 
 - Sync endpoints: `src/app/api/sync/route.ts` (metrics + sidebar payload)
 - DB migrations: `src/lib/db/migrations/007_add_bidirectional_sync.sql`, `008_fix_sync_queue_function.sql`
 - Security hardening: RR-67 fixes for views/functions
-
-

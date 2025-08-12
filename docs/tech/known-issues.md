@@ -196,12 +196,14 @@ When processing large numbers of articles for deletion (>1000 articles), Supabas
 #### Root Cause
 
 Single delete operations with large numbers of article IDs exceeded PostgreSQL's URI length limits:
+
 - Single operation with 1000 IDs ≈ 20,000+ characters
 - PostgreSQL/HTTP servers have URI length limits around 8,000-10,000 characters
 
 #### Solution
 
 Implemented chunked deletion architecture:
+
 - Process articles in chunks of 200 articles maximum
 - Configurable chunk size via `max_ids_per_delete_operation`
 - Individual chunk failures don't stop entire process
@@ -210,7 +212,7 @@ Implemented chunked deletion architecture:
 #### Results
 
 - **URI Length Reduction**: ~80% reduction (from 20,000+ to ~4,000 characters per operation)
-- **Success Rate**: 99.9% for large cleanup operations  
+- **Success Rate**: 99.9% for large cleanup operations
 - **Processing Time**: ~2-3 seconds for 1000 articles
 - **Error Isolation**: Individual chunk failures don't cascade
 

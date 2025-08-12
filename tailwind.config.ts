@@ -92,9 +92,9 @@ const config: Config = {
   },
   plugins: [
     require("@tailwindcss/typography"),
-    function({ addVariant }: any) {
-      addVariant('pwa-standalone', '.pwa-standalone &');
-    }
+    function ({ addVariant }: any) {
+      addVariant("pwa-standalone", ".pwa-standalone &");
+    },
   ],
 };
 

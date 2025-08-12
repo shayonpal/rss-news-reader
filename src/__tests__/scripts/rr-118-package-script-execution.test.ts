@@ -1,6 +1,6 @@
 /**
  * Package.json Script Execution Tests for RR-118
- * 
+ *
  * These tests verify that the package.json test scripts execute correctly
  * and route tests to the appropriate configurations.
  */
@@ -13,40 +13,43 @@ import { readFileSync, existsSync } from "fs";
 const PROJECT_ROOT = resolve(__dirname, "../../..");
 
 // Helper function to run npm scripts and capture output
-const runNpmScript = (script: string, timeout = 30000): Promise<{
+const runNpmScript = (
+  script: string,
+  timeout = 30000
+): Promise<{
   code: number;
   stdout: string;
   stderr: string;
 }> => {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['run', script], {
+    const child = spawn("npm", ["run", script], {
       cwd: PROJECT_ROOT,
-      stdio: 'pipe',
-      shell: true
+      stdio: "pipe",
+      shell: true,
     });
 
-    let stdout = '';
-    let stderr = '';
+    let stdout = "";
+    let stderr = "";
 
-    child.stdout?.on('data', (data) => {
+    child.stdout?.on("data", (data) => {
       stdout += data.toString();
     });
 
-    child.stderr?.on('data', (data) => {
+    child.stderr?.on("data", (data) => {
       stderr += data.toString();
     });
 
     const timer = setTimeout(() => {
-      child.kill('SIGTERM');
+      child.kill("SIGTERM");
       reject(new Error(`Script ${script} timed out after ${timeout}ms`));
     }, timeout);
 
-    child.on('close', (code) => {
+    child.on("close", (code) => {
       clearTimeout(timer);
       resolve({ code: code || 0, stdout, stderr });
     });
 
-    child.on('error', (error) => {
+    child.on("error", (error) => {
       clearTimeout(timer);
       reject(error);
     });
@@ -72,14 +75,20 @@ describe("RR-118: Package Script Execution Tests", () => {
     });
 
     it("should have correct vitest config references", () => {
-      const packageJson = JSON.parse(readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8"));
+      const packageJson = JSON.parse(
+        readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8")
+      );
       const scripts = packageJson.scripts;
 
       // Integration tests should reference integration config
-      expect(scripts["test:integration"]).toContain("vitest.config.integration.ts");
+      expect(scripts["test:integration"]).toContain(
+        "vitest.config.integration.ts"
+      );
 
       // Regular test should run both unit and integration tests
-      expect(scripts.test).toBe("vitest run && vitest run --config vitest.config.integration.ts");
+      expect(scripts.test).toBe(
+        "vitest run && vitest run --config vitest.config.integration.ts"
+      );
     });
   });
 
@@ -109,7 +118,7 @@ describe("RR-118: Package Script Execution Tests", () => {
     it("should route unit tests to default configuration", async () => {
       // This test itself is a unit test that should use mocked fetch
       expect(vi.isMockFunction(global.fetch)).toBe(true);
-      expect(typeof window).toBe('object'); // jsdom environment
+      expect(typeof window).toBe("object"); // jsdom environment
     });
 
     it("should identify integration test directory structure", () => {
@@ -117,9 +126,10 @@ describe("RR-118: Package Script Execution Tests", () => {
       expect(existsSync(integrationDir)).toBe(true);
 
       // Should have integration test files
-      const integrationFiles = require('fs').readdirSync(integrationDir)
-        .filter((file: string) => file.endsWith('.test.ts'));
-      
+      const integrationFiles = require("fs")
+        .readdirSync(integrationDir)
+        .filter((file: string) => file.endsWith(".test.ts"));
+
       expect(integrationFiles.length).toBeGreaterThan(0);
     });
 
@@ -129,16 +139,19 @@ describe("RR-118: Package Script Execution Tests", () => {
         resolve(PROJECT_ROOT, "src/__tests__/unit"),
         resolve(PROJECT_ROOT, "src/__tests__/test-configuration"),
         resolve(PROJECT_ROOT, "src/__tests__/scripts"),
-        resolve(PROJECT_ROOT, "src/lib")
+        resolve(PROJECT_ROOT, "src/lib"),
       ];
 
       let hasUnitTests = false;
       for (const location of locations) {
         if (existsSync(location)) {
           try {
-            const files = require('fs').readdirSync(location, { recursive: true });
-            const testFiles = files.filter((file: string) => 
-              typeof file === 'string' && file.endsWith('.test.ts')
+            const files = require("fs").readdirSync(location, {
+              recursive: true,
+            });
+            const testFiles = files.filter(
+              (file: string) =>
+                typeof file === "string" && file.endsWith(".test.ts")
             );
             if (testFiles.length > 0) {
               hasUnitTests = true;
@@ -158,12 +171,14 @@ describe("RR-118: Package Script Execution Tests", () => {
     it("should handle test script environment variables", () => {
       // Scripts should inherit proper environment
       expect(process.env.NODE_ENV).toBeDefined();
-      expect(process.env.VITEST).toBe('true');
+      expect(process.env.VITEST).toBe("true");
     });
 
     it("should handle script timeouts appropriately", () => {
       // Test scripts should not hang indefinitely
-      const packageJson = JSON.parse(readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8"));
+      const packageJson = JSON.parse(
+        readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8")
+      );
       const scripts = packageJson.scripts;
 
       // Integration test safety script should handle PM2 operations
@@ -176,7 +191,10 @@ describe("RR-118: Package Script Execution Tests", () => {
     it("should handle missing configuration files gracefully", () => {
       // If configs are missing, should provide clear error messages
       const mainConfig = resolve(PROJECT_ROOT, "vitest.config.ts");
-      const integrationConfig = resolve(PROJECT_ROOT, "vitest.config.integration.ts");
+      const integrationConfig = resolve(
+        PROJECT_ROOT,
+        "vitest.config.integration.ts"
+      );
 
       expect(existsSync(mainConfig)).toBe(true);
       expect(existsSync(integrationConfig)).toBe(true);
@@ -184,7 +202,9 @@ describe("RR-118: Package Script Execution Tests", () => {
 
     it("should handle script dependencies", () => {
       // Scripts should handle missing dependencies
-      const packageJson = JSON.parse(readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8"));
+      const packageJson = JSON.parse(
+        readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8")
+      );
       const devDependencies = packageJson.devDependencies || {};
       const dependencies = packageJson.dependencies || {};
 
@@ -195,7 +215,9 @@ describe("RR-118: Package Script Execution Tests", () => {
 
   describe("Integration with PM2 Services", () => {
     it("should handle PM2 service management in test:integration:safe", () => {
-      const packageJson = JSON.parse(readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8"));
+      const packageJson = JSON.parse(
+        readFileSync(resolve(PROJECT_ROOT, "package.json"), "utf-8")
+      );
       const safeScript = packageJson.scripts["test:integration:safe"];
 
       // Should stop services before tests
@@ -216,27 +238,40 @@ describe("RR-118: Package Script Execution Tests", () => {
 
       const ecosystem = readFileSync(ecosystemPath, "utf-8");
       expect(ecosystem).toContain("rss-reader-dev");
-      expect(ecosystem).toContain("PORT: 3000") || expect(ecosystem).toContain("SERVER_PORT");
+      expect(ecosystem).toContain("PORT: 3000") ||
+        expect(ecosystem).toContain("SERVER_PORT");
     });
   });
 
   describe("Configuration Consistency", () => {
     it("should have consistent alias resolution across configs", () => {
-      const mainConfig = readFileSync(resolve(PROJECT_ROOT, "vitest.config.ts"), "utf-8");
-      const integrationConfig = readFileSync(resolve(PROJECT_ROOT, "vitest.config.integration.ts"), "utf-8");
+      const mainConfig = readFileSync(
+        resolve(PROJECT_ROOT, "vitest.config.ts"),
+        "utf-8"
+      );
+      const integrationConfig = readFileSync(
+        resolve(PROJECT_ROOT, "vitest.config.integration.ts"),
+        "utf-8"
+      );
 
       // Both should have same aliases
       const aliases = ["@/", "@/lib", "@/components", "@/types"];
-      
-      aliases.forEach(alias => {
+
+      aliases.forEach((alias) => {
         expect(mainConfig).toContain(alias);
         expect(integrationConfig).toContain(alias);
       });
     });
 
     it("should have consistent plugin configuration", () => {
-      const mainConfig = readFileSync(resolve(PROJECT_ROOT, "vitest.config.ts"), "utf-8");
-      const integrationConfig = readFileSync(resolve(PROJECT_ROOT, "vitest.config.integration.ts"), "utf-8");
+      const mainConfig = readFileSync(
+        resolve(PROJECT_ROOT, "vitest.config.ts"),
+        "utf-8"
+      );
+      const integrationConfig = readFileSync(
+        resolve(PROJECT_ROOT, "vitest.config.integration.ts"),
+        "utf-8"
+      );
 
       // Both should use React plugin
       expect(mainConfig).toContain("@vitejs/plugin-react");
@@ -251,17 +286,16 @@ describe("RR-118: Package Script Execution Tests", () => {
   describe("Test File Discovery", () => {
     it("should discover test files in expected patterns", () => {
       // Default vitest should find unit tests
-      const unitTestPatterns = [
-        "**/*.test.ts",
-        "**/*.spec.ts"
-      ];
+      const unitTestPatterns = ["**/*.test.ts", "**/*.spec.ts"];
 
       // Integration config should include integration directory
       const integrationTestPattern = "src/__tests__/integration/**/*.test.ts";
 
       // Both patterns should be valid glob patterns
-      expect(unitTestPatterns.every(pattern => typeof pattern === 'string')).toBe(true);
-      expect(typeof integrationTestPattern).toBe('string');
+      expect(
+        unitTestPatterns.every((pattern) => typeof pattern === "string")
+      ).toBe(true);
+      expect(typeof integrationTestPattern).toBe("string");
     });
 
     it("should handle test file naming conventions", () => {
@@ -272,8 +306,10 @@ describe("RR-118: Package Script Execution Tests", () => {
       // Integration tests should be in integration directory
       const integrationDir = resolve(PROJECT_ROOT, "src/__tests__/integration");
       if (existsSync(integrationDir)) {
-        const files = require('fs').readdirSync(integrationDir);
-        const testFiles = files.filter((file: string) => file.endsWith('.test.ts'));
+        const files = require("fs").readdirSync(integrationDir);
+        const testFiles = files.filter((file: string) =>
+          file.endsWith(".test.ts")
+        );
         expect(testFiles.length).toBeGreaterThan(0);
       }
     });

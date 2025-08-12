@@ -1,11 +1,11 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 /**
  * Supabase Mock Helper
- * 
+ *
  * Provides consistent Supabase client mocking with proper method chaining support.
  * This solves the "mockSupabase.from(...).update(...).eq is not a function" errors.
- * 
+ *
  * Issue: RR-186
  */
 
@@ -35,7 +35,9 @@ export interface MockSupabaseQueryBuilder {
   throwOnError: ReturnType<typeof vi.fn>;
 }
 
-export function createMockSupabaseClient(defaultResponse = { data: [], error: null }) {
+export function createMockSupabaseClient(
+  defaultResponse = { data: [], error: null }
+) {
   const createQueryBuilder = (): MockSupabaseQueryBuilder => {
     const builder: any = {
       select: vi.fn(() => Promise.resolve(defaultResponse)),
@@ -62,7 +64,7 @@ export function createMockSupabaseClient(defaultResponse = { data: [], error: nu
       maybeSingle: vi.fn(() => Promise.resolve(defaultResponse)),
       throwOnError: vi.fn(() => builder),
     };
-    
+
     // Make select return a promise but also chainable
     builder.select = vi.fn((columns?: string) => {
       const selectBuilder = { ...builder };
@@ -75,21 +77,25 @@ export function createMockSupabaseClient(defaultResponse = { data: [], error: nu
       };
       return selectBuilder;
     });
-    
+
     return builder;
   };
 
   const mockClient = {
     from: vi.fn((table: string) => createQueryBuilder()),
     auth: {
-      getUser: vi.fn(() => Promise.resolve({ 
-        data: { user: { id: 'test-user-id' } }, 
-        error: null 
-      })),
-      getSession: vi.fn(() => Promise.resolve({ 
-        data: { session: null }, 
-        error: null 
-      })),
+      getUser: vi.fn(() =>
+        Promise.resolve({
+          data: { user: { id: "test-user-id" } },
+          error: null,
+        })
+      ),
+      getSession: vi.fn(() =>
+        Promise.resolve({
+          data: { session: null },
+          error: null,
+        })
+      ),
       signIn: vi.fn(() => Promise.resolve({ data: null, error: null })),
       signOut: vi.fn(() => Promise.resolve({ error: null })),
     },
@@ -97,7 +103,9 @@ export function createMockSupabaseClient(defaultResponse = { data: [], error: nu
       from: vi.fn((bucket: string) => ({
         upload: vi.fn(() => Promise.resolve({ data: null, error: null })),
         download: vi.fn(() => Promise.resolve({ data: null, error: null })),
-        getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'https://example.com/file' } })),
+        getPublicUrl: vi.fn(() => ({
+          data: { publicUrl: "https://example.com/file" },
+        })),
         remove: vi.fn(() => Promise.resolve({ data: null, error: null })),
         list: vi.fn(() => Promise.resolve({ data: [], error: null })),
       })),
@@ -125,7 +133,11 @@ export function createMockResponse<T>(data: T | null, error: any = null) {
 /**
  * Helper to mock specific table responses
  */
-export function mockTableResponse(mockClient: any, table: string, response: any) {
+export function mockTableResponse(
+  mockClient: any,
+  table: string,
+  response: any
+) {
   const queryBuilder = createMockSupabaseClient(response).from(table);
   mockClient.from.mockImplementation((t: string) => {
     if (t === table) {

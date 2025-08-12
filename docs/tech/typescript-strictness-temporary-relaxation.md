@@ -9,6 +9,7 @@ The pre-commit validation was blocked by 32 TypeScript errors related to strict 
 ## Changes Made
 
 ### 1. TypeScript Configuration (tsconfig.json)
+
 ```json
 // Changed from:
 "strict": true,
@@ -19,8 +20,9 @@ The pre-commit validation was blocked by 32 TypeScript errors related to strict 
 ```
 
 ### 2. Minor Type Fixes Applied
+
 - Fixed timestamp type from `number` to `string` in article-store
-- Added type conversions for `parseInt(articleId)` 
+- Added type conversions for `parseInt(articleId)`
 - Fixed Supabase raw query usage
 - Added type assertions for circular reference issues
 - Added missing `expiresAt` property
@@ -28,6 +30,7 @@ The pre-commit validation was blocked by 32 TypeScript errors related to strict 
 ## Current Status
 
 ✅ **Pre-commit validation now passes:**
+
 - TypeScript compilation: ✅ Success
 - ESLint: ✅ Success (5 warnings only)
 - Prettier: ⚠️ 407 formatting warnings (non-blocking)
@@ -37,6 +40,7 @@ The pre-commit validation was blocked by 32 TypeScript errors related to strict 
 ### To Re-enable Strict Mode:
 
 1. **Add Proper Null Guards** (Recommended)
+
    ```typescript
    // Instead of assuming state exists:
    if (!state) {

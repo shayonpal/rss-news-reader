@@ -5,6 +5,7 @@
 This document provides a comprehensive test plan for implementing the OAuth authentication status endpoint (`/api/auth/inoreader/status`) as part of RR-117. The endpoint provides authentication status information for monitoring and client use within the RSS News Reader PWA.
 
 **Test Coverage Overview:**
+
 - **Unit Tests**: 45+ test cases covering core logic and error handling
 - **Integration Tests**: 35+ test cases covering end-to-end HTTP functionality
 - **Edge Cases**: 25+ test cases covering boundary conditions and unusual scenarios
@@ -28,6 +29,7 @@ The auth status endpoint was previously removed as part of RR-71 (API route clea
 Based on analysis of existing health check patterns and integration test expectations:
 
 **Primary Requirements:**
+
 - Endpoint: `/api/auth/inoreader/status` (GET only)
 - Response format: JSON with authentication status
 - Token file validation: Check `~/.rss-reader/tokens.json`
@@ -36,6 +38,7 @@ Based on analysis of existing health check patterns and integration test expecta
 - Security: Never expose actual token values
 
 **Integration Requirements:**
+
 - Compatible with existing health check system
 - Follows same response patterns as other health endpoints
 - Integrates with PM2 service monitoring
@@ -48,25 +51,28 @@ Based on analysis of existing health check patterns and integration test expecta
 **Purpose**: Test core business logic in isolation with mocked dependencies.
 
 **Key Test Categories:**
+
 - Token file existence checks (5 test cases)
-- Token file content validation (4 test cases)  
+- Token file content validation (4 test cases)
 - Token age calculation (3 test cases)
 - Response format consistency (4 test cases)
 - Security considerations (2 test cases)
 - HTTP methods and performance (3 test cases)
 
 **Mocking Strategy:**
+
 - `fs/promises` module fully mocked
 - Environment variables controlled
 - Crypto operations mocked if needed
 - NextRequest/NextResponse simulated
 
 **Sample Critical Tests:**
+
 ```typescript
-it('should return authenticated: false when token file does not exist')
-it('should return authenticated: false for unencrypted tokens')
-it('should calculate token age correctly for recent tokens')
-it('should never expose actual token values in response')
+it("should return authenticated: false when token file does not exist");
+it("should return authenticated: false for unencrypted tokens");
+it("should calculate token age correctly for recent tokens");
+it("should never expose actual token values in response");
 ```
 
 ### 2. Integration Tests (`rr-117-auth-status-integration.test.ts`)
@@ -74,6 +80,7 @@ it('should never expose actual token values in response')
 **Purpose**: Test end-to-end HTTP functionality with real file system operations.
 
 **Key Test Categories:**
+
 - Endpoint availability and basic response (4 test cases)
 - Token file scenarios (4 test cases)
 - Token age and expiration logic (3 test cases)
@@ -83,17 +90,19 @@ it('should never expose actual token values in response')
 - CORS and headers (2 test cases)
 
 **Test Environment:**
+
 - Temporary directory setup for token files
 - Real HTTP requests via test server
 - File system operations with cleanup
 - Concurrent request testing
 
 **Sample Critical Tests:**
+
 ```typescript
-it('should respond to GET /reader/api/auth/inoreader/status')
-it('should handle valid encrypted tokens')
-it('should handle concurrent requests without errors')
-it('should not expose sensitive data in responses')
+it("should respond to GET /reader/api/auth/inoreader/status");
+it("should handle valid encrypted tokens");
+it("should handle concurrent requests without errors");
+it("should not expose sensitive data in responses");
 ```
 
 ### 3. Edge Cases Tests (`rr-117-auth-status-edge-cases.test.ts`)
@@ -101,6 +110,7 @@ it('should not expose sensitive data in responses')
 **Purpose**: Test boundary conditions, unusual scenarios, and error recovery.
 
 **Key Test Categories:**
+
 - Boundary conditions (4 test cases)
 - Unusual file system states (4 test cases)
 - Malformed JSON edge cases (5 test cases)
@@ -109,6 +119,7 @@ it('should not expose sensitive data in responses')
 - Memory and resource constraints (3 test cases)
 
 **Special Scenarios:**
+
 - Token file exactly 365 days old
 - Zero-byte files and directory instead of file
 - System clock changes and DST transitions
@@ -116,11 +127,12 @@ it('should not expose sensitive data in responses')
 - Out-of-memory and disk full conditions
 
 **Sample Edge Cases:**
+
 ```typescript
-it('should handle token file with exactly 365 days age')
-it('should handle token file that exists but is a directory')
-it('should handle system clock changes (future date)')
-it('should handle out-of-memory conditions gracefully')
+it("should handle token file with exactly 365 days age");
+it("should handle token file that exists but is a directory");
+it("should handle system clock changes (future date)");
+it("should handle out-of-memory conditions gracefully");
 ```
 
 ### 4. Acceptance Tests (`rr-117-acceptance.test.ts`)
@@ -130,44 +142,52 @@ it('should handle out-of-memory conditions gracefully')
 **Acceptance Criteria Coverage:**
 
 #### AC-1: Endpoint Availability and HTTP Compliance (4 test cases)
+
 - Accessible at correct URL
 - Only accepts GET requests
 - Returns valid JSON
 - Responds within time limits
 
 #### AC-2: Response Schema Compliance (3 test cases)
+
 - Required fields always present
 - ISO 8601 timestamp format
 - Meaningful status values
 
 #### AC-3: Authentication State Detection (4 test cases)
+
 - Correct response for no tokens
 - Correct response for valid tokens
 - Correct response for unencrypted tokens
 - Correct response for expired tokens
 
 #### AC-4: Token Age Calculation and Expiry Warning (3 test cases)
+
 - Accurate age calculation in days
 - Warning for tokens expiring soon
 - 365-day expiry assumption
 
 #### AC-5: Error Handling and Resilience (4 test cases)
+
 - Invalid JSON handling
 - File system error handling
 - No sensitive information exposure
 - Concurrent request handling
 
 #### AC-6: Integration with Existing Health Check System (3 test cases)
+
 - Compatibility with other health endpoints
 - Monitoring system compatibility
 - API response pattern consistency
 
 #### AC-7: Security and Privacy Requirements (3 test cases)
+
 - Never expose actual tokens
 - Sanitized error messages
 - Path traversal protection
 
 #### AC-8: Performance and Resource Usage (3 test cases)
+
 - Performance budget compliance
 - Memory usage constraints
 - Efficient file processing
@@ -178,16 +198,17 @@ Based on analysis of existing health endpoints and integration test expectations
 
 ```typescript
 interface AuthStatusResponse {
-  authenticated: boolean;      // Primary authentication state
-  status: string;             // Detailed status code
-  message: string;            // Human-readable status message
-  timestamp: string;          // ISO 8601 formatted timestamp
-  tokenAge: number | null;    // Age in days, null if no tokens
+  authenticated: boolean; // Primary authentication state
+  status: string; // Detailed status code
+  message: string; // Human-readable status message
+  timestamp: string; // ISO 8601 formatted timestamp
+  tokenAge: number | null; // Age in days, null if no tokens
   daysRemaining: number | null; // Days until expiry, null if no tokens
 }
 ```
 
 **Status Values:**
+
 - `valid`: Tokens are valid and fresh (> 30 days remaining)
 - `expiring_soon`: Tokens valid but expiring within 30 days
 - `expired`: Tokens are expired (> 365 days old)
@@ -201,19 +222,22 @@ interface AuthStatusResponse {
 ## Implementation Strategy
 
 ### File Structure
+
 ```
 src/app/api/auth/inoreader/status/
 └── route.ts                 # Main endpoint implementation
 ```
 
 ### Dependencies
+
 ```typescript
-import fs from 'fs/promises';
-import path from 'path';
-import { NextRequest, NextResponse } from 'next/server';
+import fs from "fs/promises";
+import path from "path";
+import { NextRequest, NextResponse } from "next/server";
 ```
 
 ### Key Logic Flow
+
 1. Check environment variables (HOME, TOKEN_ENCRYPTION_KEY)
 2. Construct token file path (`~/.rss-reader/tokens.json`)
 3. Check file existence and readability
@@ -224,6 +248,7 @@ import { NextRequest, NextResponse } from 'next/server';
 8. Return structured response
 
 ### Error Handling Strategy
+
 - Always return HTTP 200 (errors are in response body)
 - Sanitize all error messages (no file paths or sensitive data)
 - Graceful degradation for file system errors
@@ -233,6 +258,7 @@ import { NextRequest, NextResponse } from 'next/server';
 ## Test Execution Plan
 
 ### Phase 1: Unit Test Development and Execution
+
 ```bash
 # Run unit tests only
 npx vitest run src/__tests__/unit/rr-117-auth-status-unit.test.ts
@@ -241,11 +267,13 @@ npx vitest run src/__tests__/unit/rr-117-auth-status-unit.test.ts
 ```
 
 ### Phase 2: Implementation Development
+
 - Implement `/api/auth/inoreader/status/route.ts` based on unit test specifications
 - Follow existing health check patterns from `app-health-check.ts`
 - Ensure compliance with Next.js App Router patterns
 
 ### Phase 3: Integration Test Execution
+
 ```bash
 # Run integration tests
 npx vitest run --config vitest.integration.config.ts src/__tests__/integration/rr-117-auth-status-integration.test.ts
@@ -254,6 +282,7 @@ npx vitest run --config vitest.integration.config.ts src/__tests__/integration/r
 ```
 
 ### Phase 4: Edge Case Validation
+
 ```bash
 # Run edge case tests
 npx vitest run src/__tests__/edge-cases/rr-117-auth-status-edge-cases.test.ts
@@ -262,6 +291,7 @@ npx vitest run src/__tests__/edge-cases/rr-117-auth-status-edge-cases.test.ts
 ```
 
 ### Phase 5: Acceptance Criteria Verification
+
 ```bash
 # Run acceptance tests
 npx vitest run src/__tests__/acceptance/rr-117-acceptance.test.ts
@@ -270,6 +300,7 @@ npx vitest run src/__tests__/acceptance/rr-117-acceptance.test.ts
 ```
 
 ### Phase 6: Full Test Suite Execution
+
 ```bash
 # Run all RR-117 related tests
 npx vitest run --no-coverage src/__tests__/**/*rr-117*.test.ts
@@ -282,6 +313,7 @@ npx vitest run src/__tests__/integration/health-endpoints.test.ts
 ```
 
 ### Phase 7: Performance and Load Testing
+
 ```bash
 # Test concurrent requests (manual verification)
 for i in {1..10}; do
@@ -296,8 +328,9 @@ wait
 ## Expected Test Results
 
 ### Success Criteria
+
 - **All unit tests pass**: 45+ test cases
-- **All integration tests pass**: 35+ test cases  
+- **All integration tests pass**: 35+ test cases
 - **All edge case tests pass**: 25+ test cases
 - **All acceptance tests pass**: 35+ test cases
 - **No regression**: Existing health endpoint tests still pass
@@ -306,11 +339,13 @@ wait
 - **Security validated**: No sensitive data exposure
 
 ### Coverage Targets
+
 - **Line Coverage**: > 95%
 - **Branch Coverage**: > 90%
 - **Function Coverage**: 100%
 
 ### Integration Validation
+
 - Endpoint accessible at `/api/auth/inoreader/status`
 - Response format matches existing health endpoints
 - Works with PM2 process monitoring
@@ -375,6 +410,7 @@ The endpoint will integrate with:
 ### Metrics and Logging
 
 The endpoint should log:
+
 - Request count and timing
 - Error conditions and recovery
 - Token status changes (without exposing values)
@@ -402,6 +438,7 @@ The endpoint should log:
 ### Documentation Updates
 
 When implementation is complete:
+
 - Update API documentation
 - Update monitoring runbooks
 - Update troubleshooting guides
@@ -419,6 +456,7 @@ This comprehensive test plan provides 140+ test cases covering all aspects of th
 The implementation should follow the patterns established by existing health check endpoints while providing the specific authentication status information needed for monitoring and client operations.
 
 **Next Steps:**
+
 1. Review and approve this test plan
 2. Execute Phase 1 (unit tests) to validate approach
 3. Implement the endpoint following test specifications

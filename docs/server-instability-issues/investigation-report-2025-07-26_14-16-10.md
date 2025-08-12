@@ -79,13 +79,11 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ### Primary Factors
 
 1. **Incomplete Build Understanding**
-
    - Changes made to configuration without full rebuilds
    - Misunderstanding of Next.js build vs runtime requirements
    - Partial fixes addressing symptoms not causes
 
 2. **Configuration Management Issues**
-
    - Recent changes to `ecosystem.config.js`
    - Missing `_error.tsx` causing build failures
    - Incorrect assumptions about PM2 environment handling
@@ -151,7 +149,6 @@ The RSS News Reader PWA has experienced critical server instability over the pas
    ```
 
 2. **Update PM2 Configuration**
-
    - Remove cluster mode permanently
    - Add proper error handling
    - Set up restart limits to prevent loops
@@ -180,21 +177,18 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ### Long-term Improvements (Within 1 Week)
 
 1. **Automated Build Pipeline**
-
    - Pre-build validation checks
    - Environment variable verification
    - Post-build testing
    - Automated rollback on failure
 
 2. **Enhanced Monitoring**
-
    - Monitor vendor chunk availability
    - Track environment variable presence
    - Alert on build failures
    - PM2 restart count monitoring
 
 3. **Documentation Updates**
-
    - Document build requirements clearly
    - Create deployment checklist
    - Add troubleshooting guide
@@ -209,13 +203,11 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ## Lessons Learned
 
 1. **Next.js Build Requirements**
-
    - `NEXT_PUBLIC_*` variables MUST be available at build time
    - PM2 runtime injection is insufficient for client-side code
    - Always verify builds complete successfully
 
 2. **Configuration Changes**
-
    - Test configuration changes in isolation
    - Always perform full rebuild after config changes
    - Verify all dependent services after changes
@@ -228,14 +220,12 @@ The RSS News Reader PWA has experienced critical server instability over the pas
 ## Recommended Process Changes
 
 1. **Before Any Deployment**
-
    - Run build validation script
    - Test all health endpoints
    - Verify environment variables
    - Check PM2 logs for errors
 
 2. **During Configuration Changes**
-
    - Make one change at a time
    - Test thoroughly before proceeding
    - Document what was changed and why

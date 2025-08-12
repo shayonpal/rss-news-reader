@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
     inputs:
       skip_tests:
-        description: 'Skip tests (emergency deployments only)'
+        description: "Skip tests (emergency deployments only)"
         required: false
         default: false
         type: boolean
 
 env:
-  NODE_VERSION: '20'
-  PNPM_VERSION: '8'
+  NODE_VERSION: "20"
+  PNPM_VERSION: "8"
   CI: true
   FORCE_COLOR: 1
 
@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install dependencies (minimal)
         run: |
@@ -64,7 +64,7 @@ jobs:
               src/__tests__/unit/test-setup.smoke.test.ts \
               --reporter=verbose || echo "Smoke test not found, skipping..."
           fi
-          
+
           # Use the isolation script for critical tests to prevent cross-test interference
           echo "Running critical tests with proper isolation..."
           chmod +x scripts/run-critical-tests.sh
@@ -106,7 +106,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline
@@ -165,7 +165,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline
@@ -220,7 +220,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install dependencies
         run: npm ci --prefer-offline
@@ -233,10 +233,10 @@ jobs:
           echo "Running performance benchmarks..."
           # Measure build size
           du -sh .next/ | tee build-size.txt
-          
+
           # Run performance tests
           npm run test:performance || true
-          
+
           # Check for performance regressions
           if [ -f performance-baseline.json ]; then
             echo "Comparing with baseline..."
@@ -267,7 +267,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 🔍 Run npm audit
         run: |
@@ -301,28 +301,28 @@ jobs:
         id: gates
         run: |
           echo "Evaluating quality gates..."
-          
+
           # Check if all required jobs passed
           DEPLOY_ALLOWED="true"
-          
+
           # Check test results
           if [[ "${{ needs.full-test-suite.result }}" != "success" ]]; then
             echo "❌ Full test suite failed"
             DEPLOY_ALLOWED="false"
           fi
-          
+
           if [[ "${{ needs.e2e-tests.result }}" != "success" ]] && [[ "${{ needs.e2e-tests.result }}" != "skipped" ]]; then
             echo "❌ E2E tests failed"
             DEPLOY_ALLOWED="false"
           fi
-          
+
           # Security scan is non-blocking but logged
           if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
             echo "⚠️ Security scan had issues (non-blocking)"
           fi
-          
+
           echo "deploy_allowed=$DEPLOY_ALLOWED" >> $GITHUB_OUTPUT
-          
+
           # Summary
           echo "### 🚦 Quality Gates" >> $GITHUB_STEP_SUMMARY
           echo "- Smoke Tests: ✅" >> $GITHUB_STEP_SUMMARY
@@ -351,7 +351,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: 📦 Install production dependencies
         run: npm ci --production --prefer-offline

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimiter } from "@/lib/api/rate-limiter";
 import { logInoreaderApiCall } from "@/lib/api/log-api-call";
-import { processInoreaderResponse, applyThrottleIfNeeded } from "@/lib/api/inoreader-headers";
+import {
+  processInoreaderResponse,
+  applyThrottleIfNeeded,
+} from "@/lib/api/inoreader-headers";
 
 export async function GET(request: NextRequest) {
   // Get trigger from query params

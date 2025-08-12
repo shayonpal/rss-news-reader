@@ -199,12 +199,16 @@ export class StorageManager {
             .limit(toDelete)
             .primaryKeys();
 
-          await db.transaction("rw", [db.articles, db.summaries] as any, async () => {
-            await Promise.all([
-              db.articles.bulkDelete(deletedIds),
-              db.summaries.where("articleId").anyOf(deletedIds).delete(),
-            ]);
-          });
+          await db.transaction(
+            "rw",
+            [db.articles, db.summaries] as any,
+            async () => {
+              await Promise.all([
+                db.articles.bulkDelete(deletedIds),
+                db.summaries.where("articleId").anyOf(deletedIds).delete(),
+              ]);
+            }
+          );
 
           console.log(`Emergency cleanup: deleted ${toDelete} articles`);
         }

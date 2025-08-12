@@ -1238,31 +1238,31 @@ const cicdTestingStrategy = {
     smokeTests: {
       duration: "2-3 minutes",
       validation: ["TypeScript", "ESLint", "critical tests", "build"],
-      purpose: "Fast feedback for developers"
+      purpose: "Fast feedback for developers",
     },
-    
+
     fullTestSuite: {
-      duration: "8-10 minutes", 
+      duration: "8-10 minutes",
       matrix: ["Node 18", "Node 20"],
       sharding: "4-way parallel execution",
-      coverage: ["unit", "integration", "performance"]
+      coverage: ["unit", "integration", "performance"],
     },
-    
+
     e2eTests: {
       duration: "5-15 minutes",
       browsers: ["Chromium", "Firefox", "WebKit", "Mobile Safari"],
       devices: ["iPhone 14", "iPad", "Android Pixel 5"],
-      validation: ["user journeys", "touch compliance", "PWA functionality"]
-    }
+      validation: ["user journeys", "touch compliance", "PWA functionality"],
+    },
   },
-  
+
   // Quality gates
   qualityGates: {
     unitTests: "100% pass rate required",
     e2eTests: "95% pass rate (allows network flakiness)",
     security: "No high/critical vulnerabilities",
-    performance: "Within baseline thresholds"
-  }
+    performance: "Within baseline thresholds",
+  },
 };
 ```
 
@@ -2425,6 +2425,7 @@ WHERE is_partial_content = true;
 ```
 
 **Schema Benefits**:
+
 - **Single Source of Truth**: `is_partial_content` field eliminates confusion
 - **Query Efficiency**: Optimized indexes for partial feed identification
 - **Data Integrity**: Migration completed with zero data loss
@@ -2448,7 +2449,7 @@ CREATE TABLE IF NOT EXISTS fetch_logs (
 
 -- Optimized indexes for RR-176 performance patterns
 CREATE INDEX idx_fetch_logs_article ON fetch_logs(article_id);
-CREATE INDEX idx_fetch_logs_partial_feeds ON fetch_logs(feed_id) 
+CREATE INDEX idx_fetch_logs_partial_feeds ON fetch_logs(feed_id)
 WHERE fetch_type = 'auto'; -- Focus on auto-fetch patterns
 ```
 
@@ -2465,26 +2466,25 @@ const useContentState = (article: Article, feed?: Feed) => {
   const getDisplayContent = () => {
     // Force original content bypasses all enhancements
     if (forceOriginalContent) return originalRSSContent;
-    
+
     // Priority: fetched > parsed > stored > original
-    return fetchedContent || 
-           parsedContent || 
-           storedFullContent || 
-           originalRSSContent;
+    return (
+      fetchedContent || parsedContent || storedFullContent || originalRSSContent
+    );
   };
 
   // Enhanced button state management
   const getButtonState = () => {
-    if (isParsing || isFetching) return 'loading';
-    if (hasEnhancedContent()) return 'revert'; // Undo2 icon
-    return 'fetch'; // Download icon
+    if (isParsing || isFetching) return "loading";
+    if (hasEnhancedContent()) return "revert"; // Undo2 icon
+    return "fetch"; // Download icon
   };
 
   return {
     displayContent: getDisplayContent(),
     buttonState: getButtonState(),
     canRevert: hasEnhancedContent(),
-    shouldAutoFetch: needsParsing(article, feed)
+    shouldAutoFetch: needsParsing(article, feed),
   };
 };
 ```
@@ -3159,17 +3159,14 @@ ORDER BY failure_count DESC;
 #### Potential Issues & Solutions
 
 1. **Rate Limiting by Websites**
-
    - Solution: Implement per-domain rate limiting
    - Add User-Agent rotation if needed
 
 2. **Resource Exhaustion**
-
    - Solution: Strict timeouts and memory limits
    - Queue management for concurrent fetches
 
 3. **Content Quality**
-
    - Solution: Fallback to RSS content
    - User feedback mechanism for improvements
 

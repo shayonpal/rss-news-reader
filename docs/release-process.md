@@ -51,7 +51,6 @@ git checkout dev
 ```
 
 Notes:
+
 - No deployment step is needed (no production server). The dev machine continues running the PM2-managed dev services on `dev`.
 - If you need to hotfix `main`, branch from `main`, apply the fix, tag a patch release, and merge back into `dev`.
-
-

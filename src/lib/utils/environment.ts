@@ -6,7 +6,7 @@ export interface EnvironmentInfo {
   environment: string;
   isTest: boolean;
   hasDatabase: boolean;
-  runtime: 'node' | 'vitest' | 'jest';
+  runtime: "node" | "vitest" | "jest";
   timestamp: string;
   serviceConfig?: ServiceConfiguration;
 }
@@ -24,7 +24,7 @@ export interface ServiceConfiguration {
  */
 export function isTestEnvironment(): boolean {
   // Check NODE_ENV first - most explicit signal
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env.NODE_ENV === "test") {
     return true;
   }
 
@@ -34,7 +34,7 @@ export function isTestEnvironment(): boolean {
   }
 
   // Check for test runners
-  if (process.env.VITEST === 'true' || process.env.JEST_WORKER_ID) {
+  if (process.env.VITEST === "true" || process.env.JEST_WORKER_ID) {
     return true;
   }
 
@@ -47,19 +47,21 @@ export function isTestEnvironment(): boolean {
  */
 export function getEnvironmentInfo(): EnvironmentInfo {
   const isTest = isTestEnvironment();
-  const hasDatabase = !!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
-  
-  let runtime: 'node' | 'vitest' | 'jest' = 'node';
-  if (process.env.VITEST === 'true') {
-    runtime = 'vitest';
+  const hasDatabase = !!(
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  );
+
+  let runtime: "node" | "vitest" | "jest" = "node";
+  if (process.env.VITEST === "true") {
+    runtime = "vitest";
   } else if (process.env.JEST_WORKER_ID) {
-    runtime = 'jest';
+    runtime = "jest";
   }
 
   const serviceConfig = getServiceConfiguration(isTest);
-  
+
   return {
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || "development",
     isTest,
     hasDatabase,
     runtime,
@@ -77,18 +79,18 @@ function getServiceConfiguration(isTest: boolean): ServiceConfiguration {
   if (isTest) {
     // Test environment configuration - faster timeouts, no startup delays
     return {
-      healthCheckTimeout: 5000,    // 5 seconds
-      minStartupTime: 0,          // No startup delay in tests
-      cacheResultsMs: 1000,       // 1 second cache
-      gracefulDegradation: true,  // Always degrade gracefully in tests
+      healthCheckTimeout: 5000, // 5 seconds
+      minStartupTime: 0, // No startup delay in tests
+      cacheResultsMs: 1000, // 1 second cache
+      gracefulDegradation: true, // Always degrade gracefully in tests
     };
   }
-  
+
   // Production/development configuration
   return {
-    healthCheckTimeout: 30000,    // 30 seconds
-    minStartupTime: 2000,        // 2 seconds startup time
-    cacheResultsMs: 5000,        // 5 seconds cache
-    gracefulDegradation: false,  // Fail fast in production
+    healthCheckTimeout: 30000, // 30 seconds
+    minStartupTime: 2000, // 2 seconds startup time
+    cacheResultsMs: 5000, // 5 seconds cache
+    gracefulDegradation: false, // Fail fast in production
   };
 }

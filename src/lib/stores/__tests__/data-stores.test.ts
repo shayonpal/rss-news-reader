@@ -10,7 +10,7 @@ let mockDb: any;
 
 vi.mock("@/lib/db/database", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/db/database")>();
-  
+
   // Return a mock object where the 'db' export is a getter.
   // This ensures that the test-specific database instance is used whenever 'db' is accessed.
   return {
@@ -27,7 +27,7 @@ vi.mock("@/lib/db/database", async (importOriginal) => {
 // Create a chainable query mock for Supabase
 const createChainableQuery = (data: any[] = []) => {
   const query: any = {};
-  
+
   // Add chainable methods that return the query object
   query.select = vi.fn().mockReturnValue(query);
   query.eq = vi.fn().mockReturnValue(query);
@@ -39,14 +39,17 @@ const createChainableQuery = (data: any[] = []) => {
   query.range = vi.fn().mockReturnValue(query);
   query.single = vi.fn().mockReturnValue(query);
   query.maybeSingle = vi.fn().mockReturnValue(query);
-  
+
   // Make the query thenable so it can be awaited
   query.then = vi.fn().mockImplementation((resolve) => {
-    const result = data.length === 1 ? { data: data[0], error: null } : { data, error: null };
+    const result =
+      data.length === 1
+        ? { data: data[0], error: null }
+        : { data, error: null };
     resolve(result);
     return Promise.resolve(result);
   });
-  
+
   return query;
 };
 
@@ -61,9 +64,11 @@ vi.mock("@/lib/db/supabase", () => ({
       upsert: vi.fn(() => createChainableQuery([])),
     })),
     auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null })
+      getSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: null }, error: null }),
     },
-    rpc: vi.fn().mockResolvedValue({ data: null, error: null })
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   },
   supabaseAdmin: {
     from: vi.fn((table: string) => ({
@@ -71,8 +76,8 @@ vi.mock("@/lib/db/supabase", () => ({
       insert: vi.fn(() => createChainableQuery([])),
       update: vi.fn(() => createChainableQuery([])),
       delete: vi.fn(() => createChainableQuery([])),
-    }))
-  }
+    })),
+  },
 }));
 
 // Import after mocks are set up
@@ -146,12 +151,12 @@ describe("Data Stores Integration Tests", () => {
     // Create a new database instance with unique name for each test
     const dbName = generateUniqueDbName("data_stores");
     testDb = new AppDatabase(dbName);
-    
+
     // Open and initialize the database BEFORE setting it as the mock
     // This ensures all tables are properly created
     await testDb.open();
     await testDb.initialize();
-    
+
     // Now set the mock references AFTER the database is fully initialized
     mockDb = testDb; // Set the mock to use our test database
     (globalThis as any).mockDbInstance = testDb; // Also set global reference
@@ -163,18 +168,18 @@ describe("Data Stores Integration Tests", () => {
       try {
         // Ensure all transactions are complete
         if (testDb.isOpen()) {
-          await testDb.transaction('r', testDb.tables, async () => {
+          await testDb.transaction("r", testDb.tables, async () => {
             // This empty transaction ensures all pending operations complete
           });
         }
-        
+
         // Safe cleanup
         await testDb.safeDelete();
       } catch (error) {
-        console.warn('Error during test cleanup:', error);
+        console.warn("Error during test cleanup:", error);
       }
     }
-    
+
     // Clear mock references
     mockDb = null as any;
     (globalThis as any).mockDbInstance = null;

@@ -124,7 +124,7 @@ For simpler state requirements, could use React's built-in state management.
 - tags: User tags with names, colors, descriptions
 - article_tags: Many-to-many article-tag relationships
 
--- Sync and monitoring tables  
+-- Sync and monitoring tables
 - sync_metadata: Sync timestamps and status
 - sync_errors: Error logging
 - api_usage: API call tracking
@@ -521,7 +521,7 @@ class SyncService {
 
     // 4. Write to Supabase
     await this.supabase.upsertAll(feeds, tags, articles, counts);
-    
+
     // 5. Execute cleanup operations (RR-129)
     const cleanupService = new ArticleCleanupService(supabase);
     await cleanupService.executeFullCleanup(feedIds, userId);
@@ -536,13 +536,13 @@ class HtmlDecoderService {
       ...article,
       title: decodeHtmlEntities(article.title),
       content: decodeHtmlEntities(article.content),
-      description: decodeHtmlEntities(article.description)
+      description: decodeHtmlEntities(article.description),
     };
   }
-  
+
   // URL-safe decoding - never decode URLs
   static isSafeUrl(text: string): boolean {
-    return text?.startsWith('http') || text?.includes('://');
+    return text?.startsWith("http") || text?.includes("://");
   }
 }
 
@@ -551,22 +551,27 @@ class ArticleCleanupService {
   async executeFullCleanup(feedIds: string[], userId: string) {
     // Remove feeds no longer in Inoreader
     await this.cleanupDeletedFeeds(feedIds, userId);
-    
+
     // Remove read articles with chunked deletion (RR-150)
     await this.cleanupReadArticles(userId);
   }
-  
+
   // Chunked deletion to handle large datasets (RR-150)
   async processArticleDeletion(articlesToDelete: Article[]) {
     const chunkSize = config.maxIdsPerDeleteOperation || 200;
-    
+
     for (let i = 0; i < articlesToDelete.length; i += chunkSize) {
       const chunk = articlesToDelete.slice(i, i + chunkSize);
-      await this.supabase.from('articles').delete()
-        .in('id', chunk.map(a => a.id));
-      
+      await this.supabase
+        .from("articles")
+        .delete()
+        .in(
+          "id",
+          chunk.map((a) => a.id)
+        );
+
       // Rate limiting between chunks
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 }

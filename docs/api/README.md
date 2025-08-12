@@ -31,17 +31,18 @@ This directory contains documentation for all API endpoints and server-side func
 - OAuth tokens are stored server-side only in `~/.rss-reader/tokens.json`
 - All endpoints require Tailscale network access (no public authentication)
 - API rate limiting is handled server-side to respect Inoreader's 100 calls/day limit
+- **Base Path (RR-102)**: All endpoints use `/reader` prefix. Development environment provides automatic redirects from `/api/*` → `/reader/api/*` for improved developer experience
 
 ## Quick Reference
 
-| Category | Primary Endpoints | Purpose |
-| -------- | ----------------- | ------- |
-| Inoreader | `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/stream-contents`, `/api/inoreader/unread-counts`, `/api/inoreader/edit-tag` | Proxies to Inoreader API |
-| Articles | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize`, `/api/articles/[id]/tags` | Content extraction, AI summaries, tag management |
-| Tags | `/api/tags`, `/api/tags/[id]` | Tag listing and management |
-| Sync | `/api/sync`, `/api/sync/status/{syncId}`, `/api/sync/last-sync`, `/api/sync/refresh-view` | Start sync with sidebar payload, poll status, last sync time (with cache prevention headers), refresh views |
-| Health | `/api/health` (alias `/api/health/app`), `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude` | Health checks |
-| Analytics & Logs | `/api/analytics/fetch-stats`, `/api/logs/inoreader` | Usage analytics, API call logging |
+| Category         | Primary Endpoints                                                                                                                                       | Purpose                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Inoreader        | `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/stream-contents`, `/api/inoreader/unread-counts`, `/api/inoreader/edit-tag` | Proxies to Inoreader API                                                                                    |
+| Articles         | `/api/articles/[id]/fetch-content`, `/api/articles/[id]/summarize`, `/api/articles/[id]/tags`                                                           | Content extraction, AI summaries, tag management                                                            |
+| Tags             | `/api/tags`, `/api/tags/[id]`                                                                                                                           | Tag listing and management                                                                                  |
+| Sync             | `/api/sync`, `/api/sync/status/{syncId}`, `/api/sync/last-sync`, `/api/sync/refresh-view`                                                               | Start sync with sidebar payload, poll status, last sync time (with cache prevention headers), refresh views |
+| Health           | `/api/health` (alias `/api/health/app`), `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude`                              | Health checks                                                                                               |
+| Analytics & Logs | `/api/analytics/fetch-stats`, `/api/logs/inoreader`                                                                                                     | Usage analytics, API call logging                                                                           |
 
 **Note**: Feed and article data are accessed directly via Supabase from the client. Base `/api/feeds` and `/api/articles` endpoints don't exist.
 
@@ -54,7 +55,7 @@ The sync endpoint returns comprehensive metrics and sidebar payload data for imm
 ```json
 {
   "syncId": "uuid-string",
-  "status": "completed|partial|failed", 
+  "status": "completed|partial|failed",
   "metrics": {
     "newArticles": 15,
     "deletedArticles": 3,
@@ -64,12 +65,8 @@ The sync endpoint returns comprehensive metrics and sidebar payload data for imm
     "duration": 2340
   },
   "sidebar": {
-    "feedCounts": [
-      {"feedId": "uuid", "unreadCount": 12, "totalCount": 45}
-    ],
-    "tags": [
-      {"id": "uuid", "name": "Technology", "count": 8}  
-    ]
+    "feedCounts": [{ "feedId": "uuid", "unreadCount": 12, "totalCount": 45 }],
+    "tags": [{ "id": "uuid", "name": "Technology", "count": 8 }]
   }
 }
 ```
@@ -78,7 +75,7 @@ The sync endpoint returns comprehensive metrics and sidebar payload data for imm
 
 ```json
 {
-  "syncId": "uuid-string", 
+  "syncId": "uuid-string",
   "status": "pending|running|completed|failed",
   "startedAt": "2025-08-09T13:18:00Z",
   "completedAt": "2025-08-09T13:18:02Z",

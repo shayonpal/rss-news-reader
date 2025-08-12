@@ -1,13 +1,13 @@
 // Custom Vitest matcher type definitions
-import 'vitest'
+import "vitest";
 
-declare module 'vitest' {
+declare module "vitest" {
   interface Assertion<T = any> {
     /**
      * Custom matcher to check if a value is one of several possible values
      * @example expect(statusCode).toBeOneOf([200, 201, 202])
      */
-    toBeOneOf(expected: any[]): T
+    toBeOneOf(expected: any[]): T;
   }
 
   interface AsymmetricMatchersContaining {
@@ -15,7 +15,7 @@ declare module 'vitest' {
      * Custom matcher to check if a value is one of several possible values
      * @example expect(statusCode).toBeOneOf([200, 201, 202])
      */
-    toBeOneOf(expected: any[]): any
+    toBeOneOf(expected: any[]): any;
   }
 }
 
@@ -26,7 +26,7 @@ declare global {
       /**
        * Custom matcher for Jest compatibility
        */
-      toBeOneOf(expected: any[]): T
+      toBeOneOf(expected: any[]): T;
     }
   }
 }

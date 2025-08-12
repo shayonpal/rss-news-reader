@@ -29,13 +29,18 @@ export default function ArticlePage() {
 
         if (fetchedArticle) {
           setArticle(fetchedArticle);
-          
+
           // Track navigation to this article
-          navigationHistory.addEntry(`/article/${articleId}`, parseInt(articleId));
-          
+          navigationHistory.addEntry(
+            `/article/${articleId}`,
+            parseInt(articleId)
+          );
+
           // Fetch tags for the article
           try {
-            const tagsResponse = await fetch(`/reader/api/articles/${articleId}/tags`);
+            const tagsResponse = await fetch(
+              `/reader/api/articles/${articleId}/tags`
+            );
             if (tagsResponse.ok) {
               const { tags } = await tagsResponse.json();
               setArticleTags(tags || []);
@@ -43,7 +48,7 @@ export default function ArticlePage() {
           } catch (error) {
             console.error("Error fetching article tags:", error);
           }
-          
+
           // Mark as read when opened
           if (!fetchedArticle.isRead) {
             await markAsRead(articleId);
@@ -100,7 +105,7 @@ export default function ArticlePage() {
         await markAsRead(targetArticle.id);
         // Note: markAsRead already handles all session state updates via markArticlesAsReadWithSession
       }
-      
+
       router.push(`/article/${encodeURIComponent(targetArticle.id)}`);
     }
   };

@@ -1,13 +1,28 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
-import { setupTestServer } from './test-server';
-import type { Server } from 'http';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
+import { useRouter } from "next/navigation";
+import { setupTestServer } from "./test-server";
+import type { Server } from "http";
 
 // Mock Next.js router
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
-  useParams: vi.fn(() => ({ id: 'test-article-1' })),
+  useParams: vi.fn(() => ({ id: "test-article-1" })),
 }));
 
 // Mock Zustand stores
@@ -15,7 +30,7 @@ const mockArticleStore = {
   articles: new Map(),
   loadingArticles: false,
   articlesError: null,
-  readStatusFilter: 'unread' as const,
+  readStatusFilter: "unread" as const,
   loadArticles: vi.fn(),
   markAsRead: vi.fn(),
   markMultipleAsRead: vi.fn(),
@@ -29,11 +44,11 @@ const mockFeedStore = {
   loadFeeds: vi.fn(),
 };
 
-vi.mock('@/lib/stores/article-store', () => ({
+vi.mock("@/lib/stores/article-store", () => ({
   useArticleStore: () => mockArticleStore,
 }));
 
-vi.mock('@/lib/stores/feed-store', () => ({
+vi.mock("@/lib/stores/feed-store", () => ({
   useFeedStore: () => mockFeedStore,
 }));
 
@@ -44,7 +59,7 @@ mockIntersectionObserver.mockReturnValue({
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 });
-vi.stubGlobal('IntersectionObserver', mockIntersectionObserver);
+vi.stubGlobal("IntersectionObserver", mockIntersectionObserver);
 
 // Mock sessionStorage
 const mockSessionStorage = {
@@ -53,17 +68,45 @@ const mockSessionStorage = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-vi.stubGlobal('sessionStorage', mockSessionStorage);
+vi.stubGlobal("sessionStorage", mockSessionStorage);
 
 // Test components - simplified versions for integration testing
-const TestArticleList = ({ onArticleClick }: { onArticleClick: (id: string) => void }) => {
-  const scrollContainerRef = { current: document.createElement('div') };
-  
+const TestArticleList = ({
+  onArticleClick,
+}: {
+  onArticleClick: (id: string) => void;
+}) => {
+  const scrollContainerRef = { current: document.createElement("div") };
+
   // Mock articles for testing
   const testArticles = [
-    { id: '1', title: 'Article 1', isRead: false, publishedAt: new Date(), feedTitle: 'Test Feed', content: 'Content 1', tags: [] },
-    { id: '2', title: 'Article 2', isRead: true, publishedAt: new Date(), feedTitle: 'Test Feed', content: 'Content 2', tags: [] },
-    { id: '3', title: 'Article 3', isRead: false, publishedAt: new Date(), feedTitle: 'Test Feed', content: 'Content 3', tags: [] },
+    {
+      id: "1",
+      title: "Article 1",
+      isRead: false,
+      publishedAt: new Date(),
+      feedTitle: "Test Feed",
+      content: "Content 1",
+      tags: [],
+    },
+    {
+      id: "2",
+      title: "Article 2",
+      isRead: true,
+      publishedAt: new Date(),
+      feedTitle: "Test Feed",
+      content: "Content 2",
+      tags: [],
+    },
+    {
+      id: "3",
+      title: "Article 3",
+      isRead: false,
+      publishedAt: new Date(),
+      feedTitle: "Test Feed",
+      content: "Content 3",
+      tags: [],
+    },
   ];
 
   return (
@@ -75,34 +118,34 @@ const TestArticleList = ({ onArticleClick }: { onArticleClick: (id: string) => v
           data-article-id={article.id}
           data-is-read={article.isRead}
           onClick={() => onArticleClick(article.id)}
-          className={article.isRead ? 'opacity-70' : ''}
+          className={article.isRead ? "opacity-70" : ""}
         >
           <h2>{article.title}</h2>
-          <div>Read: {article.isRead ? 'Yes' : 'No'}</div>
+          <div>Read: {article.isRead ? "Yes" : "No"}</div>
         </div>
       ))}
     </div>
   );
 };
 
-const TestArticleDetail = ({ 
-  articleId, 
-  onBack, 
-  onNavigate 
-}: { 
-  articleId: string; 
-  onBack: () => void; 
-  onNavigate: (direction: 'prev' | 'next') => void;
+const TestArticleDetail = ({
+  articleId,
+  onBack,
+  onNavigate,
+}: {
+  articleId: string;
+  onBack: () => void;
+  onNavigate: (direction: "prev" | "next") => void;
 }) => {
   return (
     <div data-testid="article-detail">
       <button data-testid="back-button" onClick={onBack}>
         Back
       </button>
-      <button data-testid="prev-button" onClick={() => onNavigate('prev')}>
+      <button data-testid="prev-button" onClick={() => onNavigate("prev")}>
         Previous
       </button>
-      <button data-testid="next-button" onClick={() => onNavigate('next')}>
+      <button data-testid="next-button" onClick={() => onNavigate("next")}>
         Next
       </button>
       <h1>Article {articleId}</h1>
@@ -111,7 +154,7 @@ const TestArticleDetail = ({
   );
 };
 
-describe('RR-27: Article List State Preservation - Integration Tests', () => {
+describe("RR-27: Article List State Preservation - Integration Tests", () => {
   let server: Server;
   let app: any;
   let mockPush: ReturnType<typeof vi.fn>;
@@ -121,7 +164,7 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
     const testServer = await setupTestServer(3002);
     server = testServer.server;
     app = testServer.app;
-    
+
     await new Promise<void>((resolve) => {
       server.listen(3002, resolve);
     });
@@ -140,7 +183,7 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
     // Reset mocks
     vi.clearAllMocks();
     mockSessionStorage.getItem.mockReturnValue(null);
-    
+
     // Setup router mocks
     mockPush = vi.fn();
     mockBack = vi.fn();
@@ -154,13 +197,13 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
 
     // Reset article store
     mockArticleStore.articles.clear();
-    mockArticleStore.readStatusFilter = 'unread';
+    mockArticleStore.readStatusFilter = "unread";
     mockArticleStore.loadingArticles = false;
     mockArticleStore.articlesError = null;
   });
 
-  describe('Basic Navigation Flow', () => {
-    it('should save scroll position when navigating to article detail', async () => {
+  describe("Basic Navigation Flow", () => {
+    it("should save scroll position when navigating to article detail", async () => {
       const handleArticleClick = vi.fn((articleId: string) => {
         // Simulate navigation to article detail
         mockPush(`/article/${articleId}`);
@@ -169,62 +212,76 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       render(<TestArticleList onArticleClick={handleArticleClick} />);
 
       // Click on an article
-      const article = screen.getByTestId('article-1');
+      const article = screen.getByTestId("article-1");
       fireEvent.click(article);
 
-      expect(handleArticleClick).toHaveBeenCalledWith('1');
-      expect(mockPush).toHaveBeenCalledWith('/article/1');
+      expect(handleArticleClick).toHaveBeenCalledWith("1");
+      expect(mockPush).toHaveBeenCalledWith("/article/1");
     });
 
-    it('should restore scroll position when navigating back from article detail', async () => {
+    it("should restore scroll position when navigating back from article detail", async () => {
       // Setup saved scroll position
-      mockSessionStorage.getItem.mockReturnValue('500');
+      mockSessionStorage.getItem.mockReturnValue("500");
 
       const handleArticleClick = vi.fn();
       render(<TestArticleList onArticleClick={handleArticleClick} />);
 
       // Verify sessionStorage was checked for saved position
-      expect(mockSessionStorage.getItem).toHaveBeenCalledWith('articleListScroll');
+      expect(mockSessionStorage.getItem).toHaveBeenCalledWith(
+        "articleListScroll"
+      );
     });
 
-    it('should handle back navigation from article detail', async () => {
+    it("should handle back navigation from article detail", async () => {
       const handleBack = vi.fn(() => {
-        mockPush('/');
+        mockPush("/");
       });
 
       const handleNavigate = vi.fn();
 
       render(
-        <TestArticleDetail 
-          articleId='1' 
+        <TestArticleDetail
+          articleId="1"
           onBack={handleBack}
           onNavigate={handleNavigate}
         />
       );
 
       // Click back button
-      const backButton = screen.getByTestId('back-button');
+      const backButton = screen.getByTestId("back-button");
       fireEvent.click(backButton);
 
       expect(handleBack).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith("/");
     });
   });
 
-  describe('State Preservation in Unread Only Mode', () => {
+  describe("State Preservation in Unread Only Mode", () => {
     beforeEach(() => {
-      mockArticleStore.readStatusFilter = 'unread';
+      mockArticleStore.readStatusFilter = "unread";
     });
 
-    it('should preserve auto-read articles in session storage', async () => {
+    it("should preserve auto-read articles in session storage", async () => {
       const savedState = {
         articles: [
-          { id: '1', isRead: false, wasAutoRead: false, position: 0, sessionPreserved: false },
-          { id: '2', isRead: true, wasAutoRead: true, position: 1, sessionPreserved: true },
+          {
+            id: "1",
+            isRead: false,
+            wasAutoRead: false,
+            position: 0,
+            sessionPreserved: false,
+          },
+          {
+            id: "2",
+            isRead: true,
+            wasAutoRead: true,
+            position: 1,
+            sessionPreserved: true,
+          },
         ],
         scrollPosition: 300,
         timestamp: Date.now(),
-        filter: 'unread',
+        filter: "unread",
       };
 
       mockSessionStorage.getItem.mockReturnValue(JSON.stringify(savedState));
@@ -236,7 +293,7 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       expect(mockSessionStorage.getItem).toHaveBeenCalled();
     });
 
-    it('should handle intersection observer for auto-read detection', async () => {
+    it("should handle intersection observer for auto-read detection", async () => {
       const mockObserve = vi.fn();
       const mockDisconnect = vi.fn();
       mockIntersectionObserver.mockReturnValue({
@@ -252,7 +309,7 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       expect(mockIntersectionObserver).toHaveBeenCalled();
     });
 
-    it('should differentiate between auto-read and manually read articles', async () => {
+    it("should differentiate between auto-read and manually read articles", async () => {
       // This test would verify that articles marked as read via intersection observer
       // are treated differently from manually read articles
       const handleArticleClick = vi.fn();
@@ -265,8 +322,8 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
         boundingClientRect: { bottom: -100 },
         target: {
           getAttribute: vi.fn((attr) => {
-            if (attr === 'data-article-id') return '1';
-            if (attr === 'data-is-read') return 'false';
+            if (attr === "data-article-id") return "1";
+            if (attr === "data-is-read") return "false";
             return null;
           }),
         },
@@ -278,54 +335,58 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
 
       // Verify that the article would be marked for auto-read
       // (In real implementation, this would trigger markMultipleAsRead)
-      expect(mockEntry.target.getAttribute).toHaveBeenCalledWith('data-article-id');
-      expect(mockEntry.target.getAttribute).toHaveBeenCalledWith('data-is-read');
+      expect(mockEntry.target.getAttribute).toHaveBeenCalledWith(
+        "data-article-id"
+      );
+      expect(mockEntry.target.getAttribute).toHaveBeenCalledWith(
+        "data-is-read"
+      );
     });
   });
 
-  describe('Navigation History Management', () => {
-    it('should handle prev/next navigation between articles', async () => {
-      const handleNavigate = vi.fn((direction: 'prev' | 'next') => {
-        if (direction === 'next') {
-          mockPush('/article/2');
+  describe("Navigation History Management", () => {
+    it("should handle prev/next navigation between articles", async () => {
+      const handleNavigate = vi.fn((direction: "prev" | "next") => {
+        if (direction === "next") {
+          mockPush("/article/2");
         } else {
-          mockPush('/article/1');
+          mockPush("/article/1");
         }
       });
 
       render(
-        <TestArticleDetail 
-          articleId='1' 
+        <TestArticleDetail
+          articleId="1"
           onBack={vi.fn()}
           onNavigate={handleNavigate}
         />
       );
 
       // Click next button
-      const nextButton = screen.getByTestId('next-button');
+      const nextButton = screen.getByTestId("next-button");
       fireEvent.click(nextButton);
 
-      expect(handleNavigate).toHaveBeenCalledWith('next');
-      expect(mockPush).toHaveBeenCalledWith('/article/2');
+      expect(handleNavigate).toHaveBeenCalledWith("next");
+      expect(mockPush).toHaveBeenCalledWith("/article/2");
 
       // Click prev button
-      const prevButton = screen.getByTestId('prev-button');
+      const prevButton = screen.getByTestId("prev-button");
       fireEvent.click(prevButton);
 
-      expect(handleNavigate).toHaveBeenCalledWith('prev');
+      expect(handleNavigate).toHaveBeenCalledWith("prev");
     });
 
-    it('should maintain navigation state across article transitions', async () => {
+    it("should maintain navigation state across article transitions", async () => {
       // Test that navigation history is preserved when moving between articles
       const navigationHistory = [
-        { path: '/', timestamp: Date.now() - 2000 },
-        { path: '/article/1', timestamp: Date.now() - 1000 },
-        { path: '/article/2', timestamp: Date.now() },
+        { path: "/", timestamp: Date.now() - 2000 },
+        { path: "/article/1", timestamp: Date.now() - 1000 },
+        { path: "/article/2", timestamp: Date.now() },
       ];
 
       // Mock session storage to return navigation history
       mockSessionStorage.getItem.mockImplementation((key) => {
-        if (key === 'navigationHistory') {
+        if (key === "navigationHistory") {
           return JSON.stringify(navigationHistory);
         }
         return null;
@@ -333,26 +394,28 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
 
       const handleNavigate = vi.fn();
       render(
-        <TestArticleDetail 
-          articleId='2' 
+        <TestArticleDetail
+          articleId="2"
           onBack={vi.fn()}
           onNavigate={handleNavigate}
         />
       );
 
       // Navigation should be aware of history
-      expect(mockSessionStorage.getItem).toHaveBeenCalledWith('navigationHistory');
+      expect(mockSessionStorage.getItem).toHaveBeenCalledWith(
+        "navigationHistory"
+      );
     });
   });
 
-  describe('Filter State Preservation', () => {
-    it('should preserve filter state when navigating back', async () => {
+  describe("Filter State Preservation", () => {
+    it("should preserve filter state when navigating back", async () => {
       const savedState = {
         articles: [],
         scrollPosition: 0,
         timestamp: Date.now(),
-        filter: 'unread',
-        feedId: 'feed-123',
+        filter: "unread",
+        feedId: "feed-123",
       };
 
       mockSessionStorage.getItem.mockReturnValue(JSON.stringify(savedState));
@@ -364,9 +427,9 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       expect(mockSessionStorage.getItem).toHaveBeenCalled();
     });
 
-    it('should handle filter changes and update preserved state', async () => {
+    it("should handle filter changes and update preserved state", async () => {
       // Simulate changing from 'unread' to 'all' filter
-      mockArticleStore.readStatusFilter = 'all';
+      mockArticleStore.readStatusFilter = "all";
 
       const handleArticleClick = vi.fn();
       render(<TestArticleList onArticleClick={handleArticleClick} />);
@@ -376,19 +439,19 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
     });
   });
 
-  describe('Error Handling and Edge Cases', () => {
-    it('should handle corrupted session storage gracefully', async () => {
-      mockSessionStorage.getItem.mockReturnValue('invalid-json');
+  describe("Error Handling and Edge Cases", () => {
+    it("should handle corrupted session storage gracefully", async () => {
+      mockSessionStorage.getItem.mockReturnValue("invalid-json");
 
       const handleArticleClick = vi.fn();
-      
+
       // Should not throw error
       expect(() => {
         render(<TestArticleList onArticleClick={handleArticleClick} />);
       }).not.toThrow();
     });
 
-    it('should handle missing article data gracefully', async () => {
+    it("should handle missing article data gracefully", async () => {
       mockArticleStore.getArticle.mockResolvedValue(null);
 
       const handleBack = vi.fn();
@@ -397,8 +460,8 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       // Should not throw error when article is not found
       expect(() => {
         render(
-          <TestArticleDetail 
-            articleId='non-existent' 
+          <TestArticleDetail
+            articleId="non-existent"
             onBack={handleBack}
             onNavigate={handleNavigate}
           />
@@ -406,21 +469,21 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       }).not.toThrow();
     });
 
-    it('should handle network errors during state synchronization', async () => {
-      mockArticleStore.markAsRead.mockRejectedValue(new Error('Network error'));
+    it("should handle network errors during state synchronization", async () => {
+      mockArticleStore.markAsRead.mockRejectedValue(new Error("Network error"));
 
       const handleArticleClick = vi.fn(async (articleId: string) => {
         try {
           await mockArticleStore.markAsRead(articleId);
         } catch (error) {
           // Should handle error gracefully
-          console.error('Failed to mark as read:', error);
+          console.error("Failed to mark as read:", error);
         }
       });
 
       render(<TestArticleList onArticleClick={handleArticleClick} />);
 
-      const article = screen.getByTestId('article-1');
+      const article = screen.getByTestId("article-1");
       fireEvent.click(article);
 
       await waitFor(() => {
@@ -429,8 +492,8 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
     });
   });
 
-  describe('Performance and Memory Management', () => {
-    it('should clean up intersection observers on unmount', async () => {
+  describe("Performance and Memory Management", () => {
+    it("should clean up intersection observers on unmount", async () => {
       const mockDisconnect = vi.fn();
       mockIntersectionObserver.mockReturnValue({
         observe: vi.fn(),
@@ -439,7 +502,9 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       });
 
       const handleArticleClick = vi.fn();
-      const { unmount } = render(<TestArticleList onArticleClick={handleArticleClick} />);
+      const { unmount } = render(
+        <TestArticleList onArticleClick={handleArticleClick} />
+      );
 
       unmount();
 
@@ -447,7 +512,7 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
       expect(mockDisconnect).toHaveBeenCalled();
     });
 
-    it('should limit session storage size', async () => {
+    it("should limit session storage size", async () => {
       // Test that session storage doesn't grow indefinitely
       const largeState = {
         articles: Array.from({ length: 1000 }, (_, i) => ({
@@ -459,34 +524,49 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
         })),
         scrollPosition: 5000,
         timestamp: Date.now(),
-        filter: 'unread',
+        filter: "unread",
       };
 
       mockSessionStorage.setItem = vi.fn((key, value) => {
         // Simulate storage quota exceeded
         if (value.length > 50000) {
-          throw new Error('QuotaExceededError');
+          throw new Error("QuotaExceededError");
         }
       });
 
       // Should handle storage quota gracefully
       expect(() => {
-        mockSessionStorage.setItem('articleListState', JSON.stringify(largeState));
-      }).toThrow('QuotaExceededError');
+        mockSessionStorage.setItem(
+          "articleListState",
+          JSON.stringify(largeState)
+        );
+      }).toThrow("QuotaExceededError");
     });
   });
 
-  describe('Real User Scenarios', () => {
-    it('should handle complete user journey: list -> detail -> back with preserved state', async () => {
+  describe("Real User Scenarios", () => {
+    it("should handle complete user journey: list -> detail -> back with preserved state", async () => {
       // Setup initial state
       const initialState = {
         articles: [
-          { id: '1', isRead: false, wasAutoRead: false, position: 0, sessionPreserved: false },
-          { id: '2', isRead: false, wasAutoRead: false, position: 1, sessionPreserved: false },
+          {
+            id: "1",
+            isRead: false,
+            wasAutoRead: false,
+            position: 0,
+            sessionPreserved: false,
+          },
+          {
+            id: "2",
+            isRead: false,
+            wasAutoRead: false,
+            position: 1,
+            sessionPreserved: false,
+          },
         ],
         scrollPosition: 100,
         timestamp: Date.now(),
-        filter: 'unread',
+        filter: "unread",
       };
 
       mockSessionStorage.getItem.mockReturnValue(JSON.stringify(initialState));
@@ -496,47 +576,49 @@ describe('RR-27: Article List State Preservation - Integration Tests', () => {
         mockPush(`/article/${articleId}`);
       });
 
-      const { rerender } = render(<TestArticleList onArticleClick={handleArticleClick} />);
+      const { rerender } = render(
+        <TestArticleList onArticleClick={handleArticleClick} />
+      );
 
       // Step 2: Click article to navigate to detail
-      const article = screen.getByTestId('article-1');
+      const article = screen.getByTestId("article-1");
       fireEvent.click(article);
 
-      expect(mockPush).toHaveBeenCalledWith('/article/1');
+      expect(mockPush).toHaveBeenCalledWith("/article/1");
 
       // Step 3: Render article detail
       const handleBack = vi.fn(() => {
-        mockPush('/');
+        mockPush("/");
       });
 
       rerender(
-        <TestArticleDetail 
-          articleId='1' 
+        <TestArticleDetail
+          articleId="1"
           onBack={handleBack}
           onNavigate={vi.fn()}
         />
       );
 
       // Step 4: Navigate back
-      const backButton = screen.getByTestId('back-button');
+      const backButton = screen.getByTestId("back-button");
       fireEvent.click(backButton);
 
       expect(handleBack).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith("/");
 
       // Step 5: Verify state preservation would occur
       // (In real implementation, scroll position and read states would be restored)
     });
 
-    it('should handle rapid navigation without state corruption', async () => {
+    it("should handle rapid navigation without state corruption", async () => {
       // Test rapid clicking/navigation to ensure state remains consistent
       const handleArticleClick = vi.fn();
       render(<TestArticleList onArticleClick={handleArticleClick} />);
 
       // Rapid clicks
-      const article1 = screen.getByTestId('article-1');
-      const article2 = screen.getByTestId('article-2');
-      
+      const article1 = screen.getByTestId("article-1");
+      const article2 = screen.getByTestId("article-2");
+
       fireEvent.click(article1);
       fireEvent.click(article2);
       fireEvent.click(article1);

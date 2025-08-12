@@ -7,19 +7,19 @@ const INOREADER_API_BASE = "https://www.inoreader.com/reader/api/0";
 /**
  * Development-only proxy endpoint for testing Inoreader API calls
  * GET /api/inoreader/dev?endpoint=user-info&method=GET
- * 
+ *
  * This endpoint:
  * 1. Makes raw API calls to Inoreader
  * 2. Captures and stores rate limit headers
  * 3. Returns both response data and headers for debugging
- * 
+ *
  * For RR-5: Sync Status Display
  */
 export async function GET(request: NextRequest) {
   // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
-      { error: 'This endpoint is only available in development' },
+      { error: "This endpoint is only available in development" },
       { status: 403 }
     );
   }
@@ -45,11 +45,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Build the full URL
-    const url = endpoint.startsWith('http') 
-      ? endpoint 
+    const url = endpoint.startsWith("http")
+      ? endpoint
       : `${INOREADER_API_BASE}/${endpoint}`;
 
-    console.log('[Dev Proxy] Calling:', method, url);
+    console.log("[Dev Proxy] Calling:", method, url);
 
     // Make the request
     const response = await fetch(url, {
@@ -68,9 +68,11 @@ export async function GET(request: NextRequest) {
     // Extract headers for debugging
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
-      if (key.toLowerCase().includes('x-reader') || 
-          key.toLowerCase().includes('rate') ||
-          key.toLowerCase().includes('limit')) {
+      if (
+        key.toLowerCase().includes("x-reader") ||
+        key.toLowerCase().includes("rate") ||
+        key.toLowerCase().includes("limit")
+      ) {
         headers[key] = value;
       }
     });
@@ -87,22 +89,28 @@ export async function GET(request: NextRequest) {
         status: response.status,
         statusText: response.statusText,
         zone1: {
-          usage: headers['x-reader-zone1-usage'] || headers['X-Reader-Zone1-Usage'],
-          limit: headers['x-reader-zone1-limit'] || headers['X-Reader-Zone1-Limit'],
+          usage:
+            headers["x-reader-zone1-usage"] || headers["X-Reader-Zone1-Usage"],
+          limit:
+            headers["x-reader-zone1-limit"] || headers["X-Reader-Zone1-Limit"],
         },
         zone2: {
-          usage: headers['x-reader-zone2-usage'] || headers['X-Reader-Zone2-Usage'],
-          limit: headers['x-reader-zone2-limit'] || headers['X-Reader-Zone2-Limit'],
+          usage:
+            headers["x-reader-zone2-usage"] || headers["X-Reader-Zone2-Usage"],
+          limit:
+            headers["x-reader-zone2-limit"] || headers["X-Reader-Zone2-Limit"],
         },
-        resetAfter: headers['x-reader-limits-reset-after'] || headers['X-Reader-Limits-Reset-After'],
+        resetAfter:
+          headers["x-reader-limits-reset-after"] ||
+          headers["X-Reader-Limits-Reset-After"],
       },
     });
   } catch (error) {
-    console.error('[Dev Proxy] Error:', error);
+    console.error("[Dev Proxy] Error:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -114,9 +122,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
-      { error: 'This endpoint is only available in development' },
+      { error: "This endpoint is only available in development" },
       { status: 403 }
     );
   }
@@ -132,7 +140,7 @@ export async function POST(request: NextRequest) {
     // Get parameters from query
     const { searchParams } = new URL(request.url);
     const endpoint = searchParams.get("endpoint");
-    
+
     if (!endpoint) {
       return NextResponse.json(
         { error: "Endpoint parameter is required" },
@@ -144,15 +152,15 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
 
     // Build the full URL
-    const url = endpoint.startsWith('http') 
-      ? endpoint 
+    const url = endpoint.startsWith("http")
+      ? endpoint
       : `${INOREADER_API_BASE}/${endpoint}`;
 
-    console.log('[Dev Proxy] POST to:', url);
+    console.log("[Dev Proxy] POST to:", url);
 
     // Make the request
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken.value}`,
         AppId: process.env.NEXT_PUBLIC_INOREADER_CLIENT_ID!,
@@ -169,9 +177,11 @@ export async function POST(request: NextRequest) {
     // Extract headers for debugging
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
-      if (key.toLowerCase().includes('x-reader') || 
-          key.toLowerCase().includes('rate') ||
-          key.toLowerCase().includes('limit')) {
+      if (
+        key.toLowerCase().includes("x-reader") ||
+        key.toLowerCase().includes("rate") ||
+        key.toLowerCase().includes("limit")
+      ) {
         headers[key] = value;
       }
     });
@@ -184,26 +194,32 @@ export async function POST(request: NextRequest) {
       headers,
       debug: {
         url,
-        method: 'POST',
+        method: "POST",
         status: response.status,
         statusText: response.statusText,
         zone1: {
-          usage: headers['x-reader-zone1-usage'] || headers['X-Reader-Zone1-Usage'],
-          limit: headers['x-reader-zone1-limit'] || headers['X-Reader-Zone1-Limit'],
+          usage:
+            headers["x-reader-zone1-usage"] || headers["X-Reader-Zone1-Usage"],
+          limit:
+            headers["x-reader-zone1-limit"] || headers["X-Reader-Zone1-Limit"],
         },
         zone2: {
-          usage: headers['x-reader-zone2-usage'] || headers['X-Reader-Zone2-Usage'],
-          limit: headers['x-reader-zone2-limit'] || headers['X-Reader-Zone2-Limit'],
+          usage:
+            headers["x-reader-zone2-usage"] || headers["X-Reader-Zone2-Usage"],
+          limit:
+            headers["x-reader-zone2-limit"] || headers["X-Reader-Zone2-Limit"],
         },
-        resetAfter: headers['x-reader-limits-reset-after'] || headers['X-Reader-Limits-Reset-After'],
+        resetAfter:
+          headers["x-reader-limits-reset-after"] ||
+          headers["X-Reader-Limits-Reset-After"],
       },
     });
   } catch (error) {
-    console.error('[Dev Proxy] Error:', error);
+    console.error("[Dev Proxy] Error:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

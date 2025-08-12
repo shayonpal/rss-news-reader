@@ -6,9 +6,9 @@ import path from "path";
 export async function GET() {
   // Define cache prevention headers for all responses
   const cacheHeaders = {
-    'Cache-Control': 'no-store, no-cache, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
   };
 
   try {
@@ -17,7 +17,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    
+
     // 1) sync_metadata key last_sync_time (written at end of sync)
     const { data: metaRow } = await supabase
       .from("sync_metadata")
@@ -29,10 +29,13 @@ export async function GET() {
       // Validate the date before trying to convert it
       const syncTime = new Date(metaRow.value);
       if (!isNaN(syncTime.getTime())) {
-        return NextResponse.json({
-          lastSyncTime: syncTime.toISOString(),
-          source: "sync_metadata"
-        }, { headers: cacheHeaders });
+        return NextResponse.json(
+          {
+            lastSyncTime: syncTime.toISOString(),
+            source: "sync_metadata",
+          },
+          { headers: cacheHeaders }
+        );
       }
       // If invalid date, fall through to next source
     }
@@ -48,10 +51,13 @@ export async function GET() {
 
       const statusRow = Array.isArray(statusRows) ? statusRows[0] : null;
       if (statusRow?.completed_at) {
-        return NextResponse.json({
-          lastSyncTime: new Date(statusRow.completed_at).toISOString(),
-          source: "sync_status"
-        }, { headers: cacheHeaders });
+        return NextResponse.json(
+          {
+            lastSyncTime: new Date(statusRow.completed_at).toISOString(),
+            source: "sync_status",
+          },
+          { headers: cacheHeaders }
+        );
       }
     } catch {
       // If sync_status fails, continue to next source
@@ -66,10 +72,13 @@ export async function GET() {
         try {
           const entry = JSON.parse(lines[i]);
           if (entry.status === "completed" && entry.timestamp) {
-            return NextResponse.json({
-              lastSyncTime: new Date(entry.timestamp).toISOString(),
-              source: "sync-log"
-            }, { headers: cacheHeaders });
+            return NextResponse.json(
+              {
+                lastSyncTime: new Date(entry.timestamp).toISOString(),
+                source: "sync-log",
+              },
+              { headers: cacheHeaders }
+            );
           }
         } catch {
           continue;
@@ -84,14 +93,13 @@ export async function GET() {
       { lastSyncTime: null, source: "none" },
       { headers: cacheHeaders }
     );
-
   } catch (error) {
     console.error("Error fetching last sync time:", error);
     return NextResponse.json(
       { error: "Failed to fetch last sync time" },
-      { 
+      {
         status: 500,
-        headers: cacheHeaders
+        headers: cacheHeaders,
       }
     );
   }

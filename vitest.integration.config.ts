@@ -9,9 +9,9 @@ export default defineConfig({
     globals: true,
     environment: "node", // Integration tests use node environment
     setupFiles: ["./src/test-setup-integration.ts"],
-    include: ['**/src/__tests__/integration/**/*.test.ts'],
+    include: ["**/src/__tests__/integration/**/*.test.ts"],
     // Resource limits to prevent memory exhaustion (RR-123)
-    pool: 'forks',
+    pool: "forks",
     poolOptions: {
       forks: {
         singleFork: true,

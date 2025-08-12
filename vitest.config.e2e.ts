@@ -9,10 +9,10 @@ export default defineConfig({
   plugins: [react()],
   test: {
     exclude: [
-      '**/src/__tests__/e2e/**',
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/build/**'
+      "**/src/__tests__/e2e/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
     ],
   },
   resolve: {

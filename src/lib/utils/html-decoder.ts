@@ -1,11 +1,11 @@
-import { decode } from 'he';
+import { decode } from "he";
 
 /**
  * RR-154: HTML Entity Decoder Module
- * 
+ *
  * Provides safe HTML entity decoding for article titles and content while preserving URLs.
  * Uses the 'he' library for standards-compliant decoding of HTML entities.
- * 
+ *
  * Key Requirements:
  * - Decode common entities: &rsquo;, &amp;, &lsquo;, &quot;, &#8217;, &ndash;, etc.
  * - URLs must NEVER be decoded to preserve query parameters
@@ -18,29 +18,38 @@ import { decode } from 'he';
  * Enhanced to catch more URL patterns and edge cases
  */
 export function isSafeUrl(text: string): boolean {
-  if (!text || typeof text !== 'string') {
+  if (!text || typeof text !== "string") {
     return false;
   }
 
   // Check for absolute URLs with protocols
-  if (text.startsWith('http://') || text.startsWith('https://') || 
-      text.startsWith('feed://') || text.startsWith('ftp://') ||
-      text.startsWith('tag:') || text.includes('://')) {
+  if (
+    text.startsWith("http://") ||
+    text.startsWith("https://") ||
+    text.startsWith("feed://") ||
+    text.startsWith("ftp://") ||
+    text.startsWith("tag:") ||
+    text.includes("://")
+  ) {
     return true;
   }
 
   // Check for URLs with query parameters (common case for entities in URLs)
-  if (text.includes('?') && (text.includes('&amp;') || text.includes('='))) {
+  if (text.includes("?") && (text.includes("&amp;") || text.includes("="))) {
     return true;
   }
 
   // Check for common URL patterns without protocol
-  if (text.match(/^(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=]*)/)) {
+  if (
+    text.match(
+      /^(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&=]*)/
+    )
+  ) {
     return true;
   }
 
   // Check for Inoreader/Google Reader style IDs
-  if (text.startsWith('user/') || text.startsWith('state/com.google/')) {
+  if (text.startsWith("user/") || text.startsWith("state/com.google/")) {
     return true;
   }
 
@@ -53,12 +62,12 @@ export function isSafeUrl(text: string): boolean {
 export function decodeHtmlEntities(text: string | null | undefined): string {
   // Handle null/undefined gracefully
   if (!text) {
-    return text === null ? '' : (text === undefined ? '' : '');
+    return text === null ? "" : text === undefined ? "" : "";
   }
 
   // Convert non-string types to empty string
-  if (typeof text !== 'string') {
-    return '';
+  if (typeof text !== "string") {
+    return "";
   }
 
   // Don't decode URLs
@@ -73,15 +82,15 @@ export function decodeHtmlEntities(text: string | null | undefined): string {
     // Track decoding failures for monitoring
     const errorDetails = {
       input: text.substring(0, 100), // Limit for privacy
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
     };
-    
-    console.warn('HTML entity decoding failed:', errorDetails);
-    
+
+    console.warn("HTML entity decoding failed:", errorDetails);
+
     // TODO: Add metrics tracking for production monitoring
     // trackDecodingFailure(errorDetails);
-    
+
     return text;
   }
 }
@@ -103,8 +112,10 @@ interface ArticleData {
 /**
  * Decodes HTML entities in article title, content, and description while preserving other fields
  */
-export function decodeArticleData(article: ArticleData | null | undefined): ArticleData {
-  if (!article || typeof article !== 'object') {
+export function decodeArticleData(
+  article: ArticleData | null | undefined
+): ArticleData {
+  if (!article || typeof article !== "object") {
     return article || {};
   }
 
@@ -134,12 +145,14 @@ export function decodeArticleData(article: ArticleData | null | undefined): Arti
 /**
  * Processes multiple articles efficiently with batch decoding
  */
-export function decodeArticleBatch(articles: ArticleData[] | null | undefined): ArticleData[] {
+export function decodeArticleBatch(
+  articles: ArticleData[] | null | undefined
+): ArticleData[] {
   if (!articles || !Array.isArray(articles)) {
     return [];
   }
 
-  return articles.map(article => decodeArticleData(article));
+  return articles.map((article) => decodeArticleData(article));
 }
 
 /**
@@ -165,7 +178,10 @@ export function decodeContent(content: string | null | undefined): string {
  */
 export function batchDecodeArticles(
   articles: ArticleData[],
-  options: { chunkSize?: number; onProgress?: (processed: number, total: number) => void } = {}
+  options: {
+    chunkSize?: number;
+    onProgress?: (processed: number, total: number) => void;
+  } = {}
 ): ArticleData[] {
   const { chunkSize = 200, onProgress } = options;
   const total = articles.length;

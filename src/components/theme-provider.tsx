@@ -10,7 +10,7 @@ export function ThemeProvider() {
   useEffect(() => {
     const applyTheme = () => {
       const root = window.document.documentElement;
-      
+
       // Remove existing theme classes
       root.classList.remove("light", "dark");
 

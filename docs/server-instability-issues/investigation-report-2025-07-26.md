@@ -83,13 +83,11 @@ The Mac Mini is under significant load:
 ### Primary Issues:
 
 1. **Incomplete Production Build**: The Next.js build is missing critical files, suggesting:
-
    - Build process failed or was interrupted
    - Wrong build directory is being used
    - Build cache corruption
 
 2. **Environment Variable Issues**: OAuth token path may not be resolving correctly:
-
    - Possible HOME directory resolution issues
    - PM2 environment variable inheritance problems
 
@@ -137,19 +135,16 @@ pm2 restart all
 ## Long-term Recommendations
 
 1. **Implement Proper Health Monitoring**:
-
    - Deploy Uptime Kuma as planned
    - Add more granular health checks
    - Implement automatic recovery procedures
 
 2. **Improve Build Process**:
-
    - Add build verification steps
    - Implement rollback capabilities
    - Cache production builds
 
 3. **Fix OAuth Token Access**:
-
    - Use absolute paths for token file
    - Add better error logging
    - Implement token validation on startup

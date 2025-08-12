@@ -15,21 +15,18 @@ export async function GET(
 ) {
   try {
     const tagId = params.id;
-    
+
     // Get user
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
       .eq("inoreader_id", "shayon")
       .single();
-      
+
     if (userError || !userData) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
+
     // Get tag details
     const { data: tag, error: tagError } = await supabase
       .from("tags")
@@ -37,23 +34,21 @@ export async function GET(
       .eq("id", tagId)
       .eq("user_id", userData.id)
       .single();
-      
+
     if (tagError || !tag) {
-      return NextResponse.json(
-        { error: "Tag not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Tag not found" }, { status: 404 });
     }
-    
+
     // Get associated articles (optionally)
     const { searchParams } = new URL(request.url);
     const includeArticles = searchParams.get("includeArticles") === "true";
     const limit = parseInt(searchParams.get("limit") || "10");
-    
+
     if (includeArticles) {
       const { data: articleTags, error: articlesError } = await supabase
         .from("article_tags")
-        .select(`
+        .select(
+          `
           articles (
             id,
             title,
@@ -66,26 +61,30 @@ export async function GET(
               title
             )
           )
-        `)
+        `
+        )
         .eq("tag_id", tagId)
         .order("created_at", { ascending: false })
         .limit(limit);
-        
+
       if (articlesError) {
         console.error("Error fetching articles for tag:", articlesError);
       }
-      
+
       return NextResponse.json({
         ...tag,
-        articles: articleTags?.map(at => at.articles).filter(Boolean) || [],
+        articles: articleTags?.map((at) => at.articles).filter(Boolean) || [],
       });
     }
-    
+
     return NextResponse.json(tag);
   } catch (error) {
     console.error("Get tag error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -98,21 +97,18 @@ export async function DELETE(
 ) {
   try {
     const tagId = params.id;
-    
+
     // Get user
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
       .eq("inoreader_id", "shayon")
       .single();
-      
+
     if (userError || !userData) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
+
     // Check if tag exists and belongs to user
     const { data: tag, error: tagError } = await supabase
       .from("tags")
@@ -120,20 +116,17 @@ export async function DELETE(
       .eq("id", tagId)
       .eq("user_id", userData.id)
       .single();
-      
+
     if (tagError || !tag) {
-      return NextResponse.json(
-        { error: "Tag not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Tag not found" }, { status: 404 });
     }
-    
+
     // Delete tag (CASCADE will handle article_tags)
     const { error: deleteError } = await supabase
       .from("tags")
       .delete()
       .eq("id", tagId);
-      
+
     if (deleteError) {
       console.error("Error deleting tag:", deleteError);
       return NextResponse.json(
@@ -141,7 +134,7 @@ export async function DELETE(
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json(
       { message: "Tag deleted successfully" },
       { status: 200 }
@@ -149,7 +142,10 @@ export async function DELETE(
   } catch (error) {
     console.error("Delete tag error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -163,23 +159,20 @@ export async function PATCH(
   try {
     const tagId = params.id;
     const body = await request.json();
-    
+
     const { name, color, description } = body;
-    
+
     // Get user
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
       .eq("inoreader_id", "shayon")
       .single();
-      
+
     if (userError || !userData) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
+
     // Check if tag exists and belongs to user
     const { data: existingTag, error: tagError } = await supabase
       .from("tags")
@@ -187,30 +180,30 @@ export async function PATCH(
       .eq("id", tagId)
       .eq("user_id", userData.id)
       .single();
-      
+
     if (tagError || !existingTag) {
-      return NextResponse.json(
-        { error: "Tag not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Tag not found" }, { status: 404 });
     }
-    
+
     // Prepare update data
     const updateData: any = {};
-    
+
     if (name !== undefined && name.trim().length > 0) {
       updateData.name = name.trim();
-      updateData.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      updateData.slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
     }
-    
+
     if (color !== undefined) {
       updateData.color = color;
     }
-    
+
     if (description !== undefined) {
       updateData.description = description;
     }
-    
+
     // Update tag
     const { data: updatedTag, error: updateError } = await supabase
       .from("tags")
@@ -218,7 +211,7 @@ export async function PATCH(
       .eq("id", tagId)
       .select()
       .single();
-      
+
     if (updateError) {
       console.error("Error updating tag:", updateError);
       return NextResponse.json(
@@ -226,12 +219,15 @@ export async function PATCH(
         { status: 500 }
       );
     }
-    
+
     return NextResponse.json(updatedTag);
   } catch (error) {
     console.error("Update tag error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

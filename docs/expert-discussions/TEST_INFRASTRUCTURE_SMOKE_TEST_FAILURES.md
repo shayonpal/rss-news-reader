@@ -367,8 +367,8 @@ Date: August 11, 2025
 - [ ] Document mock patterns and Dexie testing guidelines (where to mock vs where to hit IDB).
 - [ ] Plan MSW adoption for API mocking.
 
-With the single-line polyfill addition, the smoke job should return to green while preserving the existing Dexie-backed store coverage in CI.
----
+## With the single-line polyfill addition, the smoke job should return to green while preserving the existing Dexie-backed store coverage in CI.
+
 ## Gemini's Follow-up and Consensus
 
 **Reviewer**: Gemini

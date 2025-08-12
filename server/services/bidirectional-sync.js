@@ -277,35 +277,37 @@ class BiDirectionalSyncService {
   async captureRateLimitHeaders(headers) {
     try {
       // Extract zone headers
-      const zone1Usage = headers.get('X-Reader-Zone1-Usage');
-      const zone1Limit = headers.get('X-Reader-Zone1-Limit');
-      const zone2Usage = headers.get('X-Reader-Zone2-Usage');
-      const zone2Limit = headers.get('X-Reader-Zone2-Limit');
-      const resetAfter = headers.get('X-Reader-Limits-Reset-After');
+      const zone1Usage = headers.get("X-Reader-Zone1-Usage");
+      const zone1Limit = headers.get("X-Reader-Zone1-Limit");
+      const zone2Usage = headers.get("X-Reader-Zone2-Usage");
+      const zone2Limit = headers.get("X-Reader-Zone2-Limit");
+      const resetAfter = headers.get("X-Reader-Limits-Reset-After");
 
       // If we have any zone headers, update the database
       if (zone1Usage || zone1Limit || zone2Usage || zone2Limit) {
         const today = new Date().toISOString().split("T")[0];
 
         // Parse values, removing commas and handling defaults
-        const usage1 = parseInt(zone1Usage?.replace(/,/g, '') || '0');
-        const limit1 = parseInt(zone1Limit?.replace(/,/g, '') || '5000');
-        const usage2 = parseInt(zone2Usage?.replace(/,/g, '') || '0');
-        const limit2 = parseInt(zone2Limit?.replace(/,/g, '') || '100');
-        const resetSeconds = parseInt(resetAfter?.replace(/\.\d+$/, '') || '86400');
+        const usage1 = parseInt(zone1Usage?.replace(/,/g, "") || "0");
+        const limit1 = parseInt(zone1Limit?.replace(/,/g, "") || "5000");
+        const usage2 = parseInt(zone2Usage?.replace(/,/g, "") || "0");
+        const limit2 = parseInt(zone2Limit?.replace(/,/g, "") || "100");
+        const resetSeconds = parseInt(
+          resetAfter?.replace(/\.\d+$/, "") || "86400"
+        );
 
         // Check if record exists for today
         const { data: existing } = await this.supabase
-          .from('api_usage')
-          .select('id')
-          .eq('service', 'inoreader')
-          .eq('date', today)
+          .from("api_usage")
+          .select("id")
+          .eq("service", "inoreader")
+          .eq("date", today)
           .single();
 
         if (existing) {
           // Update existing record
           const { error } = await this.supabase
-            .from('api_usage')
+            .from("api_usage")
             .update({
               zone1_usage: usage1,
               zone1_limit: limit1,
@@ -315,36 +317,40 @@ class BiDirectionalSyncService {
               updated_at: new Date().toISOString(),
               count: usage1, // Legacy support
             })
-            .eq('id', existing.id);
+            .eq("id", existing.id);
 
           if (error) {
-            console.error('[BiDirectionalSync] Failed to update zone usage:', error);
+            console.error(
+              "[BiDirectionalSync] Failed to update zone usage:",
+              error
+            );
           } else {
-            console.log('[BiDirectionalSync] Updated zone usage:', {
-              zone1: `${usage1}/${limit1} (${((usage1/limit1) * 100).toFixed(1)}%)`,
-              zone2: `${usage2}/${limit2} (${((usage2/limit2) * 100).toFixed(1)}%)`,
+            console.log("[BiDirectionalSync] Updated zone usage:", {
+              zone1: `${usage1}/${limit1} (${((usage1 / limit1) * 100).toFixed(1)}%)`,
+              zone2: `${usage2}/${limit2} (${((usage2 / limit2) * 100).toFixed(1)}%)`,
               resetAfter: `${resetSeconds}s`,
             });
           }
         } else {
           // Insert new record
-          const { error } = await this.supabase
-            .from('api_usage')
-            .insert({
-              service: 'inoreader',
-              date: today,
-              zone1_usage: usage1,
-              zone1_limit: limit1,
-              zone2_usage: usage2,
-              zone2_limit: limit2,
-              reset_after: resetSeconds,
-              count: usage1, // Legacy support
-            });
+          const { error } = await this.supabase.from("api_usage").insert({
+            service: "inoreader",
+            date: today,
+            zone1_usage: usage1,
+            zone1_limit: limit1,
+            zone2_usage: usage2,
+            zone2_limit: limit2,
+            reset_after: resetSeconds,
+            count: usage1, // Legacy support
+          });
 
           if (error) {
-            console.error('[BiDirectionalSync] Failed to insert zone usage:', error);
+            console.error(
+              "[BiDirectionalSync] Failed to insert zone usage:",
+              error
+            );
           } else {
-            console.log('[BiDirectionalSync] Created zone usage record:', {
+            console.log("[BiDirectionalSync] Created zone usage record:", {
               zone1: `${usage1}/${limit1}`,
               zone2: `${usage2}/${limit2}`,
             });
@@ -352,7 +358,7 @@ class BiDirectionalSyncService {
         }
       }
     } catch (error) {
-      console.error('[BiDirectionalSync] Error capturing headers:', error);
+      console.error("[BiDirectionalSync] Error capturing headers:", error);
       // Don't throw - this should not break the sync
     }
   }

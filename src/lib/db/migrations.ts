@@ -320,6 +320,6 @@ export class DatabaseMigrations {
 }
 
 // Setup migrations when module loads (except in test environment)
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
   DatabaseMigrations.setupMigrations();
 }

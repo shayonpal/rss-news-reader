@@ -8,24 +8,26 @@ This document provides comprehensive test cases and execution procedures for val
 
 ### 1. Test Categories
 
-| Category | Tests Created | Purpose |
-|----------|---------------|---------|
-| **Acceptance Tests** | 45+ test cases | Validate complete removal process phase-by-phase |
-| **Integration Tests** | 25+ test cases | Test monitoring system integration after removal |
-| **Unit Tests** | 20+ test cases | Validate database function usage and cleanup |
-| **E2E Tests** | 30+ test cases | End-to-end validation of system functionality |
-| **Manual Procedures** | 50+ steps | Step-by-step manual validation procedures |
-| **Automated Validation** | 35+ checks | Comprehensive automated validation script |
+| Category                 | Tests Created  | Purpose                                          |
+| ------------------------ | -------------- | ------------------------------------------------ |
+| **Acceptance Tests**     | 45+ test cases | Validate complete removal process phase-by-phase |
+| **Integration Tests**    | 25+ test cases | Test monitoring system integration after removal |
+| **Unit Tests**           | 20+ test cases | Validate database function usage and cleanup     |
+| **E2E Tests**            | 30+ test cases | End-to-end validation of system functionality    |
+| **Manual Procedures**    | 50+ steps      | Step-by-step manual validation procedures        |
+| **Automated Validation** | 35+ checks     | Comprehensive automated validation script        |
 
 ### 2. Test Files Created
 
 #### Automated Test Suites
+
 - `src/__tests__/acceptance/rr-106-freshness-api-removal.test.ts` - Acceptance criteria tests
-- `src/__tests__/integration/rr-106-monitoring-integration.test.ts` - Monitoring integration tests  
+- `src/__tests__/integration/rr-106-monitoring-integration.test.ts` - Monitoring integration tests
 - `src/__tests__/unit/rr-106-database-functions.test.ts` - Database function analysis
 - `src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts` - End-to-end validation
 
 #### Documentation and Procedures
+
 - `docs/testing/rr-106-manual-testing-procedures.md` - Comprehensive manual testing guide
 - `docs/testing/rr-106-test-execution-report.md` - This execution report
 - `scripts/test-rr-106-removal-validation.sh` - Automated validation script
@@ -48,6 +50,7 @@ The test suite is designed to validate each phase of the removal process:
 ### Test Execution Commands
 
 #### Automated Test Execution
+
 ```bash
 # Run all RR-106 specific tests
 npm test -- --testPathPattern="rr-106"
@@ -66,6 +69,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 ```
 
 #### Automated Validation Script
+
 ```bash
 # Run comprehensive validation
 ./scripts/test-rr-106-removal-validation.sh
@@ -84,6 +88,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 **Purpose**: Establish baseline state before making changes
 
 **Key Test Cases**:
+
 - Verify freshness API currently accessible and functional
 - Document all freshness references in codebase (baseline count)
 - Validate monitoring scripts include freshness checks
@@ -91,6 +96,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 - Establish service health baseline
 
 **Success Criteria**:
+
 - Freshness endpoint returns valid response (200/503)
 - All baseline health endpoints functional
 - Monitoring systems operational with freshness included
@@ -100,6 +106,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 **Purpose**: Validate each removal phase progresses correctly
 
 **Key Test Cases**:
+
 - API route file removal verification
 - Endpoint 404 response validation
 - Test file cleanup verification
@@ -107,6 +114,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 - Monitoring script update verification
 
 **Success Criteria**:
+
 - Each phase removes expected components
 - No broken references introduced
 - System remains stable during removal
@@ -116,6 +124,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 **Purpose**: Ensure complete removal and system integrity
 
 **Key Test Cases**:
+
 - Freshness endpoint returns 404
 - All other health endpoints remain functional
 - Monitoring systems work without freshness
@@ -123,6 +132,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 - No freshness references remain in active code
 
 **Success Criteria**:
+
 - System operates normally without freshness API
 - Monitoring coverage remains adequate
 - No regression in core functionality
@@ -132,6 +142,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 **Purpose**: Ensure removal doesn't break existing functionality
 
 **Key Test Areas**:
+
 - Article reading and sync functionality
 - Health monitoring and alerting
 - Database operations and performance
@@ -139,6 +150,7 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 - Build and deployment processes
 
 **Success Criteria**:
+
 - All core features work unchanged
 - Performance metrics remain within baseline
 - Monitoring and alerting continue functioning
@@ -147,19 +159,20 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 
 ### Functions Under Review
 
-1. **count_articles_since(TIMESTAMPTZ)** 
+1. **count_articles_since(TIMESTAMPTZ)**
    - Primary usage: Freshness API only
    - Safe to remove: Yes (no other dependencies found)
    - Alternative: Direct SQL query if needed elsewhere
 
 2. **count_all_articles()**
-   - Primary usage: Freshness API only  
+   - Primary usage: Freshness API only
    - Safe to remove: Yes (no other dependencies found)
    - Alternative: Direct SQL query if needed elsewhere
 
 ### Database Cleanup Options
 
 1. **Option 1: Remove Functions** (Recommended)
+
    ```sql
    DROP FUNCTION IF EXISTS count_articles_since(TIMESTAMPTZ);
    DROP FUNCTION IF EXISTS count_all_articles();
@@ -203,13 +216,15 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 ### Uptime Kuma Monitor Changes
 
 **Remove Monitor**:
+
 - Name: "RSS Reader - Article Freshness"
 - URL: `http://100.96.166.53:3000/reader/api/health/freshness`
 - Type: HTTP monitor
 
 **Keep Monitors**:
+
 - RSS Reader - App Health
-- RSS Reader - Database Health  
+- RSS Reader - Database Health
 - RSS Reader - Cron Health
 - RSS Reader - Sync API Endpoint
 - RSS Reader - Sync Success Rate (Push)
@@ -217,18 +232,21 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 ## Test Environment Considerations
 
 ### Development Environment
+
 - Single environment: http://localhost:3000 or http://100.96.166.53:3000
 - PM2 services: rss-reader-dev, rss-sync-server, rss-sync-cron
 - Supabase database with test data
 - Tailscale network access required
 
 ### Test Data Requirements
+
 - Articles in database for testing
 - Valid OAuth tokens for sync testing
 - Active PM2 services for monitoring tests
 - Log files for historical data analysis
 
 ### Service Dependencies
+
 - **Required**: Supabase database connection
 - **Required**: Node.js and npm for test execution
 - **Optional**: PM2 for service monitoring tests
@@ -286,26 +304,28 @@ npx playwright test src/__tests__/e2e/rr-106-freshness-api-removal.spec.ts
 If critical issues are discovered during testing:
 
 1. **Immediate Actions**
+
    ```bash
    # Restore freshness API file
    git checkout HEAD~1 -- src/app/api/health/freshness/route.ts
-   
+
    # Restore monitoring scripts
    git checkout HEAD~1 -- scripts/monitor-dashboard.sh
    git checkout HEAD~1 -- scripts/setup-sync-monitors.js
-   
+
    # Restart services
    pm2 restart ecosystem.config.js
    ```
 
 2. **Validation Steps**
+
    ```bash
    # Verify freshness endpoint works
    curl http://100.96.166.53:3000/reader/api/health/freshness
-   
+
    # Run test suite
    npm run test
-   
+
    # Check monitoring
    ./scripts/monitor-dashboard.sh
    ```
@@ -328,26 +348,31 @@ If critical issues are discovered during testing:
 ### Primary Acceptance Criteria
 
 ✅ **API Removal**
+
 - [ ] Freshness API route file deleted
 - [ ] Endpoint returns 404
 - [ ] No freshness references in source code
 
-✅ **Test Updates**  
+✅ **Test Updates**
+
 - [ ] Unit tests removed/updated
 - [ ] Integration tests cleaned
 - [ ] Test suite passes
 
 ✅ **Monitoring Updates**
+
 - [ ] Scripts updated to exclude freshness
 - [ ] Uptime Kuma monitors updated
 - [ ] Monitoring coverage adequate
 
 ✅ **System Integrity**
+
 - [ ] Core functionality unchanged
 - [ ] Performance baseline maintained
 - [ ] No regression issues
 
 ✅ **Documentation**
+
 - [ ] API docs updated
 - [ ] Monitoring guides updated
 - [ ] CLAUDE.md references removed
@@ -355,11 +380,13 @@ If critical issues are discovered during testing:
 ### Secondary Acceptance Criteria
 
 ✅ **Database Cleanup**
+
 - [ ] Unused functions identified
 - [ ] Cleanup strategy documented
 - [ ] No critical dependencies found
 
 ✅ **Rollback Readiness**
+
 - [ ] Rollback procedures tested
 - [ ] Git history preserved
 - [ ] Emergency contacts identified

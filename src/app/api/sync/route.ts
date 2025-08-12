@@ -48,45 +48,49 @@ async function gatherSidebarData() {
     const { data: feedStats } = await supabase
       .from("feed_stats")
       .select("feed_id, unread_count");
-    
-    const feedCounts: Array<[string, number]> = feedStats?.map(stat => 
-      [stat.feed_id, stat.unread_count]
-    ) || [];
-    
+
+    const feedCounts: Array<[string, number]> =
+      feedStats?.map((stat) => [stat.feed_id, stat.unread_count]) || [];
+
     // Get the actual user ID first
     const { data: userData } = await supabase
       .from("users")
       .select("id")
       .eq("inoreader_id", "shayon")
       .single();
-    
+
     const userId = userData?.id;
     if (!userId) {
       console.error("[Sync] User not found for sidebar data");
       return null;
     }
-    
+
     // RR-163: Get tags with UNREAD counts - properly join tags table for names
     const { data: unreadArticleTags, error: tagError } = await supabase
       .from("articles")
-      .select(`
+      .select(
+        `
         id,
         article_tags!inner(
           tag_id,
           tags!inner(id, name)
         )
-      `)
+      `
+      )
       .eq("user_id", userId)
       .eq("is_read", false);
-    
+
     if (tagError) {
       console.error("[Sync] Error fetching unread article tags:", tagError);
     }
-    console.log("[Sync] Unread articles with tags count:", unreadArticleTags?.length || 0);
-    
+    console.log(
+      "[Sync] Unread articles with tags count:",
+      unreadArticleTags?.length || 0
+    );
+
     // Count unread articles per tag
     const tagCounts = new Map<string, { name: string; count: number }>();
-    unreadArticleTags?.forEach(article => {
+    unreadArticleTags?.forEach((article) => {
       if (article.article_tags && Array.isArray(article.article_tags)) {
         article.article_tags.forEach((tagRelation: any) => {
           const tag = tagRelation.tags;
@@ -104,25 +108,25 @@ async function gatherSidebarData() {
                 .replace(/&#039;/g, "'")
                 .replace(/&#x27;/g, "'")
                 .replace(/&#x2F;/g, "/");
-              
+
               tagCounts.set(tag.id, { name: decodedName, count: 1 });
             }
           }
         });
       }
     });
-    
+
     const tagsArray = Array.from(tagCounts.entries()).map(([id, data]) => ({
       id,
       name: data.name,
-      count: data.count
+      count: data.count,
     }));
-    
+
     console.log("[Sync] Sidebar tags array:", tagsArray.length, "tags");
-    
+
     return {
       feedCounts,
-      tags: tagsArray
+      tags: tagsArray,
     };
   } catch (error) {
     console.error("[Sync] Error gathering sidebar data:", error);
@@ -222,10 +226,10 @@ export async function POST() {
 
     if (!rateLimit.allowed) {
       // Calculate retry-after based on environment or default to 5 minutes
-      const retryAfterSeconds = process.env.RATE_LIMIT_RETRY_SECONDS 
-        ? parseInt(process.env.RATE_LIMIT_RETRY_SECONDS) 
+      const retryAfterSeconds = process.env.RATE_LIMIT_RETRY_SECONDS
+        ? parseInt(process.env.RATE_LIMIT_RETRY_SECONDS)
         : 300; // Default 5 minutes
-      
+
       return NextResponse.json(
         {
           error: "rate_limit_exceeded",
@@ -235,11 +239,11 @@ export async function POST() {
           remaining: 0,
           retryAfter: retryAfterSeconds, // Include in body for backward compatibility
         },
-        { 
+        {
           status: 429,
           headers: {
-            'Retry-After': retryAfterSeconds.toString(), // Standard HTTP header
-          }
+            "Retry-After": retryAfterSeconds.toString(), // Standard HTTP header
+          },
         }
       );
     }
@@ -313,7 +317,7 @@ async function performServerSync(syncId: string) {
 
     // Get access token
     const accessToken = await tokenManager.getAccessToken();
-    
+
     // RR-149: Track current timestamp for incremental sync
     const currentTimestamp = Math.floor(Date.now() / 1000);
 
@@ -332,7 +336,9 @@ async function performServerSync(syncId: string) {
     if (!subsResponse.ok) {
       // Check if it's a rate limit error
       if (subsResponse.status === 429) {
-        console.error("[Sync] Inoreader API rate limit reached during subscriptions fetch");
+        console.error(
+          "[Sync] Inoreader API rate limit reached during subscriptions fetch"
+        );
         status.error = "Rate limit exceeded - sync incomplete";
         status.status = "failed";
         await writeSyncStatus(syncId, status);
@@ -375,13 +381,18 @@ async function performServerSync(syncId: string) {
     if (!tagListResponse.ok) {
       // Check if it's a rate limit error (RR-5)
       if (tagListResponse.status === 429) {
-        console.error("[Sync] Inoreader API rate limit reached during tag list fetch");
-        status.error = "Rate limit exceeded - sync incomplete after fetching subscriptions";
+        console.error(
+          "[Sync] Inoreader API rate limit reached during tag list fetch"
+        );
+        status.error =
+          "Rate limit exceeded - sync incomplete after fetching subscriptions";
         status.status = "failed";
         await writeSyncStatus(syncId, status);
         return; // Exit gracefully with partial data
       }
-      console.error(`[Sync] Failed to fetch tag list: ${tagListResponse.statusText}`);
+      console.error(
+        `[Sync] Failed to fetch tag list: ${tagListResponse.statusText}`
+      );
       // Continue sync even if tag list fails for other reasons
     }
 
@@ -390,12 +401,14 @@ async function performServerSync(syncId: string) {
     if (tagListResponse.ok) {
       const tagListData = await tagListResponse.json();
       for (const tag of tagListData.tags || []) {
-        if (tag.id && tag.id.includes('/label/')) {
-          const labelName = tag.id.replace(/^user\/[^\/]*\/label\//, '');
+        if (tag.id && tag.id.includes("/label/")) {
+          const labelName = tag.id.replace(/^user\/[^\/]*\/label\//, "");
           allLabels.add(labelName);
         }
       }
-      console.log(`[Sync] Found ${allLabels.size} total labels (tags + folders)`);
+      console.log(
+        `[Sync] Found ${allLabels.size} total labels (tags + folders)`
+      );
     }
 
     // Tags are labels that are NOT folders
@@ -405,15 +418,17 @@ async function performServerSync(syncId: string) {
         pureTags.add(label);
       }
     }
-    console.log(`[Sync] Identified ${pureTags.size} pure tags (excluding folders)`);
-    
+    console.log(
+      `[Sync] Identified ${pureTags.size} pure tags (excluding folders)`
+    );
+
     // Create a map for quick lookup during article processing
     const tagTypeMap = new Map<string, string>();
     for (const label of allLabels) {
       if (folderNames.has(label)) {
-        tagTypeMap.set(label, 'folder');
+        tagTypeMap.set(label, "folder");
       } else {
-        tagTypeMap.set(label, 'tag');
+        tagTypeMap.set(label, "tag");
       }
     }
 
@@ -428,8 +443,11 @@ async function performServerSync(syncId: string) {
     if (!countsResponse.ok) {
       // Check if it's a rate limit error (RR-5)
       if (countsResponse.status === 429) {
-        console.error("[Sync] Inoreader API rate limit reached during unread counts fetch");
-        status.error = "Rate limit exceeded - sync incomplete after fetching tags";
+        console.error(
+          "[Sync] Inoreader API rate limit reached during unread counts fetch"
+        );
+        status.error =
+          "Rate limit exceeded - sync incomplete after fetching tags";
         status.status = "failed";
         await writeSyncStatus(syncId, status);
         return; // Exit gracefully with partial data
@@ -520,7 +538,7 @@ async function performServerSync(syncId: string) {
       inoreaderFeedIds,
       userId
     );
-    
+
     if (feedCleanupResult.feedsDeleted > 0) {
       console.log(
         `[Sync] Cleaned up ${feedCleanupResult.feedsDeleted} deleted feeds and ${feedCleanupResult.articlesDeleted} articles`
@@ -538,28 +556,36 @@ async function performServerSync(syncId: string) {
       .eq("key", "last_incremental_sync_timestamp")
       .single();
 
-    const lastSyncTimestamp = lastSyncData?.value ? parseInt(lastSyncData.value) : null;
-    
+    const lastSyncTimestamp = lastSyncData?.value
+      ? parseInt(lastSyncData.value)
+      : null;
+
     // Check if we should do a full sync (weekly or no previous timestamp)
-    const shouldDoFullSync = !lastSyncTimestamp || 
-      (currentTimestamp - lastSyncTimestamp) > (7 * 24 * 60 * 60); // 7 days in seconds
+    const shouldDoFullSync =
+      !lastSyncTimestamp ||
+      currentTimestamp - lastSyncTimestamp > 7 * 24 * 60 * 60; // 7 days in seconds
 
     // Step 3: Fetch recent articles (single stream call)
     const maxArticles = process.env.SYNC_MAX_ARTICLES
       ? parseInt(process.env.SYNC_MAX_ARTICLES)
       : 100;
-    
+
     // RR-149: Build URL with xt parameter to exclude read articles and ot for incremental sync
     let streamUrl = `https://www.inoreader.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list?n=${maxArticles}&xt=user/-/state/com.google/read`;
-    
+
     if (!shouldDoFullSync && lastSyncTimestamp) {
       streamUrl += `&ot=${lastSyncTimestamp}`;
-      console.log(`[Sync] Performing incremental sync (articles newer than ${new Date(lastSyncTimestamp * 1000).toISOString()})`);
+      console.log(
+        `[Sync] Performing incremental sync (articles newer than ${new Date(lastSyncTimestamp * 1000).toISOString()})`
+      );
     } else {
-      console.log(`[Sync] Performing full sync (${shouldDoFullSync ? 'weekly refresh' : 'no previous timestamp'})`);
+      console.log(
+        `[Sync] Performing full sync (${shouldDoFullSync ? "weekly refresh" : "no previous timestamp"})`
+      );
     }
-    
-    const streamResponse = await tokenManager.makeAuthenticatedRequest(streamUrl);
+
+    const streamResponse =
+      await tokenManager.makeAuthenticatedRequest(streamUrl);
 
     // Capture rate limit headers for RR-5 (even on failure)
     await captureRateLimitHeaders(streamResponse.headers);
@@ -567,8 +593,11 @@ async function performServerSync(syncId: string) {
     if (!streamResponse.ok) {
       // Check if it's a rate limit error (RR-5)
       if (streamResponse.status === 429) {
-        console.error("[Sync] Inoreader API rate limit reached during stream contents fetch");
-        status.error = "Rate limit exceeded - sync incomplete after fetching unread counts";
+        console.error(
+          "[Sync] Inoreader API rate limit reached during stream contents fetch"
+        );
+        status.error =
+          "Rate limit exceeded - sync incomplete after fetching unread counts";
         status.status = "failed";
         await writeSyncStatus(syncId, status);
         return; // Exit gracefully with partial data
@@ -593,7 +622,7 @@ async function performServerSync(syncId: string) {
 
     // Mark sync timestamp for loop prevention
     const syncTimestamp = new Date().toISOString();
-    
+
     // Initialize conflict detector for this sync session
     const conflictDetector = new SyncConflictDetector(syncId);
 
@@ -601,34 +630,44 @@ async function performServerSync(syncId: string) {
     if (articles.length > 0 && feedIdMap.size > 0) {
       // RR-129: Check for previously deleted articles to prevent re-import
       const articleInoreaderIds = articles.map((a: any) => a.id);
-      const deletedArticles = await cleanupService.wasArticleDeleted(articleInoreaderIds);
-      
+      const deletedArticles =
+        await cleanupService.wasArticleDeleted(articleInoreaderIds);
+
       const articlesToUpsert = articles
         .filter((article: any) => {
           // Find which feed this article belongs to
           const feedInorId = article.origin?.streamId;
           const hasValidFeed = feedInorId && feedIdMap.has(feedInorId);
-          
+
           // RR-129: Skip articles that were previously deleted as read
           // UNLESS they are now unread in Inoreader (user changed their mind)
           if (deletedArticles.has(article.id)) {
-            const isNowUnread = !article.categories?.includes("user/-/state/com.google/read");
+            const isNowUnread = !article.categories?.includes(
+              "user/-/state/com.google/read"
+            );
             if (isNowUnread) {
-              console.log(`[Sync] Re-importing article ${article.id} - now marked as unread in Inoreader`);
+              console.log(
+                `[Sync] Re-importing article ${article.id} - now marked as unread in Inoreader`
+              );
               // Remove from deletion tracking since user wants it back
-              supabase.from('deleted_articles')
+              supabase
+                .from("deleted_articles")
                 .delete()
-                .eq('inoreader_id', article.id)
+                .eq("inoreader_id", article.id)
                 .then(() => {
-                  console.log(`[Sync] Removed ${article.id} from deletion tracking`);
+                  console.log(
+                    `[Sync] Removed ${article.id} from deletion tracking`
+                  );
                 });
               return hasValidFeed;
             } else {
-              console.log(`[Sync] Skipping previously deleted article ${article.id}`);
+              console.log(
+                `[Sync] Skipping previously deleted article ${article.id}`
+              );
               return false;
             }
           }
-          
+
           return hasValidFeed;
         })
         .map((article: any) => {
@@ -640,7 +679,9 @@ async function performServerSync(syncId: string) {
             inoreader_id: article.id,
             title: decodeHtmlEntities(article.title) || "Untitled",
             author: article.author || null,
-            content: decodeHtmlEntities(article.content?.content || article.summary?.content || ""),
+            content: decodeHtmlEntities(
+              article.content?.content || article.summary?.content || ""
+            ),
             url:
               article.canonical?.[0]?.href ||
               article.alternate?.[0]?.href ||
@@ -688,9 +729,10 @@ async function performServerSync(syncId: string) {
 
             if (existing) {
               // Check if states differ (potential conflict)
-              const statesDiffer = existing.is_read !== article.is_read || 
-                                  existing.is_starred !== article.is_starred;
-              
+              const statesDiffer =
+                existing.is_read !== article.is_read ||
+                existing.is_starred !== article.is_starred;
+
               if (existing.last_local_update) {
                 // IMPORTANT: We compare last_local_update with last_sync_update (not current time)
                 // This ensures we only preserve changes made AFTER the last sync from Inoreader.
@@ -698,18 +740,18 @@ async function performServerSync(syncId: string) {
                 // always win, preventing Inoreader changes from ever being applied.
                 const lastSyncTime =
                   existing.last_sync_update || existing.updated_at;
-                  
+
                 if (
                   new Date(existing.last_local_update) > new Date(lastSyncTime)
                 ) {
                   if (statesDiffer) {
                     // RR-30: Log conflict - local changes will be preserved
-                    conflictDetector.detectConflict(existing, article, 'local');
+                    conflictDetector.detectConflict(existing, article, "local");
                     console.log(
                       `[Sync] Conflict detected for ${article.inoreader_id}: preserving local state`
                     );
                   }
-                  
+
                   // Local changes are newer than last sync - preserve local state
                   // This handles the case where user marked articles as read/starred
                   // between the last sync and now. Without this, their changes would
@@ -724,7 +766,7 @@ async function performServerSync(syncId: string) {
                 } else if (statesDiffer && existing.last_local_update) {
                   // Local changes exist but are older than last sync AND states differ
                   // This means remote wins but we should log the conflict
-                  conflictDetector.detectConflict(existing, article, 'remote');
+                  conflictDetector.detectConflict(existing, article, "remote");
                   console.log(
                     `[Sync] Conflict detected for ${article.inoreader_id}: applying remote state`
                   );
@@ -763,98 +805,134 @@ async function performServerSync(syncId: string) {
         // RR-128: Extract and save tags for articles
         if (tagTypeMap.size > 0) {
           console.log("[Sync] Processing tags for articles...");
-          
+
           // Get all unique tags from articles
           const allTags = new Set<string>();
-          const articleTagAssociations: Array<{ articleId: string; tagName: string }> = [];
-          
+          const articleTagAssociations: Array<{
+            articleId: string;
+            tagName: string;
+          }> = [];
+
           for (const article of articles) {
             if (article.categories && Array.isArray(article.categories)) {
               for (const category of article.categories) {
-                if (category.includes('/label/')) {
-                  const labelName = category.replace(/^user\/[^\/]*\/label\//, '');
+                if (category.includes("/label/")) {
+                  const labelName = category.replace(
+                    /^user\/[^\/]*\/label\//,
+                    ""
+                  );
                   const tagType = tagTypeMap.get(labelName);
-                  
+
                   // Only process if it's explicitly a tag (not a folder)
-                  if (tagType === 'tag') {
+                  if (tagType === "tag") {
                     allTags.add(labelName);
                     // Store association for later
                     articleTagAssociations.push({
                       articleId: article.id, // Inoreader ID
-                      tagName: labelName
+                      tagName: labelName,
                     });
                   }
                 }
               }
             }
           }
-          
+
           if (allTags.size > 0) {
             console.log(`[Sync] Found ${allTags.size} unique tags in articles`);
-            
+
             // Upsert tags to database
-            const tagsToUpsert = Array.from(allTags).map(tagName => ({
+            const tagsToUpsert = Array.from(allTags).map((tagName) => ({
               name: tagName,
-              slug: tagName.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, ''),
+              slug: tagName
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, "")
+                .replace(/[\s_-]+/g, "-")
+                .replace(/^-+|-+$/g, ""),
               user_id: userId,
-              article_count: 0 // Will be updated later
+              article_count: 0, // Will be updated later
             }));
-            
+
             const { data: upsertedTags, error: tagError } = await supabase
               .from("tags")
               .upsert(tagsToUpsert, { onConflict: "user_id,slug" })
               .select("id, name, slug");
-            
+
             if (tagError) {
               console.error("[Sync] Error upserting tags:", tagError);
             } else if (upsertedTags) {
               console.log(`[Sync] Upserted ${upsertedTags.length} tags`);
-              
+
               // Create tag name to ID map
-              const tagIdMap = new Map(upsertedTags.map(tag => [tag.name, tag.id]));
-              
+              const tagIdMap = new Map(
+                upsertedTags.map((tag) => [tag.name, tag.id])
+              );
+
               // Get article IDs from database
-              const inoreaderIds = articles.map(a => a.id);
-              const { data: dbArticles, error: articleLookupError } = await supabase
-                .from("articles")
-                .select("id, inoreader_id")
-                .in("inoreader_id", inoreaderIds);
-              
+              const inoreaderIds = articles.map((a) => a.id);
+              const { data: dbArticles, error: articleLookupError } =
+                await supabase
+                  .from("articles")
+                  .select("id, inoreader_id")
+                  .in("inoreader_id", inoreaderIds);
+
               if (articleLookupError) {
-                console.error("[Sync] Error looking up article IDs:", articleLookupError);
+                console.error(
+                  "[Sync] Error looking up article IDs:",
+                  articleLookupError
+                );
               } else if (dbArticles) {
                 // Create Inoreader ID to database ID map
-                const articleIdMap = new Map(dbArticles.map(a => [a.inoreader_id, a.id]));
-                
+                const articleIdMap = new Map(
+                  dbArticles.map((a) => [a.inoreader_id, a.id])
+                );
+
                 // Create article-tag associations
                 const associationsToInsert = articleTagAssociations
-                  .map(assoc => {
+                  .map((assoc) => {
                     const articleId = articleIdMap.get(assoc.articleId);
                     const tagId = tagIdMap.get(assoc.tagName);
-                    return articleId && tagId ? { article_id: articleId, tag_id: tagId } : null;
+                    return articleId && tagId
+                      ? { article_id: articleId, tag_id: tagId }
+                      : null;
                   })
-                  .filter(assoc => assoc !== null);
-                
+                  .filter((assoc) => assoc !== null);
+
                 if (associationsToInsert.length > 0) {
                   // Batch insert associations
                   const assocChunkSize = 100;
-                  for (let i = 0; i < associationsToInsert.length; i += assocChunkSize) {
-                    const assocChunk = associationsToInsert.slice(i, i + assocChunkSize);
+                  for (
+                    let i = 0;
+                    i < associationsToInsert.length;
+                    i += assocChunkSize
+                  ) {
+                    const assocChunk = associationsToInsert.slice(
+                      i,
+                      i + assocChunkSize
+                    );
                     const { error: assocError } = await supabase
                       .from("article_tags")
                       .upsert(assocChunk, { onConflict: "article_id,tag_id" });
-                    
+
                     if (assocError) {
-                      console.error("[Sync] Error creating article-tag associations:", assocError);
+                      console.error(
+                        "[Sync] Error creating article-tag associations:",
+                        assocError
+                      );
                     }
                   }
-                  
-                  console.log(`[Sync] Created ${associationsToInsert.length} article-tag associations`);
-                  
+
+                  console.log(
+                    `[Sync] Created ${associationsToInsert.length} article-tag associations`
+                  );
+
                   // Update tag counts
-                  const { error: updateCountError } = await supabase.rpc("update_tag_counts");
+                  const { error: updateCountError } =
+                    await supabase.rpc("update_tag_counts");
                   if (updateCountError) {
-                    console.error("[Sync] Error updating tag counts:", updateCountError);
+                    console.error(
+                      "[Sync] Error updating tag counts:",
+                      updateCountError
+                    );
                   } else {
                     console.log("[Sync] Updated tag counts");
                   }
@@ -901,7 +979,7 @@ async function performServerSync(syncId: string) {
       },
       { onConflict: "key" }
     );
-    
+
     // RR-149: Update incremental sync timestamp for next sync
     await supabase.from("sync_metadata").upsert(
       {
@@ -918,11 +996,13 @@ async function performServerSync(syncId: string) {
     status.progress = 97;
     status.message = "Logging sync conflicts...";
     await writeSyncStatus(syncId, status);
-    
+
     const conflictSummary = conflictDetector.getSummary();
     if (conflictSummary.totalConflicts > 0) {
       await conflictDetector.writeConflicts();
-      console.log(`[Sync] Detected ${conflictSummary.totalConflicts} conflicts:`);
+      console.log(
+        `[Sync] Detected ${conflictSummary.totalConflicts} conflicts:`
+      );
       console.log(conflictDetector.generateReport());
     }
 
@@ -931,9 +1011,10 @@ async function performServerSync(syncId: string) {
     status.message = "Cleaning up read articles...";
     await writeSyncStatus(syncId, status);
     console.log("[Sync] Cleaning up read articles with tracking...");
-    
+
     try {
-      const articleCleanupResult = await cleanupService.cleanupReadArticles(userId);
+      const articleCleanupResult =
+        await cleanupService.cleanupReadArticles(userId);
       if (articleCleanupResult.readArticlesDeleted > 0) {
         console.log(
           `[Sync] Deleted ${articleCleanupResult.readArticlesDeleted} read articles, tracked ${articleCleanupResult.trackingEntriesCreated} deletions`
@@ -942,13 +1023,16 @@ async function performServerSync(syncId: string) {
       if (articleCleanupResult.errors.length > 0) {
         console.error("[Sync] Cleanup errors:", articleCleanupResult.errors);
       }
-      
+
       // RR-149: Enforce article retention limit
-      const retentionLimit = process.env.ARTICLES_RETENTION_LIMIT 
+      const retentionLimit = process.env.ARTICLES_RETENTION_LIMIT
         ? parseInt(process.env.ARTICLES_RETENTION_LIMIT)
         : 1000;
-      
-      const retentionResult = await cleanupService.enforceRetentionLimit(userId, retentionLimit);
+
+      const retentionResult = await cleanupService.enforceRetentionLimit(
+        userId,
+        retentionLimit
+      );
       if (retentionResult.deletedCount > 0) {
         console.log(
           `[Sync] Enforced retention limit: deleted ${retentionResult.deletedCount} articles in ${retentionResult.chunksProcessed} chunks`
@@ -992,12 +1076,12 @@ async function performServerSync(syncId: string) {
       newArticles: articles.length, // This is approximate, should track actual inserts
       deletedArticles: 0, // Track deletions if implemented
       newTags: 0, // Count new tags added during sync
-      failedFeeds: 0 // Track failed feed fetches
+      failedFeeds: 0, // Track failed feed fetches
     };
-    
+
     // RR-171: Gather sidebar data for immediate UI update
     const sidebarData = await gatherSidebarData();
-    
+
     // Complete with metrics and sidebar data
     status.status = "completed";
     status.progress = 100;
@@ -1005,9 +1089,10 @@ async function performServerSync(syncId: string) {
     if (sidebarData) {
       status.sidebar = sidebarData;
     }
-    const conflictMessage = conflictSummary.totalConflicts > 0 
-      ? ` Detected ${conflictSummary.totalConflicts} conflicts.`
-      : '';
+    const conflictMessage =
+      conflictSummary.totalConflicts > 0
+        ? ` Detected ${conflictSummary.totalConflicts} conflicts.`
+        : "";
     status.message = `Sync completed. Synced ${subscriptions.length} feeds and ${articles.length} articles.${conflictMessage}`;
     await writeSyncStatus(syncId, status);
 

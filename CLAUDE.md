@@ -3,8 +3,9 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## BEHAVIORAL RULES (MUST DISPLAY AT START OF EVERY RESPONSE)
+
 1. NEVER commit code without explicit user permission
-2. ALWAYS run tests before declaring fixes complete  
+2. ALWAYS run tests before declaring fixes complete
 3. ALWAYS search for existing endpoints before creating new ones (use Grep)
 4. NEVER modify test files - fix the actual code instead
 5. NEVER modify .env files - fix the code that uses them
@@ -133,7 +134,7 @@ src/
 
 All API routes follow RESTful conventions:
 
-- `/api/articles/[id]/*` - Article content and AI operations  
+- `/api/articles/[id]/*` - Article content and AI operations
 - `/api/inoreader/*` - Inoreader API proxy
 - `/api/sync` - Sync operations
 - `/api/health` - Health checks
@@ -246,7 +247,7 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 ## Proof of Concepts (POCs)
 
 - All POC exercises must be created in `src/app/pocs/` directory
-- Organize POCs by feature name (not technology domain)  
+- Organize POCs by feature name (not technology domain)
 - Each POC should include a README.md with decisions and rationale
 - POCs are accessible via web routes: `http://100.96.166.53:3000/reader/pocs/[feature-name]`
 - Reference completed POCs in related Linear issues for implementation guidance
@@ -270,8 +271,9 @@ Run `./scripts/validate-env.sh` before building to ensure all variables are set.
 - The app has a base path of `/reader`
 
 ### Testing Infrastructure (RR-145 Resolved)
+
 - **Crisis Resolved (2025-08-11)**: Fixed major testing infrastructure failure that was causing 118/120 test suite failures
-- **Root Causes Fixed**: 
+- **Root Causes Fixed**:
   - TypeScript JSX configuration missing (`jsx: "react-jsx"`, `allowSyntheticDefaultImports`)
   - Test setup sessionStorage redefinition crashes in `src/__tests__/test-setup.ts`
   - Missing custom Vitest matcher definitions (`toBeOneOf`)

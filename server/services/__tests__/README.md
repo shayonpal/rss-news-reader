@@ -9,7 +9,6 @@ This directory contains comprehensive unit and integration tests for the BiDirec
 The unit tests focus on:
 
 1. **API Usage Tracking**
-
    - Correctly tracks new API usage records
    - Updates existing records
    - Handles database errors gracefully
@@ -17,7 +16,6 @@ The unit tests focus on:
    - No database schema errors occur
 
 2. **Sync Queue Processing**
-
    - Skips when already processing
    - Handles empty queues
    - Processes when minimum threshold met
@@ -25,19 +23,16 @@ The unit tests focus on:
    - Handles database errors gracefully
 
 3. **Inoreader API Integration**
-
    - Sends correct parameters for each action type
    - Handles API errors appropriately
    - Validates action types
 
 4. **Error Handling & Retries**
-
    - Updates retry attempts correctly
    - Respects max retry limits
    - Maintains retry state properly
 
 5. **Memory Management**
-
    - Resets processing flags after errors
    - Tracks retry attempts without unbounded growth
    - Handles large batches efficiently
@@ -52,14 +47,12 @@ The unit tests focus on:
 The integration tests simulate realistic scenarios:
 
 1. **Full Sync Cycles**
-
    - Multiple action types in one cycle
    - Partial failures with retry logic
    - Batch size limits
    - Rate limiting handling
 
 2. **Memory Usage Patterns**
-
    - Large batch processing (1000+ items)
    - Memory leak prevention
    - Retry map accumulation
@@ -93,17 +86,14 @@ npm run test:coverage
 ## Key Assertions
 
 1. **API Usage Tracking Never Blocks Sync**
-
    - Even if the API usage tracking fails completely, the sync process continues
    - Database errors are logged but don't throw exceptions
 
 2. **Memory Stays Within Limits**
-
    - Processing 1000 items increases heap by less than 50MB
    - No unbounded growth of internal data structures
 
 3. **Error Recovery**
-
    - Failed syncs are retried with exponential backoff
    - Max retries prevent infinite loops
    - Processing flags are always reset

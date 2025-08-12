@@ -95,7 +95,7 @@ describe("validate-build.sh - RR-69 Updates", () => {
 
       // Should check status codes for health endpoints
       expect(scriptContent).toMatch(/health_status_code/);
-      
+
       // Production removed per RR-92, only dev environment exists
       expect(scriptContent).not.toMatch(/prod_status_code/);
     });
