@@ -106,17 +106,13 @@ Initially built for personal use, with exactly one user, with plans to open-sour
 - Fetched content stored in separate `full_content` field
 - Failed extractions show user-friendly error with reason (manual fetch only)
 
-#### Auto-Fetch for Partial Feeds
+#### Manual Content Fetching Only (RR-162)
 
-- Feeds can be marked as "partial content" via toggle in article view
-- Auto-fetch runs as part of sync process (after normal article sync completes)
-- Applies to: Manual sync, 2am automatic sync, 2pm automatic sync
-- Rate limit: Maximum 50 articles per 30 minutes
-- **Performance Optimization**: Processes ONLY articles from feeds marked as partial content (`is_partial_content = true`)
-- **Targeted Processing**: Prevents unnecessary content fetching for feeds that already provide full content in their RSS
-- **Efficiency Improvement**: Significantly reduces server load and processing time by targeting only feeds that actually need content extraction
+- **Manual fetch only**: Users can fetch full content via button in article view
+- **Auto-fetch removed**: Automatic background content fetching functionality removed to resolve sync performance issues
+- **Per-article basis**: Content fetching available on-demand for any article
 - All fetch attempts logged in database (success/failure/reason)
-- Silent failures for auto-fetch (no user notification)
+- User-triggered fetches show clear feedback and error messages
 
 #### Database Changes
 

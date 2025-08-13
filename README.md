@@ -14,9 +14,9 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **iOS 26 Liquid Glass Design**: Advanced morphing animations with spring easing and enhanced glass effects
 - **Full Content Extraction**: Extract complete articles beyond RSS snippets (v0.6.0)
   - Manual fetch button for any article
-  - Automatic fetching for partial content feeds
   - Smart content priority display
   - Comprehensive fetch statistics dashboard
+  - Note: Automatic fetching removed in RR-162 for improved sync performance
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
 - **Author Display**: Shows article authors in list and detail views (v0.12.0)
 - **Navigation State Preservation**: Articles remain visible when returning from detail view (v0.12.0)

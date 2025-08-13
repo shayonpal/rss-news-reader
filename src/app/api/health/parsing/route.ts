@@ -41,23 +41,15 @@ export async function GET() {
       .select("status, fetch_type")
       .gte("created_at", oneDayAgo.toISOString());
 
-    // Calculate fetch statistics (exclude auto-fetch for API health metrics)
+    // Calculate fetch statistics (only manual fetch)
     const manualFetchLogs =
-      fetchLogs?.filter((log) => log.fetch_type !== "auto") || [];
-    const autoFetchLogs =
-      fetchLogs?.filter((log) => log.fetch_type === "auto") || [];
+      fetchLogs?.filter((log) => log.fetch_type === "manual") || [];
 
     const fetchStats = {
       total: manualFetchLogs.length,
       success: manualFetchLogs.filter((log) => log.status === "success").length,
       failure: manualFetchLogs.filter((log) => log.status === "failure").length,
-      manual:
-        fetchLogs?.filter((log) => log.fetch_type === "manual").length || 0,
-      auto: {
-        total: autoFetchLogs.length,
-        success: autoFetchLogs.filter((log) => log.status === "success").length,
-        failure: autoFetchLogs.filter((log) => log.status === "failure").length,
-      },
+      manual: manualFetchLogs.length,
     };
 
     // Get average parse duration from recent logs
@@ -124,11 +116,9 @@ export async function GET() {
               failure: fetchStats.failure,
               manual: fetchStats.manual,
             },
-            auto: fetchStats.auto,
           },
           successRate: `${successRate.toFixed(1)}%`,
           avgDurationMs: Math.round(avgDuration),
-          note: "Success rate excludes auto-fetch operations (content parsing)",
         },
         configuration: {
           timeoutSeconds: parseInt(configMap.parse_timeout_seconds || "30"),

@@ -56,8 +56,8 @@ The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102
 
 ### Sync
 
-- POST `/api/sync` (RR-176)
-  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers bi-directional queue processing. As of RR-176, auto-fetch logic is optimized to only trigger for partial feeds during user navigation.
+- POST `/api/sync` (RR-176, RR-162)
+  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers bi-directional queue processing. As of RR-162, auto-fetch functionality has been removed to resolve sync performance issues.
   - Response 200: `{ success, syncId, status, message, metrics: { newArticles, deletedArticles, newTags, failedFeeds }, sidebar: { feedCounts: [[feedId, unreadCount], ...], tags: [{ id, name, count }], lastUpdated } }`
   - Response 429: `{ error: "rate_limit_exceeded", ... }`
   - Response 500: `{ error: "sync_start_failed", message, details }`
@@ -96,8 +96,8 @@ The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102
 
 ### Articles
 
-- POST `/api/articles/{id}/fetch-content` (RR-176)
-  - Description: Fetches article URL, extracts full content via Readability, stores `full_content`, marks parsing metadata, and logs attempts in `fetch_logs`. As of RR-176, auto-triggering is now limited to feeds marked with `is_partial_content = true` to improve performance.
+- POST `/api/articles/{id}/fetch-content` (RR-176, RR-162)
+  - Description: Fetches article URL, extracts full content via Readability, stores `full_content`, marks parsing metadata, and logs attempts in `fetch_logs`. Manual fetch only - auto-fetch functionality removed in RR-162.
   - Request JSON (optional): `{ forceRefresh?: boolean }`
   - Responses:
     - 200: `{ success: true, content, title?, excerpt?, byline?, length?, siteName?, parsedAt }`
@@ -244,7 +244,7 @@ The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102
 ### Analytics & Logs
 
 - GET `/api/analytics/fetch-stats`
-  - Description: Aggregated manual/auto fetch stats by period (today, thisMonth, lifetime), per-feed summaries, top issues, and recent failures.
+  - Description: Aggregated manual fetch stats by period (today, thisMonth, lifetime), per-feed summaries, top issues, and recent failures. Auto-fetch statistics removed in RR-162.
   - Response 200: `{ overall: { today, thisMonth, lifetime }, feeds: [...], topIssues: { problematicFeeds, recentFailures } }`
 
 - POST `/api/logs/inoreader`

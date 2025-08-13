@@ -302,7 +302,6 @@ export class DatabaseMigrations {
           theme: "system" as const,
           syncFrequency: 6,
           maxArticles: 500,
-          autoFetchFullContent: false,
           enableNotifications: false,
           fontSize: "medium" as const,
           readingWidth: "medium" as const,

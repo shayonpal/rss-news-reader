@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **[RR-162] Remove auto-fetch functionality to resolve sync hanging at 92%** (Wednesday, August 13, 2025 at 7:10 PM)
+  - **Breaking Change**: Removed `autoFetchFullContent` field from UserPreferences interface
+  - **Database Cleanup**: Removed auto-fetch preferences from user defaults and migrations
+  - **Health Endpoint**: Cleaned up health/parsing route to remove auto-fetch statistics
+  - **Sync Performance**: Fixed sync hanging issue by eliminating unused auto-fetch preference processing
+  - **Files Modified**: `src/types/index.ts`, `src/lib/repositories/user-preferences-repository.ts`, `src/lib/utils/migrations.ts`, `src/app/api/health/parsing/route.ts`
+  - **Impact**: Manual fetch functionality remains fully available - only automatic background fetching preference removed
+  - **Rationale**: The auto-fetch preference was not being used in the current implementation but was causing sync to hang during preference processing
+
 ### Fixed
 
 - **[RR-102] API Base Path Smart Redirects for Development Environment** (Monday, August 12, 2025 at 8:18 PM)

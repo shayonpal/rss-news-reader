@@ -108,7 +108,6 @@ export interface UserPreferences {
   theme: "light" | "dark" | "system";
   syncFrequency: number; // hours
   maxArticles: number;
-  autoFetchFullContent: boolean;
   enableNotifications: boolean;
   fontSize: "small" | "medium" | "large";
   readingWidth: "narrow" | "medium" | "wide";
