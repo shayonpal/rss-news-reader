@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { setupTestServer } from '../integration/test-server';
-import { existsSync, renameSync } from 'fs';
-import { Server } from 'http';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { setupTestServer } from "../integration/test-server";
+import { existsSync, renameSync } from "fs";
+import { Server } from "http";
 
-describe('RR-121: Test Server Edge Cases', () => {
+describe("RR-121: Test Server Edge Cases", () => {
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
@@ -14,10 +14,10 @@ describe('RR-121: Test Server Edge Cases', () => {
     process.env = originalEnv;
   });
 
-  describe('Missing Environment File Tests', () => {
-    it('should fall back to .env if .env.test missing', async () => {
-      const envTestPath = '.env.test';
-      const tempPath = '.env.test.backup';
+  describe("Missing Environment File Tests", () => {
+    it("should fall back to .env if .env.test missing", async () => {
+      const envTestPath = ".env.test";
+      const tempPath = ".env.test.backup";
       let movedFile = false;
 
       // Temporarily move .env.test if it exists
@@ -30,7 +30,7 @@ describe('RR-121: Test Server Edge Cases', () => {
         // Should still work with just .env
         const { server } = await setupTestServer(3150);
         expect(server).toBeDefined();
-        
+
         // Cleanup
         await new Promise<void>((resolve) => {
           server.close(() => resolve());
@@ -44,10 +44,10 @@ describe('RR-121: Test Server Edge Cases', () => {
     });
   });
 
-  describe('Port Conflict Tests', () => {
-    it('should handle port already in use', async () => {
+  describe("Port Conflict Tests", () => {
+    it("should handle port already in use", async () => {
       const port = 3151;
-      
+
       // Start first server
       const { server: server1 } = await setupTestServer(port);
       await new Promise<void>((resolve) => {
@@ -57,17 +57,17 @@ describe('RR-121: Test Server Edge Cases', () => {
       try {
         // Try to start second server on same port
         const { server: server2 } = await setupTestServer(port);
-        
+
         await expect(
           new Promise<void>((resolve, reject) => {
             server2.listen(port, () => resolve());
-            server2.on('error', (err: any) => {
-              if (err.code === 'EADDRINUSE') {
-                reject(new Error('Port already in use'));
+            server2.on("error", (err: any) => {
+              if (err.code === "EADDRINUSE") {
+                reject(new Error("Port already in use"));
               }
             });
           })
-        ).rejects.toThrow('Port already in use');
+        ).rejects.toThrow("Port already in use");
       } finally {
         // Cleanup
         await new Promise<void>((resolve) => {
@@ -77,12 +77,12 @@ describe('RR-121: Test Server Edge Cases', () => {
     });
   });
 
-  describe('Memory Constraint Tests', () => {
-    it('should not exceed memory limits during startup', async () => {
+  describe("Memory Constraint Tests", () => {
+    it("should not exceed memory limits during startup", async () => {
       const initialMemory = process.memoryUsage().heapUsed;
-      
+
       const { server, app } = await setupTestServer(3152);
-      
+
       await new Promise<void>((resolve) => {
         server.listen(3152, () => resolve());
       });
@@ -100,10 +100,10 @@ describe('RR-121: Test Server Edge Cases', () => {
     });
   });
 
-  describe('Cleanup Tests', () => {
-    it('should properly close server and app', async () => {
+  describe("Cleanup Tests", () => {
+    it("should properly close server and app", async () => {
       const { server, app } = await setupTestServer(3153);
-      
+
       await new Promise<void>((resolve) => {
         server.listen(3153, () => resolve());
       });

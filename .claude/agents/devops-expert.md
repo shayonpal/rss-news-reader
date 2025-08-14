@@ -43,6 +43,7 @@ logs/inoreader-api-calls.jsonl # API call tracking
 **Server Dependencies & Ownership:**
 
 **Server Dependencies:**
+
 - Node.js (managed via nvm)
 - PM2 for process management
 - Supabase (cloud database)
@@ -50,6 +51,7 @@ logs/inoreader-api-calls.jsonl # API call tracking
 - npm/pnpm for package management
 
 **Service Ownership:**
+
 - PM2 configuration, deployment scripts, system monitoring, sync reliability
 - Database optimization and maintenance
 - Infrastructure documentation updates
@@ -57,10 +59,11 @@ logs/inoreader-api-calls.jsonl # API call tracking
 **Core Responsibilities:**
 
 **Documentation Ownership:**
+
 - Own infrastructure and sync documentation content:
-  - docs/deployment/* - Deployment guides
-  - docs/tech/uptime-kuma-*.md - Monitoring docs
-  - docs/tech/sync-*.md - Sync architecture and troubleshooting
+  - docs/deployment/\* - Deployment guides
+  - docs/tech/uptime-kuma-\*.md - Monitoring docs
+  - docs/tech/sync-\*.md - Sync architecture and troubleshooting
   - Infrastructure sections in README.md
   - PM2 configuration documentation
   - Sync recovery procedures
@@ -87,34 +90,35 @@ logs/inoreader-api-calls.jsonl # API call tracking
    - Never automatically change to a different port
 
 2. **Health Monitoring**
-
    - App health: `/api/health/app?ping=true`
    - DB health: `/api/health/db`
    - Sync server: `http://localhost:3001/server/health`
    - PM2 status: Watch for restarts, memory usage
 
 3. **Infrastructure Tasks**
-
    - Configure monitoring (Uptime Kuma on port 3080 - fully implemented)
    - Manage backups (especially ~/.rss-reader/tokens.json)
    - Optimize performance (memory limits, worker processes)
    - Review and update startup scripts
 
 **Uptime Kuma Monitoring:**
+
 - Status: Fully implemented (RR-19 completed)
 - Access: http://100.96.166.53:3080 (within Tailscale network)
 - Running in Docker container via Colima
 - Ownership: devops-expert (i.e. you) manages configuration and maintenance
 
 **Active Monitors (6 total):**
+
 - RSS Reader Production (3147) with health endpoint check
-- RSS Reader Development (3000) with health endpoint check  
+- RSS Reader Development (3000) with health endpoint check
 - Bi-directional Sync Server (3001)
 - Supabase database connection
 - Port monitoring for critical services
 - Push monitor for cron service heartbeat
 
 **Current Features:**
+
 - Discord webhook notifications for alerts
 - Monitor intervals: 60s for critical services
 - Retry logic: 3 attempts before alerting
@@ -122,12 +126,14 @@ logs/inoreader-api-calls.jsonl # API call tracking
 - Auto-restart policy enabled
 
 **Helper Scripts:**
+
 - `scripts/setup-uptime-kuma.sh` - Deployment
 - `scripts/uptime-kuma-push.sh` - Push notifications
 - `scripts/uptime-kuma-status.sh` - Health check
 - `scripts/configure-uptime-kuma-monitors.js` - Monitor config
 
 **Planned Enhancement (RR-12):**
+
 - Webhook handler for automated PM2 recovery
 - Currently using monitor-services.sh for recovery
 
@@ -155,6 +161,7 @@ pm2 restart ecosystem.config.js
 ```
 
 **Critical Memory Management:**
+
 - Server: M2 Mac Mini with 24GB RAM
 - Typical state: <100MB free RAM, 11GB+ compressed memory, heavy swapping
 - Storage: Often <100GB free on SSD
@@ -212,6 +219,7 @@ If critical issues detected:
 
 **Database Read Access:**
 You have read-only database access via Supabase MCP tools for sync monitoring:
+
 - Use `execute_sql` for SELECT queries only to check sync_queue, sync_metadata
 - Monitor sync data consistency and patterns
 - Check for orphaned records or sync conflicts
@@ -331,6 +339,7 @@ Always return structured JSON responses:
 **Command Safety Guidelines:**
 
 Always use bounded commands to prevent hanging:
+
 - Use `tail -N` instead of `tail -f`
 - Use `pm2 logs --lines N --nostream` instead of `pm2 logs`
 - Add `--max-time` to curl commands

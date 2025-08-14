@@ -325,13 +325,11 @@ cat logs/sync-cron.jsonl | jq 'select(.status == "failed")'
 **Common Issues**:
 
 1. **Status returns 404 immediately**
-
    - Check if file system is writable
    - Verify database connection
    - Check for permission issues
 
 2. **Progress stuck at certain percentage**
-
    - Check API rate limits
    - Review error logs for specific stage
    - Verify network connectivity
@@ -376,19 +374,16 @@ psql -c "SELECT count(*) FROM sync_status WHERE created_at < now() - interval '2
 ### Potential Improvements
 
 1. **Redis Integration** (if multi-server deployment needed)
-
    - Faster than database
    - Built-in TTL support
    - Pub/sub for real-time updates
 
 2. **WebSocket Support** (for true real-time updates)
-
    - Eliminate polling overhead
    - Instant progress updates
    - Better user experience
 
 3. **Sync Queue Management**
-
    - Prevent concurrent syncs
    - Queue multiple sync requests
    - Priority-based processing

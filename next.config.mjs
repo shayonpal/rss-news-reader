@@ -7,6 +7,34 @@ const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
+  async redirects() {
+    // Only apply redirects in development to help with API path confusion
+    if (process.env.NODE_ENV !== "development") {
+      return [];
+    }
+
+    return [
+      // Redirect common API patterns missing /reader prefix
+      {
+        source: "/api/:path*",
+        destination: "/reader/api/:path*",
+        permanent: false,
+        basePath: false, // Important: bypass basePath for these redirects
+      },
+      {
+        source: "/health",
+        destination: "/reader/health",
+        permanent: false,
+        basePath: false,
+      },
+      {
+        source: "/manifest.json",
+        destination: "/reader/manifest.json",
+        permanent: false,
+        basePath: false,
+      },
+    ];
+  },
   eslint: {
     // Ignore ESLint errors during production build
     ignoreDuringBuilds: true,

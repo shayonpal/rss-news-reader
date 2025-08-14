@@ -11,12 +11,15 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  MoreVertical,
+  Ellipsis,
   BarChart3,
   ArrowUp,
+  Tag,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import DOMPurify from "isomorphic-dompurify";
 import { SummaryButton } from "./summary-button";
 import { StarButton } from "./star-button";
@@ -25,16 +28,124 @@ import { SummaryDisplay } from "./summary-display";
 import { FetchContentButton } from "./fetch-content-button";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
+import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
+import { useContentState } from "@/hooks/use-content-state";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ContentParsingIndicator,
+  ContentLoadingSkeleton,
+} from "./content-parsing-indicator";
+import {
+  GlassToolbarButton,
+  GlassIconButton,
+} from "@/components/ui/glass-button";
+import {
+  MorphingDropdown,
+  type DropdownItem,
+} from "@/components/ui/morphing-dropdown";
+
+// Reusable toolbar (can be moved to its own file if you prefer)
+function ArticleActionsToolbar({
+  articleId,
+  isStarred,
+  hasSummary,
+  hasFullContent,
+  onToggleStar,
+  onSummarySuccess,
+  onFetchSuccess,
+  onFetchRevert,
+  feed,
+  onTogglePartialFeed,
+  isUpdatingFeed,
+  onShare,
+  articleUrl,
+}: {
+  articleId: string;
+  isStarred: boolean;
+  hasSummary: boolean;
+  hasFullContent?: boolean;
+  onToggleStar: () => void;
+  onSummarySuccess: () => void;
+  onFetchSuccess: (content: string) => void;
+  onFetchRevert: () => void;
+  feed?: Feed;
+  onTogglePartialFeed: () => void;
+  isUpdatingFeed: boolean;
+  onShare: () => void;
+  articleUrl?: string;
+}) {
+  // Build toolbar elements (keep original functionality, style inline to match POC)
+  const toolbarElements = [
+    <StarButton
+      key="star"
+      onToggleStar={onToggleStar}
+      isStarred={isStarred}
+      size="lg"
+    />,
+    <SummaryButton
+      key="summary"
+      articleId={articleId}
+      hasSummary={hasSummary}
+      variant="icon"
+      size="lg"
+      onSuccess={onSummarySuccess}
+    />,
+    <FetchContentButton
+      key="fetch"
+      articleId={articleId}
+      hasFullContent={!!hasFullContent}
+      variant="icon"
+      size="lg"
+      onSuccess={onFetchSuccess}
+      onRevert={onFetchRevert}
+    />,
+  ];
+
+  // Build dropdown items dynamically
+  const dropdownItems: DropdownItem[] = [
+    ...(feed
+      ? [
+          {
+            id: "partial-feed",
+            label: "Partial Feed",
+            checked: feed.isPartialContent,
+            onClick: onTogglePartialFeed,
+            disabled: isUpdatingFeed,
+            separator: true,
+          },
+        ]
+      : []),
+    {
+      id: "share",
+      label: "Share",
+      icon: <Share2 className="h-5 w-5" />,
+      onClick: onShare,
+    },
+    ...(articleUrl
+      ? [
+          {
+            id: "open-original",
+            label: "Open Original",
+            icon: <ExternalLink className="h-5 w-5" />,
+            onClick: () =>
+              window.open(articleUrl, "_blank", "noopener,noreferrer"),
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <MorphingDropdown
+      toolbarElements={toolbarElements}
+      items={dropdownItems}
+      animationMode="sequential"
+      easingMode="spring"
+    />
+  );
+}
 
 interface ArticleDetailProps {
   article: Article;
+  articleTags?: any[];
   feed?: Feed;
   feedTitle: string;
   onToggleStar: () => void;
@@ -44,6 +155,7 @@ interface ArticleDetailProps {
 
 export function ArticleDetail({
   article,
+  articleTags = [],
   feed,
   feedTitle,
   onToggleStar,
@@ -54,9 +166,9 @@ export function ArticleDetail({
   const contentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [currentArticle, setCurrentArticle] = useState(article);
+  const [fetchedContent, setFetchedContent] = useState<string | null>(null);
+  const [forceOriginalContent, setForceOriginalContent] = useState(false);
   const { getArticle } = useArticleStore();
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
@@ -65,13 +177,34 @@ export function ArticleDetail({
     typeof window !== "undefined" &&
     /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // Minimum swipe distance (in px)
-  const minSwipeDistance = 50;
+  // Auto-parse content for partial feeds
+  const {
+    isParsing,
+    parseError,
+    parsedContent,
+    shouldShowRetry,
+    triggerParse,
+    clearError,
+    clearParsedContent,
+  } = useAutoParseContent({
+    article: currentArticle,
+    feed,
+    enabled: true, // Always enable auto-parsing
+  });
 
   // Update current article when it changes or summary is updated
   useEffect(() => {
     setCurrentArticle(article);
+    // Reset states when article changes
+    setFetchedContent(null);
+    setForceOriginalContent(false);
   }, [article]);
+
+  // Force button state update when auto-parsing completes
+  useEffect(() => {
+    // Button should reflect state after auto-parse completes
+    // The hasFullContentState will automatically update due to reactive dependency on parsedContent
+  }, [parsedContent]);
 
   // Handle summary success
   const handleSummarySuccess = async () => {
@@ -84,12 +217,9 @@ export function ArticleDetail({
 
   // Handle fetch content success
   const handleFetchContentSuccess = async (content: string) => {
-    // Update the current article with the full content
-    setCurrentArticle({
-      ...currentArticle,
-      fullContent: content,
-      hasFullContent: true,
-    });
+    // Set the manually fetched content and disable force original
+    setFetchedContent(content);
+    setForceOriginalContent(false);
     // Also refresh from store to ensure consistency
     const updatedArticle = await getArticle(article.id);
     if (updatedArticle) {
@@ -99,19 +229,29 @@ export function ArticleDetail({
 
   // Handle revert to RSS content
   const handleRevertContent = () => {
-    // Clear full content to show RSS content
-    setCurrentArticle({
-      ...currentArticle,
-      fullContent: undefined,
-      hasFullContent: false,
-    });
+    // Clear ALL enhanced content to show original RSS content
+    // Clear both manually fetched and auto-parsed content
+    setFetchedContent(null);
+    if (parsedContent) {
+      clearParsedContent();
+    }
+    // Force showing original RSS content even if fullContent exists in DB
+    setForceOriginalContent(true);
   };
 
-  // Clean and sanitize HTML content - prioritize full content over RSS content
-  const contentToDisplay = currentArticle.fullContent || currentArticle.content;
+  // Use unified content state management
+  const { contentSource, displayContent, hasEnhancedContent } = useContentState(
+    currentArticle,
+    parsedContent,
+    fetchedContent,
+    forceOriginalContent
+  );
+
+  // Use the unified state for button
+  const hasFullContentState = hasEnhancedContent;
 
   // Process links BEFORE sanitization to ensure attributes are preserved
-  const processedContent = processArticleLinksSSR(contentToDisplay);
+  const processedContent = processArticleLinksSSR(displayContent);
 
   const cleanContent = DOMPurify.sanitize(processedContent, {
     ALLOWED_TAGS: [
@@ -173,7 +313,7 @@ export function ArticleDetail({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNavigate, onBack]);
 
-  // Header show/hide on scroll
+  // Header/toolbar show/hide on scroll
   useEffect(() => {
     let ticking = false;
 
@@ -187,15 +327,11 @@ export function ArticleDetail({
 
           // Scrolling down - hide header after scrolling 50px down
           if (scrollDelta > 0 && currentScrollY > 50) {
-            headerRef.current.style.transform = "translateY(-100%)";
+            headerRef.current.classList.add("is-hidden");
           }
-          // Scrolling up - show header immediately (even 1px scroll up)
-          else if (scrollDelta < 0) {
-            headerRef.current.style.transform = "translateY(0)";
-          }
-          // At very top - ensure header is visible
-          else if (currentScrollY < 5) {
-            headerRef.current.style.transform = "translateY(0)";
+          // Scrolling up or at the top - show header
+          else if (scrollDelta < 0 || currentScrollY < 5) {
+            headerRef.current.classList.remove("is-hidden");
           }
 
           // Show/hide scroll to top button on iOS
@@ -204,6 +340,21 @@ export function ArticleDetail({
           }
 
           lastScrollY.current = currentScrollY;
+          // Scroll-aware contrast for Liquid Glass
+          headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
+
+          // Footer slide + scroll-aware contrast
+          const footer = document.getElementById("article-footer");
+          if (footer) {
+            if (scrollDelta > 0 && currentScrollY > 50) {
+              footer.style.transform = "translateY(100%)";
+            } else if (scrollDelta < 0) {
+              footer.style.transform = "translateY(0)";
+            } else if (currentScrollY < 5) {
+              footer.style.transform = "translateY(0)";
+            }
+            footer.classList.toggle("is-scrolled", currentScrollY > 8);
+          }
           ticking = false;
         });
 
@@ -218,29 +369,19 @@ export function ArticleDetail({
     };
   }, [isIOS]);
 
-  // Touch handlers for swipe navigation
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
-      onNavigate("next");
-    } else if (isRightSwipe) {
-      onNavigate("prev");
+  // Hide viewport scrollbar while on detail view (apply to html and body)
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      const body = document.body;
+      root.classList.add("scrollbar-hide");
+      body.classList.add("scrollbar-hide");
+      return () => {
+        root.classList.remove("scrollbar-hide");
+        body.classList.remove("scrollbar-hide");
+      };
     }
-  };
+  }, []);
 
   const handleShare = async () => {
     if (navigator.share && currentArticle.url) {
@@ -267,135 +408,103 @@ export function ArticleDetail({
   const handleToggleFeedPartialContent = async () => {
     if (!feed || !article.feedId) return;
 
+    const newState = !feed.isPartialContent;
+    const feedName = feed.title || "Feed";
+    const toastId = `partial-feed-${article.feedId}`;
+
+    // Show loading toast with amber styling
+    toast.loading(
+      `${newState ? "Marking" : "Unmarking"} ${feedName} as partial feed...`,
+      {
+        id: toastId,
+        style: {
+          background: "#f59e0b", // amber-500
+          color: "white",
+        },
+      }
+    );
+
     setIsUpdatingFeed(true);
     try {
       // Toggle the partial content setting
-      await updateFeedPartialContent(article.feedId, !feed.isPartialContent);
+      await updateFeedPartialContent(article.feedId, newState);
+
+      // Show success toast with green styling
+      toast.success(
+        `${feedName} ${newState ? "marked" : "unmarked"} as partial feed`,
+        {
+          id: toastId,
+          duration: 3000,
+          style: {
+            background: "#10b981", // green-500
+            color: "white",
+          },
+        }
+      );
+
       // The UI will update automatically when the feed store updates
     } catch (error) {
-      // Could show a toast notification here for error feedback
+      console.error("Failed to update feed partial content setting:", error);
+
+      // Show error toast with red styling
+      toast.error(`Failed to update ${feedName}. Please try again.`, {
+        id: toastId,
+        duration: 0, // Manual dismiss for errors
+        style: {
+          background: "#ef4444", // red-500
+          color: "white",
+        },
+      });
     } finally {
       setIsUpdatingFeed(false);
     }
   };
 
   return (
-    <div
-      className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900">
       {/* Header */}
-      <header
+      {/* Floating controls container (no top pane) */}
+      <div
         ref={headerRef}
-        className="pwa-safe-area-top fixed left-0 right-0 top-0 z-10 border-b border-gray-200 bg-white transition-transform duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900"
-        style={{ transform: "translateY(0)" }}
+        className="article-header-controls fixed left-0 right-0 z-10 transition-opacity transition-transform duration-300 ease-in-out"
+        style={{ top: "24px" }}
       >
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <IOSButton
-            variant="ghost"
-            size="icon"
-            onPress={onBack}
-            aria-label="Back to list"
-            className="hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+        <div className="mx-auto flex w-full max-w-4xl items-start justify-between px-4 sm:px-6 lg:px-8">
+          {/* Back button aligned with content */}
+          <div className="pointer-events-auto">
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Back to list"
+              className="glass-icon-btn"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Actions toolbar constrained to article width */}
+          <div
+            className="pointer-events-auto"
+            style={{ touchAction: "manipulation" }}
           >
-            <ArrowLeft className="h-5 w-5" />
-          </IOSButton>
-
-          <div className="flex items-center gap-2">
-            <StarButton
-              onToggleStar={onToggleStar}
+            <ArticleActionsToolbar
+              articleId={currentArticle.id}
               isStarred={currentArticle.tags?.includes("starred") || false}
-              size="md"
-            />
-
-            <SummaryButton
-              articleId={currentArticle.id}
               hasSummary={!!currentArticle.summary}
-              variant="icon"
-              size="md"
-              onSuccess={handleSummarySuccess}
+              hasFullContent={hasFullContentState}
+              onToggleStar={onToggleStar}
+              onSummarySuccess={handleSummarySuccess}
+              onFetchSuccess={handleFetchContentSuccess}
+              onFetchRevert={handleRevertContent}
+              feed={feed}
+              onTogglePartialFeed={handleToggleFeedPartialContent}
+              isUpdatingFeed={isUpdatingFeed}
+              onShare={handleShare}
+              articleUrl={currentArticle.url}
             />
-
-            <FetchContentButton
-              articleId={currentArticle.id}
-              hasFullContent={currentArticle.hasFullContent}
-              variant="icon"
-              size="md"
-              onSuccess={handleFetchContentSuccess}
-              onRevert={handleRevertContent}
-            />
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <IOSButton
-                  variant="ghost"
-                  size="icon"
-                  aria-label="More options"
-                  className="hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </IOSButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {feed && (
-                  <DropdownMenuItem
-                    onSelect={handleToggleFeedPartialContent}
-                    disabled={isUpdatingFeed}
-                    className="relative"
-                  >
-                    <span
-                      className={cn(
-                        "mr-2 text-base transition-opacity duration-200",
-                        isUpdatingFeed && "opacity-50"
-                      )}
-                    >
-                      {feed.isPartialContent ? "☑" : "☐"}
-                    </span>
-                    <span
-                      className={cn(
-                        "transition-opacity duration-200",
-                        isUpdatingFeed && "opacity-50"
-                      )}
-                    >
-                      Partial Feed
-                    </span>
-                    {isUpdatingFeed && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
-                      </div>
-                    )}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onSelect={handleShare}>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Share
-                </DropdownMenuItem>
-                {currentArticle.url && (
-                  <DropdownMenuItem
-                    onSelect={() =>
-                      window.open(
-                        currentArticle.url,
-                        "_blank",
-                        "noopener,noreferrer"
-                      )
-                    }
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open Original
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => router.push("/fetch-stats")}>
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Fetch Stats
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Spacer for fixed header */}
       <div className="h-[60px] pwa-standalone:h-[calc(60px+env(safe-area-inset-top))]" />
@@ -423,6 +532,34 @@ export function ArticleDetail({
               })}
             </time>
           </div>
+
+          {/* Tags */}
+          {articleTags && articleTags.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Tag className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+              {articleTags.map((tag) => (
+                <button
+                  key={tag.id}
+                  onClick={() => {
+                    // Set tag filter in session storage and navigate to home
+                    sessionStorage.setItem("articleListTagFilter", tag.id);
+                    // Clear any feed filter to ensure tag filter takes precedence
+                    sessionStorage.setItem("articleListFilter", "null");
+                    router.push("/");
+                  }}
+                  className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  style={{
+                    backgroundColor: tag.color ? `${tag.color}15` : undefined,
+                    color: tag.color || undefined,
+                    borderColor: tag.color ? `${tag.color}30` : undefined,
+                    borderWidth: tag.color ? "1px" : undefined,
+                  }}
+                >
+                  {decodeHtmlEntities(tag.name)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* AI Summary */}
@@ -434,29 +571,41 @@ export function ArticleDetail({
           />
         )}
 
-        {/* Article Body */}
-        <div
-          ref={contentRef}
-          className="prose prose-base max-w-none dark:prose-invert sm:prose-lg prose-headings:font-bold prose-a:text-blue-600 prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-code:rounded prose-code:bg-gray-100 prose-code:px-1 prose-pre:overflow-x-auto prose-pre:bg-gray-100 prose-img:h-auto prose-img:max-w-full prose-img:rounded-lg prose-img:shadow-md dark:prose-a:text-blue-400 dark:prose-blockquote:border-gray-700 dark:prose-code:bg-gray-800 dark:prose-pre:bg-gray-800 [&>*]:break-words"
-          style={{ touchAction: "manipulation" }}
-          dangerouslySetInnerHTML={{ __html: cleanContent }}
-        />
-
-        {/* Fetch/Revert Full Content button at bottom */}
-        <div className="mb-8 mt-8 flex justify-center">
-          <FetchContentButton
-            articleId={currentArticle.id}
-            hasFullContent={currentArticle.hasFullContent}
-            variant="button"
-            onSuccess={handleFetchContentSuccess}
-            onRevert={handleRevertContent}
+        {/* Parsing Indicator */}
+        {(isParsing || parseError) && !parsedContent && (
+          <ContentParsingIndicator
+            isParsing={isParsing}
+            error={parseError}
+            onRetry={triggerParse}
+            showRetry={shouldShowRetry}
+            className="mb-6"
           />
-        </div>
+        )}
+
+        {/* Article Body */}
+        {isParsing && !parsedContent ? (
+          <ContentLoadingSkeleton className="mt-6" />
+        ) : (
+          <div
+            ref={contentRef}
+            className="prose prose-base max-w-none dark:prose-invert sm:prose-lg prose-headings:font-bold prose-a:text-blue-600 prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-code:rounded prose-code:bg-gray-100 prose-code:px-1 prose-pre:overflow-x-auto prose-pre:bg-gray-100 prose-img:h-auto prose-img:max-w-full prose-img:rounded-lg prose-img:shadow-md dark:prose-a:text-blue-400 dark:prose-blockquote:border-gray-700 dark:prose-code:bg-gray-800 dark:prose-pre:bg-gray-800 [&>*]:break-words"
+            style={{ touchAction: "manipulation" }}
+            dangerouslySetInnerHTML={{ __html: cleanContent }}
+          />
+        )}
       </article>
 
       {/* Navigation Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-10 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <footer
+        ref={() => {
+          // Attach a refless scrolled class toggle synced with window scroll
+          // This will be updated in the scroll handler below
+        }}
+        className="glass-footer fixed bottom-0 left-0 right-0 z-10 border-t transition-transform duration-300 ease-in-out"
+        style={{ transform: "translateY(0)" }}
+        id="article-footer"
+      >
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <IOSButton
             variant="ghost"
             size="sm"

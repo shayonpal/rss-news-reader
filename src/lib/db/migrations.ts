@@ -302,7 +302,6 @@ export class DatabaseMigrations {
           theme: "system" as const,
           syncFrequency: 6,
           maxArticles: 500,
-          autoFetchFullContent: false,
           enableNotifications: false,
           fontSize: "medium" as const,
           readingWidth: "medium" as const,
@@ -320,6 +319,6 @@ export class DatabaseMigrations {
 }
 
 // Setup migrations when module loads (except in test environment)
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
   DatabaseMigrations.setupMigrations();
 }

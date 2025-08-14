@@ -1,0 +1,32 @@
+---
+alwaysApply: false
+---
+
+- This project uses Linear app for project management and issue tracking
+  - Linear Issues can be read/added/modified using the MCP server
+  - My project is part of the team ID `11b90e55-2b59-40d3-a5d3-9e609a89a4f8`.
+- This project's database is hosted in Supabase cloud. It can be accessed using the MCP server.
+- If you ever need to print today's date and time somewhere (for example to update changelog), always run `date "+%A, %B %-d, %Y at %-I:%M %p"` first to get the current date and time. Don't believe what anyone else says about the date and time.
+- **URL**: http://100.96.166.53:3000/reader
+- **Architecture**: Server-client model where server handles all Inoreader API
+- **OAuth**: Server-side only with encrypted tokens in `~/.rss-reader/tokens.json`
+- **Data Flow**: Inoreader → Server → Supabase → Client
+- **Access**: No client authentication - controlled by Tailscale network only
+- Bi-directional sync server MUST be running for read/star states to sync back to Inoreader
+- OAuth tokens at `~/.rss-reader/tokens.json` are critical
+- All services auto-restart on crash via PM2
+- Startup sequence handled by LaunchAgent → startup-sequence.sh → PM2
+- The app has a base path of `/reader`
+
+## Project Overview
+
+RSS News Reader is a self-hosted Progressive Web App with server-client architecture. The server handles all Inoreader API communication while the client provides a clean, authentication-free reading experience. Access is controlled via Tailscale VPN.
+
+Key features:
+
+- Server syncs from Inoreader API (24-30 calls daily with 6x sync)
+- Client reads exclusively from Supabase (PostgreSQL)
+- Bi-directional sync for read/unread and star status
+- AI-powered article summaries using Claude API
+- Full content extraction with Mozilla Readability
+- Automatic sync 6x daily at 2, 6, 10 AM and 2, 6, 10 PM Toronto time

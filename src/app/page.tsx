@@ -16,19 +16,19 @@ export default function HomePage() {
   const router = useRouter();
   // Fix hydration issues with localStorage
   useHydrationFix();
-  
+
   // Clear preserved article state on page unload (browser refresh, tab close, etc.)
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Only clear if user is refreshing or closing tab, not navigating within app
       articleListStateManager.clearState();
     };
-    
+
     // Listen for page unload events (browser refresh, tab close, etc.)
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 
@@ -42,6 +42,13 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       const savedFilter = sessionStorage.getItem("articleListFilter");
       return savedFilter === "null" ? null : savedFilter;
+    }
+    return null;
+  });
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const savedTagFilter = sessionStorage.getItem("articleListTagFilter");
+      return savedTagFilter === "null" ? null : savedTagFilter;
     }
     return null;
   });
@@ -59,6 +66,16 @@ export default function HomePage() {
     setSelectedFeedId(feedId);
     // Save filter state for restoration
     sessionStorage.setItem("articleListFilter", feedId || "null");
+    // Close sidebar on mobile after selection
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleTagSelect = (tagId: string | null) => {
+    setSelectedTagId(tagId);
+    // Save tag filter state for restoration
+    sessionStorage.setItem("articleListTagFilter", tagId || "null");
     // Close sidebar on mobile after selection
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
@@ -99,6 +116,8 @@ export default function HomePage() {
           }
 
           lastScrollY.current = currentScrollY;
+          // Scroll-aware contrast for Liquid Glass
+          headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
           ticking = false;
         });
 
@@ -150,7 +169,9 @@ export default function HomePage() {
         >
           <SimpleFeedSidebar
             selectedFeedId={selectedFeedId}
+            selectedTagId={selectedTagId}
             onFeedSelect={handleFeedSelect}
+            onTagSelect={handleTagSelect}
             onClose={() => setIsSidebarOpen(false)}
           />
         </ErrorBoundary>
@@ -161,7 +182,7 @@ export default function HomePage() {
         {/* Enhanced Header with Database Counts */}
         <div
           ref={headerRef}
-          className="fixed left-0 right-0 top-0 z-30 border-b bg-background transition-transform duration-300 ease-in-out md:left-80"
+          className="glass-nav fixed left-0 right-0 top-0 z-30 border-b transition-transform duration-300 ease-in-out md:left-80"
           style={{ transform: "translateY(0)" }}
         >
           <ArticleHeader
@@ -182,10 +203,11 @@ export default function HomePage() {
         {/* Article List Container with its own scroll */}
         <div
           ref={articleListRef}
-          className="ios-scroll-container relative flex-1 overflow-y-auto pt-[70px] pwa-standalone:pt-[calc(50px+env(safe-area-inset-top))]"
+          className="ios-scroll-container scrollbar-hide relative flex-1 overflow-y-auto pt-[70px] pwa-standalone:pt-[calc(50px+env(safe-area-inset-top))]"
         >
           <ArticleList
             feedId={selectedFeedId || undefined}
+            tagId={selectedTagId || undefined}
             onArticleClick={handleArticleClick}
             scrollContainerRef={articleListRef}
           />

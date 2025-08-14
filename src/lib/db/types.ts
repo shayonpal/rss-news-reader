@@ -7,6 +7,7 @@ export interface Database {
           id: string;
           email: string;
           inoreader_id: string | null;
+          preferences: Record<string, any> | null;
           created_at: string;
           updated_at: string;
         };
@@ -14,6 +15,7 @@ export interface Database {
           id?: string;
           email: string;
           inoreader_id?: string | null;
+          preferences?: Record<string, any> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -21,6 +23,7 @@ export interface Database {
           id?: string;
           email?: string;
           inoreader_id?: string | null;
+          preferences?: Record<string, any> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -34,6 +37,7 @@ export interface Database {
           url: string;
           folder_id: string | null;
           unread_count: number;
+          is_partial_feed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -45,6 +49,7 @@ export interface Database {
           url: string;
           folder_id?: string | null;
           unread_count?: number;
+          is_partial_feed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -56,6 +61,7 @@ export interface Database {
           url?: string;
           folder_id?: string | null;
           unread_count?: number;
+          is_partial_feed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -75,6 +81,9 @@ export interface Database {
           published_at: string | null;
           is_read: boolean;
           is_starred: boolean;
+          parsed_at: string | null;
+          parse_failed: boolean;
+          parse_attempts: number;
           created_at: string;
           updated_at: string;
         };
@@ -92,6 +101,9 @@ export interface Database {
           published_at?: string | null;
           is_read?: boolean;
           is_starred?: boolean;
+          parsed_at?: string | null;
+          parse_failed?: boolean;
+          parse_attempts?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -109,6 +121,9 @@ export interface Database {
           published_at?: string | null;
           is_read?: boolean;
           is_starred?: boolean;
+          parsed_at?: string | null;
+          parse_failed?: boolean;
+          parse_attempts?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -145,21 +160,39 @@ export interface Database {
           service: string;
           date: string;
           count: number;
+          zone1_usage: number;
+          zone1_limit: number;
+          zone2_usage: number;
+          zone2_limit: number;
+          reset_after: number;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           service: string;
           date: string;
           count?: number;
+          zone1_usage?: number;
+          zone1_limit?: number;
+          zone2_usage?: number;
+          zone2_limit?: number;
+          reset_after?: number;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           service?: string;
           date?: string;
           count?: number;
+          zone1_usage?: number;
+          zone1_limit?: number;
+          zone2_usage?: number;
+          zone2_limit?: number;
+          reset_after?: number;
           created_at?: string;
+          updated_at?: string;
         };
       };
       sync_metadata: {

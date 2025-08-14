@@ -23,6 +23,15 @@ This document outlines the security measures and policies implemented in the RSS
 - **Service Role Protection**: Database service role key only used server-side
 - **Input Validation**: All API endpoints validate input parameters
 - **Error Handling**: Consistent error responses without sensitive information leakage
+- **XSS Protection**: HTML escaping implemented for all user-generated content and tag names (RR-128)
+
+### Database Security
+
+- **Row Level Security (RLS)**: Enabled on all tables with user-specific policies
+- **SECURITY INVOKER Views**: All views respect RLS policies of the querying user (RR-67)
+- **Function Search Path Protection**: Critical functions have explicit `search_path = public` to prevent SQL injection
+- **No SECURITY DEFINER**: Eliminated all views with SECURITY DEFINER to prevent privilege escalation
+- **Principle of Least Privilege**: Views and functions run with invoker's permissions, not definer's
 
 ## Security Fixes
 
@@ -50,6 +59,75 @@ This document outlines the security measures and policies implemented in the RSS
 - No impact on legitimate users
 
 **Testing**: Comprehensive test suite created to prevent regression of removed endpoints.
+
+### RR-128: XSS Protection Implementation (January 2025)
+
+**Issue**: Tag names and user-generated content needed proper HTML escaping to prevent Cross-Site Scripting (XSS) attacks.
+
+**Implementation**:
+
+- **HTML Entity Decoding**: Tag names are decoded using HTML entity decoder to handle entities like &#x2F; properly
+- **React XSS Protection**: Relies on React's built-in XSS protection for text content rendering instead of double-escaping
+- **API Input Validation**: Tag creation endpoints validate and sanitize input before storage
+- **Database Storage**: Tags stored with original content, HTML entity decoding applied during display
+- **Comprehensive Testing**: XSS attack vectors tested in tag management functionality
+
+**Update (RR-170 - August 2025)**: Removed redundant HTML escaping that was interfering with proper entity decoding. React's automatic XSS protection is sufficient for text content.
+
+**Scope**:
+
+- Tag names in sidebar navigation ("Topics" section)
+- Tag creation and editing forms
+- Tag search and filtering functionality
+- Article tag displays and associations
+- All user-facing tag content rendering
+
+**Impact**:
+
+- Prevented potential XSS vulnerabilities in tag system
+- Maintained user experience while ensuring security
+- Established security patterns for future user-generated content
+- No impact on existing functionality or performance
+
+### RR-67: Database Security - SECURITY DEFINER and search_path (August 9, 2025)
+
+**Issue**: Database views with SECURITY DEFINER bypassed Row Level Security policies, and functions without search_path were vulnerable to SQL injection attacks.
+
+**Vulnerabilities Fixed**:
+
+**Views (4 SECURITY DEFINER removed)**:
+
+- `sync_queue_stats` - Sync monitoring view
+- `author_quality_report` - Author coverage analysis
+- `author_statistics` - Author metrics view
+- `sync_author_health` - Sync health monitoring
+
+**Functions (7 search_path added)**:
+
+- `get_unread_counts_by_feed` - Core unread count functionality
+- `get_articles_optimized` - Main article fetching
+- `refresh_feed_stats` - Post-sync statistics update
+- `add_to_sync_queue` - Bi-directional sync operations
+- `update_updated_at_column` - Timestamp trigger
+- `increment_api_usage` - API call tracking
+- `clean_old_sync_queue_entries` - Queue maintenance
+
+**Implementation**:
+
+- Created migration `supabase/migrations/0001_security_fixes_rr67.sql`
+- Views recreated with explicit `WITH (security_invoker = true)`
+- Functions protected with `ALTER FUNCTION ... SET search_path = public`
+- Comprehensive test suite with behavior contracts
+
+**Impact**:
+
+- 100% elimination of ERROR-level security issues
+- 46% reduction in total security warnings (24 → 13)
+- All views now respect RLS policies of querying user
+- Functions protected against search_path manipulation attacks
+- No data loss or functionality impact
+
+**Testing**: Test-first development with 32 unit tests defining exact expected behavior
 
 ## Security Best Practices
 
@@ -129,6 +207,8 @@ The application implements security headers:
 - [ ] No hardcoded credentials in code
 - [ ] Build validation passes
 - [ ] Security tests pass
+- [ ] XSS protection verified for all user-generated content
+- [ ] HTML entity decoding implemented for tag names with React XSS protection
 
 ### Regular Security Reviews
 
@@ -137,6 +217,8 @@ The application implements security headers:
 - [ ] Validate access controls
 - [ ] Review error messages for information leakage
 - [ ] Test authentication mechanisms
+- [ ] Verify XSS protection in all user input areas
+- [ ] Check HTML entity decoding and React XSS protection in tag features
 
 ## Related Documentation
 

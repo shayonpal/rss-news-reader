@@ -364,23 +364,19 @@ Root (http://100.96.166.53/reader)
 ## Decision Points
 
 1. **Tailscale Network Check**
-
    - On Tailscale → Allow access
    - Not on Tailscale → Block access
 
 2. **Supabase Connection Check**
-
    - Connected → Load articles
    - Disconnected → Show error
 
 3. **Content Type Check**
-
    - full_content exists → Display full content
    - Only content exists → Display RSS + fetch button
    - ai_summary exists → Show summary
 
 4. **Filter State Check**
-
    - No filter → Show all articles
    - Feed filter active → Show feed articles only
    - Tag filter active → Show tag articles only
@@ -394,31 +390,26 @@ Root (http://100.96.166.53/reader)
 ## Edge Cases
 
 1. **Server Sync Failures**
-
    - Partial sync → Log errors in sync_errors table
    - Continue with successful items
    - Show "X articles synced, Y failed"
 
 2. **Tailscale Service Down**
-
    - Server auto-restarts Tailscale (sudo configured)
    - Client shows connection error
    - User must wait for service restoration
 
 3. **Article Limit Reached (500)**
-
    - Server automatically prunes oldest articles
    - Maintains most recent 500
    - No user notification needed
 
 4. **Simultaneous Sync Requests**
-
    - Server returns existing syncId if sync running
    - Client continues polling same syncId
    - Prevents duplicate Inoreader API calls
 
 5. **Readability Extraction Fails**
-
    - Server returns error to client
    - Client continues showing RSS content
    - "Unable to fetch full content" message

@@ -13,6 +13,14 @@ interface UIState {
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
 
+  // Collapsible Sections (session-only, not persisted)
+  feedsSectionCollapsed: boolean;
+  setFeedsSectionCollapsed: (collapsed: boolean) => void;
+  toggleFeedsSection: () => void;
+  tagsSectionCollapsed: boolean;
+  setTagsSectionCollapsed: (collapsed: boolean) => void;
+  toggleTagsSection: () => void;
+
   // Article View
   isArticleOpen: boolean;
   selectedArticleId: string | null;
@@ -47,6 +55,20 @@ export const useUIStore = create<UIState>()(
       setSidebarOpen: (open) => set({ isSidebarOpen: open }),
       toggleSidebar: () =>
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+
+      // Collapsible Sections (session-only, not persisted)
+      feedsSectionCollapsed: false,
+      setFeedsSectionCollapsed: (collapsed) =>
+        set({ feedsSectionCollapsed: Boolean(collapsed) }),
+      toggleFeedsSection: () =>
+        set((state) => ({
+          feedsSectionCollapsed: !state.feedsSectionCollapsed,
+        })),
+      tagsSectionCollapsed: false,
+      setTagsSectionCollapsed: (collapsed) =>
+        set({ tagsSectionCollapsed: Boolean(collapsed) }),
+      toggleTagsSection: () =>
+        set((state) => ({ tagsSectionCollapsed: !state.tagsSectionCollapsed })),
 
       // Article View
       isArticleOpen: false,

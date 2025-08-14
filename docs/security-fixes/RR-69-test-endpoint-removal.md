@@ -34,17 +34,14 @@ The removed endpoints were exposing:
 ### Test Pages (4 removed)
 
 1. **`/test-supabase`** - Database testing interface
-
    - **Risk**: Exposed database schema, connection strings, and query capabilities
    - **Files**: `src/app/test-supabase/page.tsx`
 
 2. **`/test-server-api`** - API testing interface
-
    - **Risk**: Listed all API endpoints with examples and internal structure
    - **Files**: `src/app/test-server-api/page.tsx`
 
 3. **`/test-performance`** - Performance testing interface
-
    - **Risk**: Revealed system performance metrics and resource usage
    - **Files**: `src/app/test-performance/page.tsx`
 
@@ -55,22 +52,18 @@ The removed endpoints were exposing:
 ### Debug API Endpoints (5 removed)
 
 1. **`/api/test-supabase`** - Direct database testing
-
    - **Risk**: Direct database query capability, schema exposure
    - **Files**: `src/app/api/test-supabase/route.ts`
 
 2. **`/api/test-prompt-config`** - AI prompt configuration testing
-
    - **Risk**: Exposed AI prompt templates and configuration details
    - **Files**: `src/app/api/test-prompt-config/route.ts`
 
 3. **`/api/test-api-endpoints`** - API structure exposure
-
    - **Risk**: Comprehensive API endpoint listing with internal details
    - **Files**: `src/app/api/test-api-endpoints/route.ts`
 
 4. **`/api/test-refresh-stats`** - Database operations testing
-
    - **Risk**: Unauthorized database operations, materialized view manipulation
    - **Files**: `src/app/api/test-refresh-stats/route.ts`
 

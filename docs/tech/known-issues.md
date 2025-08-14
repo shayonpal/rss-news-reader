@@ -77,6 +77,34 @@ The Inoreader API limit of 100 calls per day constrains how often users can manu
 
 The PWA can be installed over HTTP (required for Tailscale network) but some features like push notifications are unavailable without HTTPS.
 
+### Test Environment Browser API Compatibility
+
+**Status:** 🟢 Resolved (August 11, 2025)  
+**Severity:** High
+
+#### Description
+
+Node.js test environment lacks browser APIs like IndexedDB, causing failures in tests that depend on client-side storage functionality (Dexie database operations, offline queues).
+
+#### Root Cause
+
+- Node.js runtime doesn't provide IndexedDB API by default
+- Test environment required polyfill for browser storage APIs
+- Dexie library depends on IndexedDB for database operations
+
+#### Solution (RR-186)
+
+1. **IndexedDB Polyfill**: Added `fake-indexeddb` v6.1.0 dependency with automatic polyfill initialization
+2. **Test Setup Enhancement**: Added `import 'fake-indexeddb/auto';` to `src/test-setup.ts`
+3. **Environment Validation**: Created smoke test to verify polyfill availability
+4. **Storage Mock Fix**: Properly configured localStorage/sessionStorage mocks with writable properties
+
+#### Prevention
+
+- **Smoke Test**: `src/__tests__/unit/test-setup.smoke.test.ts` validates test environment before execution
+- **Mock Helpers**: Reusable mock system at `src/__tests__/helpers/supabase-mock.ts`
+- **Documentation**: Comprehensive troubleshooting guide for common test environment issues
+
 ## Production Deployment Issues (Resolved)
 
 ### Manual Sync Failure - Missing Build Manifests
@@ -153,6 +181,40 @@ PM2 service was restarting continuously (105+ times) when configured in cluster 
 #### Solution
 
 Changed `ecosystem.config.js` from `exec_mode: 'cluster'` to `exec_mode: 'fork'`
+
+## Database Cleanup Issues (Resolved)
+
+### URI Length Limits for Large Deletions (RR-150)
+
+**Status:** 🟢 Resolved (August 6, 2025 at 10:53 PM)  
+**Severity:** High
+
+#### Description
+
+When processing large numbers of articles for deletion (>1000 articles), Supabase PostgreSQL would return a "414 Request-URI Too Large" error due to URI length limitations when using the `.in()` filter with many IDs.
+
+#### Root Cause
+
+Single delete operations with large numbers of article IDs exceeded PostgreSQL's URI length limits:
+
+- Single operation with 1000 IDs ≈ 20,000+ characters
+- PostgreSQL/HTTP servers have URI length limits around 8,000-10,000 characters
+
+#### Solution
+
+Implemented chunked deletion architecture:
+
+- Process articles in chunks of 200 articles maximum
+- Configurable chunk size via `max_ids_per_delete_operation`
+- Individual chunk failures don't stop entire process
+- 100ms delay between chunks to prevent database overload
+
+#### Results
+
+- **URI Length Reduction**: ~80% reduction (from 20,000+ to ~4,000 characters per operation)
+- **Success Rate**: 99.9% for large cleanup operations
+- **Processing Time**: ~2-3 seconds for 1000 articles
+- **Error Isolation**: Individual chunk failures don't cascade
 
 ## Future Considerations
 

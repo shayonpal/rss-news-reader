@@ -18,6 +18,15 @@
 # production
 /build
 
+# caches and alt build dirs
+.cache/
+
+# playwright reports
+playwright-report/
+tests/artifacts/
+tests/reports/playwright/
+tests/reports/performance/
+
 # misc
 .DS_Store
 *.pem
@@ -32,6 +41,7 @@ yarn-error.log*
 .env
 .env.backup
 .env.test
+.env.test.backup
 
 # vercel
 .vercel
@@ -43,10 +53,14 @@ next-env.d.ts
 # IDE
 .vscode/settings.json
 .idea/
+.cursor
+.gemini-clipboard
+.serena
 
 # Local development
 CLAUDE.local.md
 update-project-fields.js
+GEMINI.md
 
 # Logs
 /logs/
@@ -57,10 +71,21 @@ docs/revised-priority.md
 # Claude settings
 .claude/settings.local.json
 
+# Gemini CLI Instructions
+*GEMINI*.md
+
 # Token files
 ~/.rss-reader/tokens.json
 documentation-analysis-report.json
 
+# Accidental tilde dir
+~/
+
 # Uptime Kuma configuration
 .kuma-push-urls
 kuma-monitor.config.js
+
+# Test and debug logs
+*.log
+rr-*.log
+test-output.log

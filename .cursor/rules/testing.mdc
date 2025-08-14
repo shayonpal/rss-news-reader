@@ -1,0 +1,26 @@
+---
+description: Testing strategy and execution using Vitest and tiered configs
+---
+# Testing
+
+Test tiers and locations:
+- Unit: [src/__tests__/unit](mdc:src/__tests__/unit)
+- Integration: [src/__tests__/integration](mdc:src/__tests__/integration)
+- E2E/Acceptance: [src/__tests__/e2e](mdc:src/__tests__/e2e), [src/__tests__/acceptance](mdc:src/__tests__/acceptance)
+- Contracts: [src/__tests__/contracts](mdc:src/__tests__/contracts)
+
+Configs:
+- Base: [vitest.config.ts](mdc:vitest.config.ts)
+- Integration: [vitest.config.integration.ts](mdc:vitest.config.integration.ts) / [vitest.integration.config.ts](mdc:vitest.integration.config.ts)
+- E2E: [vitest.config.e2e.ts](mdc:vitest.config.e2e.ts)
+
+Setup:
+- Global setup: [src/test-setup.ts](mdc:src/test-setup.ts)
+- Integration setup: [src/test-setup-integration.ts](mdc:src/test-setup-integration.ts)
+- Utilities: [src/test-utils](mdc:src/test-utils)
+
+Conventions:
+- Keep fast unit tests isolated and deterministic.
+- Integration tests may hit in-memory or test DB depending on environment; see [docs/testing/safe-test-practices.md](mdc:docs/testing/safe-test-practices.md).
+- Security regression tests (RR-67, RR-69, etc.) live under their respective tiers. Do not skip.
+- Store large test artifacts under `test-results/` or `tests/reports/`.

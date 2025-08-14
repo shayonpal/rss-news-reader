@@ -1,55 +1,66 @@
-import { vi } from 'vitest';
-import type { UISystemHealth, HealthStatus } from '@/types/health';
+import { vi } from "vitest";
+import type { UISystemHealth, HealthStatus } from "@/types/health";
 
 /**
  * Creates a mock health check result for testing
  */
-export function createMockHealthCheckResult(overrides?: Partial<UISystemHealth>): UISystemHealth {
+export function createMockHealthCheckResult(
+  overrides?: Partial<UISystemHealth>
+): UISystemHealth {
   return {
-    status: 'healthy' as HealthStatus,
-    timestamp: new Date().toISOString(),
+    status: "healthy" as HealthStatus,
+    timestamp: new Date(),
     metrics: {
+      uptime: 3600,
       totalChecks: 1,
       failedChecks: 0,
-      lastCheck: new Date().toISOString(),
-      avgResponseTime: 50
+      avgResponseTime: 50,
     },
     services: [
       {
-        name: 'database',
-        status: 'healthy' as HealthStatus,
+        name: "database",
+        displayName: "Database",
+        status: "healthy" as HealthStatus,
+        lastCheck: new Date(),
+        message: "Database connection established",
         checks: [
           {
-            name: 'connection',
-            status: 'healthy' as HealthStatus,
-            message: 'Database connection established'
-          }
-        ]
+            name: "connection",
+            status: "healthy" as HealthStatus,
+            message: "Database connection established",
+          },
+        ],
       },
       {
-        name: 'network',
-        status: 'healthy' as HealthStatus,
+        name: "network",
+        displayName: "Network",
+        status: "healthy" as HealthStatus,
+        lastCheck: new Date(),
+        message: "Network connectivity verified",
         checks: [
           {
-            name: 'connectivity',
-            status: 'healthy' as HealthStatus,
-            message: 'Network connectivity verified'
-          }
-        ]
+            name: "connectivity",
+            status: "healthy" as HealthStatus,
+            message: "Network connectivity verified",
+          },
+        ],
       },
       {
-        name: 'cache',
-        status: 'healthy' as HealthStatus,
+        name: "cache",
+        displayName: "Cache",
+        status: "healthy" as HealthStatus,
+        lastCheck: new Date(),
+        message: "Service worker registered",
         checks: [
           {
-            name: 'service-worker',
-            status: 'healthy' as HealthStatus,
-            message: 'Service worker registered'
-          }
-        ]
-      }
+            name: "service-worker",
+            status: "healthy" as HealthStatus,
+            message: "Service worker registered",
+          },
+        ],
+      },
     ],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -60,12 +71,12 @@ export function createMockHealthCheckService() {
   const mockService = {
     checkHealth: vi.fn().mockResolvedValue(createMockHealthCheckResult()),
     reset: vi.fn(),
-    getInstance: vi.fn()
+    getInstance: vi.fn(),
   };
-  
+
   // Make getInstance return the mock service
   mockService.getInstance.mockReturnValue(mockService);
-  
+
   return mockService;
 }
 
@@ -74,12 +85,12 @@ export function createMockHealthCheckService() {
  */
 export function setupHealthCheckMocks() {
   const mockService = createMockHealthCheckService();
-  
-  vi.mock('@/lib/health/health-check-service', () => ({
+
+  vi.mock("@/lib/health/health-check-service", () => ({
     HealthCheckService: {
-      getInstance: () => mockService
-    }
+      getInstance: () => mockService,
+    },
   }));
-  
+
   return mockService;
 }

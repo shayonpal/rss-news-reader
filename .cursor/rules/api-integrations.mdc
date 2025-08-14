@@ -1,0 +1,34 @@
+---
+description: Guidance for Inoreader and Anthropic Claude integrations, rate limits, and sync strategy
+---
+# API Integrations
+
+Primary references:
+- Detailed write-up: [docs/tech/api-integrations.md](mdc:docs/tech/api-integrations.md)
+- Inoreader routes: [src/app/api/inoreader](mdc:src/app/api/inoreader)
+- Sync API: [src/app/api/sync/route.ts](mdc:src/app/api/sync/route.ts)
+- Rate limiter: [src/lib/api/rate-limiter.ts](mdc:src/lib/api/rate-limiter.ts)
+
+Inoreader:
+- OAuth credentials come from environment variables (see Env & Config rule).
+- Minimize calls; target ~4–6 calls per sync. Use incremental sync (RR-149) with `ot` timestamp and `xt=read` when appropriate.
+- Prefer fetching from "All Items" stream for breadth, then feed-specific as needed.
+
+Claude (Anthropic):
+- Server-side only; never expose API key to client.
+- Summarization should prefer `full_content` when available; otherwise fall back to RSS content per current implementation.
+
+Sync Endpoints (RR-171):
+- POST `/api/sync` returns comprehensive metrics plus sidebar payload data for immediate UI updates
+- GET `/api/sync/status/{syncId}` provides real-time sync progress tracking
+- 429 responses include `Retry-After` header for rate-limit countdown UX
+- Sidebar payload includes fresh feed counts and tags to avoid materialized view timing issues
+
+Concurrency and Debouncing:
+- Single sync guard prevents duplicate operations
+- 500ms debounce on sync requests to prevent rapid-fire submissions
+- Rate-limit handling with visual countdown timer on sync button
+
+Error and rate limit handling:
+- Map 401/403/429/5xx to safe, non-leaky client messages.
+- Backoff and queue long-running operations. Persist usage stats when useful for monitoring.

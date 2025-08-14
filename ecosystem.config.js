@@ -136,7 +136,7 @@ module.exports = {
       env: {
         NODE_ENV: "development",
         // Health check URLs
-        HEALTH_URL: "http://localhost:3000/api/health",
+        HEALTH_URL: "http://localhost:3000/reader/api/health/app",
         // Discord webhook (if configured)
         DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL || "",
         // Monitoring configuration
@@ -149,6 +149,35 @@ module.exports = {
       },
       error_file: "./logs/monitor-error.log",
       out_file: "./logs/monitor-out.log",
+      time: true,
+    },
+
+    // Uptime Kuma Push Monitor
+    {
+      name: "kuma-push-monitor",
+      script: "./scripts/kuma-push-daemon.sh",
+      instances: 1,
+      exec_mode: "fork",
+      interpreter: "/bin/bash",
+      min_uptime: 10000, // 10 seconds - prevent rapid restart loops
+      kill_timeout: 5000, // 5 seconds - script should exit gracefully
+      max_restarts: 10, // Conservative for monitoring daemon
+      restart_delay: 60000, // 1 minute delay before restart
+      wait_ready: false, // Daemon doesn't need ready signal
+      max_memory_restart: "128M", // Minimal memory for bash script
+      env: {
+        NODE_ENV: "development",
+        // Push intervals (in seconds)
+        SYNC_PUSH_INTERVAL: 300, // 5 minutes
+        DB_PUSH_INTERVAL: 600, // 10 minutes
+        FETCH_PUSH_INTERVAL: 1800, // 30 minutes
+        API_PUSH_INTERVAL: 3600, // 1 hour
+        // Log configuration
+        LOG_FILE: "./logs/kuma-push-out.log",
+        ERROR_LOG: "./logs/kuma-push-error.log",
+      },
+      error_file: "./logs/kuma-push-error.log",
+      out_file: "./logs/kuma-push-out.log",
       time: true,
     },
   ],

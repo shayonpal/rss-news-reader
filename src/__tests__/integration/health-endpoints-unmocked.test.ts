@@ -7,10 +7,10 @@ import { describe, it, expect, beforeAll, vi } from "vitest";
 describe("Fetch Mock Test", () => {
   beforeAll(() => {
     // Restore real fetch for this test
-    vi.unmock('node-fetch');
+    vi.unmock("node-fetch");
     global.fetch = vi.fn().mockImplementation((...args) => {
       // Use real fetch implementation
-      return import('node-fetch').then(({ default: fetch }) => fetch(...args));
+      return import("node-fetch").then(({ default: fetch }) => fetch(...args));
     });
   });
 

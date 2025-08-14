@@ -1,193 +1,208 @@
 ---
-description: Test an implemented feature that's in review. Validates against Linear acceptance criteria and runs comprehensive test suite.
+description: Test implemented feature using symbolic analysis and comprehensive validation against Linear acceptance criteria
 argument_hint: <linear-issue-id>
 ---
 
-# Test Implementation
+# Test Implementation with Symbol Analysis
 
-Test the implementation for Linear issue $ARGUMENTS against its documented requirements and acceptance criteria. Test on dev server ONLY, and never on production server. Dev server is the development server.
+Test the implementation for Linear issue $ARGUMENTS using symbolic navigation and comprehensive validation.
 
-## ⚠️ CRITICAL WARNING: Memory-Safe Test Execution Required
+## 1. Linear Validation & Symbol Discovery
 
-**Previous test runner issues caused severe memory exhaustion requiring system reboots (RR-123).** All test execution MUST use the safe test runner with resource limits. See Section 2.A for safe execution commands. 
+### Verify Issue Context
 
-If you must run a test command that might hang the activity, ask me to run it on your behalf instead. Just give me the entire command to run, along with a way to pipe the output to a file so that you can read it easily. `tee` command will be preferred wherever possible.
+Use `linear-expert` to:
 
-## Step 0: Linear Validation
+- Verify issue is in "In Review" status
+- Extract requirements, test contracts, and acceptance criteria
+- Get implementation plan and test cases from comments
 
-### Verify Issue Status
-Use `linear-expert` agent to:
-1. Verify issue exists and is in "In Review" status
-2. If not in review:
-   - If "In Progress": Suggest completing implementation first
-   - If "Done": Explain testing was already completed
-   - If other status: Explain current status and next steps
-3. Get full issue specification (description + ALL comments)
-4. Extract:
-   - Original requirements
-   - Implementation plan from comments
-   - Test cases from comments
-   - Any spec clarifications in comments
+### Symbol-Level Implementation Analysis
 
-### Pre-Test Verification
-Check for:
-1. **Implementation comment**: Look for implementation summary
-2. **Test documentation**: Verify test cases are documented
-3. **Files changed**: Note which files were modified
+Use Serena MCP to understand what was implemented:
 
-If missing critical information:
-- 🛑 STOP and explain what's needed
-- Suggest running `/execute` if implementation incomplete
+1. **Find Implementation Symbols**:
+   - `search_for_pattern` with Linear issue ID to find related commits
+   - `get_symbols_overview` on changed files to map modifications
+   - `find_symbol` for specific functions/classes mentioned in Linear
 
-## 1. Environment Preparation
+2. **Map Symbol Dependencies**:
+   - `find_referencing_symbols` to identify impact scope
+   - Trace call chains for integration test planning
+   - Identify all symbols that need testing
 
-Verify testing environment:
+3. **Test Coverage Analysis**:
+   - Locate existing test files for modified symbols
+   - `find_symbol` to map tests to implementation symbols
+   - Identify missing test coverage areas
+
+## 2. Test Execution Strategy
+
+### Create Symbol-Based Test Plan
+
+Use TodoWrite to track testing by symbol:
+
+```
+- [ ] Environment verification
+- [ ] Primary symbols: [list from symbol analysis]
+- [ ] Consumer symbols: [components using the changes]
+- [ ] Integration symbols: [API routes, DB operations]
+- [ ] Test contract validation
+- [ ] Acceptance criteria verification
+- [ ] Performance validation
+- [ ] Bug documentation
+```
+
+### Environment Health Check
+
 ```bash
 pm2 status | grep -E "rss-reader|sync"
 curl -s http://localhost:3000/api/health/app | jq .status
-curl -s http://localhost:3000/api/health/db | jq .database
+npm run type-check && npm run lint
 ```
-Clear test artifacts and ensure clean state for testing.
 
-**Note about Integration Test Setup**: Integration tests now properly load environment variables from .env.test and use the test-server.ts setup for integration tests with real API endpoints.
+## 3. Symbol-Level Testing
 
-## 2. Test Execution
+### A. Unit Test Execution (Memory-Safe)
 
-### A. Unit Test Verification
-
-⚠️ **CRITICAL: Use Memory-Safe Test Execution**
 ```bash
-# SAFE - Uses safe-test-runner.sh with resource limits
-npm test
+# SAFE - Uses optimized test runner
+npm run test:optimized
 
-# AVOID - Coverage can spawn excessive processes
-# npm run test:coverage  # Use only for specific files
-
-# If tests hang or cause memory issues:
-./scripts/kill-test-processes.sh
-
-# Monitor test execution in another terminal:
-./scripts/monitor-test-processes.sh
+# For specific symbol tests
+npx vitest run --no-coverage path/to/symbol.test.ts
 ```
 
-**Resource Limits Enforced:**
-- Max 1 concurrent test execution
-- Max 2 vitest worker processes  
-- 30-second timeout per test
-- Automatic cleanup on exit
+### B. Symbol Contract Validation
 
-Document: total tests, pass/fail counts, coverage % (if run), failing test details.
+For each modified symbol, validate against contracts:
 
-**Note**: Integration tests should use `vitest.integration.config.ts` and fetch is no longer mocked in integration tests.
-
-### B. Integration Testing
-Test based on feature type:
-- **Sync**: Manual sync via API, check sync_metadata, verify bi-directional sync, monitor API usage
-- **Database**: Schema changes, migrations, query performance, RLS policies, transactions
-- **UI**: Development environment, responsive design, iOS PWA, offline functionality, accessibility
-
-### C. Acceptance Criteria Testing
-Test each criterion from Linear issue. Document as:
 ```
-✅ Criterion: [Description] - PASS - [Evidence]
-❌ Criterion: [Description] - FAIL - [Issue + Log/Screenshot]
+Symbol: ArticleStore/syncArticles
+Expected Behavior: [from test contracts]
+Actual Behavior: [test execution results]
+Status: ✅ PASS | ❌ FAIL [details]
+
+Dependencies Tested:
+- SyncService/performSync: [status]
+- useArticleStore hook: [status]
 ```
 
-### D. Edge Case & Regression Testing
-Test edge cases: boundary conditions, error scenarios, concurrent operations, network failures, memory constraints.
-Verify core functionality: article reading, sync pipeline, OAuth, performance, critical user paths.
+### C. Integration Testing
 
-## 3. Performance Validation
+Use `test-expert` for comprehensive validation:
 
-Measure: page load times, sync completion, memory usage, database queries, API efficiency.
+```
+Context Package:
+- Linear Issue: [RR-XXX with full requirements]
+- Symbol Changes: [exact functions/classes modified]
+- Test Contracts: [from Linear comments]
+- Dependency Map: [from find_referencing_symbols]
+- Implementation Files: [list from git analysis]
+
+Testing Focus:
+- Symbol-level functionality
+- Integration point validation
+- Contract compliance
+- Performance impact
+```
+
+## 4. Acceptance Criteria Validation
+
+For each criterion from Linear:
+
+```
+✅ Criterion: [Description]
+   Symbol: [relevant function/class]
+   Evidence: [test results/screenshots]
+
+❌ Criterion: [Description]
+   Symbol: [failing function/class]
+   Issue: [specific problem]
+   Fix Required: [action needed]
+```
+
+## 5. Performance & Security Review
+
+### Performance Validation
+
 ```bash
-pm2 show rss-reader-dev | grep memory
-# Monitor for memory leaks during 5-minute active use
-# Run EXPLAIN on new database queries
+# Test execution baseline (<20s)
+npm run test:performance
+
+# Memory usage check
+pm2 monit
+
+# Symbol call chain analysis (via Serena)
+# Check for bottlenecks in modified symbols
 ```
 
-## 4. Security Review
+### Security Review
 
-Verify: no exposed secrets, proper error handling, input validation, XSS/SQL injection prevention, authentication checks.
+- No hardcoded secrets in symbol implementations
+- Input validation in API route symbols
+- Authentication checks maintained
+- Error handling consistent across symbol chain
 
-## 5. Bug Documentation
+## 6. Bug Documentation & Fixes
 
-Document bugs as:
+Document issues with symbol-level precision:
+
 ```
 🐛 [Title] - Severity: Critical|High|Medium|Low
-Description: [What's wrong]
-Reproduce: [Steps] → Expected vs Actual
-Evidence: [Screenshot/Logs/Test output]
-Fix: [If obvious]
+Symbol: [exact function/class with issue]
+Location: [file:line]
+Description: [what's wrong]
+Impact: [which dependent symbols affected]
+Fix: [specific symbol modification needed]
 ```
-Severity: Critical (data loss, security, crashes) → High (major features) → Medium (minor issues) → Low (cosmetic).
 
-## 6. Test Report Generation
+## 7. Comprehensive Test Report
 
 ```
 📋 Test Report for RR-XXX: [Title]
 
-📊 Summary: Unit Tests (X/Y, Z%), Integration (tested), Acceptance Criteria (X/Y), Edge Cases (X/Y), Regression (status)
-✅ Working: [List verified features]
-❌ Issues: [List bugs with severity]
-🔧 Performance: [Metrics vs baseline, memory usage, query performance]
-🔒 Security: [Status]
-📱 Devices: [Desktop browsers, iOS PWA version, responsive breakpoints]
-🚀 Ready: [Ready|Ready with conditions|Not ready] - [Conditions/Blockers]
+🔍 Symbol Analysis:
+- Primary symbols tested: [list with results]
+- Consumer symbols validated: [list]
+- Integration points verified: [list]
+- Dependencies checked: [count via find_referencing_symbols]
+
+📊 Test Results:
+- Unit Tests: X/Y passed (execution time: Xs)
+- Symbol Contracts: ✅ All match | ⚠️ [deviations listed]
+- Integration: [status by component]
+- Acceptance Criteria: X/Y met
+
+✅ Verified Functionality:
+- [Symbol-by-symbol breakdown]
+- [Contract validations passed]
+
+❌ Issues Found:
+- [Symbol-specific bugs with severity]
+- [Missing test coverage areas]
+
+🚀 Release Status: Ready | Conditional | Blocked
+- [Specific symbol-level conditions if any]
 ```
 
-## 7. Update Linear
+## 8. Linear Update & Closure
 
-Ask `linear-expert` agent to ddd test report as comment. Update labels (add "has-bugs" if needed). Update status: pass → stay "In Review", minor issues → stay "In Review" with comment, blocking → "In Progress". Create separate issues for complex bugs.
+Use `linear-expert` to:
 
-## 8. Bug Fixing Loop
-
-Fix Critical/High bugs immediately. Fix Medium/Low if affecting core functionality.
-For each bug: write failing test → implement fix → verify test passes → run full test suite.
-Continue until all critical/high bugs fixed, acceptance criteria pass, no regressions, acceptable performance.
-After fixes, return to Step 2.
-
-## 9. Final Summary & Issue Closure
-
-```
-✅ Testing Complete for RR-XXX - Result: PASS
-Iterations: [X], Bugs Fixed: [X critical, Y high, Z medium/low]
-Ready for manual verification and issue closure.
-```
-
-### Wait for Manual Verification
-Wait for manual testing, address concerns, make adjustments if needed.
-
-### Update Documentation (After Manual Verification)
-Update relevant project documentation:
-- **CLAUDE.md**: Architecture, commands, env vars, database schema, services
-- **API Documentation**: New/changed endpoints with examples and schemas  
-- **Configuration**: Environment variables, PM2 services, monitoring, OAuth
-- **Development**: Build scripts, testing requirements, troubleshooting
-
-#### Update CHANGELOG.md
-```markdown
-## [Unreleased]
-### Added
-- [RR-XXX features]
-### Changed  
-- [RR-XXX modifications]
-### Fixed
-- [Bugs fixed]
-### Technical
-- [Internal improvements]
-```
-Include: date, Linear reference, user impact, breaking changes (⚠️), migration steps.
-
-### Close Linear Issue using `linear-expert` agent
-After confirmation: Change status to "Done", add final comment with timestamp, ensure linked issues resolved, confirm deployment readiness, note follow-ups.
+- Add comprehensive test report as comment
+- Update status based on results:
+  - Pass → Keep "In Review"
+  - Minor issues → "In Review" with conditions
+  - Blocking issues → "In Progress"
+- Create separate issues for complex bugs found
 
 ## Important Notes
 
-- Never close without manual verification
-- Iterate until ALL bugs fixed  
-- Test after every fix to prevent regressions
-- Update documentation and CHANGELOG
-- Fix new issues discovered during testing
+- **Symbol-First Testing**: Focus on exact functions/classes changed
+- **Use test-expert**: Leverage agent for comprehensive symbol analysis
+- **Memory Safety**: Always use optimized test runners
+- **Iterative Fixes**: Fix critical issues immediately and re-test
+- **Documentation**: Update CHANGELOG.md after successful testing
 
-Job complete when: tests pass, bugs fixed, docs updated, CHANGELOG current, manually verified and approved, Linear closed.
+**Completion Criteria**: All symbols tested, contracts validated, acceptance criteria met, no critical bugs, performance within baseline, manual verification complete.

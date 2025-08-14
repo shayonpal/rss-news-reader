@@ -19,6 +19,7 @@ export async function GET() {
         message: "Cron health check skipped in test environment",
         environment: envInfo.environment,
         lastCheck: null,
+        lastRun: null, // Include lastRun for test compatibility
         timestamp: new Date().toISOString(),
       },
       { status: 200, headers }
@@ -76,7 +77,7 @@ export async function GET() {
     // Consider unhealthy if last check is older than 5 hours (4-hour interval + 1 hour buffer)
     const isStale = ageHours > 5;
     const status = isStale ? "unhealthy" : lastHealthData.status;
-    const message = isStale 
+    const message = isStale
       ? `Last check was ${Math.round(ageHours)} hours ago (expected every 4 hours)`
       : lastHealthData.message || "Sync completed successfully";
 

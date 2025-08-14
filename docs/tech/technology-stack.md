@@ -90,7 +90,7 @@ The RSS Reader uses a clean separation of concerns:
 // Store slices
 - articlesStore: Article read operations from Supabase
 - feedsStore: Feed hierarchy from Supabase
-- tagsStore: Tag management from Supabase
+- tagsStore: Tag management and filtering (RR-128)
 - syncStore: Sync status polling
 - settingsStore: User preferences and theme
 ```
@@ -114,17 +114,21 @@ For simpler state requirements, could use React's built-in state management.
 **Tables Used:**
 
 ```sql
--- Existing tables (no schema changes needed)
+-- Existing tables
 - users: Single user record
 - folders: Feed folder hierarchy
 - feeds: Feed metadata and unread counts
 - articles: Article content and metadata
 
--- New tables
-- tags: User tags from Inoreader
-- article_tags: Tag assignments
+-- Tag management tables (RR-128)
+- tags: User tags with names, colors, descriptions
+- article_tags: Many-to-many article-tag relationships
+
+-- Sync and monitoring tables
 - sync_metadata: Sync timestamps and status
 - sync_errors: Error logging
+- api_usage: API call tracking
+- fetch_logs: Content extraction logs
 ```
 
 ### Secondary Storage: **localStorage**
@@ -159,6 +163,9 @@ For theme preference only.
 - GET /api/sync/status/:syncId - Check sync progress
 - POST /api/articles/:id/fetch-content - Fetch full content
 - POST /api/articles/:id/summarize - Generate AI summary
+- GET /api/tags - List and search tags (RR-128)
+- POST /api/tags - Create new tags (RR-128)
+- GET /api/articles/:id/tags - Get article tags (RR-128)
 ```
 
 ### Server HTTP: **Axios**
@@ -177,6 +184,7 @@ For theme preference only.
 - inoreaderService: All Inoreader API calls
 - anthropicService: Claude AI summarization
 - readabilityService: Article content extraction
+- cleanupService: Database cleanup and maintenance (RR-129/RR-150)
 ```
 
 ## Development & Build Tools
@@ -262,6 +270,7 @@ For theme preference only.
 - IndexedDB for application data
 - Memory caching for API responses
 - HTTP cache headers optimization
+- **Anti-Cache Headers**: Time-sensitive endpoints like `/api/sync/last-sync` use cache prevention headers (`Cache-Control: no-store, no-cache, must-revalidate`, `Pragma: no-cache`, `Expires: 0`) to ensure fresh data
 
 ## Development Environment
 
@@ -439,7 +448,8 @@ TEST_INOREADER_PASSWORD=
   "express": "^4.0.0",
   "pm2": "^5.0.0",
   "@anthropic-ai/sdk": "^0.20.0",
-  "node-keytar": "^7.0.0"
+  "node-keytar": "^7.0.0",
+  "he": "^1.2.0"
 }
 ```
 
@@ -511,6 +521,58 @@ class SyncService {
 
     // 4. Write to Supabase
     await this.supabase.upsertAll(feeds, tags, articles, counts);
+
+    // 5. Execute cleanup operations (RR-129)
+    const cleanupService = new ArticleCleanupService(supabase);
+    await cleanupService.executeFullCleanup(feedIds, userId);
+  }
+}
+
+// HTML Entity Decoder Service (RR-154)
+class HtmlDecoderService {
+  static decodeArticleContent(article: any) {
+    // Uses 'he' library for standards-compliant decoding
+    return {
+      ...article,
+      title: decodeHtmlEntities(article.title),
+      content: decodeHtmlEntities(article.content),
+      description: decodeHtmlEntities(article.description),
+    };
+  }
+
+  // URL-safe decoding - never decode URLs
+  static isSafeUrl(text: string): boolean {
+    return text?.startsWith("http") || text?.includes("://");
+  }
+}
+
+// Database cleanup service (RR-129/RR-150)
+class ArticleCleanupService {
+  async executeFullCleanup(feedIds: string[], userId: string) {
+    // Remove feeds no longer in Inoreader
+    await this.cleanupDeletedFeeds(feedIds, userId);
+
+    // Remove read articles with chunked deletion (RR-150)
+    await this.cleanupReadArticles(userId);
+  }
+
+  // Chunked deletion to handle large datasets (RR-150)
+  async processArticleDeletion(articlesToDelete: Article[]) {
+    const chunkSize = config.maxIdsPerDeleteOperation || 200;
+
+    for (let i = 0; i < articlesToDelete.length; i += chunkSize) {
+      const chunk = articlesToDelete.slice(i, i + chunkSize);
+      await this.supabase
+        .from("articles")
+        .delete()
+        .in(
+          "id",
+          chunk.map((a) => a.id)
+        );
+
+      // Rate limiting between chunks
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 }
 ```

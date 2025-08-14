@@ -1,513 +1,321 @@
-# Server API Endpoints (US-103)
+# Server API Endpoints
 
-This document describes the server API endpoints implemented as part of US-103.
+This document lists all internal API endpoints implemented in the codebase, covering both Next.js App Router routes under `/api/*` and the auxiliary Express service under `/server/*`.
 
-## Overview
+- Access model: Internal only; app is reachable via Tailscale network. Client holds no public secrets.
+- Authentication: Inoreader OAuth is handled server-side or via secure cookies where applicable.
+- **API Base Path (RR-102)**: All endpoints use `/reader` prefix. Development environment automatically redirects `/api/*` → `/reader/api/*` with 307 status.
+- Last Updated: 2025-08-12
 
-All server API endpoints are designed to handle complex operations that should not run on the client:
+## Quick Reference
 
-- External API communication (Inoreader)
-- Content extraction (Mozilla Readability)
-- AI summarization (Claude API)
-- Rate limiting and usage tracking
+| Category         | Primary Endpoints                                                                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sync             | `POST /api/sync`, `GET /api/sync/status/{syncId}`, `GET /api/sync/last-sync`, `POST /api/sync/metadata`, `POST /api/sync/refresh-view`, `POST /api/sync/bidirectional`, `GET /api/sync/api-usage`                                  |
+| Articles         | `POST /api/articles/{id}/fetch-content`, `POST /api/articles/{id}/summarize`, `GET /api/articles/{id}/tags`                                                                                                                        |
+| Tags             | `GET /api/tags`, `POST /api/tags`, `GET /api/tags/{id}`, `PATCH /api/tags/{id}`, `DELETE /api/tags/{id}`                                                                                                                           |
+| Inoreader Proxy  | `GET /api/inoreader/user-info`, `GET /api/inoreader/subscriptions`, `GET /api/inoreader/stream-contents`, `GET /api/inoreader/unread-counts`, `POST /api/inoreader/edit-tag`, `GET /api/inoreader/debug`, `GET /api/inoreader/dev` |
+| Health           | `GET /api/health` (and alias `/api/health/app`), `GET /api/health/db`, `GET /api/health/cron`, `GET /api/health/parsing`, `GET /api/health/claude`                                                                                 |
+| Analytics & Logs | `GET /api/analytics/fetch-stats`, `POST /api/logs/inoreader`                                                                                                                                                                       |
+| Auth Status      | `GET /api/auth/inoreader/status`                                                                                                                                                                                                   |
+| Express Service  | `POST /server/sync/trigger`, `GET /server/sync/stats`, `POST /server/sync/clear-failed`, `POST /server/mark-all-read`, `GET /server/health`                                                                                        |
 
-## Endpoints
+Note: Previous reference to `/api/health/freshness` has been retired; use `/api/health/parsing` and other health endpoints below.
 
-### 1. Trigger Manual Sync
+## API Base Path Handling (RR-102)
 
-**Endpoint:** `POST /api/sync`
+The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102 implementation provides smart redirects in development to improve developer experience:
 
-**Description:** Triggers a server-side sync with Inoreader API
+### Production Behavior
 
-**Request:**
+- **Requires** the `/reader` prefix: `/reader/api/health/app`
+- Missing prefix returns 404 error
 
-```json
-POST /api/sync
-Content-Type: application/json
-```
+### Development Behavior (Smart Redirects)
 
-**Response (Success):**
+- **Both paths work**: `/api/health/app` OR `/reader/api/health/app`
+- Automatic 307 redirects: `/api/*` → `/reader/api/*`
+- **HTTP Method Preservation**: GET, POST, PUT, DELETE, PATCH methods preserved
+- **Request Body Preservation**: POST/PUT request bodies maintained during redirect
 
-```json
-{
-  "success": true,
-  "syncId": "uuid-string",
-  "message": "Sync started successfully",
-  "rateLimit": {
-    "remaining": 96,
-    "limit": 100,
-    "used": 4
-  }
-}
-```
+### Error Handling
 
-**Response (Rate Limited):**
+- Malformed requests (non-API paths) handled by catch-all route: `/api/[...catch]`
+- Provides helpful error messages with debugging information
+- Example: `/api/invalid/path` returns clear error with available endpoints
 
-```json
-{
-  "error": "rate_limit_exceeded",
-  "message": "Inoreader API rate limit exceeded",
-  "limit": 100,
-  "used": 100,
-  "remaining": 0
-}
-```
+### Implementation Details
 
-**Status Codes:**
-
-- 200: Success
-- 429: Rate limit exceeded
-- 500: Server error
+- Redirect rules configured in `next.config.mjs` (development only)
+- Catch-all error handler at `src/app/api/[...catch]/route.ts`
+- Zero production impact - redirects disabled when `NODE_ENV === 'production'`
 
 ---
 
-### 2. Check Sync Status
+## Next.js App Router Endpoints (/api/\*)
 
-**Endpoint:** `GET /api/sync/status/:syncId`
+### Sync
 
-**Description:** Polls the status of an ongoing sync operation
+- POST `/api/sync` (RR-176, RR-162)
+  - Description: Starts server-side sync from Inoreader to Supabase. Handles folders, feeds, unread counts, articles import, tag extraction, cleanup, metadata updates, and triggers bi-directional queue processing. As of RR-162, auto-fetch functionality has been removed to resolve sync performance issues.
+  - Response 200: `{ success, syncId, status, message, metrics: { newArticles, deletedArticles, newTags, failedFeeds }, sidebar: { feedCounts: [[feedId, unreadCount], ...], tags: [{ id, name, count }], lastUpdated } }`
+  - Response 429: `{ error: "rate_limit_exceeded", ... }`
+  - Response 500: `{ error: "sync_start_failed", message, details }`
+  - Note: Sync process now maintains `feeds.is_partial_content` field for auto-parse targeting
 
-**Request:**
+- GET `/api/sync/status/{syncId}`
+  - Description: Poll sync status; primary source is a temp file with DB fallback.
+  - Response 200: `{ status: "pending"|"running"|"completed"|"partial"|"failed", progress, message, error?, itemsProcessed, totalItems }`
+  - Response 404: `{ error: "sync_not_found", message }`
 
-```
-GET /api/sync/status/123e4567-e89b-12d3-a456-426614174000
-```
+- GET `/api/sync/last-sync`
+  - Description: Returns last sync time, preferring database truth: `sync_metadata` → `sync_status` → log fallback. Includes cache prevention headers to ensure fresh data.
+  - Response Headers: `Cache-Control: no-store, no-cache, must-revalidate`, `Pragma: no-cache`, `Expires: 0`
+  - Response 200: `{ lastSyncTime: string|null, source: "sync_metadata"|"sync_status"|"sync-log"|"none" }`
 
-**Response:**
+- POST `/api/sync/metadata`
+  - Description: Update sync metadata keys; supports direct value or `{ increment: number }`.
+  - Request: `{ [key: string]: string | number | { increment: number } }`
+  - Response 200: `{ success: true }`
 
-```json
-{
-  "syncId": "123e4567-e89b-12d3-a456-426614174000",
-  "status": "running",
-  "progress": 70,
-  "message": "Processing 164 articles...",
-  "startTime": 1737510123456
-}
-```
+- POST `/api/sync/refresh-view`
+  - Description: Refreshes `feed_stats` materialized view.
+  - Response 200: `{ status: "success", message, timestamp }`
 
-**Status Values:**
+- POST `/api/sync/bidirectional`
+  - Description: Back-compat placeholder; bi-directional sync runs as separate service.
+  - Response 501: `{ error, message }`
 
-- `pending`: Sync queued but not started
-- `running`: Sync in progress
-- `completed`: Sync finished successfully
-- `failed`: Sync failed with error
+- GET `/api/sync/api-usage` (RR-5)
+  - Description: Returns current Inoreader API usage with zone percentages for display in sidebar. Values are sourced from Inoreader response headers captured on every call.
+  - Response 200: `{ zone1: { used, limit, percentage }, zone2: { used, limit, percentage }, resetAfterSeconds, timestamp }`
+  - Cache-Control: 30 seconds (near real-time updates)
+  - Notes:
+    - Free tier limits: 100/day for Zone 1 and 100/day for Zone 2 (limits come from headers and may vary by plan)
+    - To mitigate occasional header lag during bursts, Zone 1 `used` is computed as `max(header_usage, daily_call_count)`, capped at `limit`
 
----
+### Articles
 
-### 3. Extract Article Content
+- POST `/api/articles/{id}/fetch-content` (RR-176, RR-162)
+  - Description: Fetches article URL, extracts full content via Readability, stores `full_content`, marks parsing metadata, and logs attempts in `fetch_logs`. Manual fetch only - auto-fetch functionality removed in RR-162.
+  - Request JSON (optional): `{ forceRefresh?: boolean }`
+  - Responses:
+    - 200: `{ success: true, content, title?, excerpt?, byline?, length?, siteName?, parsedAt }`
+    - 200 (fallback): `{ success: false, content, fallback: true, error, canRetry? }`
+    - 400: `{ error: "no_url", message }`
+    - 404: `{ error: "article_not_found", ... }`
+    - 408: `{ error: "timeout", ... }`
+    - 500: `{ error: "extraction_failed" | "unexpected_error", ... }`
+  - Notes:
+    - Auto-parsing logic (RR-176): Only triggered for feeds with `is_partial_content = true` OR content <500 chars OR truncation indicators
+    - Manual fetching via UI buttons works for all articles regardless of feed type
 
-**Endpoint:** `POST /api/articles/:id/fetch-content`
+- POST `/api/articles/{id}/summarize`
+  - Description: Generates AI summary using Claude; caches summary in `articles.ai_summary`.
+  - Request JSON: `{ regenerate?: boolean }`
+  - Responses:
+    - 200: `{ success, summary, model, regenerated, input_tokens, output_tokens, config }`
+    - 400: `{ error: "no_content", ... }`
+    - 404: `{ error: "article_not_found", ... }`
+    - 401: `{ error: "invalid_api_key" }`
+    - 429: `{ error: "rate_limit" }`
+    - 503: `{ error: "api_not_configured" }`
+    - 500: `{ error: "summarization_failed", ... }`
 
-**Description:** Extracts clean, readable content from article URL using Mozilla Readability
+- GET `/api/articles/{id}/tags`
+  - Description: Returns tags linked to the article.
+  - Response 200: `{ tags: [{ id, name, slug, color, description }] }`
 
-**Request:**
+### Feeds
 
-```json
-POST /api/articles/550e8400-e29b-41d4-a716-446655440000/fetch-content
-Content-Type: application/json
-```
+**Note (RR-176)**: Feed management operations are currently handled through the client-side store (`updateFeedPartialContent`). A future API endpoint may be added for:
 
-**Response (Success):**
+- `PATCH /api/feeds/{id}` - Update feed settings including `is_partial_content` toggle
 
-```json
-{
-  "success": true,
-  "content": "<p>Clean article content...</p>",
-  "title": "Extracted Article Title",
-  "excerpt": "Article excerpt...",
-  "byline": "Author Name",
-  "length": 2345,
-  "siteName": "Example News",
-  "cached": false
-}
-```
+### Tags
 
-**Response (Cached):**
+- GET `/api/tags`
+  - Description: List tags with filtering, sorting, pagination, and real-time unread counts per user.
+  - Query:
+    - `search?: string`
+    - `sortBy?: "name" | "count" | "recent"` (default `name`)
+    - `order?: "asc" | "desc"` (default `asc`)
+    - `limit?: number` (default 50)
+    - `offset?: number` (default 0)
+    - `includeEmpty?: "true" | "false"` (default false)
+  - Response 200: `{ tags: [{ ...tag, unread_count: number }], pagination: { limit, offset, total, hasMore } }`
+  - Note: Each tag now includes `unread_count` field calculated from user's feeds to ensure accurate per-user unread article counts
 
-```json
-{
-  "success": true,
-  "content": "<p>Previously extracted content...</p>",
-  "cached": true
-}
-```
+- POST `/api/tags`
+  - Description: Create a new tag for the user.
+  - Request JSON: `{ name: string, color?: string, description?: string }`
+  - Responses: 201 with new tag; 400 missing name; 404 user not found; 409 duplicate; 500 on error.
 
-**Response (Fallback):**
+- GET `/api/tags/{id}`
+  - Description: Get tag details; optionally include recent associated articles.
+  - Query: `includeArticles?: "true"`, `limit?: number` (default 10)
+  - Response 200: tag object, optionally `{ ...tag, articles: [...] }`
+  - Response 404: Tag or user not found.
 
-```json
-{
-  "success": true,
-  "content": "<p>RSS feed content...</p>",
-  "fallback": true
-}
-```
+- PATCH `/api/tags/{id}`
+  - Description: Update tag fields: `name`, `color`, `description`. Slug auto-updates from `name`.
+  - Responses: 200 updated tag; 404 not found; 500 on error.
 
-**Status Codes:**
+- DELETE `/api/tags/{id}`
+  - Description: Delete a tag (cascades `article_tags`).
+  - Response 200: `{ message: "Tag deleted successfully" }`
 
-- 200: Success
-- 400: No URL available
-- 404: Article not found
-- 408: Timeout (10 second limit)
-- 500: Extraction failed
+### Inoreader Proxy
 
----
+- GET `/api/inoreader/user-info`
+  - Description: Proxies Inoreader user info; enforces internal rate-limiter and logs call.
+  - Query: `trigger?: string` (for logging)
+  - Responses: 200 user info; 401 unauthenticated/expired; 429 rate limit; 500 error.
 
-### 4. Generate AI Summary
+- GET `/api/inoreader/subscriptions`
+  - Description: Proxies Inoreader subscription list; refreshes token if expired; logs call.
+  - Query: `trigger?: string`
+  - Responses: 200 JSON from Inoreader; 401/5xx passthrough.
 
-**Endpoint:** `POST /api/articles/:id/summarize`
+- GET `/api/inoreader/stream-contents`
+  - Description: Proxies Inoreader stream contents for a given `streamId`.
+  - Query:
+    - `streamId` (required)
+    - Optional passthrough: `n`, `r`, `c`, `xt`, `ot`
+    - `trigger?: string` (logging)
+  - Responses: 200 JSON from Inoreader; 400 missing streamId; 401 unauthenticated; 5xx passthrough.
 
-**Description:** Generates a 150-175 word summary using Claude 4 Sonnet
+- GET `/api/inoreader/unread-counts`
+  - Description: Proxies Inoreader unread counts; logs call.
+  - Query: `trigger?: string`
+  - Responses: 200 unread counts; 401; 5xx passthrough.
 
-**Request:**
+- POST `/api/inoreader/edit-tag`
+  - Description: Proxies Inoreader edit-tag to update read/star states in batch (bi-directional sync).
+  - Body: `application/x-www-form-urlencoded` (forwarded as-is). Includes item IDs and add/remove state labels.
+  - Responses:
+    - 200: `{ success: true }`
+    - 401/403: auth failures (OAuth tokens missing/expired)
+    - 429: rate limited (honor `Retry-After` header)
+    - 5xx: upstream error passthrough
 
-```json
-POST /api/articles/550e8400-e29b-41d4-a716-446655440000/summarize
-Content-Type: application/json
+- GET `/api/inoreader/debug`
+  - Description: Returns cookie/token presence and expiry diagnostics (for debugging).
+  - Response 200: `{ hasAccessToken, hasRefreshToken, expiresAt, expiresIn, isExpired, cookies: { ... } }`
 
-{
-  "regenerate": true  // Optional, forces new summary
-}
-```
+- GET `/api/inoreader/dev` (RR-5, Development Only)
+  - Description: Development proxy for testing Inoreader API calls and capturing rate limit headers.
+  - Query: `endpoint` (required), `method=GET|POST` (default GET)
+  - Response 200: `{ data, headers, debug: { zone1: { usage, limit }, zone2: { usage, limit }, resetAfter } }`
+  - Response 403: In production environment
+  - Note: Automatically captures and stores rate limit headers in api_usage table
 
-**Response (Success):**
+- POST `/api/inoreader/dev` (RR-5, Development Only)
+  - Description: POST variant for write operations testing.
+  - Query: `endpoint` (required)
+  - Body: Raw form data to pass through
+  - Response: Same as GET variant
 
-```json
-{
-  "success": true,
-  "summary": "This article discusses the latest developments in...",
-  "model": "claude-sonnet-4-20250514",
-  "regenerated": false,
-  "input_tokens": 1234,
-  "output_tokens": 175
-}
-```
+### Health
 
-**Response (Cached):**
+- GET `/api/health` (alias endpoint also exposed as `/api/health/app`)
+  - Description: App health check. Supports lightweight ping.
+  - Query: `ping=true` returns `{ status: "ok", ping: true }`
+  - Response 200 or 503 with `{ ...health, version, timestamp }`
 
-```json
-{
-  "success": true,
-  "summary": "Previously generated summary...",
-  "cached": true
-}
-```
+- GET `/api/health/db`
+  - Description: DB connectivity health with timings and environment info.
+  - Responses:
+    - 200: `{ status: "healthy" | "degraded", database|connection, queryTime, environment, timestamp }`
+    - 503: `{ status: "unhealthy", ... }`
 
-**Status Codes:**
+- GET `/api/health/cron`
+  - Description: Cron service health by reading `logs/cron-health.jsonl`; test env returns healthy skip.
+  - Responses: 200 healthy; 503 unknown/unhealthy; includes `{ lastCheck, ageMinutes, lastRun, nextRun, recentRuns, uptime }`
 
-- 200: Success
-- 400: No content to summarize
-- 401: Invalid API key
-- 404: Article not found
-- 429: Claude API rate limit
-- 503: Claude API not configured
-- 500: Summarization failed
+- GET `/api/health/parsing` (RR-176)
+  - Description: Parsing/fetching health metrics and recommendations, using `articles`, `fetch_logs`, `feeds`, and `system_config`. Uses `feeds.is_partial_content` field to identify partial feeds (updated from deprecated `is_partial_feed`).
+  - Response 200: `{ status, timestamp, metrics: { parsing: {...}, fetch: {...}, configuration: {...} }, recommendations: string[] }`
 
----
+- GET `/api/health/claude`
+  - Description: Claude API connectivity check (models endpoint).
+  - Responses: 200 healthy; 501 not configured; 503 unhealthy.
 
-### 5. Application Health Check
+### Analytics & Logs
 
-**Endpoint:** `GET /api/health/app`
+- GET `/api/analytics/fetch-stats`
+  - Description: Aggregated manual fetch stats by period (today, thisMonth, lifetime), per-feed summaries, top issues, and recent failures. Auto-fetch statistics removed in RR-162.
+  - Response 200: `{ overall: { today, thisMonth, lifetime }, feeds: [...], topIssues: { problematicFeeds, recentFailures } }`
 
-**Description:** Comprehensive health check for the main Next.js application
+- POST `/api/logs/inoreader`
+  - Description: Append Inoreader API call log entry to `logs/inoreader-api-calls.jsonl`. Non-fatal on failure.
+  - Request JSON: `{ endpoint: string, trigger: string, method?: string, timestamp?: string }`
+  - Response 200: `{ success: true|false }` (always 200)
 
-**Request:**
+### Auth Status
 
-```
-GET /api/health/app
-```
-
-**Response (Healthy):**
-
-```json
-{
-  "status": "healthy",
-  "service": "rss-reader-app",
-  "uptime": 3456,
-  "lastActivity": "2025-07-26T22:30:00Z",
-  "errorCount": 0,
-  "dependencies": {
-    "database": "healthy",
-    "oauth": "healthy"
-  },
-  "performance": {
-    "avgResponseTime": 45
-  },
-  "details": {
-    "version": "0.7.0",
-    "nodeVersion": "20.11.0",
-    "syncStatus": "idle",
-    "memoryUsage": 56789012,
-    "tokenExpiry": "2025-07-27T10:00:00Z"
-  }
-}
-```
-
-**Status Codes:**
-
-- 200: Healthy or degraded
-- 503: Unhealthy
-
----
-
-### 6. Database Health Check
-
-**Endpoint:** `GET /api/health/db`
-
-**Description:** Tests database connectivity and query performance
-
-**Request:**
-
-```
-GET /api/health/db
-```
-
-**Response (Healthy):**
-
-```json
-{
-  "status": "healthy",
-  "service": "database",
-  "timestamp": "2025-07-26T22:30:00Z",
-  "performance": {
-    "queryTime": 12,
-    "connectionTime": 5
-  },
-  "details": {
-    "host": "db.rgfxyraamghqnechkppg.supabase.co",
-    "database": "postgres",
-    "ssl": true,
-    "rowCount": 1
-  }
-}
-```
-
-**Response (Unhealthy):**
-
-```json
-{
-  "status": "unhealthy",
-  "service": "database",
-  "timestamp": "2025-07-26T22:30:00Z",
-  "error": "Connection timeout",
-  "details": {
-    "message": "Unable to connect to database"
-  }
-}
-```
-
-**Status Codes:**
-
-- 200: Healthy
-- 503: Database connection error
+- GET `/api/auth/inoreader/status`
+  - Description: Validates presence and age of encrypted OAuth tokens stored in `~/.rss-reader/tokens.json`.
+  - Responses (200): `{ authenticated: boolean, status: "valid"|"expiring_soon"|"expired"|"no_tokens"|"config_error"|"invalid_format"|"unencrypted"|"empty_tokens"|"error", message, tokenAge, daysRemaining, timestamp }`
+  - Other methods (POST/PUT/DELETE/PATCH): 405 Method Not Allowed
 
 ---
 
-### 7. Cron Service Health Check
+## Express Service Endpoints (/server/\*)
 
-**Endpoint:** `GET /api/health/cron`
+These run in the auxiliary Express server (`server/server.js`).
 
-**Description:** Returns the health status of the sync cron service by reading health file
+- POST `/server/sync/trigger`
+  - Description: Triggers bi-directional sync to push local changes back to Inoreader.
+  - Response 200: `{ success: true, message }`
+  - Response 500: `{ error }`
 
-**Request:**
+- GET `/server/sync/stats`
+  - Description: Returns sync queue statistics.
+  - Response 200: JSON with queue stats.
 
-```
-GET /api/health/cron
-```
+- POST `/server/sync/clear-failed`
+  - Description: Clears failed items from sync queue.
+  - Response 200: `{ success: true, cleared }`
 
-**Response:**
+- POST `/server/mark-all-read`
+  - Description: Proxy to Inoreader “mark-all-as-read”.
+  - Request JSON: `{ streamId: string }`
+  - Responses: 200 `{ success: true }`; 400 missing `streamId`; 4xx/5xx passthrough; logs to `logs/inoreader-api-calls.jsonl`.
 
-```json
-{
-  "status": "healthy",
-  "service": "rss-sync-cron",
-  "lastRun": "2025-07-26T14:00:00Z",
-  "nextRun": "2025-07-27T02:00:00Z",
-  "lastRunSuccess": true,
-  "consecutiveFailures": 0,
-  "details": {
-    "articlesSync": 69,
-    "feedsSync": 45,
-    "duration": 4500
-  }
-}
-```
-
-### 8. Article Freshness Health Check
-
-**Endpoint:** `GET /api/health/freshness`
-
-**Description:** Checks if articles are fresh by analyzing recent article timestamps and sync activity
-
-**Request:**
-
-```
-GET /api/health/freshness
-```
-
-**Response (Fresh Articles):**
-
-```json
-{
-  "status": "healthy",
-  "lastSyncAt": "2025-07-28T12:00:00Z",
-  "newestArticleAt": "2025-07-28T11:45:00Z",
-  "articlesInLast12Hours": 42,
-  "totalArticles": 1847,
-  "details": {
-    "hoursSinceLastSync": 1.1,
-    "hoursSinceNewestArticle": 1.25,
-    "stalenessStatus": "fresh"
-  }
-}
-```
-
-**Response (Stale Articles):**
-
-```json
-{
-  "status": "warning",
-  "lastSyncAt": "2025-07-26T14:00:00Z",
-  "newestArticleAt": "2025-07-26T13:45:00Z",
-  "articlesInLast12Hours": 0,
-  "totalArticles": 1805,
-  "details": {
-    "hoursSinceLastSync": 46.1,
-    "hoursSinceNewestArticle": 46.25,
-    "stalenessStatus": "stale",
-    "warning": "No new articles in 12+ hours"
-  }
-}
-```
+- GET `/server/health`
+  - Description: Service health summary (integrates sync/dependency checks). Returns 200 healthy, 503 unhealthy with details.
 
 ---
 
 ## Rate Limiting
 
-### Inoreader API
-
-- **Limit:** 100 calls per day
-- **Reset:** Midnight UTC
-- **Tracking:** Stored in `api_usage` table
-- **Sync Usage:** ~4-5 calls per sync
-
-### Claude API
-
-- **Limit:** Based on Anthropic account tier
-- **Tracking:** Each summarization tracked in `api_usage` table
-- **Cost:** Approximately $0.003 per summary
-
----
+- Inoreader: 100 calls/day (Zone 1) + 100/day (Zone 2). Tracked in `api_usage`. Sync aims for ~4–5 calls.
+- Claude: Tracked in `api_usage` with per-call increments; cost-sensitive usage.
 
 ## Error Handling
 
-All endpoints follow a consistent error response format:
+Standard error envelope:
 
 ```json
 {
   "error": "error_code",
-  "message": "Human-readable error message",
-  "details": "Additional error details (optional)"
+  "message": "Human-readable message",
+  "details": "optional"
 }
 ```
 
-Common error codes:
+Common codes:
 
-- `rate_limit_exceeded`: API rate limit hit
-- `article_not_found`: Article ID not found
-- `sync_start_failed`: Failed to initiate sync
-- `extraction_failed`: Content extraction failed
-- `summarization_failed`: AI summary generation failed
-- `api_not_configured`: Required API key missing
-
----
-
-## Database Tables
-
-### api_usage
-
-Tracks API usage for rate limiting:
-
-```sql
-CREATE TABLE api_usage (
-  id UUID PRIMARY KEY,
-  service VARCHAR(50),     -- 'inoreader', 'claude'
-  date DATE,
-  count INTEGER,
-  created_at TIMESTAMP
-);
-```
-
-### sync_metadata
-
-Stores sync-related metadata:
-
-```sql
-CREATE TABLE sync_metadata (
-  key VARCHAR(100) PRIMARY KEY,
-  value TEXT,
-  updated_at TIMESTAMP
-);
-```
-
-### articles (extended columns)
-
-```sql
-ALTER TABLE articles ADD COLUMN full_content TEXT;
-ALTER TABLE articles ADD COLUMN has_full_content BOOLEAN;
-ALTER TABLE articles ADD COLUMN ai_summary TEXT;
-ALTER TABLE articles ADD COLUMN author VARCHAR(255);
-```
-
----
+- `rate_limit_exceeded`, `sync_start_failed`, `article_not_found`, `extraction_failed`, `timeout`, `api_not_configured`, `invalid_api_key`, `summarization_failed`
 
 ## Testing
 
-Use curl commands or tools like Postman to test endpoints directly. All test/debug endpoints have been removed for security reasons.
-
-### Curl Examples
-
-#### Health Checks
-
-```bash
-# Application health
-curl http://100.96.166.53:3000/reader/api/health/app
-
-# Database health
-curl http://100.96.166.53:3000/reader/api/health/db
-
-# Cron health
-curl http://100.96.166.53:3000/reader/api/health/cron
-
-# Article freshness
-curl http://100.96.166.53:3000/reader/api/health/freshness
-```
-
-#### Manual Sync
-
-```bash
-# Trigger manual sync
-curl -X POST http://100.96.166.53:3000/reader/api/sync \
-  -H "Content-Type: application/json"
-```
-
-#### Article Operations
-
-```bash
-# Fetch full article content
-curl -X POST http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/fetch-content \
-  -H "Content-Type: application/json"
-
-# Generate AI summary
-curl -X POST http://100.96.166.53:3000/reader/api/articles/ARTICLE_ID/summarize \
-  -H "Content-Type: application/json"
-```
-
----
-
-## Implementation Notes
-
-1. **Server-Side Only:** These endpoints run on the server to protect API keys and handle rate limiting
-2. **Caching:** Both content extraction and summaries are cached to minimize API calls
-3. **Background Processing:** Sync runs asynchronously to avoid timeouts
-4. **Error Recovery:** All operations handle failures gracefully with proper error messages
-5. **Security:** No authentication required as access is controlled by Tailscale network
+- Use integration tests under `src/__tests__/integration/**` to validate API responses.
+- Curl quick checks:
+  - Health: `/api/health`, `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude`
+  - Sync: `POST /api/sync` then `GET /api/sync/status/{id}`
+  - Articles: `POST /api/articles/{id}/fetch-content`, `POST /api/articles/{id}/summarize`
+  - Tags: `GET /api/tags`, `POST /api/tags`, `GET|PATCH|DELETE /api/tags/{id}`
+  - Inoreader: `/api/inoreader/*`
+  - Analytics: `GET /api/analytics/fetch-stats`

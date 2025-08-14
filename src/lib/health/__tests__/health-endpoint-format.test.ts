@@ -12,20 +12,24 @@ vi.mock("@supabase/supabase-js", () => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         limit: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: { key: "test" }, error: null }))
-        }))
-      }))
-    }))
-  }))
+          single: vi.fn(() =>
+            Promise.resolve({ data: { key: "test" }, error: null })
+          ),
+        })),
+      })),
+    })),
+  })),
 }));
 
 // Mock fs/promises
 vi.mock("fs/promises", () => ({
   access: vi.fn(() => Promise.resolve()),
   readFile: vi.fn(() => Promise.resolve('{"encrypted": true}')),
-  stat: vi.fn(() => Promise.resolve({ mtime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) })),
+  stat: vi.fn(() =>
+    Promise.resolve({ mtime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) })
+  ),
   mkdir: vi.fn(() => Promise.resolve()),
-  appendFile: vi.fn(() => Promise.resolve())
+  appendFile: vi.fn(() => Promise.resolve()),
 }));
 
 describe("Health Endpoint Format Compliance", () => {
@@ -39,7 +43,7 @@ describe("Health Endpoint Format Compliance", () => {
   describe("Root Level Timestamp Field", () => {
     it("should include timestamp field at root level in health response", async () => {
       const health = await healthCheck.checkHealth();
-      
+
       expect(health).toHaveProperty("timestamp");
       expect(health.timestamp).toBeTypeOf("string");
       expect(new Date(health.timestamp)).toBeInstanceOf(Date);
@@ -47,25 +51,31 @@ describe("Health Endpoint Format Compliance", () => {
 
     it("should have timestamp in ISO format", async () => {
       const health = await healthCheck.checkHealth();
-      
-      expect(health.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
+      expect(health.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it("should have timestamp close to current time", async () => {
       const beforeTime = new Date();
       const health = await healthCheck.checkHealth();
       const afterTime = new Date();
-      
+
       const healthTimestamp = new Date(health.timestamp);
-      expect(healthTimestamp.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-      expect(healthTimestamp.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+      expect(healthTimestamp.getTime()).toBeGreaterThanOrEqual(
+        beforeTime.getTime()
+      );
+      expect(healthTimestamp.getTime()).toBeLessThanOrEqual(
+        afterTime.getTime()
+      );
     });
   });
 
   describe("Response Structure Validation", () => {
     it("should match expected health response structure", async () => {
       const health = await healthCheck.checkHealth();
-      
+
       expect(health).toMatchObject({
         status: expect.stringMatching(/^(healthy|degraded|unhealthy)$/),
         service: "rss-reader-app",
@@ -75,13 +85,13 @@ describe("Health Endpoint Format Compliance", () => {
         timestamp: expect.any(String),
         dependencies: {
           database: expect.stringMatching(/^(healthy|degraded|unhealthy)$/),
-          oauth: expect.stringMatching(/^(healthy|degraded|unhealthy)$/)
+          oauth: expect.stringMatching(/^(healthy|degraded|unhealthy)$/),
         },
         performance: {
           avgDbQueryTime: expect.any(Number),
           avgApiCallTime: expect.any(Number),
-          avgSyncTime: expect.any(Number)
-        }
+          avgSyncTime: expect.any(Number),
+        },
       });
     });
 
@@ -91,7 +101,7 @@ describe("Health Endpoint Format Compliance", () => {
 
     it("should have consistent field types", async () => {
       const health = await healthCheck.checkHealth();
-      
+
       expect(typeof health.status).toBe("string");
       expect(typeof health.service).toBe("string");
       expect(typeof health.uptime).toBe("number");
@@ -109,29 +119,36 @@ describe("Health Endpoint Format Compliance", () => {
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             limit: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({ data: null, error: { message: "Connection failed" } }))
-            }))
-          }))
-        }))
+              single: vi.fn(() =>
+                Promise.resolve({
+                  data: null,
+                  error: { message: "Connection failed" },
+                })
+              ),
+            })),
+          })),
+        })),
       };
 
       // Mock failed database
       vi.doMock("@supabase/supabase-js", () => ({
-        createClient: vi.fn(() => mockSupabase)
+        createClient: vi.fn(() => mockSupabase),
       }));
 
       const health = await healthCheck.checkHealth();
-      
+
       expect(health).toHaveProperty("timestamp");
       expect(health.status).toBe("unhealthy");
     });
 
     it("should handle errors gracefully while maintaining format", async () => {
       // Force an error in health check
-      vi.spyOn(healthCheck as any, "checkDatabase").mockRejectedValueOnce(new Error("Test error"));
-      
+      vi.spyOn(healthCheck as any, "checkDatabase").mockRejectedValueOnce(
+        new Error("Test error")
+      );
+
       const health = await healthCheck.checkHealth();
-      
+
       expect(health).toHaveProperty("timestamp");
       expect(health).toHaveProperty("status");
       expect(health).toHaveProperty("errorCount");
@@ -144,9 +161,9 @@ describe("Health Endpoint Format Compliance", () => {
       AppHealthCheck.trackMetric("dbQueries", 50);
       AppHealthCheck.trackMetric("apiCalls", 100);
       AppHealthCheck.trackMetric("syncOperations", 200);
-      
+
       const health = await healthCheck.checkHealth();
-      
+
       expect(health.performance.avgDbQueryTime).toBeGreaterThan(0);
       expect(health.performance.avgApiCallTime).toBeGreaterThan(0);
       expect(health.performance.avgSyncTime).toBeGreaterThan(0);
@@ -156,7 +173,7 @@ describe("Health Endpoint Format Compliance", () => {
       // Clear metrics by creating new instance
       const freshHealthCheck = AppHealthCheck.getInstance();
       const health = await freshHealthCheck.checkHealth();
-      
+
       expect(health.performance.avgDbQueryTime).toBe(0);
       expect(health.performance.avgApiCallTime).toBe(0);
       expect(health.performance.avgSyncTime).toBe(0);
@@ -165,10 +182,12 @@ describe("Health Endpoint Format Compliance", () => {
 
   describe("Concurrent Access", () => {
     it("should handle concurrent health checks", async () => {
-      const promises = Array(5).fill(null).map(() => healthCheck.checkHealth());
+      const promises = Array(5)
+        .fill(null)
+        .map(() => healthCheck.checkHealth());
       const results = await Promise.all(promises);
-      
-      results.forEach(health => {
+
+      results.forEach((health) => {
         expect(health).toHaveProperty("timestamp");
         expect(health).toHaveProperty("status");
       });
@@ -176,10 +195,12 @@ describe("Health Endpoint Format Compliance", () => {
 
     it("should maintain performance under load", async () => {
       const start = Date.now();
-      const promises = Array(10).fill(null).map(() => healthCheck.checkHealth());
+      const promises = Array(10)
+        .fill(null)
+        .map(() => healthCheck.checkHealth());
       await Promise.all(promises);
       const duration = Date.now() - start;
-      
+
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
     });
   });

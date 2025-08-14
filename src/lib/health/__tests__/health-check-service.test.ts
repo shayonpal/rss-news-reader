@@ -26,17 +26,17 @@ describe("HealthCheckService", () => {
     // Get fresh instance and reset it
     service = HealthCheckService.getInstance();
     // Reset the singleton state
-    if ('reset' in service && typeof service.reset === 'function') {
+    if ("reset" in service && typeof service.reset === "function") {
       (service as any).reset();
     }
-    
+
     vi.clearAllMocks();
 
     // Setup navigator mock using Object.defineProperty
-    Object.defineProperty(window, 'navigator', {
+    Object.defineProperty(window, "navigator", {
       writable: true,
       value: { onLine: true },
-      configurable: true
+      configurable: true,
     });
 
     // Mock caches API
@@ -69,7 +69,6 @@ describe("HealthCheckService", () => {
   describe("checkHealth", () => {
     it("should return healthy status when all services are healthy", async () => {
       const result = await service.checkHealth();
-
 
       expect(result.status).toBe("healthy");
       expect(result.services).toHaveLength(3); // database, cache, network (no api/auth - server-side only)
@@ -210,10 +209,10 @@ describe("HealthCheckService", () => {
 
     it("should detect offline status", async () => {
       // Update navigator mock to offline
-      Object.defineProperty(window, 'navigator', {
+      Object.defineProperty(window, "navigator", {
         writable: true,
         value: { onLine: false },
-        configurable: true
+        configurable: true,
       });
 
       const result = await service.checkHealth();
@@ -230,7 +229,7 @@ describe("HealthCheckService", () => {
   describe("Metrics Calculation", () => {
     it("should track response times", async () => {
       // Reset singleton state to ensure clean metrics
-      if ('reset' in service && typeof service.reset === 'function') {
+      if ("reset" in service && typeof service.reset === "function") {
         (service as any).reset();
       }
 
@@ -247,7 +246,7 @@ describe("HealthCheckService", () => {
 
     it("should track failed checks", async () => {
       // Reset singleton state to ensure clean metrics
-      if ('reset' in service && typeof service.reset === 'function') {
+      if ("reset" in service && typeof service.reset === "function") {
         (service as any).reset();
       }
 
@@ -271,7 +270,7 @@ describe("HealthCheckService", () => {
     it("should calculate uptime correctly", async () => {
       // Create a fresh service instance without reset for this test
       const freshService = HealthCheckService.getInstance();
-      
+
       // Wait a bit to ensure uptime > 0
       await new Promise((resolve) => setTimeout(resolve, 100));
 

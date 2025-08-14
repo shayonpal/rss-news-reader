@@ -17,9 +17,9 @@ MAX_RESTARTS_PER_HOUR="${MAX_RESTARTS_PER_HOUR:-3}"
 RESTART_COOLDOWN="${RESTART_COOLDOWN:-300}"
 
 # Health endpoints
-health_url="${HEALTH_URL:-http://localhost:3000/api/health}"
-cron_health_url="http://localhost:3000/api/health/cron"
-sync_health_url="http://localhost:3001/health"
+health_url="${HEALTH_URL:-http://localhost:3000/reader/api/health/app}"
+cron_health_url="http://localhost:3000/reader/api/health/cron"
+sync_health_url="http://localhost:3001/server/health"
 
 # Colors for terminal output
 RED='\033[0;31m'

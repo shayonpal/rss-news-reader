@@ -14,6 +14,7 @@ import type { Article } from "@/types";
 interface ArticleListProps {
   feedId?: string;
   folderId?: string;
+  tagId?: string;
   onArticleClick?: (articleId: string) => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
@@ -21,6 +22,7 @@ interface ArticleListProps {
 export function ArticleList({
   feedId,
   folderId,
+  tagId,
   onArticleClick,
   scrollContainerRef,
 }: ArticleListProps) {
@@ -67,6 +69,7 @@ export function ArticleList({
     articles,
     feedId,
     folderId,
+    tagId, // RR-163: Add tagId for state preservation
     readStatusFilter,
     scrollContainerRef,
     onArticleClick,
@@ -80,22 +83,22 @@ export function ArticleList({
     if (markAsReadTimer.current) {
       clearTimeout(markAsReadTimer.current);
     }
-    loadArticles(feedId, folderId);
-  }, [feedId, folderId, loadArticles]);
+    loadArticles(feedId, folderId, tagId);
+  }, [feedId, folderId, tagId, loadArticles]);
 
   // Batch mark as read with debounce - now tracking auto-read articles
   const processPendingMarkAsRead = useCallback(() => {
     if (pendingMarkAsRead.current.size > 0) {
       const articleIds = Array.from(pendingMarkAsRead.current);
       pendingMarkAsRead.current.clear();
-      
+
       // Update state manager to track auto-read articles
-      const updates = articleIds.map(id => ({
+      const updates = articleIds.map((id) => ({
         id,
-        changes: { isRead: true, wasAutoRead: true }
+        changes: { isRead: true, wasAutoRead: true },
       }));
       articleListStateManager.batchUpdateArticles(updates);
-      
+
       markMultipleAsRead(articleIds);
     }
   }, [markMultipleAsRead]);
@@ -107,7 +110,7 @@ export function ArticleList({
     if (markAsReadTimer.current) {
       clearTimeout(markAsReadTimer.current);
     }
-    
+
     // Disable auto-mark initially to prevent false marks during render
     autoMarkEnabled.current = false;
 
@@ -185,11 +188,11 @@ export function ArticleList({
         threshold: 0, // Trigger as soon as article starts leaving
       });
     }
-    
+
     // Enable auto-mark after a delay to prevent false marks during initial render/feed switch
     const enableTimer = setTimeout(() => {
       autoMarkEnabled.current = true;
-      console.log('🔓 Auto-mark as read enabled after delay');
+      console.log("🔓 Auto-mark as read enabled after delay");
     }, 2000); // 2 second delay
 
     // Clean up on unmount or when filter changes
@@ -207,23 +210,34 @@ export function ArticleList({
       // Process any pending marks before cleanup
       processPendingMarkAsRead();
     };
-  }, [readStatusFilter, feedId, folderId, processPendingMarkAsRead, scrollContainerRef]);
+  }, [
+    readStatusFilter,
+    feedId,
+    folderId,
+    tagId,
+    processPendingMarkAsRead,
+    scrollContainerRef,
+  ]);
 
   // Restore scroll position and state after articles load
   useEffect(() => {
     if (!loadingArticles && articles.size > 0 && !hasRestoredScroll.current) {
       // Try to restore full state first
       const stateRestored = restoreStateIfAvailable();
-      
+
       // Also check for saved scroll position
       const savedScrollPos = sessionStorage.getItem("articleListScroll");
       const savedState = articleListStateManager.getListState();
 
-      if (savedScrollPos || (savedState && !articleListStateManager.isStateExpired())) {
+      if (
+        savedScrollPos ||
+        (savedState && !articleListStateManager.isStateExpired())
+      ) {
         hasRestoredScroll.current = true;
         // Small delay to ensure DOM is updated
         requestAnimationFrame(() => {
-          const scrollPos = savedState?.scrollPosition || parseInt(savedScrollPos || "0", 10);
+          const scrollPos =
+            savedState?.scrollPosition || parseInt(savedScrollPos || "0", 10);
           const scrollContainer = scrollContainerRef?.current;
           if (scrollContainer) {
             scrollContainer.scrollTop = scrollPos;
@@ -233,24 +247,35 @@ export function ArticleList({
         });
       }
     }
-  }, [loadingArticles, articles.size, scrollContainerRef, restoreStateIfAvailable]);
+  }, [
+    loadingArticles,
+    articles.size,
+    scrollContainerRef,
+    restoreStateIfAvailable,
+  ]);
 
   // Reset restoration flag when feed changes
   const previousFeedIdRef = useRef(feedId);
   const previousFolderIdRef = useRef(folderId);
-  
+
   useEffect(() => {
     hasRestoredScroll.current = false;
-    
+
     // Track feed/folder changes but DON'T clear state
     // Preserved articles should remain visible across feed changes
-    const feedChanged = previousFeedIdRef.current !== feedId && previousFeedIdRef.current !== undefined;
-    const folderChanged = previousFolderIdRef.current !== folderId && previousFolderIdRef.current !== undefined;
-    
+    const feedChanged =
+      previousFeedIdRef.current !== feedId &&
+      previousFeedIdRef.current !== undefined;
+    const folderChanged =
+      previousFolderIdRef.current !== folderId &&
+      previousFolderIdRef.current !== undefined;
+
     if (feedChanged || folderChanged) {
-      console.log(`🔄 Feed/folder changed: ${previousFeedIdRef.current}→${feedId}, ${previousFolderIdRef.current}→${folderId} (keeping preserved articles)`);
+      console.log(
+        `🔄 Feed/folder changed: ${previousFeedIdRef.current}→${feedId}, ${previousFolderIdRef.current}→${folderId} (keeping preserved articles)`
+      );
     }
-    
+
     // Update refs
     previousFeedIdRef.current = feedId;
     previousFolderIdRef.current = folderId;
@@ -323,7 +348,7 @@ export function ArticleList({
     async (article: Article) => {
       // Save full state before navigating
       saveStateBeforeNavigation();
-      
+
       // Also save scroll position for backward compatibility
       const scrollContainer = scrollContainerRef?.current;
       const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
@@ -331,7 +356,7 @@ export function ArticleList({
 
       // Don't mark as read here - let the article detail page handle it
       // This prevents the article from immediately disappearing from "Unread Only" view
-      
+
       // Use the state-aware click handler
       handleArticleClickWithState(article);
     },
@@ -451,7 +476,7 @@ export function ArticleList({
     >
       <div className="article-list-container divide-y divide-border overflow-x-hidden">
         {Array.from(articles.values())
-          .filter(article => shouldShowArticle(article))
+          .filter((article) => shouldShowArticle(article))
           .map((article) => (
             <article
               key={article.id}
@@ -473,73 +498,74 @@ export function ArticleList({
                 }
               }}
             >
-            {/* Touch target helper for mobile - ensures 44x44px minimum */}
-            <div className="absolute inset-0 sm:hidden" aria-hidden="true" />
+              {/* Touch target helper for mobile - ensures 44x44px minimum */}
+              <div className="absolute inset-0 sm:hidden" aria-hidden="true" />
 
-            <div className="relative space-y-2">
-              {/* Title with star indicator */}
-              <div className="flex items-start gap-2">
-                <h2
-                  className={`flex-1 text-base sm:text-lg ${
-                    article.isRead
-                      ? "font-normal text-muted-foreground"
-                      : "font-semibold text-foreground"
-                  }`}
-                >
-                  {article.title}
-                </h2>
-                <div className="flex items-center gap-1">
-                  {article.summary && (
-                    <span
-                      className="text-sm text-yellow-500"
-                      title="AI Summary Available"
-                    >
-                      ⚡
-                    </span>
-                  )}
-                  {!article.summary && !summarizingArticles.has(article.id) && (
-                    <SummaryButton
-                      articleId={article.id}
-                      hasSummary={false}
-                      variant="icon"
+              <div className="relative space-y-2">
+                {/* Title with star indicator */}
+                <div className="flex items-start gap-2">
+                  <h2
+                    className={`flex-1 text-base sm:text-lg ${
+                      article.isRead
+                        ? "font-normal text-muted-foreground"
+                        : "font-semibold text-foreground"
+                    }`}
+                  >
+                    {article.title}
+                  </h2>
+                  <div className="flex items-center gap-1">
+                    {article.summary && (
+                      <span
+                        className="text-sm text-yellow-500"
+                        title="AI Summary Available"
+                      >
+                        ⚡
+                      </span>
+                    )}
+                    {!article.summary &&
+                      !summarizingArticles.has(article.id) && (
+                        <SummaryButton
+                          articleId={article.id}
+                          hasSummary={false}
+                          variant="icon"
+                          size="sm"
+                        />
+                      )}
+                    <StarButton
+                      onToggleStar={() => toggleStar(article.id)}
+                      isStarred={article.tags?.includes("starred") || false}
                       size="sm"
                     />
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                  <span className="font-medium">{article.feedTitle}</span>
+                  {article.author && (
+                    <>
+                      <span>•</span>
+                      <span className="max-w-[150px] truncate">
+                        {article.author}
+                      </span>
+                    </>
                   )}
-                  <StarButton
-                    onToggleStar={() => toggleStar(article.id)}
-                    isStarred={article.tags?.includes("starred") || false}
-                    size="sm"
-                  />
+                  <span>•</span>
+                  <time
+                    dateTime={article.publishedAt.toISOString()}
+                    suppressHydrationWarning
+                  >
+                    {formatTimestamp(article.publishedAt)}
+                  </time>
+                </div>
+
+                {/* Content Preview */}
+                <div className="overflow-hidden text-sm">
+                  {renderPreview(article)}
                 </div>
               </div>
-
-              {/* Metadata */}
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-                <span className="font-medium">{article.feedTitle}</span>
-                {article.author && (
-                  <>
-                    <span>•</span>
-                    <span className="max-w-[150px] truncate">
-                      {article.author}
-                    </span>
-                  </>
-                )}
-                <span>•</span>
-                <time
-                  dateTime={article.publishedAt.toISOString()}
-                  suppressHydrationWarning
-                >
-                  {formatTimestamp(article.publishedAt)}
-                </time>
-              </div>
-
-              {/* Content Preview */}
-              <div className="overflow-hidden text-sm">
-                {renderPreview(article)}
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))}
 
         {/* Infinite scroll trigger */}
         {hasMore && (

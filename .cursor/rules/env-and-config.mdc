@@ -1,0 +1,19 @@
+---
+description: Environment variables, build configs, and runtime settings
+---
+# Environment & Config
+
+Core configs:
+- TypeScript: [tsconfig.json](mdc:tsconfig.json), [tsconfig.prod.json](mdc:tsconfig.prod.json)
+- Vitest: [vitest.config.ts](mdc:vitest.config.ts), [vitest.config.integration.ts](mdc:vitest.config.integration.ts), [vitest.config.e2e.ts](mdc:vitest.config.e2e.ts)
+- Next.js: [next.config.mjs](mdc:next.config.mjs)
+- Lint/Format: [.eslintrc.json](mdc:.eslintrc.json), [.prettierrc](mdc:.prettierrc)
+- Tailwind: [tailwind.config.ts](mdc:tailwind.config.ts)
+
+Environment variables:
+- See [docs/deployment/environment-variables.md](mdc:docs/deployment/environment-variables.md) for authoritative list and semantics.
+- Sensitive keys must not be exposed to the client. Prefix `NEXT_PUBLIC_` only for non-sensitive values.
+
+Runtime:
+- Scripts in `scripts/` manage monitoring, builds, and migrations. Prefer using these over ad-hoc commands in CI or production.
+- Uptime Kuma config and monitors are under `kuma-monitor.config.js` and related scripts.

@@ -31,9 +31,11 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       // Check for proper bash configuration
       expect(scriptContent).toContain("#!/bin/bash");
       expect(scriptContent).toContain("set -e");
-      
+
       // Check for proper directory navigation
-      expect(scriptContent).toContain('SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"');
+      expect(scriptContent).toContain(
+        'SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"'
+      );
       expect(scriptContent).toContain('PROJECT_DIR="$(dirname "$SCRIPT_DIR")"');
       expect(scriptContent).toContain('cd "$PROJECT_DIR"');
     });
@@ -49,11 +51,15 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
 
     it("should have proper health check configuration", () => {
       // Check health check URL configuration
-      expect(scriptContent).toContain('HEALTH_URL="http://localhost:3000/reader/api/health/app"');
+      expect(scriptContent).toContain(
+        'HEALTH_URL="http://localhost:3000/reader/api/health/app"'
+      );
       expect(scriptContent).toContain("MAX_RETRIES=5");
-      
+
       // Verify health check retry logic
-      expect(scriptContent).toMatch(/while \[ \$RETRY_COUNT -lt \$MAX_RETRIES \]/);
+      expect(scriptContent).toMatch(
+        /while \[ \$RETRY_COUNT -lt \$MAX_RETRIES \]/
+      );
       expect(scriptContent).toContain("curl -s -f");
     });
   });
@@ -63,7 +69,7 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       // Check for PM2 service status verification
       expect(scriptContent).toContain("pm2 describe rss-reader-dev");
       expect(scriptContent).toContain("pm2 stop rss-reader-dev");
-      
+
       // Verify conditional stopping
       expect(scriptContent).toMatch(/if pm2 describe rss-reader-dev.*then/);
       expect(scriptContent).toContain("Service not running");
@@ -71,8 +77,10 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
 
     it("should restart service with correct configuration", () => {
       // Check PM2 restart command
-      expect(scriptContent).toContain("pm2 start ecosystem.config.js --only rss-reader-dev");
-      
+      expect(scriptContent).toContain(
+        "pm2 start ecosystem.config.js --only rss-reader-dev"
+      );
+
       // Verify service stabilization wait
       expect(scriptContent).toContain("sleep 10");
     });
@@ -103,11 +111,13 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
     it("should handle missing directories gracefully", () => {
       // Verify conditional cleanup (only if directories exist)
       const nextCleanup = scriptContent.match(/if \[ -d "\.next" \][\s\S]*?fi/);
-      const cacheCleanup = scriptContent.match(/if \[ -d "node_modules\/\.cache" \][\s\S]*?fi/);
-      
+      const cacheCleanup = scriptContent.match(
+        /if \[ -d "node_modules\/\.cache" \][\s\S]*?fi/
+      );
+
       expect(nextCleanup).toBeTruthy();
       expect(cacheCleanup).toBeTruthy();
-      
+
       // Both should have else clauses for "not found" messages
       expect(nextCleanup![0]).toContain("else");
       expect(cacheCleanup![0]).toContain("else");
@@ -117,9 +127,11 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
   describe("Health Check Implementation", () => {
     it("should implement proper health check retry logic", () => {
       // Check retry loop implementation
-      expect(scriptContent).toMatch(/while \[ \$RETRY_COUNT -lt \$MAX_RETRIES \]/);
+      expect(scriptContent).toMatch(
+        /while \[ \$RETRY_COUNT -lt \$MAX_RETRIES \]/
+      );
       expect(scriptContent).toContain("RETRY_COUNT=$((RETRY_COUNT + 1))");
-      
+
       // Verify success condition
       expect(scriptContent).toContain("curl -s -f");
       expect(scriptContent).toContain("Health check passed!");
@@ -131,18 +143,24 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       expect(scriptContent).toContain("Health check failed after");
       expect(scriptContent).toContain("pm2 logs rss-reader-dev --lines 50");
       expect(scriptContent).toContain("exit 1");
-      
+
       // Verify retry messages
-      expect(scriptContent).toContain("Health check failed, retrying in 5 seconds");
+      expect(scriptContent).toContain(
+        "Health check failed, retrying in 5 seconds"
+      );
       expect(scriptContent).toContain("sleep 5");
     });
 
     it("should use correct health endpoint URL", () => {
       // Verify health URL matches expected pattern
-      expect(scriptContent).toContain("http://localhost:3000/reader/api/health/app");
-      
+      expect(scriptContent).toContain(
+        "http://localhost:3000/reader/api/health/app"
+      );
+
       // Check that it's properly quoted
-      expect(scriptContent).toMatch(/"http:\/\/localhost:3000\/reader\/api\/health\/app"/);
+      expect(scriptContent).toMatch(
+        /"http:\/\/localhost:3000\/reader\/api\/health\/app"/
+      );
     });
   });
 
@@ -150,7 +168,7 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
     it("should have proper error handling throughout script", () => {
       // Check for set -e at the beginning
       expect(scriptContent).toContain("set -e");
-      
+
       // Verify explicit exit codes
       const exitCodes = scriptContent.match(/exit \d+/g) || [];
       expect(exitCodes).toContain("exit 0");
@@ -160,11 +178,15 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
     it("should provide helpful error messages", () => {
       // Check for user-friendly messages
       expect(scriptContent).toContain("🔧 Starting webpack recovery process");
-      expect(scriptContent).toContain("🎉 Webpack recovery completed successfully!");
+      expect(scriptContent).toContain(
+        "🎉 Webpack recovery completed successfully!"
+      );
       expect(scriptContent).toContain("❌ Health check failed");
-      
+
       // Verify troubleshooting guidance
-      expect(scriptContent).toContain("Please check the PM2 logs for more details");
+      expect(scriptContent).toContain(
+        "Please check the PM2 logs for more details"
+      );
     });
   });
 
@@ -172,8 +194,10 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
     it("should use safe file operations", () => {
       // Check for safe directory checks before removal
       expect(scriptContent).toMatch(/if \[ -d "\.next" \]; then/);
-      expect(scriptContent).toMatch(/if \[ -d "node_modules\/\.cache" \]; then/);
-      
+      expect(scriptContent).toMatch(
+        /if \[ -d "node_modules\/\.cache" \]; then/
+      );
+
       // Verify no wildcard removals without directory checks
       expect(scriptContent).not.toMatch(/rm -rf \*/);
     });
@@ -181,7 +205,7 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
     it("should handle concurrent execution safely", () => {
       // Check for PM2 service status checks before operations
       expect(scriptContent).toContain("pm2 describe rss-reader-dev");
-      
+
       // Verify proper error handling for service operations
       expect(scriptContent).toMatch(/> \/dev\/null 2>&1/);
     });
@@ -190,9 +214,11 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       // Check for stabilization waits
       expect(scriptContent).toContain("sleep 10");
       expect(scriptContent).toContain("sleep 5");
-      
-      // Verify these are in the right context  
-      expect(scriptContent).toContain("4️⃣  Waiting for service to stabilize...");
+
+      // Verify these are in the right context
+      expect(scriptContent).toContain(
+        "4️⃣  Waiting for service to stabilize..."
+      );
       expect(scriptContent).toContain("retrying in 5 seconds...");
     });
   });
@@ -204,7 +230,7 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       expect(scriptContent).toContain("✅");
       expect(scriptContent).toContain("❌");
       expect(scriptContent).toContain("🎉");
-      
+
       // Verify step numbering
       expect(scriptContent).toContain("1️⃣");
       expect(scriptContent).toContain("2️⃣");
@@ -215,12 +241,16 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
 
     it("should provide progress feedback", () => {
       // Check for progress indicators
-      expect(scriptContent).toContain("================================================");
+      expect(scriptContent).toContain(
+        "================================================"
+      );
       expect(scriptContent).toContain("Starting webpack recovery process");
       expect(scriptContent).toContain("Waiting for service to stabilize");
-      
+
       // Verify completion messages
-      expect(scriptContent).toContain("Webpack recovery completed successfully!");
+      expect(scriptContent).toContain(
+        "Webpack recovery completed successfully!"
+      );
     });
   });
 
@@ -229,7 +259,7 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       // Check ecosystem.config.js reference
       expect(scriptContent).toContain("ecosystem.config.js");
       expect(scriptContent).toContain("--only rss-reader-dev");
-      
+
       // Verify service name consistency
       expect(scriptContent).toContain("rss-reader-dev");
       expect(scriptContent).not.toContain("rss-reader-prod");
@@ -240,7 +270,7 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       expect(scriptContent).toContain("pm2 describe");
       expect(scriptContent).toContain("pm2 stop");
       expect(scriptContent).toContain("pm2 start");
-      
+
       // Verify PM2 log access for troubleshooting
       expect(scriptContent).toContain("pm2 logs");
     });
@@ -250,11 +280,11 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
     it("should have reasonable timeout values", () => {
       // Check MAX_RETRIES value (should allow for reasonable recovery time)
       expect(scriptContent).toContain("MAX_RETRIES=5");
-      
+
       // Verify sleep intervals
       expect(scriptContent).toContain("sleep 10"); // Service stabilization
-      expect(scriptContent).toContain("sleep 5");  // Retry interval
-      
+      expect(scriptContent).toContain("sleep 5"); // Retry interval
+
       // Calculate maximum recovery time: 10s (stabilize) + 5 * 5s (retries) = 35s
       // This should be well under the 90-second requirement
     });
@@ -263,14 +293,14 @@ describe("webpack-recovery.sh - RR-110 Implementation", () => {
       // Verify steps are in optimal order (stop -> clean -> start -> verify)
       const steps = [
         "Stopping rss-reader-dev service",
-        "Cleaning webpack artifacts", 
+        "Cleaning webpack artifacts",
         "Restarting rss-reader-dev service",
         "Waiting for service to stabilize",
-        "Running health check"
+        "Running health check",
       ];
-      
+
       let lastIndex = -1;
-      steps.forEach(step => {
+      steps.forEach((step) => {
         const index = scriptContent.indexOf(step);
         expect(index).toBeGreaterThan(lastIndex);
         lastIndex = index;

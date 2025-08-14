@@ -51,18 +51,18 @@ test_pm2_logrotate_config() {
     local config_output
     config_output=$(pm2 conf pm2-logrotate 2>/dev/null || echo "")
     
-    # Check max_size setting (should be 1M)
-    if echo "$config_output" | grep -q "max_size 1M"; then
-        log_pass "PM2 logrotate max_size set to 1M"
+    # Check max_size setting (should be 10M)
+    if echo "$config_output" | grep -q "max_size 10M"; then
+        log_pass "PM2 logrotate max_size set to 10M"
     else
-        log_fail "PM2 logrotate max_size not set to 1M"
+        log_fail "PM2 logrotate max_size not set to 10M"
     fi
     
-    # Check retain setting (should be 3-5)
-    if echo "$config_output" | grep -qE "retain [3-5]"; then
-        log_pass "PM2 logrotate retain set to appropriate value (3-5)"
+    # Check retain setting (should be 7)
+    if echo "$config_output" | grep -q "retain 7"; then
+        log_pass "PM2 logrotate retain set to 7 days"
     else
-        log_fail "PM2 logrotate retain not set to 3-5"
+        log_fail "PM2 logrotate retain not set to 7 days"
     fi
     
     # Check compress setting (should be true)

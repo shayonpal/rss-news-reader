@@ -83,10 +83,10 @@ Return all findings as structured JSON with analysis and insights:
    - Find architecture diagrams and specs
 
 2. **By Documentation Type**:
-   - API Reference: */api-*.md, */reference/*.md
-   - Guides: */guide*.md, */tutorial*.md, */how-to*.md
-   - Architecture: */architecture*.md, */design*.md
-   - Deployment: */deploy*.md, */installation*.md
+   - API Reference: _/api-_.md, _/reference/_.md
+   - Guides: _/guide_.md, _/tutorial_.md, _/how-to_.md
+   - Architecture: _/architecture_.md, _/design_.md
+   - Deployment: _/deploy_.md, _/installation_.md
 
 3. **By Quality Indicators**:
    - TODO/FIXME markers in docs
@@ -97,6 +97,7 @@ Return all findings as structured JSON with analysis and insights:
 ## Documentation Standards Reference
 
 When analyzing, check against these standards:
+
 - Proper markdown formatting
 - Consistent heading hierarchy
 - Code examples with language tags

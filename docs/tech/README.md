@@ -7,66 +7,86 @@ This directory contains all technical documentation for the RSS News Reader appl
 ### Core Technical Documentation
 
 1. **technology-stack.md**
-
    - **Description**: Complete technology stack documentation including frameworks, libraries, and tools
    - **Status**: Current ✅
    - **Contents**: Next.js 14, TypeScript, Supabase, PM2, Tailwind CSS, and all dependencies
 
-2. **implementation-strategy.md**
+2. **ci-cd-pipeline.md**
+   - **Description**: Comprehensive GitHub Actions CI/CD pipeline documentation with progressive testing strategy
+   - **Status**: Current ✅ (Added for RR-185)
+   - **Contents**: Pipeline architecture, quality gates, test matrix, performance monitoring, security scanning
 
+3. **implementation-strategy.md**
    - **Description**: High-level implementation approach and architectural decisions
    - **Status**: Current ✅
    - **Contents**: Project phases, development workflow, testing strategy, deployment approach
 
-3. **api-integrations.md**
+4. **api-integrations.md**
    - **Description**: Detailed documentation of external API integrations (Inoreader, Claude AI)
-   - **Status**: Current ✅
-   - **Contents**: Authentication flows, rate limits, endpoints, error handling
+   - **Status**: Current ✅ (Updated for RR-171)
+   - **Contents**: Authentication flows, rate limits, endpoints, error handling, sidebar payload, concurrency control
 
 ### Feature-Specific Documentation
 
-4. **bidirectional-sync-investigation.md**
-
+5. **bidirectional-sync-investigation.md**
    - **Description**: Investigation and implementation of two-way sync with Inoreader
    - **Status**: Completed ✅
    - **Contents**: Sync architecture, conflict resolution, implementation details
 
-5. **button-architecture.md**
-
+6. **button-architecture.md**
    - **Description**: Standardized button component architecture and design system
    - **Status**: Current ✅
    - **Contents**: Button variants, states, accessibility, usage guidelines
 
-6. **sync-progress-tracking-architecture.md**
+7. **sync-progress-tracking-architecture.md**
    - **Description**: Dual-write sync progress tracking system with file system and database storage
    - **Status**: Current ✅
    - **Contents**: Architecture patterns, implementation details, API endpoints, monitoring
 
+8. **cleanup-architecture.md**
+   - **Description**: Database cleanup system with chunked deletion for handling large datasets
+   - **Status**: Current ✅ (Updated for RR-150)
+   - **Contents**: Feed and article cleanup, deletion tracking, chunked deletion to solve URI length limits
+
+### Tag Management System (RR-128)
+
+9. **Tag Architecture**
+   - **Description**: Comprehensive tag management system with full CRUD operations and XSS protection
+   - **Status**: Implemented ✅
+   - **Contents**: Tag creation, filtering, article association, HTML entity decoding, sidebar integration
+   - **Key Features**:
+     - Tag API endpoints (`/api/tags`, `/api/articles/[id]/tags`)
+     - Database schema with `tags` and `article_tags` tables
+     - XSS protection via React's built-in safeguards and HTML entity decoding
+     - Tag sync from Inoreader categories
+     - Sidebar "Topics" section display
+     - Comprehensive test coverage
+
 ### Monitoring & Infrastructure
 
-7. **uptime-kuma-setup.md**
+10. **uptime-kuma-setup.md**
 
-   - **Description**: Setup guide for Uptime Kuma monitoring service
-   - **Status**: Current ✅
-   - **Contents**: Docker setup, monitor configuration, alert rules
+- **Description**: Setup guide for Uptime Kuma monitoring service
+- **Status**: Current ✅
+- **Contents**: Docker setup, monitor configuration, alert rules
 
-8. **uptime-kuma-monitoring-strategy.md**
-   - **Description**: Comprehensive monitoring strategy using Uptime Kuma
-   - **Status**: Current ✅
-   - **Contents**: Monitoring objectives, metrics, alerting strategy, dashboards
+11. **uptime-kuma-monitoring-strategy.md**
+
+- **Description**: Comprehensive monitoring strategy using Uptime Kuma
+- **Status**: Current ✅
+- **Contents**: Monitoring objectives, metrics, alerting strategy, dashboards
 
 ### Issues & Maintenance
 
-9. **known-issues.md**
+12. **known-issues.md**
+    - **Description**: Documentation of known issues, limitations, and workarounds
+    - **Status**: Living Document 🔄
+    - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-   - **Description**: Documentation of known issues, limitations, and workarounds
-   - **Status**: Living Document 🔄
-   - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
-
-10. **security.md**
+13. **security.md**
     - **Description**: Security measures, policies, and incident documentation
-    - **Status**: Current ✅
-    - **Contents**: Network security, authentication, security fixes (RR-69), best practices
+    - **Status**: Current ✅ (Updated for RR-128)
+    - **Contents**: Network security, authentication, security fixes (RR-69, RR-128), XSS protection, best practices
 
 ## Architecture Overview
 
@@ -96,6 +116,49 @@ This directory contains all technical documentation for the RSS News Reader appl
 3. **PM2 Process Management**: Reliable process management with auto-restart
 4. **Tailscale Access Control**: Network-level security instead of app auth
 5. **PWA Architecture**: Offline-first with service workers
+
+## RR-171 RefreshManager Pattern
+
+### Overview
+
+The RefreshManager pattern coordinates UI updates across multiple store sections after sync operations, ensuring consistent state management and user feedback.
+
+### Implementation
+
+```typescript
+class RefreshManager {
+  async refreshAll(): Promise<void> {
+    await Promise.all([
+      feedStore.refresh(),
+      articleStore.refresh(),
+      tagStore.refresh(),
+    ]);
+  }
+
+  async handleManualSync(): Promise<void> {
+    showSkeletons();
+    const result = await syncApi.triggerSync();
+    applySidebarData(result.sidebar);
+    hideSkeletons();
+    showToast(formatSyncResult(result));
+  }
+
+  async handleBackgroundSync(): Promise<void> {
+    const result = await syncApi.triggerSync();
+    applySidebarData(result.sidebar);
+    if (result.metrics.newArticles > 0) {
+      showInfoToast(`${result.metrics.newArticles} new articles available`);
+    }
+  }
+}
+```
+
+### Key Features
+
+- **Skeleton States**: Visual loading feedback during manual sync operations
+- **Sidebar Application**: Direct application of sync response data to avoid timing issues
+- **Toast Formatting**: Consistent user feedback with sync metrics (no emojis)
+- **Background Sync Behavior**: Silent updates with optional refresh action notifications
 
 ## Development Guidelines
 

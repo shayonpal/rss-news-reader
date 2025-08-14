@@ -10,13 +10,16 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 
 - **Server-Client Architecture**: Server handles all external APIs, client is presentation only
 - **No Client Authentication**: Access controlled by Tailscale network
-- **Progressive Web App**: Install on mobile and desktop devices
+- **Progressive Web App**: Install on mobile and desktop devices with iOS touch-optimized interface
+- **iOS 26 Liquid Glass Design**: Advanced morphing animations with spring easing and enhanced glass effects
 - **Full Content Extraction**: Extract complete articles beyond RSS snippets (v0.6.0)
   - Manual fetch button for any article
-  - Automatic fetching for partial content feeds
   - Smart content priority display
   - Comprehensive fetch statistics dashboard
+  - Note: Automatic fetching removed in RR-162 for improved sync performance
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
+- **Author Display**: Shows article authors in list and detail views (v0.12.0)
+- **Navigation State Preservation**: Articles remain visible when returning from detail view (v0.12.0)
 - **Server-Side Sync**: Efficient sync with only 4-5 API calls
 - **Bi-directional Sync**: Changes sync back to Inoreader (read/unread, star/unstar)
 - **Mark All Read**: Quickly mark all articles in a feed as read with two-tap confirmation
@@ -33,12 +36,12 @@ The RSS News Reader requires several services to be running for full functionali
 
 ### Services & Ports
 
-| Service Name        | PM2 Process Name | Port | Purpose                               |
-| ------------------- | ---------------- | ---- | ------------------------------------- |
-| RSS Reader Dev      | rss-reader-dev   | 3000 | Development/main web application      |
-| Sync Cron Service   | rss-sync-cron    | N/A  | Automated article syncing (2AM & 2PM) |
-| Supabase PostgreSQL | N/A              | 5432 | Database server (cloud-hosted)        |
-| Tailscale           | N/A              | N/A  | VPN for secure network access         |
+| Service Name        | PM2 Process Name | Port | Purpose                              |
+| ------------------- | ---------------- | ---- | ------------------------------------ |
+| RSS Reader Dev      | rss-reader-dev   | 3000 | Development/main web application     |
+| Sync Cron Service   | rss-sync-cron    | N/A  | Automated article syncing (6x daily) |
+| Supabase PostgreSQL | N/A              | 5432 | Database server (cloud-hosted)       |
+| Tailscale           | N/A              | N/A  | VPN for secure network access        |
 
 ### Essential Startup Commands
 
@@ -63,11 +66,17 @@ pm2 stop all
 
 ### Health Check Endpoints
 
-- **Application Health**: http://100.96.166.53:3000/api/health/app
-- **Database Health**: http://100.96.166.53:3000/api/health/db
-- **Article Freshness**: http://100.96.166.53:3000/api/health/freshness
-- **Cron Service Status**: http://100.96.166.53:3000/api/health/cron
+- **Application Health**: http://100.96.166.53:3000/reader/api/health/app
+- **Database Health**: http://100.96.166.53:3000/reader/api/health/db
+- **Parsing/Content Health**: http://100.96.166.53:3000/reader/api/health/parsing
+- **Cron Service Status**: http://100.96.166.53:3000/reader/api/health/cron
 - **Sync Status**: Check via PM2 logs for `rss-sync-cron`
+
+**Development Note (RR-102)**: In development environment, API endpoints work with or without the `/reader` prefix:
+
+- Both `http://100.96.166.53:3000/api/health/app` and `http://100.96.166.53:3000/reader/api/health/app` work
+- Automatic 307 redirects preserve HTTP methods and request bodies
+- Production environment still requires the `/reader` prefix
 
 ### Monitoring
 
@@ -157,14 +166,21 @@ The RSS reader includes an automatic sync service that runs 6 times daily to kee
 
 - **Schedule**: Every 4 hours at 2, 6, 10 AM and 2, 6, 10 PM (America/Toronto timezone)
 - **Implementation**: Node.js cron service running as separate PM2 process
-- **API Efficiency**: 24-30 API calls daily (well within 1000-5000 limit)
+- **API Efficiency**: 24-30 API calls daily (well within 200 daily limit - 100 Zone 1 + 100 Zone 2)
 - **Logging**: All sync operations logged to JSONL format for analysis
 - **Error Handling**: Automatic retry with exponential backoff
 
 ### Sync Features
 
-- Fetches up to 100 new articles per sync
-- Round-robin distribution across feeds (max 20 per feed)
+- **Manual Sync**: On-demand sync with immediate UI updates from sidebar payload data
+- **Background Sync**: Automated 6x daily sync with unobtrusive info toasts
+- **Real-time Updates**: Sidebar counts and tags refresh immediately after sync completion
+- **Incremental Sync**: Only fetches articles newer than last sync using 'ot' parameter
+- **Efficiency Optimization**: Excludes read articles from sync using 'xt' parameter
+- **Weekly Full Sync**: Every 7 days performs complete sync for data integrity
+- Fetches up to 500 new articles per sync (configurable via SYNC_MAX_ARTICLES)
+- **Article Retention**: Automatically enforces 1000-article limit during sync
+- **Skeleton Loading**: Visual feedback during manual sync operations with rate-limit countdown
 - Updates read/unread counts
 - Refreshes feed statistics materialized view
 - Tracks success/failure metrics
@@ -194,25 +210,10 @@ For detailed automatic sync documentation, see [docs/deployment/automatic-sync.m
 
 ## Bi-directional Sync
 
-The RSS reader includes bi-directional sync that pushes your reading activity back to Inoreader:
+Bi-directional sync pushes your reading activity back to Inoreader (read/unread, star/unstar) using a durable queue and batch updates. See the full technical guide:
 
-- **Supported Actions**: Read/unread status, star/unstar articles
-- **Sync Interval**: Changes sync every 5 minutes automatically
-- **Batch Processing**: Multiple changes are batched to minimize API calls
-- **Conflict Resolution**: Last-write-wins based on timestamps
-- **Retry Logic**: Failed syncs retry with exponential backoff
-- **Sync Queue**: Local changes queued until successfully synced
-
-### How It Works
-
-1. User actions (marking read, starring) are tracked locally
-2. Changes are added to a sync queue with timestamps
-3. Every 5 minutes, the sync service processes the queue
-4. Changes are batched and sent to Inoreader's `/edit-tag` endpoint
-5. Successfully synced items are removed from the queue
-6. Failed items retry up to 3 times with increasing delays
-
-This ensures your reading progress stays synchronized across all Inoreader clients.
+- Technical doc: `docs/tech/bidirectional-sync.md`
+- API reference: `docs/api/server-endpoints.md` (Sync and Inoreader sections)
 
 ## Development Setup
 
@@ -260,7 +261,6 @@ This ensures your reading progress stays synchronized across all Inoreader clien
    ```
 
    This runs a Playwright script that:
-
    - Starts a local OAuth server on port 8080
    - Opens Inoreader login page
    - Uses test credentials from .env
@@ -279,7 +279,7 @@ This ensures your reading progress stays synchronized across all Inoreader clien
 
 ### Important: Server-Client Architecture
 
-**New Architecture (January 2025):**
+**New Architecture (June 2025):**
 
 - **Server**: Handles all Inoreader API communication
 - **Client**: No authentication - reads from Supabase only
@@ -295,6 +295,7 @@ This ensures your reading progress stays synchronized across all Inoreader clien
 **URLs:**
 
 - Development: http://100.96.166.53:3000/reader
+- **API Paths (RR-102)**: In development, both `/api/*` and `/reader/api/*` work (automatic redirects)
 
 ### Development Commands
 
@@ -314,16 +315,21 @@ npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
 npm run pre-commit      # Run all quality checks
 
-# Testing (Memory-Safe Execution)
-npm run test            # ✅ RECOMMENDED: Safe test runner with resource limits
-npm run test:unit       # ⚠️  Unit tests only (use cautiously)
+# Testing (Optimized Execution - RR-183)
+npm run test            # ✅ RECOMMENDED: Optimized runner (8-20 seconds)
+npm run test:parallel   # ✅ Fastest execution (8-12 seconds) - ideal for CI/CD
+npm run test:sequential # ✅ Most reliable (15-20 seconds) - ideal for debugging
+npm run test:sharded    # ✅ Balanced execution (10-15 seconds)
+npm run test:progressive # ✅ Detailed feedback with progress tracking
+npm run test:watch      # ✅ Development mode with hot reload
+npm run test:legacy     # ✅ Conservative fallback (legacy safe runner)
+npm run test:unit       # ⚠️  Unit tests only (bypasses optimizations)
 npm run test:integration:safe # ✅ Integration tests with PM2 service management
 npm run test:e2e        # End-to-end tests (Playwright)
-npm run test:watch      # Tests in watch mode
 
-# Emergency Test Management
-./scripts/kill-test-processes.sh    # Emergency cleanup if tests hang
-./scripts/monitor-test-processes.sh # Real-time test process monitoring
+# Emergency Test Management (Legacy)
+./scripts/kill-test-processes.sh    # Emergency cleanup (only needed for legacy scripts)
+./scripts/monitor-test-processes.sh # Real-time process monitoring
 
 # Build & Deploy
 npm run build           # Production build
@@ -338,46 +344,201 @@ npm run clean           # Clean build artifacts
 ./scripts/rollback-last-build.sh           # Emergency rollback
 ```
 
-## Testing & Quality Assurance
+## CI/CD Pipeline (GitHub Actions)
 
-The RSS News Reader implements comprehensive testing with **memory-safe execution** to prevent system instability. Previous issues with test runner memory exhaustion (RR-123) led to the development of protective measures.
+The RSS News Reader includes comprehensive CI/CD infrastructure (RR-185) with progressive testing strategy and automated quality gates.
 
-### Safe Test Execution
+### Pipeline Overview
 
-**Always use the safe test runner:**
+**Main Pipeline** (`.github/workflows/ci-cd-pipeline.yml`):
+
+- **Smoke Tests Stage** (2-3 min): TypeScript compilation, linting, critical tests, build validation
+- **Full Test Suite** (8-10 min): Matrix testing across Node 18/20 with 4-way sharding for parallel execution
+- **E2E Testing** (5-15 min): Cross-browser testing (Chromium, Firefox, WebKit, Mobile Safari)
+- **Performance Testing**: Automated regression detection with baseline comparison
+- **Security Scanning**: npm audit and vulnerability assessment
+- **Quality Gates**: Automated deployment readiness assessment
+
+**PR Validation** (`.github/workflows/pr-checks.yml`):
+
+- TypeScript and ESLint validation
+- Test coverage analysis on changed files
+- Bundle size impact assessment
+- Security vulnerability checking
+- Auto-labeling based on file changes (docs, tests, features, etc.)
+
+### Local CI/CD Equivalent Commands
+
+Run the same validations locally as the CI/CD pipeline:
+
 ```bash
-npm test  # Runs with resource limits and process monitoring
+# Smoke Tests (equivalent to CI smoke stage)
+npm run type-check        # TypeScript compilation
+npm run lint             # ESLint validation
+npm run test:unit        # Critical unit tests
+npm run build            # Build validation
+
+# Full Test Suite (equivalent to CI test matrix)
+npm run test:parallel    # Fastest execution (8-12s) - matches CI sharding
+npm run test:e2e         # Cross-browser E2E testing
+
+# Performance Testing
+npm run test:performance # Performance regression detection
+
+# Pre-commit Quality Gates
+npm run pre-commit       # Complete quality validation
+
+# Security Scanning
+npm audit --audit-level moderate
 ```
 
-This provides:
-- **Resource Limits**: Max 1 concurrent test suite, 2 vitest worker processes
-- **Timeout Protection**: 30-second test timeout, 30-minute total runtime limit
-- **Process Monitoring**: Background monitoring with automatic cleanup
-- **Emergency Recovery**: Automatic process cleanup if tests become unresponsive
+### Branch Workflow
+
+- **Development**: All work happens on `dev` branch (triggers full pipeline)
+- **Stable Releases**: Periodic releases to `main` branch (triggers release pipeline)
+- **Pull Requests**: Trigger PR validation workflow with coverage analysis
+
+### Current Status
+
+- ✅ **Pipeline Active**: Comprehensive CI/CD validation on all pushes
+- ✅ **Quality Gates**: Automated testing and security scanning
+- ✅ **Cross-Browser Testing**: Full E2E validation across 8 browser profiles
+- ✅ **Performance Monitoring**: Regression detection with baseline tracking
+- ⚠️ **Deployment**: Validation-only (manual deployment as app is in active development)
+
+For detailed CI/CD documentation, see [docs/tech/ci-cd-pipeline.md](docs/tech/ci-cd-pipeline.md).
+
+## Testing & Quality Assurance
+
+The RSS News Reader implements **optimized test execution** (RR-183) achieving 8-20 second test suite completion times, resolving previous timeout issues and enabling CI/CD integration.
+
+### Optimized Test Execution (RR-183)
+
+**Recommended test execution:**
+
+```bash
+npm test  # Optimized runner with thread pool (8-20 seconds)
+```
+
+**Performance breakthrough:**
+
+- **Execution Time**: 8-20 seconds (vs previous 2+ minute timeouts - 90%+ improvement)
+- **Thread Pool Optimization**: Uses threads pool with 4 max threads for optimal performance
+- **Resource Management**: Comprehensive cleanup hooks prevent memory leaks
+- **CI/CD Ready**: Reliable execution under 10-minute timeout for continuous integration
+- **Multiple Execution Modes**: 5 different execution strategies for various development scenarios
+
+**Choose execution mode based on needs:**
+
+- `npm run test:parallel` - Fastest (8-12s) for CI/CD pipelines
+- `npm run test:sequential` - Most reliable (15-20s) for debugging
+- `npm run test:watch` - Development mode with hot reload
+- `npm run test:progressive` - Detailed feedback and progress tracking
 
 ### Test Types
 
 - **Unit Tests**: Component and utility function testing with mocked dependencies
 - **Integration Tests**: API endpoint testing with isolated test environment
-- **End-to-End Tests**: Full user workflow testing (Playwright)
+- **End-to-End Tests**: Full user workflow testing (Playwright) - See [E2E Testing](#end-to-end-e2e-testing) below
 - **Performance Tests**: Resource usage validation and memory leak detection
 
-### Emergency Procedures
+**Test Environment Requirements (RR-186):**
 
-If tests become unresponsive or cause high memory usage:
+- **IndexedDB Polyfill**: `fake-indexeddb` library provides browser API compatibility for storage tests
+- **Environment Validation**: Smoke test validates polyfill setup before test execution
+- **Mock Infrastructure**: Comprehensive mocks for browser APIs and external services
+
+### End-to-End (E2E) Testing
+
+**Comprehensive cross-browser E2E testing with Playwright (RR-184):**
+
+The RSS News Reader includes robust E2E testing infrastructure for validating core user journeys across multiple browsers, with special focus on Safari on iPhone and iPad PWA.
+
+**Run E2E tests:**
 
 ```bash
-# Emergency cleanup
+# Run all E2E tests across all browsers
+npm run test:e2e
+
+# Run specific test file
+npx playwright test src/__tests__/e2e/rr-184-core-user-journeys.spec.ts
+
+# Run iPhone button tappability tests specifically
+npx playwright test src/__tests__/e2e/iphone-button-tappability.spec.ts
+
+# Run on specific browser
+npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
+npx playwright test --project="Mobile Safari"
+npx playwright test --project="iPad Safari"
+
+# Run in headed mode for debugging
+npx playwright test --headed
+
+# Run with UI mode for interactive debugging
+npx playwright test --ui
+```
+
+**Browser Coverage:**
+
+- **Desktop**: Chromium, Firefox, Safari (WebKit)
+- **Mobile**: iPhone 14, iPhone 14 Pro Max (Safari)
+- **Tablet**: iPad Gen 7, iPad Pro 11" (Safari)
+- **Android**: Pixel 5 (Chrome)
+
+**Core Test Scenarios:**
+
+1. **Article Reading Journey**: Browse feeds → Select article → Read content → Navigate back
+2. **Sync Validation**: Manual sync triggers and UI updates
+3. **Cross-Device State**: Read/unread status persistence
+4. **Performance Testing**: Page load times and responsiveness
+5. **PWA Installation**: Manifest and service worker validation
+6. **iPhone Button Tappability**: iOS touch target compliance (44x44px) and element spacing validation
+7. **Touch Interactions**: Swipe gestures, pull-to-refresh, and mobile navigation patterns
+8. **ARIA Accessibility**: Screen reader support and keyboard navigation validation
+
+**Test Reports:**
+
+- HTML reports generated in `playwright-report/`
+- Videos and screenshots captured on failure
+- Trace files for debugging in `test-results/`
+
+**Requirements:**
+
+- Tests require Tailscale VPN connection (access via `100.96.166.53`)
+- No authentication needed (network-based access control)
+- Development server must be running or will auto-start
+
+**API Path Handling (RR-102)**: Tests benefit from smart redirects - API calls work with or without `/reader` prefix in development, improving test reliability.
+
+### Legacy Emergency Procedures
+
+**Note**: With RR-183 optimizations, emergency procedures are rarely needed as tests complete reliably in 8-20 seconds.
+
+If using legacy test scripts and they become unresponsive:
+
+```bash
+# Emergency cleanup (legacy scripts only)
 ./scripts/kill-test-processes.sh
 
-# Real-time monitoring
+# Real-time monitoring (legacy scripts)
 ./scripts/monitor-test-processes.sh
 ```
 
-**⚠️ Important**: Never run `npx vitest` directly as it bypasses safety measures and can cause memory exhaustion.
+**⚠️ Important**: The optimized test runner eliminates previous timeout and memory issues. Legacy emergency procedures are only needed when using `./scripts/safe-test-runner.sh` or direct vitest commands.
 
 For comprehensive testing guidelines, troubleshooting, and best practices, see:
 **[Safe Test Practices Documentation](docs/testing/safe-test-practices.md)**
+
+For a complete list of PM2, npm, and helper script commands, see:
+**[Operations & Commands Reference](docs/operations-and-commands.md)**
+
+For a concise release process (dev → main tagging), see:
+**[Release Process](docs/release-process.md)**
+
+For full API endpoint details (request/response formats, error envelopes), see:
+**[Server API Endpoints](docs/api/server-endpoints.md)**
 
 ## Project Structure
 
@@ -404,7 +565,7 @@ src/
 
 **Phase**: Production Deployed
 
-**Version**: 0.6.0
+**Version**: 0.12.0
 
 ### Development Access
 
@@ -413,7 +574,7 @@ src/
 ### Deployment Status (July 22, 2025)
 
 - ✅ **Production Deployed** - RSS reader running on PM2 with automatic startup
-- ✅ **Automatic Daily Sync** - Cron service syncing at 2:00 AM and 2:00 PM Toronto time
+- ✅ **Automatic 6x Daily Sync** - Cron service runs every 4 hours (2, 6, 10, 14, 18, 22 Toronto time)
 - ✅ **69 feeds** and **250 articles** synced and available
 - ✅ **Tailscale Monitoring** - Auto-restart service ensures constant availability
 - ✅ **Database Security** - Row Level Security enabled on all tables
@@ -461,7 +622,7 @@ src/
 - **[Monitoring and Alerting](docs/tech/monitoring-and-alerting.md)**: Multi-layered monitoring system with Discord alerts
 - **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
-- **[Deployment Guide](docs/deployment/caddy-pm2-setup.md)**: Production deployment instructions
+- Deployment docs focus on the dev-only, Tailscale-protected setup. See `docs/deployment/`.
 - **[RR-26 Analysis](docs/issues/RR-26-freshness-perception-analysis.md)**: Article freshness perception issue analysis
 
 ## API Integration
@@ -484,14 +645,16 @@ src/
 
 Key configuration options:
 
-- **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per sync (default: 100)
+- **`SYNC_MAX_ARTICLES`**: Number of articles to fetch per sync (default: 500)
+  - Used for incremental syncs to balance freshness with efficiency
+  - Higher values ensure more complete article history
+  - Weekly full syncs ignore this limit for complete data integrity
 
   - Controls how many articles are retrieved from Inoreader in each sync operation
   - Lower values reduce API usage and sync time
   - Higher values ensure more complete article history
 
 - **`ARTICLES_RETENTION_LIMIT`**: Number of articles to keep during auto-cleanup (default: 1000)
-
   - Sets the maximum number of articles to retain in the database
   - Auto-cleanup feature to be implemented in future updates
   - Helps manage storage space and database performance
@@ -600,6 +763,8 @@ The RSS reader uses PostgreSQL (via Supabase) with 8 main tables and additional 
 - Foreign key index on `user_id`
 - Unique index on `inoreader_id`
 - Index on `folder_id`
+
+**Note**: The `is_partial_content` field was consolidated from the previous `is_partial_feed` field as part of RR-176 implementation to standardize content fetching behavior across all feeds.
 
 #### 3. Articles Table
 
@@ -799,12 +964,10 @@ GROUP BY f.id, f.user_id;
 #### Database Functions
 
 1. **get_unread_counts_by_feed(p_user_id uuid)**
-
    - Returns aggregated unread counts per feed
    - Reduces data transfer by 92.4% (290 rows → 22 rows)
 
 2. **refresh_feed_stats()**
-
    - Refreshes the materialized view
    - Called automatically after each sync
 
@@ -824,21 +987,18 @@ GROUP BY f.id, f.user_id;
 All tables have RLS enabled with the following policies:
 
 1. **Users Table**:
-
    - SELECT: Only user 'shayon' can read
    - INSERT: Only user 'shayon' can insert
    - UPDATE: Only user 'shayon' can update own record
    - DELETE: No deletes allowed
 
 2. **Feeds, Articles, Folders Tables**:
-
    - SELECT: Only user 'shayon' can read own data
    - INSERT: Only service role (server) can insert
    - UPDATE: Client can update specific fields (is_read, is_starred)
    - DELETE: Only service role can delete
 
 3. **Sync Metadata, API Usage Tables**:
-
    - All operations restricted to service role (server only)
 
 4. **Fetch Logs Table**:

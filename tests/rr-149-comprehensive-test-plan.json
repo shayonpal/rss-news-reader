@@ -1,0 +1,783 @@
+{
+  "test_plan": {
+    "linear_issue": "RR-149",
+    "scope": "Implement incremental sync using Inoreader 'ot' parameter to reduce duplicate processing from 80% to near 0%",
+    "acceptance_criteria": [
+      "Fix bug: exclude read articles using 'xt' parameter",
+      "Implement incremental sync with 'ot' parameter for timestamp-based filtering",
+      "Enforce ARTICLES_RETENTION_LIMIT (1000 articles max)",
+      "Respect SYNC_MAX_ARTICLES per sync call (500)",
+      "Weekly full sync fallback for data integrity",
+      "Track sync timestamps in sync_metadata table",
+      "Reduce duplicate processing from 80% to near 0%"
+    ],
+    "test_categories": [
+      {
+        "category": "Unit Tests - Retention Logic",
+        "tests": [
+          "Test retention limit enforcement with exactly 1000 articles",
+          "Test retention when exceeding limit by 1 article",
+          "Test retention with multiple cleanup batches",
+          "Test retention logic integration with ArticleCleanupService",
+          "Test retention metadata tracking in sync_metadata"
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Unit Tests - Timestamp Parameter Logic",
+        "tests": [
+          "Test 'ot' parameter generation from last sync timestamp",
+          "Test 'xt' parameter excludes read articles",
+          "Test parameter combination (ot + xt + n)",
+          "Test timestamp conversion to Unix epoch",
+          "Test fallback behavior when no last sync exists"
+        ],
+        "priority": "critical"
+      },
+      {
+        "category": "Integration Tests - Incremental Sync Flow",
+        "tests": [
+          "Test complete incremental sync with recent articles only",
+          "Test sync metadata persistence across syncs",
+          "Test API call reduction vs baseline sync",
+          "Test sync with mixed read/unread articles",
+          "Test sync after retention cleanup"
+        ],
+        "priority": "critical"
+      },
+      {
+        "category": "Integration Tests - Weekly Full Sync",
+        "tests": [
+          "Test full sync when 7 days elapsed since last full sync",
+          "Test full sync metadata tracking",
+          "Test full sync ignores 'ot' parameter",
+          "Test full sync applies retention limits",
+          "Test transition from full sync back to incremental"
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Edge Cases - Timestamp Handling",
+        "tests": [
+          "Test sync with malformed timestamp in metadata",
+          "Test sync when clock skew exists",
+          "Test sync with very old 'ot' parameter (>30 days)",
+          "Test sync when Inoreader returns no results for timestamp",
+          "Test sync metadata corruption recovery"
+        ],
+        "priority": "medium"
+      },
+      {
+        "category": "Performance Tests",
+        "tests": [
+          "Measure duplicate processing reduction (target: <10%)",
+          "Measure API calls per sync (baseline vs incremental)",
+          "Measure sync time improvement with fewer articles",
+          "Test retention cleanup performance with 1000+ articles",
+          "Load test with maximum articles per sync (500)"
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Acceptance Tests - Bug Fixes",
+        "tests": [
+          "Verify read articles are excluded from sync",
+          "Verify only unread articles are processed",
+          "Verify starred read articles are still excluded",
+          "Test read exclusion with various article states",
+          "Verify 'xt' parameter in API calls"
+        ],
+        "priority": "critical"
+      },
+      {
+        "category": "End-to-End Tests",
+        "tests": [
+          "Complete sync workflow with timestamp filtering",
+          "Multi-day incremental sync scenario",
+          "Retention limit enforcement in production-like scenario",
+          "Weekly full sync trigger and execution",
+          "Recovery from sync failures"
+        ],
+        "priority": "high"
+      }
+    ]
+  },
+  "execution_results": {
+    "summary": {
+      "total_tests": 40,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "confidence_level": "high"
+    },
+    "service_health": {
+      "pm2_services": [],
+      "api_endpoints": [],
+      "database": "not_checked"
+    },
+    "test_results": [],
+    "performance_metrics": {
+      "sync_time_ms": 0,
+      "api_calls_used": 0,
+      "query_performance": [],
+      "memory_usage_mb": 0
+    }
+  },
+  "detailed_test_specifications": {
+    "unit_tests": {
+      "retention_limit_enforcement": {
+        "test_file": "src/__tests__/unit/rr-149-retention-limit.test.ts",
+        "test_cases": [
+          {
+            "name": "should enforce exactly 1000 article limit",
+            "description": "When articles exceed retention limit, oldest articles should be deleted",
+            "setup": "Create 1001 articles in database",
+            "action": "Run retention cleanup",
+            "expected": "Exactly 1000 articles remain, oldest deleted",
+            "assertions": [
+              "Article count equals 1000",
+              "Oldest article by published_at is deleted",
+              "Newest articles are preserved"
+            ]
+          },
+          {
+            "name": "should handle retention limit boundary conditions",
+            "description": "Test behavior at exact limit boundary",
+            "setup": "Create exactly 1000 articles",
+            "action": "Add 1 new article and run cleanup",
+            "expected": "Still 1000 articles, oldest one deleted",
+            "assertions": [
+              "Total count remains 1000",
+              "Deletion tracking entry created",
+              "New article is preserved"
+            ]
+          },
+          {
+            "name": "should respect cleanup batch size limits",
+            "description": "Large cleanups should be batched appropriately",
+            "setup": "Create 2000 articles (1000 over limit)",
+            "action": "Run retention with batch size 200",
+            "expected": "1000 articles deleted in 5 batches",
+            "assertions": [
+              "Exactly 5 delete operations executed",
+              "Each batch processes max 200 articles",
+              "Final count is 1000 articles"
+            ]
+          },
+          {
+            "name": "should integrate with ArticleCleanupService",
+            "description": "Retention logic should work with existing cleanup service",
+            "setup": "Mock ArticleCleanupService methods",
+            "action": "Call retention enforcement",
+            "expected": "Cleanup service methods called correctly",
+            "assertions": [
+              "CleanupService.cleanupReadArticles called",
+              "Deletion tracking enabled",
+              "Configuration loaded from system_config"
+            ]
+          },
+          {
+            "name": "should update retention metadata",
+            "description": "Retention operations should update sync metadata",
+            "setup": "Clean sync metadata table",
+            "action": "Run retention cleanup",
+            "expected": "Metadata includes retention timestamp and count",
+            "assertions": [
+              "last_retention_cleanup timestamp updated",
+              "articles_retained_count equals 1000",
+              "retention_deleted_count recorded"
+            ]
+          }
+        ]
+      },
+      "timestamp_parameters": {
+        "test_file": "src/__tests__/unit/rr-149-timestamp-params.test.ts",
+        "test_cases": [
+          {
+            "name": "should generate 'ot' parameter from last sync timestamp",
+            "description": "Convert last_sync_time to Unix epoch for ot parameter",
+            "setup": "Mock sync_metadata with last_sync_time = '2024-01-15T10:30:00Z'",
+            "action": "Generate sync parameters",
+            "expected": "ot parameter = 1705315800 (Unix epoch)",
+            "assertions": [
+              "ot parameter matches exact Unix timestamp",
+              "Parameter is numeric string",
+              "Timezone handling is correct"
+            ]
+          },
+          {
+            "name": "should include 'xt' parameter to exclude read articles",
+            "description": "Add xt parameter to prevent read article sync",
+            "setup": "Standard sync parameter generation",
+            "action": "Build Inoreader API URL",
+            "expected": "URL contains xt=user/-/state/com.google/read",
+            "assertions": [
+              "xt parameter present in URL",
+              "Correct Google Reader API format",
+              "Parameter value properly encoded"
+            ]
+          },
+          {
+            "name": "should combine multiple parameters correctly",
+            "description": "Test parameter combination in API URL",
+            "setup": "Last sync timestamp + max articles limit",
+            "action": "Build complete API URL",
+            "expected": "URL contains ot, xt, and n parameters",
+            "assertions": [
+              "All three parameters present",
+              "Parameters properly separated with &",
+              "Values correctly formatted"
+            ]
+          },
+          {
+            "name": "should handle missing last sync timestamp",
+            "description": "First sync should not include ot parameter",
+            "setup": "Empty sync_metadata table",
+            "action": "Generate sync parameters",
+            "expected": "Only xt and n parameters included",
+            "assertions": [
+              "ot parameter is undefined/null",
+              "xt parameter still present",
+              "n parameter equals SYNC_MAX_ARTICLES"
+            ]
+          },
+          {
+            "name": "should validate timestamp conversion accuracy",
+            "description": "Ensure timestamp conversion is precise",
+            "setup": "Multiple test timestamps with different timezones",
+            "action": "Convert to Unix epoch",
+            "expected": "All conversions mathematically correct",
+            "assertions": [
+              "UTC timestamps convert correctly",
+              "ISO string format handled properly",
+              "Precision maintained to second level"
+            ]
+          }
+        ]
+      }
+    },
+    "integration_tests": {
+      "incremental_sync_flow": {
+        "test_file": "src/__tests__/integration/rr-149-incremental-sync.test.ts",
+        "test_cases": [
+          {
+            "name": "should perform complete incremental sync",
+            "description": "End-to-end incremental sync with real API calls",
+            "setup": "Database with existing articles and last_sync_time",
+            "action": "Trigger /api/sync endpoint",
+            "expected": "Only articles newer than last sync are fetched",
+            "assertions": [
+              "API call includes correct ot parameter",
+              "Only new articles imported",
+              "Sync metadata updated with current time",
+              "Duplicate processing avoided"
+            ]
+          },
+          {
+            "name": "should persist sync metadata across syncs",
+            "description": "Metadata should survive multiple sync cycles",
+            "setup": "Run initial sync",
+            "action": "Run second incremental sync",
+            "expected": "Second sync uses timestamp from first sync",
+            "assertions": [
+              "last_sync_time from first sync is used",
+              "Metadata table has persistent data",
+              "No duplicate articles imported"
+            ]
+          },
+          {
+            "name": "should demonstrate API call reduction",
+            "description": "Compare API calls: baseline vs incremental",
+            "setup": "Measure baseline sync API calls",
+            "action": "Measure incremental sync API calls",
+            "expected": "Incremental sync uses same number of setup calls",
+            "assertions": [
+              "Same subscription/folder API calls",
+              "Same unread-count API calls",
+              "Stream API returns fewer articles",
+              "Overall processing time reduced"
+            ]
+          },
+          {
+            "name": "should handle mixed read/unread article states",
+            "description": "Incremental sync with various article states",
+            "setup": "Articles in different read/starred states",
+            "action": "Run incremental sync",
+            "expected": "Only unread articles processed",
+            "assertions": [
+              "Read articles excluded via xt parameter",
+              "Starred read articles still excluded",
+              "Unread starred articles included",
+              "State conflicts properly resolved"
+            ]
+          },
+          {
+            "name": "should sync after retention cleanup",
+            "description": "Incremental sync after articles cleaned up",
+            "setup": "Run retention cleanup then incremental sync",
+            "action": "Verify sync works normally",
+            "expected": "Sync proceeds without issues",
+            "assertions": [
+              "Cleaned up articles not re-imported",
+              "Deletion tracking prevents re-sync",
+              "New articles still imported normally",
+              "Feed stats remain accurate"
+            ]
+          }
+        ]
+      },
+      "weekly_full_sync": {
+        "test_file": "src/__tests__/integration/rr-149-weekly-full-sync.test.ts",
+        "test_cases": [
+          {
+            "name": "should trigger full sync after 7 days",
+            "description": "Weekly full sync overrides incremental logic",
+            "setup": "Set last_full_sync_time to 8 days ago",
+            "action": "Trigger sync",
+            "expected": "Full sync executed instead of incremental",
+            "assertions": [
+              "ot parameter not used in API call",
+              "All available articles fetched (up to limit)",
+              "last_full_sync_time updated",
+              "Next sync reverts to incremental"
+            ]
+          },
+          {
+            "name": "should track full sync metadata separately",
+            "description": "Full sync and incremental sync have different metadata",
+            "setup": "Clear sync metadata",
+            "action": "Run full sync followed by incremental",
+            "expected": "Both metadata entries exist",
+            "assertions": [
+              "last_full_sync_time exists",
+              "last_sync_time exists and is different",
+              "Both timestamps are properly formatted",
+              "Metadata persists across syncs"
+            ]
+          },
+          {
+            "name": "should ignore 'ot' parameter during full sync",
+            "description": "Full sync fetches all available articles",
+            "setup": "Set last_sync_time to recent time",
+            "action": "Force full sync (7+ days since last full)",
+            "expected": "API call omits ot parameter",
+            "assertions": [
+              "ot parameter absent from URL",
+              "xt parameter still present",
+              "n parameter equals SYNC_MAX_ARTICLES",
+              "More articles fetched than incremental"
+            ]
+          },
+          {
+            "name": "should apply retention limits during full sync",
+            "description": "Full sync respects article retention limits",
+            "setup": "Database with articles near retention limit",
+            "action": "Run full sync with retention enforcement",
+            "expected": "Article count stays within limit",
+            "assertions": [
+              "Total articles <= ARTICLES_RETENTION_LIMIT",
+              "Oldest articles cleaned up",
+              "Retention cleanup logged",
+              "Full sync completes successfully"
+            ]
+          },
+          {
+            "name": "should transition back to incremental after full sync",
+            "description": "Next sync after full sync should be incremental",
+            "setup": "Complete full sync",
+            "action": "Run subsequent sync within 7 days",
+            "expected": "Incremental sync parameters used",
+            "assertions": [
+              "ot parameter includes full sync timestamp",
+              "Incremental logic applies",
+              "No duplicate processing",
+              "Full sync timer reset"
+            ]
+          }
+        ]
+      }
+    },
+    "edge_case_tests": {
+      "timestamp_edge_cases": {
+        "test_file": "src/__tests__/unit/rr-149-timestamp-edge-cases.test.ts",
+        "test_cases": [
+          {
+            "name": "should handle malformed timestamp in metadata",
+            "description": "Graceful fallback when timestamp is invalid",
+            "setup": "Set last_sync_time to 'invalid-date'",
+            "action": "Generate sync parameters",
+            "expected": "Falls back to full sync (no ot parameter)",
+            "assertions": [
+              "ot parameter is undefined",
+              "Error logged but sync continues",
+              "Fallback to full sync behavior",
+              "Invalid metadata cleaned up"
+            ]
+          },
+          {
+            "name": "should handle clock skew scenarios",
+            "description": "Future timestamps should not break sync",
+            "setup": "Set last_sync_time to future date",
+            "action": "Run incremental sync",
+            "expected": "Future timestamp handled gracefully",
+            "assertions": [
+              "ot parameter uses future timestamp",
+              "API call succeeds (returns no results)",
+              "Sync completes without errors",
+              "Metadata updated to current time"
+            ]
+          },
+          {
+            "name": "should handle very old 'ot' parameter",
+            "description": "Old timestamps should trigger full sync",
+            "setup": "Set last_sync_time to 45 days ago",
+            "action": "Run sync with old timestamp logic",
+            "expected": "Falls back to full sync for data integrity",
+            "assertions": [
+              "ot parameter older than threshold ignored",
+              "Full sync behavior applied",
+              "All available articles fetched",
+              "Metadata reset to current sync"
+            ]
+          },
+          {
+            "name": "should handle empty Inoreader response",
+            "description": "No articles returned for timestamp range",
+            "setup": "Set ot parameter to very recent timestamp",
+            "action": "Run sync when no new articles exist",
+            "expected": "Sync completes successfully with no articles",
+            "assertions": [
+              "No articles imported",
+              "Sync metadata still updated",
+              "No errors reported",
+              "Feed stats remain unchanged"
+            ]
+          },
+          {
+            "name": "should recover from metadata corruption",
+            "description": "Handle corrupted sync_metadata table",
+            "setup": "Corrupt sync_metadata with invalid JSON values",
+            "action": "Run sync with corrupted metadata",
+            "expected": "Sync recovers and rebuilds metadata",
+            "assertions": [
+              "Corrupted entries cleaned up",
+              "Fresh metadata created",
+              "Sync defaults to full sync mode",
+              "Recovery logged for monitoring"
+            ]
+          }
+        ]
+      }
+    },
+    "performance_tests": {
+      "efficiency_measurements": {
+        "test_file": "src/__tests__/performance/rr-149-sync-efficiency.test.ts",
+        "test_cases": [
+          {
+            "name": "should achieve <10% duplicate processing",
+            "description": "Measure reduction in duplicate article processing",
+            "setup": "Baseline: measure duplicates in current sync",
+            "action": "Measure duplicates with incremental sync",
+            "expected": "Duplicate processing reduced by >80%",
+            "metrics": [
+              "Baseline duplicate percentage",
+              "Incremental duplicate percentage",
+              "Processing time per article",
+              "Total sync time improvement"
+            ]
+          },
+          {
+            "name": "should reduce API calls per sync",
+            "description": "API call count should remain constant",
+            "setup": "Track API calls in baseline sync",
+            "action": "Track API calls in incremental sync",
+            "expected": "Setup calls same, fewer stream results",
+            "metrics": [
+              "Subscription API calls (same)",
+              "Stream API calls (same count, fewer results)",
+              "Total processing time",
+              "Articles per second throughput"
+            ]
+          },
+          {
+            "name": "should improve sync time with fewer articles",
+            "description": "Processing time should scale with article count",
+            "setup": "Measure baseline sync time for 300 articles",
+            "action": "Measure incremental sync time for ~50 new articles",
+            "expected": "Sync time reduced proportionally",
+            "metrics": [
+              "Baseline sync time (300 articles)",
+              "Incremental sync time (~50 articles)",
+              "Time per article processed",
+              "Database operation time"
+            ]
+          },
+          {
+            "name": "should handle retention cleanup efficiently",
+            "description": "Retention cleanup should be performant",
+            "setup": "Database with 1500 articles (500 over limit)",
+            "action": "Run retention cleanup",
+            "expected": "Cleanup completes within performance limits",
+            "metrics": [
+              "Cleanup time for 500 articles",
+              "Database query performance",
+              "Batch deletion time",
+              "Tracking entry creation time"
+            ]
+          },
+          {
+            "name": "should handle maximum article load",
+            "description": "Load test with SYNC_MAX_ARTICLES (500)",
+            "setup": "Mock Inoreader to return 500 articles",
+            "action": "Run full sync with maximum article load",
+            "expected": "Sync handles maximum load efficiently",
+            "metrics": [
+              "Sync time for 500 articles",
+              "Memory usage during processing",
+              "Database batch operation time",
+              "Conflict resolution time"
+            ]
+          }
+        ]
+      }
+    },
+    "acceptance_tests": {
+      "bug_fix_verification": {
+        "test_file": "src/__tests__/acceptance/rr-149-bug-fixes.test.ts",
+        "test_cases": [
+          {
+            "name": "should exclude read articles from sync",
+            "description": "Primary bug fix: read articles should not be synced",
+            "setup": "Inoreader account with mix of read/unread articles",
+            "action": "Run incremental sync",
+            "expected": "Only unread articles are imported",
+            "verification": [
+              "API URL contains xt=user/-/state/com.google/read",
+              "Database query shows only unread articles imported",
+              "Read article count unchanged",
+              "Sync log confirms read exclusion"
+            ]
+          },
+          {
+            "name": "should process only unread articles",
+            "description": "Verify only unread articles enter processing pipeline",
+            "setup": "Database with existing articles, Inoreader with new unread",
+            "action": "Run sync and trace article processing",
+            "expected": "Processing pipeline only sees unread articles",
+            "verification": [
+              "Article filter applied before database operations",
+              "Conflict resolution only for unread articles",
+              "Read articles skipped in logs",
+              "Unread count accurate after sync"
+            ]
+          },
+          {
+            "name": "should exclude starred read articles",
+            "description": "Even starred articles should be excluded if read",
+            "setup": "Inoreader with starred+read articles",
+            "action": "Run sync",
+            "expected": "Starred read articles are not synced",
+            "verification": [
+              "xt parameter takes precedence over starred state",
+              "Starred read articles not in import batch",
+              "Only starred+unread articles imported",
+              "Star status preserved for existing articles"
+            ]
+          },
+          {
+            "name": "should handle various article state combinations",
+            "description": "Test all permutations of read/starred states",
+            "setup": "Articles in all 4 states: read+starred, read+unstarred, unread+starred, unread+unstarred",
+            "action": "Run sync and verify imports",
+            "expected": "Only unread articles imported regardless of star status",
+            "verification": [
+              "read+starred: excluded",
+              "read+unstarred: excluded",
+              "unread+starred: included",
+              "unread+unstarred: included"
+            ]
+          },
+          {
+            "name": "should verify 'xt' parameter in API calls",
+            "description": "Confirm xt parameter is present in actual API requests",
+            "setup": "Enable API request logging",
+            "action": "Run sync and inspect actual API calls",
+            "expected": "xt parameter present in stream API calls",
+            "verification": [
+              "Request URL contains xt parameter",
+              "Parameter value is correctly formatted",
+              "Parameter survives URL encoding",
+              "API returns appropriately filtered results"
+            ]
+          }
+        ]
+      }
+    },
+    "end_to_end_tests": {
+      "complete_workflows": {
+        "test_file": "src/__tests__/e2e/rr-149-complete-workflows.spec.ts",
+        "test_cases": [
+          {
+            "name": "should execute complete incremental sync workflow",
+            "description": "Full end-to-end incremental sync scenario",
+            "scenario": [
+              "Start with clean database",
+              "Run initial full sync (no ot parameter)",
+              "Add new articles to Inoreader",
+              "Run incremental sync (with ot parameter)",
+              "Verify only new articles imported"
+            ],
+            "verification": [
+              "Initial sync imports all articles",
+              "Incremental sync imports only new articles",
+              "No duplicate processing",
+              "Metadata tracked correctly"
+            ]
+          },
+          {
+            "name": "should handle multi-day incremental sync scenario",
+            "description": "Simulate several days of incremental syncs",
+            "scenario": [
+              "Day 1: Initial full sync",
+              "Day 2: Incremental sync with few new articles",
+              "Day 3: Incremental sync with no new articles",
+              "Day 4: Incremental sync with many new articles"
+            ],
+            "verification": [
+              "Each sync uses previous sync timestamp",
+              "Cumulative article count is correct",
+              "No articles imported multiple times",
+              "Sync performance improves over time"
+            ]
+          },
+          {
+            "name": "should enforce retention limit in production scenario",
+            "description": "Retention limit enforcement with real article volumes",
+            "scenario": [
+              "Import 900 articles via multiple syncs",
+              "Import 200 more articles (exceeding limit)",
+              "Trigger retention cleanup",
+              "Verify oldest 100 articles removed"
+            ],
+            "verification": [
+              "Article count capped at 1000",
+              "Oldest articles by published_at removed",
+              "Deleted articles tracked in deleted_articles table",
+              "Feed stats remain accurate"
+            ]
+          },
+          {
+            "name": "should trigger and execute weekly full sync",
+            "description": "Weekly full sync trigger and execution",
+            "scenario": [
+              "Set last_full_sync_time to 8 days ago",
+              "Run sync (should be full)",
+              "Verify full sync behavior",
+              "Run next sync (should be incremental)"
+            ],
+            "verification": [
+              "Full sync ignores ot parameter",
+              "More articles fetched in full sync",
+              "Metadata updated with full sync time",
+              "Next sync uses incremental logic"
+            ]
+          },
+          {
+            "name": "should recover from sync failures gracefully",
+            "description": "Error recovery and sync resumption",
+            "scenario": [
+              "Start incremental sync",
+              "Simulate API failure mid-sync",
+              "Verify partial progress not corrupted",
+              "Retry sync should recover cleanly"
+            ],
+            "verification": [
+              "Partial import rolled back on failure",
+              "Metadata not corrupted by failed sync",
+              "Retry sync starts from correct state",
+              "No duplicate processing on recovery"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "test_execution_commands": {
+    "unit_tests": [
+      "npx vitest run src/__tests__/unit/rr-149-retention-limit.test.ts",
+      "npx vitest run src/__tests__/unit/rr-149-timestamp-params.test.ts",
+      "npx vitest run src/__tests__/unit/rr-149-timestamp-edge-cases.test.ts"
+    ],
+    "integration_tests": [
+      "NODE_ENV=test npx vitest run --config vitest.integration.config.ts src/__tests__/integration/rr-149-incremental-sync.test.ts",
+      "NODE_ENV=test npx vitest run --config vitest.integration.config.ts src/__tests__/integration/rr-149-weekly-full-sync.test.ts"
+    ],
+    "performance_tests": [
+      "npx vitest run src/__tests__/performance/rr-149-sync-efficiency.test.ts"
+    ],
+    "acceptance_tests": [
+      "npx vitest run src/__tests__/acceptance/rr-149-bug-fixes.test.ts"
+    ],
+    "e2e_tests": [
+      "npx playwright test src/__tests__/e2e/rr-149-complete-workflows.spec.ts"
+    ]
+  },
+  "implementation_areas": {
+    "files_to_modify": [
+      "src/app/api/sync/route.ts - Add incremental sync logic with ot/xt parameters",
+      "src/lib/services/cleanup-service.ts - Add retention limit enforcement method",
+      "src/lib/services/incremental-sync-service.ts - NEW: Core incremental sync logic",
+      "src/lib/utils/timestamp-utils.ts - NEW: Timestamp conversion utilities"
+    ],
+    "database_changes": [
+      "Add last_full_sync_time to sync_metadata",
+      "Add articles_retained_count to sync_metadata",
+      "Ensure sync_metadata has proper indexing"
+    ],
+    "environment_variables": [
+      "SYNC_MAX_ARTICLES=500 (already configured)",
+      "ARTICLES_RETENTION_LIMIT=1000 (already configured)",
+      "FULL_SYNC_INTERVAL_DAYS=7 (new)"
+    ]
+  },
+  "success_metrics": {
+    "primary": [
+      "Duplicate processing reduced from 80% to <10%",
+      "Read articles excluded from all syncs",
+      "Article retention limit enforced (≤1000 articles)",
+      "Weekly full sync executed automatically"
+    ],
+    "secondary": [
+      "Sync time improvement with fewer articles",
+      "API call count remains constant",
+      "Memory usage stable during retention cleanup",
+      "Database query performance maintained"
+    ]
+  },
+  "risk_mitigation": {
+    "high_risk": [
+      "Timestamp parameter calculation errors → Unit test all timestamp conversions",
+      "Retention cleanup deleting wrong articles → Sort by published_at, test boundary conditions",
+      "API parameter encoding issues → Test URL encoding with real API calls"
+    ],
+    "medium_risk": [
+      "Clock skew between server and Inoreader → Handle future timestamps gracefully",
+      "Metadata corruption during sync failure → Atomic updates with rollback",
+      "Full sync not triggering when needed → Test 7-day boundary conditions"
+    ]
+  },
+  "monitoring": {
+    "key_metrics": [
+      "Duplicate article processing percentage",
+      "Articles imported per sync",
+      "Retention cleanup frequency and volume",
+      "Full sync vs incremental sync ratio"
+    ],
+    "alerts": [
+      "Duplicate processing >20% (indicates issue with ot/xt parameters)",
+      "Article count >1050 (retention limit not enforced)",
+      "No full sync in >8 days (weekly fallback broken)",
+      "Sync failures after ot parameter implementation"
+    ]
+  }
+}

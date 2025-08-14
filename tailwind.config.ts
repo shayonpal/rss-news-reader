@@ -74,13 +74,27 @@ const config: Config = {
           },
         },
       },
+      keyframes: {
+        "collapsible-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-collapsible-content-height)" },
+        },
+        "collapsible-up": {
+          from: { height: "var(--radix-collapsible-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "collapsible-down": "collapsible-down 200ms ease-out",
+        "collapsible-up": "collapsible-up 200ms ease-out",
+      },
     },
   },
   plugins: [
     require("@tailwindcss/typography"),
-    function({ addVariant }: any) {
-      addVariant('pwa-standalone', '.pwa-standalone &');
-    }
+    function ({ addVariant }: any) {
+      addVariant("pwa-standalone", ".pwa-standalone &");
+    },
   ],
 };
 

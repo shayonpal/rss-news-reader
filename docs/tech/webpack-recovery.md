@@ -30,6 +30,7 @@ If automatic recovery fails, use the one-command recovery script:
 ```
 
 This script performs the following actions:
+
 1. Stops the rss-reader-dev service
 2. Removes `.next` and `node_modules/.cache` directories
 3. Restarts the service

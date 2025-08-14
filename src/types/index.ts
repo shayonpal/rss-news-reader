@@ -22,6 +22,10 @@ export interface Article {
   fullContentUrl?: string;
   hasFullContent?: boolean;
   fullContent?: string;
+  parsedAt?: Date;
+  parseFailed?: boolean;
+  parseAttempts?: number;
+  contentLength?: number;
 }
 
 export interface Feed {
@@ -35,7 +39,7 @@ export interface Feed {
   folderId?: string | null;
   unreadCount: number;
   isActive: boolean;
-  isPartialContent?: boolean; // Whether feed typically has partial content
+  isPartialContent?: boolean; // Whether feed typically has partial content requiring on-demand parsing
   lastFetchedAt?: Date;
   inoreaderId?: string; // Inoreader's feed ID
   createdAt: Date;
@@ -61,6 +65,20 @@ export interface Summary {
   generatedAt: Date;
   model: string;
   isRegenerated: boolean;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+  description?: string;
+  articleCount: number;
+  unreadCount?: number; // RR-163: Track unread articles per tag
+  totalCount?: number; // RR-163: Explicit total (alias of articleCount)
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SyncState {
@@ -90,7 +108,6 @@ export interface UserPreferences {
   theme: "light" | "dark" | "system";
   syncFrequency: number; // hours
   maxArticles: number;
-  autoFetchFullContent: boolean;
   enableNotifications: boolean;
   fontSize: "small" | "medium" | "large";
   readingWidth: "narrow" | "medium" | "wide";

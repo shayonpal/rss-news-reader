@@ -150,14 +150,14 @@ GET / reader / api / 0 / unread - count;
 }
 ```
 
-#### 5. Mark Items as Read/Unread
+#### 5. Mark Items as Read/Unread (Bi-directional)
 
 ```typescript
 POST / reader / api / 0 / edit - tag;
 ```
 
-**Purpose**: Sync read/unread states
-**Frequency**: Every 30 minutes or on app close
+**Purpose**: Sync read/unread/star/unstar states (bi-directional)
+**Frequency**: Batched every ~5 minutes by queue processor, or sooner if thresholds/age conditions are met
 **Rate Limit Impact**: 1 call per batch (up to 100 items)
 **Payload**:
 
@@ -169,12 +169,19 @@ POST / reader / api / 0 / edit - tag;
 }
 ```
 
-### Rate Limiting Strategy
+### Rate Limiting Strategy (RR-5)
 
-**Current Limits** (Inoreader Free Tier):
+**Limits Source of Truth**
 
-- 100 API calls per day for Zone 1 (basic operations)
-- Resets at midnight UTC
+- Limits and usage come from Inoreader response headers on every call:
+  - `X-Reader-Zone1-Limit`, `X-Reader-Zone2-Limit`
+  - `X-Reader-Zone1-Usage`, `X-Reader-Zone2-Usage`
+  - `X-Reader-Limits-Reset-After`
+- We persist only header-provided values (no hardcoded defaults); partial updates are supported.
+
+**Free Tier Reference**
+
+- Typical free plan limits are 100/day for Zone 1 and 100/day for Zone 2, but the app does not assume these; it reads headers.
 
 **Optimization Approach**:
 
@@ -189,34 +196,18 @@ const syncStrategy = {
 };
 
 // Total per sync: ~4-5 calls
-// Daily usage: ~20-24 calls (4 syncs + manual refreshes)
-// Leaves 75+ calls for manual operations
+// Daily usage: ~24-30 calls (6 incremental syncs + occasional full sync)
+// Leaves ~70+ calls for manual operations on free tier
 ```
+
+See also: `docs/tech/bidirectional-sync.md` for end-to-end behavior, queue semantics, and conflict handling.
 
 **Rate Limit Management**:
 
 ```typescript
-class RateLimitManager {
-  private callsToday = 0;
-  private lastReset = new Date().toDateString();
-
-  async makeCall<T>(apiCall: () => Promise<T>): Promise<T> {
-    if (this.callsToday >= 95) {
-      throw new Error("API_LIMIT_REACHED");
-    }
-
-    this.callsToday++;
-    return await apiCall();
-  }
-
-  getUsageStats() {
-    return {
-      used: this.callsToday,
-      remaining: 100 - this.callsToday,
-      resetTime: "Midnight UTC",
-    };
-  }
-}
+// RR-5 capture: backend records headers after every request;
+// API usage endpoint returns latest totals with a hybrid for Zone 1 to reduce header lag impact.
+// See `/api/sync/api-usage`.
 ```
 
 ### Error Handling
@@ -518,13 +509,19 @@ if (needsExtraction) {
 
 ```typescript
 class SyncOrchestrator {
-  async performFullSync(): Promise<SyncResult> {
+  async performSync(): Promise<SyncResult> {
+    // Determine sync type (incremental vs full)
+    const syncType = await this.determineSyncType();
+
     const steps = [
       this.syncUserInfo,
       this.syncSubscriptions,
-      this.syncArticles,
+      () => this.syncArticles(syncType), // Pass sync type for parameter selection
+      this.decodeHtmlEntities, // RR-154: Decode HTML entities in article content
       this.syncUnreadCounts,
       this.syncReadStates,
+      this.enforceArticleRetention, // Clean up old articles
+      this.prepareSidebarData, // RR-171: Prepare sidebar payload for immediate UI updates
     ];
 
     const results = [];
@@ -538,7 +535,45 @@ class SyncOrchestrator {
       }
     }
 
+    // Update sync metadata with appropriate timestamps
+    await this.updateSyncMetadata(syncType);
+
     return this.consolidateResults(results);
+  }
+
+  private async determineSyncType(): Promise<"incremental" | "full"> {
+    const lastFullSync = await getSyncMetadata("last_full_sync_time");
+    if (!lastFullSync) return "full";
+
+    const daysSince =
+      (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7 ? "full" : "incremental";
+  }
+
+  private async decodeHtmlEntities(): Promise<void> {
+    // RR-154: Decode HTML entities during sync
+    // This step runs after article sync but before unread counts
+    // to ensure decoded content is available for display
+    const { decodeHtmlEntities } = await import("@/lib/utils/html-decoder");
+
+    // Decoding happens inline during article processing in syncArticles()
+    // This placeholder ensures it's documented in the sync pipeline
+    console.log("HTML entity decoding integrated into article sync process");
+  }
+
+  private async prepareSidebarData(): Promise<SidebarPayload> {
+    // RR-171: Prepare sidebar payload for immediate UI updates
+    // This step collects feed counts and tags for immediate frontend refresh
+    const [feedCounts, tags] = await Promise.all([
+      this.getFeedCounts(),
+      this.getAvailableTags(),
+    ]);
+
+    return {
+      feedCounts,
+      tags,
+      lastUpdated: new Date().toISOString(),
+    };
   }
 }
 ```
@@ -647,5 +682,546 @@ const sanitizeError = (error: any): PublicError => {
   return publicErrors[error.code] || "Something went wrong";
 };
 ```
+
+## RR-149 Incremental Sync Enhancement
+
+### Overview
+
+The incremental sync implementation significantly improves efficiency by:
+
+1. **Timestamp-Based Filtering**: Uses Inoreader's `ot` parameter to fetch only articles newer than the last sync
+2. **Read Article Exclusion**: Uses `xt=read` parameter to exclude already-read articles
+3. **Weekly Full Sync Fallback**: Performs complete sync every 7 days for data integrity
+4. **Article Retention Management**: Automatically enforces article limits during sync
+
+### Implementation Details
+
+```typescript
+// Incremental sync query construction
+const buildSyncQuery = async (userId: string): Promise<string> => {
+  const baseUrl = `/reader/api/0/stream/contents/user/${userId}/state/com.google/reading-list`;
+  const params = new URLSearchParams({
+    n: process.env.SYNC_MAX_ARTICLES || "500",
+    r: "n", // Newest first
+    xt: "read", // Exclude read articles
+  });
+
+  // Check if we need a full sync (weekly)
+  const lastFullSync = await getSyncMetadata("last_full_sync_time");
+  const daysSinceFullSync = lastFullSync
+    ? (Date.now() - lastFullSync.getTime()) / (1000 * 60 * 60 * 24)
+    : 7;
+
+  if (daysSinceFullSync < 7) {
+    // Incremental sync - add timestamp filter
+    const lastIncSync = await getSyncMetadata(
+      "last_incremental_sync_timestamp"
+    );
+    if (lastIncSync) {
+      params.set("ot", Math.floor(lastIncSync.getTime() / 1000).toString());
+    }
+  }
+
+  return `${baseUrl}?${params.toString()}`;
+};
+
+// Article retention enforcement
+const enforceArticleRetention = async (): Promise<void> => {
+  const retentionLimit = parseInt(
+    process.env.ARTICLES_RETENTION_LIMIT || "1000"
+  );
+  await ArticleCleanupService.enforceRetentionLimit(retentionLimit);
+};
+```
+
+### Sync Metadata Management
+
+New metadata keys for tracking incremental sync state:
+
+- `last_incremental_sync_timestamp`: Timestamp used for `ot` parameter in next sync
+- `last_full_sync_time`: Tracks when last complete sync was performed
+
+### Performance Benefits
+
+- **Reduced Data Transfer**: Only fetches new, unread articles
+- **Faster Sync Times**: Most incremental syncs process 0-50 articles vs 100-200
+- **Lower API Usage**: Maintains same call count with much less data
+- **Better User Experience**: Quicker syncs mean fresher content
+
+### Fallback Strategy
+
+Weekly full syncs ensure data integrity by:
+
+- Catching any articles missed due to timestamp issues
+- Synchronizing read states that may have drifted
+- Providing a complete data refresh
+
+## RR-154 HTML Entity Decoding Integration
+
+### Overview
+
+HTML entity decoding is seamlessly integrated into the sync pipeline to ensure all article titles and content display properly without raw HTML entities.
+
+### Implementation Details
+
+```typescript
+// Integration point in sync process
+import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
+
+// During article processing in /api/sync/route.ts
+const processedArticle = {
+  ...article,
+  title: decodeHtmlEntities(article.title) || "Untitled",
+  content: decodeHtmlEntities(
+    article.content?.content || article.summary?.content || ""
+  ),
+  // URLs are never decoded to preserve query parameters
+  url: article.url, // Always preserved as-is
+  canonical_url: article.canonical_url, // Always preserved as-is
+};
+```
+
+### Supported HTML Entities
+
+- **Quotation marks**: `&rsquo;` → `'`, `&lsquo;` → `'`, `&quot;` → `"`
+- **Ampersands**: `&amp;` → `&`
+- **Dashes**: `&ndash;` → `–`, `&mdash;` → `—`
+- **Brackets**: `&lt;` → `<`, `&gt;` → `>`
+- **Numeric entities**: `&#8217;` → `'`, `&#8220;` → `"`, `&#8221;` → `"`
+- **Hex entities**: `&#x2019;` → `'`, `&#x201C;` → `"`, `&#x201D;` → `"`
+
+### URL Safety
+
+Critical requirement: URLs are never decoded to prevent breaking query parameters like `?param1=value&amp;param2=value`.
+
+```typescript
+// URL detection patterns
+function isSafeUrl(text: string): boolean {
+  return (
+    text.startsWith("http://") ||
+    text.startsWith("https://") ||
+    text.startsWith("feed://") ||
+    text.includes("://") ||
+    (text.includes("?") && text.includes("&amp;"))
+  );
+}
+```
+
+### Performance Characteristics
+
+- **Speed**: <1ms per article, <200ms for 200 articles
+- **Memory**: Minimal overhead with streaming processing
+- **Reliability**: Uses 'he' library for standards-compliant decoding
+- **Error Handling**: Graceful fallback returns original text on decode failure
+
+### Migration Support
+
+Two migration scripts are provided for existing data:
+
+1. **`migrate-html-entities-simple.js`**: Direct database updates (recommended)
+2. **`migrate-html-entities.js`**: Backup-based migration with rollback capability
+
+### Integration Testing
+
+Comprehensive test coverage includes:
+
+- Unit tests for decoder functions
+- Integration tests for sync pipeline integration
+- E2E tests for user experience validation
+- Performance tests for large article batches
+
+### Monitoring
+
+Decoding failures are logged but don't block sync operations:
+
+```typescript
+// Error tracking for production monitoring
+console.warn("HTML entity decoding failed:", {
+  input: text.substring(0, 100), // Limited for privacy
+  error: error.message,
+  timestamp: new Date().toISOString(),
+});
+```
+
+## RR-171 Sync Status Metrics and UI Updates
+
+### Overview
+
+The RR-171 enhancement adds comprehensive sync status reporting and immediate UI updates through sidebar payload data, eliminating the need for separate client-side refreshes.
+
+### Sync Flow with Sidebar Data
+
+```
+Manual Sync Request → Show Skeletons → Execute Sync Steps → Prepare Sidebar Data → Return Response → Update UI → Hide Skeletons → Show Toast
+Background Sync → Execute Sync Steps → Prepare Sidebar Data → Return Response → Silent Update → Optional Info Toast
+```
+
+### Concurrency Control
+
+```typescript
+// Single sync guard prevents duplicate operations
+let syncInProgress = false;
+let syncDebounceTimer: NodeJS.Timeout;
+
+export async function handleSyncRequest(
+  request: SyncRequest
+): Promise<SyncResponse> {
+  // 500ms debounce to prevent rapid-fire requests
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+  }
+
+  return new Promise((resolve, reject) => {
+    syncDebounceTimer = setTimeout(async () => {
+      if (syncInProgress) {
+        reject(new Error("SYNC_IN_PROGRESS"));
+        return;
+      }
+
+      syncInProgress = true;
+      try {
+        const result = await performSyncWithMetrics();
+        resolve(result);
+      } finally {
+        syncInProgress = false;
+      }
+    }, 500);
+  });
+}
+```
+
+### Inoreader Rate Limiting UX
+
+The RSS reader implements intelligent rate limiting to handle Inoreader's API constraints:
+
+- **Rate Limit Detection**: Monitors HTTP 429 responses with `Retry-After` headers
+- **Visual Feedback**: Shows countdown timer on sync button when rate limited
+- **User Messaging**: Clear explanation of rate limits with estimated wait time
+- **Background Handling**: Automatically queues background sync operations
+
+```typescript
+interface RateLimitResponse {
+  error: "RATE_LIMITED";
+  message: "Sync rate limited. Please wait before trying again.";
+  retryAfter: number; // seconds
+  nextSyncAvailable: string; // ISO timestamp
+}
+```
+
+### Backend HTML Entity Decoding
+
+The sync process includes automatic HTML entity decoding for tags and content to prevent display issues like `India&#x2F;Canada` appearing instead of `India/Canada`. This processing occurs server-side during sync to ensure clean data storage and display.
+
+### Materialized View Timing Mitigation
+
+To address potential timing issues where materialized views might not be immediately updated, RR-171 includes sidebar payload data directly in the sync response. This eliminates the gap between sync completion and UI refresh by providing fresh counts and tags data immediately.
+
+```typescript
+interface SidebarPayload {
+  feedCounts: Array<{
+    feedId: string;
+    unreadCount: number;
+    totalCount: number;
+  }>;
+  tags: Array<{
+    id: string;
+    name: string;
+    count: number;
+  }>;
+  lastUpdated: string;
+}
+```
+
+## RR-163 Dynamic Sidebar Filtering - Tag-Based Article Filtering
+
+### Overview
+
+The RR-163 implementation adds comprehensive tag-based filtering to the sidebar, enabling users to filter articles dynamically based on Read/Unread/All status with real-time unread count tracking.
+
+### Enhanced Tag Data Model
+
+```typescript
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color?: string;
+  description?: string;
+  articleCount: number; // Total articles with this tag
+  unreadCount?: number; // RR-163: Unread articles with this tag
+  totalCount?: number; // RR-163: Explicit total (alias of articleCount)
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### API Enhancements
+
+#### Enhanced GET /api/tags Endpoint
+
+The `/api/tags` endpoint now includes per-user unread count calculation:
+
+```typescript
+// Enhanced response format
+interface TagsResponse {
+  tags: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    article_count: number;
+    unread_count: number; // RR-163: New field
+    // ... other tag fields
+  }>;
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+```
+
+**Implementation Details:**
+
+- Scopes unread count calculation to user's subscribed feeds only
+- Prevents cross-user data contamination
+- Uses optimized SQL joins: `articles → article_tags → tags`
+- Returns 0 for tags without unread articles
+
+```typescript
+// Per-user feed scoping query
+const { data: userFeeds } = await supabase
+  .from("feeds")
+  .select("id")
+  .eq("user_id", userData.id);
+
+const feedIds = userFeeds.map((f) => f.id);
+
+// Unread articles query scoped to user's feeds
+const { data: unreadCounts } = await supabase
+  .from("articles")
+  .select(
+    `
+    id,
+    article_tags!inner(
+      tag_id,
+      tags!inner(id)
+    )
+  `
+  )
+  .in("feed_id", feedIds)
+  .eq("is_read", false);
+```
+
+### Tag Store Integration
+
+#### Merge Strategy for Sync Updates
+
+```typescript
+// RR-163: Tag store merge logic
+applySidebarTags: (
+  sidebarTags: Array<{ id: string; name: string; count: number }>
+) => {
+  // Don't reset counts if sync returns no tags
+  if (sidebarTags.length === 0) {
+    console.log("No sidebar tags from sync, keeping existing unread counts");
+    return;
+  }
+
+  set((state) => {
+    const mergedTags = new Map(state.tags);
+
+    // Reset all unreadCounts to 0 (tags not in response have 0 unread)
+    mergedTags.forEach((tag) => {
+      tag.unreadCount = 0;
+    });
+
+    // Update with new unread counts from sync
+    sidebarTags.forEach((sidebarTag) => {
+      const existing = mergedTags.get(sidebarTag.id);
+      if (existing) {
+        existing.unreadCount = sidebarTag.count;
+      }
+    });
+
+    return { tags: mergedTags };
+  });
+};
+```
+
+#### Optimistic Updates
+
+```typescript
+// RR-163: Immediate UI updates when articles are marked read
+updateSelectedTagUnreadCount: (delta: number) => {
+  set((state) => {
+    // Only update if single tag selected
+    if (state.selectedTagIds.size !== 1) return state;
+
+    const tagId = Array.from(state.selectedTagIds)[0];
+    const updatedTags = new Map(state.tags);
+    const tag = updatedTags.get(tagId);
+
+    if (tag && tag.unreadCount !== undefined) {
+      // Bound at 0 to prevent negative counts
+      tag.unreadCount = Math.max(0, tag.unreadCount + delta);
+    }
+
+    return { tags: updatedTags };
+  });
+};
+```
+
+### Filtering Logic
+
+#### Three-Mode Filtering System
+
+```typescript
+// Sidebar filtering based on read status
+const filterTags = (
+  tags: Tag[],
+  readStatusFilter: string,
+  totalUnreadCount: number
+) => {
+  return tags.filter((tag) => {
+    // Always show currently selected tag
+    if (selectedTagId === tag.id) return true;
+
+    if (readStatusFilter === "unread") {
+      const hasUnread = (tag.unreadCount ?? 0) > 0;
+      const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
+
+      // If tag has unread, show it
+      if (hasUnread) return true;
+
+      // Fallback: If system has unread but no tags show unread counts,
+      // show all tags with articles (handles sync issues)
+      if (totalUnreadCount > 0 && hasArticles) {
+        const noTagsHaveUnread = tags.every((t) => (t.unreadCount ?? 0) === 0);
+        return noTagsHaveUnread;
+      }
+
+      return false;
+    } else if (readStatusFilter === "read") {
+      const totalCount = tag.totalCount ?? tag.articleCount;
+      const unreadCount = tag.unreadCount ?? 0;
+      return totalCount > 0 && unreadCount === 0;
+    } else {
+      // 'all' - show all non-empty tags
+      return (tag.totalCount ?? tag.articleCount) > 0;
+    }
+  });
+};
+```
+
+#### Smart Fallback Logic
+
+The system includes intelligent fallback behavior for edge cases:
+
+- **Normal Operation**: Shows tags with actual unread counts
+- **Sync Edge Case**: When system has unread articles but all tags show 0 unread count, shows all tags with articles using total counts
+- **Visual Indication**: In 'all' mode, dims tags with no unread articles using opacity
+
+### State Preservation Integration
+
+#### RR-27 Enhancement
+
+The implementation extends RR-27 state preservation to include tag context:
+
+```typescript
+interface UseArticleListStateProps {
+  articles: Map<string, Article>;
+  feedId: string | null;
+  folderId: string | null;
+  tagId?: string; // RR-163: Added for tag context preservation
+  readStatusFilter: string;
+  scrollContainerRef: React.RefObject<HTMLElement>;
+  onArticleClick: (article: Article) => void;
+  autoMarkObserverRef: React.MutableRefObject<IntersectionObserver | null>;
+}
+```
+
+This ensures that when users navigate back from article detail view, they return to the same tag filter instead of defaulting to "All Articles".
+
+### Mark-as-Read Integration
+
+#### Optimistic UI Updates
+
+Both single and batch mark-as-read operations trigger immediate tag count updates:
+
+```typescript
+// Single article mark-as-read
+await markArticlesAsReadWithSession([articleId], ...);
+
+// RR-163: Optimistically update selected tag unread count by -1
+try {
+  const { useTagStore } = await import('./tag-store');
+  const tagState = useTagStore.getState();
+  if (tagState.selectedTagIds.size === 1) {
+    tagState.updateSelectedTagUnreadCount(-1);
+  }
+} catch (e) {
+  console.warn('Failed to optimistically update tag unread count:', e);
+}
+
+// Batch article mark-as-read (auto-read)
+await markArticlesAsReadWithSession(articlesToMark, ...);
+
+// RR-163: Optimistically update selected tag unread count by -N
+try {
+  const { useTagStore } = await import('./tag-store');
+  const tagState = useTagStore.getState();
+  if (tagState.selectedTagIds.size === 1) {
+    tagState.updateSelectedTagUnreadCount(-articlesToMark.length);
+  }
+} catch (e) {
+  console.warn('Failed to optimistically update tag unread count (batch):', e);
+}
+```
+
+### Data Flow Architecture
+
+```
+User Loads App → Tag Store loads from /api/tags with unread_count → Immediate display with accurate counts
+                                    ↓
+User Marks Article Read → Optimistic UI Update (-1 unread) → Background sync to Inoreader → Sync response updates counts
+                                    ↓
+User Syncs Manually → Fetch from Inoreader → Update database → /api/tags recalculates → Tag store merges new counts
+```
+
+### Performance Considerations
+
+- **Immediate Load**: Tags display with unread counts on initial page load (no sync required)
+- **Optimistic Updates**: UI updates immediately when articles are marked read
+- **Efficient Queries**: Per-user scoping prevents unnecessary data processing
+- **Smart Caching**: Tag store preserves existing tags and only updates counts
+- **Fallback Performance**: Fallback logic executes only when needed
+
+### Error Handling
+
+```typescript
+// Graceful error handling for optimistic updates
+try {
+  tagState.updateSelectedTagUnreadCount(-1);
+} catch (e) {
+  // Non-fatal; sidebar counts will refresh on next sync
+  console.warn("Failed to optimistically update tag unread count:", e);
+}
+```
+
+### Integration Testing
+
+Key test scenarios for RR-163:
+
+- Tag filtering accuracy across all three modes (unread/read/all)
+- Optimistic update synchronization with actual data
+- Fallback behavior when tag associations are incomplete
+- State preservation during navigation
+- Cross-device sync consistency
+
+This comprehensive tag filtering system provides users with accurate, real-time article filtering capabilities while maintaining optimal performance and reliable data synchronization.
+
+## Conclusion
 
 This comprehensive API integration plan ensures efficient use of both Inoreader and Claude APIs while maintaining good user experience and staying within rate limits.

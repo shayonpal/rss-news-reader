@@ -18,13 +18,13 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
   beforeAll(async () => {
     // Start Next.js server for testing with basePath configuration
     // CRITICAL FIX: Use separate build directory to avoid webpack collision
-    app = next({ 
-      dev, 
-      dir: process.cwd(), 
-      conf: { 
-        basePath: '/reader',
-        distDir: '.next-test'  // <-- THIS IS THE FIX!
-      } 
+    app = next({
+      dev,
+      dir: process.cwd(),
+      conf: {
+        basePath: "/reader",
+        distDir: ".next-test", // <-- THIS IS THE FIX!
+      },
     });
     const handle = app.getRequestHandler();
     await app.prepare();
@@ -45,14 +45,16 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
   afterAll(async () => {
     await new Promise((resolve) => server.close(resolve));
     // Clean up test build directory
-    const { execSync } = require('child_process');
-    execSync('rm -rf .next-test', { stdio: 'ignore' });
+    const { execSync } = require("child_process");
+    execSync("rm -rf .next-test", { stdio: "ignore" });
   });
 
   // Rest of the tests remain the same...
   describe("Production Health Endpoints", () => {
     it("should return 200 for /reader/api/health/app", async () => {
-      const response = await fetch(`http://localhost:${port}/reader/api/health/app`);
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/health/app`
+      );
       expect(response.status).toBe(200);
 
       const data = await response.json();

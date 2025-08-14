@@ -29,7 +29,6 @@ This server handles all Inoreader API communication for the RSS Reader PWA.
    ```
 
    This will:
-
    - Start a local Express server on port 8080
    - Open a browser window with Playwright
    - Automatically log in to Inoreader

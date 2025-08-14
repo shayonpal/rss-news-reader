@@ -1,6 +1,6 @@
 ---
 description: Get comprehensive context of the RSS Reader PWA project including documentation, architecture, and database schema
-argument-hint: 
+argument-hint:
 ---
 
 # Get Project Context

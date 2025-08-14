@@ -11,7 +11,9 @@ This document provides step-by-step manual testing procedures for the complete r
 **Objective**: Establish baseline service health before making changes.
 
 **Steps**:
+
 1. Execute monitoring dashboard:
+
    ```bash
    cd /Users/shayon/DevProjects/rss-news-reader
    ./scripts/monitor-dashboard.sh
@@ -19,7 +21,7 @@ This document provides step-by-step manual testing procedures for the complete r
 
 2. Verify all services show green status:
    - ✅ App: Healthy
-   - ✅ Sync Server: Healthy  
+   - ✅ Sync Server: Healthy
    - ✅ Database: Healthy
    - ✅ PM2 processes: Online
    - ✅ Last Sync: Recent (< 5 hours)
@@ -28,6 +30,7 @@ This document provides step-by-step manual testing procedures for the complete r
 3. Document any existing issues in baseline state.
 
 **Expected Results**:
+
 - Monitor dashboard completes without critical errors
 - Freshness API returns valid response (200 or 503)
 - All other health endpoints functional
@@ -35,20 +38,22 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 2. Endpoint Accessibility Test
 
 **Steps**:
+
 1. Test all health endpoints manually:
+
    ```bash
    # App health
    curl -s http://100.96.166.53:3000/reader/api/health/app | jq .
-   
-   # Database health  
+
+   # Database health
    curl -s http://100.96.166.53:3000/reader/api/health/db | jq .
-   
+
    # Cron health
    curl -s http://100.96.166.53:3000/reader/api/health/cron | jq .
-   
+
    # Freshness (currently working)
    curl -s http://100.96.166.53:3000/reader/api/health/freshness | jq .
-   
+
    # Sync server health
    curl -s http://localhost:3001/server/health | jq .
    ```
@@ -56,6 +61,7 @@ This document provides step-by-step manual testing procedures for the complete r
 2. Document response status and key fields for each endpoint.
 
 **Expected Results**:
+
 - All endpoints return valid JSON responses
 - Status codes are 200 (healthy) or 503 (degraded)
 - Response structures include `status` and `timestamp` fields
@@ -63,21 +69,24 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 3. Monitoring Integration Test
 
 **Steps**:
+
 1. Check Uptime Kuma monitors:
    - Access http://localhost:3080
    - Verify "RSS Reader - Article Freshness" monitor exists and is functional
    - Note current status and response times
 
 2. Verify monitoring scripts work:
+
    ```bash
    # Test sync health monitor
    ./scripts/sync-health-monitor.sh --check
-   
+
    # Test build validation
    ./scripts/validate-build.sh --mode quick
    ```
 
 **Expected Results**:
+
 - Uptime Kuma shows freshness monitor as operational
 - Monitoring scripts complete without errors
 - Scripts include freshness endpoint checks
@@ -89,19 +98,23 @@ This document provides step-by-step manual testing procedures for the complete r
 **After removing** `src/app/api/health/freshness/route.ts`:
 
 **Steps**:
+
 1. Verify route file is deleted:
+
    ```bash
    ls -la src/app/api/health/freshness/
    # Should return "No such file or directory"
    ```
 
 2. Test endpoint accessibility:
+
    ```bash
    curl -s http://100.96.166.53:3000/reader/api/health/freshness
    # Should return 404 or connection error
    ```
 
 3. Verify other endpoints still work:
+
    ```bash
    curl -s http://100.96.166.53:3000/reader/api/health/app | jq .status
    curl -s http://100.96.166.53:3000/reader/api/health/db | jq .status
@@ -113,6 +126,7 @@ This document provides step-by-step manual testing procedures for the complete r
    - Confirm article list loads (if data available)
 
 **Expected Results**:
+
 - Freshness endpoint returns 404
 - Other health endpoints remain functional
 - Main application loads without errors
@@ -122,13 +136,16 @@ This document provides step-by-step manual testing procedures for the complete r
 **After removing** `src/__tests__/unit/health-endpoints/freshness.test.ts`:
 
 **Steps**:
+
 1. Verify test file is deleted:
+
    ```bash
    ls -la src/__tests__/unit/health-endpoints/freshness.test.ts
    # Should return "No such file or directory"
    ```
 
 2. Run unit test suite:
+
    ```bash
    npm run test:unit
    ```
@@ -136,6 +153,7 @@ This document provides step-by-step manual testing procedures for the complete r
 3. Verify no failing tests due to missing freshness tests.
 
 **Expected Results**:
+
 - Unit test suite passes
 - No references to deleted freshness test file
 - Coverage reports don't include freshness API
@@ -145,12 +163,15 @@ This document provides step-by-step manual testing procedures for the complete r
 **After updating integration test files**:
 
 **Steps**:
+
 1. Run integration test suite:
+
    ```bash
    npm run test:integration
    ```
 
 2. Verify specific test files no longer reference freshness:
+
    ```bash
    grep -r "freshness" src/__tests__/integration/ || echo "No freshness references found"
    ```
@@ -163,6 +184,7 @@ This document provides step-by-step manual testing procedures for the complete r
    - `rr-71-api-routes.test.ts`
 
 **Expected Results**:
+
 - Integration tests pass without freshness endpoint tests
 - No broken test references
 - Test coverage remains adequate for remaining endpoints
@@ -172,7 +194,9 @@ This document provides step-by-step manual testing procedures for the complete r
 **After updating monitoring scripts**:
 
 **Steps**:
+
 1. Test updated monitor dashboard:
+
    ```bash
    ./scripts/monitor-dashboard.sh
    ```
@@ -183,11 +207,13 @@ This document provides step-by-step manual testing procedures for the complete r
    - Should complete without errors
 
 3. Test sync health monitor:
+
    ```bash
    ./scripts/sync-health-monitor.sh --check
    ```
 
 4. Test build validation:
+
    ```bash
    ./scripts/validate-build.sh --mode quick
    ```
@@ -198,6 +224,7 @@ This document provides step-by-step manual testing procedures for the complete r
    ```
 
 **Expected Results**:
+
 - Monitor dashboard works without freshness section
 - Other monitoring functions remain intact
 - Build validation passes
@@ -208,19 +235,21 @@ This document provides step-by-step manual testing procedures for the complete r
 **After removing freshness monitor from Uptime Kuma**:
 
 **Steps**:
+
 1. Access Uptime Kuma dashboard: http://localhost:3080
 
 2. Verify "RSS Reader - Article Freshness" monitor is removed or disabled
 
 3. Confirm other monitors still function:
    - RSS Reader - App Health
-   - RSS Reader - Database Health  
+   - RSS Reader - Database Health
    - RSS Reader - Cron Health
    - RSS Reader - Sync API Endpoint
 
 4. Test alert functionality with remaining monitors
 
 **Expected Results**:
+
 - Freshness monitor removed from Uptime Kuma
 - Other monitors continue working
 - Alert notifications still functional
@@ -230,7 +259,9 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 1. Full System Health Check
 
 **Steps**:
+
 1. Run complete monitoring dashboard:
+
    ```bash
    ./scripts/monitor-dashboard.sh
    ```
@@ -249,6 +280,7 @@ This document provides step-by-step manual testing procedures for the complete r
    ```
 
 **Expected Results**:
+
 - Monitor dashboard completes successfully
 - No freshness-related errors in output
 - All other monitoring functions work normally
@@ -256,6 +288,7 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 2. Application Functionality Test
 
 **Steps**:
+
 1. Load main application: http://100.96.166.53:3000/reader
 
 2. Test core functionality:
@@ -265,6 +298,7 @@ This document provides step-by-step manual testing procedures for the complete r
    - Page performance acceptable
 
 3. Test sync functionality:
+
    ```bash
    curl -X POST http://100.96.166.53:3000/reader/api/sync
    ```
@@ -277,6 +311,7 @@ This document provides step-by-step manual testing procedures for the complete r
    ```
 
 **Expected Results**:
+
 - Application loads and functions normally
 - Core features work without freshness dependency
 - Health endpoints provide adequate monitoring coverage
@@ -284,17 +319,21 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 3. Test Suite Execution
 
 **Steps**:
+
 1. Run complete test suite:
+
    ```bash
    npm run test
    ```
 
 2. Run pre-commit checks:
+
    ```bash
    npm run pre-commit
    ```
 
 3. Verify build process:
+
    ```bash
    npm run build
    ```
@@ -302,6 +341,7 @@ This document provides step-by-step manual testing procedures for the complete r
 4. Check test coverage reports for completeness
 
 **Expected Results**:
+
 - All tests pass
 - Pre-commit checks succeed
 - Build completes successfully
@@ -310,7 +350,9 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 4. Performance and Stability Test
 
 **Steps**:
+
 1. Monitor system resources during operation:
+
    ```bash
    pm2 monit
    ```
@@ -325,6 +367,7 @@ This document provides step-by-step manual testing procedures for the complete r
    ```
 
 **Expected Results**:
+
 - System performance unchanged
 - No memory leaks detected
 - Sync process continues normally
@@ -335,6 +378,7 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 1. Core Feature Verification
 
 **Test Article Reading Flow**:
+
 1. Load application
 2. Navigate to article (if available)
 3. Mark as read/unread
@@ -342,12 +386,14 @@ This document provides step-by-step manual testing procedures for the complete r
 5. Verify changes persist
 
 **Test Sync Process**:
+
 1. Trigger manual sync
 2. Verify sync completes successfully
 3. Check sync logs for errors
 4. Confirm article data updates
 
 **Test Monitoring**:
+
 1. Check all remaining health endpoints
 2. Verify monitoring alerts work
 3. Test PM2 service management
@@ -356,18 +402,21 @@ This document provides step-by-step manual testing procedures for the complete r
 ### 2. Integration Point Testing
 
 **Database Operations**:
+
 - Verify article queries work
 - Check sync metadata updates
 - Confirm RLS policies function
 - Test materialized view refresh
 
 **API Endpoints**:
+
 - Health endpoints respond correctly
 - Sync API functions properly
 - Error handling works
 - Rate limiting active
 
 **Monitoring Systems**:
+
 - Uptime Kuma monitors function
 - Discord alerts work
 - Log rotation operates
@@ -380,22 +429,26 @@ This document provides step-by-step manual testing procedures for the complete r
 **If rollback is needed**:
 
 1. **Restore freshness API file**:
+
    ```bash
    git checkout HEAD~1 -- src/app/api/health/freshness/route.ts
    ```
 
 2. **Verify endpoint works**:
+
    ```bash
    curl http://100.96.166.53:3000/reader/api/health/freshness | jq .
    ```
 
 3. **Restore monitoring scripts**:
+
    ```bash
    git checkout HEAD~1 -- scripts/monitor-dashboard.sh
    git checkout HEAD~1 -- scripts/setup-sync-monitors.js
    ```
 
 4. **Test complete system**:
+
    ```bash
    ./scripts/monitor-dashboard.sh
    npm run test
@@ -440,18 +493,22 @@ This document provides step-by-step manual testing procedures for the complete r
 ### Common Issues and Solutions
 
 **Issue**: Monitor dashboard fails after removal
+
 - **Solution**: Check script syntax, verify remaining endpoints work
 - **Rollback**: Restore monitoring scripts if critical
 
 **Issue**: Uptime Kuma shows errors
+
 - **Solution**: Remove/disable freshness monitor, verify other monitors
 - **Mitigation**: Use remaining health endpoints for monitoring
 
 **Issue**: Test suite failures
+
 - **Solution**: Check for remaining freshness references, update tests
 - **Verification**: Run individual test files to isolate issues
 
 **Issue**: Application errors
+
 - **Solution**: Check console logs, verify no freshness dependencies
 - **Safety**: Core app should not depend on freshness API
 

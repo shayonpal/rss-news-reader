@@ -34,7 +34,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
 
   describe("Production Health Endpoints", () => {
     it("should return 200 for /reader/api/health/app", async () => {
-      const response = await fetch(`http://localhost:${port}/reader/api/health/app`);
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/health/app`
+      );
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -45,7 +47,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
 
     // RR-114: Enhanced version property integration tests
     it("should return valid version property format in /reader/api/health/app", async () => {
-      const response = await fetch(`http://localhost:${port}/reader/api/health/app`);
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/health/app`
+      );
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -71,7 +75,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
     });
 
     it("should return 200 for /reader/api/health/db", async () => {
-      const response = await fetch(`http://localhost:${port}/reader/api/health/db`);
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/health/db`
+      );
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -81,7 +87,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
 
     // RR-114: Connection property alias integration tests
     it("should return connection property as alias for database property in /reader/api/health/db", async () => {
-      const response = await fetch(`http://localhost:${port}/reader/api/health/db`);
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/health/db`
+      );
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -90,7 +98,7 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
       expect(data.connection).toBe(data.database); // Alias should match database value
       expect(typeof data.database).toBe("string");
       expect(typeof data.connection).toBe("string");
-      
+
       // Verify common database status values
       const validStatuses = ["connected", "unavailable", "error", "slow"];
       expect(validStatuses).toContain(data.database);
@@ -98,7 +106,9 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
     });
 
     it("should return 200 for /reader/api/health/cron", async () => {
-      const response = await fetch(`http://localhost:${port}/reader/api/health/cron`);
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/health/cron`
+      );
       expect(response.status).toBe(200);
 
       const data = await response.json();
@@ -153,9 +163,12 @@ describe("Health Endpoints - Post RR-69 Verification", () => {
     it("should serve specific article endpoints", async () => {
       // Test that article-specific endpoints exist (even if they return errors without params)
       // Note: /api/articles and /api/feeds base endpoints don't exist - data is fetched via Supabase directly
-      const response = await fetch(`http://localhost:${port}/reader/api/articles/test-id/fetch-content`, {
-        method: 'POST'
-      });
+      const response = await fetch(
+        `http://localhost:${port}/reader/api/articles/test-id/fetch-content`,
+        {
+          method: "POST",
+        }
+      );
       // Should return 400 or 404 for invalid ID, not route-not-found
       expect([400, 404, 500]).toContain(response.status);
     });

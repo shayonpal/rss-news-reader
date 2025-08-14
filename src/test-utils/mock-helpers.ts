@@ -10,7 +10,7 @@ export function mockWindowReload() {
     if (!(window as any).__originalReload) {
       (window as any).__originalReload = window.location.reload;
     }
-    
+
     // Override with mock
     window.location.reload = vi.fn();
   }
@@ -21,7 +21,11 @@ export function mockWindowReload() {
  * Call this in afterEach hooks
  */
 export function restoreWindowReload() {
-  if (typeof window !== "undefined" && window.location && (window as any).__originalReload) {
+  if (
+    typeof window !== "undefined" &&
+    window.location &&
+    (window as any).__originalReload
+  ) {
     window.location.reload = (window as any).__originalReload;
   }
 }
@@ -31,12 +35,12 @@ export function restoreWindowReload() {
  */
 export function mockEnvironment(env: Partial<typeof process.env> = {}) {
   const originalEnv = { ...process.env };
-  
+
   Object.assign(process.env, {
     NODE_ENV: "test",
-    ...env
+    ...env,
   });
-  
+
   return () => {
     process.env = originalEnv;
   };
@@ -45,7 +49,10 @@ export function mockEnvironment(env: Partial<typeof process.env> = {}) {
 /**
  * Create mock fetch response
  */
-export function createMockFetchResponse(data: any, options: Partial<Response> = {}) {
+export function createMockFetchResponse(
+  data: any,
+  options: Partial<Response> = {}
+) {
   return vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
@@ -55,7 +62,7 @@ export function createMockFetchResponse(data: any, options: Partial<Response> = 
     blob: vi.fn().mockResolvedValue(new Blob([JSON.stringify(data)])),
     arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
     headers: new Headers({ "Content-Type": "application/json" }),
-    ...options
+    ...options,
   });
 }
 
@@ -69,6 +76,6 @@ export function createMockErrorResponse(status: number, message: string) {
     statusText: message,
     json: vi.fn().mockResolvedValue({ error: message }),
     text: vi.fn().mockResolvedValue(message),
-    headers: new Headers({ "Content-Type": "application/json" })
+    headers: new Headers({ "Content-Type": "application/json" }),
   });
 }

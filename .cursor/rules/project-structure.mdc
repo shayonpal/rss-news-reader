@@ -1,0 +1,24 @@
+---
+description: High-level map of the codebase for navigation and discovery
+alwaysApply: false
+---
+# Project Structure
+
+- Next.js App Router app lives in [src/app](mdc:src/app). Pages, API routes, and route handlers are here.
+- UI components are in [src/components](mdc:src/components).
+- Shared libraries in [src/lib](mdc:src/lib):
+  - `db/` for SQL migrations and types
+  - `services/` for domain services (sync, parsing, cleanup)
+  - `api/` for API helpers (headers, rate limiter)
+  - `utils/` for helpers (HTML decode/escape, navigation state)
+- Global types in [src/types](mdc:src/types).
+- Hooks in [src/hooks](mdc:src/hooks).
+- Tests in [src/__tests__](mdc:src/__tests__) with unit/integration/e2e tiers, plus test utils and setup files.
+- Root runtime server endpoints (monitoring, health) in [src/app/api](mdc:src/app/api).
+- A separate legacy/aux server exists under [server/](mdc:server) for scripts/tests and possible service endpoints.
+- Config and tooling at repo root: [tsconfig.json](mdc:tsconfig.json), [vitest.config.ts](mdc:vitest.config.ts), [.eslintrc.json](mdc:.eslintrc.json), [.prettierrc](mdc:.prettierrc), [next.config.mjs](mdc:next.config.mjs), [tailwind.config.ts](mdc:tailwind.config.ts).
+
+Conventions:
+- Prefer colocating feature-specific logic under `src/lib` and referencing from routes/components.
+- Keep route handlers minimal; call services in `src/lib/services`.
+- Reference environment shape from docs: [docs/deployment/environment-variables.md](mdc:docs/deployment/environment-variables.md).

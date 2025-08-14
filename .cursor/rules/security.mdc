@@ -1,0 +1,18 @@
+---
+description: Security, validation, and safe defaults referenced by RR-67/RR-69
+---
+# Security & Validation
+
+References:
+- Security tests: [src/__tests__/unit/rr-67-security-validation.test.ts](mdc:src/__tests__/unit/rr-67-security-validation.test.ts), [src/__tests__/integration/rr-67-security-fixes.test.ts](mdc:src/__tests__/integration/rr-67-security-fixes.test.ts), [src/__tests__/contracts/rr-67-security-fixes.contract.ts](mdc:src/__tests__/contracts/rr-67-security-fixes.contract.ts)
+- Tech doc: [docs/tech/security.md](mdc:docs/tech/security.md)
+
+Guidelines:
+- Validate and sanitize all external inputs at API boundaries in `src/app/api/**/route.ts`.
+- Enforce rate limiting for public endpoints via `src/lib/api/rate-limiter.ts`.
+- Never leak internal error details to clients; use safe error mappers.
+- HTML decoding must not alter URLs; only decode text content (RR-154). See [src/lib/utils/html-decoder.ts](mdc:src/lib/utils/html-decoder.ts).
+- Store secrets in environment variables; forbid client exposure of server-only keys.
+
+Testing:
+- Do not skip security tests. Keep RR-67/RR-69 tests green before merge.

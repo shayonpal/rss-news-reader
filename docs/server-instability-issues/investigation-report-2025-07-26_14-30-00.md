@@ -154,12 +154,10 @@ Over the past 2 days, the RSS News Reader PWA has experienced severe instability
    ```
 
 3. **Fix Token Path Resolution**
-
    - Use absolute path: `/Users/shayon/.rss-reader/tokens.json`
    - Or set HOME explicitly in ecosystem.config.js
 
 4. **Update PM2 Configuration**
-
    - Ensure all services use fork mode
    - Add proper environment variables
    - Implement exponential backoff for restarts
@@ -175,19 +173,16 @@ Over the past 2 days, the RSS News Reader PWA has experienced severe instability
 ### Short-term Fixes (Next 24-48 hours)
 
 1. **Implement Startup Health Checks**
-
    - Add pre-flight checks before starting services
    - Verify all dependencies accessible
    - Check database connectivity
 
 2. **Create Recovery Scripts**
-
    - Automated build verification
    - Service dependency checks
    - Graceful degradation options
 
 3. **Improve Logging**
-
    - Add detailed startup logs
    - Log environment variables (sanitized)
    - Track resource usage
@@ -200,25 +195,21 @@ Over the past 2 days, the RSS News Reader PWA has experienced severe instability
 ### Long-term Improvements
 
 1. **Implement Uptime Kuma Monitoring** (TODO-039)
-
    - Deploy as documented
    - Configure all health endpoints
    - Set up Discord notifications
 
 2. **Create Deployment Pipeline**
-
    - Automated build verification
    - Blue-green deployment strategy
    - Rollback capabilities
 
 3. **Improve Error Handling**
-
    - Graceful shutdown handlers
    - Proper error boundaries
    - Circuit breakers for external services
 
 4. **Resource Management**
-
    - Implement connection pooling
    - Add memory leak detection
    - Monitor file descriptor usage

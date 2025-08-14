@@ -84,11 +84,12 @@ export function FetchContentButton({
         onPress={handleAction}
         size={size}
         active={false}
-        label={hasFullContent ? "Revert to RSS content" : "Fetch full content"}
+        label={hasFullContent ? "Revert" : "Fetch"}
         disabled={isLoading}
         loading={isLoading}
         loadingIcon={Loader2}
         className={className}
+        showLabel={size !== "sm"}
       />
     );
   }
@@ -108,7 +109,7 @@ export function FetchContentButton({
         {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            {hasFullContent ? "Reverting..." : "Fetching full content..."}
+            {hasFullContent ? "Reverting..." : "Fetching..."}
           </>
         ) : hasFullContent ? (
           <>
@@ -118,7 +119,7 @@ export function FetchContentButton({
         ) : (
           <>
             <Download className="h-4 w-4" />
-            Fetch Full Content
+            Fetch
           </>
         )}
       </IOSButton>

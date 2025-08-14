@@ -130,7 +130,6 @@ All health endpoints are unauthenticated and expose system information:
    ```
 
 2. **Secure Discord Webhooks**
-
    - Move all webhook URLs to environment variables
    - Update scripts to use `${DISCORD_WEBHOOK_URL}`
    - Add to `.env`: `DISCORD_WEBHOOK_URL=your_webhook_here`
@@ -154,17 +153,14 @@ All health endpoints are unauthenticated and expose system information:
 ### Short-term Improvements
 
 1. **Implement Rate Limiting**
-
    - Add rate limiting to all public endpoints
    - Use middleware for consistent enforcement
 
 2. **Enhance Access Control**
-
    - Implement API key authentication for health endpoints
    - Add IP whitelisting for monitoring endpoints
 
 3. **Audit Logging**
-
    - Log all access to sensitive endpoints
    - Implement structured logging with appropriate levels
 
@@ -175,13 +171,11 @@ All health endpoints are unauthenticated and expose system information:
 ### Long-term Security Strategy
 
 1. **Security Monitoring**
-
    - Implement intrusion detection
    - Add anomaly detection for API usage
    - Regular security audits
 
 2. **Secret Management**
-
    - Consider using a secret management service
    - Implement secret rotation policies
 

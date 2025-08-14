@@ -361,7 +361,7 @@ class CronSyncService {
 
     // Schedule is '0 2,6,10,14,18,22 * * *' (6x daily)
     const scheduledHours = [2, 6, 10, 14, 18, 22];
-    
+
     // Find next scheduled hour
     for (const scheduledHour of scheduledHours) {
       if (hour < scheduledHour || (hour === scheduledHour && minutes === 0)) {
@@ -371,7 +371,7 @@ class CronSyncService {
         return next.toISOString();
       }
     }
-    
+
     // If we're past all today's scheduled times, next run is 2am tomorrow
     const next = new Date(now);
     next.setDate(next.getDate() + 1);
@@ -382,22 +382,31 @@ class CronSyncService {
   async refreshMaterializedView() {
     try {
       console.log("[Cron] Refreshing materialized view feed_stats...");
-      
+
       // Call the API endpoint to refresh the materialized view
-      const response = await fetch(`${this.apiUrl}/reader/api/sync/refresh-view`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await fetch(
+        `${this.apiUrl}/reader/api/sync/refresh-view`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (response.ok) {
         console.log("[Cron] Materialized view refreshed successfully");
       } else {
         // Log error but don't fail the sync
-        console.error("[Cron] Failed to refresh materialized view:", response.status);
+        console.error(
+          "[Cron] Failed to refresh materialized view:",
+          response.status
+        );
       }
     } catch (error) {
       // Log error but don't fail the sync - view refresh is non-critical
-      console.error("[Cron] Error refreshing materialized view:", error.message);
+      console.error(
+        "[Cron] Error refreshing materialized view:",
+        error.message
+      );
     }
   }
 }

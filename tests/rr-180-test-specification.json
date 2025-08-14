@@ -1,0 +1,231 @@
+{
+  "infrastructure_health": {
+    "typescript_compilation": "pass",
+    "test_discovery": "pass",
+    "configuration_files": {
+      "tsconfig.json": "valid",
+      "test-setup.ts": "valid",
+      "test-matchers.d.ts": "exists"
+    },
+    "can_proceed": true,
+    "validation_timestamp": "2025-08-11T14:30:00Z"
+  },
+  "test_plan": {
+    "linear_issue": "RR-180",
+    "scope": "iOS 26 Liquid Glass morphing animation for article detail dropdown",
+    "acceptance_criteria": [
+      "Glass buttons have 48px minimum touch targets",
+      "Morphing animations complete in 300ms with spring easing",
+      "Glass effects use backdrop-filter blur(16px) saturate(180%)",
+      "No gray flash or 300ms delay on touch interactions",
+      "Components respect prefers-reduced-motion",
+      "Dropdown closes on ESC key and outside clicks",
+      "Fetch Stats button removed from dropdown",
+      "Progressive migration starting with article detail"
+    ],
+    "test_categories": [
+      {
+        "category": "Component Specifications",
+        "tests": [
+          "GlassButton renders with 48px minimum touch target",
+          "GlassButton scales to 0.96 on active state",
+          "GlassButton applies blur(16px) saturate(180%) effects",
+          "GlassIconButton maintains 48px touch target for icons",
+          "GlassToolbarButton optimized for horizontal layout",
+          "All glass components prevent gray flash on touch"
+        ],
+        "priority": "critical"
+      },
+      {
+        "category": "Animation Behavior",
+        "tests": [
+          "Dropdown morphs open in exactly 300ms",
+          "Animation uses spring easing (cubic-bezier)",
+          "Dropdown expands inline without position jump",
+          "Border radius maintains 22px during animation",
+          "Animation respects prefers-reduced-motion",
+          "Frame rate maintains 60fps during animation"
+        ],
+        "priority": "critical"
+      },
+      {
+        "category": "Touch Interactions",
+        "tests": [
+          "Touch targets meet iOS HIG 44x44px standard",
+          "No webkit tap highlight (gray flash)",
+          "Immediate visual feedback on touch (scale transform)",
+          "Rapid taps handled without 300ms delay",
+          "Touch gestures (swipe) properly handled",
+          "Safe area insets respected on notched devices"
+        ],
+        "priority": "critical"
+      },
+      {
+        "category": "Dropdown Functionality",
+        "tests": [
+          "Closes on ESC key press",
+          "Closes on outside click/tap",
+          "Item clicks trigger handlers correctly",
+          "Fetch Stats button not present",
+          "Expected actions (AI Summary, Share, Archive) present",
+          "Focus trap when open"
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Performance",
+        "tests": [
+          "Component render under 50ms",
+          "Animation completes in 300ms ± 10ms",
+          "60fps maintained (< 5% frame drops)",
+          "Touch response under 100ms",
+          "Memory usage < 5MB during animation",
+          "No memory leaks over 100 iterations"
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Accessibility",
+        "tests": [
+          "WCAG 2.1 AA compliance (no violations)",
+          "Keyboard navigation support",
+          "Screen reader compatibility (ARIA labels)",
+          "Focus management and restoration",
+          "Color contrast ratios ≥ 4.5:1",
+          "VoiceOver navigation support"
+        ],
+        "priority": "high"
+      },
+      {
+        "category": "Visual Styling",
+        "tests": [
+          "Glass blur effect (16px) renders correctly",
+          "Saturation (180%) applied properly",
+          "Light/dark mode color adaptation",
+          "Semi-transparent backgrounds",
+          "22px border radius consistency",
+          "Proper layering and z-index"
+        ],
+        "priority": "medium"
+      }
+    ]
+  },
+  "test_files_generated": [
+    {
+      "path": "src/__tests__/unit/rr-180-glass-morphing.test.ts",
+      "type": "unit",
+      "test_count": 24,
+      "categories": [
+        "Component specs",
+        "Animation",
+        "Interactions",
+        "Integration"
+      ]
+    },
+    {
+      "path": "src/__tests__/e2e/rr-180-iphone-glass-morphing.spec.ts",
+      "type": "e2e",
+      "test_count": 18,
+      "categories": [
+        "Touch targets",
+        "Performance",
+        "Safe area",
+        "Accessibility"
+      ]
+    },
+    {
+      "path": "src/__tests__/performance/rr-180-glass-performance.test.ts",
+      "type": "performance",
+      "test_count": 10,
+      "categories": [
+        "Render speed",
+        "Animation fps",
+        "Memory usage",
+        "Touch response"
+      ]
+    },
+    {
+      "path": "src/__tests__/accessibility/rr-180-glass-a11y.test.ts",
+      "type": "accessibility",
+      "test_count": 16,
+      "categories": [
+        "WCAG compliance",
+        "Keyboard nav",
+        "Screen readers",
+        "Focus management"
+      ]
+    }
+  ],
+  "implementation_requirements": {
+    "components_to_create": [
+      "GlassButton: Base glass button with 48px touch target",
+      "GlassIconButton: Icon-only variant maintaining 48px size",
+      "GlassToolbarButton: Horizontal layout variant with icon+label",
+      "MorphingDropdown: Animated dropdown with spring easing"
+    ],
+    "styles_required": [
+      "backdrop-filter: blur(16px) saturate(180%)",
+      "-webkit-backdrop-filter for Safari/iOS",
+      "border-radius: 22px consistency",
+      "transition: all 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+      "transform: scale(0.96) for active state",
+      "-webkit-tap-highlight-color: transparent",
+      "touch-action: manipulation"
+    ],
+    "behavior_requirements": [
+      "Dropdown morphs from trigger button position",
+      "ESC key and outside click handlers",
+      "Focus trap when dropdown is open",
+      "Restore focus to trigger on close",
+      "Respect prefers-reduced-motion media query",
+      "Remove Fetch Stats from action list"
+    ],
+    "ios_specific": [
+      "Safe area inset handling (env vars)",
+      "No 300ms tap delay (touch-action: manipulation)",
+      "44x44px minimum touch targets (iOS HIG)",
+      "Webkit-specific CSS properties",
+      "Smooth 60fps on iPhone 14+"
+    ]
+  },
+  "test_execution_commands": [
+    "# Unit tests",
+    "npx vitest run --no-coverage src/__tests__/unit/rr-180-glass-morphing.test.ts",
+    "",
+    "# E2E tests (iPhone PWA)",
+    "npx playwright test rr-180-iphone-glass-morphing --project='Mobile Safari'",
+    "",
+    "# Performance tests",
+    "npx vitest run --no-coverage src/__tests__/performance/rr-180-glass-performance.test.ts",
+    "",
+    "# Accessibility tests",
+    "npx vitest run --no-coverage src/__tests__/accessibility/rr-180-glass-a11y.test.ts",
+    "",
+    "# All RR-180 tests",
+    "npx vitest run --no-coverage src/__tests__/**/*rr-180*.test.ts",
+    "npx playwright test rr-180"
+  ],
+  "expected_test_results": {
+    "total_tests": 68,
+    "unit_tests": 24,
+    "e2e_tests": 18,
+    "performance_tests": 10,
+    "accessibility_tests": 16,
+    "expected_pass_rate": "100%",
+    "critical_tests": [
+      "48px touch targets",
+      "300ms animation timing",
+      "No gray flash",
+      "ESC/outside click closing",
+      "Fetch Stats removed"
+    ]
+  },
+  "notes": [
+    "Tests are written BEFORE implementation (TDD approach)",
+    "Tests define the specification - implementation must conform",
+    "Mock components included in test files for reference",
+    "Performance benchmarks based on iPhone 14 capabilities",
+    "Accessibility tests ensure WCAG 2.1 AA compliance",
+    "E2E tests use Playwright with iPhone 14 device emulation"
+  ]
+}

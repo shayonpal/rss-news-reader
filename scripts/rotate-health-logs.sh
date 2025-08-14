@@ -12,13 +12,18 @@ RETENTION_DAYS=7
 MAX_SIZE_MB=100
 
 # Log files to rotate
+# Note: Both services-monitor.jsonl and monitor-services.jsonl exist due to 
+# different monitoring scripts writing to different files. Both need rotation
+# to prevent disk space issues even if one is currently empty.
 LOG_FILES=(
     "health-checks.jsonl"
     "sync-health.jsonl"
     "cron-health.jsonl"
     "inoreader-api-calls.jsonl"
     "tailscale-monitor.log"
-    "services-monitor.jsonl"
+    "services-monitor.jsonl"      # From original monitoring script
+    "sync-cron.jsonl"             # Cron service logs
+    "monitor-services.jsonl"      # From updated monitoring implementation
 )
 
 # Function to rotate a single log file

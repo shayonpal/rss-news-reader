@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { logInoreaderApiCall } from "@/lib/api/log-api-call";
+import { ContentParsingService } from "@/lib/services/content-parsing-service";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -10,6 +11,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+// Track concurrent parsing operations (in production, use Redis)
+const activeParsing = new Map<string, Promise<any>>();
+const MAX_CONCURRENT_PARSES = 5;
 
 export async function POST(
   request: NextRequest,
@@ -26,6 +31,52 @@ export async function POST(
 
     console.log("Fetch content request:", { id, decodedId });
 
+    // Check if already parsing this article
+    if (activeParsing.has(decodedId)) {
+      console.log("Already parsing article:", decodedId);
+      return activeParsing.get(decodedId);
+    }
+
+    // Check concurrent limit
+    if (activeParsing.size >= MAX_CONCURRENT_PARSES) {
+      return NextResponse.json(
+        {
+          error: "rate_limit",
+          message:
+            "Too many concurrent parse requests. Please try again later.",
+        },
+        { status: 429 }
+      );
+    }
+
+    // Create parsing promise
+    const parsePromise = performParsing(request, decodedId, startTime);
+    activeParsing.set(decodedId, parsePromise);
+
+    try {
+      return await parsePromise;
+    } finally {
+      activeParsing.delete(decodedId);
+    }
+  } catch (error) {
+    console.error("=== UNEXPECTED ERROR ===", error);
+    return NextResponse.json(
+      {
+        error: "unexpected_error",
+        message:
+          error instanceof Error ? error.message : "Unexpected error occurred",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+async function performParsing(
+  request: NextRequest,
+  decodedId: string,
+  startTime: number
+): Promise<NextResponse> {
+  try {
     // Log the API call (though this isn't Inoreader, we track it similarly)
     logInoreaderApiCall(
       `/api/articles/${decodedId}/fetch-content`,
@@ -80,13 +131,34 @@ export async function POST(
       );
     }
 
-    // Check if we already have full content
-    if (article.has_full_content && article.full_content) {
-      return NextResponse.json({
-        success: true,
-        content: article.full_content,
-        cached: true,
-      });
+    // Check if we already have full content and it's fresh
+    if (article.has_full_content && article.full_content && article.parsed_at) {
+      // Check if parsed content is recent (within last hour)
+      const parsedAt = new Date(article.parsed_at);
+      const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (parsedAt > hourAgo && !article.parse_failed) {
+        return NextResponse.json({
+          success: true,
+          content: article.full_content,
+          cached: true,
+          parsedAt: article.parsed_at,
+        });
+      }
+    }
+
+    // Check if max parse attempts reached
+    if (article.parse_failed && article.parse_attempts >= 3) {
+      // Check if force refresh is requested
+      const body = await request.json().catch(() => ({}));
+      if (!body.forceRefresh) {
+        return NextResponse.json({
+          success: false,
+          content: article.content, // Fallback to RSS content
+          fallback: true,
+          error: "Maximum parse attempts reached",
+          parseFailed: true,
+        });
+      }
     }
 
     // Fetch the article URL
@@ -118,12 +190,12 @@ export async function POST(
       status: "attempt",
     });
 
-    // Fetch the content
+    // Fetch the content with 30 second timeout (as per RR-148 spec)
     const response = await fetch(article.url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; RSS Reader Bot/1.0)",
       },
-      signal: AbortSignal.timeout(10000), // 10 second timeout
+      signal: AbortSignal.timeout(30000), // 30 second timeout per RR-148
     });
 
     if (!response.ok) {
@@ -154,11 +226,21 @@ export async function POST(
         duration_ms: Date.now() - startTime,
       });
 
-      // Fall back to RSS content
+      // Mark as failed and fall back to RSS content
+      await supabase
+        .from("articles")
+        .update({
+          parse_failed: true,
+          parse_attempts: (article.parse_attempts || 0) + 1,
+        })
+        .eq("id", article.id);
+
       return NextResponse.json({
-        success: true,
+        success: false,
         content: article.content,
         fallback: true,
+        error: "Content extraction failed",
+        canRetry: (article.parse_attempts || 0) < 3,
       });
     }
 
@@ -170,12 +252,15 @@ export async function POST(
       .replace(/class="[^"]*"/gi, "") // Remove classes
       .trim();
 
-    // Update the article with full content
+    // Update the article with full content and parsing metadata
     const { error: updateError } = await supabase
       .from("articles")
       .update({
         full_content: cleanContent,
         has_full_content: true,
+        parsed_at: new Date().toISOString(),
+        parse_failed: false,
+        parse_attempts: (article.parse_attempts || 0) + 1,
         updated_at: new Date().toISOString(),
       })
       .eq("id", article.id);
@@ -203,6 +288,7 @@ export async function POST(
       byline: extracted.byline,
       length: extracted.length,
       siteName: extracted.siteName,
+      parsedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error("=== CONTENT EXTRACTION ERROR ===", error);
@@ -213,10 +299,6 @@ export async function POST(
     let feedId: string | undefined;
 
     try {
-      const resolvedParams = await Promise.resolve(params);
-      const { id } = resolvedParams;
-      const decodedId = decodeURIComponent(id);
-
       // Try to get article info for logging
       const { data: article } = await supabase
         .from("articles")
@@ -249,6 +331,22 @@ export async function POST(
         },
         duration_ms: duration,
       });
+
+      // Also update parse_failed flag
+      // First get current parse_attempts
+      const { data: article } = await supabase
+        .from("articles")
+        .select("parse_attempts")
+        .eq("id", articleId)
+        .single();
+
+      await supabase
+        .from("articles")
+        .update({
+          parse_failed: true,
+          parse_attempts: (article?.parse_attempts || 0) + 1,
+        })
+        .eq("id", articleId);
     }
 
     // Check if it's a timeout

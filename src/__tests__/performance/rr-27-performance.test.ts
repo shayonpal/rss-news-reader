@@ -1,24 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { articleListStateManager } from '@/lib/utils/article-list-state-manager';
-import { navigationHistory } from '@/lib/utils/navigation-history';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
+import { navigationHistory } from "@/lib/utils/navigation-history";
 
 /**
  * RR-27: Article List State Preservation - Performance Tests
- * 
+ *
  * These tests ensure that the state preservation implementation maintains
  * acceptable performance characteristics even with large datasets and
  * frequent operations.
  */
 
 // Performance testing utilities
-const measureExecutionTime = async (fn: () => Promise<void> | void): Promise<number> => {
+const measureExecutionTime = async (
+  fn: () => Promise<void> | void
+): Promise<number> => {
   const start = performance.now();
   await fn();
   return performance.now() - start;
 };
 
 const measureMemoryUsage = (): number => {
-  if (typeof window !== 'undefined' && (window as any).performance?.memory) {
+  if (typeof window !== "undefined" && (window as any).performance?.memory) {
     return (window as any).performance.memory.usedJSHeapSize;
   }
   return 0; // Fallback for Node.js environment
@@ -36,14 +38,18 @@ const generateLargeArticleDataset = (size: number) => {
     wasAutoRead: Math.random() > 0.8, // ~20% auto-read
     position: index,
     sessionPreserved: Math.random() > 0.85, // ~15% session preserved
-    tags: index % 10 === 0 ? ['starred'] : [],
+    tags: index % 10 === 0 ? ["starred"] : [],
     url: `https://example.com/article-${index + 1}`,
     author: `Author ${Math.floor(index / 50) + 1}`,
   }));
 };
 
 // Helper to convert our actual implementation's state format for testing
-const convertToTestState = (articleIds: string[], readStates: Record<string, boolean> = {}, autoReadArticles: string[] = []) => {
+const convertToTestState = (
+  articleIds: string[],
+  readStates: Record<string, boolean> = {},
+  autoReadArticles: string[] = []
+) => {
   return {
     articleIds,
     readStates,
@@ -51,7 +57,7 @@ const convertToTestState = (articleIds: string[], readStates: Record<string, boo
     manualReadArticles: [],
     scrollPosition: 0,
     timestamp: Date.now(),
-    filterMode: 'unread' as const,
+    filterMode: "unread" as const,
   };
 };
 
@@ -63,7 +69,9 @@ class PerformantAutoReadManager {
   private readonly THROTTLE_MS = 200;
   private readonly BATCH_SIZE = 10;
 
-  createOptimizedObserver(callback: (articleIds: string[]) => void): IntersectionObserver {
+  createOptimizedObserver(
+    callback: (articleIds: string[]) => void
+  ): IntersectionObserver {
     return new IntersectionObserver(
       (entries) => {
         const articlesToMark: string[] = [];
@@ -71,8 +79,9 @@ class PerformantAutoReadManager {
         entries.forEach((entry) => {
           if (!entry.isIntersecting && entry.boundingClientRect.bottom < 0) {
             const articleId = (entry.target as HTMLElement).dataset.articleId;
-            const isRead = (entry.target as HTMLElement).dataset.isRead === 'true';
-            
+            const isRead =
+              (entry.target as HTMLElement).dataset.isRead === "true";
+
             if (articleId && !isRead) {
               articlesToMark.push(articleId);
             }
@@ -84,14 +93,17 @@ class PerformantAutoReadManager {
         }
       },
       {
-        rootMargin: '0px 0px -80% 0px', // Optimized trigger zone
+        rootMargin: "0px 0px -80% 0px", // Optimized trigger zone
         threshold: 0,
       }
     );
   }
 
-  private throttledCallback(articleIds: string[], callback: (articleIds: string[]) => void): void {
-    articleIds.forEach(id => this.pendingUpdates.add(id));
+  private throttledCallback(
+    articleIds: string[],
+    callback: (articleIds: string[]) => void
+  ): void {
+    articleIds.forEach((id) => this.pendingUpdates.add(id));
 
     if (this.throttleTimer) {
       clearTimeout(this.throttleTimer);
@@ -100,7 +112,7 @@ class PerformantAutoReadManager {
     this.throttleTimer = setTimeout(() => {
       const batch = Array.from(this.pendingUpdates).slice(0, this.BATCH_SIZE);
       this.pendingUpdates.clear();
-      
+
       if (batch.length > 0) {
         callback(batch);
       }
@@ -120,7 +132,7 @@ class PerformantAutoReadManager {
   }
 }
 
-describe('RR-27: Article List State Preservation - Performance Tests', () => {
+describe("RR-27: Article List State Preservation - Performance Tests", () => {
   let autoReadManager: PerformantAutoReadManager;
   let mockSessionStorage: any;
 
@@ -135,7 +147,7 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       setItem: vi.fn((key: string, value: string) => {
         // Simulate storage write latency and quota
         if (Object.keys(mockSessionStorage.data).length > 50) {
-          throw new Error('QuotaExceededError');
+          throw new Error("QuotaExceededError");
         }
         mockSessionStorage.data[key] = value;
       }),
@@ -144,13 +156,13 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       }),
     };
 
-    vi.stubGlobal('sessionStorage', mockSessionStorage);
+    vi.stubGlobal("sessionStorage", mockSessionStorage);
     vi.useFakeTimers();
 
     // Clear any existing state
     articleListStateManager.clearState();
     navigationHistory.clear();
-    
+
     autoReadManager = new PerformantAutoReadManager();
   });
 
@@ -162,16 +174,16 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
     navigationHistory.clear();
   });
 
-  describe('Large Dataset Performance', () => {
-    it('should handle 1000 articles with acceptable performance', async () => {
+  describe("Large Dataset Performance", () => {
+    it("should handle 1000 articles with acceptable performance", async () => {
       const largeDataset = generateLargeArticleDataset(1000);
-      
+
       // Convert to our implementation's format
-      const articleIds = largeDataset.map(a => a.id);
+      const articleIds = largeDataset.map((a) => a.id);
       const readStates: Record<string, boolean> = {};
       const autoReadArticles: string[] = [];
-      
-      largeDataset.forEach(article => {
+
+      largeDataset.forEach((article) => {
         if (article.isRead) {
           readStates[article.id] = true;
           if (article.wasAutoRead) {
@@ -186,7 +198,7 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
         autoReadArticles,
         manualReadArticles: [],
         scrollPosition: 2500,
-        filterMode: 'unread' as const,
+        filterMode: "unread" as const,
       };
 
       // Test save performance
@@ -209,15 +221,15 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       expect(retrievedState?.articleIds.length).toBeLessThanOrEqual(200); // Limited for performance
     });
 
-    it('should handle 5000 articles with compression and chunking', async () => {
+    it("should handle 5000 articles with compression and chunking", async () => {
       const massiveDataset = generateLargeArticleDataset(5000);
-      
+
       // Convert to our implementation's format
-      const articleIds = massiveDataset.map(a => a.id);
+      const articleIds = massiveDataset.map((a) => a.id);
       const readStates: Record<string, boolean> = {};
       const autoReadArticles: string[] = [];
-      
-      massiveDataset.forEach(article => {
+
+      massiveDataset.forEach((article) => {
         if (article.isRead) {
           readStates[article.id] = true;
           if (article.wasAutoRead) {
@@ -232,7 +244,7 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
         autoReadArticles,
         manualReadArticles: [],
         scrollPosition: 10000,
-        filterMode: 'all' as const,
+        filterMode: "all" as const,
       };
 
       // Should not crash or timeout
@@ -249,16 +261,16 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
     });
   });
 
-  describe('Rapid Operation Performance', () => {
-    it('should handle rapid state updates with debouncing', async () => {
+  describe("Rapid Operation Performance", () => {
+    it("should handle rapid state updates with debouncing", async () => {
       const articles = generateLargeArticleDataset(100);
-      
+
       // Simulate rapid updates (like during scrolling)
       const updateTimes: number[] = [];
-      
-      const articleIds = articles.map(a => a.id);
+
+      const articleIds = articles.map((a) => a.id);
       const readStates: Record<string, boolean> = {};
-      
+
       for (let i = 0; i < 20; i++) {
         const updateTime = await measureExecutionTime(() => {
           articleListStateManager.saveListState({
@@ -267,14 +279,15 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
             autoReadArticles: [],
             manualReadArticles: [],
             scrollPosition: i * 100,
-            filterMode: 'unread',
+            filterMode: "unread",
           });
         });
         updateTimes.push(updateTime);
       }
 
       // Operations should be fast
-      const avgUpdateTime = updateTimes.reduce((a, b) => a + b, 0) / updateTimes.length;
+      const avgUpdateTime =
+        updateTimes.reduce((a, b) => a + b, 0) / updateTimes.length;
       expect(avgUpdateTime).toBeLessThan(20); // Fast operations
 
       // Final state should be consistent
@@ -282,17 +295,17 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       expect(finalState?.scrollPosition).toBe(1900); // Last update
     });
 
-    it('should batch article updates efficiently', async () => {
+    it("should batch article updates efficiently", async () => {
       const articles = generateLargeArticleDataset(200);
-      
-      const articleIds = articles.map(a => a.id);
+
+      const articleIds = articles.map((a) => a.id);
       articleListStateManager.saveListState({
         articleIds,
         readStates: {},
         autoReadArticles: [],
         manualReadArticles: [],
         scrollPosition: 0,
-        filterMode: 'unread',
+        filterMode: "unread",
       });
 
       // Batch update 50 articles
@@ -308,29 +321,31 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       expect(batchTime).toBeLessThan(30); // Efficient batch operation
 
       const updatedState = articleListStateManager.getListState();
-      const readCount = Object.values(updatedState?.readStates || {}).filter(isRead => isRead).length;
+      const readCount = Object.values(updatedState?.readStates || {}).filter(
+        (isRead) => isRead
+      ).length;
       expect(readCount).toBeGreaterThanOrEqual(50);
     });
   });
 
-  describe('Memory Usage Optimization', () => {
-    it('should implement effective caching without memory leaks', async () => {
+  describe("Memory Usage Optimization", () => {
+    it("should implement effective caching without memory leaks", async () => {
       const initialMemory = measureMemoryUsage();
-      
+
       // Perform many state operations
       for (let i = 0; i < 100; i++) {
         const articles = generateLargeArticleDataset(50);
-        const articleIds = articles.map(a => a.id);
-        
+        const articleIds = articles.map((a) => a.id);
+
         articleListStateManager.saveListState({
           articleIds,
           readStates: {},
           autoReadArticles: [],
           manualReadArticles: [],
           scrollPosition: i * 10,
-          filterMode: 'unread',
+          filterMode: "unread",
         });
-        
+
         articleListStateManager.getListState(); // Access
       }
 
@@ -338,30 +353,30 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       articleListStateManager.clearState();
 
       const finalMemory = measureMemoryUsage();
-      
+
       // Memory usage should not grow excessively
       if (initialMemory > 0 && finalMemory > 0) {
         expect(finalMemory - initialMemory).toBeLessThan(10 * 1024 * 1024); // Less than 10MB growth
       }
     });
 
-    it('should handle virtual scrolling efficiently', async () => {
+    it("should handle virtual scrolling efficiently", async () => {
       const largeDataset = generateLargeArticleDataset(2000);
-      
-      const articleIds = largeDataset.slice(0, 200).map(a => a.id); // Use our limit
+
+      const articleIds = largeDataset.slice(0, 200).map((a) => a.id); // Use our limit
       articleListStateManager.saveListState({
         articleIds,
         readStates: {},
         autoReadArticles: [],
         manualReadArticles: [],
         scrollPosition: 5000,
-        filterMode: 'all',
+        filterMode: "all",
       });
 
       // Test retrieval performance
       const viewportTests = [
-        { start: 0, end: 49 },    // First page
-        { start: 50, end: 99 },   // Second page
+        { start: 0, end: 49 }, // First page
+        { start: 50, end: 99 }, // Second page
         { start: 150, end: 199 }, // End page
         { start: 100, end: 149 }, // Jump back
       ];
@@ -374,32 +389,35 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
             const visible = state.articleIds.slice(start, end + 1);
           }
         });
-        
+
         expect(retrievalTime).toBeLessThan(10); // Very fast retrieval
       }
     });
   });
 
-  describe('Intersection Observer Performance', () => {
-    it('should handle many article elements efficiently', async () => {
+  describe("Intersection Observer Performance", () => {
+    it("should handle many article elements efficiently", async () => {
       // Since IntersectionObserver is mocked in our test environment,
       // we test the performance of processing many article updates
-      const articleIds = Array.from({ length: 500 }, (_, i) => `article-${i + 1}`);
-      
+      const articleIds = Array.from(
+        { length: 500 },
+        (_, i) => `article-${i + 1}`
+      );
+
       const processingTime = await measureExecutionTime(() => {
         // Simulate batch processing of auto-read articles
         const batches = [];
         const batchSize = 10;
-        
+
         for (let i = 0; i < articleIds.length; i += batchSize) {
           batches.push(articleIds.slice(i, i + batchSize));
         }
-        
+
         // Process each batch
-        batches.forEach(batch => {
-          const updates = batch.map(id => ({
+        batches.forEach((batch) => {
+          const updates = batch.map((id) => ({
             id,
-            changes: { isRead: true, wasAutoRead: true }
+            changes: { isRead: true, wasAutoRead: true },
           }));
           articleListStateManager.batchUpdateArticles(updates);
         });
@@ -409,7 +427,7 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       expect(articleIds.length).toBe(500);
     });
 
-    it('should efficiently track auto-read articles', async () => {
+    it("should efficiently track auto-read articles", async () => {
       // Test the efficiency of our actual state manager with auto-read tracking
       const initialState = {
         articleIds: Array.from({ length: 100 }, (_, i) => `article-${i}`),
@@ -417,11 +435,11 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
         autoReadArticles: [],
         manualReadArticles: [],
         scrollPosition: 0,
-        filterMode: 'unread' as const,
+        filterMode: "unread" as const,
       };
-      
+
       articleListStateManager.saveListState(initialState);
-      
+
       // Simulate rapid auto-read updates
       const updateTime = await measureExecutionTime(() => {
         for (let i = 0; i < 50; i++) {
@@ -431,30 +449,30 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
           });
         }
       });
-      
+
       expect(updateTime).toBeLessThan(50); // Fast update handling
-      
+
       const finalState = articleListStateManager.getListState();
       expect(finalState?.autoReadArticles.length).toBe(50);
     });
   });
 
-  describe('Storage Quota and Fallback Performance', () => {
-    it('should handle storage quota gracefully without blocking', async () => {
+  describe("Storage Quota and Fallback Performance", () => {
+    it("should handle storage quota gracefully without blocking", async () => {
       // Simulate approaching storage quota
       for (let i = 0; i < 45; i++) {
-        mockSessionStorage.data[`filler-${i}`] = 'x'.repeat(1000);
+        mockSessionStorage.data[`filler-${i}`] = "x".repeat(1000);
       }
 
       const articles = generateLargeArticleDataset(1000);
-      const articleIds = articles.map(a => a.id);
+      const articleIds = articles.map((a) => a.id);
       const largeState = {
         articleIds,
         readStates: {},
         autoReadArticles: [],
         manualReadArticles: [],
         scrollPosition: 5000,
-        filterMode: 'unread' as const,
+        filterMode: "unread" as const,
       };
 
       // Should not throw or block
@@ -465,25 +483,25 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       expect(saveTime).toBeLessThan(100); // Fast handling
 
       // State manager should handle quota gracefully
-      // The actual implementation may not save a minimal fallback, 
+      // The actual implementation may not save a minimal fallback,
       // but should handle the error without crashing
       expect(mockSessionStorage.setItem).toHaveBeenCalled();
     });
 
-    it('should recover quickly from storage failures', async () => {
+    it("should recover quickly from storage failures", async () => {
       // Simulate storage failure
       mockSessionStorage.setItem.mockImplementation(() => {
-        throw new Error('Storage failed');
+        throw new Error("Storage failed");
       });
 
       const articles = generateLargeArticleDataset(100);
       const state = {
-        articleIds: articles.map(a => a.id),
+        articleIds: articles.map((a) => a.id),
         readStates: {},
         autoReadArticles: [],
         manualReadArticles: [],
         scrollPosition: 1000,
-        filterMode: 'unread' as const,
+        filterMode: "unread" as const,
       };
 
       // Should handle gracefully and quickly
@@ -495,23 +513,27 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
     });
   });
 
-  describe('Real-world Performance Scenarios', () => {
-    it('should maintain performance during heavy user interaction', async () => {
+  describe("Real-world Performance Scenarios", () => {
+    it("should maintain performance during heavy user interaction", async () => {
       // Simulate heavy user interaction: scrolling, clicking, navigating
       const articles = generateLargeArticleDataset(300);
-      
-      const articleIds = articles.map(a => a.id);
+
+      const articleIds = articles.map((a) => a.id);
       const scenarios = [
-        () => articleListStateManager.saveListState({ 
-          articleIds, 
-          readStates: {}, 
-          autoReadArticles: [], 
-          manualReadArticles: [],
-          scrollPosition: Math.random() * 1000, 
-          filterMode: 'unread' 
-        }),
+        () =>
+          articleListStateManager.saveListState({
+            articleIds,
+            readStates: {},
+            autoReadArticles: [],
+            manualReadArticles: [],
+            scrollPosition: Math.random() * 1000,
+            filterMode: "unread",
+          }),
         () => articleListStateManager.getListState(),
-        () => articleListStateManager.batchUpdateArticles([{ id: 'article-1', changes: { isRead: true } }]),
+        () =>
+          articleListStateManager.batchUpdateArticles([
+            { id: "article-1", changes: { isRead: true } },
+          ]),
       ];
 
       const operationTimes: number[] = [];
@@ -523,28 +545,29 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
         operationTimes.push(time);
       }
 
-      const avgTime = operationTimes.reduce((a, b) => a + b, 0) / operationTimes.length;
+      const avgTime =
+        operationTimes.reduce((a, b) => a + b, 0) / operationTimes.length;
       const maxTime = Math.max(...operationTimes);
 
       expect(avgTime).toBeLessThan(15); // Average operation under 15ms
       expect(maxTime).toBeLessThan(100); // No operation over 100ms
     });
 
-    it('should handle concurrent operations without performance degradation', async () => {
-      const concurrentOperations = Array.from({ length: 10 }, (_, i) => 
+    it("should handle concurrent operations without performance degradation", async () => {
+      const concurrentOperations = Array.from({ length: 10 }, (_, i) =>
         measureExecutionTime(() => {
           const articles = generateLargeArticleDataset(20);
-          const articleIds = articles.map(a => a.id);
-          
+          const articleIds = articles.map((a) => a.id);
+
           articleListStateManager.saveListState({
             articleIds,
             readStates: {},
             autoReadArticles: [],
             manualReadArticles: [],
             scrollPosition: i * 100,
-            filterMode: 'unread',
+            filterMode: "unread",
           });
-          
+
           articleListStateManager.getListState();
         })
       );
@@ -556,8 +579,8 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
     });
   });
 
-  describe('Benchmarking and Regression Prevention', () => {
-    it('should meet performance benchmarks for typical usage', async () => {
+  describe("Benchmarking and Regression Prevention", () => {
+    it("should meet performance benchmarks for typical usage", async () => {
       const benchmarks = {
         smallListSave: { size: 50, expectedTime: 10 },
         mediumListSave: { size: 200, expectedTime: 25 },
@@ -568,9 +591,9 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
 
       // Test save performance across sizes
       for (const [name, benchmark] of Object.entries(benchmarks)) {
-        if (name.includes('Save')) {
+        if (name.includes("Save")) {
           const articles = generateLargeArticleDataset(benchmark.size);
-          const articleIds = articles.map(a => a.id);
+          const articleIds = articles.map((a) => a.id);
           const time = await measureExecutionTime(() => {
             articleListStateManager.saveListState({
               articleIds,
@@ -578,7 +601,7 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
               autoReadArticles: [],
               manualReadArticles: [],
               scrollPosition: 1000,
-              filterMode: 'unread',
+              filterMode: "unread",
             });
           });
 
@@ -593,11 +616,14 @@ describe('RR-27: Article List State Preservation - Performance Tests', () => {
       expect(retrievalTime).toBeLessThan(benchmarks.retrieval.expectedTime);
 
       // Test batch update performance
-      const updates = Array.from({ length: benchmarks.batchUpdate.updates }, (_, i) => ({
-        id: `article-${i + 1}`,
-        changes: { isRead: true },
-      }));
-      
+      const updates = Array.from(
+        { length: benchmarks.batchUpdate.updates },
+        (_, i) => ({
+          id: `article-${i + 1}`,
+          changes: { isRead: true },
+        })
+      );
+
       const batchTime = await measureExecutionTime(() => {
         articleListStateManager.batchUpdateArticles(updates);
       });

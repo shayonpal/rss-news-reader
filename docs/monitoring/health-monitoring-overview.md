@@ -136,13 +136,11 @@ Both systems use the same status levels:
 ## Monitoring Best Practices
 
 1. **External Monitoring**:
-
    - Configure Uptime Kuma to check health endpoints every 60 seconds
    - Set up alerts for status changes
    - Monitor all critical services
 
 2. **Client Monitoring**:
-
    - Enable auto health checks with reasonable intervals
    - Review health dashboard during troubleshooting
    - Monitor browser console for health warnings

@@ -106,15 +106,13 @@ Initially built for personal use, with exactly one user, with plans to open-sour
 - Fetched content stored in separate `full_content` field
 - Failed extractions show user-friendly error with reason (manual fetch only)
 
-#### Auto-Fetch for Partial Feeds
+#### Manual Content Fetching Only (RR-162)
 
-- Feeds can be marked as "partial content" via toggle in article view
-- Auto-fetch runs as part of sync process (after normal article sync completes)
-- Applies to: Manual sync, 2am automatic sync, 2pm automatic sync
-- Rate limit: Maximum 50 articles per 30 minutes
-- Processes only articles from feeds marked as partial
+- **Manual fetch only**: Users can fetch full content via button in article view
+- **Auto-fetch removed**: Automatic background content fetching functionality removed to resolve sync performance issues
+- **Per-article basis**: Content fetching available on-demand for any article
 - All fetch attempts logged in database (success/failure/reason)
-- Silent failures for auto-fetch (no user notification)
+- User-triggered fetches show clear feedback and error messages
 
 #### Database Changes
 
@@ -165,7 +163,6 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 #### Setup Process
 
 1. **Automated Setup with Playwright**:
-
    - Uses test credentials from `.env` file
    - No manual login required
    - Runs directly on Mac Mini server
@@ -186,7 +183,6 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
    ```
 
 3. **Token Storage**:
-
    - Tokens stored in encrypted JSON file
    - Default location: `~/.rss-reader/tokens.json`
    - Environment variable: `RSS_READER_TOKENS_PATH`
@@ -225,22 +221,18 @@ The server requires a one-time OAuth setup to obtain Inoreader tokens:
 **Efficient API Strategy: 4-5 calls per sync**
 
 1. **Get Feed Structure** (2 calls):
-
    - `/subscription/list` - All feed subscriptions and folders
    - `/tag/list` - All user tags and labels
 
 2. **Get Articles** (1 call):
-
    - `/stream/contents/user/-/state/com.google/reading-list`
    - Parameters: `n=100` (max articles), `ot=[timestamp]` (since last sync)
    - Returns ALL articles from ALL feeds in one request
 
 3. **Get Unread Counts** (1 call):
-
    - `/unread-count` - Returns counts for all feeds/folders
 
 4. **Update Read States** (0-1 call, if needed):
-
    - `/edit-tag` - Batch update read/unread changes from client
 
 5. **Write to Supabase**:
@@ -404,7 +396,6 @@ Write a clear, informative summary that captures the essence of this article wit
 #### Views
 
 1. **Feed List** (Sidebar/Drawer)
-
    - Two tabs: "Feeds" and "Tags"
    - **Feeds Tab**:
      - Hierarchical folder structure
@@ -418,7 +409,6 @@ Write a clear, informative summary that captures the essence of this article wit
    - Visual indicators for sync status
 
 2. **Article List** (Main View)
-
    - Shows articles based on selected filters:
      - Feed/tag filter: All articles, specific feed, or specific tag
      - Read status filter: Unread only (default), Read only, All articles
@@ -434,7 +424,6 @@ Write a clear, informative summary that captures the essence of this article wit
    - Current filters shown in header
 
 3. **Article Detail**
-
    - RSS content displayed by default
    - Article metadata header
    - "Fetch Full Content" button (calls server API)
@@ -442,7 +431,6 @@ Write a clear, informative summary that captures the essence of this article wit
    - Swipe navigation (previous/next article)
 
 4. **Settings** (Simplified)
-
    - Theme preference
    - Last sync timestamp
    - Manual sync button
@@ -1385,19 +1373,16 @@ ADD COLUMN last_sync_update TIMESTAMPTZ;
 #### Implementation Notes
 
 1. **Sync Loop Prevention**:
-
    - Only sync changes made after last Inoreader sync
    - Track sync source to avoid re-syncing Inoreader changes
    - Use `last_local_update` vs `last_sync_update` comparison
 
 2. **Performance Optimization**:
-
    - Batch database operations
    - Use single Supabase transaction per sync
    - Implement request coalescing for rapid changes
 
 3. **API Usage Efficiency**:
-
    - 5-minute sync: ~12 calls/hour while active
    - Daily syncs: 2 calls
    - Manual syncs: Variable

@@ -69,13 +69,13 @@ export default function FetchStatsPage() {
 
   useEffect(() => {
     fetchStats();
-    
+
     // Set up auto-refresh every 30 seconds when enabled
     if (autoRefresh) {
       const interval = setInterval(() => {
         fetchStats();
       }, 30000);
-      
+
       return () => clearInterval(interval);
     }
   }, [autoRefresh]);
@@ -229,7 +229,9 @@ export default function FetchStatsPage() {
                 autoRefresh && "bg-blue-100 dark:bg-blue-900"
               )}
             >
-              <RefreshCw className={cn("h-3 w-3 mr-1", autoRefresh && "animate-spin")} />
+              <RefreshCw
+                className={cn("mr-1 h-3 w-3", autoRefresh && "animate-spin")}
+              />
               {autoRefresh ? "Auto" : "Manual"}
             </IOSButton>
             <IOSButton onClick={fetchStats} disabled={loading}>

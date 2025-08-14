@@ -11,7 +11,7 @@ export interface NavigationEntry {
 
 export class NavigationHistory {
   private static instance: NavigationHistory;
-  private readonly HISTORY_KEY = 'rss_reader_nav_history';
+  private readonly HISTORY_KEY = "rss_reader_nav_history";
   private readonly MAX_ENTRIES = 20;
   private readonly EXPIRY_MINUTES = 30;
   private entries: NavigationEntry[] = [];
@@ -31,11 +31,11 @@ export class NavigationHistory {
     const entry: NavigationEntry = {
       articleId,
       timestamp: new Date().toISOString(),
-      fromListPosition
+      fromListPosition,
     };
 
     // Remove any existing entry for the same article
-    this.entries = this.entries.filter(e => e.articleId !== articleId);
+    this.entries = this.entries.filter((e) => e.articleId !== articleId);
 
     // Add new entry at the beginning
     this.entries.unshift(entry);
@@ -54,7 +54,9 @@ export class NavigationHistory {
   }
 
   getPreviousArticleId(currentArticleId: string): string | null {
-    const currentIndex = this.entries.findIndex(e => e.articleId === currentArticleId);
+    const currentIndex = this.entries.findIndex(
+      (e) => e.articleId === currentArticleId
+    );
     if (currentIndex === -1 || currentIndex === this.entries.length - 1) {
       return null;
     }
@@ -62,7 +64,9 @@ export class NavigationHistory {
   }
 
   getNextArticleId(currentArticleId: string): string | null {
-    const currentIndex = this.entries.findIndex(e => e.articleId === currentArticleId);
+    const currentIndex = this.entries.findIndex(
+      (e) => e.articleId === currentArticleId
+    );
     if (currentIndex <= 0) {
       return null;
     }
@@ -71,7 +75,7 @@ export class NavigationHistory {
 
   getNavigationPath(): string[] {
     this.cleanExpiredEntries();
-    return this.entries.map(e => e.articleId);
+    return this.entries.map((e) => e.articleId);
   }
 
   clear(): void {
@@ -81,15 +85,18 @@ export class NavigationHistory {
 
   private cleanExpiredEntries(): void {
     const expiryTime = new Date(Date.now() - this.EXPIRY_MINUTES * 60 * 1000);
-    this.entries = this.entries.filter(entry => 
-      new Date(entry.timestamp) > expiryTime
+    this.entries = this.entries.filter(
+      (entry) => new Date(entry.timestamp) > expiryTime
     );
   }
 
   private loadFromStorage(): void {
     try {
       // Check if we're in a browser environment
-      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      if (
+        typeof window !== "undefined" &&
+        typeof sessionStorage !== "undefined"
+      ) {
         const saved = sessionStorage.getItem(this.HISTORY_KEY);
         if (saved) {
           this.entries = JSON.parse(saved);
@@ -97,7 +104,7 @@ export class NavigationHistory {
         }
       }
     } catch (error) {
-      console.error('Failed to load navigation history:', error);
+      console.error("Failed to load navigation history:", error);
       this.entries = [];
     }
   }
@@ -105,11 +112,14 @@ export class NavigationHistory {
   private saveToStorage(): void {
     try {
       // Check if we're in a browser environment
-      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      if (
+        typeof window !== "undefined" &&
+        typeof sessionStorage !== "undefined"
+      ) {
         sessionStorage.setItem(this.HISTORY_KEY, JSON.stringify(this.entries));
       }
     } catch (error) {
-      console.error('Failed to save navigation history:', error);
+      console.error("Failed to save navigation history:", error);
     }
   }
 
@@ -119,7 +129,7 @@ export class NavigationHistory {
   }
 
   hasEntry(articleId: string): boolean {
-    return this.entries.some(e => e.articleId === articleId);
+    return this.entries.some((e) => e.articleId === articleId);
   }
 }
 

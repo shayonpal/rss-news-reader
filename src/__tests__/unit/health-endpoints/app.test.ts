@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from '@/app/api/health/app/route';
-import { NextRequest } from 'next/server';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { GET } from "@/app/api/health/app/route";
+import { NextRequest } from "next/server";
 
 // Mock the environment utilities
-vi.mock('@/lib/utils/environment', () => ({
+vi.mock("@/lib/utils/environment", () => ({
   isTestEnvironment: vi.fn(),
   getEnvironmentInfo: vi.fn(),
 }));
 
 // Mock the app health check service
-vi.mock('@/lib/health/app-health-check', () => ({
+vi.mock("@/lib/health/app-health-check", () => ({
   appHealthCheck: {
     checkHealth: vi.fn(),
   },
@@ -18,33 +18,33 @@ vi.mock('@/lib/health/app-health-check', () => ({
   },
 }));
 
-import { isTestEnvironment, getEnvironmentInfo } from '@/lib/utils/environment';
-import { appHealthCheck } from '@/lib/health/app-health-check';
+import { isTestEnvironment, getEnvironmentInfo } from "@/lib/utils/environment";
+import { appHealthCheck } from "@/lib/health/app-health-check";
 
-describe('/api/health/app', () => {
+describe("/api/health/app", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getEnvironmentInfo).mockReturnValue({
-      environment: 'test',
+      environment: "test",
       isTest: true,
       hasDatabase: false,
-      runtime: 'vitest',
-      timestamp: '2025-08-02T06:00:00.000Z',
+      runtime: "vitest",
+      timestamp: "2025-08-02T06:00:00.000Z",
     });
   });
 
-  it('skips dependency checks in test environment', async () => {
+  it("skips dependency checks in test environment", async () => {
     vi.mocked(isTestEnvironment).mockReturnValue(true);
     vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-      status: 'healthy',
-      service: 'rss-reader-app',
+      status: "healthy",
+      service: "rss-reader-app",
       uptime: 100,
       lastActivity: new Date().toISOString(),
       errorCount: 0,
-      environment: 'test',
+      environment: "test",
       dependencies: {
-        database: 'skipped',
-        oauth: 'skipped',
+        database: "skipped",
+        oauth: "skipped",
       },
       performance: {
         avgSyncTime: 0,
@@ -53,36 +53,36 @@ describe('/api/health/app', () => {
       },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/health/app');
+    const request = new NextRequest("http://localhost:3000/api/health/app");
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data).toMatchObject({
-      status: 'healthy',
-      service: 'rss-reader-app',
-      environment: 'test',
+      status: "healthy",
+      service: "rss-reader-app",
+      environment: "test",
       dependencies: {
-        database: 'skipped',
-        oauth: 'skipped',
+        database: "skipped",
+        oauth: "skipped",
       },
       uptime: expect.any(Number),
       timestamp: expect.any(String),
     });
   });
 
-  it('returns 200 with minimal health data in test mode', async () => {
+  it("returns 200 with minimal health data in test mode", async () => {
     vi.mocked(isTestEnvironment).mockReturnValue(true);
     vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-      status: 'healthy',
-      service: 'rss-reader-app',
+      status: "healthy",
+      service: "rss-reader-app",
       uptime: 100,
       lastActivity: new Date().toISOString(),
       errorCount: 0,
-      environment: 'test',
+      environment: "test",
       dependencies: {
-        database: 'skipped',
-        oauth: 'skipped',
+        database: "skipped",
+        oauth: "skipped",
       },
       performance: {
         avgSyncTime: 0,
@@ -91,28 +91,28 @@ describe('/api/health/app', () => {
       },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/health/app');
+    const request = new NextRequest("http://localhost:3000/api/health/app");
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data.uptime).toBeGreaterThan(0);
-    expect(data.dependencies.database).toBe('skipped');
-    expect(data.dependencies.oauth).toBe('skipped');
+    expect(data.dependencies.database).toBe("skipped");
+    expect(data.dependencies.oauth).toBe("skipped");
   });
 
-  it('includes environment field in response', async () => {
+  it("includes environment field in response", async () => {
     vi.mocked(isTestEnvironment).mockReturnValue(true);
     vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-      status: 'healthy',
-      service: 'rss-reader-app',
+      status: "healthy",
+      service: "rss-reader-app",
       uptime: 100,
       lastActivity: new Date().toISOString(),
       errorCount: 0,
-      environment: 'test',
+      environment: "test",
       dependencies: {
-        database: 'skipped',
-        oauth: 'skipped',
+        database: "skipped",
+        oauth: "skipped",
       },
       performance: {
         avgSyncTime: 0,
@@ -121,32 +121,32 @@ describe('/api/health/app', () => {
       },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/health/app');
+    const request = new NextRequest("http://localhost:3000/api/health/app");
     const response = await GET(request);
     const data = await response.json();
-    expect(data.environment).toBe('test');
+    expect(data.environment).toBe("test");
   });
 
-  it('checks dependencies in production environment', async () => {
+  it("checks dependencies in production environment", async () => {
     vi.mocked(isTestEnvironment).mockReturnValue(false);
     vi.mocked(getEnvironmentInfo).mockReturnValue({
-      environment: 'production',
+      environment: "production",
       isTest: false,
       hasDatabase: true,
-      runtime: 'node',
-      timestamp: '2025-08-02T06:00:00.000Z',
+      runtime: "node",
+      timestamp: "2025-08-02T06:00:00.000Z",
     });
 
     vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-      status: 'healthy',
-      service: 'rss-reader-app',
+      status: "healthy",
+      service: "rss-reader-app",
       uptime: 100,
       lastActivity: new Date().toISOString(),
       errorCount: 0,
-      environment: 'production',
+      environment: "production",
       dependencies: {
-        database: 'healthy',
-        oauth: 'healthy',
+        database: "healthy",
+        oauth: "healthy",
       },
       performance: {
         avgSyncTime: 100,
@@ -155,41 +155,41 @@ describe('/api/health/app', () => {
       },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/health/app');
+    const request = new NextRequest("http://localhost:3000/api/health/app");
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data).toMatchObject({
-      status: 'healthy',
-      environment: 'production',
+      status: "healthy",
+      environment: "production",
       dependencies: {
-        database: 'healthy',
-        oauth: 'healthy',
+        database: "healthy",
+        oauth: "healthy",
       },
     });
   });
 
-  it('reports unhealthy when dependencies fail in production', async () => {
+  it("reports unhealthy when dependencies fail in production", async () => {
     vi.mocked(isTestEnvironment).mockReturnValue(false);
     vi.mocked(getEnvironmentInfo).mockReturnValue({
-      environment: 'production',
+      environment: "production",
       isTest: false,
       hasDatabase: true,
-      runtime: 'node',
-      timestamp: '2025-08-02T06:00:00.000Z',
+      runtime: "node",
+      timestamp: "2025-08-02T06:00:00.000Z",
     });
 
     vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-      status: 'unhealthy',
-      service: 'rss-reader-app',
+      status: "unhealthy",
+      service: "rss-reader-app",
       uptime: 100,
       lastActivity: new Date().toISOString(),
       errorCount: 5,
-      environment: 'production',
+      environment: "production",
       dependencies: {
-        database: 'unhealthy',
-        oauth: 'healthy',
+        database: "unhealthy",
+        oauth: "healthy",
       },
       performance: {
         avgSyncTime: 0,
@@ -198,59 +198,61 @@ describe('/api/health/app', () => {
       },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/health/app');
+    const request = new NextRequest("http://localhost:3000/api/health/app");
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(503);
     expect(data).toMatchObject({
-      status: 'unhealthy',
-      environment: 'production',
+      status: "unhealthy",
+      environment: "production",
       dependencies: {
-        database: 'unhealthy',
-        oauth: 'healthy',
+        database: "unhealthy",
+        oauth: "healthy",
       },
     });
   });
 
-  it('handles health check service errors gracefully', async () => {
+  it("handles health check service errors gracefully", async () => {
     vi.mocked(isTestEnvironment).mockReturnValue(false);
     vi.mocked(getEnvironmentInfo).mockReturnValue({
-      environment: 'production',
+      environment: "production",
       isTest: false,
       hasDatabase: true,
-      runtime: 'node',
-      timestamp: '2025-08-02T06:00:00.000Z',
+      runtime: "node",
+      timestamp: "2025-08-02T06:00:00.000Z",
     });
 
-    vi.mocked(appHealthCheck.checkHealth).mockRejectedValue(new Error('Service unavailable'));
+    vi.mocked(appHealthCheck.checkHealth).mockRejectedValue(
+      new Error("Service unavailable")
+    );
 
-    const request = new NextRequest('http://localhost:3000/api/health/app');
+    const request = new NextRequest("http://localhost:3000/api/health/app");
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(503);
     expect(data).toMatchObject({
-      status: 'unhealthy',
-      error: 'Service unavailable',
+      status: "unhealthy",
+      error: "Service unavailable",
       timestamp: expect.any(String),
     });
   });
 
   // RR-114: Tests for version property requirement
-  describe('RR-114: Version Property Tests', () => {
-    it('should return version property in test environment', async () => {
+  describe("RR-114: Version Property Tests", () => {
+    it("should return version property in test environment", async () => {
       vi.mocked(isTestEnvironment).mockReturnValue(true);
       vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-        status: 'healthy',
-        service: 'rss-reader-app',
+        status: "healthy",
+        service: "rss-reader-app",
         uptime: 100,
         lastActivity: new Date().toISOString(),
         errorCount: 0,
-        environment: 'test',
+        environment: "test",
         dependencies: {
-          database: 'skipped',
-          oauth: 'skipped',
+          database: "skipped",
+          oauth: "skipped",
         },
         performance: {
           avgSyncTime: 0,
@@ -259,36 +261,36 @@ describe('/api/health/app', () => {
         },
       });
 
-      const request = new NextRequest('http://localhost:3000/api/health/app');
+      const request = new NextRequest("http://localhost:3000/api/health/app");
       const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toHaveProperty('version');
-      expect(typeof data.version).toBe('string');
+      expect(data).toHaveProperty("version");
+      expect(typeof data.version).toBe("string");
       expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
     });
 
-    it('should return version property in production environment', async () => {
+    it("should return version property in production environment", async () => {
       vi.mocked(isTestEnvironment).mockReturnValue(false);
       vi.mocked(getEnvironmentInfo).mockReturnValue({
-        environment: 'production',
+        environment: "production",
         isTest: false,
         hasDatabase: true,
-        runtime: 'node',
-        timestamp: '2025-08-02T06:00:00.000Z',
+        runtime: "node",
+        timestamp: "2025-08-02T06:00:00.000Z",
       });
 
       vi.mocked(appHealthCheck.checkHealth).mockResolvedValue({
-        status: 'healthy',
-        service: 'rss-reader-app',
+        status: "healthy",
+        service: "rss-reader-app",
         uptime: 100,
         lastActivity: new Date().toISOString(),
         errorCount: 0,
-        environment: 'production',
+        environment: "production",
         dependencies: {
-          database: 'healthy',
-          oauth: 'healthy',
+          database: "healthy",
+          oauth: "healthy",
         },
         performance: {
           avgSyncTime: 100,
@@ -297,48 +299,52 @@ describe('/api/health/app', () => {
         },
       });
 
-      const request = new NextRequest('http://localhost:3000/api/health/app');
+      const request = new NextRequest("http://localhost:3000/api/health/app");
       const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toHaveProperty('version');
-      expect(typeof data.version).toBe('string');
+      expect(data).toHaveProperty("version");
+      expect(typeof data.version).toBe("string");
       expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
     });
 
-    it('should return version property even when health check fails', async () => {
+    it("should return version property even when health check fails", async () => {
       vi.mocked(isTestEnvironment).mockReturnValue(false);
       vi.mocked(getEnvironmentInfo).mockReturnValue({
-        environment: 'production',
+        environment: "production",
         isTest: false,
         hasDatabase: true,
-        runtime: 'node',
-        timestamp: '2025-08-02T06:00:00.000Z',
+        runtime: "node",
+        timestamp: "2025-08-02T06:00:00.000Z",
       });
 
-      vi.mocked(appHealthCheck.checkHealth).mockRejectedValue(new Error('Service unavailable'));
+      vi.mocked(appHealthCheck.checkHealth).mockRejectedValue(
+        new Error("Service unavailable")
+      );
 
-      const request = new NextRequest('http://localhost:3000/api/health/app');
+      const request = new NextRequest("http://localhost:3000/api/health/app");
       const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(503);
-      expect(data).toHaveProperty('version');
-      expect(typeof data.version).toBe('string');
+      expect(data).toHaveProperty("version");
+      expect(typeof data.version).toBe("string");
       expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
     });
 
-    it('should return version property with ping=true parameter', async () => {
-      const request = new NextRequest('http://localhost:3000/api/health/app?ping=true');
+    it("should return version property with ping=true parameter", async () => {
+      const request = new NextRequest(
+        "http://localhost:3000/api/health/app?ping=true"
+      );
       const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toHaveProperty('status', 'ok');
-      expect(data).toHaveProperty('ping', true);
-      expect(data).toHaveProperty('version');
-      expect(typeof data.version).toBe('string');
+      expect(data).toHaveProperty("status", "ok");
+      expect(data).toHaveProperty("ping", true);
+      expect(data).toHaveProperty("version");
+      expect(typeof data.version).toBe("string");
       expect(data.version).toMatch(/^\d+\.\d+\.\d+$/); // Semantic version format
     });
   });

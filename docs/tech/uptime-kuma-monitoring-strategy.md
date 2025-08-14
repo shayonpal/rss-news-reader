@@ -30,12 +30,10 @@ This document outlines the implementation strategy for monitoring the RSS News R
    ```
 
 2. **Discord Server & Webhook**
-
    - Discord account with server creation permissions
    - Ability to create webhooks in channels
 
 3. **Network Access**
-
    - Tailscale connection to access monitoring dashboard
    - Ports available: 3001 (suggested for Uptime Kuma)
 
@@ -210,7 +208,6 @@ Status: ✅ UP with push notifications integrated
 The implementation integrates with existing infrastructure through a dual monitoring approach:
 
 1. **External Monitoring (Uptime Kuma)**:
-
    - Visual dashboard for status overview
    - Proactive notifications via Discord
    - Historical data and trends
