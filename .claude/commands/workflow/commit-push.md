@@ -119,9 +119,132 @@ Use memory MCP to store implementation knowledge:
 - Performance considerations
 - Future enhancement opportunities
 
-## 3. Pre-Commit Symbol Validation
+## 3. Learning Memory Documentation
 
-### 3A. Symbol-Level Quality Checks
+### 3A. Assess Learning Documentation Need
+
+Determine if this implementation qualifies for learning memory:
+
+**Major Feature Criteria** (any of these triggers learning documentation):
+- Modified more than 10 symbols
+- Encountered test infrastructure failures
+- Required infrastructure fixes or workarounds
+- Implemented new architectural patterns
+- Fixed long-standing bugs or complex issues
+- Required system limitation workarounds
+- Significant integration challenges resolved
+
+**Quick Assessment**:
+```bash
+# Count modified symbols
+git diff --cached --name-only | wc -l
+
+# Check for infrastructure/test files
+git diff --cached --name-only | grep -E "(test|spec|config|infra|deploy)"
+
+# Review commit scope from Symbol Analysis (Section 1A)
+```
+
+### 3B. Generate Learning Memory (If Qualifying)
+
+If criteria met, use Serena MCP to create learning memory:
+
+```
+Task: Create learning memory for RR-XXX implementation
+
+Memory Name: issue_RR-XXX_learnings.md
+
+Content Structure:
+---
+# RR-XXX Implementation Learnings: [Issue Title]
+
+## Issue Context
+- Linear ID: RR-XXX
+- Implementation Date: [current date]
+- Primary Challenge: [main problem solved]
+
+## Implementation Challenges Encountered
+
+### Technical Challenges
+- [Symbol-specific issues encountered]
+- [Integration point difficulties]
+- [Performance/memory considerations]
+
+### Infrastructure Issues
+- [Test infrastructure problems]
+- [Build/deployment challenges]
+- [Environment configuration issues]
+
+### Architectural Decisions
+- [New patterns introduced]
+- [Design trade-offs made]
+- [Future scalability considerations]
+
+## Solutions Applied
+
+### Symbol-Level Solutions
+- [Specific function/class fixes]
+- [Integration pattern implementations]
+- [Error handling improvements]
+
+### Workarounds & Fixes
+- [System limitation workarounds]
+- [Temporary solutions with future todo]
+- [Performance optimizations]
+
+## Key Symbols & Complexity
+
+### Most Complex Symbols
+- [Function/class]: [why complex, solution applied]
+- [Integration point]: [challenge, resolution]
+
+### Problematic Areas
+- [Areas that caused multiple iterations]
+- [Symbols requiring extensive testing]
+- [Performance bottlenecks resolved]
+
+## Future Implementation Notes
+
+### Patterns to Reuse
+- [Successful approaches for similar problems]
+- [Testing strategies that worked well]
+- [Integration patterns to replicate]
+
+### Areas for Improvement
+- [Technical debt created]
+- [Performance optimizations deferred]
+- [Documentation gaps to address]
+
+### Related Work
+- [Connected issues that might benefit]
+- [Similar patterns in other parts of codebase]
+- [Dependencies to monitor]
+
+## Testing Insights
+- [Test failures and resolutions]
+- [New testing patterns established]
+- [Coverage gaps discovered]
+
+## Performance & Security Notes
+- [Performance implications]
+- [Security considerations addressed]
+- [Monitoring requirements added]
+---
+
+Symbol Change Summary from Section 1A:
+[Include the modified symbols list from earlier analysis]
+
+Quality Validation Results:
+[Include test results, performance metrics, security scan results]
+```
+
+### 3C. Store Learning Memory
+
+Execute memory creation via Serena MCP if qualifying issue.
+
+## 4. Pre-Commit Symbol Validation
+
+### 4A. Symbol-Level Quality Checks
 
 ```bash
 # Stage all changes
@@ -134,7 +257,7 @@ npm run pre-commit
 npm run test:performance
 ```
 
-### 3B. Symbol Coverage Analysis
+### 4B. Symbol Coverage Analysis
 
 Verify all modified symbols are properly:
 
@@ -143,9 +266,9 @@ Verify all modified symbols are properly:
 - Integrated (dependencies updated)
 - Secured (no vulnerabilities introduced)
 
-## 4. Generate Commit with Symbol Context
+## 5. Generate Commit with Symbol Context
 
-### 4A. Prepare Symbol-Aware Commit Message
+### 5A. Prepare Symbol-Aware Commit Message
 
 Gather comprehensive context for git-expert:
 
@@ -174,7 +297,7 @@ Breaking Changes: [yes/no with symbol details]
 Linear Reference: RR-XXX
 ```
 
-### 4B. Execute Commit via git-expert
+### 5B. Execute Commit via git-expert
 
 Use `git-expert` with symbol-level context:
 
@@ -183,9 +306,9 @@ Use `git-expert` with symbol-level context:
 - Highlight integration points affected
 - Push to dev/feature branch (never main)
 
-## 5. Post-Commit Symbol Tracking
+## 6. Post-Commit Symbol Tracking
 
-### 5A. Update Linear with Symbol Details
+### 6A. Update Linear with Symbol Details
 
 Use `linear-expert` to add comment:
 
@@ -209,7 +332,7 @@ Quality Metrics:
 - Security: All input validation maintained
 ```
 
-### 5B. Verify Push Success
+### 6B. Verify Push Success
 
 Confirm with git-expert:
 
@@ -218,7 +341,7 @@ Confirm with git-expert:
 - CI/CD pipeline triggered
 - No merge conflicts
 
-## 6. Symbol-Level Commit Report
+## 7. Symbol-Level Commit Report
 
 ```
 ✅ Commit Complete for RR-XXX: [Title]
