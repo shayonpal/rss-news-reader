@@ -13,7 +13,6 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "type-check:prod": "tsc --noEmit -p tsconfig.prod.json",
     "test": "./scripts/safe-test-runner.sh",
     "test:optimized": "./scripts/optimized-test-runner.sh",
     "test:parallel": "./scripts/optimized-test-runner.sh parallel",

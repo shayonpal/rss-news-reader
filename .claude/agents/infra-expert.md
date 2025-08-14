@@ -226,16 +226,19 @@ ls -la tsconfig.json src/test-setup.ts src/types/test-matchers.d.ts
 **For Any Test Failure, ALWAYS Perform Symbol-Level Analysis:**
 
 1. **Test Symbol Discovery**:
+
    ```bash
    mcp__serena__find_symbol <failing_test_name>
    ```
 
 2. **Test-Code Symbol Correlation**:
+
    ```bash
    mcp__serena__find_referencing_symbols <test_symbol_id>
    ```
 
 3. **Error Pattern Symbol Mapping**:
+
    ```bash
    mcp__serena__search_for_pattern <error_pattern>
    ```
@@ -247,6 +250,7 @@ ls -la tsconfig.json src/test-setup.ts src/types/test-matchers.d.ts
    - Track symbol modification impact on test infrastructure
 
 **Common Symbol-Test Infrastructure Correlations:**
+
 - **Storage Mock Failures** → Map to symbols using localStorage/sessionStorage
 - **TypeScript Compilation Errors** → Map to symbols with type issues
 - **Import/Export Failures** → Map to module dependency symbols

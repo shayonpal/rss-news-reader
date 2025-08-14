@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed problematic auto-fetch that was causing sync to hang
   - Users now manually fetch full content when needed
   - Significantly improves sync reliability and completion rates
-  
 - **[RR-175] Database security and performance overhaul**
   - Removed deprecated content_length field (only 4.8% utilized)
   - Optimized RLS policies with auth function subqueries
@@ -28,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests for timezone query caching with 24-hour TTL
   - RLS policy optimization validation
   - Cursor-based pagination performance tests
-  
 - **Enhanced agent system and commands**
   - Improved infrastructure expert with emergency bypass capabilities
   - Symbol-level analysis integration for precise debugging
@@ -40,20 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configured PM2 logrotate with 10MB max size and 7-day retention
   - Added missing critical JSONL logs to rotation (sync-cron.jsonl, monitor-services.jsonl)
   - Prevents disk space exhaustion from uncapped log growth
-  
 - **[RR-102] API base path redirect fixes for development**
   - Smart development-only redirects for API inconsistencies
   - Improved developer experience with helpful error messages
-  
 - **[RR-176] Auto-parse content hook performance improvements**
   - Refactored useAutoParseContent hook for better performance
   - Simplified parsing logic with direct useEffect implementation
   - Improved test isolation with unique ID generation
-  
 - **[RR-187] Database mock implementation improvements**
   - Simplified database mock to use getter pattern
   - Fixed test infrastructure issues with mock implementations
-  
 - **ESLint accessibility and React hooks warnings**
   - Fixed aria-pressed to aria-selected for tab roles
   - Added missing dependencies to useEffect and useCallback hooks
@@ -66,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
 - **[RR-36] Log Management and Rotation Configuration for PM2 Services** (Thursday, August 14, 2025 at 1:00 PM)
   - **PM2 Logrotate Configuration**: Configured PM2 logrotate module with 10MB max size and 7-day retention for automatic log rotation
   - **Critical JSONL Log Coverage**: Added missing critical JSONL logs to rotation script (sync-cron.jsonl, monitor-services.jsonl, services-monitor.jsonl) preventing disk space exhaustion
@@ -74,13 +69,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Files Modified**: `scripts/test-log-rotation.sh` - Enhanced validation logic for PM2 logrotate configuration
   - **Impact**: Eliminated risk of disk space exhaustion from uncapped log growth, ensuring system stability with proper log retention policies
 - Temporarily disabled failing useAutoParseContent hook tests to unblock development (RR-192) - Thursday, August 14, 2025 at 10:15 PM
-  - Tests were failing despite functionality working correctly in production  
+  - Tests were failing despite functionality working correctly in production
   - Manual testing confirmed auto-parse works for BBC articles and manual triggers work
   - Created Linear issue RR-192 to track proper test environment fixes
   - Tests disabled with `describe.skip()` in `src/__tests__/unit/rr-176-auto-parse-logic.test.ts`
 
 ### Changed
 
+- [RR-74] Cleaned up redundant configuration files and scripts following production environment removal (Thursday, August 14, 2025 at 3:35 PM)
+  - Removed duplicate TypeScript config (tsconfig.prod.json)
+  - Removed duplicate Vitest config (vitest.integration.config.ts)
+  - Removed obsolete test scripts (test-rr-\*.sh files)
+  - Removed type-check:prod script from package.json
+  - Documented configuration hierarchy in docs/configuration-hierarchy.md
 - Enhanced infra-expert agent to integrate Serena MCP for symbol-level infrastructure analysis and test failure correlation (Wednesday, August 14, 2025 at 9:47 PM)
   - **Serena MCP Integration**: Added `mcp__serena__find_symbol`, `mcp__serena__get_symbols_overview`, `mcp__serena__find_referencing_symbols`, and `mcp__serena__search_for_pattern` tools
   - **Symbol-Level Diagnostic Methodology**: Enhanced diagnostic workflow to start with symbol-level analysis for precise issue isolation and error correlation

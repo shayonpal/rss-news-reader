@@ -126,6 +126,7 @@ Use memory MCP to store implementation knowledge:
 Determine if this implementation qualifies for learning memory:
 
 **Major Feature Criteria** (any of these triggers learning documentation):
+
 - Modified more than 10 symbols
 - Encountered test infrastructure failures
 - Required infrastructure fixes or workarounds
@@ -135,6 +136,7 @@ Determine if this implementation qualifies for learning memory:
 - Significant integration challenges resolved
 
 **Quick Assessment**:
+
 ```bash
 # Count modified symbols
 git diff --cached --name-only | wc -l
