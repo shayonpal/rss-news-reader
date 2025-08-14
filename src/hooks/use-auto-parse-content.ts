@@ -27,53 +27,12 @@ export function useAutoParseContent({
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const isParsingRef = useRef(false); // Track parsing state without causing re-renders
-
-  // Check if this article needs parsing
-  const needsParsing = useCallback(() => {
-    // Already has full content
-    if (article.hasFullContent && article.fullContent) {
-      return false;
-    }
-
-    // Check if this is from a partial feed - ALWAYS parse these
-    if (feed?.isPartialContent === true) {
-      return true;
-    }
-
-    // For non-partial feeds, only parse if content is short or truncated
-    // Check if content is suspiciously short (less than 500 chars)
-    if (article.content && article.content.length < 500) {
-      return true;
-    }
-
-    // Check for truncation indicators
-    const truncationIndicators = [
-      "Read more",
-      "Continue reading",
-      "[...]",
-      "Click here to read",
-      "View full article",
-    ];
-
-    if (article.content) {
-      return truncationIndicators.some((indicator) =>
-        article.content.toLowerCase().includes(indicator.toLowerCase())
-      );
-    }
-
-    return false;
-  }, [
-    article.hasFullContent,
-    article.fullContent,
-    article.content,
-    feed?.isPartialContent,
-  ]);
+  const lastTriggeredRef = useRef<string | null>(null);
 
   const triggerParse = useCallback(
     async (isManual = false) => {
       // Don't start a new parse if one is already in progress (unless manual)
-      if (!isManual && isParsingRef.current) return;
+      if (!isManual && isParsing) return;
       if (!article.url) return;
 
       // Track the current article ID to detect if it changes during fetch
@@ -85,7 +44,6 @@ export function useAutoParseContent({
       }
 
       setIsParsing(true);
-      isParsingRef.current = true; // Update ref
       setParseError(null);
       setParseAttempted(true);
 
@@ -101,7 +59,7 @@ export function useAutoParseContent({
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              forceRefresh: isManual, // Pass manual flag to API
+              forceRefresh: isManual,
             }),
             signal: controller.signal,
           }
@@ -166,43 +124,86 @@ export function useAutoParseContent({
         // Only update isParsing if this is still the current article
         if (currentArticleId === article.id) {
           setIsParsing(false);
-          isParsingRef.current = false; // Update ref
         }
         abortControllerRef.current = null;
       }
     },
-    [article.id, article.url]
-  ); // Removed isParsing to prevent circular dependency
+    [article.id, article.url, isParsing]
+  );
 
-  // Auto-trigger parsing when component mounts if needed
+  // Reset state when article changes
   useEffect(() => {
-    // Reset ALL state when article changes (critical fix)
     setParsedContent(null);
     setParseError(null);
     setParseAttempted(false);
-    setIsParsing(false); // Critical: Reset parsing state to prevent stuck loading states
-    isParsingRef.current = false; // Reset ref too
+    setIsParsing(false);
+    lastTriggeredRef.current = null;
 
     // Cancel any in-flight request from previous article
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+  }, [article.id]);
 
-    // Check if we need to parse and trigger if so
-    if (enabled && needsParsing() && !article.parseFailed) {
-      triggerParse();
+  // Check if auto-parsing should be triggered
+  useEffect(() => {
+    // Skip if auto-parsing is disabled
+    if (!enabled) return;
+
+    // Skip if already triggered for this article
+    if (lastTriggeredRef.current === article.id) return;
+
+    // Skip if already has full content
+    if (article.hasFullContent && article.fullContent) return;
+
+    // Skip if parsing failed permanently
+    if (article.parseFailed) return;
+
+    // Determine if auto-parsing is needed
+    let needsParsing = false;
+
+    // Always parse partial feeds
+    if (feed?.isPartialContent === true) {
+      needsParsing = true;
+    }
+    // Parse short content
+    else if (article.content && article.content.length < 500) {
+      needsParsing = true;
+    }
+    // Parse content with truncation indicators
+    else if (article.content) {
+      const truncationIndicators = [
+        "Read more",
+        "Continue reading",
+        "[...]",
+        "Click here to read",
+        "View full article",
+      ];
+      needsParsing = truncationIndicators.some((indicator) =>
+        article.content.toLowerCase().includes(indicator.toLowerCase())
+      );
     }
 
-    // Cleanup function to abort request when dependencies change
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article.id, enabled, article.parseFailed, needsParsing, triggerParse]); // Include stable functions
+    if (needsParsing) {
+      lastTriggeredRef.current = article.id;
+      // Use setTimeout to avoid triggering during render
+      const timeoutId = setTimeout(() => {
+        triggerParse(false);
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    enabled,
+    article.id,
+    article.hasFullContent,
+    article.fullContent,
+    article.parseFailed,
+    article.content,
+    feed?.isPartialContent,
+    triggerParse,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
