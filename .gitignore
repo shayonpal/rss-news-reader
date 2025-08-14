@@ -53,6 +53,9 @@ next-env.d.ts
 # IDE
 .vscode/settings.json
 .idea/
+.cursor
+.gemini-clipboard
+.serena
 
 # Local development
 CLAUDE.local.md
