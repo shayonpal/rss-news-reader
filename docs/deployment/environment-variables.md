@@ -146,7 +146,7 @@ Additional development/runtime helpers:
 
 2. **"Internal Server Error" in production**:
    - Database credentials missing or incorrect
-   - Run validation on production server
+   - Run validation on development server
    - Check PM2 logs for specific errors
 
 3. **Client features not working**:

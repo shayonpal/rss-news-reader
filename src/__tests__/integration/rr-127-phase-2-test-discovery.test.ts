@@ -269,7 +269,7 @@ describe("RR-127 Phase 2: Systematic Test Discovery Fix", () => {
 
   describe("Test Configuration Discovery", () => {
     it("should validate vitest configurations are properly structured", async () => {
-      const configFiles = ["vitest.config.ts", "vitest.integration.config.ts"];
+      const configFiles = ["vitest.config.ts", "vitest.config.integration.ts"];
 
       for (const configFile of configFiles) {
         const fullPath = resolve(projectRoot, configFile);

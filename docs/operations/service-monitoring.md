@@ -222,7 +222,6 @@ Monitor these cleanup-specific errors:
 
 ## Related Documentation
 
-- [PM2 Process Management](./pm2-management.md)
-- [Health Endpoints](../api/health-endpoints.md)
-- [Troubleshooting Guide](./troubleshooting.md)
+- [Server Health Endpoints](../monitoring/server-health-endpoints.md)
 - [Cleanup Architecture](../tech/cleanup-architecture.md)
+- [Health Monitoring Overview](../monitoring/health-monitoring-overview.md)

@@ -1291,11 +1291,11 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
       }),
       (e = [
         {
-          revision: "e2eab88e56a3733a5c3b35b7f613c223",
+          revision: "54fe28e561dfa71790bbc40545626180",
           url: "/reader/_next/app-build-manifest.json",
         },
         {
-          revision: "b3a575287bd9407e7ccd6a815f0bd97b",
+          revision: "9f27a607f3b4ed3cdd94c227845d3f84",
           url: "/reader/_next/build-manifest.json",
         },
         {
@@ -1303,39 +1303,39 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
           url: "/reader/_next/react-loadable-manifest.json",
         },
         {
-          revision: "b60f12865313497357939a0bcbc0c685",
+          revision: "67671a0c3e4593c9c45cb0175949fb04",
           url: "/reader/_next/server/app/_not-found/page_client-reference-manifest.js",
         },
         {
-          revision: "36e35018ee52b5490ebdb73d4434c964",
+          revision: "5fe7a7a732b09aa1b518e6dd89b9f0fb",
           url: "/reader/_next/server/app/article/[id]/page_client-reference-manifest.js",
         },
         {
-          revision: "1ceff276ee5c88c08ea7f453f6af9090",
+          revision: "b22465c09e01602161143c9278d16a22",
           url: "/reader/_next/server/app/fetch-stats/page_client-reference-manifest.js",
         },
         {
-          revision: "6171cd951b5948847ba03c1a4812e2f3",
+          revision: "4222184a96b8e4b8509a57b989d7db6d",
           url: "/reader/_next/server/app/health/page_client-reference-manifest.js",
         },
         {
-          revision: "46aa138cc5b6b902380a874f5b8b99f0",
+          revision: "85759f21334e3227799f884020c27284",
           url: "/reader/_next/server/app/offline/page_client-reference-manifest.js",
         },
         {
-          revision: "22860c87772bbf0d8e366529ec443635",
+          revision: "6b9af22b0265ee566bc76798964dcd1c",
           url: "/reader/_next/server/app/page_client-reference-manifest.js",
         },
         {
-          revision: "e918f70703d37f56be3ef7f3c6210f15",
+          revision: "d453599e168ba98347f989874aba0aaf",
           url: "/reader/_next/server/app/pocs/article-dropdown-liquid-glass/enhanced/page_client-reference-manifest.js",
         },
         {
-          revision: "0d3f1acb34ee354e52fa5b3283ac8a4d",
+          revision: "11ffee711153bb85c0ff05636f525ebd",
           url: "/reader/_next/server/app/pocs/article-dropdown-liquid-glass/page_client-reference-manifest.js",
         },
         {
-          revision: "328e869ffc753a04f6a67bd20708e47f",
+          revision: "5942c19d134e116b528d1d9948ce9f29",
           url: "/reader/_next/server/app/pocs/mark-all-read-liquid-glass/page_client-reference-manifest.js",
         },
         {
@@ -1356,11 +1356,11 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: "c155cce658e53418dec34664328b51ac",
-          url: "/reader/_next/static/Fx8YZXqo8SF3VFAjab3OH/_buildManifest.js",
+          url: "/reader/_next/static/__eBo5-RAiIdFq0v3EXOn/_buildManifest.js",
         },
         {
           revision: "b6652df95db52feb4daf4eca35380933",
-          url: "/reader/_next/static/Fx8YZXqo8SF3VFAjab3OH/_ssgManifest.js",
+          url: "/reader/_next/static/__eBo5-RAiIdFq0v3EXOn/_ssgManifest.js",
         },
         {
           revision: null,
@@ -1440,7 +1440,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/article/[id]/page-3b4081626ee130e7.js",
+          url: "/reader/_next/static/chunks/app/article/[id]/page-82356326ed2fae78.js",
         },
         {
           revision: null,
@@ -1468,7 +1468,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/page-dd707401bd61fcc7.js",
+          url: "/reader/_next/static/chunks/app/page-893c3b172ecf7105.js",
         },
         {
           revision: null,

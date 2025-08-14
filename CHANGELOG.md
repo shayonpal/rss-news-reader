@@ -5,6 +5,38 @@ All notable changes to the RSS News Reader project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Documentation] - Thursday, August 14, 2025 at 4:17 PM
+
+### Fixed
+- **Documentation Links (RR-70)**: Fixed broken internal documentation links
+  - Updated service-monitoring.md to reference existing server-health-endpoints.md instead of missing files
+  - Fixed content-extraction-strategy.md reference in api-integrations.md with inline explanation
+  - Corrected health monitoring documentation references
+
+### Removed
+- **Duplicate Investigation Reports (RR-70)**: Consolidated server instability investigation reports
+  - Removed 4 timestamped duplicate reports from docs/server-instability-issues/
+  - Kept main investigation-report-2025-07-26.md and README.md for reference
+
+### Changed
+- **Implementation Strategy (RR-70)**: Modernized development deployment documentation
+  - Updated production references to development deployment patterns
+  - Changed class names and configurations to reflect current development setup
+  - Added note about single-user development optimization
+  - Updated title from "Shayon's News" to "RSS News Reader"
+
+## [Documentation] - Thursday, August 14, 2025 at 4:10 PM
+
+### Changed
+- **Documentation Cleanup (RR-70)**: Removed all production references (port 3147, rss-reader-prod) from deployment and monitoring documentation
+- **Uptime Kuma Documentation**: Consolidated uptime-kuma-monitoring-strategy.md and uptime-kuma-setup.md into single uptime-kuma-monitoring.md file
+- **Implementation Strategy**: Removed deprecated auto-fetch functionality documentation from implementation-strategy.md (lines 2386-3181)
+
+### Removed
+- **Production Configuration**: Eliminated references to production environment that was removed in RR-92
+- **Auto-Fetch Documentation**: Removed comprehensive auto-fetch implementation details as functionality was removed in RR-162
+- **Duplicate Files**: Deleted docs/tech/uptime-kuma-monitoring-strategy.md and docs/tech/uptime-kuma-setup.md after consolidation
+
 ## [1.0.0] - 2025-08-14
 
 ### ⚠️ BREAKING CHANGES
