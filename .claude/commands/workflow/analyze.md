@@ -45,8 +45,10 @@ Use `linear-expert` to:
 
 - Get full issue with ALL comments and sub-issues
 - Check parent/child issues and dependencies
+- If the issue has a parent issue, check other children issues of the parent issue to get a better understanding of the larger picture
 - Extract description, labels, priority
 - Remember: Issue + comments = living specification
+- Get context of all other incomplete + Done issues in the current cycle
 
 ### 3B. Project Memory Context
 

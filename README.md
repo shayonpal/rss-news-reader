@@ -435,6 +435,21 @@ npm test  # Optimized runner with thread pool (8-20 seconds)
 - `npm run test:watch` - Development mode with hot reload
 - `npm run test:progressive` - Detailed feedback and progress tracking
 
+### Auto-Generated Files
+
+The following files are automatically generated during build/test processes and should NOT be committed to the repository:
+
+- `performance-baseline.json` - Performance baseline metrics (generated during build)
+- `performance-report.json` - Current performance metrics (generated during build)
+- `infrastructure-readiness-report.json` - Infrastructure validation report (archived versions kept in docs/infrastructure/)
+- `*.tsbuildinfo` - TypeScript incremental build cache
+- `next-env.d.ts` - Next.js TypeScript definitions
+- `.next/` directories - Next.js build output
+- `playwright-report/` - Playwright test results
+- `test-results/` - Test execution artifacts
+
+These files are properly configured in `.gitignore` and will be regenerated as needed during build processes.
+
 ### Test Types
 
 - **Unit Tests**: Component and utility function testing with mocked dependencies

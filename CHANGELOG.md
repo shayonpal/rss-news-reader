@@ -120,6 +120,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **[RR-78] Cleaned up build artifacts and miscellaneous files** (Thursday, August 14, 2025 at 6:32 PM)
+  - Updated .gitignore to exclude auto-generated files (performance reports, test SQL, build cache)
+  - Moved infrastructure readiness report to docs/infrastructure/
+  - Added documentation about auto-generated files in README.md
+  - Updated performance regression script to handle missing baseline files gracefully
 - [RR-74] Cleaned up redundant configuration files and scripts following production environment removal (Thursday, August 14, 2025 at 3:35 PM)
   - Removed duplicate TypeScript config (tsconfig.prod.json)
   - Removed duplicate Vitest config (vitest.integration.config.ts)
