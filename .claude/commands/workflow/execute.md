@@ -97,11 +97,13 @@ Use agents IN PARALLEL to rebuild understanding:
    - Understand constraints and relationships
    - Check existing data patterns
 
-3. **Code Context** (doc-search):
-   - Find similar test files (\*.test.ts)
-   - Identify test utilities and helpers
-   - Find similar API implementations
-   - Check existing error handling patterns
+3. **Code Context** (Use Serena MCP):
+   - Use `find_symbol` with pattern "\*.test.ts" to locate test files
+   - Use `get_symbols_overview` on test files to understand test structure
+   - Find test utilities: `find_symbol` with "beforeEach|describe|it|expect"
+   - Use `find_symbol` to locate similar API implementations by name
+   - Use `find_referencing_symbols` to understand code dependencies
+   - Map symbol relationships for the feature being implemented
 
 4. **Memory Context** (memory MCP):
    - Search for project-specific patterns
@@ -138,12 +140,114 @@ Ensure test-expert has written tests that:
 4. Include all acceptance criteria from Linear
 5. Run tests to confirm they fail (red phase)
 
-### Step 2: Implementation
+#### 1D. Symbol-Level Test Mapping
 
-1. Implement the solution to make tests pass
-2. Follow the implementation plan from Linear comments
-3. Track performance: Keep test execution under 20s baseline
-4. Update Linear with progress if implementation takes multiple sessions
+Use Serena to ensure complete test coverage:
+
+1. **Map Test-to-Symbol Relationships**:
+   - Use `find_symbol` to locate all symbols mentioned in test contracts
+   - For each symbol, use `find_referencing_symbols` to find dependencies
+   - Ensure tests cover primary symbols and critical dependencies
+
+2. **Validate Coverage Completeness**:
+   - Primary symbols: Must have dedicated test cases
+   - Consumer symbols: Must have integration tests
+   - Utility symbols: Covered through usage tests
+
+3. **Generate Symbol Test Matrix**:
+   ```
+   Symbol Coverage Matrix:
+   - ArticleStore/syncArticles → sync.test.ts (unit)
+   - SyncService/performSync → sync-service.test.ts (unit)
+   - /api/sync/trigger → api-sync.test.ts (integration)
+   - All 3 symbols → sync-flow.test.ts (E2E)
+   ```
+
+### Step 2: Implementation with Symbol Precision
+
+#### 2A. Choose the Right Editing Approach
+
+**Use Serena's Symbolic Editing for:**
+
+- **Whole function/method replacement**: `replace_symbol_body`
+- **Adding new methods to classes**: `insert_after_symbol`
+- **Adding imports or initialization**: `insert_before_symbol`
+- **Major refactoring**: Complete symbol replacement
+
+**Use Traditional Edit/MultiEdit for:**
+
+- Changing a few lines within a large function
+- Updating string literals or constants
+- Minor bug fixes within a method
+- Configuration value changes
+
+#### 2B. Serena Editing Patterns
+
+1. **Replacing Entire Functions/Methods**:
+
+   ```
+   # First, find the symbol to understand current implementation
+   find_symbol(name_path="ArticleStore/syncArticles", include_body=true)
+
+   # Then replace the entire body
+   replace_symbol_body(
+     name_path="ArticleStore/syncArticles",
+     relative_path="src/lib/stores/article-store.ts",
+     body="async syncArticles() { /* new implementation */ }"
+   )
+   ```
+
+2. **Adding New Methods to Classes**:
+
+   ```
+   # Insert after an existing method
+   insert_after_symbol(
+     name_path="ArticleStore/syncArticles",
+     relative_path="src/lib/stores/article-store.ts",
+     body="async newMethod() { /* implementation */ }"
+   )
+   ```
+
+3. **Adding Imports**:
+
+   ```
+   # Find first symbol in file, insert before it
+   get_symbols_overview("src/lib/stores/article-store.ts")
+   insert_before_symbol(
+     name_path="[first symbol name]",
+     relative_path="src/lib/stores/article-store.ts",
+     body="import { newDependency } from './deps'"
+   )
+   ```
+
+4. **Hybrid Approach for Partial Edits**:
+   ```
+   # For changing part of a large function:
+   1. Use find_symbol to get current implementation
+   2. Modify the specific part in the retrieved code
+   3. Use replace_symbol_body with the modified version
+   ```
+
+#### 2C. Implementation Workflow
+
+1. **Navigate to symbols from Linear documentation**:
+   - Use exact symbol paths documented in analysis
+   - Example: "Modify ArticleStore/syncArticles at lines 145-203"
+
+2. **Check impact before modifying**:
+   - Always run `find_referencing_symbols` first
+   - Understand which code depends on your changes
+   - Plan updates for all dependent symbols
+
+3. **Apply modifications systematically**:
+   - Start with leaf symbols (no dependencies)
+   - Work up to higher-level symbols
+   - Test after each symbol modification
+
+4. **Track symbol-level progress**:
+   - Document each symbol modified
+   - Note if implementation spans multiple sessions
+   - Update Linear with symbol-specific progress
 
 ### Step 3: Test & Refine
 
@@ -153,20 +257,43 @@ Ensure test-expert has written tests that:
 4. For UI changes: Run Playwright tests `npx playwright test --project=chrome`
 5. Refactor code while keeping tests green
 
-## 3. Specialist Reviews
+## 3. Specialist Reviews with Symbol Analysis
 
-Based on implementation type, get reviews from read-only agents:
+Based on implementation type, get symbol-aware reviews:
 
-- **Database changes**: Use `db-expert-readonly` to verify schema/queries
-- **Infrastructure changes**: Use `devops-expert-readonly` to check deployment impact
-- **UI changes**: Use `ui-expert` to review user experience
+### Database Changes
 
-Each review should check:
+Use `db-expert-readonly` with symbol context:
 
-- Does implementation match Linear requirements?
-- Are there any security concerns?
-- Is error handling adequate?
-- Are there performance implications?
+- Which symbols interact with modified tables
+- Symbol-level query patterns and optimizations
+- Impact on data access layer symbols
+
+### Infrastructure Changes
+
+Use `devops-expert-readonly` with symbol mapping:
+
+- Service initialization symbols affected
+- Configuration loading symbol modifications
+- Deployment script symbol dependencies
+
+### UI Changes
+
+Use `ui-expert` with component symbols:
+
+- Component tree via `find_referencing_symbols`
+- State management symbol interactions
+- Event handler symbol chains
+
+### Symbol-Level Review Checklist
+
+Each review should verify:
+
+- All modified symbols match Linear requirements
+- Symbol dependencies properly updated
+- Error handling at symbol boundaries
+- Performance impact on symbol call chains
+- No orphaned symbols or dead code
 
 ## 4. Quality Checks
 
@@ -192,28 +319,35 @@ Use `linear-expert` to:
 
 ## 6. Implementation Report
 
-Provide summary:
+Provide symbol-precise summary:
 
 ```
 📋 Implementation Complete: RR-XXX
 
-✅ What was implemented:
-- [Key change 1]
-- [Key change 2]
+✅ Symbols Modified:
+- ArticleStore/syncArticles: Updated sync logic
+- SyncService/performSync: Added retry mechanism
+- /api/sync/trigger: Enhanced error responses
 
-🧪 Tests written:
-- X unit tests (all passing)
-- Y integration tests (all passing)
+🔗 Symbol Dependencies Updated:
+- 12 components updated via useArticleStore hook
+- 3 API routes modified for new response format
+- 5 test files updated for new behavior
 
-📁 Files changed:
-- src/... (implementation)
-- src/__tests__/... (tests)
+🧪 Test Coverage:
+- X unit tests (all passing) - covering Y symbols
+- Z integration tests (all passing) - covering cross-symbol flows
+
+📁 Precise Changes:
+- src/lib/stores/article-store.ts: ArticleStore class (3 methods)
+- src/services/sync-service.ts: SyncService class (2 methods)
+- src/app/api/sync/trigger/route.ts: POST handler
 
 ✅ Quality checks:
 - Type check: Passing
 - Linter: Passing
 - Build: Successful
-- Manual testing: Completed
+- Symbol coverage: 100%
 
 🚀 Ready for review
 

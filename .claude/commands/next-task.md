@@ -42,6 +42,7 @@ TodoWrite.get_todos()
 ### B. Linear Context (via linear-expert)
 
 If filter is `cc` or `current-cycle`:
+
 ```
 # First get the current cycle for the team
 linear-expert.list_cycles(teamId="RSS Reader Team", type="current")
@@ -51,6 +52,7 @@ linear-expert.list_issues(cycle="[current-cycle-id]")
 ```
 
 Otherwise:
+
 - Get all incomplete issues, sub-issues, and comments
 - Check for duplicates and dependencies
 - Note recent completions from comments
@@ -162,7 +164,9 @@ For each potential task:
 After reviewing the recommendations above, you can:
 
 ### 🎯 Start Working on a Task
+
 Reply with: `/analyze RR-XXX` to:
+
 - Get deep code analysis for the issue
 - Understand implementation approach
 - See affected files and dependencies
@@ -170,13 +174,17 @@ Reply with: `/analyze RR-XXX` to:
 - Begin implementation planning
 
 ### 📋 See More Options
+
 Reply with: `/next-task more` to:
+
 - Get the next batch of 6 recommendations
 - Excludes already shown tasks
 - Uses same filter criteria
 
 ### 🔄 Try Different Filters
+
 Reply with any of these to reanalyze:
+
 - `/next-task cc` - Current cycle issues only
 - `/next-task quick` - Only quick wins (<1 hour)
 - `/next-task impact` - High-impact tasks only
@@ -185,12 +193,15 @@ Reply with any of these to reanalyze:
 - `/next-task tech-debt` - Refactoring tasks
 
 ### 💡 Custom Analysis
+
 Reply with: `/next-task [specific-area]` like:
+
 - `/next-task sync` - Tasks related to sync
 - `/next-task ui` - Frontend tasks
 - `/next-task performance` - Performance improvements
 
 ### Example Responses:
+
 ```
 > /next-task cc          # Show current cycle only
 > /analyze RR-123        # Start working on task

@@ -7,6 +7,7 @@ export interface Database {
           id: string;
           email: string;
           inoreader_id: string | null;
+          preferences: Record<string, any> | null;
           created_at: string;
           updated_at: string;
         };
@@ -14,6 +15,7 @@ export interface Database {
           id?: string;
           email: string;
           inoreader_id?: string | null;
+          preferences?: Record<string, any> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -21,6 +23,7 @@ export interface Database {
           id?: string;
           email?: string;
           inoreader_id?: string | null;
+          preferences?: Record<string, any> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -81,7 +84,6 @@ export interface Database {
           parsed_at: string | null;
           parse_failed: boolean;
           parse_attempts: number;
-          content_length: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -102,7 +104,6 @@ export interface Database {
           parsed_at?: string | null;
           parse_failed?: boolean;
           parse_attempts?: number;
-          content_length?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -123,7 +124,6 @@ export interface Database {
           parsed_at?: string | null;
           parse_failed?: boolean;
           parse_attempts?: number;
-          content_length?: number | null;
           created_at?: string;
           updated_at?: string;
         };

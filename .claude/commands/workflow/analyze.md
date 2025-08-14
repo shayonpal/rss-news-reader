@@ -81,12 +81,27 @@ Use `db-expert-readonly` to:
 
 ### 3E. Existing Code Context
 
-Use `doc-search` to find:
+Use Serena MCP for precise symbolic analysis:
 
-- **API Endpoints**: Search for "app.get", "app.post", "router.get", "router.post", "export async function GET", "export async function POST" patterns
-- **Similar Features**: Search for related functionality already implemented
-- **Test Patterns**: Identify existing test approaches
-- Review docs/api/server-endpoints.md for documented endpoints
+1. **API Endpoint Discovery**:
+   - Use `get_symbols_overview` on src/app/api/ to map all route handlers
+   - Use `find_symbol` with pattern "GET|POST|PUT|DELETE" for HTTP methods
+   - For each endpoint found, use `find_referencing_symbols` to trace usage
+
+2. **Similar Feature Analysis**:
+   - Use `find_symbol` with substring_matching=true for related functionality
+   - Example: For sync issue, search "sync" to find all sync-related symbols
+   - Use depth=1 to understand method signatures without reading full implementations
+
+3. **Dependency Mapping**:
+   - For key symbols, use `find_referencing_symbols` to build dependency graph
+   - Identify which components, stores, and services will be affected
+   - Generate exact modification scope with symbol paths
+
+4. **Pattern Recognition**:
+   - Use `search_for_pattern` with semantic awareness for implementation patterns
+   - Find similar data flows: store → service → API → database
+   - Identify reusable utility functions via symbol relationships
 
 ## 4. Update Linear Status
 
@@ -103,7 +118,9 @@ Based on gathered context, analyze:
 - Can this use existing API endpoints? (prefer extending over creating new)
 - Can this use existing database tables/columns? (prefer extending over new)
 - What similar patterns exist in the codebase?
-- Which files will need modification?
+- Use `find_symbol` to locate exact functions/classes to modify
+- Use `find_referencing_symbols` to identify ALL code that depends on changes
+- Build a complete dependency graph showing ripple effects
 
 ### Technical Validation:
 
@@ -115,6 +132,33 @@ Based on gathered context, analyze:
 
 - Use `code-reviewer` agent to validate proposed approach
 - Check for security implications and best practices
+
+## 5A. Symbol-Based Impact Assessment
+
+Execute precise symbol-level analysis:
+
+### Symbol Discovery:
+
+Use Serena to map the feature's symbol footprint:
+
+1. Primary symbols: Classes/functions that implement core logic
+2. Secondary symbols: Supporting utilities and helpers
+3. Consumer symbols: Components/services that use the feature
+
+### Impact Graph:
+
+Build complete dependency graph:
+
+- Forward dependencies: What this feature will call
+- Reverse dependencies: What calls this feature
+- Cross-file impacts: Symbols in other files affected
+
+### Modification Precision:
+
+Instead of: "Modify src/lib/stores/article-store.ts"
+Provide: "Replace symbol body: ArticleStore/syncArticles (lines 145-203)"
+"Insert after symbol: ArticleStore/constructor to add new state"
+"17 call sites need updating: [list with symbol paths]"
 
 ## 6. Pragmatic Assessment
 
@@ -260,45 +304,47 @@ Use `linear-expert` to add comment:
 Timestamp: [current time]
 ```
 
-### 9C. Gather Complete Context for test-expert
+### 9C. Gather Symbol-Level Context for test-expert
 
-Before invoking test-expert, gather ALL necessary context:
+Use Serena for precise test context:
 
-1. **Database Schema** (from db-expert-readonly):
-   - Relevant table structures
-   - Column types and constraints
-   - Existing indexes
+1. **Symbol Signatures** (via `find_symbol`):
+   - Exact function signatures with parameter types
+   - Return types and error conditions
+   - Class constructors and methods
 
-2. **Existing Test Patterns** (from doc-search):
-   - Search for similar \*.test.ts files
-   - Identify test utilities and helpers
-   - Find test setup patterns
+2. **Test Pattern Discovery** (via `search_for_pattern`):
+   - Find test files: pattern "_.test.ts" or "_.spec.ts"
+   - Use `get_symbols_overview` on test files to understand test structure
+   - Find test utilities: `find_symbol` with "beforeEach|afterEach|describe|it"
 
-3. **Existing Code Patterns** (from doc-search):
-   - Similar API endpoints
-   - Similar database operations
-   - Error handling patterns
+3. **Implementation Patterns** (via `find_referencing_symbols`):
+   - Trace how similar features are tested
+   - Find mock patterns and test helpers
+   - Identify integration points needing test coverage
 
-### 9D. Generate Test Cases with Full Context
+### 9D. Generate Symbol-Aware Test Cases
 
-Use `test-expert` providing COMPLETE context package:
+Provide test-expert with symbol-precise specifications:
 
 ```
-Linear Issue: [full details including all comments]
-Implementation Strategy: [from 9A]
-Test Contracts: [from 9A]
+Symbols to Test:
+- Primary: [Exact symbol path with file location]
+- Dependencies: [List of dependent symbols from find_referencing_symbols]
+- API: [Route handler symbols from get_symbols_overview]
 
-Database Context:
-[Complete schema for relevant tables]
+Symbol Contracts:
+- Input: [Exact parameters from symbol signature]
+- Output: [Return type from symbol analysis]
+- Side Effects: [Store updates and service calls traced via references]
 
-Existing Test Patterns:
-[Examples of similar tests from codebase]
-
-Existing Code Patterns:
-[Similar implementations found]
+Coverage Requirements:
+- Unit: Test symbol in isolation with mocked dependencies
+- Integration: Test symbol interaction with dependent symbols
+- E2E: Test complete flow through symbol call chain
+```
 
 IMPORTANT: These tests are the SPECIFICATION. Write them to define exact behavior that implementation must conform to. Tests should NOT be modified later to match implementation.
-```
 
 ### 9E. Update Linear with Test Cases
 

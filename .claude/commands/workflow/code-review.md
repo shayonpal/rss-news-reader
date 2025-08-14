@@ -1,88 +1,109 @@
 ---
-description: Performs comprehensive code review on staged git changes using OpenAI's o3 model for advanced reasoning
-args: "[optional: specific focus area like 'security', 'performance', 'architecture', or file path to prioritize]"
+description: Performs comprehensive code review on implementation using symbolic analysis and structured feedback
+args: "[optional: specific focus area like 'security', 'performance', 'architecture', or Linear issue ID]"
 ---
 
-# o3 Code Review
+# Code Review with Symbol Analysis
 
-Review staged git changes using OpenAI o3: $ARGUMENTS
+Review implemented code using symbolic navigation and comprehensive analysis: $ARGUMENTS
 
-## Execution Steps
+## 1. Parse Input & Setup
 
-### 1. Verify API Key Setup
+Check $ARGUMENTS:
+
+- If Linear issue ID (RR-XXX) → Review specific implementation
+- If focus area → Prioritize that aspect
+- If empty → General review of recent changes
+
+## 2. Context Gathering
+
+Use Serena MCP for precise code analysis:
+
+### 2A. Changed Files Discovery
 
 ```bash
-# Check if OPENAI_API_KEY is set in environment
-grep "export OPENAI_API_KEY" ~/.zshrc || echo "⚠️ OPENAI_API_KEY not found in ~/.zshrc"
-# Verify key is loaded in current session
-[[ -z "$OPENAI_API_KEY" ]] && echo "❌ OPENAI_API_KEY not set. Add to ~/.zshrc and run: source ~/.zshrc" || echo "✅ API key configured"
+git status --porcelain
+git diff --cached --name-only
+git log --oneline -5
 ```
 
-If API key is not set, inform user to add `export OPENAI_API_KEY="your-key"` to ~/.zshrc
+### 2B. Symbol-Level Change Analysis
 
-### 2. Stage Current Changes
+Use Serena to understand modifications:
 
-```bash
-git add -A  # Stage all current changes for review
+- `get_symbols_overview` on each changed file
+- `find_symbol` for modified functions/classes
+- `find_referencing_symbols` to assess impact scope
+- Map changes to specific symbols for targeted review
+
+### 2C. Implementation Context
+
+If Linear issue provided:
+
+- Use `linear-expert` to get requirements and test contracts
+- Extract expected behavior from issue comments
+- Identify implementation strategy from analysis phase
+
+## 3. Invoke Code-Reviewer Agent
+
+Use `code-reviewer` agent with complete symbol-level context:
+
+```
+Context Package:
+- Linear Issue: [RR-XXX details if provided]
+- Changed Files: [list from git status]
+- Symbol Changes: [specific functions/classes modified]
+- Dependency Impact: [symbols affected via find_referencing_symbols]
+- Focus Area: [from $ARGUMENTS or inferred from changes]
+- Project Patterns: [relevant existing implementations]
 ```
 
-### 3. Context Gathering (Parallel)
+## 4. Review Focus Areas
 
-- `git status` → modified files
-- `git diff --cached` → staged changes
-- `git log --oneline -5` → recent commits
+Based on change analysis:
 
-### 4. Determine Review Focus
+**Symbol-Level Reviews**:
 
-Based on change type and $ARGUMENTS:
+- Primary symbols: Core logic implementation
+- Consumer symbols: Components using the changes
+- Dependency symbols: Called functions/services
+- Integration symbols: API routes, database operations
 
-- **New Feature** → "Architecture fit, completeness, edge cases, integration points"
-- **Bug Fix** → "Root cause analysis, regression testing, fix validation"
-- **Refactor** → "Code clarity, functionality preservation, performance impact"
-- **Performance** → "Optimization effectiveness, benchmarks, trade-offs"
-- **Security** → "Vulnerability assessment, input validation, auth checks"
-- **Custom from $ARGUMENTS** → Use provided focus area directly
+**Quality Checks**:
 
-### 5. Execute Review
+- Requirements adherence (if Linear provided)
+- Security vulnerabilities and exposed secrets
+- Performance bottlenecks and optimization opportunities
+- Error handling and edge cases
+- Test coverage and quality
 
-Call `mcp__code-reviewer__perform_code_review` with:
+## 5. Structured Output
 
-```javascript
-{
-  target: "staged",
-  taskDescription: // Build from git log and changes context
-  llmProvider: "openai",
-  modelName: "o3",
-  reviewFocus: // From step 3 based on changes or $ARGUMENTS
-  projectContext: // Extract from CLAUDE.md and project files
-  maxTokens: 32000 // Default, increase if needed
-}
-```
+Expect structured feedback with:
 
-## Output Format
+**Assessment**: Approved | Needs Changes | Major Issues
+**Risk Level**: Low | Medium | High | Critical
+**Symbol-Level Issues**: Specific function/class problems
 
-**Assessment**: Approved | Needs Changes | Major Issues  
-**Risk Level**: Low | Medium | High  
-**Issues Found**: [count]
+### Critical Issues (If Any)
 
-### Critical Issues
+- Issue → Symbol:Line → Required fix
 
-- Issue description → File:line → Fix required
+### Improvements
 
-### Improvements (if any)
-
-**Must Fix**: Blocking issues  
-**Should Fix**: Important improvements  
-**Consider**: Optional enhancements
+- **Must Fix**: Blocking issues with symbol references
+- **Should Fix**: Important improvements
+- **Consider**: Optional enhancements
 
 ### Next Steps
 
-1. Fix critical issues
-2. Run tests: `npm run test`
-3. Commit with insights from review
+1. Address critical issues at symbol level
+2. Run verification: `npm run type-check && npm run lint && npm run test`
+3. Re-review if major changes needed
 
 ## Requirements
 
-- MCP server installed: `@praneybehl/code-review-mcp`
-- Environment variable: `OPENAI_API_KEY` must be set
-- Must run from git repository root
+- Serena MCP activated for symbolic analysis
+- Git repository with staged changes
+- Code-reviewer agent available
+- Optional: Linear issue for context

@@ -594,7 +594,6 @@ describe("RR-148: Content Parsing Service", () => {
           extraction_method: parsedData.method || "readability",
           extracted_at: new Date().toISOString(),
           extraction_duration: parsedData.duration || 0,
-          content_length: parsedData.content.length,
           updated_at: new Date().toISOString(),
         };
 
@@ -622,12 +621,10 @@ describe("RR-148: Content Parsing Service", () => {
         extraction_method: "readability",
         extracted_at: expect.any(String),
         extraction_duration: 1500,
-        content_length: 36,
         updated_at: expect.any(String),
       });
 
       expect(result.has_full_content).toBe(true);
-      expect(result.content_length).toBe(36);
     });
   });
 

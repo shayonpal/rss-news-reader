@@ -1,6 +1,7 @@
 # Technology Stack
 
 ## Frontend
+
 - **Framework**: Next.js 14+ with App Router
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
@@ -11,6 +12,7 @@
 - **Date Handling**: date-fns
 
 ## Backend
+
 - **Runtime**: Node.js
 - **Framework**: Express (for sync server)
 - **Database**: Supabase (PostgreSQL)
@@ -21,12 +23,14 @@
 - **Content Extraction**: Mozilla Readability
 
 ## Testing
+
 - **Unit/Integration**: Vitest
 - **E2E**: Playwright
 - **Coverage**: Built-in Vitest coverage
 - **Mocking**: vitest-mock, fake-indexeddb
 
 ## Development Tools
+
 - **Linting**: ESLint with Next.js config
 - **Formatting**: Prettier with Tailwind plugin
 - **Type Checking**: TypeScript compiler
@@ -34,6 +38,7 @@
 - **Environment**: .env files with validation
 
 ## Services
+
 - **Main App**: rss-reader-dev (port 3000)
 - **Sync Service**: rss-sync-cron (automated)
 - **Sync Server**: rss-sync-server (port 3001)

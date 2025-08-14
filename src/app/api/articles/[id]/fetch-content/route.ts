@@ -261,7 +261,6 @@ async function performParsing(
         parsed_at: new Date().toISOString(),
         parse_failed: false,
         parse_attempts: (article.parse_attempts || 0) + 1,
-        content_length: cleanContent.length,
         updated_at: new Date().toISOString(),
       })
       .eq("id", article.id);

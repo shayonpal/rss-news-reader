@@ -1,201 +1,277 @@
 ---
-description: Commit and push changes to the repository after validation.
+description: Commit and push changes using symbolic analysis for precise change tracking and validation
 argument-hint: [linear-issue-id]
 ---
 
-# Commit and Push Changes
+# Commit and Push Changes with Symbol Analysis
 
-Prepare, validate, and commit changes for Linear issue $ARGUMENTS (or current work if no issue provided).
+Prepare, validate, and commit changes with symbol-level precision for Linear issue $ARGUMENTS.
 
-## Step 1: Context Recovery & Validation
+## 1. Symbol-Level Change Analysis
 
-### 1A. Gather Context
+### 1A. Discover Implementation Changes
 
-If Linear issue provided in $ARGUMENTS:
+Use Serena MCP to understand what was implemented:
 
-- Use `linear-expert` to get issue details and status
-- Verify issue is in "Done" or ready for commit
+1. **Find Modified Symbols**:
+
+   ```bash
+   git status --porcelain
+   git diff --cached --name-only
+   ```
+
+2. **Analyze Symbol Changes**:
+   - `get_symbols_overview` on each modified file
+   - `find_symbol` for specific functions/classes changed
+   - `find_referencing_symbols` to identify impact scope
+
+3. **Map Implementation to Requirements**:
+   - Cross-reference symbol changes with Linear issue
+   - Identify which acceptance criteria are addressed
+   - Validate symbol-level completeness
+
+### 1B. Linear Context Recovery
+
+If Linear issue provided:
+
+- Use `linear-expert` to verify issue status and requirements
 - Extract implementation summary from comments
+- Confirm all symbol changes align with planned approach
 
-If no Linear issue:
-
-- Use `git-expert` to check staged changes
-- Determine if changes require Linear tracking
-
-### 1B. Branch Verification
-
-Ensure we're on the correct branch:
+### 1C. Branch & Environment Validation
 
 ```bash
-# Check current branch
+# Verify correct branch (NOT main)
 git branch --show-current
 
-# Verify we're NOT on main
-if [ "$(git branch --show-current)" = "main" ]; then
-  echo "❌ ERROR: Cannot commit directly to main branch"
-  echo "Switch to dev or feature branch first"
-  exit 1
-fi
+# Validate environment
+npm run type-check
+npm run lint
+npm run test:optimized  # <20s execution
 ```
 
-**Branch Rules:**
+## 2. Symbol-Based Documentation Check
 
-- Primary development: Push to `dev` branch
-- Feature work: Push to feature branch, if work was done on a feature branch (e.g., `feature/RR-XXX-description`)
-- NEVER push directly to `main` (only via PR/merge from dev)
+### 2A. CHANGELOG with Symbol Details
 
-### 1C. Pre-Commit Checks
+Use `doc-admin` to update CHANGELOG.md with symbol-specific information:
 
-Run validation to ensure code is ready:
+```markdown
+## [Unreleased]
+
+### Added
+
+- [RR-XXX] New sync functionality in ArticleStore/syncArticles
+- Enhanced error handling in SyncService/performSync
+
+### Changed
+
+- [RR-XXX] Modified useArticleStore hook for better state management
+- Updated API endpoint /api/sync/trigger for improved response format
+
+### Fixed
+
+- [RR-XXX] Resolved memory leak in article cleanup (ArticleManager/cleanup)
+```
+
+### 2B. Comprehensive Documentation Review
+
+Use `doc-admin` to identify and update all relevant documentation:
+
+```
+Task: Review and update all documentation for RR-XXX changes
+
+Symbol Changes Analysis:
+- [Provide list of modified symbols from Section 1A]
+- [API endpoints added/modified]
+- [Configuration changes]
+- [New features or behavior changes]
+
+Documentation Review Checklist:
+- API documentation (docs/api/) for new/changed endpoints
+- README.md for setup/usage changes
+- Environment variables documentation (.env.example)
+- Service configuration (PM2, monitoring)
+- Testing documentation for new test patterns
+- Architecture docs for significant changes
+- User guides for feature changes
+- Deployment instructions if needed
+
+Update Requirements:
+- Include Linear reference (RR-XXX)
+- Add timestamps and version info
+- Update table of contents if needed
+- Ensure all cross-references are valid
+```
+
+Expected outputs:
+
+- List of documentation files updated
+- Summary of changes made to each file
+- Confirmation that all relevant docs are current
+
+### 2C. Update Project Memory
+
+Use memory MCP to store implementation knowledge:
+
+- Symbol-level changes made
+- Integration patterns used
+- Performance considerations
+- Future enhancement opportunities
+
+## 3. Pre-Commit Symbol Validation
+
+### 3A. Symbol-Level Quality Checks
 
 ```bash
-# Check what's being committed
-git status
-git diff --cached
+# Stage all changes
+git add .
 
-# Run pre-commit checks (REQUIRED)
+# Comprehensive validation
 npm run pre-commit
 
-# Verify tests pass (optimized runner)
-npm test  # Should complete in <20s
-
-# Check for performance regression
-node scripts/check-performance-regression.js
-
-# Verify no debug code
-git diff --cached | grep -E "console\.(log|debug|warn|error)" || echo "✅ No console statements"
+# Symbol-specific checks
+npm run test:performance
 ```
 
-If any checks fail:
+### 3B. Symbol Coverage Analysis
 
-- 🛑 STOP - Fix issues before committing
-- Use appropriate agent for fixes
+Verify all modified symbols are properly:
 
-## Step 2: Documentation Verification
+- Tested (unit and integration)
+- Documented (comments and external docs)
+- Integrated (dependencies updated)
+- Secured (no vulnerabilities introduced)
 
-### 2A. Check CHANGELOG Status
+## 4. Generate Commit with Symbol Context
 
-Review if CHANGELOG.md needs updating:
+### 4A. Prepare Symbol-Aware Commit Message
 
-- For features: REQUIRED (Added section)
-- For bug fixes: REQUIRED (Fixed section)
-- For refactoring: Optional (Changed section)
-- For docs/chores: Usually not needed
-
-If CHANGELOG needs updating and isn't:
-
-- Use `doc-admin` to update CHANGELOG.md with:
-  - Current date and time
-  - Linear issue reference
-  - Clear description of changes
-  - User impact
-
-### 2B. Check Other Documentation
-
-Verify if other docs need updates:
-
-- API documentation for new endpoints
-- README for new features or setup changes
-- Configuration docs for new env vars
-
-### 2C. Check & Update memory
-
-If not already done, update the project memory with a brief information about what has been implemented using `memory` MCP server.
-
-## Step 3: Generate Commit Context for git-expert
-
-Prepare comprehensive context for git-expert:
+Gather comprehensive context for git-expert:
 
 ```
-Task: Commit and push changes for RR-XXX
+Task: Commit symbol-level changes for RR-XXX
 
-Context:
-- Linear Issue: [title and description if available]
-- Change Summary: [what was implemented]
-- Test Status: [confirm tests passed]
-- Documentation: [confirm CHANGELOG updated]
+Symbol Changes:
+- Primary: ArticleStore/syncArticles (enhanced sync logic)
+- Consumer: useArticleStore hook (state management updates)
+- Integration: /api/sync/trigger (response format changes)
+- Dependencies: SyncService/performSync (error handling)
 
-Commit Type: [feat|fix|docs|chore]
-Breaking Changes: [yes/no with details]
+Implementation Summary:
+- [Brief description of what symbols do]
+- [Integration points modified]
+- [Performance/security considerations]
 
-Special Instructions:
-- Include Linear reference (RR-XXX) in commit message
-- Use conventional commit format
-- Stage all relevant files including .claude updates
+Quality Validation:
+- Tests: All passing (Xs execution time)
+- Type-check: Clean compilation
+- Performance: No regression detected
+- Documentation: CHANGELOG and memory updated
+
+Commit Type: feat|fix|docs|chore
+Breaking Changes: [yes/no with symbol details]
+Linear Reference: RR-XXX
 ```
 
-## Step 4: Execute Commit with git-expert
+### 4B. Execute Commit via git-expert
 
-Use `git-expert` agent with full context:
+Use `git-expert` with symbol-level context:
 
-- Provide Linear issue details
-- Confirm documentation is updated
-- Specify target branch explicitly (dev or feature/RR-XXX)
-- Request commit and push operation
-- git-expert will handle:
-  - Proper commit message format
-  - Git hooks compliance
-  - Linear reference inclusion
-  - Push to specified branch (NOT main)
+- Include specific symbol paths in commit message
+- Reference Linear issue and acceptance criteria
+- Highlight integration points affected
+- Push to dev/feature branch (never main)
 
-**Example context for git-expert:**
+## 5. Post-Commit Symbol Tracking
+
+### 5A. Update Linear with Symbol Details
+
+Use `linear-expert` to add comment:
 
 ```
-Push to: dev branch (or feature/RR-XXX if on feature branch)
-IMPORTANT: Never push to main branch directly
+✅ Implementation Complete - Commit: [SHA]
+
+Symbol Changes:
+- ArticleStore/syncArticles: Enhanced sync performance
+- SyncService/performSync: Added retry mechanism
+- /api/sync/trigger: Updated response schema
+- useArticleStore: Improved state management
+
+Impact Analysis:
+- X symbols modified
+- Y dependent components updated
+- Z integration points validated
+
+Quality Metrics:
+- Test coverage: 100% of modified symbols
+- Performance: No regression in sync operations
+- Security: All input validation maintained
 ```
-
-## Step 5: Post-Commit Actions
-
-### 5A. Update Linear Issue
-
-If Linear issue was referenced:
-
-- Use `linear-expert` to add comment with commit SHA
-- Update status if needed (In Review → Done if all tests passed)
-- Note deployment readiness
 
 ### 5B. Verify Push Success
 
-Confirm with git-expert response:
+Confirm with git-expert:
 
-- Commit SHA recorded
-- Push successful
-- No conflicts
-- Hooks passed
+- Commit SHA and message recorded
+- Push successful to correct branch
+- CI/CD pipeline triggered
+- No merge conflicts
 
-## Step 6: Final Report
+## 6. Symbol-Level Commit Report
 
 ```
-✅ Commit Complete for RR-XXX
+✅ Commit Complete for RR-XXX: [Title]
 
-📝 Commit Details:
-- SHA: [commit hash]
-- Message: [commit message]
-- Files: X changed, Y insertions, Z deletions
+🔍 Symbol Analysis:
+Primary Changes:
+- ArticleStore/syncArticles: [brief description]
+- SyncService/performSync: [brief description]
+- /api/sync/trigger: [brief description]
 
-✅ Quality Checks:
-- Tests: Passing (execution: Xs)
-- Performance: No regression
-- Type-check: Clean
+Dependency Updates:
+- X consumer symbols updated
+- Y integration points modified
+- Z test files enhanced
+
+📊 Quality Validation:
+- Type Compilation: ✅ Clean
+- Linting: ✅ No issues
+- Tests: ✅ All passing (Xs)
+- Performance: ✅ No regression
+- Security: ✅ No vulnerabilities
 
 📚 Documentation:
-- CHANGELOG: ✅ Updated
-- Memory: ✅ Updated
+- CHANGELOG: ✅ Updated with symbol details
+- Memory: ✅ Implementation patterns stored
+- Linear: ✅ Commented with symbol changes
 
-🔗 Linear:
-- Issue: RR-XXX
-- Status: [current status]
+🚀 Deployment:
+- Branch: [dev/feature-branch]
+- Commit: [SHA]
+- CI/CD: ✅ Pipeline triggered
+- Status: Ready for review/merge
 
-🚀 Next Steps:
-- CI/CD pipeline will validate on push
-- [Deployment readiness]
+🔗 References:
+- Linear: RR-XXX
+- Changed Files: [count]
+- Modified Symbols: [count]
 ```
+
+## Execution Principles
+
+1. **Symbol-First**: Track changes at function/class level, not just files
+2. **Impact-Aware**: Use `find_referencing_symbols` to understand ripple effects
+3. **Quality-Gated**: Never commit without comprehensive validation
+4. **Documentation-Rich**: Include symbol details in all documentation
+5. **Traceability**: Maintain clear symbol-to-requirement mapping
 
 ## Important Notes
 
-- Never commit without pre-commit checks passing
-- Always update CHANGELOG for user-facing changes
-- Include Linear reference for significant work
-- Let git-expert handle the actual git operations
-- Don't duplicate git-expert's validation logic
+- **Use Serena**: Leverage symbolic navigation for precise change tracking
+- **Quality Gates**: All validation must pass before commit
+- **Symbol Precision**: Reference exact functions/classes in documentation
+- **Branch Safety**: Never push directly to main branch
+- **Agent Coordination**: Let git-expert handle actual git operations with symbol context
+
+**Success Criteria**: All symbols validated, documentation updated, tests passing, Linear referenced, correct branch pushed.

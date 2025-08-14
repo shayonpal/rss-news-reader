@@ -1,6 +1,7 @@
 # RSS News Reader Project Structure
 
 ## Root Directory
+
 ```
 rss-news-reader/
 ├── src/                    # Source code
@@ -21,6 +22,7 @@ rss-news-reader/
 ```
 
 ## Source Code Structure (`src/`)
+
 ```
 src/
 ├── app/                   # Next.js App Router
@@ -52,24 +54,28 @@ src/
 ## Key Directories
 
 ### `/server`
+
 - Express server for bi-directional sync
 - OAuth token management
 - Inoreader API integration
 - Content extraction services
 
 ### `/scripts`
+
 - `validate-env.sh` - Environment validation
 - `monitor-dashboard.sh` - Service monitoring
 - `sync-health-monitor.sh` - Sync status
 - Build and test utilities
 
 ### `/docs`
+
 - `/tech` - Technical documentation
 - `/api` - API documentation
 - `/testing` - Test plans
 - `/ui-ux` - Design guidelines
 
 ## Configuration Files
+
 - `.env` - Environment variables (never commit)
 - `ecosystem.config.js` - PM2 process management
 - `next.config.mjs` - Next.js configuration
@@ -77,12 +83,14 @@ src/
 - `vitest.config.ts` - Test configuration
 
 ## Database
+
 - Supabase PostgreSQL
 - 9 main tables
 - Row Level Security enabled
 - Materialized view for performance
 
 ## Services (PM2)
+
 1. `rss-reader-dev` - Main web app (port 3000)
 2. `rss-sync-cron` - Scheduled sync
 3. `rss-sync-server` - Bi-directional sync (port 3001)

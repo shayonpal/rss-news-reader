@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Tag } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { Tag } from "@/types";
 
 interface TagState {
   tags: Map<string, Tag>;
@@ -8,7 +8,7 @@ interface TagState {
   isLoading: boolean;
   error: string | null;
   includeEmpty: boolean;
-  
+
   // Actions
   loadTags: (includeEmpty?: boolean) => Promise<void>;
   selectTag: (tagId: string | null) => void;
@@ -16,7 +16,9 @@ interface TagState {
   clearSelectedTags: () => void;
   getSelectedTags: () => Tag[];
   refreshTags: () => Promise<void>;
-  applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => void;
+  applySidebarTags: (
+    sidebarTags: Array<{ id: string; name: string; count: number }>
+  ) => void;
   updateSelectedTagUnreadCount: (delta: number) => void; // RR-163: Optimistic updates
 }
 
@@ -32,12 +34,14 @@ export const useTagStore = create<TagState>()(
       loadTags: async (includeEmpty = false) => {
         set({ isLoading: true, error: null, includeEmpty });
         try {
-          const response = await fetch(`/reader/api/tags?includeEmpty=${includeEmpty}`);
-          if (!response.ok) throw new Error('Failed to load tags');
-          
+          const response = await fetch(
+            `/reader/api/tags?includeEmpty=${includeEmpty}`
+          );
+          if (!response.ok) throw new Error("Failed to load tags");
+
           const data = await response.json();
           const tagsMap = new Map<string, Tag>();
-          
+
           data.tags.forEach((tag: any) => {
             tagsMap.set(tag.id, {
               id: tag.id,
@@ -53,13 +57,14 @@ export const useTagStore = create<TagState>()(
               updatedAt: new Date(tag.updated_at),
             });
           });
-          
+
           console.log(`[TagStore] Loaded ${tagsMap.size} tags from API`);
           set({ tags: tagsMap, isLoading: false });
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to load tags',
-            isLoading: false 
+          set({
+            error:
+              error instanceof Error ? error.message : "Failed to load tags",
+            isLoading: false,
           });
         }
       },
@@ -91,7 +96,7 @@ export const useTagStore = create<TagState>()(
       getSelectedTags: () => {
         const state = get();
         return Array.from(state.selectedTagIds)
-          .map(id => state.tags.get(id))
+          .map((id) => state.tags.get(id))
           .filter((tag): tag is Tag => tag !== undefined);
       },
 
@@ -102,27 +107,33 @@ export const useTagStore = create<TagState>()(
       },
 
       // RR-163: Apply sidebar tags from API response with merge strategy
-      applySidebarTags: (sidebarTags: Array<{ id: string; name: string; count: number }>) => {
-        console.log(`[TagStore] Applying sidebar tags: ${sidebarTags.length} tags with unread counts`);
-        
+      applySidebarTags: (
+        sidebarTags: Array<{ id: string; name: string; count: number }>
+      ) => {
+        console.log(
+          `[TagStore] Applying sidebar tags: ${sidebarTags.length} tags with unread counts`
+        );
+
         // Don't reset counts if sync returns no tags - this means no unread articles have tags
         // The existing counts from the API are still valid
         if (sidebarTags.length === 0) {
-          console.log(`[TagStore] No sidebar tags from sync, keeping existing unread counts`);
+          console.log(
+            `[TagStore] No sidebar tags from sync, keeping existing unread counts`
+          );
           return;
         }
-        
+
         set((state) => {
           const mergedTags = new Map(state.tags);
           console.log(`[TagStore] Current tags in store: ${mergedTags.size}`);
-          
+
           // Reset all unreadCounts to 0 (tags not in response have 0 unread)
-          mergedTags.forEach(tag => {
+          mergedTags.forEach((tag) => {
             tag.unreadCount = 0;
           });
-          
+
           // Update with new unread counts from sync
-          sidebarTags.forEach(sidebarTag => {
+          sidebarTags.forEach((sidebarTag) => {
             const existing = mergedTags.get(sidebarTag.id);
             if (existing) {
               // Preserve existing metadata, update counts
@@ -131,24 +142,28 @@ export const useTagStore = create<TagState>()(
               if (!existing.totalCount && existing.articleCount) {
                 existing.totalCount = existing.articleCount;
               }
-              console.log(`[TagStore] Updated ${existing.name}: unreadCount=${sidebarTag.count}`);
+              console.log(
+                `[TagStore] Updated ${existing.name}: unreadCount=${sidebarTag.count}`
+              );
             } else {
               // New tag from sync
-              console.log(`[TagStore] Adding new tag ${sidebarTag.name} with unreadCount=${sidebarTag.count}`);
+              console.log(
+                `[TagStore] Adding new tag ${sidebarTag.name} with unreadCount=${sidebarTag.count}`
+              );
               mergedTags.set(sidebarTag.id, {
                 id: sidebarTag.id,
                 name: sidebarTag.name,
-                slug: sidebarTag.name.toLowerCase().replace(/\s+/g, '-'),
+                slug: sidebarTag.name.toLowerCase().replace(/\s+/g, "-"),
                 articleCount: sidebarTag.count,
                 unreadCount: sidebarTag.count,
                 totalCount: sidebarTag.count,
-                userId: 'shayon',
+                userId: "shayon",
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
               });
             }
           });
-          
+
           console.log(`[TagStore] After merge: ${mergedTags.size} total tags`);
           return { tags: mergedTags };
         });
@@ -159,23 +174,23 @@ export const useTagStore = create<TagState>()(
         set((state) => {
           // Only update if single tag selected
           if (state.selectedTagIds.size !== 1) return state;
-          
+
           const tagId = Array.from(state.selectedTagIds)[0];
           const updatedTags = new Map(state.tags);
           const tag = updatedTags.get(tagId);
-          
+
           if (tag && tag.unreadCount !== undefined) {
             // Bound at 0 to prevent negative counts
             tag.unreadCount = Math.max(0, tag.unreadCount + delta);
             updatedTags.set(tagId, { ...tag });
           }
-          
+
           return { tags: updatedTags };
         });
       },
     }),
     {
-      name: 'tag-store',
+      name: "tag-store",
       partialize: (state) => ({
         selectedTagIds: Array.from(state.selectedTagIds),
       }),

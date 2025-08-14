@@ -2,7 +2,7 @@
 description: Groom Linear Issues
 ---
 
-Use the `liear-expert` agent to:
+Use the `linear-expert` agent to:
 
 1. Look into all the incomplete issues, sub-issues, and comments
 2. Analyze if they are still valid.
