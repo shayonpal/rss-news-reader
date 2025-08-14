@@ -8,17 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Documentation] - Thursday, August 14, 2025 at 4:17 PM
 
 ### Fixed
+
 - **Documentation Links (RR-70)**: Fixed broken internal documentation links
   - Updated service-monitoring.md to reference existing server-health-endpoints.md instead of missing files
   - Fixed content-extraction-strategy.md reference in api-integrations.md with inline explanation
   - Corrected health monitoring documentation references
 
 ### Removed
+
 - **Duplicate Investigation Reports (RR-70)**: Consolidated server instability investigation reports
   - Removed 4 timestamped duplicate reports from docs/server-instability-issues/
   - Kept main investigation-report-2025-07-26.md and README.md for reference
 
 ### Changed
+
 - **Implementation Strategy (RR-70)**: Modernized development deployment documentation
   - Updated production references to development deployment patterns
   - Changed class names and configurations to reflect current development setup
@@ -28,11 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Documentation] - Thursday, August 14, 2025 at 4:10 PM
 
 ### Changed
+
 - **Documentation Cleanup (RR-70)**: Removed all production references (port 3147, rss-reader-prod) from deployment and monitoring documentation
 - **Uptime Kuma Documentation**: Consolidated uptime-kuma-monitoring-strategy.md and uptime-kuma-setup.md into single uptime-kuma-monitoring.md file
 - **Implementation Strategy**: Removed deprecated auto-fetch functionality documentation from implementation-strategy.md (lines 2386-3181)
 
 ### Removed
+
 - **Production Configuration**: Eliminated references to production environment that was removed in RR-92
 - **Auto-Fetch Documentation**: Removed comprehensive auto-fetch implementation details as functionality was removed in RR-162
 - **Duplicate Files**: Deleted docs/tech/uptime-kuma-monitoring-strategy.md and docs/tech/uptime-kuma-setup.md after consolidation
@@ -92,6 +97,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
+- **[RR-172] Dev server crashes when running `npm run build` due to shared `.next` directory** (Thursday, August 14, 2025 at 5:27 PM)
+  - Separated build directories: dev uses `.next-dev`, build uses `.next-build`, tests use `.next-test`
+  - Modified package.json scripts to set NEXT_BUILD_DIR environment variable
+  - Fixed service worker generation to output to build directory instead of public/
+  - Updated TypeScript config to include new build directory types
+  - Updated build validation scripts to handle multiple build directories
 
 - **[RR-36] Log Management and Rotation Configuration for PM2 Services** (Thursday, August 14, 2025 at 1:00 PM)
   - **PM2 Logrotate Configuration**: Configured PM2 logrotate module with 10MB max size and 7-day retention for automatic log rotation

@@ -216,6 +216,7 @@ docker run -d \
 #### Discord Integration Setup
 
 1. Create Discord server structure:
+
    ```
    📁 RSS Reader Monitoring
    ├── 🚨 critical-alerts

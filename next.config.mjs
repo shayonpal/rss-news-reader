@@ -57,7 +57,7 @@ const nextConfig = {
       config.plugins.push(
         new InjectManifest({
           swSrc: "./src/sw.js",
-          swDest: "../public/sw.js",
+          swDest: "static/sw.js",
           exclude: [/\.map$/, /manifest$/, /\.DS_Store$/],
           maximumFileSizeToCacheInBytes: 5000000,
         })

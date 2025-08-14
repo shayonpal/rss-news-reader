@@ -10,12 +10,20 @@ echo "============================================"
 
 # Check if both build directories exist
 echo -e "\n📁 Build Directories:"
-if [ -d ".next" ]; then
-    NEXT_SIZE=$(du -sh .next | cut -f1)
-    NEXT_MODIFIED=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" .next)
-    echo "✅ Development (.next): $NEXT_SIZE - Last modified: $NEXT_MODIFIED"
+if [ -d ".next-dev" ]; then
+    NEXT_SIZE=$(du -sh .next-dev | cut -f1)
+    NEXT_MODIFIED=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" .next-dev)
+    echo "✅ Development (.next-dev): $NEXT_SIZE - Last modified: $NEXT_MODIFIED"
 else
-    echo "❌ Development (.next): Not found"
+    echo "❌ Development (.next-dev): Not found"
+fi
+
+if [ -d ".next-build" ]; then
+    BUILD_SIZE=$(du -sh .next-build | cut -f1)
+    BUILD_MODIFIED=$(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" .next-build)
+    echo "✅ Build (.next-build): $BUILD_SIZE - Last modified: $BUILD_MODIFIED"
+else
+    echo "ℹ️  Build (.next-build): Not found"
 fi
 
 
@@ -40,8 +48,8 @@ done
 
 # Check webpack cache status
 echo -e "\n💾 Webpack Cache Status:"
-if [ -d ".next/cache" ]; then
-    CACHE_SIZE=$(du -sh .next/cache 2>/dev/null | cut -f1 || echo "0")
+if [ -d ".next-dev/cache" ]; then
+    CACHE_SIZE=$(du -sh .next-dev/cache 2>/dev/null | cut -f1 || echo "0")
     echo "Development cache: $CACHE_SIZE"
 fi
 
@@ -69,10 +77,10 @@ if [[ "$DEV_RESTARTS" -gt 10 ]] 2>/dev/null; then
 fi
 
 # Check if build directory exists
-if [ -d ".next" ]; then
-    echo "✅ Build directory is properly configured"
+if [ -d ".next-dev" ]; then
+    echo "✅ Dev build directory is properly configured"
 else
-    echo "⚠️  Missing build directory. Run: npm run build"
+    echo "⚠️  Missing dev build directory. Run: npm run dev"
 fi
 
 echo -e "\n✅ Monitoring complete!"
