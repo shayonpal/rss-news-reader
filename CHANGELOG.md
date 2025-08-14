@@ -5,6 +5,64 @@ All notable changes to the RSS News Reader project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-08-14
+
+### ⚠️ BREAKING CHANGES
+
+- **[RR-162] Auto-fetch functionality removed** - Resolves sync hanging at 92% issue
+  - Removed problematic auto-fetch that was causing sync to hang
+  - Users now manually fetch full content when needed
+  - Significantly improves sync reliability and completion rates
+  
+- **[RR-175] Database security and performance overhaul**
+  - Removed deprecated content_length field (only 4.8% utilized)
+  - Optimized RLS policies with auth function subqueries
+  - Implemented cursor-based pagination replacing LIMIT/OFFSET
+  - Smart feed_stats refresh only when articles change
+  - Performance improvements: <100ms pagination, <5ms cached timezone queries
+
+### Added
+
+- **[RR-175] Database performance optimization tests**
+  - Comprehensive test suite for database performance improvements
+  - Tests for timezone query caching with 24-hour TTL
+  - RLS policy optimization validation
+  - Cursor-based pagination performance tests
+  
+- **Enhanced agent system and commands**
+  - Improved infrastructure expert with emergency bypass capabilities
+  - Symbol-level analysis integration for precise debugging
+  - Enhanced release management workflow
+
+### Fixed
+
+- **[RR-36] Comprehensive log management and rotation system**
+  - Configured PM2 logrotate with 10MB max size and 7-day retention
+  - Added missing critical JSONL logs to rotation (sync-cron.jsonl, monitor-services.jsonl)
+  - Prevents disk space exhaustion from uncapped log growth
+  
+- **[RR-102] API base path redirect fixes for development**
+  - Smart development-only redirects for API inconsistencies
+  - Improved developer experience with helpful error messages
+  
+- **[RR-176] Auto-parse content hook performance improvements**
+  - Refactored useAutoParseContent hook for better performance
+  - Simplified parsing logic with direct useEffect implementation
+  - Improved test isolation with unique ID generation
+  
+- **[RR-187] Database mock implementation improvements**
+  - Simplified database mock to use getter pattern
+  - Fixed test infrastructure issues with mock implementations
+  
+- **ESLint accessibility and React hooks warnings**
+  - Fixed aria-pressed to aria-selected for tab roles
+  - Added missing dependencies to useEffect and useCallback hooks
+  - Clean lint pass with no warnings or errors
+
+### Changed
+
+- Updated .gitignore to exclude AI assistant directories (.cursor, .gemini-clipboard, .serena)
+
 ## [Unreleased]
 
 ### Fixed

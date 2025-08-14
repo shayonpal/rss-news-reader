@@ -1,6 +1,6 @@
 {
   "name": "rss-news-reader",
-  "version": "0.12.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
