@@ -37,7 +37,7 @@ export function ReadStatusFilter() {
 
       <button
         role="tab"
-        aria-pressed={value === "all"}
+        aria-selected={value === "all"}
         className="glass-segment-btn"
         onClick={() => setReadStatusFilter("all")}
         title="All articles"
@@ -48,7 +48,7 @@ export function ReadStatusFilter() {
 
       <button
         role="tab"
-        aria-pressed={value === "unread"}
+        aria-selected={value === "unread"}
         className="glass-segment-btn"
         onClick={() => setReadStatusFilter("unread")}
         title="Unread only"
@@ -59,7 +59,7 @@ export function ReadStatusFilter() {
 
       <button
         role="tab"
-        aria-pressed={value === "read"}
+        aria-selected={value === "read"}
         className="glass-segment-btn"
         onClick={() => setReadStatusFilter("read")}
         title="Read only"

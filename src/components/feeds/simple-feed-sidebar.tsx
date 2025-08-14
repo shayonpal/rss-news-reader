@@ -152,7 +152,7 @@ export function SimpleFeedSidebar({
     // Refresh every 5 minutes
     const interval = setInterval(() => fetchApiUsage(false), 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [updateApiUsage, isSyncing]); // Also refresh when sync completes
+  }, [updateApiUsage, isSyncing, apiUsage?.zone1]); // Also refresh when sync completes
 
   // Save and restore scroll position when filter changes
   useEffect(() => {

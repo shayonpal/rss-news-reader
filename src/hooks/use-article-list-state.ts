@@ -353,7 +353,7 @@ export function useArticleListState({
 
     hasRestoredState.current = true;
     return true;
-  }, [feedId, folderId, autoMarkObserverRef]);
+  }, [feedId, folderId, tagId, autoMarkObserverRef]);
 
   // Update auto-read tracking when articles are marked as read
   useEffect(() => {
