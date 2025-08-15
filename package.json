@@ -34,7 +34,10 @@
     "server": "node server/server.js",
     "server:dev": "nodemon server/server.js",
     "backup:claude": "./scripts/backup-claude-to-dev.sh",
-    "export:insomnia": "tsx scripts/export-insomnia.ts"
+    "export:insomnia": "tsx scripts/export-insomnia.ts",
+    "docs:validate": "node scripts/validate-openapi-coverage.js",
+    "docs:coverage": "node scripts/validate-openapi-coverage.js --report",
+    "docs:serve": "npm run dev && open http://localhost:3000/reader/api-docs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",

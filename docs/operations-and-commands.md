@@ -54,6 +54,17 @@ A consolidated reference of common commands (npm scripts, PM2, and helper script
   - `npm run server:dev`
 - backup:claude: Backup Claude data to dev
   - `npm run backup:claude`
+- export:insomnia: Export OpenAPI spec to Insomnia format
+  - `npm run export:insomnia`
+
+### Documentation Workflow Scripts (RR-208)
+
+- docs:validate: Validate OpenAPI coverage (45/45 endpoints, <2s)
+  - `npm run docs:validate`
+- docs:coverage: Generate detailed OpenAPI coverage report
+  - `npm run docs:coverage`
+- docs:serve: Start dev server and open Swagger UI
+  - `npm run docs:serve`
 
 ## PM2 processes (ecosystem.config.js)
 

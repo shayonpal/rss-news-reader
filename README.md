@@ -337,6 +337,11 @@ npm run start           # Start production server
 npm run analyze         # Bundle size analysis
 npm run clean           # Clean build artifacts
 
+# API Documentation Workflow (RR-208)
+npm run docs:validate   # ✅ Validate OpenAPI coverage (45/45 endpoints, <2s)
+npm run docs:coverage   # ✅ Generate detailed coverage report
+npm run docs:serve      # ✅ Start dev server and open Swagger UI
+
 # Build Validation & Safety
 ./scripts/validate-build.sh --mode basic   # Quick validation
 ./scripts/validate-build.sh --mode full    # Comprehensive validation
@@ -645,9 +650,15 @@ src/
 
 ### API Documentation & Testing
 
-- **OpenAPI Documentation**: Interactive Swagger UI at http://100.96.166.53:3000/reader/api-docs
-- **Insomnia Export**: One-click export to Insomnia REST client via "Export to Insomnia" button in Swagger UI
-- **Direct Export Endpoint**: `/api/insomnia.json` for programmatic access to Insomnia v4 collection format
+- **📚 Interactive API Documentation**: Complete Swagger UI with **100% OpenAPI coverage (45/45 endpoints)**
+  - **Access URL**: http://100.96.166.53:3000/reader/api-docs
+  - **Try it out functionality**: Test all endpoints directly in the browser with operationId support
+  - **Real-time validation**: OpenAPI spec validates in <2 seconds
+  - **Complete coverage**: Health (6), Sync (7), Articles (4), Tags (5), Inoreader (8), Auth (1), Test (7), Analytics (1), Feeds (2), Users (2), Logs (1), Insomnia (1)
+- **🔧 Developer Tools**: 
+  - **Insomnia Export**: One-click export via "Export to Insomnia" button in Swagger UI
+  - **Direct Export Endpoint**: `/api/insomnia.json` for programmatic access to Insomnia v4 collection format
+  - **OpenAPI Spec**: `/api-docs/openapi.json` for integration with other tools
 
 ### Inoreader API
 

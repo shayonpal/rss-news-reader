@@ -260,6 +260,7 @@ const ErrorResponseSchema = registry.register(
 registry.registerPath({
   method: "get",
   path: "/api/health",
+  operationId: "getHealthStatus",
   description: "Main application health check",
   summary: "Get overall application health status",
   tags: ["Health"],
@@ -328,6 +329,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/health/app",
+  operationId: "getAppHealth",
   description: "Application-specific health check",
   summary: "Get application health with version information",
   tags: ["Health"],
@@ -397,6 +399,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/health/db",
+  operationId: "getDatabaseHealth",
   description: "Database connectivity health check",
   summary: "Get database connection status and performance",
   tags: ["Health"],
@@ -449,6 +452,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/health/cron",
+  operationId: "getCronHealth",
   description: "Cron job health check",
   summary: "Get cron job status and recent execution history",
   tags: ["Health"],
@@ -498,6 +502,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/health/parsing",
+  operationId: "getParsingHealth",
   description: "Content parsing health check",
   summary: "Get parsing metrics and performance statistics",
   tags: ["Health"],
@@ -556,6 +561,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/health/claude",
+  operationId: "getClaudeHealth",
   description: "Claude AI API health check",
   summary: "Get Claude API connectivity and status",
   tags: ["Health"],
@@ -647,6 +653,7 @@ const InsomniaExportResponseSchema = registry.register(
 registry.registerPath({
   method: "get",
   path: "/api/insomnia.json",
+  operationId: "exportInsomniaCollection",
   summary: "Export OpenAPI as Insomnia collection",
   description:
     "Exports the entire OpenAPI specification as an Insomnia v4 collection file. " +
@@ -942,6 +949,7 @@ const ApiUsageResponseSchema = registry.register(
 registry.registerPath({
   method: "post",
   path: "/api/sync",
+  operationId: "startSync",
   description:
     "⚠️ **MAKES INOREADER API CALLS** - Trigger a full synchronization of RSS feeds and articles. This endpoint makes multiple API calls to Inoreader including: subscription list, tag list, unread counts, and article stream content. Use judiciously to avoid hitting API rate limits.",
   summary: "✨ Trigger full sync (Uses Inoreader API)",
@@ -1015,6 +1023,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/sync/status/{syncId}",
+  operationId: "getSyncStatus",
   description:
     "✅ **NO API CALLS** - Get the current status of a specific sync operation. This endpoint only reads from local file system or database and does not make any external API calls.",
   summary: "Get sync operation status (Local only)",
@@ -1104,6 +1113,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/sync/last-sync",
+  operationId: "getLastSync",
   description:
     "✅ **NO API CALLS** - Get the timestamp of the last successful sync operation. This endpoint only queries the local database and does not make any external API calls.",
   summary: "Get last sync timestamp (Local only)",
@@ -1157,6 +1167,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/sync/metadata",
+  operationId: "refreshMetadata",
   description:
     "✅ **NO API CALLS** - Update sync-related metadata key-value pairs. This endpoint only updates the local database and does not make any external API calls.",
   summary: "Update sync metadata (Local only)",
@@ -1234,6 +1245,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/sync/refresh-view",
+  operationId: "refreshMaterializedView",
   description:
     "✅ **NO API CALLS** - Refresh the feed_stats materialized view for updated article counts. This endpoint only refreshes the database view and does not make any external API calls.",
   summary: "Refresh materialized view (Local only)",
@@ -1282,6 +1294,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/sync/bidirectional",
+  operationId: "bidirectionalSync",
   description:
     "✅ **NO API CALLS** - Bidirectional sync endpoint (currently returns 501 - handled by background service). The actual sync runs as a separate background service on port 3001.",
   summary: "Bidirectional sync (501 - Not Implemented)",
@@ -1313,6 +1326,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/sync/api-usage",
+  operationId: "getApiUsageStats",
   description:
     "✅ **NO API CALLS** - Get current API usage statistics and remaining quota. This endpoint reads cached rate limit data from the database (captured from previous API responses) and does not make any external API calls.",
   summary: "Get API usage statistics (Local only)",
@@ -1757,6 +1771,7 @@ const SummarizeRequestSchema = z
 registry.registerPath({
   method: "get",
   path: "/api/articles/paginated",
+  operationId: "getPaginatedArticles",
   description:
     "Retrieve articles with cursor-based pagination. Supports filtering by feed, user, and read status. Articles are sorted by publication date (newest first).",
   summary: "Get paginated articles",
@@ -1865,6 +1880,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/articles/{id}/fetch-content",
+  operationId: "fetchArticleContent",
   description:
     "⚠️ **MAKES EXTERNAL HTTP CALLS** - Extract full content from article URL. This endpoint fetches the article webpage and extracts the main content. Rate limited to prevent abuse.",
   summary: "✨ Extract article content (External fetch)",
@@ -1959,6 +1975,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/articles/{id}/summarize",
+  operationId: "summarizeArticle",
   description:
     "⚠️ **USES CLAUDE API** - Generate AI summary for article using Claude. Requires ANTHROPIC_API_KEY. Caches summaries to avoid repeated API calls.",
   summary: "✨ Generate AI summary (Claude API)",
@@ -2110,6 +2127,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/articles/{id}/tags",
+  operationId: "getArticleTags",
   description:
     "Get all tags associated with a specific article. Returns empty array if article has no tags.",
   summary: "Get article tags",
@@ -2187,6 +2205,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/tags",
+  operationId: "getTags",
   description:
     "List all tags for the authenticated user with filtering, sorting, and pagination. Results are automatically scoped to the user's tags only. Includes article counts and unread counts for each tag.",
   summary: "List tags",
@@ -2297,6 +2316,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/tags",
+  operationId: "createTag",
   description:
     "Create a new tag. Automatically generates a URL-friendly slug from the name. Tags must have unique slugs per user. The user_id is automatically set from the authenticated session context.",
   summary: "Create tag",
@@ -2411,6 +2431,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/tags/{id}",
+  operationId: "getTag",
   description:
     "Get details for a specific tag owned by the authenticated user. Access is automatically restricted to user's own tags. Optionally include associated articles.",
   summary: "Get tag details",
@@ -2528,6 +2549,7 @@ registry.registerPath({
 registry.registerPath({
   method: "patch",
   path: "/api/tags/{id}",
+  operationId: "updateTag",
   description:
     "Update an existing tag owned by the authenticated user. All fields are optional. Updating the name will regenerate the slug. Access is automatically restricted to user's own tags.",
   summary: "Update tag",
@@ -2614,6 +2636,7 @@ registry.registerPath({
 registry.registerPath({
   method: "delete",
   path: "/api/tags/{id}",
+  operationId: "deleteTag",
   description:
     "Delete a tag owned by the authenticated user. This will remove the tag and all article associations (CASCADE delete on article_tags). Access is automatically restricted to user's own tags.",
   summary: "Delete tag",
@@ -2731,6 +2754,39 @@ export function generateOpenAPIDocument(requestServerUrl?: string) {
         name: "Tags",
         description:
           "Tag management endpoints for full CRUD operations on article categorization tags",
+      },
+      {
+        name: "Inoreader",
+        description:
+          "Inoreader API proxy endpoints for user info, subscriptions, and stream management",
+      },
+      {
+        name: "Auth",
+        description:
+          "Authentication and authorization endpoints for token validation",
+      },
+      {
+        name: "Test",
+        description:
+          "Development-only test endpoints for debugging and simulation",
+      },
+      {
+        name: "Analytics",
+        description:
+          "Analytics and statistics endpoints for tracking usage and performance",
+      },
+      {
+        name: "Feeds",
+        description:
+          "Feed management endpoints for statistics and cache operations",
+      },
+      {
+        name: "Users",
+        description: "User management endpoints for preferences and settings",
+      },
+      {
+        name: "Logs",
+        description: "Logging endpoints for event tracking and debugging",
       },
     ],
   });
@@ -2900,6 +2956,7 @@ const CheckHeadersErrorSchema = registry.register(
 registry.registerPath({
   method: "get",
   path: "/api/auth/inoreader/status",
+  operationId: "getAuthStatus",
   summary: "Check OAuth authentication status",
   description:
     "Validates the local OAuth token file status without making API calls. Checks token existence, encryption, age, and expiration (365-day lifetime).",
@@ -2920,6 +2977,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/test/check-headers",
+  operationId: "checkHeaders",
   summary: "Test API connectivity and rate limits",
   description:
     "Makes a single API call to Inoreader to validate token functionality and retrieve rate limit headers. Uses only 1 API call to check sync readiness.",
@@ -3163,6 +3221,7 @@ const InoreaderDevResponseSchema = z
 registry.registerPath({
   method: "get",
   path: "/api/inoreader/user-info",
+  operationId: "getInoreaderUserInfo",
   summary: "Get Inoreader user information",
   description:
     "Retrieves authenticated user's profile information from Inoreader. Requires valid OAuth token stored in encrypted file (~/.rss-reader/tokens.json). Tokens are encrypted using AES-256-GCM algorithm with HMAC authentication for secure storage.",
@@ -3230,6 +3289,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/inoreader/subscriptions",
+  operationId: "getInoreaderSubscriptions",
   summary: "Get user's feed subscriptions",
   description:
     "Retrieves the list of RSS feeds the authenticated user is subscribed to. Uses encrypted OAuth tokens (AES-256-GCM) and automatically refreshes expired tokens when possible.",
@@ -3306,6 +3366,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/inoreader/stream-contents",
+  operationId: "getInoreaderStreamContents",
   summary: "Get paginated article stream",
   description:
     "Retrieves articles from a specific stream (feed, folder, or tag). Supports pagination via continuation tokens. Authentication via encrypted OAuth tokens (AES-256-GCM with 16-byte IV and HMAC auth tag).",
@@ -3417,6 +3478,7 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/inoreader/unread-counts",
+  operationId: "getInoreaderUnreadCounts",
   summary: "Get unread counts per feed",
   description:
     "Retrieves the number of unread articles for each subscription and category.",
@@ -3493,6 +3555,7 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/inoreader/edit-tag",
+  operationId: "editInoreaderTag",
   summary: "Edit article tags/states",
   description:
     "Modifies tags or states (read/starred/etc) for articles. Accepts form-encoded data with article IDs and actions. Uses encrypted OAuth tokens stored with AES-256-GCM encryption.",
@@ -3577,6 +3640,7 @@ if (process.env.NODE_ENV !== "production") {
   registry.registerPath({
     method: "get",
     path: "/api/inoreader/debug",
+    operationId: "debugInoreader",
     summary: "Debug token status",
     description:
       "[DEV ONLY] Displays current OAuth token status for debugging authentication issues. Tokens are stored in ~/.rss-reader/tokens.json using AES-256-GCM encryption:\n\n**Encryption Details:**\n- Algorithm: AES-256-GCM (Galois/Counter Mode)\n- Key: 256-bit key derived from TOKEN_ENCRYPTION_KEY env variable (base64 encoded)\n- IV: 16-byte random initialization vector\n- Auth Tag: 16-byte HMAC authentication tag for integrity\n- Storage Format: JSON with 'encrypted', 'iv', and 'authTag' fields\n\nThis endpoint reads the encrypted token file, decrypts it, and reports token age and validity.",
@@ -3656,6 +3720,7 @@ if (process.env.NODE_ENV !== "production") {
   registry.registerPath({
     method: "get",
     path: "/api/inoreader/dev",
+    operationId: "getInoreaderDev",
     summary: "Development API proxy",
     description:
       "[DEV ONLY] Proxies arbitrary Inoreader API endpoints for testing and development. Returns response data with rate limit headers.",
@@ -3739,6 +3804,7 @@ if (process.env.NODE_ENV !== "production") {
   registry.registerPath({
     method: "post",
     path: "/api/inoreader/dev",
+    operationId: "postInoreaderDev",
     summary: "Development API proxy (POST)",
     description:
       "[DEV ONLY] Proxies POST requests to Inoreader API endpoints for testing write operations. Uses encrypted OAuth tokens stored with AES-256-GCM encryption for authentication.",
@@ -3821,6 +3887,869 @@ if (process.env.NODE_ENV !== "production") {
       },
     },
   });
+
+  // Analytics endpoint (RR-208)
+  const AnalyticsStatsResponseSchema = z.object({
+    fetchStats: z
+      .object({
+        totalAttempts: z.number().describe("Total content fetch attempts"),
+        successCount: z.number().describe("Successful fetches"),
+        failureCount: z.number().describe("Failed fetches"),
+        autoFetchCount: z.number().describe("Automatic fetch attempts"),
+        manualFetchCount: z.number().describe("Manual fetch attempts"),
+        avgDurationMs: z
+          .number()
+          .nullable()
+          .describe("Average fetch duration in milliseconds"),
+        commonErrors: z
+          .array(
+            z.object({
+              reason: z.string().describe("Error reason"),
+              count: z.number().describe("Occurrence count"),
+            })
+          )
+          .describe("Most common error reasons"),
+      })
+      .describe("Content fetching statistics"),
+    syncStats: z
+      .object({
+        totalSyncs: z.number().describe("Total sync operations"),
+        lastSyncTime: z
+          .string()
+          .nullable()
+          .describe("Last successful sync timestamp"),
+        avgSyncDuration: z
+          .number()
+          .nullable()
+          .describe("Average sync duration in seconds"),
+      })
+      .describe("Sync operation statistics"),
+    apiUsage: z
+      .object({
+        zone1Usage: z.number().describe("Read operations usage"),
+        zone1Limit: z.number().describe("Read operations limit"),
+        zone2Usage: z.number().describe("Write operations usage"),
+        zone2Limit: z.number().describe("Write operations limit"),
+        resetAfter: z
+          .number()
+          .nullable()
+          .describe("Seconds until rate limit reset"),
+      })
+      .describe("API usage and rate limits"),
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/analytics/fetch-stats",
+    operationId: "getAnalyticsStats",
+    summary: "Get analytics and statistics",
+    description:
+      "Retrieves comprehensive analytics including fetch statistics, sync metrics, and API usage data",
+    tags: ["Analytics"],
+    responses: {
+      200: {
+        description: "Analytics data retrieved successfully",
+        content: {
+          "application/json": {
+            schema: AnalyticsStatsResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  fetchStats: {
+                    totalAttempts: 1250,
+                    successCount: 1180,
+                    failureCount: 70,
+                    autoFetchCount: 950,
+                    manualFetchCount: 300,
+                    avgDurationMs: 2345,
+                    commonErrors: [
+                      { reason: "Network timeout", count: 25 },
+                      { reason: "Content not found", count: 20 },
+                    ],
+                  },
+                  syncStats: {
+                    totalSyncs: 48,
+                    lastSyncTime: "2025-08-15T10:30:00.000Z",
+                    avgSyncDuration: 12.5,
+                  },
+                  apiUsage: {
+                    zone1Usage: 3500,
+                    zone1Limit: 5000,
+                    zone2Usage: 45,
+                    zone2Limit: 100,
+                    resetAfter: 3600,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Failed to retrieve analytics",
+                  details: "Database connection error",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Logs endpoint (RR-208)
+  const LogEventRequestSchema = z.object({
+    event: z.string().describe("Event type"),
+    level: z.enum(["info", "warn", "error"]).describe("Log level"),
+    message: z.string().describe("Log message"),
+    metadata: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe("Additional metadata"),
+    timestamp: z.string().optional().describe("Event timestamp (ISO 8601)"),
+  });
+
+  const LogEventResponseSchema = z.object({
+    success: z.boolean().describe("Whether the log was recorded"),
+    logId: z.string().optional().describe("Unique log entry ID"),
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/logs/inoreader",
+    operationId: "logInoreaderEvent",
+    summary: "Log Inoreader events",
+    description:
+      "Records Inoreader-related events for debugging and monitoring",
+    tags: ["Logs"],
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: LogEventRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Log recorded successfully",
+        content: {
+          "application/json": {
+            schema: LogEventResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  success: true,
+                  logId: "log_abc123xyz",
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Invalid log data",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Invalid log data",
+                  details: "Missing required field: event",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Failed to record log",
+                  details: "Database write error",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Feeds stats endpoints (RR-208)
+  const FeedStatsResponseSchema = z.object({
+    feedId: z.string().describe("Feed UUID"),
+    title: z.string().describe("Feed title"),
+    unreadCount: z.number().describe("Number of unread articles"),
+    totalCount: z.number().describe("Total number of articles"),
+    latestArticleDate: z
+      .string()
+      .nullable()
+      .describe("Most recent article publication date"),
+    authorCoverage: z.number().describe("Percentage of articles with authors"),
+    avgArticlesPerDay: z
+      .number()
+      .nullable()
+      .describe("Average articles published per day"),
+    isPartialContent: z
+      .boolean()
+      .describe("Whether feed requires full content fetching"),
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/feeds/{id}/stats",
+    operationId: "getFeedStats",
+    summary: "Get feed statistics",
+    description: "Retrieves detailed statistics for a specific feed",
+    tags: ["Feeds"],
+    request: {
+      params: z.object({
+        id: z.string().describe("Feed ID (UUID)"),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Feed statistics retrieved successfully",
+        content: {
+          "application/json": {
+            schema: FeedStatsResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  feedId: "550e8400-e29b-41d4-a716-446655440000",
+                  title: "TechCrunch",
+                  unreadCount: 42,
+                  totalCount: 150,
+                  latestArticleDate: "2025-08-15T12:00:00.000Z",
+                  authorCoverage: 85.5,
+                  avgArticlesPerDay: 5.2,
+                  isPartialContent: false,
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        description: "Feed not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              notFound: {
+                value: {
+                  error: "Feed not found",
+                  details: "No feed exists with the provided ID",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Failed to retrieve feed statistics",
+                  details: "Database query error",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/feeds/{id}/stats",
+    operationId: "clearFeedStatsCache",
+    summary: "Delete feed statistics cache",
+    description:
+      "Clears cached statistics for a specific feed, forcing recalculation on next request",
+    tags: ["Feeds"],
+    request: {
+      params: z.object({
+        id: z.string().describe("Feed ID (UUID)"),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Feed statistics cache cleared successfully",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+              message: z.string(),
+            }),
+            examples: {
+              success: {
+                value: {
+                  success: true,
+                  message: "Feed statistics cache cleared",
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        description: "Feed not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              notFound: {
+                value: {
+                  error: "Feed not found",
+                  details: "No feed exists with the provided ID",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Failed to clear feed statistics",
+                  details: "Cache deletion error",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Users timezone endpoints (RR-208)
+  const TimezoneResponseSchema = z.object({
+    userId: z.string().describe("User UUID"),
+    timezone: z.string().describe("IANA timezone identifier"),
+    offset: z.string().describe("Current UTC offset (e.g., '+05:30')"),
+  });
+
+  const TimezoneUpdateRequestSchema = z.object({
+    timezone: z
+      .string()
+      .describe("IANA timezone identifier (e.g., 'America/New_York')"),
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/users/{id}/timezone",
+    operationId: "getUserTimezone",
+    summary: "Get user timezone",
+    description: "Retrieves the timezone setting for a specific user",
+    tags: ["Users"],
+    request: {
+      params: z.object({
+        id: z.string().describe("User ID (UUID)"),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Timezone retrieved successfully",
+        content: {
+          "application/json": {
+            schema: TimezoneResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  userId: "550e8400-e29b-41d4-a716-446655440001",
+                  timezone: "America/Toronto",
+                  offset: "-05:00",
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        description: "User not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              notFound: {
+                value: {
+                  error: "User not found",
+                  details: "No user exists with the provided ID",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Failed to retrieve timezone",
+                  details: "Database query error",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/users/{id}/timezone",
+    operationId: "updateUserTimezone",
+    summary: "Update user timezone",
+    description: "Updates the timezone setting for a specific user",
+    tags: ["Users"],
+    request: {
+      params: z.object({
+        id: z.string().describe("User ID (UUID)"),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: TimezoneUpdateRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Timezone updated successfully",
+        content: {
+          "application/json": {
+            schema: TimezoneResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  userId: "550e8400-e29b-41d4-a716-446655440001",
+                  timezone: "Europe/London",
+                  offset: "+00:00",
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Invalid timezone",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              invalid: {
+                value: {
+                  error: "Invalid timezone",
+                  details:
+                    "'Invalid/Timezone' is not a valid IANA timezone identifier",
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        description: "User not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              notFound: {
+                value: {
+                  error: "User not found",
+                  details: "No user exists with the provided ID",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              error: {
+                value: {
+                  error: "Failed to update timezone",
+                  details: "Database update error",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Test endpoints (RR-208) - Only register in development
+  const isDevelopment =
+    process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  if (isDevelopment) {
+    const TestAuditResponseSchema = z.object({
+      capturedData: z
+        .array(
+          z.object({
+            timestamp: z.string(),
+            operation: z.string(),
+            data: z.any(),
+          })
+        )
+        .describe("Captured audit trail data"),
+      count: z.number().describe("Total operations captured"),
+    });
+
+    registry.registerPath({
+      method: "get",
+      path: "/api/test/audit-capture",
+      operationId: "auditCapture",
+      summary: "Capture audit trail (Development only)",
+      description:
+        "Test endpoint for capturing and inspecting audit trail data during development",
+      tags: ["Test"],
+      responses: {
+        200: {
+          description: "Audit data captured",
+          content: {
+            "application/json": {
+              schema: TestAuditResponseSchema,
+              examples: {
+                success: {
+                  value: {
+                    capturedData: [
+                      {
+                        timestamp: "2025-08-15T10:30:00.000Z",
+                        operation: "sync_started",
+                        data: { syncId: "sync_123" },
+                      },
+                    ],
+                    count: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+
+    const DuplicateCheckResponseSchema = z.object({
+      duplicates: z
+        .array(
+          z.object({
+            inoreader_id: z.string(),
+            count: z.number(),
+            article_ids: z.array(z.string()),
+          })
+        )
+        .describe("Duplicate article groups"),
+      totalDuplicates: z.number().describe("Total duplicate count"),
+    });
+
+    registry.registerPath({
+      method: "get",
+      path: "/api/test/check-duplicates",
+      operationId: "checkDuplicates",
+      summary: "Check for duplicate articles (Development only)",
+      description:
+        "Test endpoint for detecting duplicate articles in the database during development",
+      tags: ["Test"],
+      responses: {
+        200: {
+          description: "Duplicate check completed",
+          content: {
+            "application/json": {
+              schema: DuplicateCheckResponseSchema,
+              examples: {
+                success: {
+                  value: {
+                    duplicates: [
+                      {
+                        inoreader_id: "tag:google.com,2005:reader/item/12345",
+                        count: 2,
+                        article_ids: ["abc123", "def456"],
+                      },
+                    ],
+                    totalDuplicates: 2,
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+
+    registry.registerPath({
+      method: "get",
+      path: "/api/test/simulate-headers",
+      operationId: "simulateHeaders",
+      summary: "Simulate API headers (Development only)",
+      description:
+        "Test endpoint for simulating various API response headers during development",
+      tags: ["Test"],
+      responses: {
+        200: {
+          description: "Headers simulated",
+          content: {
+            "application/json": {
+              schema: z.object({
+                headers: z.record(z.string(), z.string()),
+                message: z.string(),
+              }),
+              examples: {
+                success: {
+                  value: {
+                    headers: {
+                      "X-Rate-Limit-Remaining": "100",
+                      "X-Rate-Limit-Reset": "1735689600",
+                    },
+                    message: "Headers simulated successfully",
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+
+    const RateLimitSimulationSchema = z.object({
+      scenario: z
+        .enum(["normal", "warning", "exceeded", "reset"])
+        .describe("Rate limit scenario"),
+      remaining: z.number().describe("Remaining API calls"),
+      limit: z.number().describe("Total limit"),
+      resetTime: z.string().describe("Reset timestamp"),
+    });
+
+    registry.registerPath({
+      method: "get",
+      path: "/api/test/simulate-rate-limit",
+      operationId: "simulateRateLimitGet",
+      summary: "Get rate limit simulation (Development only)",
+      description:
+        "Test endpoint for retrieving current rate limit simulation state during development",
+      tags: ["Test"],
+      responses: {
+        200: {
+          description: "Rate limit state retrieved",
+          content: {
+            "application/json": {
+              schema: RateLimitSimulationSchema,
+              examples: {
+                success: {
+                  value: {
+                    scenario: "warning",
+                    remaining: 50,
+                    limit: 5000,
+                    resetTime: "2025-08-16T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+
+    registry.registerPath({
+      method: "post",
+      path: "/api/test/simulate-rate-limit",
+      operationId: "simulateRateLimitPost",
+      summary: "Set rate limit simulation (Development only)",
+      description:
+        "Test endpoint for configuring rate limit simulation scenarios during development",
+      tags: ["Test"],
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                scenario: z.enum(["normal", "warning", "exceeded", "reset"]),
+              }),
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Rate limit simulation configured",
+          content: {
+            "application/json": {
+              schema: RateLimitSimulationSchema,
+              examples: {
+                success: {
+                  value: {
+                    scenario: "exceeded",
+                    remaining: 0,
+                    limit: 5000,
+                    resetTime: "2025-08-16T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Invalid scenario",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "Server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+
+    registry.registerPath({
+      method: "post",
+      path: "/api/test/force-update-usage",
+      operationId: "forceUpdateApiUsage",
+      summary: "Force API usage update (Development only)",
+      description:
+        "Test endpoint for manually updating API usage counters during development",
+      tags: ["Test"],
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                zone1Increment: z
+                  .number()
+                  .optional()
+                  .describe("Amount to add to zone 1 usage"),
+                zone2Increment: z
+                  .number()
+                  .optional()
+                  .describe("Amount to add to zone 2 usage"),
+                reset: z
+                  .boolean()
+                  .optional()
+                  .describe("Reset all counters to zero"),
+              }),
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Usage updated successfully",
+          content: {
+            "application/json": {
+              schema: z.object({
+                zone1Usage: z.number(),
+                zone1Limit: z.number(),
+                zone2Usage: z.number(),
+                zone2Limit: z.number(),
+                message: z.string(),
+              }),
+              examples: {
+                success: {
+                  value: {
+                    zone1Usage: 2500,
+                    zone1Limit: 5000,
+                    zone2Usage: 25,
+                    zone2Limit: 100,
+                    message: "API usage updated successfully",
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Invalid update parameters",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "Server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+  }
 }
 
 export {
