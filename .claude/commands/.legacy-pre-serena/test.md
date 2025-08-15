@@ -314,7 +314,7 @@ Wait for manual testing, address concerns, make adjustments if needed.
 
 ### Update Documentation (After Manual Verification)
 
-Update relevant project documentation:
+Update relevant project documentation using the `doc-admin` agent:
 
 - **API Documentation**: New/changed endpoints with examples and schemas
 - **Configuration**: Environment variables, PM2 services, monitoring, OAuth
@@ -350,7 +350,7 @@ After confirmation: Change status to "Done", add final comment with timestamp, e
 
 ## Important Notes
 
-- Never close without manual verification
+- Never close an issue without manual verification
 - Iterate until ALL bugs fixed
 - Test after every fix to prevent regressions
 - Update documentation and CHANGELOG

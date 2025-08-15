@@ -9,6 +9,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useViewport } from "@/hooks/use-viewport";
 import { ReadStatusFilter } from "./read-status-filter";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
@@ -45,6 +46,7 @@ export function ArticleHeader({
   const { readStatusFilter, markAllAsRead, refreshArticles } =
     useArticleStore();
   const { getFeed, getFolder } = useFeedStore();
+  const viewport = useViewport();
   const [counts, setCounts] = useState<ArticleCounts>({
     total: 0,
     unread: 0,
@@ -223,17 +225,19 @@ export function ArticleHeader({
             {isMarkingAllRead ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span className="hidden sm:inline">Marking...</span>
+                {!viewport.shouldShowCompactFilters && <span>Marking...</span>}
               </>
             ) : waitingConfirmation ? (
               <>
                 <AlertTriangle className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Confirm?</span>
+                {!viewport.shouldShowCompactFilters && <span>Confirm?</span>}
               </>
             ) : (
               <>
                 <CheckCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Mark All Read</span>
+                {!viewport.shouldShowCompactFilters && (
+                  <span>Mark All Read</span>
+                )}
               </>
             )}
           </Button>

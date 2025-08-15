@@ -9,6 +9,7 @@ import { useFeedStore } from "@/lib/stores/feed-store";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useHydrationFix } from "@/hooks/use-hydration-fix";
+import { useViewport } from "@/hooks/use-viewport";
 import { Menu, X, ArrowUp } from "lucide-react";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 
@@ -52,11 +53,23 @@ export default function HomePage() {
     }
     return null;
   });
+  const viewport = useViewport();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const isIOS =
     typeof window !== "undefined" &&
     /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Auto-manage sidebar state based on viewport
+  useEffect(() => {
+    if (!viewport.shouldCollapseSidebar) {
+      // On tablet/desktop, sidebar should always be open
+      setIsSidebarOpen(true);
+    } else {
+      // On mobile, sidebar starts closed
+      setIsSidebarOpen(false);
+    }
+  }, [viewport.shouldCollapseSidebar]);
 
   const handleArticleClick = (articleId: string) => {
     router.push(`/article/${encodeURIComponent(articleId)}`);
@@ -67,7 +80,7 @@ export default function HomePage() {
     // Save filter state for restoration
     sessionStorage.setItem("articleListFilter", feedId || "null");
     // Close sidebar on mobile after selection
-    if (window.innerWidth < 768) {
+    if (viewport.shouldCollapseSidebar) {
       setIsSidebarOpen(false);
     }
   };
@@ -77,7 +90,7 @@ export default function HomePage() {
     // Save tag filter state for restoration
     sessionStorage.setItem("articleListTagFilter", tagId || "null");
     // Close sidebar on mobile after selection
-    if (window.innerWidth < 768) {
+    if (viewport.shouldCollapseSidebar) {
       setIsSidebarOpen(false);
     }
   };
@@ -139,20 +152,41 @@ export default function HomePage() {
     };
   }, [isIOS]);
 
+  // Compute sidebar classes for better readability
+  const getSidebarClasses = () => {
+    const baseClasses =
+      "h-full w-[280px] transition-transform duration-200 ease-in-out md:w-80";
+    const positionClasses = viewport.shouldCollapseSidebar
+      ? "fixed inset-y-0 left-0 z-50 transform"
+      : "relative";
+    const translateClasses =
+      viewport.shouldCollapseSidebar && !isSidebarOpen
+        ? "-translate-x-full"
+        : "translate-x-0";
+
+    return `${positionClasses} ${translateClasses} ${baseClasses}`;
+  };
+
+  // Compute header classes
+  const getHeaderClasses = () => {
+    const baseClasses =
+      "glass-nav fixed left-0 right-0 top-0 z-30 border-b transition-transform duration-300 ease-in-out";
+    const offsetClasses = !viewport.shouldCollapseSidebar ? "md:left-80" : "";
+    return `${baseClasses} ${offsetClasses}`;
+  };
+
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background">
       {/* Mobile Sidebar Backdrop */}
-      {isSidebarOpen && (
+      {isSidebarOpen && viewport.shouldCollapseSidebar && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Feed Sidebar - Independent scroll container */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 transform md:relative ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} h-full w-[280px] transition-transform duration-200 ease-in-out md:w-80 md:translate-x-0`}
-      >
+      <div className={getSidebarClasses()}>
         <ErrorBoundary
           fallback={
             <div className="h-full border-r bg-muted/10 p-4">
@@ -182,20 +216,26 @@ export default function HomePage() {
         {/* Enhanced Header with Database Counts */}
         <div
           ref={headerRef}
-          className="glass-nav fixed left-0 right-0 top-0 z-30 border-b transition-transform duration-300 ease-in-out md:left-80"
+          className={getHeaderClasses()}
           style={{ transform: "translateY(0)" }}
         >
           <ArticleHeader
             selectedFeedId={selectedFeedId}
             selectedFolderId={null}
-            isMobile={true}
-            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            isMobile={viewport.shouldShowHamburger}
+            onMenuClick={
+              viewport.shouldShowHamburger
+                ? () => setIsSidebarOpen(!isSidebarOpen)
+                : undefined
+            }
             menuIcon={
-              isSidebarOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )
+              viewport.shouldShowHamburger ? (
+                isSidebarOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )
+              ) : undefined
             }
           />
         </div>

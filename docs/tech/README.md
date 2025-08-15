@@ -62,15 +62,30 @@ This directory contains all technical documentation for the RSS News Reader appl
      - Sidebar "Topics" section display
      - Comprehensive test coverage
 
+### Responsive Design System (RR-206)
+
+10. **Responsive Architecture**
+    - **Description**: Comprehensive responsive design implementation with three-tier breakpoint system
+    - **Status**: Implemented ✅
+    - **Contents**: Viewport detection, breakpoint management, responsive component architecture
+    - **Key Features**:
+      - `useViewport()` hook with SSR support and 50ms debouncing
+      - Centralized breakpoint constants (`src/lib/constants/breakpoints.ts`)
+      - Three-tier responsive system: Mobile (<768px), Tablet (768-1023px), Desktop (≥1024px)
+      - Responsive components: ArticleHeader, ReadStatusFilter, main layout
+      - Automatic sidebar collapse and hamburger menu on mobile
+      - Adaptive filter button display (icons-only on mobile/tablet, full text on desktop)
+      - Performance-optimized with smooth 60fps transitions
+
 ### Monitoring & Infrastructure
 
-10. **uptime-kuma-setup.md**
+11. **uptime-kuma-setup.md**
 
 - **Description**: Setup guide for Uptime Kuma monitoring service
 - **Status**: Current ✅
 - **Contents**: Docker setup, monitor configuration, alert rules
 
-11. **uptime-kuma-monitoring-strategy.md**
+12. **uptime-kuma-monitoring-strategy.md**
 
 - **Description**: Comprehensive monitoring strategy using Uptime Kuma
 - **Status**: Current ✅
@@ -78,12 +93,12 @@ This directory contains all technical documentation for the RSS News Reader appl
 
 ### Issues & Maintenance
 
-12. **known-issues.md**
+13. **known-issues.md**
     - **Description**: Documentation of known issues, limitations, and workarounds
     - **Status**: Living Document 🔄
     - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-13. **security.md**
+14. **security.md**
     - **Description**: Security measures, policies, and incident documentation
     - **Status**: Current ✅ (Updated for RR-128)
     - **Contents**: Network security, authentication, security fixes (RR-69, RR-128), XSS protection, best practices

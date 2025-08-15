@@ -43,7 +43,7 @@ export function ReadStatusFilter() {
         title="All articles"
       >
         <List className="h-4 w-4" />
-        <span className="ml-2 hidden md:inline">All</span>
+        <span className="ml-2 hidden lg:inline">All</span>
       </button>
 
       <button
@@ -54,7 +54,7 @@ export function ReadStatusFilter() {
         title="Unread only"
       >
         <MailOpen className="h-4 w-4" />
-        <span className="ml-2 hidden md:inline">Unread</span>
+        <span className="ml-2 hidden lg:inline">Unread</span>
       </button>
 
       <button
@@ -65,7 +65,7 @@ export function ReadStatusFilter() {
         title="Read only"
       >
         <CheckCheck className="h-4 w-4" />
-        <span className="ml-2 hidden md:inline">Read</span>
+        <span className="ml-2 hidden lg:inline">Read</span>
       </button>
     </div>
   );

@@ -197,6 +197,14 @@ Complete React/TypeScript implementation of the Figma designs:
 - **Toast Notification System** - Color-coded feedback for user actions
 - **Improved Content Display** - Enhanced revert functionality with true RSS content
 
+#### Responsive Design Implementation (RR-206)
+
+- **Viewport Detection Hook** - `useViewport()` with SSR support and 50ms debouncing
+- **Breakpoint Constants** - Centralized breakpoint system with media queries
+- **Responsive Header** - Smart hamburger menu display based on viewport
+- **Responsive Filters** - Adaptive filter button text display (icons-only on mobile/tablet)
+- **Layout Adaptation** - Automatic sidebar collapse and layout adjustments
+
 #### Traditional UI Components
 
 - Basic glass morphism styles
@@ -290,6 +298,17 @@ Complete React/TypeScript implementation of the Figma designs:
 2. **State Transitions**: Smooth transitions between content states
 3. **User Control**: Easy access to revert and fetch operations
 4. **Loading States**: Clear indication of content loading progress
+
+#### Responsive Design Patterns (RR-206)
+
+1. **Breakpoint System**: Consistent three-tier responsive design
+   - **Mobile** (<768px): Collapsed sidebar, hamburger menu, compact UI
+   - **Tablet** (768-1023px): Visible sidebar, compact filter buttons (icons only)
+   - **Desktop** (≥1024px): Visible sidebar, full text filter buttons
+2. **Performance**: 50ms debounced viewport detection for smooth 60fps transitions
+3. **SSR Safety**: Server-side rendering compatible with sensible defaults
+4. **Orientation Support**: Automatic adaptation to orientation changes
+5. **Touch Targets**: iOS-compliant 44px minimum touch targets on mobile
 
 ## Related Documentation
 

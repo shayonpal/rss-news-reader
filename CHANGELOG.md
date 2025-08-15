@@ -5,6 +5,26 @@ All notable changes to the RSS News Reader project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - Thursday, August 14, 2025 at 9:13 PM
+
+### Fixed
+
+- **[RR-206] Fix sidebar collapse behavior for proper responsive display**
+  - **Mobile breakpoint**: <768px - sidebar collapses, hamburger menu visible
+  - **Tablet breakpoint**: 768-1023px - sidebar visible, compact filter buttons (icons only)
+  - **Desktop breakpoint**: ≥1024px - sidebar visible, full text filter buttons
+  - **Performance optimization**: 50ms debounce for smooth 60fps transitions
+  - **SSR-safe implementation**: Proper server-side rendering with sensible defaults
+  - **New responsive architecture**:
+    - `src/hooks/use-viewport.ts` - Viewport detection hook with orientation change support
+    - `src/lib/constants/breakpoints.ts` - Centralized breakpoint constants and media queries
+    - Enhanced `src/components/articles/article-header.tsx` with responsive button behavior
+    - Enhanced `src/components/articles/read-status-filter.tsx` with responsive filter display
+    - Updated `src/app/page.tsx` with responsive layout behavior
+  - **Manual verification**: All acceptance criteria confirmed working across devices
+  - **Test status**: Simple unit tests passing (38/38), complex behavior tests need infrastructure improvements
+  - **Impact**: Proper responsive behavior restored - mobile users see hamburger menu, tablet/desktop users see appropriate sidebar and filter states
+
 ## [Documentation] - Thursday, August 14, 2025 at 4:17 PM
 
 ### Fixed

@@ -457,6 +457,7 @@ html.reduce-transparency .liquid-glass-btn {
     transition:
       background-color 200ms var(--ease-smooth),
       box-shadow 200ms var(--ease-smooth);
+    will-change: transform;
   }
 
   /* Glass toolbar container (clustered capsule) */

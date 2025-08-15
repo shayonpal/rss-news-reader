@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Use this agent to review code generated after executing implementation plans. Provides comprehensive analysis of code quality, adherence to project patterns, potential issues, and improvement suggestions. Returns structured JSON with actionable feedback.
-model: opus
+model: sonnet
 tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, ListMcpResourcesTool, ReadMcpResourceTool, mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__server-brave-search__brave_local_search, mcp__linear-server__list_issues, mcp__linear-server__get_issue, mcp__linear-server__list_comments, mcp__supabase__list_tables, mcp__supabase__execute_sql, mcp__supabase__search_docs, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__find_referencing_symbols, mcp__serena__search_for_pattern
 ---
 
