@@ -86,13 +86,17 @@ The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102
   - Description: Back-compat placeholder; bi-directional sync runs as separate service.
   - Response 501: `{ error, message }`
 
-- GET `/api/sync/api-usage` (RR-5)
-  - Description: Returns current Inoreader API usage with zone percentages for display in sidebar. Values are sourced from Inoreader response headers captured on every call.
-  - Response 200: `{ zone1: { used, limit, percentage }, zone2: { used, limit, percentage }, resetAfterSeconds, timestamp }`
+- GET `/api/sync/api-usage` (RR-5, RR-207)
+  - Description: Returns current Inoreader API usage with zone percentages for display in sidebar. Values are sourced directly from Inoreader response headers as the authoritative source (fixed in RR-207).
+  - Response 200: `{ zone1: { used, limit, percentage }, zone2: { used, limit, percentage }, resetAfterSeconds, timestamp, dataReliability, lastHeaderUpdate }`
   - Cache-Control: 30 seconds (near real-time updates)
+  - Response fields:
+    - `dataReliability`: "headers" when data comes from API headers, "fallback" when headers unavailable
+    - `lastHeaderUpdate`: ISO timestamp of last header update, null if no headers captured
   - Notes:
-    - Free tier limits: 100/day for Zone 1 and 100/day for Zone 2 (limits come from headers and may vary by plan)
-    - To mitigate occasional header lag during bursts, Zone 1 `used` is computed as `max(header_usage, daily_call_count)`, capped at `limit`
+    - Free tier limits: 10000/day for Zone 1 and 2000/day for Zone 2 (from headers, varies by plan)
+    - RR-207 fix: Headers are now the authoritative source, removing the Math.max() hybrid calculation that was causing 10x discrepancies
+    - Warning logs generated when header/local count discrepancy exceeds 20%
 
 ### Articles
 
@@ -293,6 +297,44 @@ These run in the auxiliary Express server (`server/server.js`).
 - Inoreader: 100 calls/day (Zone 1) + 100/day (Zone 2). Tracked in `api_usage`. Sync aims for ~4–5 calls.
 - Claude: Tracked in `api_usage` with per-call increments; cost-sensitive usage.
 
+## Security
+
+### UUID Validation Middleware (RR-202)
+
+All API endpoints that accept UUID parameters (articles, tags, feeds) now include comprehensive UUID validation:
+
+**Protected Endpoints:**
+
+- `POST /api/articles/{id}/fetch-content`
+- `POST /api/articles/{id}/summarize`
+- `GET /api/articles/{id}/tags`
+- `GET /api/tags/{id}`
+- `DELETE /api/tags/{id}`
+- `PATCH /api/tags/{id}`
+
+**Implementation:**
+
+- **Middleware**: `src/lib/utils/uuid-validation-middleware.ts` using Zod schemas
+- **Validation Functions**: `validateUUID()`, `validateUUIDParams()`, `withUUIDValidation()`
+- **Convenience Wrappers**: `withArticleIdValidation()`, `withTagIdValidation()`
+
+**Error Response (400):**
+
+```json
+{
+  "error": "Invalid parameter format",
+  "message": "Invalid UUID format: [invalid-value]",
+  "details": "Parameter 'id' must be a valid UUID"
+}
+```
+
+**Security Benefits:**
+
+- **SQL Injection Protection**: Prevents malformed UUIDs from reaching database queries
+- **Input Validation**: Catches invalid parameters before route handler execution
+- **Clear Error Messages**: Helpful debugging information for developers
+- **Type Safety**: TypeScript integration with proper type constraints
+
 ## Error Handling
 
 Standard error envelope:
@@ -307,12 +349,34 @@ Standard error envelope:
 
 Common codes:
 
-- `rate_limit_exceeded`, `sync_start_failed`, `article_not_found`, `extraction_failed`, `timeout`, `api_not_configured`, `invalid_api_key`, `summarization_failed`
+- `rate_limit_exceeded`, `sync_start_failed`, `article_not_found`, `extraction_failed`, `timeout`, `api_not_configured`, `invalid_api_key`, `summarization_failed`, `invalid_parameter_format`
 
 ## Testing
 
+### Test Endpoints
+
+- GET `/api/test/check-headers`
+  - Description: Validates OAuth token and Inoreader connectivity with minimal API consumption (1 call).
+  - Purpose: Use this to test if sync will work without triggering a full sync (which uses 4+ calls).
+  - Location: `src/app/api/test/check-headers/route.ts`
+  - Response 200: `{ success: true, status: 200, rateLimitHeaders: {...}, allHeaders: {...}, data: { userId, userName, userEmail } }`
+  - Response 500: `{ error: "check_failed", message: "..." }` if tokens invalid or API unreachable
+  - Usage: `curl -s http://100.96.166.53:3000/reader/api/test/check-headers | jq .`
+  - Note: This is the recommended way to validate sync readiness during development/debugging.
+
+- GET `/api/auth/inoreader/status`
+  - Description: Check OAuth token file status locally without making any API calls (0 calls).
+  - Purpose: Validate presence and readability of encrypted token file before attempting API operations.
+  - Location: `src/app/api/auth/inoreader/status/route.ts`
+  - Response 200: `{ authenticated: boolean, status: "valid"|"expiring_soon"|"expired"|"no_tokens"|"config_error", message: string, tokenAge?: number, daysRemaining?: number, timestamp: string }`
+  - Usage: `curl -s http://100.96.166.53:3000/reader/api/auth/inoreader/status | jq .`
+  - Note: Alternative to check-headers when you want to avoid API consumption entirely.
+
+### Integration Testing
+
 - Use integration tests under `src/__tests__/integration/**` to validate API responses.
 - Curl quick checks:
+  - **Sync Validation**: `/api/test/check-headers` (1 API call) or `/api/auth/inoreader/status` (0 API calls, local only)
   - Health: `/api/health`, `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude`
   - Sync: `POST /api/sync` then `GET /api/sync/status/{id}`
   - Articles: `POST /api/articles/{id}/fetch-content`, `POST /api/articles/{id}/summarize`

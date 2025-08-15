@@ -79,6 +79,21 @@ Key variables stored in `.env` (never commit):
 - Update issue status when completing work
 - Reference issue numbers in commits (e.g., RR-102)
 
+### Testing Sync Without Consuming API Calls
+
+**Use `/api/test/check-headers` to validate sync readiness with only 1 API call:**
+
+```bash
+curl -s http://100.96.166.53:3000/reader/api/test/check-headers | jq .
+```
+
+- ✅ `success: true` → Token valid, sync will work
+- ❌ `success: false` → Token invalid or API unreachable
+- Returns rate limit headers and user info
+- Located at: `src/app/api/test/check-headers/route.ts`
+
+**Alternative (no API calls):** `/api/auth/inoreader/status` - Only checks if token file exists and is readable locally
+
 ## Sub-Agents
 
 Always use specialized agents when available:

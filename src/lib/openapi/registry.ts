@@ -1233,6 +1233,1326 @@ registry.registerPath({
 });
 
 // Generate OpenAPI document
+// ========== ARTICLES SCHEMAS ==========
+
+// Article schema
+const ArticleSchema = registry.register(
+  "Article",
+  z
+    .object({
+      id: z.string().uuid().openapi({
+        description: "Article unique identifier",
+        example: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+      feed_id: z.string().uuid().openapi({
+        description: "Associated feed ID",
+        example: "660e8400-e29b-41d4-a716-446655440001",
+      }),
+      inoreader_id: z.string().openapi({
+        description: "Inoreader article ID",
+        example: "tag:google.com,2005:reader/item/000000001234abcd",
+      }),
+      title: z.string().openapi({
+        description: "Article title",
+        example: "Breaking News: Tech Innovation",
+      }),
+      content: z.string().optional().openapi({
+        description: "RSS content (may be truncated)",
+        example: "<p>Article preview content...</p>",
+      }),
+      full_content: z.string().nullable().openapi({
+        description: "Full extracted article content",
+        example: "<p>Complete article content...</p>",
+      }),
+      has_full_content: z.boolean().openapi({
+        description: "Whether full content has been extracted",
+        example: true,
+      }),
+      ai_summary: z.string().nullable().openapi({
+        description: "AI-generated summary",
+        example: "This article discusses recent technological innovations...",
+      }),
+      author: z.string().nullable().openapi({
+        description: "Article author",
+        example: "John Doe",
+      }),
+      url: z.string().url().nullable().openapi({
+        description: "Article URL",
+        example: "https://example.com/article/123",
+      }),
+      published_at: z.string().openapi({
+        description: "Publication timestamp",
+        example: "2025-08-15T10:30:00Z",
+      }),
+      is_read: z.boolean().openapi({
+        description: "Read status",
+        example: false,
+      }),
+      is_starred: z.boolean().openapi({
+        description: "Starred status",
+        example: true,
+      }),
+      parsed_at: z.string().nullable().openapi({
+        description: "Content extraction timestamp",
+        example: "2025-08-15T10:35:00Z",
+      }),
+      parse_failed: z.boolean().optional().openapi({
+        description: "Whether content extraction failed",
+        example: false,
+      }),
+      parse_attempts: z.number().optional().openapi({
+        description: "Number of extraction attempts",
+        example: 1,
+      }),
+      created_at: z.string().openapi({
+        description: "Database creation timestamp",
+        example: "2025-08-15T10:31:00Z",
+      }),
+      updated_at: z.string().openapi({
+        description: "Last update timestamp",
+        example: "2025-08-15T10:35:00Z",
+      }),
+    })
+    .openapi({
+      description: "Article entity with full metadata",
+    })
+);
+
+// Paginated articles response
+const PaginatedArticlesResponseSchema = registry.register(
+  "PaginatedArticlesResponse",
+  z
+    .object({
+      articles: z.array(ArticleSchema).openapi({
+        description: "Array of articles",
+      }),
+      nextCursor: z.string().nullable().openapi({
+        description: "Cursor for next page (base64 encoded)",
+        example: "eyJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCJ9",
+      }),
+      prevCursor: z.string().nullable().openapi({
+        description: "Cursor for previous page",
+        example: null,
+      }),
+      hasNext: z.boolean().openapi({
+        description: "Whether more pages exist",
+        example: true,
+      }),
+      hasPrev: z.boolean().openapi({
+        description: "Whether previous pages exist",
+        example: false,
+      }),
+    })
+    .openapi({
+      description: "Cursor-based paginated articles response",
+    })
+);
+
+// Fetch content response
+const FetchContentResponseSchema = registry.register(
+  "FetchContentResponse",
+  z
+    .object({
+      success: z.boolean().openapi({ example: true }),
+      article: z
+        .object({
+          id: z.string().uuid(),
+          has_full_content: z.boolean(),
+          full_content: z.string(),
+        })
+        .optional()
+        .openapi({
+          description: "Updated article with extracted content",
+        }),
+      cached: z.boolean().optional().openapi({
+        description: "Whether content was already available",
+        example: false,
+      }),
+    })
+    .openapi({
+      description: "Content extraction result",
+    })
+);
+
+// Summarize response
+const SummarizeResponseSchema = registry.register(
+  "SummarizeResponse",
+  z
+    .object({
+      success: z.boolean().openapi({ example: true }),
+      summary: z.string().openapi({
+        description: "AI-generated summary",
+        example:
+          "This article explores recent advances in quantum computing, highlighting breakthrough achievements in error correction and practical applications in drug discovery and cryptography.",
+      }),
+      model: z.string().optional().openapi({
+        description: "Claude model used",
+        example: "claude-sonnet-4-20250514",
+      }),
+      cached: z.boolean().optional().openapi({
+        description: "Whether summary was cached",
+        example: false,
+      }),
+      regenerated: z.boolean().optional().openapi({
+        description: "Whether summary was regenerated",
+        example: false,
+      }),
+      input_tokens: z.number().optional().openapi({
+        description: "Input token count",
+        example: 2500,
+      }),
+      output_tokens: z.number().optional().openapi({
+        description: "Output token count",
+        example: 150,
+      }),
+      config: z
+        .object({
+          style: z.string(),
+          focus: z.array(z.string()),
+          maxLength: z.number(),
+        })
+        .optional()
+        .openapi({
+          description: "Summary configuration used",
+        }),
+    })
+    .openapi({
+      description: "Article summarization result",
+    })
+);
+
+// Article tags response
+const ArticleTagsResponseSchema = registry.register(
+  "ArticleTagsResponse",
+  z
+    .object({
+      tags: z
+        .array(
+          z.object({
+            id: z
+              .string()
+              .uuid()
+              .openapi({ example: "770e8400-e29b-41d4-a716-446655440003" }),
+            name: z.string().openapi({ example: "Technology" }),
+            slug: z.string().openapi({ example: "technology" }),
+            color: z.string().nullable().openapi({ example: "#3B82F6" }),
+            description: z.string().nullable().openapi({
+              example: "Articles about technology and innovation",
+            }),
+          })
+        )
+        .openapi({
+          description: "Tags associated with the article",
+        }),
+    })
+    .openapi({
+      description: "Tags for a specific article",
+    })
+);
+
+// ========== TAGS SCHEMAS ==========
+
+// Tag schema
+const TagSchema = registry.register(
+  "Tag",
+  z
+    .object({
+      id: z.string().uuid().openapi({
+        description: "Tag unique identifier",
+        example: "770e8400-e29b-41d4-a716-446655440003",
+      }),
+      name: z.string().openapi({
+        description: "Tag display name",
+        example: "Technology",
+      }),
+      slug: z.string().openapi({
+        description: "URL-friendly slug",
+        example: "technology",
+      }),
+      color: z.string().nullable().openapi({
+        description: "Tag color (hex)",
+        example: "#3B82F6",
+      }),
+      description: z.string().nullable().openapi({
+        description: "Tag description",
+        example: "Articles about technology and innovation",
+      }),
+      user_id: z.string().uuid().openapi({
+        description: "Owner user ID",
+        example: "880e8400-e29b-41d4-a716-446655440004",
+      }),
+      article_count: z.number().openapi({
+        description: "Number of tagged articles",
+        example: 42,
+      }),
+      unread_count: z.number().optional().openapi({
+        description: "Number of unread articles",
+        example: 12,
+      }),
+      created_at: z.string().openapi({
+        description: "Creation timestamp",
+        example: "2025-08-01T09:00:00Z",
+      }),
+      updated_at: z.string().openapi({
+        description: "Last update timestamp",
+        example: "2025-08-15T10:00:00Z",
+      }),
+    })
+    .openapi({
+      description: "Tag entity with metadata",
+    })
+);
+
+// Tags list response
+const TagsListResponseSchema = registry.register(
+  "TagsListResponse",
+  z
+    .object({
+      tags: z.array(TagSchema).openapi({
+        description: "Array of tags",
+      }),
+      pagination: z
+        .object({
+          limit: z.number().openapi({ example: 50 }),
+          offset: z.number().openapi({ example: 0 }),
+          total: z.number().openapi({ example: 25 }),
+          hasMore: z.boolean().openapi({ example: false }),
+        })
+        .openapi({
+          description: "Pagination metadata",
+        }),
+    })
+    .openapi({
+      description: "List of tags with pagination",
+    })
+);
+
+// Tag with articles response
+const TagWithArticlesResponseSchema = registry.register(
+  "TagWithArticlesResponse",
+  TagSchema.extend({
+    articles: z
+      .array(
+        z.object({
+          id: z.string().uuid(),
+          title: z.string(),
+          url: z.string().url(),
+          published_at: z.string(),
+          is_read: z.boolean(),
+          is_starred: z.boolean(),
+          feeds: z
+            .object({
+              id: z.string().uuid(),
+              title: z.string(),
+            })
+            .optional(),
+        })
+      )
+      .optional()
+      .openapi({
+        description: "Associated articles (when includeArticles=true)",
+      }),
+  }).openapi({
+    description: "Tag with optional associated articles",
+  })
+);
+
+// Create tag request
+const CreateTagRequestSchema = z
+  .object({
+    name: z.string().min(1).openapi({
+      description: "Tag name (required)",
+      example: "AI Research",
+    }),
+    color: z.string().optional().openapi({
+      description: "Tag color (hex)",
+      example: "#8B5CF6",
+    }),
+    description: z.string().optional().openapi({
+      description: "Tag description",
+      example: "Articles about artificial intelligence research",
+    }),
+  })
+  .openapi({
+    description: "Create tag request body",
+  });
+
+// Update tag request
+const UpdateTagRequestSchema = z
+  .object({
+    name: z.string().min(1).optional().openapi({
+      description: "New tag name",
+      example: "Machine Learning",
+    }),
+    color: z.string().nullable().optional().openapi({
+      description: "New tag color (hex)",
+      example: "#10B981",
+    }),
+    description: z.string().nullable().optional().openapi({
+      description: "New tag description",
+      example: "Updated description for the tag",
+    }),
+  })
+  .openapi({
+    description: "Update tag request body",
+  });
+
+// Delete tag response
+const DeleteTagResponseSchema = registry.register(
+  "DeleteTagResponse",
+  z
+    .object({
+      message: z.string().openapi({
+        example: "Tag deleted successfully",
+      }),
+    })
+    .openapi({
+      description: "Tag deletion confirmation",
+    })
+);
+
+// Summarize request body
+const SummarizeRequestSchema = z
+  .object({
+    regenerate: z.boolean().optional().openapi({
+      description: "Force regenerate summary even if cached",
+      example: false,
+    }),
+  })
+  .openapi({
+    description: "Summarize request options",
+  });
+
+// ========== REGISTER ARTICLES ENDPOINTS ==========
+
+// GET /api/articles/paginated
+registry.registerPath({
+  method: "get",
+  path: "/api/articles/paginated",
+  description:
+    "Retrieve articles with cursor-based pagination. Supports filtering by feed, user, and read status. Articles are sorted by publication date (newest first).",
+  summary: "Get paginated articles",
+  tags: ["Articles"],
+  request: {
+    query: z.object({
+      cursor: z.string().optional().openapi({
+        description: "Pagination cursor from previous response",
+        example: "eyJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCJ9",
+      }),
+      direction: z.enum(["next", "prev"]).optional().openapi({
+        description: "Pagination direction",
+        example: "next",
+      }),
+      pageSize: z.string().optional().openapi({
+        description: "Number of articles per page (max 100)",
+        example: "50",
+      }),
+      feedId: z.string().uuid().optional().openapi({
+        description: "Filter by feed ID",
+        example: "660e8400-e29b-41d4-a716-446655440001",
+      }),
+      userId: z.string().uuid().optional().openapi({
+        description: "Filter by user ID",
+        example: "user-456",
+      }),
+      isRead: z.string().optional().openapi({
+        description: "Filter by read status (true/false)",
+        example: "false",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Articles retrieved successfully",
+      content: {
+        "application/json": {
+          schema: PaginatedArticlesResponseSchema,
+          examples: {
+            success: {
+              summary: "Paginated articles",
+              value: {
+                articles: [
+                  {
+                    id: "550e8400-e29b-41d4-a716-446655440000",
+                    feed_id: "660e8400-e29b-41d4-a716-446655440001",
+                    title: "Breaking News: Tech Innovation",
+                    url: "https://example.com/article/123",
+                    published_at: "2025-08-15T10:30:00Z",
+                    is_read: false,
+                    is_starred: true,
+                    has_full_content: true,
+                    created_at: "2025-08-15T10:31:00Z",
+                    updated_at: "2025-08-15T10:35:00Z",
+                  },
+                ],
+                nextCursor:
+                  "eyJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCJ9",
+                prevCursor: null,
+                hasNext: true,
+                hasPrev: false,
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid cursor format",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            invalidCursor: {
+              summary: "Invalid cursor",
+              value: {
+                error: "Invalid cursor format",
+                message: "The provided cursor is not valid",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Failed to fetch articles",
+                message: "Database query failed",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// POST /api/articles/{id}/fetch-content
+registry.registerPath({
+  method: "post",
+  path: "/api/articles/{id}/fetch-content",
+  description:
+    "⚠️ **MAKES EXTERNAL HTTP CALLS** - Extract full content from article URL. This endpoint fetches the article webpage and extracts the main content. Rate limited to prevent abuse.",
+  summary: "✨ Extract article content (External fetch)",
+  tags: ["Articles"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({
+        description: "Article ID (URL encoded)",
+        example: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Content extracted successfully",
+      content: {
+        "application/json": {
+          schema: FetchContentResponseSchema,
+          examples: {
+            extracted: {
+              summary: "Content extracted",
+              value: {
+                success: true,
+                article: {
+                  id: "550e8400-e29b-41d4-a716-446655440000",
+                  has_full_content: true,
+                  full_content: "<p>Full article content here...</p>",
+                },
+                cached: false,
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Article not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            notFound: {
+              summary: "Article not found",
+              value: {
+                error: "article_not_found",
+                message: "Article not found in database",
+              },
+            },
+          },
+        },
+      },
+    },
+    429: {
+      description: "Rate limit exceeded",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            rateLimit: {
+              summary: "Too many requests",
+              value: {
+                error: "rate_limit",
+                message:
+                  "Too many concurrent parse requests. Please try again later.",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Extraction failed",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Extraction error",
+              value: {
+                error: "unexpected_error",
+                message: "Failed to extract article content",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// POST /api/articles/{id}/summarize
+registry.registerPath({
+  method: "post",
+  path: "/api/articles/{id}/summarize",
+  description:
+    "⚠️ **USES CLAUDE API** - Generate AI summary for article using Claude. Requires ANTHROPIC_API_KEY. Caches summaries to avoid repeated API calls.",
+  summary: "✨ Generate AI summary (Claude API)",
+  tags: ["Articles"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({
+        description: "Article ID",
+        example: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: SummarizeRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Summary generated successfully",
+      content: {
+        "application/json": {
+          schema: SummarizeResponseSchema,
+          examples: {
+            generated: {
+              summary: "Summary generated",
+              value: {
+                success: true,
+                summary:
+                  "This article explores recent advances in quantum computing, highlighting breakthrough achievements in error correction and practical applications in drug discovery and cryptography.",
+                model: "claude-sonnet-4-20250514",
+                cached: false,
+                regenerated: false,
+                input_tokens: 2500,
+                output_tokens: 150,
+                config: {
+                  style: "concise",
+                  focus: ["key_points", "innovations"],
+                  maxLength: 300,
+                },
+              },
+            },
+            cached: {
+              summary: "Cached summary returned",
+              value: {
+                success: true,
+                summary:
+                  "Previously generated summary about the article's main points...",
+                cached: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "No content to summarize",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            noContent: {
+              summary: "No content available",
+              value: {
+                error: "no_content",
+                message: "Article has no content to summarize",
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Invalid API key",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            invalidKey: {
+              summary: "API key invalid",
+              value: {
+                error: "invalid_api_key",
+                message: "Invalid Claude API key",
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Article not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            notFound: {
+              summary: "Article not found",
+              value: {
+                error: "article_not_found",
+                message: "Article not found",
+                details: "No article with specified ID",
+              },
+            },
+          },
+        },
+      },
+    },
+    429: {
+      description: "Claude API rate limit",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            rateLimit: {
+              summary: "API rate limit",
+              value: {
+                error: "rate_limit",
+                message:
+                  "Claude API rate limit exceeded. Please try again later.",
+              },
+            },
+          },
+        },
+      },
+    },
+    503: {
+      description: "Claude API not configured",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            notConfigured: {
+              summary: "API not configured",
+              value: {
+                error: "api_not_configured",
+                message: "Claude API key not configured on server",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// GET /api/articles/{id}/tags
+registry.registerPath({
+  method: "get",
+  path: "/api/articles/{id}/tags",
+  description:
+    "Get all tags associated with a specific article. Returns empty array if article has no tags.",
+  summary: "Get article tags",
+  tags: ["Articles"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({
+        description: "Article ID",
+        example: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Tags retrieved successfully",
+      content: {
+        "application/json": {
+          schema: ArticleTagsResponseSchema,
+          examples: {
+            withTags: {
+              summary: "Article with tags",
+              value: {
+                tags: [
+                  {
+                    id: "tag-123",
+                    name: "Technology",
+                    slug: "technology",
+                    color: "#3B82F6",
+                    description: "Articles about technology and innovation",
+                  },
+                  {
+                    id: "tag-456",
+                    name: "AI",
+                    slug: "ai",
+                    color: "#8B5CF6",
+                    description: null,
+                  },
+                ],
+              },
+            },
+            noTags: {
+              summary: "Article without tags",
+              value: {
+                tags: [],
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Failed to fetch tags",
+                message: "Database query failed",
+                details: "Connection error",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// ========== REGISTER TAGS ENDPOINTS ==========
+
+// GET /api/tags
+registry.registerPath({
+  method: "get",
+  path: "/api/tags",
+  description:
+    "List all tags for the authenticated user with filtering, sorting, and pagination. Results are automatically scoped to the user's tags only. Includes article counts and unread counts for each tag.",
+  summary: "List tags",
+  tags: ["Tags"],
+  request: {
+    query: z.object({
+      search: z.string().optional().openapi({
+        description: "Search tags by name",
+        example: "tech",
+      }),
+      sortBy: z.enum(["name", "count", "recent"]).optional().openapi({
+        description: "Sort field",
+        example: "name",
+      }),
+      order: z.enum(["asc", "desc"]).optional().openapi({
+        description: "Sort order",
+        example: "asc",
+      }),
+      limit: z.string().optional().openapi({
+        description: "Results per page",
+        example: "50",
+      }),
+      offset: z.string().optional().openapi({
+        description: "Pagination offset",
+        example: "0",
+      }),
+      includeEmpty: z.string().optional().openapi({
+        description: "Include tags with no articles (true/false)",
+        example: "false",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Tags retrieved successfully",
+      content: {
+        "application/json": {
+          schema: TagsListResponseSchema,
+          examples: {
+            success: {
+              summary: "Tags list",
+              value: {
+                tags: [
+                  {
+                    id: "770e8400-e29b-41d4-a716-446655440003",
+                    name: "Technology",
+                    slug: "technology",
+                    color: "#3B82F6",
+                    description: "Tech articles",
+                    user_id: "880e8400-e29b-41d4-a716-446655440004",
+                    article_count: 42,
+                    unread_count: 12,
+                    created_at: "2025-08-01T09:00:00Z",
+                    updated_at: "2025-08-15T10:00:00Z",
+                  },
+                ],
+                pagination: {
+                  limit: 50,
+                  offset: 0,
+                  total: 25,
+                  hasMore: false,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            userNotFound: {
+              summary: "User not found",
+              value: {
+                error: "User not found",
+                message: "No user with specified ID",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Failed to fetch tags",
+                message: "Database query failed",
+                details: "Connection error",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// POST /api/tags
+registry.registerPath({
+  method: "post",
+  path: "/api/tags",
+  description:
+    "Create a new tag. Automatically generates a URL-friendly slug from the name. Tags must have unique slugs per user. The user_id is automatically set from the authenticated session context.",
+  summary: "Create tag",
+  tags: ["Tags"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateTagRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Tag created successfully",
+      content: {
+        "application/json": {
+          schema: TagSchema,
+          examples: {
+            created: {
+              summary: "Tag created",
+              value: {
+                id: "990e8400-e29b-41d4-a716-446655440005",
+                name: "AI Research",
+                slug: "ai-research",
+                color: "#8B5CF6",
+                description: "Articles about artificial intelligence research",
+                user_id: "880e8400-e29b-41d4-a716-446655440004",
+                article_count: 0,
+                created_at: "2025-08-15T12:00:00Z",
+                updated_at: "2025-08-15T12:00:00Z",
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid tag name",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            invalidName: {
+              summary: "Name required",
+              value: {
+                error: "Tag name is required",
+                message: "Tag name cannot be empty",
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            userNotFound: {
+              summary: "User not found",
+              value: {
+                error: "User not found",
+                message: "No user with specified ID",
+              },
+            },
+          },
+        },
+      },
+    },
+    409: {
+      description: "Tag already exists",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            duplicate: {
+              summary: "Duplicate tag",
+              value: {
+                error: "Tag already exists",
+                message: "A tag with this slug already exists",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Failed to create tag",
+                message: "Database insertion failed",
+                details: "Constraint violation",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// GET /api/tags/{id}
+registry.registerPath({
+  method: "get",
+  path: "/api/tags/{id}",
+  description:
+    "Get details for a specific tag owned by the authenticated user. Access is automatically restricted to user's own tags. Optionally include associated articles.",
+  summary: "Get tag details",
+  tags: ["Tags"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({
+        description: "Tag ID",
+        example: "770e8400-e29b-41d4-a716-446655440003",
+      }),
+    }),
+    query: z.object({
+      includeArticles: z.string().optional().openapi({
+        description: "Include associated articles (true/false)",
+        example: "true",
+      }),
+      limit: z.string().optional().openapi({
+        description: "Max articles to include",
+        example: "10",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Tag retrieved successfully",
+      content: {
+        "application/json": {
+          schema: TagWithArticlesResponseSchema,
+          examples: {
+            withoutArticles: {
+              summary: "Tag without articles",
+              value: {
+                id: "tag-123",
+                name: "Technology",
+                slug: "technology",
+                color: "#3B82F6",
+                description: "Tech articles",
+                user_id: "user-456",
+                article_count: 42,
+                created_at: "2025-08-01T09:00:00Z",
+                updated_at: "2025-08-15T10:00:00Z",
+              },
+            },
+            withArticles: {
+              summary: "Tag with articles",
+              value: {
+                id: "tag-123",
+                name: "Technology",
+                slug: "technology",
+                color: "#3B82F6",
+                description: "Tech articles",
+                user_id: "user-456",
+                article_count: 42,
+                created_at: "2025-08-01T09:00:00Z",
+                updated_at: "2025-08-15T10:00:00Z",
+                articles: [
+                  {
+                    id: "550e8400-e29b-41d4-a716-446655440000",
+                    title: "Tech Innovation News",
+                    url: "https://example.com/tech-news",
+                    published_at: "2025-08-15T10:00:00Z",
+                    is_read: false,
+                    is_starred: true,
+                    feeds: {
+                      id: "feed-123",
+                      title: "Tech Blog",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Tag or user not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            tagNotFound: {
+              summary: "Tag not found",
+              value: {
+                error: "Tag not found",
+                message: "No tag with specified ID",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Internal server error",
+                message: "Failed to fetch tag",
+                details: "Database query failed",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// PATCH /api/tags/{id}
+registry.registerPath({
+  method: "patch",
+  path: "/api/tags/{id}",
+  description:
+    "Update an existing tag owned by the authenticated user. All fields are optional. Updating the name will regenerate the slug. Access is automatically restricted to user's own tags.",
+  summary: "Update tag",
+  tags: ["Tags"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({
+        description: "Tag ID",
+        example: "770e8400-e29b-41d4-a716-446655440003",
+      }),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateTagRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Tag updated successfully",
+      content: {
+        "application/json": {
+          schema: TagSchema,
+          examples: {
+            updated: {
+              summary: "Tag updated",
+              value: {
+                id: "770e8400-e29b-41d4-a716-446655440003",
+                name: "Machine Learning",
+                slug: "machine-learning",
+                color: "#10B981",
+                description: "Updated ML articles",
+                user_id: "880e8400-e29b-41d4-a716-446655440004",
+                article_count: 42,
+                created_at: "2025-08-01T09:00:00Z",
+                updated_at: "2025-08-15T12:30:00Z",
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Tag or user not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            tagNotFound: {
+              summary: "Tag not found",
+              value: {
+                error: "Tag not found",
+                message: "No tag with specified ID",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Failed to update tag",
+                message: "Database update failed",
+                details: "Constraint violation",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// DELETE /api/tags/{id}
+registry.registerPath({
+  method: "delete",
+  path: "/api/tags/{id}",
+  description:
+    "Delete a tag owned by the authenticated user. This will remove the tag and all article associations (CASCADE delete on article_tags). Access is automatically restricted to user's own tags.",
+  summary: "Delete tag",
+  tags: ["Tags"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({
+        description: "Tag ID",
+        example: "770e8400-e29b-41d4-a716-446655440003",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Tag deleted successfully",
+      content: {
+        "application/json": {
+          schema: DeleteTagResponseSchema,
+          examples: {
+            deleted: {
+              summary: "Tag deleted",
+              value: {
+                message: "Tag deleted successfully",
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Tag or user not found",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            tagNotFound: {
+              summary: "Tag not found",
+              value: {
+                error: "Tag not found",
+                message: "No tag with specified ID",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: SyncErrorResponseSchema,
+          examples: {
+            error: {
+              summary: "Database error",
+              value: {
+                error: "Failed to delete tag",
+                message: "Database deletion failed",
+                details: "Foreign key constraint",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
 export function generateOpenAPIDocument(requestServerUrl?: string) {
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
@@ -1251,7 +2571,8 @@ export function generateOpenAPIDocument(requestServerUrl?: string) {
     info: {
       title: "RSS News Reader API",
       version: "1.0.0",
-      description: "Health endpoints for the RSS News Reader application",
+      description:
+        "Complete API documentation for the RSS News Reader application including health monitoring, sync operations, articles management, and tags CRUD operations",
     },
     servers: [
       {
@@ -1273,6 +2594,16 @@ export function generateOpenAPIDocument(requestServerUrl?: string) {
         description:
           "RSS feed synchronization endpoints for managing sync operations, status tracking, and API usage",
       },
+      {
+        name: "Articles",
+        description:
+          "Article management endpoints for pagination, content extraction, AI summarization, and tag associations",
+      },
+      {
+        name: "Tags",
+        description:
+          "Tag management endpoints for full CRUD operations on article categorization tags",
+      },
     ],
   });
 }
@@ -1287,6 +2618,203 @@ export {
   ClaudeHealthResponseSchema,
   ErrorResponseSchema,
 };
+
+// ========== AUTH SCHEMAS ==========
+
+// Auth Status Response Schema
+const AuthStatusResponseSchema = registry.register(
+  "AuthStatusResponse",
+  z
+    .object({
+      authenticated: z.boolean().openapi({
+        description: "Whether the user has valid OAuth tokens",
+        example: true,
+      }),
+      status: z
+        .enum([
+          "valid",
+          "expiring_soon",
+          "expired",
+          "no_tokens",
+          "invalid_format",
+          "unencrypted",
+          "empty_tokens",
+          "config_error",
+          "error",
+        ])
+        .openapi({
+          description: "Current authentication status",
+          example: "valid",
+        }),
+      message: z.string().openapi({
+        description: "Human-readable status message",
+        example: "OAuth tokens are valid (350 days remaining)",
+      }),
+      timestamp: z.string().openapi({
+        description: "ISO 8601 timestamp of the check",
+        example: "2025-08-15T12:00:00Z",
+      }),
+      tokenAge: z.number().nullable().openapi({
+        description: "Age of the token file in days",
+        example: 15,
+      }),
+      daysRemaining: z.number().nullable().openapi({
+        description: "Days until token expiration (365 day lifetime)",
+        example: 350,
+      }),
+    })
+    .openapi({
+      description: "OAuth authentication status information",
+    })
+);
+
+// ========== TEST SCHEMAS ==========
+
+// Rate Limit Headers Schema
+const RateLimitHeadersSchema = z
+  .object({
+    "X-Reader-Zone1-Usage": z.string().nullable().openapi({
+      description: "Zone 1 API usage count",
+      example: "150",
+    }),
+    "X-Reader-Zone1-Limit": z.string().nullable().openapi({
+      description: "Zone 1 API limit",
+      example: "10000",
+    }),
+    "X-Reader-Zone2-Usage": z.string().nullable().openapi({
+      description: "Zone 2 API usage count",
+      example: "50",
+    }),
+    "X-Reader-Zone2-Limit": z.string().nullable().openapi({
+      description: "Zone 2 API limit",
+      example: "1000",
+    }),
+    "X-Reader-Limits-Reset-After": z.string().nullable().openapi({
+      description: "Time until rate limit reset",
+      example: "3600",
+    }),
+    "X-Reader-Ratelimits": z.string().nullable().openapi({
+      description: "Additional rate limit information",
+      example: "zone1=150/10000;zone2=50/1000",
+    }),
+  })
+  .openapi({
+    description: "Inoreader API rate limit headers",
+  });
+
+// Check Headers Response Schema
+const CheckHeadersResponseSchema = registry.register(
+  "CheckHeadersResponse",
+  z
+    .object({
+      success: z.boolean().openapi({
+        description: "Whether the API call succeeded",
+        example: true,
+      }),
+      status: z.number().openapi({
+        description: "HTTP status code from Inoreader API",
+        example: 200,
+      }),
+      rateLimitHeaders: RateLimitHeadersSchema.openapi({
+        description: "Rate limit headers with standard casing",
+      }),
+      caseVariations: RateLimitHeadersSchema.openapi({
+        description: "Rate limit headers with lowercase casing",
+      }),
+      allHeaders: z.record(z.string(), z.string()).openapi({
+        description: "All response headers from the API",
+        example: {
+          "content-type": "application/json",
+          "x-reader-zone1-usage": "150",
+        },
+      }),
+      data: z
+        .any()
+        .nullable()
+        .openapi({
+          description: "User info data if request succeeded",
+          example: {
+            userId: "1005921515",
+            userName: "user@example.com",
+            userProfileId: "1005921515",
+          },
+        }),
+      message: z.string().openapi({
+        description: "Informational message",
+        example: "Check which headers are actually present in the response",
+      }),
+    })
+    .openapi({
+      description: "API header validation response",
+    })
+);
+
+// Check Headers Error Response Schema
+const CheckHeadersErrorSchema = registry.register(
+  "CheckHeadersError",
+  z
+    .object({
+      error: z.string().openapi({
+        description: "Error code",
+        example: "check_failed",
+      }),
+      message: z.string().openapi({
+        description: "Error message",
+        example: "Failed to make authenticated request",
+      }),
+    })
+    .openapi({
+      description: "Error response for header check",
+    })
+);
+
+// Register /api/auth/inoreader/status endpoint
+registry.registerPath({
+  method: "get",
+  path: "/api/auth/inoreader/status",
+  summary: "Check OAuth authentication status",
+  description:
+    "Validates the local OAuth token file status without making API calls. Checks token existence, encryption, age, and expiration (365-day lifetime).",
+  tags: ["Authentication"],
+  responses: {
+    200: {
+      description: "Authentication status retrieved successfully",
+      content: {
+        "application/json": {
+          schema: AuthStatusResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// Register /api/test/check-headers endpoint
+registry.registerPath({
+  method: "get",
+  path: "/api/test/check-headers",
+  summary: "Test API connectivity and rate limits",
+  description:
+    "Makes a single API call to Inoreader to validate token functionality and retrieve rate limit headers. Uses only 1 API call to check sync readiness.",
+  tags: ["Testing"],
+  responses: {
+    200: {
+      description: "Headers retrieved successfully",
+      content: {
+        "application/json": {
+          schema: CheckHeadersResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Failed to check headers",
+      content: {
+        "application/json": {
+          schema: CheckHeadersErrorSchema,
+        },
+      },
+    },
+  },
+});
 
 // Export with test-expected names for backwards compatibility
 export {

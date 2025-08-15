@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { SummaryPromptBuilder } from "@/lib/ai/summary-prompt";
+import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -17,10 +18,10 @@ const anthropic = process.env.ANTHROPIC_API_KEY
     })
   : null;
 
-export async function POST(
+const postHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const { id } = params;
 
@@ -181,7 +182,10 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+};
+
+// Export the wrapped handler with UUID validation
+export const POST = withArticleIdValidation(postHandler);
 
 // Track API usage for rate limiting
 async function trackApiUsage(service: string, count: number = 1) {

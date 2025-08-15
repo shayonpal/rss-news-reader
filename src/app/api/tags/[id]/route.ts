@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withTagIdValidation } from "@/lib/utils/uuid-validation-middleware";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -9,10 +10,10 @@ const supabase = createClient(
 );
 
 // GET /api/tags/[id] - Get tag details with associated articles
-export async function GET(
+const getHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const tagId = params.id;
 
@@ -88,13 +89,16 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+};
+
+// Export the wrapped GET handler with UUID validation
+export const GET = withTagIdValidation(getHandler);
 
 // DELETE /api/tags/[id] - Delete a tag and all associations
-export async function DELETE(
+const deleteHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const tagId = params.id;
 
@@ -149,13 +153,16 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+};
+
+// Export the wrapped DELETE handler with UUID validation
+export const DELETE = withTagIdValidation(deleteHandler);
 
 // PATCH /api/tags/[id] - Update a tag
-export async function PATCH(
+const patchHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const tagId = params.id;
     const body = await request.json();
@@ -231,4 +238,7 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+};
+
+// Export the wrapped PATCH handler with UUID validation
+export const PATCH = withTagIdValidation(patchHandler);

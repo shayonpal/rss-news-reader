@@ -5,6 +5,64 @@ All notable changes to the RSS News Reader project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - Friday, August 15, 2025 at 6:01 AM
+
+### Fixed
+
+- **[RR-207] Fix API usage header priority logic to resolve 10x discrepancy**
+  - **Root cause**: Hybrid Math.max() calculation between headers and local count was amplifying values
+  - **Solution**: Remove Math.max() logic, use headers as authoritative source
+  - **Core changes in** `src/lib/api/capture-rate-limit-headers.ts`:
+    - `getCurrentApiUsage()` function now directly uses header values without hybrid calculation
+    - Added warning logs for >20% discrepancies between headers and local count
+    - Fallback to 0 (not count) when headers are null
+    - Improved percentage calculation with zero-limit handling
+  - **API endpoint enhancements** in `src/app/api/sync/api-usage/route.ts`:
+    - Added `dataReliability` field indicating "headers" or "fallback" source
+    - Added `lastHeaderUpdate` timestamp for data freshness visibility
+  - **Test coverage**: 16 comprehensive unit tests validating all edge cases
+    - `src/__tests__/unit/rr-207-api-usage-headers.test.ts` - 9 tests for header priority logic
+    - `src/__tests__/unit/rr-207-api-endpoint.test.ts` - 7 tests for API response format
+  - **Impact**: Correct API usage reporting (4 calls shown instead of 39)
+  - **Performance**: No regression, warning system for monitoring discrepancies
+
+### Documentation
+
+- **Updated server API endpoint documentation** `docs/api/server-endpoints.md`
+  - Updated GET `/api/sync/api-usage` documentation to reflect RR-207 changes
+  - Added new response fields: `dataReliability` and `lastHeaderUpdate`
+  - Updated notes explaining header-as-authoritative approach and warning system
+  - Corrected free tier limits: 10000/day Zone 1, 2000/day Zone 2
+
+## [1.0.2] - Friday, August 15, 2025 at 5:05 AM
+
+### Added
+
+- **[RR-202] Comprehensive UUID validation middleware for API routes**
+  - **New middleware**: `src/lib/utils/uuid-validation-middleware.ts` providing UUID validation using Zod
+  - **validateUUID()** function for runtime UUID validation
+  - **validateUUIDParams()** middleware function for Next.js API routes
+  - **withUUIDValidation()** higher-order function wrapper for route handlers
+  - **Convenience functions**: `withArticleIdValidation()` and `withTagIdValidation()` for common use cases
+  - **Applied to 4 API routes**:
+    - `POST /api/articles/[id]/fetch-content` - Article content fetching
+    - `POST /api/articles/[id]/summarize` - Article AI summarization
+    - `GET /api/articles/[id]/tags` - Article tags retrieval
+    - `GET|DELETE|PATCH /api/tags/[id]` - Tag CRUD operations
+  - **Security enhancement**: Returns 400 Bad Request for invalid UUIDs with clear error messages
+  - **Error format**: `{ error: "Invalid parameter format", message: "Invalid UUID format: [value]", details: "Parameter 'id' must be a valid UUID" }`
+  - **SQL injection protection**: Prevents malformed UUID parameters from reaching database queries
+  - **Developer experience**: Clear validation errors help identify parameter format issues quickly
+
+### Added
+
+- **New testing endpoints for development validation**
+  - **GET /api/test/check-headers** - Validate OAuth token status and API connectivity with minimal consumption (1 API call)
+  - **GET /api/auth/inoreader/status** - Check OAuth token file status locally (0 API calls)
+  - Purpose: Enable sync readiness validation without triggering expensive full sync operations
+  - Usage: `curl -s http://100.96.166.53:3000/reader/api/test/check-headers | jq .`
+  - Response format includes rate limit headers, user info, and connectivity status
+
 ## [1.0.1] - Thursday, August 14, 2025 at 9:13 PM
 
 ### Fixed

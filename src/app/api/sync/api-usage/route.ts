@@ -10,6 +10,9 @@ export async function GET() {
   try {
     const usage = await getCurrentApiUsage();
 
+    // Determine data reliability based on whether we have header data
+    const dataReliability = usage.lastUpdated !== null ? "headers" : "fallback";
+
     return NextResponse.json(
       {
         zone1: {
@@ -24,6 +27,8 @@ export async function GET() {
         },
         resetAfterSeconds: usage.resetAfterSeconds,
         timestamp: new Date().toISOString(),
+        dataReliability,
+        lastHeaderUpdate: usage.lastUpdated,
       },
       {
         headers: {
