@@ -173,9 +173,13 @@ export function ArticleDetail({
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const isIOS =
-    typeof window !== "undefined" &&
-    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Fix iOS detection hydration issue - use state instead of direct check
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    setIsIOS(/iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
 
   // Auto-parse content for partial feeds
   const {
@@ -526,7 +530,10 @@ export function ArticleDetail({
                 <span>•</span>
               </>
             )}
-            <time dateTime={currentArticle.publishedAt.toISOString()}>
+            <time
+              dateTime={currentArticle.publishedAt.toISOString()}
+              suppressHydrationWarning
+            >
               {formatDistanceToNow(currentArticle.publishedAt, {
                 addSuffix: true,
               })}

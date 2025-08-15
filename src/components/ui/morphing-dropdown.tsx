@@ -71,6 +71,27 @@ export function MorphingDropdown({
     React.useState<number>(160);
   const [focusedIndex, setFocusedIndex] = React.useState(-1);
 
+  // Track dark mode in state to avoid hydration mismatch
+  const [isDark, setIsDark] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check dark mode after hydration
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    };
+
+    checkDarkMode();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const setOpen = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled) {
@@ -228,21 +249,15 @@ export function MorphingDropdown({
         // Enhanced glass effect matching POC exactly
         backdropFilter: "blur(16px) saturate(180%)",
         WebkitBackdropFilter: "blur(16px) saturate(180%)",
-        background:
-          typeof window !== "undefined" &&
-          document.documentElement.classList.contains("dark")
-            ? "rgba(10, 10, 10, 0.18)"
-            : "rgba(255, 255, 255, 0.18)",
-        border:
-          typeof window !== "undefined" &&
-          document.documentElement.classList.contains("dark")
-            ? "1px solid rgba(255, 255, 255, 0.08)"
-            : "1px solid rgba(0, 0, 0, 0.04)",
-        boxShadow:
-          typeof window !== "undefined" &&
-          document.documentElement.classList.contains("dark")
-            ? "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06)"
-            : "0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+        background: isDark
+          ? "rgba(10, 10, 10, 0.18)"
+          : "rgba(255, 255, 255, 0.18)",
+        border: isDark
+          ? "1px solid rgba(255, 255, 255, 0.08)"
+          : "1px solid rgba(0, 0, 0, 0.04)",
+        boxShadow: isDark
+          ? "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06)"
+          : "0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
         borderRadius: "22px",
         width: isOpen ? "200px" : "auto",
         minHeight: "48px",
@@ -340,17 +355,13 @@ export function MorphingDropdown({
                     touchAction: "manipulation",
                     background:
                       focusedIndex === index
-                        ? typeof window !== "undefined" &&
-                          document.documentElement.classList.contains("dark")
+                        ? isDark
                           ? "rgba(255, 255, 255, 0.08)"
                           : "rgba(0, 0, 0, 0.04)"
                         : "transparent",
                   }}
                   onMouseEnter={(e) => {
                     if (!item.disabled) {
-                      const isDark =
-                        typeof window !== "undefined" &&
-                        document.documentElement.classList.contains("dark");
                       e.currentTarget.style.background = isDark
                         ? "rgba(255, 255, 255, 0.08)"
                         : "rgba(0, 0, 0, 0.04)";

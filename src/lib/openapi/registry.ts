@@ -2817,6 +2817,884 @@ registry.registerPath({
 });
 
 // Export with test-expected names for backwards compatibility
+// ============================================================================
+// INOREADER API SCHEMAS
+// ============================================================================
+
+const InoreaderUserInfoSchema = z
+  .object({
+    userId: z.string().openapi({
+      description: "User's unique identifier",
+      example: "1005921515",
+    }),
+    userName: z.string().openapi({
+      description: "User's display name",
+      example: "john.doe",
+    }),
+    userProfileId: z.string().openapi({
+      description: "User's profile identifier",
+      example: "1005921515",
+    }),
+    userEmail: z.string().email().openapi({
+      description: "User's email address",
+      example: "john.doe@example.com",
+    }),
+    isBloggerUser: z.boolean().openapi({
+      description: "Whether user has blogger features",
+      example: false,
+    }),
+    signupTimeSec: z.number().openapi({
+      description: "Signup timestamp in seconds",
+      example: 1234567890,
+    }),
+    isMultiLoginEnabled: z.boolean().openapi({
+      description: "Whether multi-login is enabled",
+      example: false,
+    }),
+  })
+  .openapi("InoreaderUserInfo");
+
+const InoreaderSubscriptionSchema = z
+  .object({
+    id: z.string().openapi({
+      description: "Feed identifier",
+      example: "feed/http://example.com/rss",
+    }),
+    title: z.string().openapi({
+      description: "Feed title",
+      example: "Example Blog",
+    }),
+    categories: z
+      .array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+        })
+      )
+      .openapi({
+        description: "Feed categories/folders",
+      }),
+    url: z.string().url().optional().openapi({
+      description: "Feed URL",
+      example: "http://example.com/rss",
+    }),
+    htmlUrl: z.string().url().optional().openapi({
+      description: "Website URL",
+      example: "http://example.com",
+    }),
+    iconUrl: z.string().url().optional().openapi({
+      description: "Feed icon URL",
+    }),
+  })
+  .openapi("InoreaderSubscription");
+
+const InoreaderStreamItemSchema = z
+  .object({
+    id: z.string().openapi({
+      description: "Article identifier",
+      example: "tag:google.com,2005:reader/item/0000000001",
+    }),
+    title: z.string().openapi({
+      description: "Article title",
+    }),
+    published: z.number().openapi({
+      description: "Published timestamp in seconds",
+    }),
+    updated: z.number().optional().openapi({
+      description: "Updated timestamp in seconds",
+    }),
+    author: z.string().optional().openapi({
+      description: "Article author",
+    }),
+    summary: z
+      .object({
+        content: z.string(),
+      })
+      .optional()
+      .openapi({
+        description: "Article summary/content",
+      }),
+    alternate: z
+      .array(
+        z.object({
+          href: z.string().url(),
+          type: z.string(),
+        })
+      )
+      .optional()
+      .openapi({
+        description: "Article URLs",
+      }),
+    categories: z.array(z.string()).optional().openapi({
+      description: "Article tags/categories",
+    }),
+  })
+  .openapi("InoreaderStreamItem");
+
+const InoreaderStreamContentsSchema = z
+  .object({
+    id: z.string().openapi({
+      description: "Stream identifier",
+    }),
+    title: z.string().optional().openapi({
+      description: "Stream title",
+    }),
+    continuation: z.string().optional().openapi({
+      description: "Continuation token for pagination",
+    }),
+    items: z.array(InoreaderStreamItemSchema).openapi({
+      description: "Array of stream items/articles",
+    }),
+  })
+  .openapi("InoreaderStreamContents");
+
+const InoreaderUnreadCountSchema = z
+  .object({
+    id: z.string().openapi({
+      description: "Feed/category identifier",
+      example: "feed/http://example.com/rss",
+    }),
+    count: z.number().openapi({
+      description: "Number of unread items",
+      example: 42,
+    }),
+    newestItemTimestampUsec: z.string().optional().openapi({
+      description: "Timestamp of newest item in microseconds",
+      example: "1234567890000000",
+    }),
+  })
+  .openapi("InoreaderUnreadCount");
+
+const InoreaderEditTagResponseSchema = z
+  .object({
+    success: z.boolean().openapi({
+      description: "Whether the operation was successful",
+      example: true,
+    }),
+  })
+  .openapi("InoreaderEditTagResponse");
+
+const InoreaderDebugResponseSchema = z
+  .object({
+    hasAccessToken: z.boolean().openapi({
+      description: "Whether access token exists",
+    }),
+    hasRefreshToken: z.boolean().openapi({
+      description: "Whether refresh token exists",
+    }),
+    expiresAt: z.string().nullable().openapi({
+      description: "Token expiration timestamp",
+    }),
+    expiresIn: z.number().nullable().openapi({
+      description: "Time until expiration in milliseconds",
+    }),
+    isExpired: z.boolean().nullable().openapi({
+      description: "Whether token is expired",
+    }),
+    cookies: z.record(z.string(), z.any()).openapi({
+      description: "Cookie information",
+    }),
+  })
+  .openapi("InoreaderDebugResponse");
+
+const InoreaderDevResponseSchema = z
+  .object({
+    data: z.any().openapi({
+      description: "API response data",
+    }),
+    headers: z.record(z.string(), z.string()).openapi({
+      description: "Response headers",
+    }),
+    debug: z
+      .object({
+        url: z.string(),
+        method: z.string(),
+        status: z.number(),
+        statusText: z.string(),
+        zone1: z.object({
+          usage: z.string().nullable(),
+          limit: z.string().nullable(),
+        }),
+        zone2: z.object({
+          usage: z.string().nullable(),
+          limit: z.string().nullable(),
+        }),
+        resetAfter: z.string().nullable(),
+      })
+      .openapi({
+        description: "Debug information",
+      }),
+  })
+  .openapi("InoreaderDevResponse");
+
+// ============================================================================
+// INOREADER API ENDPOINT REGISTRATIONS
+// ============================================================================
+
+// 1. GET /api/inoreader/user-info
+registry.registerPath({
+  method: "get",
+  path: "/api/inoreader/user-info",
+  summary: "Get Inoreader user information",
+  description:
+    "Retrieves authenticated user's profile information from Inoreader. Requires valid OAuth token stored in encrypted file (~/.rss-reader/tokens.json). Tokens are encrypted using AES-256-GCM algorithm with HMAC authentication for secure storage.",
+  tags: ["Inoreader"],
+  request: {
+    query: z.object({
+      trigger: z.string().optional().openapi({
+        description: "Source that triggered this request (for tracking)",
+        example: "manual",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "User information retrieved successfully",
+      headers: RateLimitHeadersSchema,
+      content: {
+        "application/json": {
+          schema: InoreaderUserInfoSchema,
+          examples: {
+            success: {
+              summary: "Successful user info response",
+              value: {
+                userId: "1005921515",
+                userName: "john.doe",
+                userProfileId: "1005921515",
+                userEmail: "john.doe@example.com",
+                isBloggerUser: false,
+                signupTimeSec: 1609459200,
+                isMultiLoginEnabled: false,
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Not authenticated or token expired",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    429: {
+      description: "Rate limit exceeded",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// 2. GET /api/inoreader/subscriptions
+registry.registerPath({
+  method: "get",
+  path: "/api/inoreader/subscriptions",
+  summary: "Get user's feed subscriptions",
+  description:
+    "Retrieves the list of RSS feeds the authenticated user is subscribed to. Uses encrypted OAuth tokens (AES-256-GCM) and automatically refreshes expired tokens when possible.",
+  tags: ["Inoreader"],
+  request: {
+    query: z.object({
+      trigger: z.string().optional().openapi({
+        description: "Source that triggered this request",
+        example: "sync",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Subscriptions retrieved successfully",
+      headers: RateLimitHeadersSchema,
+      content: {
+        "application/json": {
+          schema: z.object({
+            subscriptions: z.array(InoreaderSubscriptionSchema),
+          }),
+          examples: {
+            success: {
+              summary: "List of subscribed feeds",
+              value: {
+                subscriptions: [
+                  {
+                    id: "feed/http://techcrunch.com/feed/",
+                    title: "TechCrunch",
+                    categories: [
+                      { id: "user/1005921515/label/Tech", label: "Tech" },
+                    ],
+                    url: "http://techcrunch.com/feed/",
+                    htmlUrl: "https://techcrunch.com",
+                    iconUrl: "https://techcrunch.com/favicon.ico",
+                  },
+                  {
+                    id: "feed/http://feeds.arstechnica.com/arstechnica/index",
+                    title: "Ars Technica",
+                    categories: [
+                      { id: "user/1005921515/label/Tech", label: "Tech" },
+                      { id: "user/1005921515/label/Science", label: "Science" },
+                    ],
+                    url: "http://feeds.arstechnica.com/arstechnica/index",
+                    htmlUrl: "https://arstechnica.com",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Not authenticated",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// 3. GET /api/inoreader/stream-contents
+registry.registerPath({
+  method: "get",
+  path: "/api/inoreader/stream-contents",
+  summary: "Get paginated article stream",
+  description:
+    "Retrieves articles from a specific stream (feed, folder, or tag). Supports pagination via continuation tokens. Authentication via encrypted OAuth tokens (AES-256-GCM with 16-byte IV and HMAC auth tag).",
+  tags: ["Inoreader"],
+  request: {
+    query: z.object({
+      streamId: z.string().openapi({
+        description: "Stream identifier (required)",
+        example: "user/-/state/com.google/reading-list",
+      }),
+      n: z.string().optional().openapi({
+        description: "Number of items to return (default 20)",
+        example: "50",
+      }),
+      r: z.string().optional().openapi({
+        description: "Sort order (n=newest first, o=oldest first)",
+        example: "n",
+      }),
+      c: z.string().optional().openapi({
+        description: "Continuation token for pagination",
+      }),
+      xt: z.string().optional().openapi({
+        description: "Exclude target state (e.g., read items)",
+        example: "user/-/state/com.google/read",
+      }),
+      ot: z.string().optional().openapi({
+        description: "Only return items older than this timestamp",
+      }),
+      trigger: z.string().optional().openapi({
+        description: "Source that triggered this request",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Stream contents retrieved successfully",
+      headers: RateLimitHeadersSchema,
+      content: {
+        "application/json": {
+          schema: InoreaderStreamContentsSchema,
+          examples: {
+            success: {
+              summary: "Paginated article stream",
+              value: {
+                id: "user/-/state/com.google/reading-list",
+                title: "Reading List",
+                continuation: "CpIBChJjb250aW51YXRpb25fdG9rZW4",
+                items: [
+                  {
+                    id: "tag:google.com,2005:reader/item/0000000001",
+                    title: "Breaking: Major Tech Announcement",
+                    summary: {
+                      content:
+                        "<p>Apple announced today a revolutionary new product...</p>",
+                    },
+                    author: "Jane Smith",
+                    published: 1704067200,
+                    updated: 1704067200,
+                    origin: {
+                      streamId: "feed/http://techcrunch.com/feed/",
+                      title: "TechCrunch",
+                      htmlUrl: "https://techcrunch.com",
+                    },
+                    canonical: [
+                      {
+                        href: "https://techcrunch.com/2024/01/01/breaking-news",
+                      },
+                    ],
+                    categories: [
+                      "user/1005921515/state/com.google/fresh",
+                      "user/1005921515/label/Tech",
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Missing required streamId parameter",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Not authenticated",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// 4. GET /api/inoreader/unread-counts
+registry.registerPath({
+  method: "get",
+  path: "/api/inoreader/unread-counts",
+  summary: "Get unread counts per feed",
+  description:
+    "Retrieves the number of unread articles for each subscription and category.",
+  tags: ["Inoreader"],
+  request: {
+    query: z.object({
+      trigger: z.string().optional().openapi({
+        description: "Source that triggered this request",
+        example: "refresh",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Unread counts retrieved successfully",
+      headers: RateLimitHeadersSchema,
+      content: {
+        "application/json": {
+          schema: z.object({
+            unreadcounts: z.array(InoreaderUnreadCountSchema),
+          }),
+          examples: {
+            success: {
+              summary: "Unread counts per feed and category",
+              value: {
+                unreadcounts: [
+                  {
+                    id: "feed/http://techcrunch.com/feed/",
+                    count: 42,
+                    newestItemTimestampUsec: "1704067200000000",
+                  },
+                  {
+                    id: "feed/http://feeds.arstechnica.com/arstechnica/index",
+                    count: 15,
+                    newestItemTimestampUsec: "1704063600000000",
+                  },
+                  {
+                    id: "user/1005921515/label/Tech",
+                    count: 57,
+                    newestItemTimestampUsec: "1704067200000000",
+                  },
+                  {
+                    id: "user/-/state/com.google/reading-list",
+                    count: 248,
+                    newestItemTimestampUsec: "1704067200000000",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Not authenticated",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// 5. POST /api/inoreader/edit-tag
+registry.registerPath({
+  method: "post",
+  path: "/api/inoreader/edit-tag",
+  summary: "Edit article tags/states",
+  description:
+    "Modifies tags or states (read/starred/etc) for articles. Accepts form-encoded data with article IDs and actions. Uses encrypted OAuth tokens stored with AES-256-GCM encryption.",
+  tags: ["Inoreader"],
+  request: {
+    query: z.object({
+      trigger: z.string().optional().openapi({
+        description: "Source that triggered this request",
+      }),
+    }),
+    body: {
+      content: {
+        "application/x-www-form-urlencoded": {
+          schema: z.object({
+            i: z.union([z.string(), z.array(z.string())]).openapi({
+              description: "Article ID(s) to modify",
+              example: "tag:google.com,2005:reader/item/0000000001",
+            }),
+            a: z.string().optional().openapi({
+              description: "Tag to add (e.g., user/-/state/com.google/starred)",
+            }),
+            r: z.string().optional().openapi({
+              description: "Tag to remove",
+            }),
+            T: z.string().optional().openapi({
+              description: "Edit token (if required)",
+            }),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Tags edited successfully",
+      headers: RateLimitHeadersSchema,
+      content: {
+        "application/json": {
+          schema: InoreaderEditTagResponseSchema,
+          examples: {
+            markAsRead: {
+              summary: "Mark article as read",
+              value: "OK",
+            },
+            addStar: {
+              summary: "Star an article",
+              value: "OK",
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid request parameters",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Not authenticated",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// 6. GET /api/inoreader/debug (Development only)
+if (process.env.NODE_ENV !== "production") {
+  registry.registerPath({
+    method: "get",
+    path: "/api/inoreader/debug",
+    summary: "Debug token status",
+    description:
+      "[DEV ONLY] Displays current OAuth token status for debugging authentication issues. Tokens are stored in ~/.rss-reader/tokens.json using AES-256-GCM encryption:\n\n**Encryption Details:**\n- Algorithm: AES-256-GCM (Galois/Counter Mode)\n- Key: 256-bit key derived from TOKEN_ENCRYPTION_KEY env variable (base64 encoded)\n- IV: 16-byte random initialization vector\n- Auth Tag: 16-byte HMAC authentication tag for integrity\n- Storage Format: JSON with 'encrypted', 'iv', and 'authTag' fields\n\nThis endpoint reads the encrypted token file, decrypts it, and reports token age and validity.",
+    tags: ["Inoreader", "Development"],
+    responses: {
+      200: {
+        description: "Debug information retrieved",
+        content: {
+          "application/json": {
+            schema: InoreaderDebugResponseSchema,
+            examples: {
+              validTokens: {
+                summary: "Valid tokens present",
+                value: {
+                  fileTokens: {
+                    hasAccessToken: true,
+                    hasRefreshToken: true,
+                    tokenAge: 5,
+                    daysOld: 5,
+                    expiresIn: 31104000000,
+                    isExpired: false,
+                    status: "Tokens present",
+                    apiUsage: {
+                      zone1: { usage: 150, limit: 25000 },
+                      zone2: { usage: 50, limit: 10000 },
+                    },
+                  },
+                  environment: {
+                    hasEncryptionKey: true,
+                    hasClientId: true,
+                    hasClientSecret: true,
+                    tokenPath: "/Users/user/.rss-reader/tokens.json",
+                  },
+                  debug: {
+                    tokenFileExists: true,
+                    isEncrypted: true,
+                    lastModified: "5 days ago",
+                  },
+                },
+              },
+              missingTokens: {
+                summary: "No tokens found",
+                value: {
+                  fileTokens: {
+                    hasAccessToken: false,
+                    hasRefreshToken: false,
+                    tokenAge: null,
+                    daysOld: null,
+                    expiresIn: null,
+                    isExpired: null,
+                    status: "Token file not found",
+                    apiUsage: null,
+                  },
+                  environment: {
+                    hasEncryptionKey: true,
+                    hasClientId: true,
+                    hasClientSecret: true,
+                    tokenPath: "/Users/user/.rss-reader/tokens.json",
+                  },
+                  debug: {
+                    tokenFileExists: false,
+                    isEncrypted: false,
+                    lastModified: null,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// 7. GET /api/inoreader/dev (Development only)
+if (process.env.NODE_ENV !== "production") {
+  registry.registerPath({
+    method: "get",
+    path: "/api/inoreader/dev",
+    summary: "Development API proxy",
+    description:
+      "[DEV ONLY] Proxies arbitrary Inoreader API endpoints for testing and development. Returns response data with rate limit headers.",
+    tags: ["Inoreader", "Development"],
+    request: {
+      query: z.object({
+        endpoint: z.string().openapi({
+          description: "Inoreader API endpoint to call",
+          example: "stream/contents/user/-/state/com.google/starred",
+        }),
+        method: z.string().optional().openapi({
+          description: "HTTP method (default GET)",
+          example: "GET",
+        }),
+      }),
+    },
+    responses: {
+      200: {
+        description: "API response with debug information",
+        content: {
+          "application/json": {
+            schema: InoreaderDevResponseSchema,
+            examples: {
+              userInfo: {
+                summary: "User info endpoint response",
+                value: {
+                  endpoint: "user-info",
+                  data: {
+                    userId: "1005921515",
+                    userName: "john.doe",
+                    userEmail: "john.doe@example.com",
+                  },
+                  rateLimits: {
+                    "X-Reader-Zone1-Usage": "150",
+                    "X-Reader-Zone1-Limit": "25000",
+                    "X-Reader-Zone2-Usage": "50",
+                    "X-Reader-Zone2-Limit": "10000",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Missing endpoint parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Not authenticated",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Endpoint not available in production",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+
+  // Also register POST variant for /api/inoreader/dev
+  registry.registerPath({
+    method: "post",
+    path: "/api/inoreader/dev",
+    summary: "Development API proxy (POST)",
+    description:
+      "[DEV ONLY] Proxies POST requests to Inoreader API endpoints for testing write operations. Uses encrypted OAuth tokens stored with AES-256-GCM encryption for authentication.",
+    tags: ["Inoreader", "Development"],
+    request: {
+      query: z.object({
+        endpoint: z.string().openapi({
+          description: "Inoreader API endpoint to call",
+        }),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: z.any().openapi({
+              description: "Request body to send to Inoreader",
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "API response with debug information",
+        content: {
+          "application/json": {
+            schema: InoreaderDevResponseSchema,
+            examples: {
+              userInfo: {
+                summary: "User info endpoint response",
+                value: {
+                  endpoint: "user-info",
+                  data: {
+                    userId: "1005921515",
+                    userName: "john.doe",
+                    userEmail: "john.doe@example.com",
+                  },
+                  rateLimits: {
+                    "X-Reader-Zone1-Usage": "150",
+                    "X-Reader-Zone1-Limit": "25000",
+                    "X-Reader-Zone2-Usage": "50",
+                    "X-Reader-Zone2-Limit": "10000",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Missing endpoint parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Not authenticated",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Endpoint not available in production",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+  });
+}
+
 export {
   MainHealthResponseSchema as healthMainSchema,
   AppHealthResponseSchema as healthAppSchema,

@@ -1,8 +1,18 @@
 {
-  "timestamp": "2025-08-15T08:26:53.334Z",
-  "totalExpected": 6,
-  "totalDocumented": 6,
+  "timestamp": "2025-08-15T12:28:11.636Z",
+  "totalExpected": 13,
+  "totalDocumented": 13,
   "coveragePercentage": 100,
+  "health": {
+    "expected": 6,
+    "documented": 6,
+    "percentage": 100
+  },
+  "inoreader": {
+    "expected": 7,
+    "documented": 7,
+    "percentage": 100
+  },
   "endpoints": [
     {
       "endpoint": "GET /api/health",
@@ -27,6 +37,34 @@
     {
       "endpoint": "GET /api/health/claude",
       "documented": true
+    },
+    {
+      "endpoint": "GET /api/inoreader/user-info",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/inoreader/subscriptions",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/inoreader/stream-contents",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/inoreader/unread-counts",
+      "documented": true
+    },
+    {
+      "endpoint": "POST /api/inoreader/edit-tag",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/inoreader/debug",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/inoreader/dev",
+      "documented": true
     }
   ],
   "validation": {
@@ -39,6 +77,6 @@
   "openApiInfo": {
     "title": "RSS News Reader API",
     "version": "1.0.0",
-    "endpointCount": 24
+    "endpointCount": 32
   }
 }

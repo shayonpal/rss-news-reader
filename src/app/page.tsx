@@ -38,27 +38,33 @@ export default function HomePage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize with saved filter to avoid race condition
-  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      const savedFilter = sessionStorage.getItem("articleListFilter");
-      return savedFilter === "null" ? null : savedFilter;
+  // Initialize states without client-side checks to avoid hydration mismatch
+  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+
+  // Restore filter states from sessionStorage after hydration
+  useEffect(() => {
+    const savedFilter = sessionStorage.getItem("articleListFilter");
+    if (savedFilter !== null) {
+      setSelectedFeedId(savedFilter === "null" ? null : savedFilter);
     }
-    return null;
-  });
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      const savedTagFilter = sessionStorage.getItem("articleListTagFilter");
-      return savedTagFilter === "null" ? null : savedTagFilter;
+
+    const savedTagFilter = sessionStorage.getItem("articleListTagFilter");
+    if (savedTagFilter !== null) {
+      setSelectedTagId(savedTagFilter === "null" ? null : savedTagFilter);
     }
-    return null;
-  });
+  }, []);
+
   const viewport = useViewport();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const isIOS =
-    typeof window !== "undefined" &&
-    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Fix iOS detection hydration issue - use state instead of direct check
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    setIsIOS(/iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
 
   // Auto-manage sidebar state based on viewport
   useEffect(() => {

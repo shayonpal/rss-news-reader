@@ -24,6 +24,17 @@ const EXPECTED_HEALTH_ENDPOINTS = [
   "GET /api/health/claude",
 ];
 
+// Expected Inoreader endpoints for RR-203
+const EXPECTED_INOREADER_ENDPOINTS = [
+  "GET /api/inoreader/user-info",
+  "GET /api/inoreader/subscriptions",
+  "GET /api/inoreader/stream-contents",
+  "GET /api/inoreader/unread-counts",
+  "POST /api/inoreader/edit-tag",
+  "GET /api/inoreader/debug",
+  "GET /api/inoreader/dev",
+];
+
 // ANSI color codes for terminal output
 const colors = {
   reset: "\x1b[0m",
@@ -79,12 +90,18 @@ async function validateCoverage() {
     log("cyan", `📊 Found ${documentedEndpoints.length} documented endpoints`);
     console.log();
 
-    // Check coverage
+    // Check coverage for both Health and Inoreader endpoints
+    const allExpectedEndpoints = [
+      ...EXPECTED_HEALTH_ENDPOINTS,
+      ...EXPECTED_INOREADER_ENDPOINTS,
+    ];
+
+    // Check Health endpoints
     log("bright", "Health Endpoints Coverage Report:");
     log("bright", "================================");
 
-    const results = [];
-    let totalCovered = 0;
+    const healthResults = [];
+    let healthCovered = 0;
 
     for (const expectedEndpoint of EXPECTED_HEALTH_ENDPOINTS) {
       const isDocumented = documentedEndpoints.includes(expectedEndpoint);
@@ -93,33 +110,77 @@ async function validateCoverage() {
 
       log(color, `${status} ${expectedEndpoint}`);
 
-      results.push({
+      healthResults.push({
         endpoint: expectedEndpoint,
         documented: isDocumented,
       });
 
-      if (isDocumented) totalCovered++;
+      if (isDocumented) healthCovered++;
+    }
+
+    console.log();
+
+    // Check Inoreader endpoints
+    log("bright", "Inoreader Endpoints Coverage Report:");
+    log("bright", "===================================");
+
+    const inoreaderResults = [];
+    let inoreaderCovered = 0;
+
+    for (const expectedEndpoint of EXPECTED_INOREADER_ENDPOINTS) {
+      const isDocumented = documentedEndpoints.includes(expectedEndpoint);
+      const status = isDocumented ? "✅" : "❌";
+      const color = isDocumented ? "green" : "red";
+
+      log(color, `${status} ${expectedEndpoint}`);
+
+      inoreaderResults.push({
+        endpoint: expectedEndpoint,
+        documented: isDocumented,
+      });
+
+      if (isDocumented) inoreaderCovered++;
     }
 
     console.log();
 
     // Calculate and display coverage percentage
-    const coveragePercentage = Math.round(
-      (totalCovered / EXPECTED_HEALTH_ENDPOINTS.length) * 100
+    const totalCovered = healthCovered + inoreaderCovered;
+    const results = [...healthResults, ...inoreaderResults];
+
+    const healthCoveragePercentage = Math.round(
+      (healthCovered / EXPECTED_HEALTH_ENDPOINTS.length) * 100
     );
+    const inoreaderCoveragePercentage = Math.round(
+      (inoreaderCovered / EXPECTED_INOREADER_ENDPOINTS.length) * 100
+    );
+    const overallCoveragePercentage = Math.round(
+      (totalCovered / allExpectedEndpoints.length) * 100
+    );
+
     const coverageColor =
-      coveragePercentage === 100
+      overallCoveragePercentage === 100
         ? "green"
-        : coveragePercentage >= 80
+        : overallCoveragePercentage >= 80
           ? "yellow"
           : "red";
 
     log("bright", "📈 Coverage Summary:");
     log("bright", "==================");
     log(
-      coverageColor,
-      `Coverage: ${totalCovered}/${EXPECTED_HEALTH_ENDPOINTS.length} endpoints (${coveragePercentage}%)`
+      healthCoveragePercentage === 100 ? "green" : "yellow",
+      `Health: ${healthCovered}/${EXPECTED_HEALTH_ENDPOINTS.length} endpoints (${healthCoveragePercentage}%)`
     );
+    log(
+      inoreaderCoveragePercentage === 100 ? "green" : "yellow",
+      `Inoreader: ${inoreaderCovered}/${EXPECTED_INOREADER_ENDPOINTS.length} endpoints (${inoreaderCoveragePercentage}%)`
+    );
+    log(
+      coverageColor,
+      `Overall: ${totalCovered}/${allExpectedEndpoints.length} endpoints (${overallCoveragePercentage}%)`
+    );
+
+    const coveragePercentage = overallCoveragePercentage;
 
     // List any missing endpoints
     const missingEndpoints = results.filter((r) => !r.documented);
@@ -154,9 +215,19 @@ async function validateCoverage() {
     // Generate detailed report
     const report = {
       timestamp: new Date().toISOString(),
-      totalExpected: EXPECTED_HEALTH_ENDPOINTS.length,
+      totalExpected: allExpectedEndpoints.length,
       totalDocumented: totalCovered,
       coveragePercentage,
+      health: {
+        expected: EXPECTED_HEALTH_ENDPOINTS.length,
+        documented: healthCovered,
+        percentage: healthCoveragePercentage,
+      },
+      inoreader: {
+        expected: EXPECTED_INOREADER_ENDPOINTS.length,
+        documented: inoreaderCovered,
+        percentage: inoreaderCoveragePercentage,
+      },
       endpoints: results,
       validation: validationResults,
       openApiInfo: {
@@ -178,15 +249,18 @@ async function validateCoverage() {
       coveragePercentage === 100 &&
       Object.values(validationResults).every((v) => v)
     ) {
-      log("green", "🎉 SUCCESS: All health endpoints are properly documented!");
-      log("green", "✅ Ready for RR-200 acceptance criteria validation");
+      log("green", "🎉 SUCCESS: All endpoints are properly documented!");
+      log("green", "✅ RR-200: Health endpoints documented (100%)");
+      log("green", "✅ RR-203: Inoreader endpoints documented (100%)");
       return true;
     } else {
       log("red", "❌ FAILURE: OpenAPI documentation is incomplete");
-      log(
-        "yellow",
-        "⚠️  Please ensure all health endpoints are documented before proceeding"
-      );
+      if (healthCoveragePercentage < 100) {
+        log("yellow", "⚠️  Missing health endpoints (RR-200)");
+      }
+      if (inoreaderCoveragePercentage < 100) {
+        log("yellow", "⚠️  Missing Inoreader endpoints (RR-203)");
+      }
       return false;
     }
   } catch (error) {

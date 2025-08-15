@@ -5,6 +5,44 @@ All notable changes to the RSS News Reader project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Fixed React hydration errors on iPhone Safari**
+  - **Root cause**: Client-side only code running during SSR, causing UI mismatch between server and client
+  - **Primary issue**: `useViewport` hook accessing `window.innerWidth` during initial state, causing different values on server (1024px) vs iPhone (375px)
+  - **Secondary issues**:
+    - iOS detection using `navigator.userAgent` during render in HomePage and ArticleDetail components
+    - Dark mode detection using `document.documentElement.classList` during render in MorphingDropdown component
+    - Missing `suppressHydrationWarning` on relative timestamp in ArticleDetail
+  - **Solutions implemented**:
+    - `src/hooks/use-viewport.ts`: Always return SSR-safe defaults, update after hydration in useEffect
+    - `src/app/page.tsx`: Move iOS detection and sessionStorage restoration to useEffect
+    - `src/components/articles/article-detail.tsx`: Move iOS detection to state, add suppressHydrationWarning to timestamp
+    - `src/components/ui/morphing-dropdown.tsx`: Track dark mode in state with MutationObserver for theme changes
+  - **Impact**: Resolved "Hydration failed" errors that only occurred on iPhone browsers (not iPad/desktop)
+
+### Added
+
+- **[RR-203] Complete OpenAPI documentation for Inoreader integration endpoints**
+  - Documented 7 Inoreader proxy endpoints with full request/response schemas
+  - Added OAuth cookie authentication specifications
+  - Documented rate limit headers (X-Reader-Zone1/2-Usage/Limit)
+  - Included realistic example payloads for all endpoints
+  - Added AES-256-GCM encryption details for token storage
+  - Conditional registration for debug endpoints (dev environment only)
+  - Files modified:
+    - `src/lib/openapi/registry.ts`: Added ~600 lines of OpenAPI schemas
+    - `scripts/validate-openapi-coverage.js`: Updated validation for Inoreader endpoints
+  - Achieved 100% OpenAPI coverage (13/13 endpoints documented)
+
+### Changed
+
+- **[RR-203] Enhanced OpenAPI debug endpoint documentation**
+  - `src/app/api/inoreader/debug/route.ts`: Fixed token age calculation bug (was showing 0 days)
+  - Added comprehensive encryption algorithm documentation
+
 ## [1.0.3] - Friday, August 15, 2025 at 6:01 AM
 
 ### Fixed

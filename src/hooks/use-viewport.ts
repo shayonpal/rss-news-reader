@@ -21,28 +21,22 @@ export interface ViewportState {
 
 export function useViewport(): ViewportState {
   const [viewport, setViewport] = useState<ViewportState>(() => {
-    // Initial state for SSR
-    if (typeof window === "undefined") {
-      return {
-        width: 1024,
-        height: 768,
-        isMobile: false,
-        isTablet: false,
-        isDesktop: true,
-        shouldCollapseSidebar: false,
-        shouldShowCompactFilters: false,
-        shouldShowHamburger: false,
-      };
-    }
-
-    // Initial client state
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    return calculateViewportState(width, height);
+    // Always return SSR-safe defaults during initial render
+    // This prevents hydration mismatches on iPhone Safari
+    return {
+      width: 1024,
+      height: 768,
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+      shouldCollapseSidebar: false,
+      shouldShowCompactFilters: false,
+      shouldShowHamburger: false,
+    };
   });
 
   useEffect(() => {
-    // Set initial state on mount
+    // Set actual viewport state after hydration
     const width = window.innerWidth;
     const height = window.innerHeight;
     setViewport(calculateViewportState(width, height));
