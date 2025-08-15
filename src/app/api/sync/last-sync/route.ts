@@ -4,11 +4,14 @@ import fs from "fs/promises";
 import path from "path";
 
 export async function GET() {
-  // Define cache prevention headers for all responses
-  const cacheHeaders = {
+  // Define headers for all responses (cache prevention + CORS)
+  const responseHeaders = {
     "Cache-Control": "no-store, no-cache, must-revalidate",
     Pragma: "no-cache",
     Expires: "0",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 
   try {
@@ -34,7 +37,7 @@ export async function GET() {
             lastSyncTime: syncTime.toISOString(),
             source: "sync_metadata",
           },
-          { headers: cacheHeaders }
+          { headers: responseHeaders }
         );
       }
       // If invalid date, fall through to next source
@@ -56,7 +59,7 @@ export async function GET() {
             lastSyncTime: new Date(statusRow.completed_at).toISOString(),
             source: "sync_status",
           },
-          { headers: cacheHeaders }
+          { headers: responseHeaders }
         );
       }
     } catch {
@@ -77,7 +80,7 @@ export async function GET() {
                 lastSyncTime: new Date(entry.timestamp).toISOString(),
                 source: "sync-log",
               },
-              { headers: cacheHeaders }
+              { headers: responseHeaders }
             );
           }
         } catch {
@@ -91,7 +94,7 @@ export async function GET() {
     // No data found
     return NextResponse.json(
       { lastSyncTime: null, source: "none" },
-      { headers: cacheHeaders }
+      { headers: responseHeaders }
     );
   } catch (error) {
     console.error("Error fetching last sync time:", error);
@@ -99,8 +102,20 @@ export async function GET() {
       { error: "Failed to fetch last sync time" },
       {
         status: 500,
-        headers: cacheHeaders,
+        headers: responseHeaders,
       }
     );
   }
+}
+
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

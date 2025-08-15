@@ -96,6 +96,7 @@ Documentation Review Checklist:
 - Architecture docs for significant changes
 - User guides for feature changes
 - Deployment instructions if needed
+- Other possible documents in `docs/` directory
 
 Update Requirements:
 - Include Linear reference (RR-XXX)

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-08-15T03:35:32.818Z",
+  "timestamp": "2025-08-15T04:55:45.914Z",
   "totalExpected": 6,
   "totalDocumented": 6,
   "coveragePercentage": 100,
@@ -39,6 +39,6 @@
   "openApiInfo": {
     "title": "RSS News Reader API",
     "version": "1.0.0",
-    "endpointCount": 6
+    "endpointCount": 13
   }
 }

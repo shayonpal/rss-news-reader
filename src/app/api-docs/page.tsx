@@ -94,6 +94,13 @@ export default function SwaggerDocsPage() {
           throw new Error(`Failed to fetch OpenAPI spec: ${response.status}`);
         }
         const data = await response.json();
+
+        // Dynamically set the server URL to match the current host
+        if (data.servers && data.servers.length > 0) {
+          const currentUrl = window.location.origin;
+          data.servers[0].url = `${currentUrl}/reader`;
+        }
+
         setSpec(data);
       } catch (err) {
         setError(

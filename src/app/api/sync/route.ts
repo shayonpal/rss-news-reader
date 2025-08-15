@@ -243,6 +243,9 @@ export async function POST() {
           status: 429,
           headers: {
             "Retry-After": retryAfterSeconds.toString(), // Standard HTTP header
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
         }
       );
@@ -277,13 +280,16 @@ export async function POST() {
     });
 
     return NextResponse.json({
-      success: true,
       syncId,
-      message: "Sync started successfully",
-      rateLimit: {
-        remaining: rateLimit.remaining,
-        limit: rateLimit.limit,
-        used: rateLimit.used,
+      status: "pending",
+      progress: 0,
+      message: "Sync operation started",
+      startTime: initialStatus.startTime,
+      metrics: {
+        newArticles: 0,
+        deletedArticles: 0,
+        newTags: 0,
+        failedFeeds: 0,
       },
     });
   } catch (error) {
@@ -1054,7 +1060,12 @@ async function performServerSync(syncId: string) {
         process.env.SYNC_SERVER_URL || "http://localhost:3001";
       const syncResponse = await fetch(`${syncServerUrl}/server/sync/trigger`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
         body: JSON.stringify({ force: true }), // Force sync even if < 5 changes
       });
 
@@ -1203,4 +1214,15 @@ async function trackApiUsage(service: string, count: number = 1) {
   } catch (error) {
     console.error("Failed to track API usage:", error);
   }
+}
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

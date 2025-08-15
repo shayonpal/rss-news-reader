@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { generateOpenAPIDocument } from "@/lib/openapi/registry";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const openApiDocument = generateOpenAPIDocument();
+    // Extract the host from the request to generate correct server URL
+    const url = new URL(request.url);
+    const serverUrl = `${url.protocol}//${url.host}`;
+    const openApiDocument = generateOpenAPIDocument(serverUrl);
 
     // Use environment-based caching strategy
     const cacheControl =

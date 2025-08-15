@@ -118,6 +118,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[RR-201] Comprehensive OpenAPI documentation for 7 sync API endpoints** (Friday, August 15, 2025 at 1:05 AM)
+  - **POST /api/sync** - Trigger full sync operation with progress tracking
+  - **GET /api/sync/status/{syncId}** - Query sync operation status by ID
+  - **GET /api/sync/last-sync** - Retrieve last sync timestamp and completion status
+  - **POST /api/sync/metadata** - Update sync metadata with key-value pairs
+  - **POST /api/sync/refresh-view** - Refresh materialized database view
+  - **POST /api/sync/bidirectional** - Bidirectional sync endpoint (returns 501)
+  - **GET /api/sync/api-usage** - Monitor API usage statistics and quotas
+  - **Complex Zod schemas** for request/response validation in registry.ts
+  - **Standardized error response format** across all sync endpoints
+  - **Interactive "Try it out" functionality** in Swagger UI for all sync operations
+  - **Request/response examples** for each endpoint with realistic data
+  - **Implementation includes**:
+    - New schemas: SyncStatusSchema, ErrorResponseSchema, LastSyncResponseSchema, MetadataUpdateResponseSchema, RefreshViewResponseSchema, ApiUsageResponseSchema
+    - All endpoints tagged under "Sync Operations" in Swagger UI
+    - Full validation for nested objects and dynamic metadata payloads
+
+### Added
+
 - **[RR-200] Health Endpoints with Swagger UI MVP Implementation** (Thursday, August 14, 2025 at 11:45 PM)
   - **OpenAPI Registry**: Created comprehensive Zod schema registry at `src/lib/openapi/registry.ts` documenting all 6 health endpoints with response examples
   - **Swagger UI Integration**: Deployed interactive Swagger UI at `/reader/api-docs` route with "Try it out" functionality for all endpoints
