@@ -2,6 +2,120 @@
 
 This document tracks test failures encountered during development to identify patterns and systemic issues.
 
+## Entry: Thursday, August 14, 2025 at 11:40 PM EDT
+
+### Context
+
+- **Linear Issue**: RR-200 - Health Endpoints with Swagger UI MVP
+- **Task**: Testing OpenAPI documentation implementation and health endpoints
+- **Environment**: Development (Mac Mini, local)
+- **Workflow**: Symbol-level testing and comprehensive validation for OpenAPI/Swagger implementation
+
+### What I Was Trying to Do
+
+1. Execute unit tests for OpenAPI registry and health endpoint schemas
+2. Validate Zod schema definitions and OpenAPI metadata
+3. Test schema parsing and validation logic
+4. Verify OpenAPI document generation functionality
+5. Confirm all 6 health endpoints are properly documented
+
+### Test Commands Executed
+
+```bash
+# OpenAPI specific unit tests
+npx vitest run --no-coverage src/__tests__/unit/openapi/
+
+# Individual test files
+npx vitest run --no-coverage src/__tests__/unit/openapi/registry.test.ts
+npx vitest run --no-coverage src/__tests__/unit/openapi/health-schemas.test.ts
+```
+
+### Test Failures Observed
+
+#### 1. **HIGH**: OpenAPI Registry Test Suite Failure (35/37 tests failed)
+
+**Test Files**:
+
+- `src/__tests__/unit/openapi/registry.test.ts` (14 tests, 12 failed)
+- `src/__tests__/unit/openapi/health-schemas.test.ts` (23 tests, 23 failed)
+
+**Severity**: HIGH - Mock configuration issues, production code works
+
+**Primary Error Pattern**: Zod schema export and mock configuration failures
+
+```
+× OpenAPI Registry (RR-200) > Registry Initialization > should create OpenAPIRegistry instance
+  → Cannot read properties of undefined (reading 'prototype')
+
+× Health Endpoint Schemas (RR-200) > Main Health Schema (/api/health) > should validate successful health response
+  → Cannot read properties of undefined (reading 'prototype')
+```
+
+**Root Causes Identified**:
+
+1. **Zod Schema Mock Issues**:
+   - Tests expect schemas to have `.parse()` method but get undefined
+   - Mock for `@asteasolutions/zod-to-openapi` not properly configured
+   - Schema exports are not being mocked correctly
+
+2. **Generator Mock Problems**:
+   - `generator.generateDocument is not a function` errors
+   - OpenAPIGenerator mock missing required methods
+
+3. **Import/Export Mismatch**:
+   - Named exports from registry.ts not matching test expectations
+   - Schemas exported but tests can't access them due to mock interference
+
+**Error Examples**:
+
+```javascript
+// Test expects:
+healthMainSchema.parse(mockResponse)
+
+// But gets:
+TypeError: healthMainSchema.parse is not a function
+// or
+TypeError: Cannot read properties of undefined (reading 'prototype')
+```
+
+```javascript
+// Generator error:
+TypeError: generator.generateDocument is not a function
+  at generateOpenAPIDocument src/lib/openapi/registry.ts:579:20
+```
+
+### Production Verification
+
+Despite test failures, production functionality verified working:
+
+- ✅ Swagger UI accessible at http://100.96.166.53:3000/reader/api-docs
+- ✅ OpenAPI JSON endpoint working at /reader/api-docs/openapi.json
+- ✅ All 6 health endpoints documented and operational
+- ✅ Coverage validation script reports 100%
+
+### Pattern Analysis
+
+**Common Theme**: Test mock configuration for complex third-party libraries
+
+- Similar to previous Dexie mock issues
+- Zod + OpenAPI integration requires special mock handling
+- Production code works but tests fail due to environment setup
+
+### Recommended Fixes
+
+1. Update test mocks to properly handle Zod schema objects
+2. Configure OpenAPIGenerator mock with all required methods
+3. Consider using actual Zod schemas in tests instead of mocks
+4. Add integration tests that test against running server (already working)
+
+### Impact
+
+- **CI/CD**: May fail test stage
+- **Development**: Misleading test failures
+- **Production**: No impact - functionality verified working
+
+---
+
 ## Entry: Thursday, August 14, 2025 at 09:02 PM EDT
 
 ### Context

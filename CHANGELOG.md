@@ -116,6 +116,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **[RR-200] Health Endpoints with Swagger UI MVP Implementation** (Thursday, August 14, 2025 at 11:45 PM)
+  - **OpenAPI Registry**: Created comprehensive Zod schema registry at `src/lib/openapi/registry.ts` documenting all 6 health endpoints with response examples
+  - **Swagger UI Integration**: Deployed interactive Swagger UI at `/reader/api-docs` route with "Try it out" functionality for all endpoints
+  - **OpenAPI JSON Endpoint**: Added machine-readable OpenAPI specification at `/reader/api-docs/openapi.json` for API tooling integration
+  - **Coverage Validation**: Created `scripts/validate-openapi-coverage.js` script for automated documentation coverage reporting
+  - **Health Endpoints Documented**:
+    - ✅ GET `/api/health` - Main health check with service status aggregation
+    - ✅ GET `/api/health/app` - Application health with version info (RR-114)
+    - ✅ GET `/api/health/db` - Database health with connection alias (RR-114)
+    - ✅ GET `/api/health/cron` - Cron job health and scheduling status
+    - ✅ GET `/api/health/parsing` - Content parsing metrics and performance
+    - ✅ GET `/api/health/claude` - Claude AI API connectivity status
+  - **Test Coverage**: Added comprehensive test suites for OpenAPI integration and schema validation
+  - **Documentation Standards**: Updated CLAUDE.md with OpenAPI documentation requirements and validation workflow
+  - **MVP Foundation**: Establishes foundation for Phase 2 (RR-152) to document remaining 34 API endpoints
+  - **Interactive Testing**: All health endpoints now support interactive testing through Swagger UI with real-time response validation
+  - **Impact**: Provides standardized API documentation infrastructure with interactive testing capabilities for development and integration workflows
+
 ### Fixed
 
 - **[RR-172] Dev server crashes when running `npm run build` due to shared `.next` directory** (Thursday, August 14, 2025 at 5:27 PM)

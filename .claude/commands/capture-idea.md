@@ -1,24 +1,31 @@
 ---
-description: Comprehensive idea capture with analysis, validation, and structured issue creation (Args: <type/RR-XXX> <brief-description>)
+description: Comprehensive idea capture with analysis, validation, relationship detection, and intelligent issue management (Args: <type/RR-XXX> <brief-description>)
 argument_hint: <type/RR-XXX> <brief-description>
 ---
 
 # Capture & Analyze Ideas - 5-Phase Workflow
 
-Comprehensive idea capture system with medium automation, context gathering, feasibility validation, and agent integration. Handles both new ideas and existing Linear issue enhancement.
+Comprehensive idea capture system with intelligent similar issue detection, label usage analysis, relationship mapping, and enhanced issue management. Features early duplicate prevention, smart labeling based on project patterns, and automatic relationship linking.
 
 ## Help Mode
 
 If user provides `--help` or `help` parameter, display this usage guide:
 
 ```
-capture-idea - Comprehensive idea capture with analysis and validation
+capture-idea - Comprehensive idea capture with intelligent analysis and relationship detection
 
 USAGE:
-  capture-idea                           Interactive mode - start from scratch
-  capture-idea bug "login fails"        Quick capture with type and description
-  capture-idea RR-123 "add context"     Add context to existing issue
+  capture-idea                           Interactive mode with full analysis
+  capture-idea bug "login fails"        Quick capture with similarity detection
+  capture-idea RR-123 "add context"     Enhance existing issue (may update title)
   capture-idea help                      Show this help
+
+FEATURES:
+  • Early duplicate detection across 90-day history
+  • Smart label application based on project usage patterns
+  • Automatic issue relationship detection and linking
+  • Title evaluation and updating for existing issues
+  • Comprehensive feasibility analysis with agent consultation
 
 TYPES:
   bug          Bug report with reproduction steps
@@ -42,7 +49,28 @@ EXAMPLES:
 - Otherwise: Set mode to "create-new"
 - Extract type and description from remaining arguments
 
-### Step 1.2: Initial Analysis
+### Step 1.2: Comprehensive Similar Issue Detection
+
+**CRITICAL**: This must be done EARLY in the process for comprehensive evaluation.
+
+Use `linear-expert` to:
+
+1. **Search for similar existing issues** using multiple search strategies:
+   - Primary keywords from description
+   - Synonym/related term searches
+   - Category-based searches (if type is known)
+   - Search across ALL issues (open, closed, archived) from last 90 days
+
+2. **Analyze similarity scores** for each found issue:
+   - > 85% similarity: "This appears to be a duplicate of RR-XXX. Should we enhance that issue instead?"
+   - 70-84% similarity: "Found related issue RR-XXX: [title]. Are these related or blocking each other?"
+   - 50-69% similarity: "Found potentially related issue RR-XXX: [title]. Should we link these?"
+
+3. **For enhance-existing mode (RR-XXX)**: Also search for issues that might be related to the existing issue being enhanced
+
+4. **Document findings**: Store similar/related issues for relationship creation in Phase 5
+
+### Step 1.3: Initial Analysis
 
 For new ideas, determine:
 
@@ -50,7 +78,7 @@ For new ideas, determine:
 - **Complexity Estimate**: Simple/Moderate/Complex based on scope indicators
 - **Category**: UI/API/Database/Infrastructure/Documentation
 
-Display initial classification and ask for confirmation before proceeding.
+Display initial classification and similar issue findings, then ask for confirmation before proceeding.
 
 ## Phase 2: Context Gathering & Agent Integration
 
@@ -202,25 +230,53 @@ If vertical slicing is possible:
 
 ## Phase 5: Issue Creation/Update & Label Management
 
-### Step 5.1: Label Management
+### Step 5.1: Enhanced Label Management with Usage Analysis
 
 Use `linear-expert` to:
 
-- Get current project labels list
-- Auto-apply relevant labels based on:
-  - Type: bug/feature/enhancement/idea
-  - Category: ui/api/database/infrastructure/documentation
-  - Priority: critical/high/medium/low
-  - Complexity: simple/moderate/complex
-  - Area: sync/reader/auth/performance
+1. **Analyze current label usage patterns**:
+   - Get all project labels with usage statistics
+   - Identify most frequently used labels by category
+   - Find label combinations that are commonly used together
+   - Note any project-specific labeling conventions
 
-### Step 5.2: Duplicate Prevention
+2. **Intelligent label application** based on actual usage patterns:
+   - **Primary Labels**: Apply based on discovered usage patterns (not just standard ones)
+   - **Secondary Labels**: Use combinations that align with project patterns
+   - **Custom Project Labels**: Apply any project-specific labels that match the issue
+   - **Avoid Over-labeling**: Don't apply labels that are rarely used in the project
 
-Before creating new issues:
+3. **Label recommendation justification**:
+   - "Applying [label] because it's used on 80% of similar [type] issues"
+   - "Adding [label] based on common pattern with [related-label]"
+   - "Skipping [label] because it's rarely used in this project context"
 
-- Use `linear-expert` to search for similar issues by keywords
-- Check both open and closed issues from last 30 days
-- If >70% similarity found: "Found similar issue RR-XXX: [title]. Is this the same or different?"
+### Step 5.2: Issue Relationship Detection & Linking
+
+**Note**: Primary similar issue detection was done in Phase 1. This step focuses on relationship creation.
+
+Use findings from Phase 1 and `linear-expert` to:
+
+1. **Establish issue relationships** based on similarity analysis:
+   - **Duplicate**: >85% similarity → Mark as duplicate and link
+   - **Related**: 50-84% similarity → Create "related to" relationship
+   - **Blocking/Blocked by**: If current issue depends on or blocks similar issues
+   - **Parent/Child**: If current issue is part of a larger effort found in similar issues
+
+2. **Cross-reference with existing issue descriptions** to identify:
+   - Issues mentioned in descriptions that should be linked
+   - Epic/project relationships that should be established
+   - Dependencies that should be documented
+
+3. **Update relationship documentation** in issue description:
+
+   ```markdown
+   ## Related Issues
+
+   - Blocks: RR-XXX (reason)
+   - Related: RR-XXX (reason)
+   - Depends on: RR-XXX (reason)
+   ```
 
 ### Step 5.3: Issue Creation/Update
 
@@ -237,10 +293,20 @@ Use `linear-expert` to create with:
 **For Existing Issues (RR-XXX mode):**
 Use `linear-expert` to:
 
-- Add comment with new analysis and context
-- Update labels if new categories identified
-- Adjust priority if validation changes assessment
-- Append technical requirements to description
+1. **Evaluate and potentially update issue title**:
+   - Assess if current title accurately reflects the scope after analysis
+   - Check if title follows project conventions (Action verb format)
+   - Consider if analysis revealed the issue is broader/narrower than title suggests
+   - If title needs updating: "Current title: '[old title]' → Suggested: '[new title]' because [reason]"
+   - Update title if user confirms the change
+
+2. **Enhanced issue updates**:
+   - Add comment with new analysis and context
+   - Update labels based on actual usage patterns (from Step 5.1)
+   - Adjust priority if validation changes assessment
+   - Append technical requirements to description
+   - Add relationship links to newly discovered related issues
+   - Update issue relationships based on new findings
 
 ### Step 5.4: Session Summary
 
@@ -253,6 +319,10 @@ Provide comprehensive completion report:
 [Link to Linear issue]
 
 ### Session Investigation Summary:
+- **Similar Issue Analysis**: [found X similar issues, Y relationships created]
+- **Label Pattern Analysis**: [applied labels based on project usage patterns]
+- **Issue Relationships**: [related/blocking/duplicate relationships established]
+- **Title Updates**: [title changes made and reasoning if applicable]
 - **Agent Consultations**: [list of agents used and key findings]
 - **Technical Assessment**: [complexity, risks, requirements]
 - **Business Value**: [priority, user impact, ROI]
@@ -275,6 +345,8 @@ Provide comprehensive completion report:
 - **User-Friendly**: Clear progress indicators, step numbering, escape options
 - **Flexible Pacing**: Allow "done" at any question to proceed with available information
 - **Context Preservation**: Maintain conversation state throughout all phases
+- **Early Intelligence**: Perform comprehensive similar issue analysis before deep investigation
+- **Relationship Awareness**: Continuously track and document issue relationships throughout process
 
 ### Agent Integration Rules
 
@@ -282,11 +354,21 @@ Provide comprehensive completion report:
 - **Parallel Consultation**: When multiple agents needed, batch the consultations
 - **Result Integration**: Synthesize agent feedback into coherent recommendations
 
+### Enhanced Intelligence Features
+
+- **Comprehensive Similarity Detection**: Multi-strategy search across 90-day history with weighted scoring
+- **Project-Aware Labeling**: Analyze actual label usage patterns instead of applying generic labels
+- **Relationship Mapping**: Automatic detection and creation of issue relationships (blocking, related, duplicate)
+- **Title Intelligence**: Evaluate and suggest title improvements for existing issues based on analysis
+- **Context Integration**: Maintain relationship awareness throughout the entire capture process
+
 ### Quality Assurance
 
 - **Validation Gates**: Require explicit confirmation before issue creation
 - **Information Completeness**: Intelligent defaults for skipped questions
 - **Error Handling**: Graceful degradation if agents unavailable
+- **Relationship Validation**: Confirm relationship links before creation
+- **Title Change Confirmation**: Always confirm title updates with user before applying
 
 ### Session State Management
 

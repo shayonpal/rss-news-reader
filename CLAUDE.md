@@ -38,6 +38,30 @@ This file provides guidance to Claude Code when working with this repository.
 - **Edit/Write** → `replace_symbol_body`, `insert_after_symbol`
 - **Full file reads** → Navigate to specific symbols
 
+## OpenAPI Documentation
+
+**Swagger UI**: http://100.96.166.53:3000/reader/api-docs
+**OpenAPI Spec**: http://100.96.166.53:3000/reader/api-docs/openapi.json
+
+### Documentation Requirements
+
+- ALL new API endpoints MUST be documented with Zod schemas in `src/lib/openapi/registry.ts`
+- Use `scripts/validate-openapi-coverage.js` to check coverage before commits
+- Health endpoints (6 total) are fully documented as MVP baseline
+- Interactive "Try it out" functionality enabled for all endpoints
+- Response examples required for 200/500 status codes
+
+### Current Coverage
+
+Health Endpoints (6/6):
+
+- ✅ GET /api/health - Main health check
+- ✅ GET /api/health/app - Application health with version (RR-114)
+- ✅ GET /api/health/db - Database health with connection alias (RR-114)
+- ✅ GET /api/health/cron - Cron job health and scheduling
+- ✅ GET /api/health/parsing - Content parsing metrics
+- ✅ GET /api/health/claude - Claude AI API connectivity
+
 ## Environment Variables
 
 All required. Run `./scripts/validate-env.sh` before building.

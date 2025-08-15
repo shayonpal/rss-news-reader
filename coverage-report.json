@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-08-15T03:35:32.818Z",
+  "totalExpected": 6,
+  "totalDocumented": 6,
+  "coveragePercentage": 100,
+  "endpoints": [
+    {
+      "endpoint": "GET /api/health",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/health/app",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/health/db",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/health/cron",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/health/parsing",
+      "documented": true
+    },
+    {
+      "endpoint": "GET /api/health/claude",
+      "documented": true
+    }
+  ],
+  "validation": {
+    "hasInfo": true,
+    "hasTitle": true,
+    "hasVersion": true,
+    "hasServers": true,
+    "hasHealthTag": true
+  },
+  "openApiInfo": {
+    "title": "RSS News Reader API",
+    "version": "1.0.0",
+    "endpointCount": 6
+  }
+}
