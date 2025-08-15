@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Completed
+
+- **[RR-152] OpenAPI Documentation System - Successfully Completed** (Friday, August 15, 2025)
+  - **Achievement**: Comprehensive OpenAPI documentation system with 100% API coverage implemented and verified
+  - **Delivered**: 45 endpoints documented (exceeding original target of 40 endpoints by 12.5%)
+  - **Infrastructure**: Swagger UI at `/reader/api-docs`, Insomnia export, pre-commit enforcement
+  - **Sub-issues completed**: RR-200 (Health MVP), RR-201 (Sync), RR-202 (Articles/Tags), RR-203 (Inoreader), RR-204 (Insomnia), RR-205 (Enforcement)
+  - **Impact**: Established type-safe, interactive API documentation with strict quality gates preventing undocumented endpoints
+  - **Verification**: All acceptance criteria met, 100% coverage validated, pre-commit hooks active
+
+### Added
+
+- **[RR-213] Dynamic page titles for tag filters - displays selected tag name in header**
+  - Extended `getDynamicPageTitle` function to accept `selectedTag` parameter
+  - Added tag store integration to `ArticleHeader` component
+  - Implemented XSS protection with DOMPurify for tag names
+  - Added comprehensive unit and integration tests
+
+- **[RR-205] Strict Enforcement & Remaining Endpoints - 100% OpenAPI Coverage Complete**
+  - **Achievement**: Successfully completed final phase of comprehensive OpenAPI documentation system (parent: RR-152)
+  - **Coverage**: Exceeded target with 45 endpoints documented (original target: 40 endpoints)
+  - **RR-208: Complete OpenAPI Documentation (100% Coverage)**
+    - Documented remaining 12 endpoints to reach 100% coverage (45/45 endpoints)
+    - Validation script optimized to run in <2 seconds
+    - Added npm scripts: `docs:validate`, `docs:coverage`, `docs:serve`
+    - All endpoints support "Try it out" functionality via operationId implementation
+    - Coverage by category: Health (6), Sync (7), Articles (4), Tags (5), Inoreader (8), Auth (1), Test (7), Analytics (1), Feeds (2), Users (2), Logs (1), Insomnia (1)
+  - **RR-209: Workflow Integration**
+    - Updated `.claude/commands/workflow/execute.md` with mandatory `docs:validate`
+    - Enhanced `.claude/agents/code-reviewer.md` with OpenAPI review criteria
+    - Updated `.claude/agents/test-expert.md` with schema validation requirements
+    - Integrated OpenAPI validation into CI/CD workflow
+  - **RR-210: Pre-commit Hook Enforcement**
+    - Comprehensive git pre-commit hook enforcing documentation before commits
+    - Multi-stage validation: type-check, lint, format, and OpenAPI documentation
+    - Timeout handling: 30s for basic checks, 60s for OpenAPI validation
+    - Graceful fallback when development server unavailable
+    - Test suite: 19 scenarios covering all edge cases
+    - Files: `.git/hooks/pre-commit`, `src/lib/constants/validation-commands.ts`, `scripts/validation-constants.js`
+  - **Impact**: All API endpoints now have Zod schemas, OpenAPI documentation, and interactive Swagger UI testing with strict quality gates
+
 ### Fixed
 
 - **Fixed React hydration errors on iPhone Safari**
@@ -22,55 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `src/components/articles/article-detail.tsx`: Move iOS detection to state, add suppressHydrationWarning to timestamp
     - `src/components/ui/morphing-dropdown.tsx`: Track dark mode in state with MutationObserver for theme changes
   - **Impact**: Resolved "Hydration failed" errors that only occurred on iPhone browsers (not iPad/desktop)
-
-### Added
-
-- **[RR-210] Git Pre-commit Hook for OpenAPI Enforcement - Production-Ready Quality Gates**
-  - **Implementation**: Comprehensive git pre-commit hook enforcing 100% OpenAPI documentation coverage before allowing commits
-  - **Key Features**:
-    - **Multi-stage Validation**: Type-check, lint, format, and OpenAPI documentation validation with individual failure tracking
-    - **Timeout Handling**: 30s for basic checks (type-check, lint, format), 60s for OpenAPI validation to prevent hanging
-    - **Graceful Fallback**: Continues validation when development server unavailable, warns about OpenAPI validation skip
-    - **Error Recovery**: Clear error messages with specific recovery instructions for common failure scenarios
-    - **Non-destructive**: Allows `--no-verify` flag to bypass hook in emergency situations
-  - **Files Created**:
-    - `.git/hooks/pre-commit` - Main hook script with individual validation tracking and simplified exit code logic
-    - `src/lib/constants/validation-commands.ts` - Shared constants module for validation commands, error messages, timeouts, and exit codes
-    - `scripts/validation-constants.js` - JavaScript version of constants for shell script compatibility
-    - `src/__tests__/integration/rr-210-git-hook.test.ts` - Comprehensive test suite with 19 test scenarios covering all edge cases
-  - **Integration**: Seamlessly integrates with existing `npm run pre-commit` workflow without disrupting developer experience
-  - **Quality Assurance**: Ensures all 45 API endpoints maintain complete OpenAPI documentation before code can be committed
-  - **Performance**: Hook completes validation in under 90 seconds total, with early termination on critical failures
-
-- **[RR-208] Complete OpenAPI Documentation & Workflow Scripts - 100% API Coverage Achieved**
-  - **Achievement**: Documented all remaining 11 endpoints to reach 100% OpenAPI coverage (45/45 endpoints)
-  - **Performance**: Validation script optimized to run in <2 seconds (enhanced from original implementation)
-  - **Interactive Documentation**: All endpoints now support "Try it out" functionality via operationId implementation
-  - **New npm Scripts**: Added comprehensive documentation workflow
-    - `npm run docs:validate` - Validate OpenAPI coverage (45/45 endpoints, <2s performance)
-    - `npm run docs:coverage` - Generate detailed coverage report with category breakdowns
-    - `npm run docs:serve` - Launch development server and automatically open Swagger UI
-  - **Coverage Breakdown by Category**:
-    - Health endpoints: 6/6 (100%) - Main health check, app, database, cron, parsing, Claude AI
-    - Sync endpoints: 7/7 (100%) - Manual sync, status polling, metadata, bidirectional sync, API usage
-    - Articles endpoints: 4/4 (100%) - Paginated listing, content fetching, summarization, tag management
-    - Tags endpoints: 5/5 (100%) - CRUD operations for tag management
-    - Inoreader endpoints: 8/8 (100%) - User info, subscriptions, stream contents, unread counts, edit tags, debug endpoints
-    - Auth endpoints: 1/1 (100%) - Inoreader authentication status
-    - Test endpoints: 7/7 (100%) - Development-only testing utilities (properly marked as dev-only)
-    - Analytics endpoints: 1/1 (100%) - Fetch statistics and usage metrics
-    - Feeds endpoints: 2/2 (100%) - Feed statistics and management
-    - Users endpoints: 2/2 (100%) - User timezone management
-    - Logs endpoints: 1/1 (100%) - Inoreader API call logging
-    - Insomnia endpoints: 1/1 (100%) - API export functionality
-  - **Documentation Files Updated**:
-    - `src/lib/openapi/registry.ts` - Complete endpoint documentation with Zod schemas
-    - `scripts/validate-openapi-coverage.js` - Enhanced validation for 45 endpoints with performance optimization
-    - `package.json` - Added documentation workflow scripts
-    - `coverage-report.json` - Comprehensive coverage tracking (now 100%)
-  - **Developer Experience**: Seamless workflow from development to documentation validation
-  - **Quality Assurance**: All endpoints include proper response examples, error schemas, and parameter documentation
-  - **Test Coverage**: Development test endpoints properly isolated and marked as environment-conditional
 
 - **[RR-204] Insomnia Integration & Export functionality**
   - **New API Endpoint**: `/api/insomnia.json` - Exports OpenAPI spec as Insomnia v4 collection format
@@ -112,7 +104,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `scripts/validate-openapi-coverage.js`: Updated validation for Inoreader endpoints
   - Achieved 100% OpenAPI coverage (13/13 endpoints documented)
 
+- **[RR-213] Improved null safety in `getDynamicPageTitle` with optional chaining**
+- **[RR-213] Optimized DOMPurify usage in ArticleHeader for better performance**
+
 ### Changed
+
+- **[RR-213] Modified `ArticleHeaderProps` interface to include `selectedTagId`**
+- **[RR-213] Updated `HomePage` component to pass `selectedTagId` to ArticleHeader**
+- **[RR-213] Priority order for page titles: Tag > Folder > Feed > "Articles"**
 
 - **[RR-203] Enhanced OpenAPI debug endpoint documentation**
   - `src/app/api/inoreader/debug/route.ts`: Fixed token age calculation bug (was showing 0 days)

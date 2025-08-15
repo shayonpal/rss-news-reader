@@ -228,6 +228,7 @@ export default function HomePage() {
           <ArticleHeader
             selectedFeedId={selectedFeedId}
             selectedFolderId={null}
+            selectedTagId={selectedTagId}
             isMobile={viewport.shouldShowHamburger}
             onMenuClick={
               viewport.shouldShowHamburger

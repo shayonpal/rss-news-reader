@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCheck, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import type { Feed, Folder } from "@/types";
+import { useTagStore } from "@/lib/stores/tag-store";
+import DOMPurify from "isomorphic-dompurify";
 
 interface ArticleCounts {
   total: number;
@@ -31,6 +33,7 @@ interface ArticleCounts {
 interface ArticleHeaderProps {
   selectedFeedId?: string | null;
   selectedFolderId?: string | null;
+  selectedTagId?: string | null;
   isMobile?: boolean;
   onMenuClick?: () => void;
   menuIcon?: React.ReactNode;
@@ -39,6 +42,7 @@ interface ArticleHeaderProps {
 export function ArticleHeader({
   selectedFeedId,
   selectedFolderId,
+  selectedTagId,
   isMobile = false,
   onMenuClick,
   menuIcon,
@@ -46,6 +50,7 @@ export function ArticleHeader({
   const { readStatusFilter, markAllAsRead, refreshArticles } =
     useArticleStore();
   const { getFeed, getFolder } = useFeedStore();
+  const { tags } = useTagStore();
   const viewport = useViewport();
   const [counts, setCounts] = useState<ArticleCounts>({
     total: 0,
@@ -58,11 +63,12 @@ export function ArticleHeader({
   const confirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countManager = useRef(new ArticleCountManager());
 
-  // Get selected feed/folder objects
+  // Get selected feed/folder/tag objects
   const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : undefined;
   const selectedFolder = selectedFolderId
     ? getFolder(selectedFolderId)
     : undefined;
+  const selectedTag = selectedTagId ? tags.get(selectedTagId) : undefined;
 
   // Fetch counts when filters change
   useEffect(() => {
@@ -110,7 +116,17 @@ export function ArticleHeader({
   }, []);
 
   const pageTitle = hydrated
-    ? getDynamicPageTitle(readStatusFilter, selectedFeed, selectedFolder)
+    ? getDynamicPageTitle(
+        readStatusFilter,
+        selectedFeed,
+        selectedFolder,
+        selectedTag
+          ? {
+              ...selectedTag,
+              name: DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] }),
+            }
+          : undefined
+      )
     : "Articles"; // Safe fallback during SSR
 
   // Get count display based on filter

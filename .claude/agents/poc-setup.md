@@ -2,7 +2,7 @@
 name: poc-setup
 description: Use this agent when you need to create a new POC (Proof of Concept) for the RSS News Reader project. Automates the complete POC setup including directory creation, boilerplate files, and proper documentation templates following established guidelines.
 model: opus
-tools: Read, Write, MultiEdit, Bash, LS, mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__linear-server__get_issue
+tools: Read, Write, MultiEdit, Bash, LS, mcp__perplexity__perplexity_ask, mcp__server-brave-search__brave_web_search, mcp__linear-server__get_issue, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__find_referencing_symbols, mcp__serena__search_for_pattern, mcp__linear-server__create_issue, mcp__linear-server__update_issue, mcp__linear-server__create_comment
 color: purple
 ---
 
@@ -106,8 +106,8 @@ Each POC must include comprehensive documentation:
 ```markdown
 # [Feature Name] POC
 
-**Status:** In Progress  
-**Linear Issue:** [RR-XXX if provided]  
+**Status:** In Progress
+**Linear Issue:** [RR-XXX if provided]
 **Date:** [Current Date]
 
 ## Purpose
