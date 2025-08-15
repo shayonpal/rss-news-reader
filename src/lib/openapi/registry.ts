@@ -608,6 +608,134 @@ registry.registerPath({
   },
 });
 
+// ========== DEVELOPER TOOLS SCHEMAS ==========
+
+// Insomnia export response schema
+const InsomniaExportResponseSchema = registry.register(
+  "InsomniaExportResponse",
+  z
+    .object({
+      _type: z.literal("export").openapi({
+        description: "Export type identifier",
+        example: "export",
+      }),
+      __export_format: z.literal(4).openapi({
+        description: "Insomnia export format version",
+        example: 4,
+      }),
+      __export_date: z.string().openapi({
+        description: "Export timestamp",
+        example: "2025-08-15T12:00:00.000Z",
+      }),
+      __export_source: z.string().openapi({
+        description: "Export source identifier",
+        example: "rss-reader-openapi-converter",
+      }),
+      resources: z.array(z.any()).openapi({
+        description:
+          "Array of Insomnia resources (workspace, environments, folders, requests)",
+      }),
+    })
+    .openapi({
+      description: "Insomnia v4 collection export format",
+    })
+);
+
+// ========== DEVELOPER TOOLS ENDPOINTS ==========
+
+// Insomnia export endpoint
+registry.registerPath({
+  method: "get",
+  path: "/api/insomnia.json",
+  summary: "Export OpenAPI as Insomnia collection",
+  description:
+    "Exports the entire OpenAPI specification as an Insomnia v4 collection file. " +
+    "Automatically detects the base URL from request headers (supports localhost, 127.0.0.1, and Tailscale IPs). " +
+    "The collection includes all documented endpoints organized by tags, with environment variables for configuration. " +
+    "Responses are cached for 5 minutes and support ETag-based caching. Rate limited to 1 request per minute per IP.",
+  tags: ["Developer Tools"],
+  responses: {
+    200: {
+      description: "Insomnia collection export",
+      headers: z.object({
+        "Content-Type": z.literal("application/json"),
+        "Content-Disposition": z.literal(
+          'attachment; filename="rss-reader-insomnia.json"'
+        ),
+        "Cache-Control": z.literal("public, max-age=300"),
+        ETag: z.string(),
+        "Access-Control-Allow-Origin": z.literal("*"),
+      }),
+      content: {
+        "application/json": {
+          schema: InsomniaExportResponseSchema,
+          examples: {
+            collection: {
+              summary: "Example Insomnia collection",
+              value: {
+                _type: "export",
+                __export_format: 4,
+                __export_date: "2025-08-15T12:00:00.000Z",
+                __export_source: "rss-reader-openapi-converter",
+                resources: [
+                  {
+                    _id: "wrk_abc123",
+                    _type: "workspace",
+                    name: "RSS Reader API",
+                    description: "RSS News Reader API collection",
+                    scope: "collection",
+                  },
+                  {
+                    _id: "env_def456",
+                    _type: "environment",
+                    parentId: "wrk_abc123",
+                    name: "RSS Reader Environment",
+                    data: {
+                      base_url: "http://100.96.166.53:3000/reader",
+                      api_key: "{{ _.api_key }}",
+                      auth_token: "{{ _.auth_token }}",
+                    },
+                    color: "#7d69cb",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    304: {
+      description: "Not Modified (ETag matched)",
+      headers: z.object({
+        ETag: z.string(),
+        "Cache-Control": z.literal("public, max-age=300"),
+      }),
+    },
+    429: {
+      description: "Rate limit exceeded",
+      headers: z.object({
+        "Retry-After": z.literal("60"),
+        "X-RateLimit-Limit": z.literal("1"),
+        "X-RateLimit-Remaining": z.literal("0"),
+        "X-RateLimit-Reset": z.string(),
+      }),
+      content: {
+        "text/plain": {
+          schema: z.string(),
+        },
+      },
+    },
+    500: {
+      description: "Failed to generate Insomnia collection",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 // ========== SYNC OPERATIONS SCHEMAS ==========
 
 // Standard sync error response schema

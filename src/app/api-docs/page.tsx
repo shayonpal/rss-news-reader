@@ -2,61 +2,285 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, Component, ReactNode } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Download, Filter, Server } from "lucide-react";
 
 // Dynamically import SwaggerUI to avoid SSR issues
 const SwaggerUI = dynamic(() => import("swagger-ui-react"), { ssr: false });
 
 // Import CSS (this will be included in the dynamic import)
 import "swagger-ui-react/swagger-ui.css";
-// Import Material theme
-import "swagger-ui-themes/themes/3.x/theme-material.css";
 
-// Error Boundary Component
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-}
+// Add custom styles to hide Swagger's default info section and adjust layout
+const customStyles = `
+  .swagger-ui .info {
+    display: none !important;
+  }
+  .swagger-ui .scheme-container {
+    display: none !important;
+  }
+  .swagger-ui .topbar {
+    display: none !important;
+  }
+  .swagger-ui {
+    padding-top: 0 !important;
+  }
+  .swagger-ui .wrapper {
+    padding-top: 0 !important;
+  }
+  
+  /* Dark mode styles for Swagger UI */
+  body.dark {
+    background-color: #1f2937 !important;
+  }
+  
+  body.dark .swagger-ui {
+    background-color: #1f2937 !important;
+  }
+  
+  body.dark .swagger-ui .opblock-tag {
+    color: #e5e7eb !important;
+    border-bottom-color: #374151 !important;
+  }
+  
+  body.dark .swagger-ui .opblock {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui .opblock .opblock-summary {
+    background: #1f2937 !important;
+    border-color: #4b5563 !important;
+    color: #e5e7eb !important;
+  }
+  
+  body.dark .swagger-ui .opblock .opblock-summary-method {
+    background: #10b981 !important;
+    color: white !important;
+  }
+  
+  body.dark .swagger-ui .opblock.opblock-post .opblock-summary-method {
+    background: #8b5cf6 !important;
+  }
+  
+  body.dark .swagger-ui .opblock.opblock-put .opblock-summary-method {
+    background: #f59e0b !important;
+  }
+  
+  body.dark .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+    background: #ef4444 !important;
+  }
+  
+  body.dark .swagger-ui .opblock .opblock-summary-path,
+  body.dark .swagger-ui .opblock .opblock-summary-description {
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .opblock .opblock-section-header {
+    background: #374151 !important;
+    color: #e5e7eb !important;
+    border-bottom-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui .opblock-body {
+    background: #1f2937 !important;
+  }
+  
+  body.dark .swagger-ui .parameter__name,
+  body.dark .swagger-ui .parameter__type,
+  body.dark .swagger-ui .response-col_status,
+  body.dark .swagger-ui .response-col_description {
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui table thead tr th,
+  body.dark .swagger-ui table thead tr td {
+    color: #e5e7eb !important;
+    border-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui .parameter__in {
+    color: #9ca3af !important;
+  }
+  
+  body.dark .swagger-ui .btn {
+    background: #4b5563 !important;
+    color: #e5e7eb !important;
+    border-color: #6b7280 !important;
+  }
+  
+  body.dark .swagger-ui .btn:hover {
+    background: #6b7280 !important;
+  }
+  
+  body.dark .swagger-ui .btn.execute {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #2563eb !important;
+  }
+  
+  body.dark .swagger-ui .btn.btn-clear {
+    background: #ef4444 !important;
+    color: white !important;
+  }
+  
+  body.dark .swagger-ui select,
+  body.dark .swagger-ui input[type=text],
+  body.dark .swagger-ui textarea {
+    background: #374151 !important;
+    color: #e5e7eb !important;
+    border-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui .model-container {
+    background: #1f2937 !important;
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .model {
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .prop-type {
+    color: #60a5fa !important;
+  }
+  
+  body.dark .swagger-ui .prop {
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .renderedMarkdown p,
+  body.dark .swagger-ui .renderedMarkdown code {
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .renderedMarkdown code {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui .model-toggle {
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .model-toggle:after {
+    background: #374151 !important;
+  }
+  
+  body.dark .swagger-ui section.models {
+    border-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui section.models h4 {
+    color: #e5e7eb !important;
+  }
+  
+  body.dark .swagger-ui .filter-container input[type=text] {
+    background: #374151 !important;
+    color: #e5e7eb !important;
+    border-color: #4b5563 !important;
+  }
+  
+  body.dark .swagger-ui .copy-to-clipboard {
+    background: #374151 !important;
+  }
+  
+  body.dark .swagger-ui .copy-to-clipboard button {
+    background: #4b5563 !important;
+    color: #e5e7eb !important;
+  }
+  
+  /* Dropdown arrows and expand/collapse indicators */
+  body.dark .swagger-ui .arrow,
+  body.dark .swagger-ui .expand-operation,
+  body.dark .swagger-ui .expand-methods {
+    fill: #d1d5db !important;
+    color: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .opblock .opblock-summary-control .arrow {
+    fill: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui svg {
+    fill: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .svg-assets {
+    filter: invert(1) !important;
+  }
+  
+  body.dark .swagger-ui .arrow:after {
+    border-color: #d1d5db !important;
+  }
+  
+  /* Response expand/collapse arrows */
+  body.dark .swagger-ui .responses-inner h4:after,
+  body.dark .swagger-ui .responses-inner h5:after {
+    background: #d1d5db !important;
+  }
+  
+  /* Model expand arrows */
+  body.dark .swagger-ui .model-toggle:after {
+    background: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .model-box {
+    background: #374151 !important;
+  }
+  
+  /* Authorization lock icons */
+  body.dark .swagger-ui .authorization__btn svg {
+    fill: #d1d5db !important;
+  }
+  
+  body.dark .swagger-ui .authorization__btn.locked svg {
+    fill: #10b981 !important;
+  }
+  
+  /* Expand/collapse all operations */
+  body.dark .swagger-ui .expand-methods svg,
+  body.dark .swagger-ui .expand-operation svg {
+    fill: #d1d5db !important;
+  }
+  
+  /* Try it out / Cancel button text */
+  body.dark .swagger-ui .try-out__btn {
+    color: #e5e7eb !important;
+    background: #4b5563 !important;
+    border-color: #6b7280 !important;
+  }
+  
+  body.dark .swagger-ui .try-out__btn:hover {
+    background: #6b7280 !important;
+  }
+`;
 
+// Error boundary to catch and handle SwaggerUI errors
 class ErrorBoundary extends Component<
   { children: ReactNode },
-  ErrorBoundaryState
+  { hasError: boolean }
 > {
   constructor(props: { children: ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    // Log error to console in development
-    if (process.env.NODE_ENV === "development") {
-      console.error("SwaggerUI Error:", error, errorInfo);
-    }
+    console.error("SwaggerUI Error:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-            <h2 className="mb-2 text-lg font-semibold text-red-800">
-              SwaggerUI Error
-            </h2>
-            <p className="text-red-600">
-              {this.state.error?.message ||
-                "An error occurred while loading the documentation"}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            >
-              Reload Page
-            </button>
-          </div>
+        <div className="p-8 text-center">
+          <h2 className="mb-2 text-xl font-semibold text-red-600">
+            Error Loading Swagger UI
+          </h2>
+          <p className="text-gray-600">Please refresh the page to try again.</p>
         </div>
       );
     }
@@ -66,25 +290,71 @@ class ErrorBoundary extends Component<
 }
 
 export default function SwaggerDocsPage() {
-  const [spec, setSpec] = useState(null);
+  const [spec, setSpec] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedServer, setSelectedServer] = useState<string>("");
+  const [tagFilter, setTagFilter] = useState<string>("");
 
-  // Load dark mode preference from localStorage
+  // Load preferences from localStorage
   useEffect(() => {
     const savedDarkMode = localStorage.getItem("swaggerDarkMode");
+    const savedServer = localStorage.getItem("swaggerSelectedServer");
+
     if (savedDarkMode === "true") {
       setIsDarkMode(true);
+      document.body.classList.add("dark");
+    }
+
+    if (savedServer) {
+      setSelectedServer(savedServer);
     }
   }, []);
 
-  // Save dark mode preference to localStorage
+  // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
     localStorage.setItem("swaggerDarkMode", newDarkMode.toString());
+
+    if (newDarkMode) {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
   };
+
+  // Handle server selection
+  const handleServerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const server = e.target.value;
+    setSelectedServer(server);
+    localStorage.setItem("swaggerSelectedServer", server);
+
+    // Update spec with new server
+    if (spec) {
+      const updatedSpec = {
+        ...spec,
+        servers: [{ url: server, description: getServerDescription(server) }],
+      };
+      setSpec(updatedSpec);
+    }
+  };
+
+  // Get server description based on URL
+  const getServerDescription = (url: string): string => {
+    if (url.includes("localhost")) return "Local Development";
+    if (url.includes("127.0.0.1")) return "Local Development (IP)";
+    if (url.includes("100.96.166.53")) return "Tailscale Network";
+    return "Production";
+  };
+
+  // Available servers
+  const availableServers = [
+    { url: "http://localhost:3000/reader", label: "Local Development" },
+    { url: "http://127.0.0.1:3000/reader", label: "Local (127.0.0.1)" },
+    { url: "http://100.96.166.53:3000/reader", label: "Tailscale Network" },
+  ];
 
   useEffect(() => {
     async function fetchSpec() {
@@ -95,10 +365,17 @@ export default function SwaggerDocsPage() {
         }
         const data = await response.json();
 
-        // Dynamically set the server URL to match the current host
+        // Set initial server
+        const currentUrl = window.location.origin;
+        const defaultServer = selectedServer || `${currentUrl}/reader`;
+
         if (data.servers && data.servers.length > 0) {
-          const currentUrl = window.location.origin;
-          data.servers[0].url = `${currentUrl}/reader`;
+          data.servers[0].url = defaultServer;
+          data.servers[0].description = getServerDescription(defaultServer);
+        }
+
+        if (!selectedServer) {
+          setSelectedServer(defaultServer);
         }
 
         setSpec(data);
@@ -114,7 +391,7 @@ export default function SwaggerDocsPage() {
     }
 
     fetchSpec();
-  }, []);
+  }, [selectedServer]);
 
   if (loading) {
     return (
@@ -148,58 +425,114 @@ export default function SwaggerDocsPage() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "bg-gray-900" : "bg-white"}`}>
+      {/* Inject custom styles */}
+      <style jsx global>
+        {customStyles}
+      </style>
+
+      {/* Compact Custom Header */}
       <div
-        className={`border-b ${isDarkMode ? "border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900" : "border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50"} px-6 py-6`}
+        className={`sticky top-0 z-50 border-b ${
+          isDarkMode
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white shadow-sm"
+        }`}
       >
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-full px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
+            {/* Left side: Title and badges */}
+            <div className="flex items-center gap-4">
               <h1
-                className={`mb-2 text-3xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"}`}
+                className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"}`}
               >
-                📚 RSS News Reader API Documentation
+                📰 RSS Reader API
               </h1>
-              <p
-                className={`mb-1 text-base ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
-              >
-                Interactive REST API documentation powered by OpenAPI 3.0 and
-                Swagger UI
-              </p>
-              <div
-                className={`mt-3 flex items-center gap-4 text-sm ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
-              >
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded-full bg-green-500"></span>
-                  Version 1.0.0
+              <div className="flex items-center gap-2">
+                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  v{spec?.info?.version || "1.0.0"}
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
-                  6 Health Endpoints Available
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded-full bg-purple-500"></span>
-                  {isDarkMode ? "Dark" : "Material"} Theme
+                <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                  OAS 3.0
                 </span>
               </div>
             </div>
-            <button
-              onClick={toggleDarkMode}
-              className={`ml-4 flex items-center gap-2 rounded-lg px-4 py-2 transition-all ${
-                isDarkMode
-                  ? "bg-gray-700 text-yellow-400 hover:bg-gray-600"
-                  : "bg-white text-gray-700 shadow-md hover:bg-gray-100"
-              }`}
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-              <span className="text-sm font-medium">
-                {isDarkMode ? "Light" : "Dark"} Mode
-              </span>
-            </button>
+
+            {/* Right side: Controls */}
+            <div className="flex items-center gap-3">
+              {/* Server Dropdown */}
+              <div className="flex items-center gap-2">
+                <Server
+                  size={16}
+                  className={isDarkMode ? "text-gray-400" : "text-gray-600"}
+                />
+                <select
+                  value={selectedServer}
+                  onChange={handleServerChange}
+                  className={`rounded border px-2 py-1 text-sm ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  }`}
+                >
+                  {availableServers.map((server) => (
+                    <option key={server.url} value={server.url}>
+                      {server.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tag Filter */}
+              <div className="flex items-center gap-2">
+                <Filter
+                  size={16}
+                  className={isDarkMode ? "text-gray-400" : "text-gray-600"}
+                />
+                <input
+                  type="text"
+                  placeholder="Filter by tag..."
+                  value={tagFilter}
+                  onChange={(e) => {
+                    setTagFilter(e.target.value);
+                    // SwaggerUI's filter is applied via the filter prop
+                  }}
+                  className={`w-32 rounded border px-2 py-1 text-sm ${
+                    isDarkMode
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                  }`}
+                />
+              </div>
+
+              {/* Export to Insomnia */}
+              <a
+                href="/reader/api/insomnia.json"
+                download="rss-reader-insomnia.json"
+                className="flex items-center gap-1.5 rounded bg-purple-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-purple-700"
+              >
+                <Download size={14} />
+                <span>Export</span>
+              </a>
+
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className={`flex items-center gap-1.5 rounded px-3 py-1 text-sm font-medium transition-colors ${
+                  isDarkMode
+                    ? "bg-gray-700 text-yellow-400 hover:bg-gray-600"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+                <span>{isDarkMode ? "Light" : "Dark"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Swagger UI Container */}
       <div className="swagger-ui-container">
         {spec && (
           <ErrorBoundary>
@@ -209,7 +542,7 @@ export default function SwaggerDocsPage() {
               defaultModelsExpandDepth={1}
               defaultModelExpandDepth={1}
               tryItOutEnabled={true}
-              filter={true}
+              filter={tagFilter || true}
               requestSnippetsEnabled={true}
               supportedSubmitMethods={["get", "post", "put", "delete", "patch"]}
               deepLinking={true}
@@ -217,301 +550,17 @@ export default function SwaggerDocsPage() {
               persistAuthorization={true}
               showExtensions={false}
               showCommonExtensions={false}
+              presets={undefined}
+              onComplete={(system: any) => {
+                // Store reference for potential future use
+                if (system) {
+                  (window as any).swaggerUISystem = system;
+                }
+              }}
             />
           </ErrorBoundary>
         )}
       </div>
-
-      <style jsx global>{`
-        /* Dark mode base styles */
-        ${isDarkMode
-          ? `
-          .swagger-ui {
-            background: #1a1a1a !important;
-            color: #e5e5e5 !important;
-          }
-
-          .swagger-ui .wrapper {
-            background: #1a1a1a !important;
-          }
-
-          .swagger-ui .info .title,
-          .swagger-ui .info .description p,
-          .swagger-ui .info .description,
-          .swagger-ui .info .version {
-            color: white !important;
-          }
-
-          .swagger-ui .scheme-container {
-            background: #2d2d2d !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-          }
-
-          .swagger-ui select {
-            background: #2d2d2d !important;
-            color: #e5e5e5 !important;
-            border: 1px solid #444 !important;
-          }
-
-          .swagger-ui .opblock-tag {
-            background: #2d2d2d !important;
-            border-bottom: 1px solid #444 !important;
-          }
-
-          .swagger-ui .opblock-tag-section h3,
-          .swagger-ui .opblock-tag-section h4 {
-            color: #e5e5e5 !important;
-          }
-
-          .swagger-ui .opblock {
-            background: #2d2d2d !important;
-            border: 1px solid #444 !important;
-          }
-
-          .swagger-ui .opblock .opblock-summary {
-            background: #2d2d2d !important;
-            border: 1px solid #444 !important;
-          }
-
-          .swagger-ui .opblock .opblock-summary-description {
-            color: #bbb !important;
-          }
-
-          .swagger-ui .opblock .opblock-section-header {
-            background: #262626 !important;
-            box-shadow: none !important;
-          }
-
-          .swagger-ui .opblock .opblock-section-header h4,
-          .swagger-ui .opblock .opblock-section-header label {
-            color: #e5e5e5 !important;
-          }
-
-          .swagger-ui .opblock.opblock-get .opblock-summary {
-            border-color: #10b981 !important;
-          }
-
-          .swagger-ui .opblock.opblock-get .opblock-summary-method {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-          }
-
-          .swagger-ui .parameters-col_description,
-          .swagger-ui .response-col_description {
-            color: #bbb !important;
-          }
-
-          .swagger-ui .parameter__name,
-          .swagger-ui .parameter__type {
-            color: #e5e5e5 !important;
-          }
-
-          .swagger-ui table thead tr th,
-          .swagger-ui table thead tr td {
-            color: #e5e5e5 !important;
-            border-color: #444 !important;
-          }
-
-          .swagger-ui .model-container {
-            background: #262626 !important;
-            border-radius: 8px !important;
-          }
-
-          .swagger-ui .model {
-            color: #e5e5e5 !important;
-          }
-
-          .swagger-ui .highlight-code .highlight pre {
-            background: #1a1a1a !important;
-            color: #e5e5e5 !important;
-          }
-
-          .swagger-ui .responses-inner {
-            background: #262626 !important;
-            padding: 15px !important;
-            border-radius: 8px !important;
-          }
-
-          .swagger-ui .response-col_status {
-            color: #10b981 !important;
-          }
-
-          .swagger-ui .btn {
-            background: #444 !important;
-            color: #e5e5e5 !important;
-            border: 1px solid #555 !important;
-          }
-
-          .swagger-ui .btn:hover {
-            background: #555 !important;
-            border-color: #666 !important;
-          }
-
-          .swagger-ui .btn.try-out__btn {
-            background: #6366f1 !important;
-            border-color: #6366f1 !important;
-          }
-
-          .swagger-ui .btn.try-out__btn:hover {
-            background: #4f46e5 !important;
-          }
-
-          .swagger-ui .btn.execute {
-            background: #10b981 !important;
-            border-color: #10b981 !important;
-          }
-
-          .swagger-ui .btn.execute:hover {
-            background: #059669 !important;
-          }
-
-          .swagger-ui .btn.cancel {
-            background: #ef4444 !important;
-            border-color: #ef4444 !important;
-          }
-
-          .swagger-ui textarea,
-          .swagger-ui input[type=text],
-          .swagger-ui input[type=password],
-          .swagger-ui input[type=email],
-          .swagger-ui input[type=url] {
-            background: #1a1a1a !important;
-            color: #e5e5e5 !important;
-            border: 1px solid #444 !important;
-          }
-
-          .swagger-ui .filter .operation-filter-input {
-            background: #2d2d2d !important;
-            color: #e5e5e5 !important;
-            border: 1px solid #444 !important;
-          }
-
-          .swagger-ui .copy-to-clipboard {
-            background: #2d2d2d !important;
-          }
-
-          .swagger-ui .copy-to-clipboard button {
-            background: #444 !important;
-            color: #e5e5e5 !important;
-          }
-        `
-          : ""}
-
-        .swagger-ui-container {
-          padding: 0;
-        }
-
-        /* Hide redundant topbar since we have custom header */
-        .swagger-ui .topbar {
-          display: none;
-        }
-
-        /* Enhance Material theme with custom touches */
-        .swagger-ui .info {
-          margin: 24px;
-          padding: 24px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 12px;
-          color: white;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .swagger-ui .info .title {
-          color: white;
-        }
-
-        .swagger-ui .info .description {
-          color: rgba(255, 255, 255, 0.95);
-        }
-
-        .swagger-ui .info .version {
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 0.875rem;
-        }
-
-        /* Material-style scheme container */
-        .swagger-ui .scheme-container {
-          background: #f5f5f5;
-          padding: 20px 24px;
-          margin: 24px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Enhance button styles with Material Design */
-        .swagger-ui .btn {
-          border-radius: 4px;
-          text-transform: uppercase;
-          font-weight: 500;
-          letter-spacing: 0.5px;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .swagger-ui .btn:hover {
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-          transform: translateY(-1px);
-        }
-
-        .swagger-ui .btn.try-out__btn {
-          background-color: #6366f1;
-          color: white;
-          border: none;
-        }
-
-        .swagger-ui .btn.try-out__btn:hover {
-          background-color: #4f46e5;
-        }
-
-        .swagger-ui .btn.execute {
-          background-color: #10b981;
-          color: white;
-          border: none;
-        }
-
-        .swagger-ui .btn.execute:hover {
-          background-color: #059669;
-        }
-
-        /* Enhance operation blocks with Material shadows */
-        .swagger-ui .opblock {
-          margin-bottom: 16px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-          transition: box-shadow 0.3s ease;
-        }
-
-        .swagger-ui .opblock:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-        }
-
-        .swagger-ui .opblock.opblock-get {
-          border-color: #10b981;
-        }
-
-        .swagger-ui .opblock.opblock-get .opblock-summary-method {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          font-weight: 600;
-        }
-
-        /* Response section styling */
-        .swagger-ui .responses-wrapper {
-          margin-top: 24px;
-          padding-top: 24px;
-          border-top: 2px solid #e5e7eb;
-        }
-
-        /* Tags section with Material chips */
-        .swagger-ui .opblock-tag {
-          margin: 24px;
-          padding: 20px;
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-      `}</style>
     </div>
   );
 }

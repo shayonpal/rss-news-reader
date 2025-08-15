@@ -25,6 +25,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[RR-204] Insomnia Integration & Export functionality**
+  - **New API Endpoint**: `/api/insomnia.json` - Exports OpenAPI spec as Insomnia v4 collection format
+    - Rate limiting: 1 request per minute per IP address
+    - CORS restricted to known origins (localhost, 127.0.0.1, Tailscale URL from NEXT_PUBLIC_APP_URL, insomnia.rest)
+    - ETag support for efficient caching (5-minute cache duration)
+    - Auto-detects base URL from request headers for environment configuration
+  - **Converter Library**: `src/lib/openapi/insomnia-converter.ts`
+    - Converts OpenAPI 3.1 spec to Insomnia v4 format with full schema support
+    - Generates workspace, environments, folders (organized by OpenAPI tags), and request collections
+    - Handles authentication methods, path/query parameters, and request bodies
+    - Memory-efficient implementation with proper resource cleanup
+  - **Swagger UI Integration**: Added "Export to Insomnia" button in Swagger UI header at `/reader/api-docs`
+    - Direct download functionality for immediate Insomnia import
+    - User-friendly workflow for API testing setup
+  - **CLI Export Script**: `scripts/export-insomnia.ts` for automated collection generation
+  - **Key Security & Performance Fixes**:
+    - Fixed memory leak in rate limiting middleware with immediate cleanup
+    - Removed fake streaming implementation for better performance
+    - Added comprehensive TypeScript types for all converter functions
+    - OpenAPI spec validation before conversion to prevent errors
+    - CORS origins restricted to specific trusted domains
+  - **Comprehensive Test Coverage**:
+    - Unit tests: `src/__tests__/unit/openapi/insomnia-converter.test.ts` (converter logic)
+    - API tests: `src/__tests__/unit/api/insomnia-json.test.ts` (endpoint functionality)
+    - Integration tests with real OpenAPI schema validation
+  - **Documentation**: Complete setup guide at `docs/api/insomnia-setup.md`
+  - **Developer Experience**: Enables easy API testing workflow - export from Swagger UI → import to Insomnia → test endpoints
+
 - **[RR-203] Complete OpenAPI documentation for Inoreader integration endpoints**
   - Documented 7 Inoreader proxy endpoints with full request/response schemas
   - Added OAuth cookie authentication specifications

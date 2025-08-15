@@ -16,8 +16,21 @@ This directory contains documentation for all API endpoints and server-side func
   - Sync endpoints (`/api/sync/*`)
   - Health check endpoints (`/api/health/*`)
   - Analytics endpoints (`/api/analytics/*`)
+  - OpenAPI documentation endpoints (`/api-docs/*`)
+  - Insomnia export endpoint (`/api/insomnia.json`)
   - Request/response formats
   - Error handling patterns
+
+### insomnia-setup.md
+
+- **Description**: Complete guide for importing and configuring the RSS Reader API collection in Insomnia REST client
+- **Status**: Current ✅
+- **Last Updated**: August 2025 (RR-204)
+- **Contents**:
+  - Export methods (Swagger UI button, direct API download, CLI script)
+  - Import procedure into Insomnia
+  - Environment configuration and authentication setup
+  - Example workflows and troubleshooting guide
 
 ## Related Documentation
 
@@ -43,6 +56,7 @@ This directory contains documentation for all API endpoints and server-side func
 | Sync             | `/api/sync`, `/api/sync/status/{syncId}`, `/api/sync/last-sync`, `/api/sync/refresh-view`                                                               | Start sync with sidebar payload, poll status, last sync time (with cache prevention headers), refresh views |
 | Health           | `/api/health` (alias `/api/health/app`), `/api/health/db`, `/api/health/cron`, `/api/health/parsing`, `/api/health/claude`                              | Health checks                                                                                               |
 | Analytics & Logs | `/api/analytics/fetch-stats`, `/api/logs/inoreader`                                                                                                     | Usage analytics, API call logging                                                                           |
+| Developer Tools  | `/api/insomnia.json`, `/api-docs`, `/api-docs/openapi.json`                                                                                             | Insomnia export, OpenAPI documentation, Swagger UI                                                          |
 
 **Note**: Feed and article data are accessed directly via Supabase from the client. Base `/api/feeds` and `/api/articles` endpoints don't exist.
 

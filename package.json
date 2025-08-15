@@ -33,7 +33,8 @@
     "setup:oauth": "node server/scripts/setup-oauth.js",
     "server": "node server/server.js",
     "server:dev": "nodemon server/server.js",
-    "backup:claude": "./scripts/backup-claude-to-dev.sh"
+    "backup:claude": "./scripts/backup-claude-to-dev.sh",
+    "export:insomnia": "tsx scripts/export-insomnia.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",

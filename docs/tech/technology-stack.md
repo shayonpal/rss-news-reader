@@ -187,6 +187,24 @@ For theme preference only.
 - cleanupService: Database cleanup and maintenance (RR-129/RR-150)
 ```
 
+### API Documentation & Testing: **OpenAPI 3.1 + Swagger UI**
+
+**Implementation (RR-204):**
+
+- **Interactive Documentation**: Swagger UI at `/reader/api-docs` for live API exploration
+- **OpenAPI Specification**: Auto-generated from Zod schemas in `src/lib/openapi/registry.ts`
+- **Insomnia Integration**: One-click export to Insomnia REST client via "Export to Insomnia" button
+- **Export Endpoint**: `/api/insomnia.json` provides Insomnia v4 collection format
+- **Developer Workflow**: Swagger UI → Insomnia export → API testing workflow
+
+**Benefits:**
+
+- Complete API documentation with request/response examples
+- Interactive testing directly in browser
+- Easy import into external REST clients (Insomnia, Postman)
+- Auto-generated collections stay in sync with API changes
+- Rate limiting and CORS protection for export endpoints
+
 ## Development & Build Tools
 
 ### Type Safety: **TypeScript 5+**

@@ -637,10 +637,17 @@ src/
 - **[Monitoring and Alerting](docs/tech/monitoring-and-alerting.md)**: Multi-layered monitoring system with Discord alerts
 - **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
+- **[API Testing with Insomnia](docs/api/insomnia-setup.md)**: Complete guide for importing API collection into Insomnia REST client
 - Deployment docs focus on the dev-only, Tailscale-protected setup. See `docs/deployment/`.
 - **[RR-26 Analysis](docs/issues/RR-26-freshness-perception-analysis.md)**: Article freshness perception issue analysis
 
 ## API Integration
+
+### API Documentation & Testing
+
+- **OpenAPI Documentation**: Interactive Swagger UI at http://100.96.166.53:3000/reader/api-docs
+- **Insomnia Export**: One-click export to Insomnia REST client via "Export to Insomnia" button in Swagger UI
+- **Direct Export Endpoint**: `/api/insomnia.json` for programmatic access to Insomnia v4 collection format
 
 ### Inoreader API
 
