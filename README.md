@@ -309,11 +309,13 @@ npm run dev:network      # Start with network access (0.0.0.0)
 npm run dev:debug        # Start with Node.js debugger
 npm run dev:turbo        # Start with Turbo mode
 
-# Quality Checks
+# Quality Checks & Pre-commit Hook (RR-210)
 npm run type-check       # TypeScript compilation check
 npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
-npm run pre-commit      # Run all quality checks
+npm run format          # Fix Prettier formatting issues
+npm run docs:validate   # OpenAPI documentation coverage (45/45 endpoints)
+npm run pre-commit      # Run all quality checks (same as pre-commit hook)
 
 # Testing (Optimized Execution - RR-183)
 npm run test            # ✅ RECOMMENDED: Optimized runner (8-20 seconds)
@@ -348,6 +350,43 @@ npm run docs:serve      # ✅ Start dev server and open Swagger UI
 ./scripts/build-and-start-prod.sh          # Safe production deployment
 ./scripts/rollback-last-build.sh           # Emergency rollback
 ```
+
+### Git Pre-commit Hook (RR-210)
+
+**Automated Quality Gates**: Every commit automatically triggers comprehensive validation through the pre-commit hook:
+
+```bash
+# Hook runs automatically on every commit
+git commit -m "your changes"
+
+# Manual hook testing
+./.git/hooks/pre-commit
+
+# Emergency bypass (not recommended)
+git commit --no-verify -m "emergency commit"
+```
+
+**Validation Steps** (individual failure tracking with timeouts):
+
+1. **Type Check** (30s): `npm run type-check` - TypeScript compilation
+2. **Lint Check** (30s): `npm run lint` - ESLint code quality
+3. **Format Check** (30s): `npm run format:check` - Prettier formatting
+4. **OpenAPI Documentation** (60s): `npm run docs:validate` - Ensures 100% API coverage (45/45 endpoints)
+
+**Key Features**:
+
+- **Quality Assurance**: Prevents committing code with quality issues
+- **Documentation Enforcement**: All API endpoints must be properly documented
+- **Fast Feedback**: Individual failure tracking with clear error messages
+- **Performance Optimized**: Completes in under 90 seconds with timeout protection
+- **Graceful Fallback**: Continues validation when development server unavailable
+
+**Benefits for Development**:
+
+- Catches issues before they reach the CI/CD pipeline
+- Ensures consistent code quality across all contributions
+- Maintains 100% OpenAPI documentation coverage automatically
+- Provides immediate feedback with specific recovery instructions
 
 ## CI/CD Pipeline (GitHub Actions)
 

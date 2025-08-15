@@ -235,9 +235,49 @@ npm run build
 # Production
 npm start
 
-# Type check
-npm run type-check
+# Code Quality & Documentation
+npm run type-check          # TypeScript compilation check
+npm run lint                 # ESLint code quality check
+npm run format:check         # Prettier formatting check
+npm run format               # Fix formatting issues
+npm run docs:validate        # OpenAPI documentation coverage (45/45 endpoints)
+npm run docs:coverage        # Detailed documentation coverage report
+npm run docs:serve          # Launch dev server and open Swagger UI
+
+# Testing
+npm run test                 # Run test suite
+npm run test:parallel        # Optimized parallel test execution
+npm run pre-commit          # Full validation pipeline (same as pre-commit hook)
 ```
+
+### Git Pre-commit Hook (RR-210)
+
+**Automatic Quality Gates**: The project includes a comprehensive pre-commit hook that automatically runs before each commit:
+
+```bash
+# Hook runs automatically on commit
+git commit -m "your changes"
+
+# Manual hook testing
+./.git/hooks/pre-commit
+
+# Emergency bypass (not recommended)
+git commit --no-verify -m "emergency commit"
+```
+
+**Validation Steps** (run in sequence with individual failure tracking):
+
+1. **Type Check** (30s timeout): Ensures TypeScript compilation success
+2. **Lint Check** (30s timeout): Validates code quality standards
+3. **Format Check** (30s timeout): Verifies Prettier formatting (non-blocking)
+4. **OpenAPI Documentation** (60s timeout): Enforces 100% API documentation coverage
+
+**Benefits**:
+
+- **Quality Assurance**: Prevents committing code that fails basic quality checks
+- **Documentation Compliance**: Ensures all API endpoints maintain complete OpenAPI documentation
+- **Fast Feedback**: Fails early on critical issues, provides clear error messages
+- **Performance Optimized**: Completes in under 90 seconds with timeout protection
 
 ---
 

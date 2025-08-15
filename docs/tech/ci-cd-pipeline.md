@@ -347,10 +347,32 @@ Lightweight validation for pull requests with focus on change impact analysis.
 
 ### Pre-Commit Integration
 
+**Git Pre-commit Hook (RR-210)**:
+
+The project implements a comprehensive pre-commit hook that enforces quality gates before allowing commits:
+
+```bash
+# Automatically runs on git commit (implemented in .git/hooks/pre-commit)
+git commit -m "your commit message"
+
+# Manual execution for testing
+./.git/hooks/pre-commit
+
+# Bypass hook in emergency situations (not recommended)
+git commit --no-verify -m "emergency commit"
+```
+
+**Hook Validation Steps**:
+
+1. **Type Check** (30s timeout): `npm run type-check`
+2. **Lint Validation** (30s timeout): `npm run lint`
+3. **Format Check** (30s timeout): `npm run format:check` (non-blocking for OpenAPI validation)
+4. **OpenAPI Documentation** (60s timeout): `npm run docs:validate` (enforces 100% coverage of all 45 endpoints)
+
 **Local Validation**:
 
 ```bash
-# Run same validations as CI smoke tests
+# Run same validations as CI smoke tests and pre-commit hook
 npm run pre-commit
 
 # Individual validation steps
@@ -358,13 +380,22 @@ npm run type-check        # TypeScript compilation
 npm run lint             # ESLint validation
 npm run test:parallel    # Optimized test execution
 npm run build            # Production build validation
+npm run docs:validate    # OpenAPI coverage validation
 ```
 
-**Git Hooks**:
+**Git Hooks Architecture**:
 
-- **Pre-commit**: Run linting and quick tests
-- **Pre-push**: Run comprehensive test suite
-- **Commit Message**: Validate conventional commit format
+- **Pre-commit Hook**: Comprehensive quality gates including OpenAPI documentation enforcement
+- **Future Enhancement**: Pre-push hook for comprehensive test suite
+- **Future Enhancement**: Commit message validation for conventional commit format
+
+**Hook Features**:
+
+- **Individual Failure Tracking**: Each validation step tracked separately
+- **Timeout Protection**: Prevents hanging on network issues or infinite loops
+- **Graceful Fallback**: Continues validation when development server unavailable
+- **Clear Error Messages**: Specific recovery instructions for common failure scenarios
+- **Performance Optimized**: Completes in under 90 seconds with early termination on critical failures
 
 ### IDE Integration
 

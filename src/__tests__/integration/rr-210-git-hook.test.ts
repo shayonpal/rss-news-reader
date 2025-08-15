@@ -8,6 +8,12 @@ import {
   chmodSync,
 } from "fs";
 import path from "path";
+import {
+  ERROR_MESSAGES,
+  VALIDATION_COMMANDS,
+  TIMEOUT_DURATIONS,
+  EXIT_CODES,
+} from "../../lib/constants/validation-commands";
 
 // Mock file system for testing hook integration
 vi.mock("fs", () => ({
@@ -110,10 +116,10 @@ exit 0`;
   describe("Workflow Integration", () => {
     it("should execute all pre-commit commands in sequence", () => {
       const commands = [
-        "npm run type-check",
-        "npm run lint",
-        "npm run format:check",
-        "npm run docs:validate",
+        VALIDATION_COMMANDS.TYPE_CHECK,
+        VALIDATION_COMMANDS.LINT,
+        VALIDATION_COMMANDS.FORMAT,
+        VALIDATION_COMMANDS.DOCS_VALIDATE,
       ];
 
       // Mock successful execution for all commands
@@ -150,10 +156,10 @@ exit 0`;
 
     it("should stop execution on first validation failure", () => {
       const commands = [
-        "npm run type-check",
-        "npm run lint",
-        "npm run format:check",
-        "npm run docs:validate",
+        VALIDATION_COMMANDS.TYPE_CHECK,
+        VALIDATION_COMMANDS.LINT,
+        VALIDATION_COMMANDS.FORMAT,
+        VALIDATION_COMMANDS.DOCS_VALIDATE,
       ];
 
       // Mock type-check success, lint failure
@@ -185,8 +191,7 @@ exit 0`;
       // Mock package.json with existing pre-commit script
       const mockPackageJson = {
         scripts: {
-          "pre-commit":
-            "npm run type-check && npm run lint && npm run format:check",
+          "pre-commit": `${VALIDATION_COMMANDS.TYPE_CHECK} && ${VALIDATION_COMMANDS.LINT} && ${VALIDATION_COMMANDS.FORMAT}`,
           "docs:validate": "node scripts/validate-openapi-coverage.js",
         },
       };
@@ -201,23 +206,23 @@ exit 0`;
       expect(packageContent.scripts["docs:validate"]).toBeDefined();
 
       // Hook should call both existing pre-commit and new docs:validate
-      execSync("npm run pre-commit");
-      execSync("npm run docs:validate");
+      execSync(VALIDATION_COMMANDS.PRE_COMMIT);
+      execSync(VALIDATION_COMMANDS.DOCS_VALIDATE);
 
-      expect(execSync).toHaveBeenCalledWith("npm run pre-commit");
-      expect(execSync).toHaveBeenCalledWith("npm run docs:validate");
+      expect(execSync).toHaveBeenCalledWith(VALIDATION_COMMANDS.PRE_COMMIT);
+      expect(execSync).toHaveBeenCalledWith(VALIDATION_COMMANDS.DOCS_VALIDATE);
     });
   });
 
   describe("OpenAPI Validation Integration", () => {
     it("should call npm run docs:validate and handle success", () => {
-      vi.mocked(execSync).mockReturnValue(
-        "🎉 SUCCESS: All endpoints are properly documented!"
-      );
+      vi.mocked(execSync).mockReturnValue(ERROR_MESSAGES.SUCCESS);
 
-      const result = execSync("npm run docs:validate", { encoding: "utf8" });
+      const result = execSync(VALIDATION_COMMANDS.DOCS_VALIDATE, {
+        encoding: "utf8",
+      });
 
-      expect(execSync).toHaveBeenCalledWith("npm run docs:validate", {
+      expect(execSync).toHaveBeenCalledWith(VALIDATION_COMMANDS.DOCS_VALIDATE, {
         encoding: "utf8",
       });
       expect(result.toString()).toContain(
@@ -236,7 +241,7 @@ exit 0`;
 
       const executeValidation = () => {
         try {
-          execSync("npm run docs:validate", { encoding: "utf8" });
+          execSync(VALIDATION_COMMANDS.DOCS_VALIDATE, { encoding: "utf8" });
           return 0;
         } catch (error: any) {
           return error.status || 1;
@@ -249,16 +254,14 @@ exit 0`;
 
     it("should handle server unavailable gracefully", () => {
       vi.mocked(execSync).mockImplementation(() => {
-        const error = new Error(
-          "Error: Could not connect to development server"
-        ) as any;
+        const error = new Error(ERROR_MESSAGES.SERVER_UNAVAILABLE) as any;
         error.status = 1;
         throw error;
       });
 
       const executeValidation = () => {
         try {
-          execSync("npm run docs:validate");
+          execSync(VALIDATION_COMMANDS.DOCS_VALIDATE);
           return 0;
         } catch (error: any) {
           if (
@@ -301,25 +304,24 @@ exit 0`;
     it("should provide clear error messages for each validation type", () => {
       const errorScenarios = [
         {
-          command: "npm run type-check",
-          error: "Type check failed: TS2304: Cannot find name 'unknown'",
-          expectedMessage: "Type check failed",
+          command: VALIDATION_COMMANDS.TYPE_CHECK,
+          error: ERROR_MESSAGES.TYPE_CHECK,
+          expectedMessage: ERROR_MESSAGES.TYPE_CHECK_PATTERN,
         },
         {
-          command: "npm run lint",
-          error:
-            "Lint check failed: 'unused-variable' is defined but never used",
-          expectedMessage: "Lint check failed",
+          command: VALIDATION_COMMANDS.LINT,
+          error: ERROR_MESSAGES.LINT,
+          expectedMessage: ERROR_MESSAGES.LINT_PATTERN,
         },
         {
-          command: "npm run format:check",
-          error: "Format check failed: Code style issues found",
-          expectedMessage: "Format check failed",
+          command: VALIDATION_COMMANDS.FORMAT,
+          error: ERROR_MESSAGES.FORMAT,
+          expectedMessage: ERROR_MESSAGES.FORMAT_PATTERN,
         },
         {
-          command: "npm run docs:validate",
-          error: "❌ OpenAPI documentation validation failed",
-          expectedMessage: "OpenAPI documentation validation failed",
+          command: VALIDATION_COMMANDS.DOCS_VALIDATE,
+          error: ERROR_MESSAGES.OPENAPI,
+          expectedMessage: ERROR_MESSAGES.OPENAPI_PATTERN,
         },
       ];
 
@@ -347,7 +349,7 @@ exit 0`;
 
     it("should handle permission errors gracefully", () => {
       vi.mocked(execSync).mockImplementation(() => {
-        const error = new Error("EACCES: permission denied") as any;
+        const error = new Error(ERROR_MESSAGES.PERMISSION_DENIED) as any;
         error.code = "EACCES";
         error.status = 126;
         throw error;
@@ -355,7 +357,7 @@ exit 0`;
 
       const executeHook = () => {
         try {
-          execSync("npm run docs:validate");
+          execSync(VALIDATION_COMMANDS.DOCS_VALIDATE);
           return 0;
         } catch (error: any) {
           if (error.code === "EACCES") {
@@ -367,12 +369,12 @@ exit 0`;
       };
 
       const exitCode = executeHook();
-      expect(exitCode).toBe(126);
+      expect(exitCode).toBe(EXIT_CODES.PERMISSION_ERROR);
     });
 
     it("should handle network timeouts for OpenAPI validation", () => {
       vi.mocked(execSync).mockImplementation(() => {
-        const error = new Error("ETIMEDOUT: connection timed out") as any;
+        const error = new Error(ERROR_MESSAGES.NETWORK_TIMEOUT) as any;
         error.code = "ETIMEDOUT";
         error.status = 1;
         throw error;
@@ -380,7 +382,9 @@ exit 0`;
 
       const executeValidation = () => {
         try {
-          execSync("npm run docs:validate", { timeout: 30000 });
+          execSync(VALIDATION_COMMANDS.DOCS_VALIDATE, {
+            timeout: TIMEOUT_DURATIONS.OPENAPI_VALIDATION,
+          });
           return 0;
         } catch (error: any) {
           if (error.code === "ETIMEDOUT") {
@@ -497,13 +501,13 @@ exit 0`;
         ).toString();
 
         // Always run these for any changes
-        execSync("npm run type-check");
-        execSync("npm run lint");
-        execSync("npm run format:check");
+        execSync(VALIDATION_COMMANDS.TYPE_CHECK);
+        execSync(VALIDATION_COMMANDS.LINT);
+        execSync(VALIDATION_COMMANDS.FORMAT);
 
         // Run OpenAPI validation if API files changed
         if (changedFiles.includes("api") || changedFiles.includes("route.ts")) {
-          execSync("npm run docs:validate");
+          execSync(VALIDATION_COMMANDS.DOCS_VALIDATE);
         }
 
         return 0;
@@ -520,16 +524,16 @@ exit 0`;
         const skipLint = process.env.SKIP_LINT === "true";
 
         try {
-          execSync("npm run type-check");
+          execSync(VALIDATION_COMMANDS.TYPE_CHECK);
 
           if (!skipLint) {
-            execSync("npm run lint");
+            execSync(VALIDATION_COMMANDS.LINT);
           }
 
-          execSync("npm run format:check");
+          execSync(VALIDATION_COMMANDS.FORMAT);
 
           if (!skipOpenAPI) {
-            execSync("npm run docs:validate");
+            execSync(VALIDATION_COMMANDS.DOCS_VALIDATE);
           }
 
           return 0;

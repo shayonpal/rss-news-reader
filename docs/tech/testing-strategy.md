@@ -581,6 +581,33 @@ This testing strategy document is updated with:
 
 ## Quality Gates
 
+### Git Pre-commit Hook (RR-210)
+
+**Automated Quality Enforcement**: Every commit automatically triggers comprehensive validation through the git pre-commit hook:
+
+**Pre-commit Validation Steps** (individual failure tracking with timeouts):
+
+1. **Type Check** (30s timeout): `npm run type-check` - TypeScript compilation validation
+2. **Lint Check** (30s timeout): `npm run lint` - ESLint code quality assessment
+3. **Format Check** (30s timeout): `npm run format:check` - Prettier formatting validation
+4. **OpenAPI Documentation** (60s timeout): `npm run docs:validate` - Ensures 100% API documentation coverage (45/45 endpoints)
+
+**Hook Features:**
+
+- **Individual Failure Tracking**: Each validation step tracked separately for precise error reporting
+- **Graceful Fallback**: Continues when development server unavailable, warns about OpenAPI validation skip
+- **Clear Error Messages**: Specific recovery instructions for common failure scenarios
+- **Performance Optimized**: Completes in under 90 seconds with early termination on critical failures
+- **Non-destructive**: Allows `--no-verify` bypass for emergency situations
+
+**Hook Integration Test Coverage**: Comprehensive test suite at `src/__tests__/integration/rr-210-git-hook.test.ts` with 19 test scenarios covering:
+
+- Hook installation and permissions
+- Individual validation step failures
+- Timeout handling and network issues
+- Error message formatting and recovery guidance
+- Integration with existing npm run pre-commit workflow
+
 ### Pre-Deployment Requirements
 
 **All Tests Must Pass:**
@@ -588,6 +615,14 @@ This testing strategy document is updated with:
 - Unit tests: 100% passing
 - Integration tests: 100% passing
 - E2E tests: 95% passing (allowing for flaky network conditions)
+- Pre-commit validation: 100% passing (enforced automatically)
+
+**Code Quality Thresholds:**
+
+- TypeScript compilation: 100% success (enforced by pre-commit hook)
+- ESLint validation: 100% success (enforced by pre-commit hook)
+- Code formatting: 100% Prettier compliance (validated by pre-commit hook)
+- API documentation: 100% OpenAPI coverage - all 45 endpoints documented (enforced by pre-commit hook)
 
 **Performance Thresholds:**
 

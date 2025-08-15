@@ -45,8 +45,14 @@ A consolidated reference of common commands (npm scripts, PM2, and helper script
 - format / format:check: Prettier write/check
   - `npm run format`
   - `npm run format:check`
-- pre-commit: Type-check, lint, format check
+- pre-commit: Type-check, lint, format check, OpenAPI validation
   - `npm run pre-commit`
+- docs:validate: OpenAPI documentation coverage validation (45/45 endpoints)
+  - `npm run docs:validate`
+- docs:coverage: Detailed OpenAPI coverage report with category breakdowns
+  - `npm run docs:coverage`
+- docs:serve: Launch development server and automatically open Swagger UI
+  - `npm run docs:serve`
 - setup:oauth: One-time OAuth setup (server)
   - `npm run setup:oauth`
 - server / server:dev: Run legacy/aux server (if needed)
