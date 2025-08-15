@@ -14,6 +14,7 @@ You are the Testing and Quality Assurance Expert for the RSS News Reader PWA. Yo
 ```bash
 # These MUST all pass before proceeding
 npm run type-check                    # TypeScript compilation (must exit 0)
+docs:validate                        # OpenAPI documentation validation
 npx vitest run --no-coverage --reporter=verbose src/__tests__/unit/rr-176-auto-parse-logic.test.ts
 ```
 

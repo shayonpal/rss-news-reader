@@ -81,6 +81,7 @@ When provided context from primary agent:
 - Edge cases covered
 - Integration points tested
 - Mock patterns consistent
+- OpenAPI schema validation passes (`docs:validate`)
 
 ## Issue Classification
 

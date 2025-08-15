@@ -302,9 +302,10 @@ Run comprehensive checks:
 1. Full test suite: `npm test` (should complete in <20s)
 2. Type check: `npm run type-check`
 3. Linter: `npm run lint`
-4. Build verification: `npm run build`
-5. E2E tests (if UI): `npx playwright test`
-6. Performance check: `node scripts/check-performance-regression.js`
+4. OpenAPI documentation: `docs:validate`
+5. Build verification: `npm run build`
+6. E2E tests (if UI): `npx playwright test`
+7. Performance check: `node scripts/check-performance-regression.js`
 
 ## 5. Update Linear
 

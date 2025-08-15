@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Users endpoints: 2/2 (100%) - User timezone management
     - Logs endpoints: 1/1 (100%) - Inoreader API call logging
     - Insomnia endpoints: 1/1 (100%) - API export functionality
-  - **Documentation Files Updated**: 
+  - **Documentation Files Updated**:
     - `src/lib/openapi/registry.ts` - Complete endpoint documentation with Zod schemas
     - `scripts/validate-openapi-coverage.js` - Enhanced validation for 45 endpoints with performance optimization
     - `package.json` - Added documentation workflow scripts

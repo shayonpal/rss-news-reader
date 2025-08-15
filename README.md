@@ -655,7 +655,7 @@ src/
   - **Try it out functionality**: Test all endpoints directly in the browser with operationId support
   - **Real-time validation**: OpenAPI spec validates in <2 seconds
   - **Complete coverage**: Health (6), Sync (7), Articles (4), Tags (5), Inoreader (8), Auth (1), Test (7), Analytics (1), Feeds (2), Users (2), Logs (1), Insomnia (1)
-- **🔧 Developer Tools**: 
+- **🔧 Developer Tools**:
   - **Insomnia Export**: One-click export via "Export to Insomnia" button in Swagger UI
   - **Direct Export Endpoint**: `/api/insomnia.json` for programmatic access to Insomnia v4 collection format
   - **OpenAPI Spec**: `/api-docs/openapi.json` for integration with other tools

@@ -1,1 +1,0 @@
-Test commit for RR-210 hook validation
