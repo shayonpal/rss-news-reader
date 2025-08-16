@@ -193,7 +193,7 @@ const [filtersReady, setFiltersReady] = useState(false);
 useEffect(() => {
   const initializeFilters = async () => {
     await parseFiltersFromUrl(); // Parse URL parameters first
-    setFiltersReady(true);       // Signal that filters are ready
+    setFiltersReady(true); // Signal that filters are ready
   };
   initializeFilters();
 }, []);
@@ -205,12 +205,12 @@ useEffect(() => {
 // src/lib/stores/article-store.ts
 class ArticleStore {
   private loadSeq = 0;
-  
+
   async loadArticles() {
     const currentSeq = ++this.loadSeq; // Increment sequence
-    
+
     const data = await api.getArticles();
-    
+
     // Only apply if this is still the current request
     if (currentSeq === this.loadSeq) {
       this.articles = data;
@@ -226,11 +226,11 @@ class ArticleStore {
 // src/components/articles/article-list.tsx
 export function ArticleList() {
   const { filtersReady } = usePageState();
-  
+
   if (!filtersReady) {
     return <LoadingState />; // Prevent loading until filters ready
   }
-  
+
   return <ArticleListContent />;
 }
 ```

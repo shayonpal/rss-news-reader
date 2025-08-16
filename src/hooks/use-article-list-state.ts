@@ -77,7 +77,9 @@ export function useArticleListState({
 
     // RR-27 Fix: Skip clearing if we're navigating to an article
     if (navigatingToArticle) {
-      console.log(`⛳ RR-27: Skipping preservation clear due to article navigation intent`);
+      console.log(
+        `⛳ RR-27: Skipping preservation clear due to article navigation intent`
+      );
       setNavigatingToArticle(false); // Reset the flag
     } else {
       // Only clear if the CHANGED dimension had a previous value (prevents first-mount clearing)
@@ -121,7 +123,8 @@ export function useArticleListState({
       else {
         const state = articleListStateManager.getListState();
         if (state && !articleListStateManager.isStateExpired()) {
-          const preserved = articleListStateManager.getSessionPreservedArticles();
+          const preserved =
+            articleListStateManager.getSessionPreservedArticles();
           sessionPreservedArticles.current = new Set(preserved);
         } else {
           // If no state exists (was cleared), ensure our ref is also cleared

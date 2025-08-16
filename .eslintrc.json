@@ -8,5 +8,19 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/__tests__/**/*.ts",
+        "src/__tests__/**/*.tsx",
+        "**/*.test.ts",
+        "**/*.test.tsx"
+      ],
+      "rules": {
+        "@next/next/no-assign-module-variable": "off",
+        "@next/next/no-img-element": "off"
+      }
+    }
+  ]
 }

@@ -173,17 +173,17 @@ export class ArticleListStateManager {
   getPreservedArticleIds(): Set<string> {
     const state = this.getListState();
     if (!state) return new Set();
-    
+
     return new Set([
       ...(state.autoReadArticles || []),
-      ...(state.manualReadArticles || [])
+      ...(state.manualReadArticles || []),
     ]);
   }
 
   getAutoReadArticleIds(): Set<string> {
     const state = this.getListState();
     if (!state) return new Set();
-    
+
     return new Set(state.autoReadArticles || []);
   }
 

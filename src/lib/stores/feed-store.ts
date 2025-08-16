@@ -3,6 +3,9 @@ import { supabase } from "@/lib/db/supabase";
 import type { Feed, Folder, FeedWithUnreadCount } from "@/types";
 import type { Database } from "@/lib/db/types";
 import { debugLog, debugTiming } from "@/lib/utils/debug";
+// RR-197: localStorage optimization imports
+import { articleCounterManager } from "@/lib/utils/article-counter-manager";
+import { localStorageQueue } from "@/lib/utils/localstorage-queue";
 
 interface FeedStoreState {
   // Feed data
@@ -57,7 +60,13 @@ interface FeedStoreState {
   // RR-171 additions
   applySidebarCounts: (feedCounts: Array<[string, number]>) => void;
   setSkeletonLoading: (loading: boolean) => void;
+
+  // RR-197 additions
+  applyLocalStorageCounterUpdates: () => void;
 }
+
+// RR-197: Debounced counter updates to prevent race conditions
+let updateCounterTimeout: NodeJS.Timeout | null = null;
 
 export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Initial state
@@ -657,6 +666,70 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       feedsWithCounts: updatedFeedsWithCounts,
       totalUnreadCount: newTotalUnread,
     });
+  },
+
+  // RR-197: Apply localStorage-based counter updates for instant UI feedback
+  applyLocalStorageCounterUpdates: () => {
+    // RR-197 Critical Fix: Debounced updates to prevent race conditions
+    if (updateCounterTimeout) {
+      clearTimeout(updateCounterTimeout);
+    }
+
+    updateCounterTimeout = setTimeout(() => {
+      try {
+        // Get counter updates from localStorage
+        const counterUpdates =
+          articleCounterManager.updateCountersFromLocalStorage();
+
+        if (counterUpdates.length === 0) {
+          console.log(`[RR-197] No new counter updates to apply`);
+          return;
+        }
+
+        const { feedsWithCounts, totalUnreadCount } = get();
+        const updatedFeedsWithCounts = new Map(feedsWithCounts);
+        let newTotalUnread = totalUnreadCount;
+
+        // Apply localStorage deltas to current counts
+        counterUpdates.forEach(({ feedId, deltaUnread }) => {
+          const feedWithCount = updatedFeedsWithCounts.get(feedId);
+          if (feedWithCount) {
+            const newUnreadCount = Math.max(
+              0,
+              feedWithCount.unreadCount + deltaUnread
+            );
+            updatedFeedsWithCounts.set(feedId, {
+              ...feedWithCount,
+              unreadCount: newUnreadCount,
+            });
+
+            // Update total
+            newTotalUnread += deltaUnread;
+          }
+        });
+
+        // Apply the updates to the store for immediate UI feedback
+        set({
+          feedsWithCounts: updatedFeedsWithCounts,
+          totalUnreadCount: Math.max(0, newTotalUnread),
+        });
+
+        console.log(
+          `🚀 [RR-197] Applied localStorage counter updates for ${counterUpdates.length} feeds:`,
+          counterUpdates
+            .map(
+              (u) =>
+                `${u.feedId}: ${u.deltaUnread > 0 ? "+" : ""}${u.deltaUnread}`
+            )
+            .join(", ")
+        );
+      } catch (error) {
+        console.error(
+          "[RR-197] Failed to apply localStorage counter updates:",
+          error
+        );
+      }
+    }, 50); // 50ms debounce to prevent rapid successive calls
   },
 
   // Set skeleton loading state (RR-171)

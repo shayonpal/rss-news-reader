@@ -287,7 +287,7 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
           undefined
         );
       });
-      
+
       // Must also update sessionStorage as fallback
       await waitFor(() => {
         expect(sessionStorage.getItem("articleListFilter")).toBe("tech-feed");
@@ -418,14 +418,14 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
     it("[CRITICAL FIX REQUIRED] ArticlePage back button must check sessionStorage and route to /?feed=X", async () => {
       // Setup: User has active feed filter
       sessionStorage.setItem("articleListFilter", "technology-feed-123");
-      
+
       // User is on article page
       render(<ArticlePage />);
-      
+
       // Find back button and click it
       const backButton = screen.getByRole("button", { name: /back/i });
       fireEvent.click(backButton);
-      
+
       // CRITICAL: Must navigate to /?feed=technology-feed-123 NOT just /
       expect(mockPush).toHaveBeenCalledWith("/?feed=technology-feed-123");
       expect(mockPush).not.toHaveBeenCalledWith("/");
@@ -435,14 +435,14 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
       // Setup: User has active tag filter
       sessionStorage.setItem("articleListTagFilter", "important");
       sessionStorage.removeItem("articleListFilter"); // No feed filter
-      
+
       // User is on article page
       render(<ArticlePage />);
-      
+
       // Find back button and click it
       const backButton = screen.getByRole("button", { name: /back/i });
       fireEvent.click(backButton);
-      
+
       // CRITICAL: Must navigate to /?tag=important NOT just /
       expect(mockPush).toHaveBeenCalledWith("/?tag=important");
       expect(mockPush).not.toHaveBeenCalledWith("/");
@@ -452,14 +452,14 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
       // Setup: User has both feed and tag filters
       sessionStorage.setItem("articleListFilter", "tech-feed");
       sessionStorage.setItem("articleListTagFilter", "important");
-      
-      // User is on article page  
+
+      // User is on article page
       render(<ArticlePage />);
-      
+
       // Find back button and click it
       const backButton = screen.getByRole("button", { name: /back/i });
       fireEvent.click(backButton);
-      
+
       // CRITICAL: Must navigate with both parameters
       expect(mockPush).toHaveBeenCalledWith("/?feed=tech-feed&tag=important");
     });
@@ -652,9 +652,9 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
       // GIVEN: User on filtered feed view (Technology)
       mockSearchParams = new URLSearchParams("?feed=technology-feed-id");
       (useSearchParams as any).mockReturnValue(mockSearchParams);
-      
+
       const { rerender } = render(<HomePage />);
-      
+
       // Verify initial state from URL
       await waitFor(() => {
         expect(mockArticleStore.loadArticles).toHaveBeenCalledWith(
@@ -663,18 +663,20 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
           undefined
         );
       });
-      
+
       // WHEN: Navigate to article
       mockPush("/article/1");
       rerender(<ArticlePage />);
-      
+
       // Press back button
       const backButton = screen.getByRole("button", { name: /back/i });
       fireEvent.click(backButton);
-      
+
       // THEN: URL has feed parameter, Articles filtered, SessionStorage preserved
       expect(mockPush).toHaveBeenCalledWith("/?feed=technology-feed-id");
-      expect(sessionStorage.getItem("articleListFilter")).toBe("technology-feed-id");
+      expect(sessionStorage.getItem("articleListFilter")).toBe(
+        "technology-feed-id"
+      );
     });
 
     it("Complete flow: Apply filter → Read article → Back → Filter preserved", async () => {
@@ -717,24 +719,26 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
           shouldShowHamburger: true,
         }),
       }));
-      
+
       sessionStorage.setItem("articleListFilter", "technology-feed-id");
       mockSearchParams = new URLSearchParams("?feed=technology-feed-id");
       (useSearchParams as any).mockReturnValue(mockSearchParams);
-      
+
       const { rerender } = render(<HomePage />);
-      
+
       // Navigate to article
       mockPush("/article/1");
       rerender(<ArticlePage />);
-      
+
       // WHEN: Swipe back from article (simulated via back navigation)
       const backButton = screen.getByRole("button", { name: /back/i });
       fireEvent.click(backButton);
-      
+
       // THEN: Filter preserved, Sidebar state correct on reopen
       expect(mockPush).toHaveBeenCalledWith("/?feed=technology-feed-id");
-      expect(sessionStorage.getItem("articleListFilter")).toBe("technology-feed-id");
+      expect(sessionStorage.getItem("articleListFilter")).toBe(
+        "technology-feed-id"
+      );
     });
 
     it("Mobile PWA flow: Swipe gestures with filter preservation", async () => {
@@ -823,41 +827,43 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
     it("[MUST FIX] ArticlePage line 137 must NOT hardcode router.push('/')", () => {
       // This test will fail until src/app/article/[id]/page.tsx line 137 is fixed
       sessionStorage.setItem("articleListFilter", "my-feed-123");
-      
+
       render(<ArticlePage />);
-      
+
       // Get the back button callback
       const backButton = screen.getByRole("button", { name: /back/i });
       fireEvent.click(backButton);
-      
+
       // Must NOT call router.push("/")
       expect(mockPush).not.toHaveBeenCalledWith("/");
-      
+
       // Must call with filter parameter
       expect(mockPush).toHaveBeenCalledWith("/?feed=my-feed-123");
     });
-    
+
     it("[MUST IMPLEMENT] HomePage must call useSearchParams() hook", () => {
       // This ensures HomePage is using the Next.js hook
       render(<HomePage />);
-      
+
       // useSearchParams must have been called at least once
       expect(useSearchParams).toHaveBeenCalled();
     });
-    
+
     it("[MUST IMPLEMENT] HomePage must sync URL params to sessionStorage on mount", async () => {
       // Clear sessionStorage
       sessionStorage.clear();
-      
+
       // Set URL with filter
       mockSearchParams = new URLSearchParams("?feed=from-url-123");
       (useSearchParams as any).mockReturnValue(mockSearchParams);
-      
+
       render(<HomePage />);
-      
+
       // SessionStorage must be updated from URL
       await waitFor(() => {
-        expect(sessionStorage.getItem("articleListFilter")).toBe("from-url-123");
+        expect(sessionStorage.getItem("articleListFilter")).toBe(
+          "from-url-123"
+        );
       });
     });
   });
@@ -949,10 +955,12 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
           undefined
         );
       });
-      
+
       // SessionStorage should be updated to match URL
       await waitFor(() => {
-        expect(sessionStorage.getItem("articleListFilter")).toBe("business-feed");
+        expect(sessionStorage.getItem("articleListFilter")).toBe(
+          "business-feed"
+        );
       });
     });
 
@@ -1084,13 +1092,13 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
 
 /**
  * Implementation Checklist for RR-216:
- * 
+ *
  * 1. ✗ src/app/article/[id]/page.tsx line 137:
  *    - MUST check sessionStorage for filters before navigation
  *    - Build URL with parameters: /?feed=X or /?tag=Y or both
- *    - Replace: router.push("/") 
+ *    - Replace: router.push("/")
  *    - With: router.push(buildReturnUrl())
- *    
+ *
  *    Example implementation:
  *    ```typescript
  *    onBack={() => {
@@ -1104,12 +1112,12 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
  *      router.push(url);
  *    }}
  *    ```
- * 
+ *
  * 2. ✗ src/app/page.tsx:
  *    - MUST import useSearchParams from 'next/navigation'
  *    - Parse URL parameters on mount
  *    - Sync to sessionStorage for persistence
- *    
+ *
  *    Example:
  *    ```typescript
  *    const searchParams = useSearchParams();
@@ -1126,10 +1134,10 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
  *      }
  *    }, [searchParams]);
  *    ```
- * 
+ *
  * 3. ✗ Filter selection handlers:
  *    - Use router.replace() not push() to avoid history pollution
  *    - Update both URL and sessionStorage
- * 
+ *
  * These tests are the CONTRACT. The implementation MUST change to pass them.
  */

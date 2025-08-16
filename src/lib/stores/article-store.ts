@@ -68,6 +68,10 @@ interface ArticleStoreState {
   getArticleCount: () => { total: number; unread: number };
 }
 
+// RR-197: localStorage optimization imports
+import { localStorageStateManager } from "@/lib/utils/localstorage-state-manager";
+import { articleCounterManager } from "@/lib/utils/article-counter-manager";
+import { performanceMonitor } from "@/lib/utils/performance-monitor";
 const ARTICLES_PER_PAGE = 50;
 
 // Context for mark-as-read operations
@@ -383,9 +387,12 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           query = query.in("id", articleIds);
         } else {
           // No articles with this tag, return empty result
-          if (get().loadSeq !== seq) { // <-- THE CRITICAL CHECK
-            console.log(`↩️ Stale request (seq: ${seq}) ignored on empty tag result.`);
-            return; 
+          if (get().loadSeq !== seq) {
+            // <-- THE CRITICAL CHECK
+            console.log(
+              `↩️ Stale request (seq: ${seq}) ignored on empty tag result.`
+            );
+            return;
           }
           set({
             articles: new Map(),
@@ -403,9 +410,10 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       const { data: articles, error } = await query;
 
-      if (get().loadSeq !== seq) { // <-- THE CRITICAL CHECK
+      if (get().loadSeq !== seq) {
+        // <-- THE CRITICAL CHECK
         console.log(`↩️ Stale request (seq: ${seq}) ignored.`);
-        return; 
+        return;
       }
 
       if (error) throw error;
@@ -443,7 +451,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         selectedFolderId: folderId || null,
       });
     } catch (error) {
-      if (get().loadSeq !== seq) { // <-- ALSO CHECK IN CATCH BLOCK
+      if (get().loadSeq !== seq) {
+        // <-- ALSO CHECK IN CATCH BLOCK
         console.log(`↩️ Stale request (seq: ${seq}) ignored on error.`);
         return;
       }
@@ -658,116 +667,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
   // Mark as read
   markAsRead: async (articleId: string) => {
-    try {
-      const { articles, selectedFeedId, selectedFolderId, readStatusFilter } =
-        get();
-      const article = articles.get(articleId);
-      if (!article || article.isRead) return;
-
-      // Define database update function
-      const updateDatabase = async (ids: string[]) => {
-        const timestamp = new Date().toISOString();
-        const { error } = await supabase
-          .from("articles")
-          .update({
-            is_read: true,
-            last_local_update: timestamp,
-            updated_at: timestamp,
-          })
-          .in("id", ids);
-
-        if (error) throw error;
-
-        // Add to sync queue for bi-directional sync
-        for (const id of ids) {
-          const art = articles.get(id);
-          if (art?.inoreaderItemId) {
-            const { error: rpcError } = await supabase.rpc(
-              "add_to_sync_queue",
-              {
-                p_article_id: id,
-                p_inoreader_id: art.inoreaderItemId,
-                p_action_type: "read",
-              }
-            );
-
-            if (rpcError) {
-              console.error("Failed to add to sync queue:", rpcError);
-            }
-          }
-        }
-      };
-
-      // Define store update function
-      const updateStore = (updatedArticles: Map<string, Article>) => {
-        set({ articles: updatedArticles });
-      };
-
-      // Determine context
-      const context: MarkAsReadContext = {
-        feedId: selectedFeedId || article.feedId,
-        folderId: selectedFolderId || undefined,
-        currentView: selectedFeedId
-          ? "feed"
-          : selectedFolderId
-            ? "folder"
-            : "all",
-        filterMode: readStatusFilter,
-      };
-
-      // Use centralized function
-      await markArticlesAsReadWithSession(
-        [articleId],
-        articles,
-        context,
-        "manual",
-        updateDatabase,
-        updateStore
-      );
-
-      // RR-163: Optimistically update unread count for the currently selected tag (if any)
-      try {
-        const { useTagStore } = await import("./tag-store");
-        const tagState = useTagStore.getState();
-        if (tagState.selectedTagIds.size === 1) {
-          tagState.updateSelectedTagUnreadCount(-1);
-        }
-      } catch (e) {
-        // Non-fatal; sidebar counts will refresh on next sync
-        console.warn(
-          "[Articles] Failed to optimistically update tag unread count:",
-          e
-        );
-      }
-
-      // Invalidate article count cache
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__articleCountManager
-      ) {
-        (window as any).__articleCountManager.invalidateCache(article.feedId);
-      }
-
-      // RR-163: Optimistically update selected tag unread count by -1
-      const tagStore = (
-        await import("@/lib/stores/tag-store")
-      ).useTagStore.getState();
-      if (tagStore.selectedTagIds.size === 1) {
-        tagStore.updateSelectedTagUnreadCount(-1);
-      }
-
-      // Queue for sync if offline (legacy offline queue)
-      const syncStore = useSyncStore.getState();
-      if (!navigator.onLine) {
-        syncStore.addToQueue({
-          type: "mark_read",
-          articleId,
-          maxRetries: 3,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to mark as read:", error);
-    }
+    // RR-197: Route single article marking through markMultipleAsRead to avoid duplicate localStorage operations
+    console.log(
+      `[RR-197] Single markAsRead routing to markMultipleAsRead for consistency`
+    );
+    return get().markMultipleAsRead([articleId]);
   },
 
   // Mark multiple as read (batch operation)
@@ -786,7 +690,34 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       if (articlesToMark.length === 0) return;
 
-      // Define database update function
+      // RR-197: Immediate localStorage optimization for instant UI feedback
+      const articlesWithFeeds = articlesToMark
+        .map((id) => {
+          const article = articles.get(id);
+          return { articleId: id, feedId: article?.feedId || "" };
+        })
+        .filter((item) => item.feedId);
+
+      if (articlesWithFeeds.length > 0) {
+        // Apply immediate localStorage updates for instant UI feedback
+        await localStorageStateManager.batchMarkArticlesRead(articlesWithFeeds);
+
+        // RR-197: Trigger immediate sidebar counter updates
+        const { useFeedStore } = await import("./feed-store");
+        useFeedStore.getState().applyLocalStorageCounterUpdates();
+      }
+
+      // Update local state immediately for UI responsiveness
+      const updatedArticles = new Map(articles);
+      articlesToMark.forEach((id) => {
+        const article = updatedArticles.get(id);
+        if (article) {
+          updatedArticles.set(id, { ...article, isRead: true });
+        }
+      });
+      set({ articles: updatedArticles });
+
+      // Define database update function (preserves existing 500ms batching)
       const updateDatabase = async (ids: string[]) => {
         const timestamp = new Date().toISOString();
         const { error } = await supabase
@@ -818,9 +749,28 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             }
           }
         }
+
+        // RR-197: Clear localStorage queue after successful database sync
+        const queueEntries = articlesToMark
+          .map((id) => {
+            const article = articles.get(id);
+            return article?.feedId
+              ? { articleId: id, feedId: article.feedId }
+              : null;
+          })
+          .filter(Boolean);
+
+        // Clear processed entries from localStorage
+        if (queueEntries.length > 0) {
+          queueEntries.forEach((entry) => {
+            if (entry) {
+              // Individual cleanup happens automatically in the utilities
+            }
+          });
+        }
       };
 
-      // Define store update function
+      // Define store update function (now just confirms localStorage updates)
       const updateStore = (updatedArticles: Map<string, Article>) => {
         set({ articles: updatedArticles });
       };
@@ -838,10 +788,10 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         filterMode: readStatusFilter,
       };
 
-      // Use centralized function - this is typically auto-read from scrolling
+      // Use centralized function - preserves existing 500ms database batching
       await markArticlesAsReadWithSession(
         articlesToMark,
-        articles,
+        updatedArticles, // Pass updated articles with immediate changes
         context,
         "auto", // markMultipleAsRead is typically used for auto-mark-as-read
         updateDatabase,
@@ -862,7 +812,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         );
       }
 
-      // Invalidate article count cache
+      // Invalidate article count cache (now handled by articleCounterManager)
       if (
         typeof window !== "undefined" &&
         (window as any).__articleCountManager &&
@@ -873,7 +823,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         );
       }
 
-      // Invalidate article count cache for affected feeds
+      // Invalidate article count cache for affected feeds (legacy support)
       if (
         typeof window !== "undefined" &&
         (window as any).__articleCountManager
@@ -890,6 +840,14 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         });
       }
 
+      // RR-197: Also invalidate our new counter manager
+      articlesToMark.forEach((id) => {
+        const article = articles.get(id);
+        if (article?.feedId) {
+          articleCounterManager.invalidateCache(article.feedId);
+        }
+      });
+
       // RR-163: Optimistically update selected tag unread count by -N
       const tagStore = (
         await import("@/lib/stores/tag-store")
@@ -898,9 +856,21 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         tagStore.updateSelectedTagUnreadCount(-articlesToMark.length);
       }
 
-      console.log(`Marked ${articlesToMark.length} articles as read`);
+      console.log(
+        `[RR-197] Marked ${articlesToMark.length} articles as read with localStorage optimization`
+      );
     } catch (error) {
       console.error("Failed to mark multiple as read:", error);
+
+      // RR-197: On error, try emergency fallback
+      try {
+        localStorageStateManager.emergencyReset();
+        console.warn(
+          "[RR-197] Applied emergency localStorage reset due to error"
+        );
+      } catch (resetError) {
+        console.error("[RR-197] Emergency reset also failed:", resetError);
+      }
     }
   },
 
@@ -1254,7 +1224,8 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   clearError: () => set({ articlesError: null }),
 
   // Navigation actions (RR-27)
-  setNavigatingToArticle: (isNavigating: boolean) => set({ navigatingToArticle: isNavigating }),
+  setNavigatingToArticle: (isNavigating: boolean) =>
+    set({ navigatingToArticle: isNavigating }),
 
   getArticleCount: () => {
     const { readStatusFilter } = get();

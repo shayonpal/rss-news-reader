@@ -56,6 +56,7 @@ Use Serena MCP tools for intelligent code navigation instead of reading entire f
 - `mcp__serena__find_referencing_symbols <component>` - Find where components are used across the app
 
 **When to Use Serena Tools:**
+
 - Analyzing existing UI patterns before suggesting improvements
 - Finding component implementations without reading full files
 - Understanding component usage and dependencies

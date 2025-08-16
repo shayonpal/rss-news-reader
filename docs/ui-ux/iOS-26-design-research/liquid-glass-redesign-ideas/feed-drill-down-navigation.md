@@ -137,7 +137,7 @@ export function useFeedNavigation() {
     }));
 
     // Wait for filter state to be established
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
     // Switch to Articles tab
     setActiveTab("articles");
@@ -189,10 +189,11 @@ const useNavigationStore = create((set, get) => ({
   filtersReady: false,
   loadSeq: 0,
 
-  setArticleFilter: (filter: FilterState) => set({ 
-    articleFilter: filter,
-    loadSeq: get().loadSeq + 1 // Increment sequence for race condition protection
-  }),
+  setArticleFilter: (filter: FilterState) =>
+    set({
+      articleFilter: filter,
+      loadSeq: get().loadSeq + 1, // Increment sequence for race condition protection
+    }),
 
   setFiltersReady: (ready: boolean) => set({ filtersReady: ready }),
 
@@ -211,7 +212,11 @@ const useNavigationStore = create((set, get) => ({
 ### Article Filtering Logic
 
 ```typescript
-function filterArticles(articles: Article[], filter: FilterState, currentSeq: number): Article[] {
+function filterArticles(
+  articles: Article[],
+  filter: FilterState,
+  currentSeq: number
+): Article[] {
   // Race condition protection: only process if this is the current sequence (RR-216)
   const { loadSeq } = useNavigationStore.getState();
   if (currentSeq !== loadSeq) {

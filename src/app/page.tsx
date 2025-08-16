@@ -51,8 +51,10 @@ export default function HomePage() {
   // Parse URL parameters for filters as primary source
   useEffect(() => {
     // RR-27 Fix: Only update filter state when on the list page to prevent false filter changes
-    if (!pathname.endsWith('/reader') && pathname !== '/') {
-      console.log(`🔗 RR-27: Skipping filter update - not on list page (pathname: ${pathname})`);
+    if (!pathname.endsWith("/reader") && pathname !== "/") {
+      console.log(
+        `🔗 RR-27: Skipping filter update - not on list page (pathname: ${pathname})`
+      );
       return;
     }
 
@@ -62,7 +64,7 @@ export default function HomePage() {
     // RR-216 Fix: Filter state preservation when navigating back from article detail
     // Problem: URL showed correct filter but article list showed all articles
     // Root cause: Race condition between handleTagSelect/handleFeedSelect calling each other
-    // Solution: 
+    // Solution:
     // 1. URL is the single source of truth for filter state
     // 2. Fixed router.replace() basePath handling (Next.js handles automatically)
     // 3. Prevented duplicate handler calls from sidebar (removed onFeedSelect(null) from tag clicks)
@@ -106,9 +108,11 @@ export default function HomePage() {
 
   const handleArticleClick = (articleId: string) => {
     // RR-27 Fix: Set navigation intent to prevent preservation clearing
-    console.log(`🔗 RR-27: Setting navigation intent before article navigation`);
+    console.log(
+      `🔗 RR-27: Setting navigation intent before article navigation`
+    );
     setNavigatingToArticle(true);
-    
+
     // Next.js automatically prepends basePath to router operations
     router.push(`/article/${encodeURIComponent(articleId)}`);
   };
@@ -124,6 +128,7 @@ export default function HomePage() {
       sessionStorage.setItem("articleListTagFilter", "null");
     }
 
+    // RR-197 Critical Fix: Use searchParams directly instead of stale React state
     // Update URL with filter (use replace to avoid history pollution)
     const params = new URLSearchParams(searchParams.toString());
     if (feedId) {
@@ -132,13 +137,15 @@ export default function HomePage() {
     } else {
       params.delete("feed");
     }
-    // Keep tag if present and no feed selected
-    if (!feedId && selectedTagId) {
-      params.set("tag", selectedTagId);
+    // Keep tag if present and no feed selected - use searchParams directly to avoid stale state
+    if (!feedId && searchParams.get("tag")) {
+      params.set("tag", searchParams.get("tag")!);
     }
     const queryString = params.toString();
     const newUrl = queryString ? `/?${queryString}` : "/";
-    console.log(`🔄 RR-216: Feed filter - Updating URL to: ${newUrl} (queryString: ${queryString})`);
+    console.log(
+      `🔧 [RR-197] Expert Fix: Feed filter - Updating URL to: ${newUrl} (queryString: ${queryString})`
+    );
     // Next.js automatically prepends basePath to router operations
     router.replace(newUrl as any);
 
@@ -174,7 +181,9 @@ export default function HomePage() {
     }
     const queryString = params.toString();
     const newUrl = queryString ? `/?${queryString}` : "/";
-    console.log(`🔄 RR-216: Tag filter - Updating URL to: ${newUrl} (queryString: ${queryString})`);
+    console.log(
+      `🔄 RR-216: Tag filter - Updating URL to: ${newUrl} (queryString: ${queryString})`
+    );
     // Next.js automatically prepends basePath to router operations
     router.replace(newUrl as any);
 

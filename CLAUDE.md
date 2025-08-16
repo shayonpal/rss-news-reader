@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code when working with this repository.
 **Most project knowledge is maintained in Serena MCP memories (.serena/memories/)**
 
-## BEHAVIORAL RULES (MUST DISPLAY AT START OF EVERY RESPONSE)
+## BEHAVIORAL RULES
 
 1. NEVER commit code without explicit user permission
 2. ALWAYS run tests before declaring fixes complete

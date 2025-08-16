@@ -49,11 +49,12 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "I'll start with Ars Technica (12)"
 
 3a. **Navigating to Filtered View (RR-216 Enhancement)**
-   - _Context_: Taps on Ars Technica feed
-   - _Emotion_: Expectant
-   - _Action_: Navigation to Articles tab with feed filter
-   - _Experience_: Immediately sees only Ars Technica articles, no flash of all articles
-   - _Thought_: "Perfect, exactly what I wanted to see"
+
+- _Context_: Taps on Ars Technica feed
+- _Emotion_: Expectant
+- _Action_: Navigation to Articles tab with feed filter
+- _Experience_: Immediately sees only Ars Technica articles, no flash of all articles
+- _Thought_: "Perfect, exactly what I wanted to see"
 
 4. **Reading with AI Summaries**
    - _Context_: Limited time before work
@@ -89,11 +90,12 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Thought_: "Much faster than searching"
 
 1a. **Filter State Reliability (RR-216 Improvement)**
-   - _Context_: Uses browser back button after reading an article
-   - _Emotion_: Efficient
-   - _Action_: Returns to filtered tag view
-   - _Experience_: Still sees only AI/ML articles, filter state preserved
-   - _Thought_: "Great, I don't have to re-filter"
+
+- _Context_: Uses browser back button after reading an article
+- _Emotion_: Efficient
+- _Action_: Returns to filtered tag view
+- _Experience_: Still sees only AI/ML articles, filter state preserved
+- _Thought_: "Great, I don't have to re-filter"
 
 2. **Fetching Full Content**
    - _Context_: RSS snippet isn't enough

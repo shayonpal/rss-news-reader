@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[RR-216] Filter State Preservation During Back Navigation with Race Condition Protection** (Saturday, August 16, 2025 at 3:20 AM)
   - **Problem**: Filter state lost when navigating back from article detail view, causing users to lose their filtering context
   - **Root Cause**: Race condition between URL parameter restoration and API request handling causing premature filter clearing
-  - **Two-Layer Solution**: 
+  - **Two-Layer Solution**:
     - **Gating Layer**: `filtersReady` guard prevents article rendering until filter state fully restored from URL parameters
     - **Request Sequencing**: `loadSeq` counter ensures only latest API requests update the UI, preventing stale data overwrites
   - **Symbol-Level Implementation**:
