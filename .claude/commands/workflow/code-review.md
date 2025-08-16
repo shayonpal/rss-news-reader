@@ -5,6 +5,15 @@ args: "[optional: specific focus area like 'security', 'performance', 'architect
 
 # Code Review with Symbol Analysis
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and symbol navigation:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 Review implemented code using symbolic navigation and comprehensive analysis: $ARGUMENTS
 
 ## 1. Parse Input & Setup

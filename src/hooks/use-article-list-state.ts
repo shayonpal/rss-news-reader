@@ -8,6 +8,7 @@ import {
   type ListState,
 } from "@/lib/utils/article-list-state-manager";
 import { navigationHistory } from "@/lib/utils/navigation-history";
+import { useArticleStore } from "@/lib/stores/article-store";
 import type { Article } from "@/types";
 
 interface UseArticleListStateProps {
@@ -40,6 +41,7 @@ export function useArticleListState({
   onArticleClick,
   autoMarkObserverRef,
 }: UseArticleListStateProps): UseArticleListStateReturn {
+  const { navigatingToArticle, setNavigatingToArticle } = useArticleStore();
   const sessionPreservedArticles = useRef<Set<string>>(new Set());
   const hasRestoredState = useRef(false);
   const restorationInProgress = useRef(false);
@@ -73,53 +75,58 @@ export function useArticleListState({
       `🔧 Hook effect: filter ${previousFilter.current}→${readStatusFilter} (changed: ${filterChanged}), feed ${previousFeed.current}→${feedId} (changed: ${feedChanged}), folder ${previousFolder.current}→${folderId} (changed: ${folderChanged}), tag ${previousTag.current}→${tagId} (changed: ${tagChanged})`
     );
 
-    // Clear state on filter changes OR feed/folder/tag changes (per RR-27 & RR-163)
-    // This ensures that switching between "All Articles" and specific feeds/tags clears preserved state
-    if (
-      (filterChanged || feedChanged || folderChanged || tagChanged) &&
-      (previousFilter.current !== undefined ||
-        previousFeed.current !== undefined ||
-        previousFolder.current !== undefined ||
-        previousTag.current !== undefined)
-    ) {
-      if (filterChanged) {
-        console.log(
-          `🧹 Clearing state due to filter change: ${previousFilter.current} → ${readStatusFilter}`
-        );
-      } else if (feedChanged) {
-        console.log(
-          `🧹 Clearing state due to feed change: ${previousFeed.current} → ${feedId}`
-        );
-      } else if (folderChanged) {
-        console.log(
-          `🧹 Clearing state due to folder change: ${previousFolder.current} → ${folderId}`
-        );
-      } else if (tagChanged) {
-        console.log(
-          `🧹 Clearing state due to tag change: ${previousTag.current} → ${tagId}`
-        ); // RR-163
-      }
+    // RR-27 Fix: Skip clearing if we're navigating to an article
+    if (navigatingToArticle) {
+      console.log(`⛳ RR-27: Skipping preservation clear due to article navigation intent`);
+      setNavigatingToArticle(false); // Reset the flag
+    } else {
+      // Only clear if the CHANGED dimension had a previous value (prevents first-mount clearing)
+      const shouldClear =
+        (filterChanged && previousFilter.current !== undefined) ||
+        (feedChanged && previousFeed.current !== undefined) ||
+        (folderChanged && previousFolder.current !== undefined) ||
+        (tagChanged && previousTag.current !== undefined);
 
-      articleListStateManager.clearState();
-      sessionPreservedArticles.current = new Set();
+      if (shouldClear) {
+        if (filterChanged) {
+          console.log(
+            `🧹 Clearing state due to filter change: ${previousFilter.current} → ${readStatusFilter}`
+          );
+        } else if (feedChanged) {
+          console.log(
+            `🧹 Clearing state due to feed change: ${previousFeed.current} → ${feedId}`
+          );
+        } else if (folderChanged) {
+          console.log(
+            `🧹 Clearing state due to folder change: ${previousFolder.current} → ${folderId}`
+          );
+        } else if (tagChanged) {
+          console.log(
+            `🧹 Clearing state due to tag change: ${previousTag.current} → ${tagId}`
+          ); // RR-163
+        }
 
-      // Also clear the preserved article IDs storage used by hybrid query
-      try {
-        sessionStorage.removeItem("preserved_article_ids");
-        console.log(`🧹 Cleared preserved article IDs from session storage`);
-      } catch (e) {
-        console.error("Failed to clear preserved article IDs:", e);
-      }
-    }
-    // If no changes, just load preserved state normally
-    else {
-      const state = articleListStateManager.getListState();
-      if (state && !articleListStateManager.isStateExpired()) {
-        const preserved = articleListStateManager.getSessionPreservedArticles();
-        sessionPreservedArticles.current = new Set(preserved);
-      } else {
-        // If no state exists (was cleared), ensure our ref is also cleared
+        articleListStateManager.clearState();
         sessionPreservedArticles.current = new Set();
+
+        // Also clear the preserved article IDs storage used by hybrid query
+        try {
+          sessionStorage.removeItem("preserved_article_ids");
+          console.log(`🧹 Cleared preserved article IDs from session storage`);
+        } catch (e) {
+          console.error("Failed to clear preserved article IDs:", e);
+        }
+      }
+      // If no changes, just load preserved state normally
+      else {
+        const state = articleListStateManager.getListState();
+        if (state && !articleListStateManager.isStateExpired()) {
+          const preserved = articleListStateManager.getSessionPreservedArticles();
+          sessionPreservedArticles.current = new Set(preserved);
+        } else {
+          // If no state exists (was cleared), ensure our ref is also cleared
+          sessionPreservedArticles.current = new Set();
+        }
       }
     }
 
@@ -311,7 +318,7 @@ export function useArticleListState({
     return `${baseClasses} ${stateClasses}`.trim();
   }, []);
 
-  // Restore state if available
+  // Restore state if available - RR-216 Fix: Only restore read states, not article data
   const restoreStateIfAvailable = useCallback(() => {
     if (hasRestoredState.current || restorationInProgress.current) {
       return false;
@@ -323,11 +330,30 @@ export function useArticleListState({
     }
 
     // Check if we're on the same feed/folder/tag
-    if (
-      savedState.feedId !== feedId ||
-      savedState.folderId !== folderId ||
-      savedState.tagId !== tagId
-    ) {
+    // For RR-216: We need to ensure filters match before restoring preserved articles
+    const savedFeedMatches =
+      savedState.feedId === feedId ||
+      (!savedState.feedId && (!feedId || feedId === undefined));
+
+    const savedTagMatches =
+      savedState.tagId === tagId ||
+      (!savedState.tagId && (!tagId || tagId === undefined));
+
+    const savedFolderMatches =
+      savedState.folderId === folderId ||
+      (!savedState.folderId && (!folderId || folderId === undefined));
+
+    // Only restore state if filters match
+    if (!savedFeedMatches || !savedFolderMatches || !savedTagMatches) {
+      console.log(
+        `🔍 State restoration blocked - filter mismatch:`,
+        `feed ${savedState.feedId} vs ${feedId},`,
+        `folder ${savedState.folderId} vs ${folderId},`,
+        `tag ${savedState.tagId} vs ${tagId}`
+      );
+      // Clear the saved state since filters don't match
+      articleListStateManager.clearState();
+      sessionPreservedArticles.current = new Set();
       return false;
     }
 
@@ -338,12 +364,18 @@ export function useArticleListState({
       autoMarkObserverRef.current.disconnect();
     }
 
-    // Update session preserved articles (both auto-read and manually read)
+    // IMPORTANT: Only restore preserved article IDs, not the full article data
+    // The actual articles will be loaded by the loadArticles call based on current filters
     const allSessionArticles = [
       ...(savedState.autoReadArticles || []),
       ...(savedState.manualReadArticles || []),
     ];
     sessionPreservedArticles.current = new Set(allSessionArticles);
+
+    console.log(
+      `✅ Restored ${allSessionArticles.length} preserved article IDs for filter:`,
+      `feed=${feedId}, tag=${tagId}`
+    );
 
     // Schedule re-enabling of observer
     setTimeout(() => {

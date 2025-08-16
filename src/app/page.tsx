@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SimpleFeedSidebar } from "@/components/feeds/simple-feed-sidebar";
 import { ArticleList } from "@/components/articles/article-list";
 import { ArticleHeader } from "@/components/articles/article-header";
@@ -15,6 +15,10 @@ import { articleListStateManager } from "@/lib/utils/article-list-state-manager"
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { setNavigatingToArticle } = useArticleStore();
+
   // Fix hydration issues with localStorage
   useHydrationFix();
 
@@ -38,22 +42,45 @@ export default function HomePage() {
   const headerRef = useRef<HTMLDivElement>(null);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize states without client-side checks to avoid hydration mismatch
+  // Initialize states - we'll set them from URL/sessionStorage in useEffect
+  // This avoids hydration mismatch while ensuring filters are ready
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [filtersReady, setFiltersReady] = useState(false); // <-- ADD THIS
 
-  // Restore filter states from sessionStorage after hydration
+  // Parse URL parameters for filters as primary source
   useEffect(() => {
-    const savedFilter = sessionStorage.getItem("articleListFilter");
-    if (savedFilter !== null) {
-      setSelectedFeedId(savedFilter === "null" ? null : savedFilter);
+    // RR-27 Fix: Only update filter state when on the list page to prevent false filter changes
+    if (!pathname.endsWith('/reader') && pathname !== '/') {
+      console.log(`🔗 RR-27: Skipping filter update - not on list page (pathname: ${pathname})`);
+      return;
     }
 
-    const savedTagFilter = sessionStorage.getItem("articleListTagFilter");
-    if (savedTagFilter !== null) {
-      setSelectedTagId(savedTagFilter === "null" ? null : savedTagFilter);
-    }
-  }, []);
+    const feedFromUrl = searchParams.get("feed");
+    const tagFromUrl = searchParams.get("tag");
+
+    // RR-216 Fix: Filter state preservation when navigating back from article detail
+    // Problem: URL showed correct filter but article list showed all articles
+    // Root cause: Race condition between handleTagSelect/handleFeedSelect calling each other
+    // Solution: 
+    // 1. URL is the single source of truth for filter state
+    // 2. Fixed router.replace() basePath handling (Next.js handles automatically)
+    // 3. Prevented duplicate handler calls from sidebar (removed onFeedSelect(null) from tag clicks)
+    // 4. Added proper filter coordination in handlers to avoid URL overwrites
+    // 5. Added pathname check to prevent false filter changes during article navigation (RR-27)
+    // Always set filter state based on URL, don't fallback to sessionStorage
+    setSelectedFeedId(feedFromUrl);
+    setSelectedTagId(tagFromUrl);
+
+    // Save to sessionStorage for the article detail back button
+    sessionStorage.setItem("articleListFilter", feedFromUrl || "null");
+    sessionStorage.setItem("articleListTagFilter", tagFromUrl || "null");
+
+    console.log(
+      `📍 HomePage: Set filters from URL - feed: ${feedFromUrl}, tag: ${tagFromUrl}`
+    );
+    setFiltersReady(true); // <-- ADD THIS
+  }, [searchParams, pathname]);
 
   const viewport = useViewport();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -78,6 +105,11 @@ export default function HomePage() {
   }, [viewport.shouldCollapseSidebar]);
 
   const handleArticleClick = (articleId: string) => {
+    // RR-27 Fix: Set navigation intent to prevent preservation clearing
+    console.log(`🔗 RR-27: Setting navigation intent before article navigation`);
+    setNavigatingToArticle(true);
+    
+    // Next.js automatically prepends basePath to router operations
     router.push(`/article/${encodeURIComponent(articleId)}`);
   };
 
@@ -85,6 +117,31 @@ export default function HomePage() {
     setSelectedFeedId(feedId);
     // Save filter state for restoration
     sessionStorage.setItem("articleListFilter", feedId || "null");
+
+    // When selecting a feed, clear tag selection but don't update URL yet
+    if (feedId) {
+      setSelectedTagId(null);
+      sessionStorage.setItem("articleListTagFilter", "null");
+    }
+
+    // Update URL with filter (use replace to avoid history pollution)
+    const params = new URLSearchParams(searchParams.toString());
+    if (feedId) {
+      params.set("feed", feedId);
+      params.delete("tag"); // Clear tag when feed is selected
+    } else {
+      params.delete("feed");
+    }
+    // Keep tag if present and no feed selected
+    if (!feedId && selectedTagId) {
+      params.set("tag", selectedTagId);
+    }
+    const queryString = params.toString();
+    const newUrl = queryString ? `/?${queryString}` : "/";
+    console.log(`🔄 RR-216: Feed filter - Updating URL to: ${newUrl} (queryString: ${queryString})`);
+    // Next.js automatically prepends basePath to router operations
+    router.replace(newUrl as any);
+
     // Close sidebar on mobile after selection
     if (viewport.shouldCollapseSidebar) {
       setIsSidebarOpen(false);
@@ -95,6 +152,32 @@ export default function HomePage() {
     setSelectedTagId(tagId);
     // Save tag filter state for restoration
     sessionStorage.setItem("articleListTagFilter", tagId || "null");
+
+    // When selecting a tag, clear feed selection but don't update URL yet
+    // The URL update will happen in the useEffect that watches for state changes
+    if (tagId) {
+      setSelectedFeedId(null);
+      sessionStorage.setItem("articleListFilter", "null");
+    }
+
+    // Update URL with filter (use replace to avoid history pollution)
+    const params = new URLSearchParams(searchParams.toString());
+    if (tagId) {
+      params.set("tag", tagId);
+      params.delete("feed"); // Clear feed when tag is selected
+    } else {
+      params.delete("tag");
+    }
+    // Keep feed if present and no tag selected
+    if (!tagId && selectedFeedId) {
+      params.set("feed", selectedFeedId);
+    }
+    const queryString = params.toString();
+    const newUrl = queryString ? `/?${queryString}` : "/";
+    console.log(`🔄 RR-216: Tag filter - Updating URL to: ${newUrl} (queryString: ${queryString})`);
+    // Next.js automatically prepends basePath to router operations
+    router.replace(newUrl as any);
+
     // Close sidebar on mobile after selection
     if (viewport.shouldCollapseSidebar) {
       setIsSidebarOpen(false);
@@ -257,6 +340,7 @@ export default function HomePage() {
             tagId={selectedTagId || undefined}
             onArticleClick={handleArticleClick}
             scrollContainerRef={articleListRef}
+            filtersReady={filtersReady}
           />
 
           {/* Liquid Glass Scroll to Top button for iOS */}

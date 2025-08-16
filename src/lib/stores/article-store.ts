@@ -23,6 +23,10 @@ interface ArticleStoreState {
   hasMore: boolean;
   loadingMore: boolean;
 
+  // Navigation state (RR-27)
+  navigatingToArticle: boolean;
+  loadSeq: number; // <-- ADD THIS
+
   // Actions
   loadArticles: (
     feedId?: string,
@@ -55,6 +59,9 @@ interface ArticleStoreState {
   setSelectedArticle: (articleId: string | null) => void;
   setFilter: (filter: "all" | "unread" | "starred") => void;
   setReadStatusFilter: (filter: "all" | "unread" | "read") => void;
+
+  // Navigation actions (RR-27)
+  setNavigatingToArticle: (isNavigating: boolean) => void;
 
   // Utility
   clearError: () => void;
@@ -255,9 +262,14 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
   hasMore: true,
   loadingMore: false,
 
+  // Navigation state (RR-27)
+  navigatingToArticle: false,
+  loadSeq: 0, // <-- ADD THIS
+
   // Load articles with pagination
   loadArticles: async (feedId?: string, folderId?: string, tagId?: string) => {
-    set({ loadingArticles: true, articlesError: null });
+    const seq = get().loadSeq + 1; // <-- Capture sequence at start
+    set({ loadingArticles: true, articlesError: null, loadSeq: seq }); // <-- Increment sequence
 
     try {
       let query = supabase
@@ -371,6 +383,10 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           query = query.in("id", articleIds);
         } else {
           // No articles with this tag, return empty result
+          if (get().loadSeq !== seq) { // <-- THE CRITICAL CHECK
+            console.log(`↩️ Stale request (seq: ${seq}) ignored on empty tag result.`);
+            return; 
+          }
           set({
             articles: new Map(),
             hasMore: false,
@@ -386,6 +402,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       query = query.limit(ARTICLES_PER_PAGE);
 
       const { data: articles, error } = await query;
+
+      if (get().loadSeq !== seq) { // <-- THE CRITICAL CHECK
+        console.log(`↩️ Stale request (seq: ${seq}) ignored.`);
+        return; 
+      }
 
       if (error) throw error;
 
@@ -422,6 +443,10 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         selectedFolderId: folderId || null,
       });
     } catch (error) {
+      if (get().loadSeq !== seq) { // <-- ALSO CHECK IN CATCH BLOCK
+        console.log(`↩️ Stale request (seq: ${seq}) ignored on error.`);
+        return;
+      }
       console.error("Failed to load articles:", error);
       set({
         loadingArticles: false,
@@ -1227,6 +1252,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
   // Utility
   clearError: () => set({ articlesError: null }),
+
+  // Navigation actions (RR-27)
+  setNavigatingToArticle: (isNavigating: boolean) => set({ navigatingToArticle: isNavigating }),
 
   getArticleCount: () => {
     const { readStatusFilter } = get();

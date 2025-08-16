@@ -17,6 +17,7 @@ interface ArticleListProps {
   tagId?: string;
   onArticleClick?: (articleId: string) => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  filtersReady: boolean; // <-- ADD THIS
 }
 
 export function ArticleList({
@@ -25,6 +26,7 @@ export function ArticleList({
   tagId,
   onArticleClick,
   scrollContainerRef,
+  filtersReady, // <-- ADD THIS
 }: ArticleListProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -78,13 +80,24 @@ export function ArticleList({
 
   // Load articles on mount or when feed/folder changes
   useEffect(() => {
+    if (!filtersReady) { // <-- ADD THIS GUARD
+      console.log("🚫 Filters not ready, skipping article load.");
+      return;
+    }
+
     // Clear pending marks when view changes
     pendingMarkAsRead.current.clear();
     if (markAsReadTimer.current) {
       clearTimeout(markAsReadTimer.current);
     }
+
+    // RR-216 Fix: Force fresh load when filters change
+    // This ensures we get the correct filtered articles from the database
+    console.log(`🔄 Loading articles for feedId: ${feedId}, tagId: ${tagId}`);
+
+    // Always load fresh articles based on current filters
     loadArticles(feedId, folderId, tagId);
-  }, [feedId, folderId, tagId, loadArticles]);
+  }, [feedId, folderId, tagId, loadArticles, filtersReady]); // <-- ADD filtersReady to dependency array
 
   // Batch mark as read with debounce - now tracking auto-read articles
   const processPendingMarkAsRead = useCallback(() => {

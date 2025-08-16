@@ -490,7 +490,7 @@ export function SimpleFeedSidebar({
                             }`}
                             onClick={() => {
                               onTagSelect(isSelected ? null : tag.id);
-                              onFeedSelect(null); // Clear feed selection when tag is selected
+                              // Note: Feed clearing is now handled in handleTagSelect
                             }}
                           >
                             <div className="flex items-center justify-between text-sm">
@@ -653,7 +653,7 @@ export function SimpleFeedSidebar({
                           }`}
                           onClick={() => {
                             onFeedSelect(feed.id);
-                            onTagSelect(null); // Clear tag selection when feed is selected
+                            // Note: Tag clearing is now handled in handleFeedSelect
                           }}
                         >
                           <div className="flex items-center justify-between text-sm">

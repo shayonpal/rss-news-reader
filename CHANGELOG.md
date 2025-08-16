@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **Comprehensive RR-216 Race Condition Fix Documentation Update** (Saturday, August 16, 2025 at 2:31 AM)
+  - **Updated UI/UX Documentation**: Enhanced filter state preservation and navigation reliability patterns
+    - `/docs/ui-ux/README.md`: Added filter state preservation section with race condition prevention details
+    - `/docs/ui-ux/liquid-glass-implementation-guide.md`: Updated glass segments with state coordination patterns
+    - `/docs/ui-ux/iOS-26-design-research/liquid-glass-redesign-ideas/feed-drill-down-navigation.md`: Enhanced navigation hooks with sequence protection
+  - **Updated Product Documentation**: Enhanced user journey documentation with improved navigation experiences
+    - `/docs/product/user-journeys.md`: Added RR-216 navigation improvements to morning catch-up and research journeys
+  - **Updated Technical Documentation**: Added comprehensive race condition architecture documentation
+    - `/docs/tech/README.md`: Added detailed RR-216 two-layer protection architecture with code examples
+  - **Coverage**: Documentation updates span UI/UX patterns, user experience flows, and technical implementation details
+  - **Impact**: Provides comprehensive reference for understanding and maintaining the race condition fix
+
 ### Completed
 
 - **[RR-152] OpenAPI Documentation System - Successfully Completed** (Friday, August 15, 2025)
@@ -24,6 +38,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added tag store integration to `ArticleHeader` component
   - Implemented XSS protection with DOMPurify for tag names
   - Added comprehensive unit and integration tests
+
+### Security
+
+- **Token file cleanup - removed stale project-local OAuth tokens**
+  - Removed unused token file at `~/rss-news-reader/~/.rss-reader/tokens.json`
+  - App correctly uses home directory tokens at `~/.rss-reader/tokens.json`
+  - Eliminated security risk from potential accidental commit of token data
+
+### Fixed
+
+- **[RR-216] Filter State Preservation During Back Navigation with Race Condition Protection** (Saturday, August 16, 2025 at 3:20 AM)
+  - **Problem**: Filter state lost when navigating back from article detail view, causing users to lose their filtering context
+  - **Root Cause**: Race condition between URL parameter restoration and API request handling causing premature filter clearing
+  - **Two-Layer Solution**: 
+    - **Gating Layer**: `filtersReady` guard prevents article rendering until filter state fully restored from URL parameters
+    - **Request Sequencing**: `loadSeq` counter ensures only latest API requests update the UI, preventing stale data overwrites
+  - **Symbol-Level Implementation**:
+    - `src/app/page.tsx`: Enhanced `handleFeedSelect` and `handleTagSelect` functions with URL parameter management for filter persistence
+    - `src/components/articles/article-list.tsx`: Added `filtersReady` guard to `ArticleList` component preventing premature rendering
+    - `src/hooks/use-article-list-state.ts`: Implemented `restoreStateIfAvailable` function with RR-216-specific filter matching logic
+    - `src/lib/stores/article-store.ts`: Added `loadSeq` counter for race condition prevention with request sequencing
+    - `src/lib/utils/article-list-state-manager.ts`: Enhanced filter state coordination between URL parameters and store state
+  - **Integration**: Seamlessly integrates with RR-27 article preservation feature, maintaining both filter context and read article visibility
+  - **Testing**: Comprehensive test coverage with 13 test files (unit, integration, E2E) validating filter preservation, race condition handling, and navigation flows
+  - **Impact**: Users now maintain their filter context (feed/tag selections) when navigating back from articles, eliminating need to re-apply filters repeatedly
+  - **Linear Reference**: RR-216
 
 - **[RR-205] Strict Enforcement & Remaining Endpoints - 100% OpenAPI Coverage Complete**
   - **Achievement**: Successfully completed final phase of comprehensive OpenAPI documentation system (parent: RR-152)

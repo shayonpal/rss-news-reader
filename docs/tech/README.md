@@ -131,6 +131,7 @@ This directory contains all technical documentation for the RSS News Reader appl
 3. **PM2 Process Management**: Reliable process management with auto-restart
 4. **Tailscale Access Control**: Network-level security instead of app auth
 5. **PWA Architecture**: Offline-first with service workers
+6. **Race Condition Prevention (RR-216)**: Two-layer protection for filter state preservation
 
 ## RR-171 RefreshManager Pattern
 
@@ -174,6 +175,72 @@ class RefreshManager {
 - **Sidebar Application**: Direct application of sync response data to avoid timing issues
 - **Toast Formatting**: Consistent user feedback with sync metrics (no emojis)
 - **Background Sync Behavior**: Silent updates with optional refresh action notifications
+
+## RR-216 Filter State Race Condition Architecture
+
+### Problem
+
+Filtered views (tag filters, feed filters) would intermittently show all articles instead of filtered results after back navigation, due to race conditions in the article loading pipeline.
+
+### Solution: Two-Layer Protection
+
+#### Layer 1: Gating with `filtersReady`
+
+```typescript
+// src/app/page.tsx
+const [filtersReady, setFiltersReady] = useState(false);
+
+useEffect(() => {
+  const initializeFilters = async () => {
+    await parseFiltersFromUrl(); // Parse URL parameters first
+    setFiltersReady(true);       // Signal that filters are ready
+  };
+  initializeFilters();
+}, []);
+```
+
+#### Layer 2: Sequencing with `loadSeq`
+
+```typescript
+// src/lib/stores/article-store.ts
+class ArticleStore {
+  private loadSeq = 0;
+  
+  async loadArticles() {
+    const currentSeq = ++this.loadSeq; // Increment sequence
+    
+    const data = await api.getArticles();
+    
+    // Only apply if this is still the current request
+    if (currentSeq === this.loadSeq) {
+      this.articles = data;
+    }
+    // Stale requests are discarded
+  }
+}
+```
+
+#### Component Integration
+
+```typescript
+// src/components/articles/article-list.tsx
+export function ArticleList() {
+  const { filtersReady } = usePageState();
+  
+  if (!filtersReady) {
+    return <LoadingState />; // Prevent loading until filters ready
+  }
+  
+  return <ArticleListContent />;
+}
+```
+
+### Benefits
+
+1. **Eliminates Race Conditions**: Filter state is established before article loading
+2. **Prevents Stale Data**: Sequence numbers discard outdated API responses
+3. **Improves Navigation**: Back button reliably shows filtered content
+4. **Maintains Performance**: Minimal overhead with immediate user feedback
 
 ## Development Guidelines
 

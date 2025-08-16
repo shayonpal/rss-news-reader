@@ -5,6 +5,15 @@ argument-hint: <issue-id>
 
 # Analyze Linear Issue with Full Context
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and context:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 Analyze the Linear issue provided in $ARGUMENTS with comprehensive project understanding.
 
 This is a `read-only` mode discussion session. No files will be written during analysis.

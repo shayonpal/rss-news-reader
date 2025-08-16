@@ -5,6 +5,15 @@ argument_hint: <linear-issue-id>
 
 # Test Implementation with Symbol Analysis
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and symbol navigation:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 Test the implementation for Linear issue $ARGUMENTS using symbolic navigation and comprehensive validation.
 
 ## 1. Linear Validation & Symbol Discovery

@@ -106,6 +106,7 @@ export default function ArticlePage() {
         // Note: markAsRead already handles all session state updates via markArticlesAsReadWithSession
       }
 
+      // Next.js automatically prepends basePath to router operations
       router.push(`/article/${encodeURIComponent(targetArticle.id)}`);
     }
   };
@@ -133,8 +134,28 @@ export default function ArticlePage() {
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}
       onBack={() => {
-        // Always navigate to listing page to ensure consistent behavior
-        router.push("/");
+        // Check sessionStorage for active filters and build appropriate URL
+        const feedFilter = sessionStorage.getItem("articleListFilter");
+        const tagFilter = sessionStorage.getItem("articleListTagFilter");
+
+        // Next.js automatically prepends basePath to router operations
+        let url = "/";
+        const params = new URLSearchParams();
+
+        // Only add params if filters are actually set (not null or "null" string)
+        if (feedFilter && feedFilter !== "null") {
+          params.set("feed", feedFilter);
+        }
+        if (tagFilter && tagFilter !== "null") {
+          params.set("tag", tagFilter);
+        }
+
+        const queryString = params.toString();
+        if (queryString) {
+          url += "?" + queryString;
+        }
+
+        router.push(url as any);
       }}
     />
   );

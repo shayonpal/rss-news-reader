@@ -1,5 +1,14 @@
 # Prepare and Execute Production Release
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and symbol navigation:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 I need you to prepare a production release from `dev` to `main` branch using symbol-level analysis for maximum precision and safety.
 
 ## Behavioral Rules (Display at Start)

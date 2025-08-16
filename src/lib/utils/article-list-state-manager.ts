@@ -170,6 +170,23 @@ export class ArticleListStateManager {
     return Array.from(preserved);
   }
 
+  getPreservedArticleIds(): Set<string> {
+    const state = this.getListState();
+    if (!state) return new Set();
+    
+    return new Set([
+      ...(state.autoReadArticles || []),
+      ...(state.manualReadArticles || [])
+    ]);
+  }
+
+  getAutoReadArticleIds(): Set<string> {
+    const state = this.getListState();
+    if (!state) return new Set();
+    
+    return new Set(state.autoReadArticles || []);
+  }
+
   updateArticleState(
     articleId: string,
     changes: { isRead?: boolean; wasAutoRead?: boolean }
@@ -258,23 +275,6 @@ export class ArticleListStateManager {
       state.autoReadArticles.includes(articleId) ||
       state.manualReadArticles.includes(articleId)
     );
-  }
-
-  getPreservedArticleIds(): Set<string> {
-    const state = this.getListState();
-    if (!state) return new Set();
-
-    return new Set([
-      ...(state.autoReadArticles || []),
-      ...(state.manualReadArticles || []),
-    ]);
-  }
-
-  getAutoReadArticleIds(): Set<string> {
-    const state = this.getListState();
-    if (!state) return new Set();
-
-    return new Set(state.autoReadArticles || []);
   }
 }
 

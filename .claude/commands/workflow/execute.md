@@ -5,6 +5,15 @@ argument_hint: [linear-issue-id] [additional-context]
 
 # Execute Implementation Plan
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and symbol navigation:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 ## Step 0: Linear Validation
 
 ### Check for Linear Issue ID
@@ -163,6 +172,34 @@ Use Serena to ensure complete test coverage:
    - All 3 symbols → sync-flow.test.ts (E2E)
    ```
 
+#### 🔍 VERIFICATION CHECKPOINT: Test Implementation
+
+After completing test writing, present verification menu:
+
+```
+📊 IMPLEMENTATION SUMMARY - TEST PHASE
+
+✅ Completed:
+- [X] Test contracts extracted from Linear
+- [X] Test files written: [list test files]
+- [X] Symbol coverage matrix generated
+- [X] Tests run and confirmed failing (red phase)
+
+🎯 Next Steps:
+- If verified: Proceed to core implementation
+- If changes needed: Modify tests based on feedback
+
+🔧 For Manual Verification:
+- Review test cases match Linear requirements exactly
+- Verify test file structure follows project patterns
+- Check that tests are comprehensive but not over-specified
+- Ensure tests focus on behavior, not implementation details
+
+Choose: 1) Verify Manually, 2) Needs Changes, 3) Manually Verified
+```
+
+Wait for user choice before proceeding to Step 2.
+
 ### Step 2: Implementation with Symbol Precision
 
 #### 2A. Choose the Right Editing Approach
@@ -257,6 +294,36 @@ Use Serena to ensure complete test coverage:
 4. For UI changes: Run Playwright tests `npx playwright test --project=chrome`
 5. Refactor code while keeping tests green
 
+#### 🔍 VERIFICATION CHECKPOINT: Core Implementation
+
+After completing main implementation, present verification menu:
+
+```
+📊 IMPLEMENTATION SUMMARY - CORE IMPLEMENTATION
+
+✅ Completed:
+- [X] All symbols implemented according to Linear spec
+- [X] Tests passing (green phase): [X/Y tests]
+- [X] Symbol dependencies properly updated
+- [X] Performance checks completed
+- [X] Files modified: [list modified files with symbols]
+
+🎯 Next Steps:
+- If verified: Proceed to specialist reviews
+- If changes needed: Refine implementation based on feedback
+
+🔧 For Manual Verification:
+- Test the actual functionality end-to-end
+- Verify edge cases are handled properly
+- Check error scenarios and user experience
+- Confirm implementation matches Linear requirements exactly
+- Test performance and responsiveness
+
+Choose: 1) Verify Manually, 2) Needs Changes, 3) Manually Verified
+```
+
+Wait for user choice before proceeding to specialist reviews.
+
 ## 3. Specialist Reviews with Symbol Analysis
 
 Based on implementation type, get symbol-aware reviews:
@@ -295,6 +362,36 @@ Each review should verify:
 - Performance impact on symbol call chains
 - No orphaned symbols or dead code
 
+#### 🔍 VERIFICATION CHECKPOINT: Specialist Reviews
+
+After completing specialist reviews (DB, UI, Infrastructure), present verification menu:
+
+```
+📊 IMPLEMENTATION SUMMARY - SPECIALIST REVIEWS
+
+✅ Completed:
+- [X] Database expert review: [findings summary]
+- [X] UI expert review: [findings summary]  
+- [X] Infrastructure expert review: [findings summary]
+- [X] Symbol-level impact analysis completed
+- [X] All expert recommendations addressed
+
+🎯 Next Steps:
+- If verified: Proceed to comprehensive quality checks
+- If changes needed: Address remaining specialist concerns
+
+🔧 For Manual Verification:
+- Review specialist feedback for any missed issues
+- Verify expert recommendations were properly implemented
+- Check that symbol changes don't break existing patterns
+- Confirm architecture remains consistent
+- Test integration points highlighted by experts
+
+Choose: 1) Verify Manually, 2) Needs Changes, 3) Manually Verified
+```
+
+Wait for user choice before proceeding to quality checks.
+
 ## 4. Quality Checks
 
 Run comprehensive checks:
@@ -307,7 +404,145 @@ Run comprehensive checks:
 6. E2E tests (if UI): `npx playwright test`
 7. Performance check: `node scripts/check-performance-regression.js`
 
-## 5. Update Linear
+#### 🔍 VERIFICATION CHECKPOINT: Quality Checks
+
+After completing all automated quality checks, present verification menu:
+
+```
+📊 IMPLEMENTATION SUMMARY - QUALITY CHECKS
+
+✅ Completed:
+- [X] Full test suite: [X/Y tests passing] (completed in <20s)
+- [X] Type check: [passing/failing]
+- [X] Linter: [passing/failing] 
+- [X] OpenAPI documentation: [validated/issues found]
+- [X] Build verification: [successful/failed]
+- [X] E2E tests: [X/Y scenarios passing]
+- [X] Performance check: [no regressions/issues found]
+
+🎯 Next Steps:
+- If verified: Proceed to final review before Linear update
+- If changes needed: Address quality check failures
+
+🔧 For Manual Verification:
+- Review any test failures or warnings carefully
+- Check build output for any concerning messages
+- Verify performance metrics are acceptable
+- Confirm all documentation is accurate and complete
+- Test the complete user journey end-to-end
+
+Choose: 1) Verify Manually, 2) Needs Changes, 3) Manually Verified
+```
+
+Wait for user choice before proceeding to final Linear update verification.
+
+## 5. Manual Verification Checkpoints
+
+### Implementation Verification Workflow
+
+**IMPORTANT**: After completing the implementation and quality checks, DO NOT automatically update Linear. Instead, engage in manual verification process.
+
+#### Present Verification Options
+
+After each implementation step, present these choices to the user:
+
+```
+🔍 IMPLEMENTATION VERIFICATION CHECKPOINT
+
+Implementation step completed. Please choose:
+
+1. 🧪 Verify Manually - Review the implementation yourself
+2. 🔄 Needs Changes - Implementation requires modifications  
+3. ✅ Manually Verified. Move on to the next step.
+
+What would you like to do? (Enter 1, 2, or 3)
+```
+
+#### Verification Process Flow
+
+1. **Option 1 - Verify Manually**: 
+   - Wait for user to review implementation
+   - Present the same menu again after user returns
+   - User can test functionality, review code quality, check edge cases
+
+2. **Option 2 - Needs Changes**:
+   - Ask user to specify what needs to be changed
+   - Implement the requested changes
+   - Re-run quality checks
+   - Present verification menu again
+   - Continue this cycle until user is satisfied
+
+3. **Option 3 - Manually Verified**:
+   - User confirms implementation meets requirements
+   - Proceed to next step or Linear update
+   - Only move forward when explicitly approved
+
+#### Verification Points
+
+Apply this verification workflow after:
+
+- **Test Implementation**: After writing tests but before main implementation
+- **Core Implementation**: After implementing main functionality  
+- **Specialist Reviews**: After each expert review (DB, UI, Infrastructure)
+- **Quality Checks**: After all automated checks pass
+- **Final Review**: Before updating Linear status
+
+#### Implementation Quality Summary
+
+Before each verification checkpoint, provide a clear summary:
+
+```
+📊 IMPLEMENTATION SUMMARY
+
+✅ Completed:
+- [List what was just implemented]
+- [Files modified and functions changed]
+- [Tests passing status]
+
+🎯 Next Steps:
+- [What happens if user chooses option 3]
+- [Remaining work if any]
+
+🔧 For Manual Verification:
+- [Specific areas to focus on]
+- [Testing suggestions]
+- [Edge cases to verify]
+```
+
+#### Handling Verification Iterations
+
+- **Track Changes**: Keep record of what was modified in each iteration
+- **Maintain Context**: Remember user feedback across verification cycles
+- **Progressive Refinement**: Each iteration should improve implementation quality
+- **No Shortcuts**: Don't proceed without explicit user approval (option 3)
+
+### Pre-Linear Update Verification
+
+**CRITICAL**: Before updating Linear, run final verification checkpoint:
+
+```
+🚨 FINAL VERIFICATION BEFORE LINEAR UPDATE
+
+All implementation work is complete. Ready to update Linear issue status.
+
+Current Implementation Status:
+- ✅ All tests passing
+- ✅ Code quality checks passed  
+- ✅ User manually verified implementation
+- ✅ Ready to mark as "In Review"
+
+Choose:
+1. 🧪 Final Manual Review - One last check before Linear update
+2. 🔄 Additional Changes Needed - More work required
+3. ✅ Approve Linear Update - Mark issue as "In Review"
+
+This is your last chance to make changes before updating Linear.
+What would you like to do? (Enter 1, 2, or 3)
+```
+
+Only proceed to Linear update after receiving option 3 from user.
+
+## 6. Update Linear
 
 Use `linear-expert` to:
 
@@ -318,7 +553,9 @@ Use `linear-expert` to:
    - Confirm all tests passing
    - Link to any follow-up issues created
 
-## 6. Implementation Report
+## 7. Implementation Report
+
+**ONLY PROVIDE AFTER USER APPROVES LINEAR UPDATE** (Section 6 verification complete)
 
 Provide symbol-precise summary:
 
@@ -350,18 +587,47 @@ Provide symbol-precise summary:
 - Build: Successful
 - Symbol coverage: 100%
 
-🚀 Ready for review
+✅ Manual Verification:
+- User verified implementation quality at each checkpoint
+- All verification iterations completed successfully
+- Final approval received for Linear update
+
+🚀 Linear Status: Updated to "In Review"
 
 Any follow-up tasks needed? (will create new issues)
 ```
 
 ## Important Notes
 
-- 🚫 NO file operations without Linear verification gates passed
-- Test-first development is mandatory (tests before implementation)
+### Critical Workflow Rules
+
+- 🚫 **NO file operations** without Linear verification gates passed
+- 🚫 **NO Linear updates** without user manual verification and approval
+- ✅ **Test-first development** is mandatory (tests before implementation)
+- ✅ **Manual verification required** at every major checkpoint
+- ✅ **User must explicitly approve** each step with option 3
+
+### Verification Requirements
+
+- **Wait for user choice** at each verification checkpoint
+- **Present verification menu** after every implementation phase
+- **Do not skip verification** even if automated checks pass
+- **Keep iterating** until user chooses "Manually Verified" (option 3)
+- **Track all changes** made during verification iterations
+
+### Implementation Standards
+
 - All work must trace to Linear issues (except minor fixes)
 - Implementation plan must be documented before coding
 - Status must be "In Progress" before writing code
-- When implementing the task, ensure existing code, functions, api endpoints and methods are used and extended as much as possible, instead of creating new ones.
+- Use existing code, functions, API endpoints and methods when possible
+- Extend rather than create new implementations
 
-Remember: The Linear issue and its comments are the contract. No implementation without proper documentation and tracking!
+### Linear Integration
+
+- Linear issue and comments are the implementation contract
+- No implementation without proper documentation and tracking
+- Only update Linear status after final user approval
+- Document all verification iterations in implementation comments
+
+Remember: **User controls quality gates** - proceed only when they explicitly verify each step!

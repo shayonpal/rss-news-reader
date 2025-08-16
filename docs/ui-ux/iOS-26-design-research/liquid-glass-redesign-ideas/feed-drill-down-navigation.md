@@ -129,12 +129,15 @@ export function useFeedNavigation() {
   const { setActiveTab, setArticleFilter } = useNavigationStore();
   const router = useRouter();
 
-  const navigateToArticles = (filter: Partial<FilterState>) => {
-    // Update filter state
+  const navigateToArticles = async (filter: Partial<FilterState>) => {
+    // Update filter state first (RR-216 race condition fix)
     setArticleFilter((prev) => ({
       ...prev,
       ...filter,
     }));
+
+    // Wait for filter state to be established
+    await new Promise(resolve => requestAnimationFrame(resolve));
 
     // Switch to Articles tab
     setActiveTab("articles");
@@ -175,16 +178,23 @@ interface FilterState {
   sourceTitle: string;
 }
 
-// Navigation store maintains filter state
-const useNavigationStore = create((set) => ({
+// Navigation store maintains filter state with race condition protection (RR-216)
+const useNavigationStore = create((set, get) => ({
   articleFilter: {
     readStatus: "unread", // Default to unread
     sourceType: "all",
     sourceId: null,
     sourceTitle: "",
   },
+  filtersReady: false,
+  loadSeq: 0,
 
-  setArticleFilter: (filter: FilterState) => set({ articleFilter: filter }),
+  setArticleFilter: (filter: FilterState) => set({ 
+    articleFilter: filter,
+    loadSeq: get().loadSeq + 1 // Increment sequence for race condition protection
+  }),
+
+  setFiltersReady: (ready: boolean) => set({ filtersReady: ready }),
 
   // Preserve read status when changing source
   updateSource: (source: Partial<FilterState>) =>
@@ -193,6 +203,7 @@ const useNavigationStore = create((set) => ({
         ...state.articleFilter,
         ...source,
       },
+      loadSeq: state.loadSeq + 1,
     })),
 }));
 ```
@@ -200,7 +211,13 @@ const useNavigationStore = create((set) => ({
 ### Article Filtering Logic
 
 ```typescript
-function filterArticles(articles: Article[], filter: FilterState): Article[] {
+function filterArticles(articles: Article[], filter: FilterState, currentSeq: number): Article[] {
+  // Race condition protection: only process if this is the current sequence (RR-216)
+  const { loadSeq } = useNavigationStore.getState();
+  if (currentSeq !== loadSeq) {
+    return []; // Discard stale filtering request
+  }
+
   let filtered = articles;
 
   // Apply source filter
@@ -269,6 +286,7 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
    - Show all articles from that folder's feeds
    - Header shows folder name
    - Read status filter persists
+   - **RR-216**: Filter state is established before article loading begins
 
 2. **User taps chevron**
    - Folder expands/collapses
@@ -280,11 +298,18 @@ function filterArticles(articles: Article[], filter: FilterState): Article[] {
    - Show only that feed's articles
    - Header shows feed name
    - Read status filter persists
+   - **RR-216**: Sequence protection prevents stale data display
 
 4. **Return to Feeds**
    - Tap Feeds tab
    - Previous expansion state maintained
    - Filter state preserved for next visit
+
+5. **Back Navigation (RR-216 Fix)**
+   - Browser back button correctly maintains filtered view
+   - URL parameters are parsed before article loading
+   - No flash of unfiltered content during navigation
+   - Consistent behavior across all navigation methods
 
 ## Animation Details
 

@@ -5,6 +5,15 @@ argument-hint: [linear-issue-id]
 
 # Commit and Push Changes with Symbol Analysis
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and symbol analysis:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 Prepare, validate, and commit changes with symbol-level precision for Linear issue $ARGUMENTS.
 
 ## 1. Symbol-Level Change Analysis

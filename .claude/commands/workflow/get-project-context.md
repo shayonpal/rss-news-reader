@@ -5,6 +5,15 @@ argument-hint:
 
 # Get Project Context
 
+## Project Activation
+
+First, activate Serena MCP to access project memories and context:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
 Use `docs-expert-readonly` to analyze the following documents:
 
 - README.md

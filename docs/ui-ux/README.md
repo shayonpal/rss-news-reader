@@ -299,6 +299,15 @@ Complete React/TypeScript implementation of the Figma designs:
 3. **User Control**: Easy access to revert and fetch operations
 4. **Loading States**: Clear indication of content loading progress
 
+#### Filter State Preservation (RR-216)
+
+1. **Race Condition Prevention**: Two-layer protection ensures filtered views maintain accuracy during navigation
+   - **Gating Layer**: `filtersReady` flag prevents ArticleList from loading until URL filters are fully parsed
+   - **Sequencing Layer**: `loadSeq` counter prevents stale API requests from overwriting current data
+2. **Navigation Reliability**: Back navigation to filtered views (tags, feeds) consistently shows filtered articles
+3. **State Synchronization**: URL state and component state remain synchronized during rapid navigation
+4. **Loading Coordination**: Article loading waits for filter state to be fully established
+
 #### Responsive Design Patterns (RR-206)
 
 1. **Breakpoint System**: Consistent three-tier responsive design
@@ -309,6 +318,14 @@ Complete React/TypeScript implementation of the Figma designs:
 3. **SSR Safety**: Server-side rendering compatible with sensible defaults
 4. **Orientation Support**: Automatic adaptation to orientation changes
 5. **Touch Targets**: iOS-compliant 44px minimum touch targets on mobile
+
+#### Navigation State Management (RR-216)
+
+1. **Filter State Coordination**: Synchronized state management between URL parameters and component state
+2. **Race Condition Mitigation**: Prevents article loading before filter state is established
+3. **Back Navigation Reliability**: Ensures filtered views (tags, feeds) maintain their filter state
+4. **Loading Pipeline Gating**: Article loading pipeline respects filter readiness state
+5. **Sequence Protection**: Request sequencing prevents stale data from overwriting current results
 
 ## Related Documentation
 
