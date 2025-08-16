@@ -81,6 +81,7 @@ describe("RR-197: localStorage Optimization - Core Utilities", () => {
   describe("localStorage Queue Management", () => {
     // Import the utilities that will be implemented
     let LocalStorageQueue: any;
+    let queue: any;
 
     beforeEach(async () => {
       // This will fail initially since the module doesn't exist yet
@@ -88,6 +89,10 @@ describe("RR-197: localStorage Optimization - Core Utilities", () => {
       try {
         const module = await import("@/lib/utils/localstorage-queue");
         LocalStorageQueue = module.LocalStorageQueue;
+        // Reset singleton instance for each test
+        LocalStorageQueue.resetInstance();
+        queue = LocalStorageQueue.getInstance();
+        queue.resetQueue(); // Clear any existing state
       } catch (error) {
         // Expected to fail until implementation exists
         LocalStorageQueue = {
@@ -100,13 +105,14 @@ describe("RR-197: localStorage Optimization - Core Utilities", () => {
             getAll: vi.fn(() => []),
             isEmpty: vi.fn(() => true),
             hasCapacity: vi.fn(() => true),
+            resetQueue: vi.fn(),
           }),
         };
+        queue = LocalStorageQueue.getInstance();
       }
     });
 
     it("should initialize with empty queue", () => {
-      const queue = LocalStorageQueue.getInstance();
       expect(queue.isEmpty()).toBe(true);
       expect(queue.size()).toBe(0);
     });

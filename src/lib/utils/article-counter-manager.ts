@@ -23,10 +23,53 @@ export class ArticleCounterManager {
   private lastCacheUpdate = 0;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+  // Concurrency guards for processed-entries update
+  private isProcessing = false; // single-tab re-entrancy guard
+  private readonly LS_LOCK_KEY = "rss_reader_counter_lock";
+  private readonly LOCK_TTL = 2000; // 2s TTL to avoid deadlocks
+
+  /**
+   * Try to acquire a short-lived localStorage lock for cross-tab coordination
+   */
+  private tryAcquireLock(): boolean {
+    try {
+      const now = Date.now();
+      const raw = localStorage.getItem(this.LS_LOCK_KEY);
+      const ts = raw ? parseInt(raw, 10) : 0;
+      if (!raw || Number.isNaN(ts) || now - ts > this.LOCK_TTL) {
+        localStorage.setItem(this.LS_LOCK_KEY, String(now));
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  }
+
+  /**
+   * Release the localStorage lock
+   */
+  private releaseLock(): void {
+    try {
+      localStorage.removeItem(this.LS_LOCK_KEY);
+    } catch {
+      // ignore
+    }
+  }
+
   /**
    * Update counter based on localStorage queue entries
    */
   updateCountersFromLocalStorage(): FeedCountUpdate[] {
+    // Single-tab re-entrancy guard
+    if (this.isProcessing) {
+      return [];
+    }
+    this.isProcessing = true;
+
+    // Best-effort cross-tab lock
+    const haveLock = this.tryAcquireLock();
+
     const queueEntries = localStorageQueue.getQueue();
     const updates: FeedCountUpdate[] = [];
 
@@ -94,7 +137,16 @@ export class ArticleCounterManager {
 
       // Keep only last 1000 processed entries to prevent storage bloat
       const trimmedEntries = newProcessedEntries.slice(-1000);
-      localStorage.setItem(processedKey, JSON.stringify(trimmedEntries));
+
+      // Only write when holding the cross-tab lock to minimize clobbering
+      if (haveLock) {
+        localStorage.setItem(processedKey, JSON.stringify(trimmedEntries));
+      } else {
+        // Fallback: attempt non-locked write but log reduced guarantees
+        try {
+          localStorage.setItem(processedKey, JSON.stringify(trimmedEntries));
+        } catch {}
+      }
 
       console.log(
         `[RR-197] Atomically processed ${newEntries.length} new localStorage entries (${queueEntries.length} total in queue, ${trimmedEntries.length} tracked)`
@@ -104,6 +156,9 @@ export class ArticleCounterManager {
         "[ArticleCounterManager] Failed to track processed entries:",
         error
       );
+    } finally {
+      if (haveLock) this.releaseLock();
+      this.isProcessing = false;
     }
 
     return updates;

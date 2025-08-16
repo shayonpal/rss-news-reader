@@ -1,6 +1,12 @@
 /**
  * Performance Monitor for RR-197
  * Tracks UI responsiveness, memory usage, and frame rate during rapid operations
+ *
+ * Compatibility: Includes legacy-style measurement helpers used by tests:
+ * - startMeasure(name), endMeasure(name)
+ * - getFPS()
+ * - isMaintenanceFPS(target)
+ * - getAverageResponseTime()
  */
 
 export interface PerformanceMetrics {
@@ -10,6 +16,8 @@ export interface PerformanceMetrics {
   responseTime: number;
   operationCount: number;
   timestamp: number;
+  lastResponseTime?: number;
+  avgResponseTime?: number;
 }
 
 export interface PerformanceThresholds {
@@ -26,8 +34,13 @@ export class PerformanceMonitor {
   private baselineMemory = 0;
   private operationStartTime = 0;
   private operationCount = 0;
+  private lastResponseTime = 0;
+  private avgResponseTime = 0;
   private isMonitoring = false;
   private rafId: number | null = null;
+
+  // Legacy-style measurement map for tests (name -> startTime)
+  private measureMap: Map<string, number> = new Map();
 
   private readonly thresholds: PerformanceThresholds = {
     minFrameRate: 60,
@@ -56,6 +69,8 @@ export class PerformanceMonitor {
     this.frameCount = 0;
     this.lastFrameTime = performance.now();
     this.operationCount = 0;
+    this.lastResponseTime = 0;
+    this.avgResponseTime = 0;
 
     this.monitorFrameRate();
   }
@@ -79,7 +94,9 @@ export class PerformanceMonitor {
     this.frameCount++;
 
     if (now - this.lastFrameTime >= 1000) {
-      this.currentFrameRate = this.frameCount;
+      const elapsed = now - this.lastFrameTime;
+      this.currentFrameRate =
+        Math.round(((this.frameCount * 1000) / elapsed) * 100) / 100;
       this.frameCount = 0;
       this.lastFrameTime = now;
     }
@@ -107,11 +124,38 @@ export class PerformanceMonitor {
   }
 
   /**
+   * Compatibility: start a named measurement (used by tests)
+   */
+  startMeasure(name: string): void {
+    this.measureMap.set(name, performance.now());
+  }
+
+  /**
+   * Compatibility: end a named measurement and return duration
+   */
+  endMeasure(name: string): number {
+    const start = this.measureMap.get(name) ?? performance.now();
+    const dt = performance.now() - start;
+    this.measureMap.delete(name);
+    // also update response-time aggregates
+    this.lastResponseTime = dt;
+    this.avgResponseTime =
+      this.avgResponseTime === 0 ? dt : 0.2 * dt + 0.8 * this.avgResponseTime;
+    this.operationCount++;
+    return dt;
+  }
+
+  /**
    * Record end of operation and increment counter
    */
   endOperation(): number {
     const responseTime = performance.now() - this.operationStartTime;
     this.operationCount++;
+    this.lastResponseTime = responseTime;
+    this.avgResponseTime =
+      this.avgResponseTime === 0
+        ? responseTime
+        : 0.2 * responseTime + 0.8 * this.avgResponseTime;
     return responseTime;
   }
 
@@ -131,7 +175,31 @@ export class PerformanceMonitor {
         : 0,
       operationCount: this.operationCount,
       timestamp: Date.now(),
+      lastResponseTime: this.lastResponseTime,
+      avgResponseTime: Math.round(this.avgResponseTime * 100) / 100,
     };
+  }
+
+  /**
+   * Compatibility: get current FPS (used by tests)
+   */
+  getFPS(): number {
+    return this.currentFrameRate;
+  }
+
+  /**
+   * Compatibility: check if FPS meets a target (used by tests)
+   */
+  isMaintenanceFPS(target: number): boolean {
+    // Use accessor so tests can vi.spyOn(getFPS) and override behavior deterministically
+    return this.getFPS() >= target;
+  }
+
+  /**
+   * Compatibility: average response time accessor (used by tests)
+   */
+  getAverageResponseTime(): number {
+    return Math.round(this.avgResponseTime * 100) / 100;
   }
 
   /**
@@ -143,7 +211,8 @@ export class PerformanceMonitor {
     return (
       metrics.frameRate >= this.thresholds.minFrameRate &&
       metrics.memoryDelta <= this.thresholds.maxMemoryIncrease &&
-      metrics.responseTime <= this.thresholds.maxResponseTime
+      (metrics.lastResponseTime ?? metrics.responseTime) <=
+        this.thresholds.maxResponseTime
     );
   }
 
@@ -193,6 +262,8 @@ export class PerformanceMonitor {
     this.operationCount = 0;
     this.baselineMemory = this.getMemoryUsage();
     this.lastFrameTime = performance.now();
+    this.lastResponseTime = 0;
+    this.avgResponseTime = 0;
   }
 
   /**

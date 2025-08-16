@@ -738,6 +738,104 @@ const ClientOptimizations = {
 };
 ```
 
+### Client Performance Enhancement (RR-197)
+
+```typescript
+// Three-tier localStorage optimization for instant UI response
+class ClientPerformanceOptimizer {
+  // Tier 1: Instant localStorage operations (<1ms)
+  private localStorageQueue = new LocalStorageQueue({
+    maxEntries: 1000,
+    storageKey: "rss-article-operations",
+    enableFIFOCleanup: true,
+  });
+
+  // Tier 2: Memory coordination with database batching
+  private stateManager = new LocalStorageStateManager({
+    batchInterval: 500, // ms
+    enableRapidMarkingMode: true,
+  });
+
+  // Tier 3: Performance monitoring
+  private performanceMonitor = new PerformanceMonitor({
+    targetFps: 60,
+    maxResponseTime: 1, // ms
+    alertOnPerformanceIssues: true,
+  });
+
+  optimizeArticleMarking(articleId: string, updates: ArticleUpdates): void {
+    const operation = () => {
+      // Instant localStorage feedback
+      this.localStorageQueue.enqueue({
+        articleId,
+        updates,
+        timestamp: Date.now(),
+      });
+
+      // Immediate UI state update
+      this.updateUIState(articleId, updates);
+
+      // Coordinated database batching
+      this.stateManager.scheduleBatchUpdate({ articleId, updates });
+    };
+
+    // Monitor performance
+    const metrics = this.performanceMonitor.monitorOperation(operation);
+
+    if (!metrics.withinTarget) {
+      console.warn(`Performance target missed: ${metrics.duration}ms`);
+    }
+  }
+
+  // Race condition prevention for counters
+  private articleCounterManager = new ArticleCounterManager({
+    enableSetBasedTracking: true,
+    maxProcessedEntries: 1000,
+    autoCleanup: true,
+  });
+
+  updateCountersOptimized(
+    articleId: string,
+    wasRead: boolean,
+    isRead: boolean
+  ): void {
+    // Prevent duplicate counter decrements
+    const entryKey = `${articleId}-${Date.now()}`;
+
+    if (this.articleCounterManager.isProcessed(entryKey)) return;
+
+    // Atomic counter updates
+    this.articleCounterManager.updateCounters(entryKey, { wasRead, isRead });
+  }
+}
+
+// Integration with existing article store
+class OptimizedArticleStore extends ArticleStore {
+  private clientOptimizer = new ClientPerformanceOptimizer();
+
+  async markMultipleAsRead(articleIds: string[]): Promise<void> {
+    // Process each article with instant feedback
+    for (const id of articleIds) {
+      this.clientOptimizer.optimizeArticleMarking(id, {
+        isRead: true,
+        lastLocalUpdate: new Date(),
+      });
+    }
+
+    // Database batching handled automatically by LocalStorageStateManager
+    // User sees immediate feedback while operations batch in background
+  }
+}
+```
+
+### Performance Targets (RR-197)
+
+- **UI Response Time**: <1ms for article marking operations
+- **Scrolling Performance**: Maintain 60fps during rapid article interactions
+- **Database Batching**: 500ms intervals for optimal server performance
+- **Memory Management**: FIFO cleanup at 1000 operations to prevent localStorage bloat
+- **Counter Accuracy**: Zero duplicate decrements through Set-based tracking
+
 ### Server Performance
 
 ```typescript

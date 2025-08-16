@@ -138,7 +138,14 @@ export function useArticleListState({
     previousFeed.current = feedId;
     previousFolder.current = folderId;
     previousTag.current = tagId; // RR-163
-  }, [readStatusFilter, feedId, folderId, tagId]); // RR-163: Add tagId to dependencies
+  }, [
+    readStatusFilter,
+    feedId,
+    folderId,
+    tagId,
+    navigatingToArticle,
+    setNavigatingToArticle,
+  ]); // RR-163: Add tagId to dependencies
 
   // Save state before navigation
   const saveStateBeforeNavigation = useCallback(() => {

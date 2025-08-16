@@ -133,7 +133,28 @@ For simpler state requirements, could use React's built-in state management.
 
 ### Secondary Storage: **localStorage**
 
-For theme preference only.
+**Primary Use**: Theme preference storage
+
+**Performance Optimization (RR-197)**: Three-tier localStorage architecture for instant UI response
+
+**Components**:
+
+```typescript
+// Core localStorage optimization classes
+- LocalStorageQueue: FIFO queue with 1000-entry limit and graceful degradation
+- PerformanceMonitor: 60fps tracking with <1ms response time monitoring
+- ArticleCounterManager: Real-time counter updates with race condition prevention
+- LocalStorageStateManager: Coordination layer providing 500ms database batching
+- LocalStorageFallback: Graceful degradation when localStorage unavailable
+```
+
+**Architecture Benefits**:
+
+- **Instant UI Response**: <1ms localStorage operations for immediate user feedback
+- **Database Efficiency**: 500ms batching reduces server load while maintaining responsiveness
+- **Memory Management**: FIFO cleanup at 1000 operations prevents localStorage bloat
+- **Race Condition Prevention**: Set-based tracking eliminates duplicate counter decrements
+- **Performance Monitoring**: Real-time 60fps tracking ensures smooth user interactions
 
 ### Service Worker: **Workbox**
 
@@ -289,6 +310,10 @@ For theme preference only.
 - Memory caching for API responses
 - HTTP cache headers optimization
 - **Anti-Cache Headers**: Time-sensitive endpoints like `/api/sync/last-sync` use cache prevention headers (`Cache-Control: no-store, no-cache, must-revalidate`, `Pragma: no-cache`, `Expires: 0`) to ensure fresh data
+- **localStorage Performance Cache (RR-197)**: Three-tier architecture for instant UI feedback
+  - **Tier 1**: localStorage operations (<1ms) for immediate user feedback
+  - **Tier 2**: Memory coordination layer with 500ms database batching
+  - **Tier 3**: Optimized database operations with FIFO cleanup at 1000 entries
 
 ## Development Environment
 

@@ -6,7 +6,7 @@ import type { Article, Feed } from "@/types";
 // Mock fetch globally
 global.fetch = vi.fn();
 
-describe.skip("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
+describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
   let testIdCounter = 0;
 
   const createMockArticle = (overrides: Partial<Article> = {}): Article => ({

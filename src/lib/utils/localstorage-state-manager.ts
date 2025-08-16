@@ -26,6 +26,13 @@ export class LocalStorageStateManager {
   private batchSyncTimer: NodeJS.Timeout | null = null;
   private isInitialized = false;
 
+  // In-memory article state cache used for test compatibility (RR-197 spec)
+  // Stores minimal per-article state for getArticleState()/updateArticleState()
+  private articleStateMap: Map<string, any> = new Map();
+
+  // Fallback mode flag for graceful degradation testing
+  public static fallbackMode = false;
+
   constructor(config: Partial<StateManagerConfig> = {}) {
     this.config = {
       enablePerformanceMonitoring: true,
@@ -91,15 +98,24 @@ export class LocalStorageStateManager {
     }
 
     try {
-      // Use article counter manager for immediate update
-      const responseTime = articleCounterManager.markArticleRead(
+      // Add to localStorage queue for instant UI update
+      localStorageQueue.enqueue({
         articleId,
-        feedId
-      );
+        feedId,
+        action: "mark_read",
+        timestamp: Date.now(),
+      });
 
-      if (this.config.enablePerformanceMonitoring) {
-        performanceMonitor.endOperation();
-      }
+      // Trigger counter updates from localStorage queue
+      articleCounterManager.updateCountersFromLocalStorage();
+
+      const responseTime = this.config.enablePerformanceMonitoring
+        ? performanceMonitor.endOperation()
+        : 0;
+
+      // Maintain a minimal in-memory state map for test compatibility
+      const prev = this.articleStateMap.get(articleId) || {};
+      this.articleStateMap.set(articleId, { ...prev, isRead: true, feedId });
 
       return {
         success: true,
@@ -135,12 +151,31 @@ export class LocalStorageStateManager {
     }
 
     try {
-      const responseTime =
-        articleCounterManager.batchMarkArticlesRead(articles);
+      // Add entries to localStorage queue for instant UI updates
+      const timestamp = Date.now();
+      const actualResponseTime = this.config.enablePerformanceMonitoring
+        ? performanceMonitor.startMeasure("batch_mark_read")
+        : 0;
 
-      if (this.config.enablePerformanceMonitoring) {
-        performanceMonitor.endOperation();
-      }
+      articles.forEach(({ articleId, feedId }) => {
+        localStorageQueue.enqueue({
+          articleId,
+          feedId,
+          action: "mark_read",
+          timestamp,
+        });
+      });
+
+      // Performance measurement
+      const responseTime = this.config.enablePerformanceMonitoring
+        ? performanceMonitor.endMeasure("batch_mark_read")
+        : 0;
+
+      // Maintain in-memory state map for test compatibility
+      articles.forEach(({ articleId, feedId }) => {
+        const prev = this.articleStateMap.get(articleId) || {};
+        this.articleStateMap.set(articleId, { ...prev, isRead: true, feedId });
+      });
 
       return {
         success: true,
@@ -295,6 +330,172 @@ export class LocalStorageStateManager {
     }
   }
 }
+
+// Back-compat facade methods expected by tests/specs
+(LocalStorageStateManager as any).prototype.updateArticleState = function (
+  articleId: string,
+  state: { isRead?: boolean; feedId?: string }
+): void {
+  try {
+    const feedId = state?.feedId || "";
+    if (state?.isRead === true && feedId) {
+      // Immediate local counter update via localStorage path
+      articleCounterManager.markArticleRead(articleId, feedId);
+    } else if (state?.isRead === false && feedId) {
+      articleCounterManager.markArticleUnread(articleId, feedId);
+    }
+  } catch (e) {
+    console.warn("[LocalStorageStateManager] updateArticleState failed:", e);
+  }
+};
+
+(LocalStorageStateManager as any).prototype.batchUpdateArticleStates =
+  function (
+    updates: Array<{ articleId: string; isRead?: boolean; feedId?: string }>
+  ): void {
+    try {
+      const toRead = updates
+        .filter((u) => u.isRead === true && !!u.feedId)
+        .map((u) => ({ articleId: u.articleId, feedId: u.feedId as string }));
+
+      if (toRead.length > 0) {
+        // Use existing immediate local batch for instant UI
+        this.batchMarkArticlesRead(toRead);
+      }
+
+      // Process unread updates individually (no batch-unread API)
+      updates.forEach((u) => {
+        if (u.isRead === false && u.feedId) {
+          articleCounterManager.markArticleUnread(u.articleId, u.feedId);
+        }
+      });
+    } catch (e) {
+      console.warn(
+        "[LocalStorageStateManager] batchUpdateArticleStates failed:",
+        e
+      );
+    }
+  };
+
+(LocalStorageStateManager as any).prototype.getUnreadCount =
+  function (): number {
+    try {
+      return articleCounterManager.getTotalUnreadCount();
+    } catch {
+      return 0;
+    }
+  };
+
+(LocalStorageStateManager as any).prototype.getFeedUnreadCount = function (
+  feedId: string
+): number {
+  try {
+    const s = articleCounterManager.getCounterState(feedId);
+    return s ? s.unreadCount : 0;
+  } catch {
+    return 0;
+  }
+};
+
+// Back-compat facade methods expected by tests/specs
+(LocalStorageStateManager as any).prototype.updateArticleState = function (
+  articleId: string,
+  state: { isRead?: boolean; feedId?: string; tags?: string[] }
+): void {
+  try {
+    const feedId = state?.feedId || "";
+    const prev = this.articleStateMap.get(articleId) || {};
+    const next = { ...prev, ...state };
+    this.articleStateMap.set(articleId, next);
+
+    if (!LocalStorageStateManager.fallbackMode) {
+      if (state?.isRead === true && feedId) {
+        articleCounterManager.markArticleRead(articleId, feedId);
+      } else if (state?.isRead === false && feedId) {
+        articleCounterManager.markArticleUnread(articleId, feedId);
+      }
+    }
+  } catch (e) {
+    console.warn("[LocalStorageStateManager] updateArticleState failed:", e);
+  }
+};
+
+(LocalStorageStateManager as any).prototype.getArticleState = function (
+  articleId: string
+): any | null {
+  return this.articleStateMap.get(articleId) || null;
+};
+
+(LocalStorageStateManager as any).prototype.batchUpdateArticleStates =
+  function (
+    updates: Array<{
+      articleId: string;
+      isRead?: boolean;
+      feedId?: string;
+      tags?: string[];
+    }>
+  ): void {
+    try {
+      // Update in-memory first
+      updates.forEach((u) => {
+        const prev = this.articleStateMap.get(u.articleId) || {};
+        this.articleStateMap.set(u.articleId, { ...prev, ...u });
+      });
+
+      if (LocalStorageStateManager.fallbackMode) return;
+
+      const toRead = updates
+        .filter((u) => u.isRead === true && !!u.feedId)
+        .map((u) => ({ articleId: u.articleId, feedId: u.feedId as string }));
+
+      if (toRead.length > 0) {
+        this.batchMarkArticlesRead(toRead);
+      }
+
+      // Process unread updates individually (no batch-unread API)
+      updates.forEach((u) => {
+        if (u.isRead === false && u.feedId) {
+          articleCounterManager.markArticleUnread(u.articleId, u.feedId);
+        }
+      });
+    } catch (e) {
+      console.warn(
+        "[LocalStorageStateManager] batchUpdateArticleStates failed:",
+        e
+      );
+    }
+  };
+
+(LocalStorageStateManager as any).prototype.getUnreadCount =
+  function (): number {
+    try {
+      return articleCounterManager.getTotalUnreadCount();
+    } catch {
+      return 0;
+    }
+  };
+
+(LocalStorageStateManager as any).prototype.getFeedUnreadCount = function (
+  feedId: string
+): number {
+  try {
+    const s = articleCounterManager.getCounterState(feedId);
+    return s ? s.unreadCount : 0;
+  } catch {
+    return 0;
+  }
+};
+
+// Fallback mode toggles for tests
+(LocalStorageStateManager as any).enableFallbackMode = function () {
+  LocalStorageStateManager.fallbackMode = true;
+};
+(LocalStorageStateManager as any).isInFallbackMode = function () {
+  return LocalStorageStateManager.fallbackMode === true;
+};
+(LocalStorageStateManager as any).disableFallbackMode = function () {
+  LocalStorageStateManager.fallbackMode = false;
+};
 
 // Export singleton instance
 export const localStorageStateManager = new LocalStorageStateManager();

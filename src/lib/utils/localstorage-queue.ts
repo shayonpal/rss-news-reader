@@ -20,17 +20,25 @@ export class LocalStorageQueue {
   private static instance: LocalStorageQueue | null = null;
   private config: QueueConfig;
   private isAvailable: boolean = true;
+  // Store raw entries exactly as provided by callers (either legacy {type,...} or current {action,...})
+  private memoryQueue: Array<
+    | QueueEntry
+    | { type: string; articleId: string; timestamp: number; feedId?: string }
+  > = [];
 
   constructor(config: Partial<QueueConfig> = {}) {
     this.config = {
       maxEntries: 1000,
-      storageKey: "rss_reader_mark_queue",
+      storageKey: "rss-reader-queue",
       enableGracefulDegradation: true,
       ...config,
     };
 
     // Test localStorage availability
     this.isAvailable = this.checkLocalStorageAvailability();
+
+    // Initialize in-memory queue from localStorage (graceful if unavailable)
+    this.refreshFromStorage();
   }
 
   /**
@@ -61,94 +69,102 @@ export class LocalStorageQueue {
    * Get current queue entries
    */
   getQueue(): QueueEntry[] {
-    if (!this.isAvailable) return [];
-
-    try {
-      const stored = localStorage.getItem(this.config.storageKey);
-      if (!stored) return [];
-
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      // Clear corrupted data
-      this.clearQueue();
-      return [];
-    }
+    // Always return a normalized copy for internal consumers
+    return this.memoryQueue.map((e: any) =>
+      "action" in e
+        ? (e as QueueEntry)
+        : ({
+            articleId: e.articleId,
+            timestamp: e.timestamp,
+            action:
+              (e.type as "mark_read" | "mark_unread" | "toggle_star") ??
+              "mark_read",
+            feedId: e.feedId ?? "",
+          } as QueueEntry)
+    );
   }
 
   /**
    * Add entry to queue with FIFO management (original internal method)
    */
-  private enqueueInternal(entry: QueueEntry): boolean {
-    if (!this.isAvailable) {
-      if (this.config.enableGracefulDegradation) {
-        console.warn(
-          "[LocalStorageQueue] localStorage unavailable, operation ignored"
-        );
-        return false;
-      }
-      throw new Error("localStorage is not available");
+  private enqueueInternal(
+    entry:
+      | QueueEntry
+      | { type: string; articleId: string; timestamp: number; feedId?: string }
+  ): boolean {
+    // Validate entry has required fields
+    const articleId = (entry as any).articleId;
+    if (!articleId || typeof articleId !== "string") {
+      console.warn(
+        "[LocalStorageQueue] Invalid entry - missing articleId:",
+        entry
+      );
+      return false;
     }
 
+    // Always update in-memory queue for instant UI updates
+    // Remove duplicate entries for same article (latest wins) - this prevents counter over-decrementing
+    this.memoryQueue = this.memoryQueue.filter(
+      (item: any) => item.articleId !== articleId
+    );
+
+    // Add new entry at end (FIFO order)
+    this.memoryQueue.push(entry);
+
+    // Apply FIFO cleanup if needed
+    this.memoryQueue = this.applyFIFOCleanup(this.memoryQueue);
+
+    // Best-effort persistence to localStorage (graceful on failure)
     try {
-      const queue = this.getQueue();
-
-      // Remove duplicate entries for same article
-      const filteredQueue = queue.filter(
-        (item) => item.articleId !== entry.articleId
+      localStorage.setItem(
+        this.config.storageKey,
+        JSON.stringify(this.memoryQueue)
       );
-
-      // Add new entry
-      filteredQueue.push(entry);
-
-      // Apply FIFO cleanup if needed
-      const finalQueue = this.applyFIFOCleanup(filteredQueue);
-
-      localStorage.setItem(this.config.storageKey, JSON.stringify(finalQueue));
-      return true;
     } catch (error) {
       if (this.config.enableGracefulDegradation) {
-        console.warn("[LocalStorageQueue] Failed to enqueue:", error);
-        return false;
+        console.warn("[LocalStorageQueue] Failed to persist enqueue:", error);
+      } else {
+        throw error;
       }
-      throw error;
     }
+
+    return true;
   }
 
   /**
    * Remove specific entry from queue by articleId
    */
-  removeByArticleId(articleId: string): QueueEntry | null {
-    if (!this.isAvailable) return null;
+  removeByArticleId(articleId: string): any | null {
+    const idx = this.memoryQueue.findIndex(
+      (i: any) => i.articleId === articleId
+    );
+    if (idx === -1) return null;
 
+    const [removed] = this.memoryQueue.splice(idx, 1);
+
+    // Persist best-effort
     try {
-      const queue = this.getQueue();
-      const entryIndex = queue.findIndex(
-        (item) => item.articleId === articleId
+      localStorage.setItem(
+        this.config.storageKey,
+        JSON.stringify(this.memoryQueue)
       );
-
-      if (entryIndex === -1) return null;
-
-      const [removedEntry] = queue.splice(entryIndex, 1);
-      localStorage.setItem(this.config.storageKey, JSON.stringify(queue));
-
-      return removedEntry;
     } catch {
-      return null;
+      // ignore
     }
+
+    return removed ?? null;
   }
 
   /**
    * Apply FIFO cleanup to maintain max entries limit
+   * O(1) slice since we append new entries at the end
    */
-  private applyFIFOCleanup(queue: QueueEntry[]): QueueEntry[] {
+  private applyFIFOCleanup<T extends any[]>(queue: any[]): any[] {
     if (queue.length <= this.config.maxEntries) {
       return queue;
     }
-
-    // Sort by timestamp and keep newest entries
-    const sorted = queue.sort((a, b) => a.timestamp - b.timestamp);
-    return sorted.slice(-this.config.maxEntries);
+    // Keep newest entries while preserving insertion order
+    return queue.slice(-this.config.maxEntries);
   }
 
   /**
@@ -185,8 +201,7 @@ export class LocalStorageQueue {
    * Clear entire queue
    */
   clearQueue(): void {
-    if (!this.isAvailable) return;
-
+    this.memoryQueue = [];
     try {
       localStorage.removeItem(this.config.storageKey);
     } catch {
@@ -204,30 +219,30 @@ export class LocalStorageQueue {
   /**
    * Batch dequeue multiple entries
    */
-  batchDequeue(articleIds: string[]): QueueEntry[] {
-    if (!this.isAvailable) return [];
+  batchDequeue(articleIds: string[]): any[] {
+    const removed: any[] = [];
+    const remaining: any[] = [];
+
+    this.memoryQueue.forEach((entry: any) => {
+      if (articleIds.includes(entry.articleId)) {
+        removed.push(entry);
+      } else {
+        remaining.push(entry);
+      }
+    });
+
+    this.memoryQueue = remaining;
 
     try {
-      const queue = this.getQueue();
-      const removedEntries: QueueEntry[] = [];
-      const remainingEntries: QueueEntry[] = [];
-
-      queue.forEach((entry) => {
-        if (articleIds.includes(entry.articleId)) {
-          removedEntries.push(entry);
-        } else {
-          remainingEntries.push(entry);
-        }
-      });
-
       localStorage.setItem(
         this.config.storageKey,
-        JSON.stringify(remainingEntries)
+        JSON.stringify(this.memoryQueue)
       );
-      return removedEntries;
     } catch {
-      return [];
+      // ignore
     }
+
+    return removed;
   }
 
   /**
@@ -288,26 +303,68 @@ export class LocalStorageQueue {
   }
 
   /**
+   * Reset queue state (for testing)
+   */
+  resetQueue(): void {
+    this.memoryQueue = [];
+    try {
+      localStorage.removeItem(this.config.storageKey);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Dequeue - remove first item or specific item by articleId
    */
-  dequeue(articleId?: string): QueueEntry | null {
+  dequeue(articleId?: string): any | null {
     if (articleId) {
       return this.removeByArticleId(articleId);
     }
 
-    // Remove first item (FIFO)
-    const queue = this.getQueue();
-    if (queue.length === 0) return null;
+    if (this.memoryQueue.length === 0) return null;
 
-    const firstItem = queue.shift();
-    if (firstItem) {
-      try {
-        localStorage.setItem(this.config.storageKey, JSON.stringify(queue));
-      } catch {
-        // Fail silently for graceful degradation
-      }
+    const firstItem = this.memoryQueue.shift() ?? null;
+
+    try {
+      localStorage.setItem(
+        this.config.storageKey,
+        JSON.stringify(this.memoryQueue)
+      );
+    } catch {
+      // graceful degradation - continue without localStorage
     }
-    return firstItem || null;
+
+    return firstItem;
+  }
+
+  /**
+   * Refresh memoryQueue from current localStorage (used on construction or when tests reset storage)
+   */
+  private refreshFromStorage(): void {
+    try {
+      const stored = localStorage.getItem(this.config.storageKey);
+      if (!stored) {
+        this.memoryQueue = [];
+        return;
+      }
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        // Accept legacy {type,...} or current {action,...}
+        this.memoryQueue = parsed
+          .map((e: any) => {
+            if (e && typeof e === "object") {
+              if ("type" in e || "action" in e) return e;
+            }
+            return null;
+          })
+          .filter(Boolean) as any[];
+      } else {
+        this.memoryQueue = [];
+      }
+    } catch {
+      this.memoryQueue = [];
+    }
   }
 
   /**
@@ -334,7 +391,22 @@ export class LocalStorageQueue {
    * Check if queue has capacity
    */
   hasCapacity(): boolean {
-    return this.getQueue().length < this.config.maxEntries;
+    return this.memoryQueue.length < this.config.maxEntries;
+  }
+
+  /**
+   * Peek at first item without removing it
+   */
+  peek(): any | null {
+    if (this.memoryQueue.length === 0) return null;
+    return this.memoryQueue[0] ?? null;
+  }
+
+  /**
+   * Clear all entries from queue
+   */
+  clear(): void {
+    this.clearQueue();
   }
 }
 

@@ -23,6 +23,9 @@ export class FallbackHandler {
   private lastAvailabilityCheck = 0;
   private readonly AVAILABILITY_CHECK_INTERVAL = 30000; // 30 seconds
 
+  // Static fallback mode flag (used by tests)
+  private static fallbackMode = false;
+
   constructor(config: Partial<FallbackConfig> = {}) {
     this.config = {
       enableLogging: true,
@@ -75,6 +78,11 @@ export class FallbackHandler {
    */
   checkLocalStorageAvailability(): boolean {
     const now = Date.now();
+
+    // If fallback mode is enabled, report unavailable
+    if (FallbackHandler.fallbackMode) {
+      return false;
+    }
 
     // Use cached result if recent
     if (now - this.lastAvailabilityCheck < this.AVAILABILITY_CHECK_INTERVAL) {
@@ -254,7 +262,21 @@ export class FallbackHandler {
   }
 
   /**
-   * Enable fallback mode
+   * Enable fallback mode (static helper used in tests)
+   */
+  static enableFallbackMode(): void {
+    FallbackHandler.fallbackMode = true;
+  }
+
+  /**
+   * Inspect fallback mode flag (static helper used in tests)
+   */
+  static isInFallbackMode(): boolean {
+    return FallbackHandler.fallbackMode === true;
+  }
+
+  /**
+   * Enable fallback mode (instance-level logging event)
    */
   enableFallbackMode(): void {
     this.logOperation({
@@ -276,6 +298,17 @@ export class FallbackHandler {
       error: error.message,
       fallbackUsed: true,
     });
+  }
+
+  /**
+   * Static helper for test compatibility
+   */
+  static handleLocalStorageError(
+    error: Error,
+    operation: string = "unknown"
+  ): void {
+    const instance = new FallbackHandler();
+    instance.handleLocalStorageError(error, operation);
   }
 }
 
