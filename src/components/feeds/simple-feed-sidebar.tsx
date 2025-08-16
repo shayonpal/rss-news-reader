@@ -29,6 +29,7 @@ interface SimpleFeedSidebarProps {
   selectedTagId: string | null;
   onFeedSelect: (feedId: string | null) => void;
   onTagSelect: (tagId: string | null) => void;
+  onClearFilters?: () => void;
   onClose?: () => void;
 }
 
@@ -37,6 +38,7 @@ export function SimpleFeedSidebar({
   selectedTagId,
   onFeedSelect,
   onTagSelect,
+  onClearFilters,
 }: SimpleFeedSidebarProps) {
   const router = useRouter();
   const {
@@ -308,8 +310,13 @@ export function SimpleFeedSidebar({
                   : "hover:border-l-2 hover:border-muted-foreground/30"
               }`}
               onClick={() => {
-                onFeedSelect(null);
-                onTagSelect(null);
+                if (onClearFilters) {
+                  onClearFilters();
+                } else {
+                  // Fallback: maintain previous behavior if handler not provided
+                  onFeedSelect(null);
+                  onTagSelect(null);
+                }
               }}
             >
               <div className="flex items-center justify-between">

@@ -117,6 +117,8 @@ export default function HomePage() {
     router.push(`/article/${encodeURIComponent(articleId)}`);
   };
 
+  const articleListRef = useRef<HTMLDivElement>(null);
+
   const handleFeedSelect = (feedId: string | null) => {
     setSelectedFeedId(feedId);
     // Save filter state for restoration
@@ -148,6 +150,12 @@ export default function HomePage() {
     );
     // Next.js automatically prepends basePath to router operations
     router.replace(newUrl as any);
+    // Reset article list scroll position to top after filter change
+    requestAnimationFrame(() => {
+      if (articleListRef.current) {
+        articleListRef.current.scrollTo({ top: 0, behavior: "auto" });
+      }
+    });
 
     // Close sidebar on mobile after selection
     if (viewport.shouldCollapseSidebar) {
@@ -175,10 +183,7 @@ export default function HomePage() {
     } else {
       params.delete("tag");
     }
-    // Keep feed if present and no tag selected
-    if (!tagId && selectedFeedId) {
-      params.set("feed", selectedFeedId);
-    }
+    // Do not re-add feed when clearing tag to avoid URL race (RR-197/RR-216)
     const queryString = params.toString();
     const newUrl = queryString ? `/?${queryString}` : "/";
     console.log(
@@ -186,6 +191,12 @@ export default function HomePage() {
     );
     // Next.js automatically prepends basePath to router operations
     router.replace(newUrl as any);
+    // Reset article list scroll position to top after filter change
+    requestAnimationFrame(() => {
+      if (articleListRef.current) {
+        articleListRef.current.scrollTo({ top: 0, behavior: "auto" });
+      }
+    });
 
     // Close sidebar on mobile after selection
     if (viewport.shouldCollapseSidebar) {
@@ -193,9 +204,38 @@ export default function HomePage() {
     }
   };
 
-  // Header show/hide on scroll - now using article list container
-  const articleListRef = useRef<HTMLDivElement>(null);
+  // Unified clear filters handler for "All Articles"
+  const handleClearFilters = () => {
+    // Clear local state
+    setSelectedFeedId(null);
+    setSelectedTagId(null);
+    // Update session storage
+    sessionStorage.setItem("articleListFilter", "null");
+    sessionStorage.setItem("articleListTagFilter", "null");
 
+    // Build new URL with both params removed
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("feed");
+    params.delete("tag");
+    const queryString = params.toString();
+    const newUrl = queryString ? `/?${queryString}` : "/";
+    console.log(`🧹 Clearing filters - Updating URL to: ${newUrl}`);
+    router.replace(newUrl as any);
+
+    // Reset scroll to top for fresh scope
+    requestAnimationFrame(() => {
+      if (articleListRef.current) {
+        articleListRef.current.scrollTo({ top: 0, behavior: "auto" });
+      }
+    });
+
+    // Close sidebar on mobile
+    if (viewport.shouldCollapseSidebar) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  // Header show/hide on scroll - now using article list container
   useEffect(() => {
     let ticking = false;
 
@@ -304,6 +344,7 @@ export default function HomePage() {
             selectedTagId={selectedTagId}
             onFeedSelect={handleFeedSelect}
             onTagSelect={handleTagSelect}
+            onClearFilters={handleClearFilters}
             onClose={() => setIsSidebarOpen(false)}
           />
         </ErrorBoundary>
