@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* RR-179: Liquid Glass Mark All Read Button Styles */
+@import "../styles/liquid-glass-button.css";
+
 /* Global viewport constraints for mobile */
 html,
 body {
