@@ -5,19 +5,42 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SimpleFeedSidebar } from "@/components/feeds/simple-feed-sidebar";
 import { ArticleList } from "@/components/articles/article-list";
 import { ArticleHeader } from "@/components/articles/article-header";
+import { ReadStatusFilter } from "@/components/articles/read-status-filter";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useArticleStore } from "@/lib/stores/article-store";
+import { useTagStore } from "@/lib/stores/tag-store";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useHydrationFix } from "@/hooks/use-hydration-fix";
 import { useViewport } from "@/hooks/use-viewport";
-import { Menu, X, ArrowUp } from "lucide-react";
+import {
+  Menu,
+  X,
+  ArrowUp,
+  Loader2,
+  AlertTriangle,
+  CircleCheckBig,
+} from "lucide-react";
+import DOMPurify from "dompurify";
+import { toast } from "sonner";
+import { ArticleCountManager } from "@/lib/article-count-manager";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 
 export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { setNavigatingToArticle } = useArticleStore();
+  const { setNavigatingToArticle, markAllAsRead, markAllAsReadForTag, readStatusFilter } =
+    useArticleStore();
+  const { getFeed } = useFeedStore();
+  const { tags } = useTagStore();
+
+  // Mark all read functionality
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [waitingConfirmation, setWaitingConfirmation] = useState(false);
+  const [counts, setCounts] = useState({ total: 0, unread: 0, read: 0 });
+  const [isLoadingCounts, setIsLoadingCounts] = useState(true);
+  const confirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countManager = useRef(new ArticleCountManager());
 
   // Fix hydration issues with localStorage
   useHydrationFix();
@@ -235,6 +258,114 @@ export default function HomePage() {
     }
   };
 
+  // Mark all read functionality
+  const getButtonState = () => {
+    if (isMarkingAllRead) return "loading";
+    if (waitingConfirmation) return "confirming";
+    if (counts.unread === 0) return "disabled";
+    return "normal";
+  };
+
+  const handleMarkAllClick = async () => {
+    if ((!selectedFeedId && !selectedTagId) || isMarkingAllRead) return;
+
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    const lockKey = `mark-all-read-${selectedFeedId || selectedTagId}-lock`;
+    const existingLock = localStorage.getItem(lockKey);
+
+    if (existingLock) {
+      const lockTime = parseInt(existingLock);
+      const isStale = Date.now() - lockTime > 10000;
+
+      if (!isStale) {
+        toast.error("Mark All Read is running in another tab • Please wait");
+        return;
+      }
+    }
+
+    // First click - show confirmation state
+    if (!waitingConfirmation) {
+      setWaitingConfirmation(true);
+
+      confirmTimeoutRef.current = setTimeout(() => {
+        setWaitingConfirmation(false);
+      }, 3000);
+
+      return;
+    }
+
+    // Second click - execute action
+    if (confirmTimeoutRef.current) {
+      clearTimeout(confirmTimeoutRef.current);
+    }
+
+    setWaitingConfirmation(false);
+    setIsMarkingAllRead(true);
+    localStorage.setItem(lockKey, Date.now().toString());
+
+    try {
+      if (selectedTagId) {
+        await markAllAsReadForTag(selectedTagId);
+      } else if (selectedFeedId) {
+        await markAllAsRead(selectedFeedId);
+      }
+
+      const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : undefined;
+      const selectedTag = selectedTagId ? tags.get(selectedTagId) : undefined;
+      const contextName =
+        selectedTag?.name || selectedFeed?.title || "articles";
+      const sanitizedName = selectedTag?.name
+        ? DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] })
+        : contextName;
+
+      toast.success(
+        selectedTagId
+          ? `Marked all "${sanitizedName}" articles as read`
+          : `Marked all articles as read in ${sanitizedName}`
+      );
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+      toast.error("Failed to mark all articles as read");
+    } finally {
+      setIsMarkingAllRead(false);
+      try {
+        localStorage.removeItem(lockKey);
+      } catch (e) {
+        console.warn("Failed to clear mark-all-read lock:", e);
+      }
+    }
+  };
+
+  // Fetch counts when filters change
+  useEffect(() => {
+    const fetchCounts = async () => {
+      setIsLoadingCounts(true);
+      try {
+        const newCounts = await countManager.current.getArticleCounts(
+          selectedFeedId || undefined,
+          null // selectedFolderId
+        );
+        setCounts(newCounts);
+      } catch (error) {
+        console.error("Failed to fetch article counts:", error);
+        setCounts({ total: 0, unread: 0, read: 0 });
+      } finally {
+        setIsLoadingCounts(false);
+      }
+    };
+
+    fetchCounts();
+  }, [selectedFeedId, selectedTagId]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (confirmTimeoutRef.current) {
+        clearTimeout(confirmTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Header show/hide on scroll - now using article list container
   useEffect(() => {
     let ticking = false;
@@ -304,7 +435,7 @@ export default function HomePage() {
         : "translate-x-0";
 
     return `${positionClasses} ${translateClasses} ${baseClasses}`;
-  };;
+  };
 
   // Compute header classes
   const getHeaderClasses = () => {
@@ -353,39 +484,85 @@ export default function HomePage() {
 
       {/* Main Content Area - Independent scroll container */}
       <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Enhanced Header with Database Counts */}
-        <div
-          ref={headerRef}
-          className={getHeaderClasses()}
-          style={{ transform: "translateY(0)" }}
-        >
-          <ArticleHeader
-            selectedFeedId={selectedFeedId}
-            selectedFolderId={null}
-            selectedTagId={selectedTagId}
-            isMobile={viewport.shouldShowHamburger}
-            onMenuClick={
-              viewport.shouldShowHamburger
-                ? () => setIsSidebarOpen(!isSidebarOpen)
-                : undefined
-            }
-            menuIcon={
-              viewport.shouldShowHamburger ? (
-                isSidebarOpen ? (
-                  <X className="h-5 w-5" />
+        {/* Floating Hamburger Button - Only on mobile when sidebar is closed */}
+        {viewport.shouldCollapseSidebar && !isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="glass-icon-btn fixed left-4 top-2 z-50 pwa-standalone:top-[calc(0px+env(safe-area-inset-top))]"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+
+        {/* Floating Filter Controls - Show on desktop always, mobile only when sidebar closed */}
+        {(!viewport.shouldCollapseSidebar || !isSidebarOpen) && (
+          <div className="fixed right-4 top-2 z-50 flex items-center gap-2 pwa-standalone:top-[calc(0px+env(safe-area-inset-top))]">
+            {/* Collapsible Filter Controls */}
+            <div className={`${waitingConfirmation ? "collapsed" : ""}`}>
+              <ReadStatusFilter />
+            </div>
+
+            {/* Mark All Read Button - positioned next to filters */}
+            {(selectedFeedId || selectedTagId) && (
+              <button
+                onClick={handleMarkAllClick}
+                disabled={isMarkingAllRead || counts.unread === 0}
+                className={`liquid-glass-mark-all-read state-${getButtonState()}`}
+                title={
+                  waitingConfirmation
+                    ? "Click again to confirm"
+                    : selectedTagId
+                      ? `Mark all "${tags.get(selectedTagId)?.name || "tag"}" articles as read`
+                      : "Mark all articles in this feed as read"
+                }
+                data-state={getButtonState()}
+              >
+                {isMarkingAllRead ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    {!viewport.shouldShowCompactFilters && (
+                      <span className="ml-2">Marking...</span>
+                    )}
+                  </>
+                ) : waitingConfirmation ? (
+                  <>
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span className="ml-2">Confirm?</span>
+                  </>
                 ) : (
-                  <Menu className="h-5 w-5" />
-                )
-              ) : undefined
-            }
-          />
-        </div>
+                  <>
+                    <CircleCheckBig className="h-3.5 w-3.5" />
+                    {!viewport.shouldShowCompactFilters && (
+                      <span className="ml-2">Mark All Read</span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Article List Container with its own scroll */}
         <div
           ref={articleListRef}
-          className="ios-scroll-container scrollbar-hide relative flex-1 overflow-y-auto pt-[70px] pwa-standalone:pt-[calc(50px+env(safe-area-inset-top))]"
+          className="ios-scroll-container scrollbar-hide relative flex-1 overflow-y-auto"
         >
+          {/* Scrolling Page Title */}
+          <div
+            className={`border-b py-6 pt-[24px] pwa-standalone:pt-[calc(8px+env(safe-area-inset-top))] ${
+              viewport.shouldShowHamburger ? "pl-20 pr-4" : "px-4"
+            }`}
+          >
+            <h1 className="text-2xl font-bold text-foreground">
+              {selectedFeedId
+                ? getFeed(selectedFeedId)?.title || "Feed"
+                : selectedTagId
+                  ? tags.get(selectedTagId)?.name || "Topic"
+                  : "Articles"}
+            </h1>
+          </div>
+
           <ArticleList
             feedId={selectedFeedId || undefined}
             tagId={selectedTagId || undefined}
