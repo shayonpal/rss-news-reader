@@ -257,7 +257,7 @@ Based on gathered context, analyze:
 
 ### Code Quality Review:
 
-- Use `code-reviewer` agent to validate proposed approach
+- Use `tech-expert` agent to validate proposed approach
 - Check for security implications and best practices
 
 ## 5A. Symbol-Based Impact Assessment

@@ -26,6 +26,11 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **Clean Design**: Minimalist interface inspired by Reeder 5
 - **Inoreader Integration**: Server syncs with existing subscriptions
 - **Feed Hierarchy**: Collapsible folder structure with unread counts
+- **Intuitive Sidebar Navigation (RR-193)**: Mutex accordion behavior with clean single-scroll experience
+  - Only one sidebar section (Topics OR Feeds) open at a time preventing UI confusion
+  - Eliminated nested scrollbars with CSS Grid layout for smooth navigation
+  - Mobile-optimized full-width overlay with improved touch targets
+  - Smart default state: Topics open, Feeds closed for consistent user experience
 - **Responsive Design**: Adaptive layout for mobile and desktop
 - **Dark/Light Mode**: Manual theme control
 - **Supabase Backend**: All client data served from PostgreSQL
@@ -674,7 +679,7 @@ src/
   - **Performance Targets**: <1ms UI response, 60fps scrolling, 500ms database batching
   - **Memory Management**: FIFO cleanup at 1000 operations to prevent localStorage bloat
 - **Installable PWA**: Install on mobile and desktop
-- **Responsive Design**: Mobile-first layout with sidebar
+- **Responsive Design**: Mobile-first layout with intuitive mutex accordion sidebar (RR-193)
 - **Theme System**: Manual light/dark mode control
 - **Feed Hierarchy**: Collapsible folders with unread counts
 - **Article List**: Infinite scroll with read/unread states

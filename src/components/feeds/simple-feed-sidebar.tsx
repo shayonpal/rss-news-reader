@@ -16,18 +16,19 @@ import {
   Newspaper,
   Rss,
   LayoutDashboard,
+  AlertCircle,
 } from "lucide-react";
 import { CollapsibleFilterSection } from "@/components/ui/collapsible-filter-section";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import { refreshManager } from "@/lib/refresh-manager";
+import { cn } from "@/lib/utils";
 
 interface SimpleFeedSidebarProps {
   selectedFeedId: string | null;
   selectedTagId: string | null;
-  onFeedSelect: (feedId: string | null) => void;
+  onFeedSelect: (feedId: string | null, feedTitle?: string) => void;
   onTagSelect: (tagId: string | null) => void;
   onClearFilters?: () => void;
   onClose?: () => void;
@@ -75,6 +76,15 @@ export function SimpleFeedSidebar({
 
   // RR-171: Rate limiting countdown state
   const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
+
+  // RR-193: Synchronize tag store selection with prop for counter updates
+  useEffect(() => {
+    if (selectedTagId) {
+      selectTag(selectedTagId);
+    } else {
+      selectTag(null);
+    }
+  }, [selectedTagId, selectTag]);
 
   // Load feeds and tags when component mounts
   useEffect(() => {
@@ -218,50 +228,54 @@ export function SimpleFeedSidebar({
             <button
               onClick={() => router.push("/fetch-stats")}
               className="rounded p-2 transition-colors hover:bg-muted"
-              aria-label="View fetch statistics"
+              aria-label="View sync statistics"
             >
               <BarChart3 className="h-4 w-4" />
             </button>
-            <button
-              onClick={async () => {
-                // RR-171: Use RefreshManager for coordinated sync
-                await refreshManager.afterManualSync();
-              }}
-              disabled={isSyncing || rateLimitCountdown > 0}
-              className="relative rounded p-2 hover:bg-muted disabled:opacity-50"
-              aria-label={
-                rateLimitCountdown > 0
-                  ? refreshManager.formatCountdown(rateLimitCountdown)
-                  : isSyncing
-                    ? "Syncing..."
-                    : "Sync feeds"
-              }
-            >
-              {isSyncing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
+            <div className="relative">
+              <button
+                onClick={performFullSync}
+                disabled={isSyncing || rateLimitCountdown > 0}
+                className="rounded p-2 transition-colors hover:bg-muted disabled:opacity-50"
+                aria-label={
+                  isSyncing
+                    ? "Sync in progress"
+                    : rateLimitCountdown > 0
+                      ? `Rate limited, try again in ${rateLimitCountdown} seconds`
+                      : "Sync feeds"
+                }
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </button>
               {/* Show progress during sync or countdown during rate limit */}
               {isSyncing && syncProgress > 0 ? (
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 transform text-[10px] font-medium">
-                  {syncProgress}%
+                  {Math.round(syncProgress)}%
                 </span>
               ) : rateLimitCountdown > 0 ? (
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 transform whitespace-nowrap text-[10px] font-medium">
                   {refreshManager.formatCountdown(rateLimitCountdown)}
                 </span>
               ) : null}
-            </button>
+            </div>
           </div>
         </div>
+
         <div className="text-sm text-muted-foreground">
           {totalUnreadCount} unread • {feeds.size} feeds
         </div>
       </div>
 
-      {/* Feed List */}
-      <div className="relative flex-1 overflow-y-auto" ref={scrollContainerRef}>
+      {/* Feed List - RR-193: Updated to CSS Grid layout */}
+      <div 
+        className="relative flex-1 overflow-y-auto" 
+        ref={scrollContainerRef}
+        data-testid="sidebar-main-container"
+      >
         {/* Loading State for Initial Sync */}
         {isSyncing && feeds.size === 0 ? (
           <div className="flex h-full flex-col items-center justify-center p-4">
@@ -277,28 +291,11 @@ export function SimpleFeedSidebar({
                     style={{ width: `${syncProgress}%` }}
                   />
                 </div>
-                <p className="mt-1 text-center text-xs text-muted-foreground">
-                  {syncProgress}%
-                </p>
+                <div className="mt-1 text-center text-xs text-muted-foreground">
+                  {Math.round(syncProgress)}%
+                </div>
               </div>
             )}
-          </div>
-        ) : syncError && feeds.size === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center p-4">
-            <p className="mb-2 text-sm text-destructive">
-              Failed to sync feeds
-            </p>
-            <p className="mb-4 text-xs text-muted-foreground">{syncError}</p>
-            <button
-              onClick={async () => {
-                // RR-171: Use RefreshManager for coordinated sync
-                await refreshManager.afterManualSync();
-              }}
-              disabled={rateLimitCountdown > 0}
-              className="rounded bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              Retry
-            </button>
           </div>
         ) : (
           <>
@@ -336,252 +333,7 @@ export function SimpleFeedSidebar({
               </div>
             </div>
 
-            {/* Tags Section */}
-            {Array.from(tags.values()).filter((t) => {
-              // RR-163: Filter count based on read status (same logic as below)
-              if (readStatusFilter === "unread") {
-                const hasUnread = (t.unreadCount ?? 0) > 0;
-                const hasArticles = (t.totalCount ?? t.articleCount) > 0;
-
-                // If tag has unread, show it
-                if (hasUnread) return true;
-
-                // If system has unread articles but no tags show unread counts,
-                // show all tags with articles (fallback for sync issues)
-                if (totalUnreadCount > 0 && hasArticles) {
-                  const noTagsHaveUnread = Array.from(tags.values()).every(
-                    (tag) => (tag.unreadCount ?? 0) === 0
-                  );
-                  return noTagsHaveUnread;
-                }
-
-                return false;
-              } else if (readStatusFilter === "read") {
-                const totalCount = t.totalCount ?? t.articleCount;
-                const unreadCount = t.unreadCount ?? 0;
-                return totalCount > 0 && unreadCount === 0;
-              }
-              return (t.totalCount ?? t.articleCount) > 0;
-            }).length > 0 && (
-              <CollapsibleFilterSection
-                title="Topics"
-                count={
-                  Array.from(tags.values()).filter((t) => {
-                    // RR-163: Show filtered count in header (same logic as section visibility)
-                    if (readStatusFilter === "unread") {
-                      const hasUnread = (t.unreadCount ?? 0) > 0;
-                      const hasArticles = (t.totalCount ?? t.articleCount) > 0;
-
-                      // If tag has unread, show it
-                      if (hasUnread) return true;
-
-                      // If system has unread articles but no tags show unread counts,
-                      // show all tags with articles (fallback for sync issues)
-                      if (totalUnreadCount > 0 && hasArticles) {
-                        const noTagsHaveUnread = Array.from(
-                          tags.values()
-                        ).every((tag) => (tag.unreadCount ?? 0) === 0);
-                        return noTagsHaveUnread;
-                      }
-
-                      return false;
-                    } else if (readStatusFilter === "read") {
-                      const totalCount = t.totalCount ?? t.articleCount;
-                      const unreadCount = t.unreadCount ?? 0;
-                      return totalCount > 0 && unreadCount === 0;
-                    }
-                    return (t.totalCount ?? t.articleCount) > 0;
-                  }).length
-                }
-                defaultOpen={!tagsSectionCollapsed}
-                onToggle={(isOpen) => setTagsSectionCollapsed(!isOpen)}
-                icon={<LayoutDashboard className="h-3.5 w-3.5" />}
-                className="mt-2 border-t"
-              >
-                <div className="scrollbar-hide max-h-[30vh] space-y-0.5 overflow-y-auto pl-6 pr-1">
-                  {/* Skeleton loading state for tags (RR-171) */}
-                  {isSkeletonLoading ? (
-                    <>
-                      {[...Array(4)].map((_, i) => (
-                        <div key={`skeleton-tag-${i}`} className="px-3 py-2">
-                          <div className="flex items-center justify-between">
-                            <div
-                              className="h-4 animate-pulse rounded bg-muted"
-                              style={{ width: `${50 + Math.random() * 30}%` }}
-                            />
-                            <div className="h-4 w-6 animate-pulse rounded bg-muted" />
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    Array.from(tags.values())
-                      .filter((tag) => {
-                        // RR-163: Filter tags based on read status
-                        // Always show the currently selected tag
-                        if (selectedTagId === tag.id) return true;
-
-                        // Filter based on read status filter
-                        if (readStatusFilter === "unread") {
-                          const hasUnread = (tag.unreadCount ?? 0) > 0;
-                          const hasArticles =
-                            (tag.totalCount ?? tag.articleCount) > 0;
-
-                          // If tag has unread, show it
-                          if (hasUnread) return true;
-
-                          // If system has unread articles but no tags show unread counts,
-                          // show all tags with articles (fallback for sync issues)
-                          if (totalUnreadCount > 0 && hasArticles) {
-                            const noTagsHaveUnread = Array.from(
-                              tags.values()
-                            ).every((t) => (t.unreadCount ?? 0) === 0);
-                            return noTagsHaveUnread;
-                          }
-
-                          return false;
-                        } else if (readStatusFilter === "read") {
-                          const totalCount = tag.totalCount ?? tag.articleCount;
-                          const unreadCount = tag.unreadCount ?? 0;
-                          return totalCount > 0 && unreadCount === 0;
-                        } else {
-                          // 'all' - show all non-empty tags
-                          return (tag.totalCount ?? tag.articleCount) > 0;
-                        }
-                      })
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((tag) => {
-                        const isSelected = selectedTagId === tag.id;
-                        const hasUnread = (tag.unreadCount ?? 0) > 0;
-
-                        // RR-163: Determine which count to show based on filter
-                        let displayCount: number;
-                        if (readStatusFilter === "unread") {
-                          const unreadCount = tag.unreadCount ?? 0;
-                          // If tag has actual unread count, show it
-                          if (unreadCount > 0) {
-                            displayCount = unreadCount;
-                          } else {
-                            // Fallback: if system has unread but this tag shows 0, show total articles
-                            // (indicates unread articles aren't properly tagged)
-                            const noTagsHaveUnread = Array.from(
-                              tags.values()
-                            ).every((t) => (t.unreadCount ?? 0) === 0);
-                            displayCount =
-                              totalUnreadCount > 0 && noTagsHaveUnread
-                                ? (tag.totalCount ?? tag.articleCount)
-                                : 0;
-                          }
-                        } else if (readStatusFilter === "read") {
-                          const totalCount = tag.totalCount ?? tag.articleCount;
-                          const unreadCount = tag.unreadCount ?? 0;
-                          displayCount = totalCount - unreadCount;
-                        } else {
-                          displayCount = tag.totalCount ?? tag.articleCount;
-                        }
-
-                        return (
-                          <div
-                            key={tag.id}
-                            className={`cursor-pointer px-3 py-2 transition-all hover:bg-muted/50 ${
-                              isSelected
-                                ? "-ml-[2px] border-l-2 border-primary bg-muted pl-[14px] font-semibold"
-                                : "hover:border-l-2 hover:border-muted-foreground/30"
-                            } ${
-                              // RR-163: Dim tags with no unread in 'all' mode
-                              readStatusFilter === "all" &&
-                              !hasUnread &&
-                              !isSelected
-                                ? "opacity-35 hover:opacity-100"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              onTagSelect(isSelected ? null : tag.id);
-                              // Note: Feed clearing is now handled in handleTagSelect
-                            }}
-                          >
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="flex items-center gap-2 truncate">
-                                {tag.color && (
-                                  <div
-                                    className="h-2 w-2 flex-shrink-0 rounded-full"
-                                    style={{ backgroundColor: tag.color }}
-                                  />
-                                )}
-                                {decodeHtmlEntities(tag.name)}
-                              </span>
-                              {displayCount > 0 && (
-                                <span
-                                  className={`rounded-full px-1.5 py-0.5 text-xs ${
-                                    isSelected
-                                      ? "bg-primary text-primary-foreground"
-                                      : hasUnread && readStatusFilter !== "read"
-                                        ? "bg-primary/10 text-primary"
-                                        : "bg-muted-foreground/10 text-muted-foreground"
-                                  }`}
-                                >
-                                  {displayCount > 999 ? "999+" : displayCount}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                  )}
-                  {/* RR-163: Empty state message for filtered tags */}
-                  {!isSkeletonLoading &&
-                    Array.from(tags.values()).filter((tag) => {
-                      if (selectedTagId === tag.id) return true;
-                      if (readStatusFilter === "unread") {
-                        const hasUnread = (tag.unreadCount ?? 0) > 0;
-                        const hasArticles =
-                          (tag.totalCount ?? tag.articleCount) > 0;
-
-                        // If tag has unread, show it
-                        if (hasUnread) return true;
-
-                        // If system has unread articles but no tags show unread counts,
-                        // show all tags with articles (fallback for sync issues)
-                        if (totalUnreadCount > 0 && hasArticles) {
-                          const noTagsHaveUnread = Array.from(
-                            tags.values()
-                          ).every((t) => (t.unreadCount ?? 0) === 0);
-                          return noTagsHaveUnread;
-                        }
-
-                        return false;
-                      } else if (readStatusFilter === "read") {
-                        const totalCount = tag.totalCount ?? tag.articleCount;
-                        const unreadCount = tag.unreadCount ?? 0;
-                        return totalCount > 0 && unreadCount === 0;
-                      }
-                      return (tag.totalCount ?? tag.articleCount) > 0;
-                    }).length === 0 && (
-                      <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                        {readStatusFilter === "unread"
-                          ? "No topics with unread articles"
-                          : readStatusFilter === "read"
-                            ? "No topics with only read articles"
-                            : "No topics found"}
-                      </div>
-                    )}
-                </div>
-              </CollapsibleFilterSection>
-            )}
-
-            {/* Empty State */}
-            {feeds.size === 0 && !isSyncing && (
-              <div className="p-4 text-center">
-                <p className="mb-2 text-sm text-muted-foreground">
-                  No feeds yet
-                </p>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  Click the Sync button to load your feeds from Inoreader
-                </p>
-              </div>
-            )}
-
-            {/* Feeds Section */}
+            {/* RR-193: Feeds Section (moved above Topics as per specification) */}
             <CollapsibleFilterSection
               title="Feeds"
               count={
@@ -599,8 +351,12 @@ export function SimpleFeedSidebar({
               onToggle={(isOpen) => setFeedsSectionCollapsed(!isOpen)}
               icon={<Rss className="h-3.5 w-3.5" />}
               className="mt-2 border-t"
+              testId="feeds-collapsible"
             >
-              <div className="scrollbar-hide max-h-[60vh] space-y-0.5 overflow-y-auto pl-6 pr-1">
+              <div 
+                className="space-y-0.5 pl-6 pr-1"
+                data-testid="feeds-scrollable-section"
+              >
                 {/* Skeleton loading state for RR-171 */}
                 {isSkeletonLoading ? (
                   <>
@@ -616,6 +372,10 @@ export function SimpleFeedSidebar({
                       </div>
                     ))}
                   </>
+                ) : feeds.size === 0 ? (
+                  <div className="px-6 py-4 text-sm text-muted-foreground">
+                    No feeds available
+                  </div>
                 ) : (
                   /* Individual Feeds */
                   Array.from(feeds.values())
@@ -637,58 +397,212 @@ export function SimpleFeedSidebar({
                         return unreadCount > 0;
                       }
 
-                      // Show all feeds for 'read' or 'all' filters
-                      return true;
+                      if (readStatusFilter === "read") {
+                        const feedWithCount = feedsWithCounts.get(feed.id);
+                        const unreadCount = feedWithCount?.unreadCount || 0;
+                        return unreadCount === 0;
+                      }
+
+                      return true; // "all" filter
                     })
                     .map((feed) => {
                       const feedWithCount = feedsWithCounts.get(feed.id);
                       const unreadCount = feedWithCount?.unreadCount || 0;
                       const isSelected = selectedFeedId === feed.id;
-                      const hasUnread = unreadCount > 0;
 
                       return (
-                        <div
+                        <button
                           key={feed.id}
-                          className={`cursor-pointer px-3 py-2 transition-all hover:bg-muted/50 ${
+                          onClick={() => onFeedSelect(feed.id, feed.title)}
+                          className={cn(
+                            "w-full rounded-md px-3 py-2 text-left text-sm transition-colors",
                             isSelected
-                              ? "-ml-[2px] border-l-2 border-primary bg-muted pl-[14px] font-semibold"
-                              : "hover:border-l-2 hover:border-muted-foreground/30"
-                          } ${
-                            !hasUnread && !isSelected
-                              ? "opacity-35 hover:opacity-100"
-                              : ""
-                          }`}
-                          onClick={() => {
-                            onFeedSelect(feed.id);
-                            // Note: Tag clearing is now handled in handleFeedSelect
-                          }}
+                              ? "bg-accent text-accent-foreground"
+                              : "hover:bg-accent/50"
+                          )}
                         >
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="truncate">
-                              {String(feed.title || "Untitled Feed")}
+                          <div className="flex items-center justify-between">
+                            <span className="line-clamp-2 text-sm font-medium">
+                              {feed.title || "Untitled"}
                             </span>
                             {unreadCount > 0 && (
-                              <span
-                                className={`rounded-full px-1.5 py-0.5 text-xs ${
+                              <span 
+                                className={`ml-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium ${
                                   isSelected
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-primary/10 text-primary"
                                 }`}
                               >
-                                {unreadCount > 999 ? "999+" : unreadCount}
+                                {unreadCount > 99 ? "99+" : unreadCount}
                               </span>
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })
                 )}
               </div>
             </CollapsibleFilterSection>
 
-            {/* Spacer for fixed sidebar info bar (tuned for mobile) */}
-            <div className="h-[96px] md:h-[86px]" />
+            {/* RR-193: Topics Section (moved below Feeds as per specification) */}
+            <CollapsibleFilterSection
+              title="Topics"
+              count={
+                Array.from(tags.values()).filter((tag) => {
+                  // RR-163: Filter tags based on read status
+                  if (selectedTagId === tag.id) return true;
+
+                  if (readStatusFilter === "unread") {
+                    const hasUnread = (tag.unreadCount ?? 0) > 0;
+                    const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
+
+                    if (hasUnread) return true;
+
+                    if (totalUnreadCount > 0 && hasArticles) {
+                      const noTagsHaveUnread = Array.from(tags.values()).every(
+                        (t) => (t.unreadCount ?? 0) === 0
+                      );
+                      return noTagsHaveUnread;
+                    }
+
+                    return false;
+                  }
+
+                  if (readStatusFilter === "read") {
+                    const totalCount = tag.totalCount ?? tag.articleCount ?? 0;
+                    const unreadCount = tag.unreadCount ?? 0;
+                    return totalCount > 0 && unreadCount === 0;
+                  }
+                  return (tag.totalCount ?? tag.articleCount) > 0;
+                }).length
+              }
+              defaultOpen={!tagsSectionCollapsed}
+              onToggle={(isOpen) => setTagsSectionCollapsed(!isOpen)}
+              icon={<LayoutDashboard className="h-3.5 w-3.5" />}
+              className="mt-2 border-t"
+              testId="topics-collapsible"
+            >
+              <div 
+                className="space-y-0.5 pl-6 pr-1"
+                data-testid="topics-scrollable-section"
+              >
+                {/* Skeleton loading state for tags (RR-171) */}
+                {isSkeletonLoading ? (
+                  <>
+                    {[...Array(4)].map((_, i) => (
+                      <div key={`skeleton-tag-${i}`} className="px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <div
+                            className="h-4 animate-pulse rounded bg-muted"
+                            style={{ width: `${50 + Math.random() * 30}%` }}
+                          />
+                          <div className="h-4 w-6 animate-pulse rounded bg-muted" />
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : Array.from(tags.values()).length === 0 ? (
+                  <div className="px-6 py-4 text-sm text-muted-foreground">
+                    No topics available
+                  </div>
+                ) : (
+                  Array.from(tags.values())
+                    .filter((tag) => {
+                      // RR-163: Filter tags based on read status
+                      // Always show the currently selected tag
+                      if (selectedTagId === tag.id) return true;
+
+                      // Filter based on read status filter
+                      if (readStatusFilter === "unread") {
+                        const hasUnread = (tag.unreadCount ?? 0) > 0;
+                        const hasArticles =
+                          (tag.totalCount ?? tag.articleCount) > 0;
+
+                        // If tag has unread, show it
+                        if (hasUnread) return true;
+
+                        // If system has unread articles but no tags show unread counts,
+                        // show all tags with articles (fallback for sync issues)
+                        if (totalUnreadCount > 0 && hasArticles) {
+                          const noTagsHaveUnread = Array.from(
+                            tags.values()
+                          ).every((t) => (t.unreadCount ?? 0) === 0);
+                          return noTagsHaveUnread;
+                        }
+
+                        return false;
+                      }
+
+                      if (readStatusFilter === "read") {
+                        const totalCount =
+                          tag.totalCount ?? tag.articleCount ?? 0;
+                        const unreadCount = tag.unreadCount ?? 0;
+                        return totalCount > 0 && unreadCount === 0;
+                      }
+                      return (tag.totalCount ?? tag.articleCount) > 0;
+                    })
+                    .sort((a, b) => {
+                      const aCount = a.unreadCount ?? 0;
+                      const bCount = b.unreadCount ?? 0;
+                      if (aCount !== bCount) return bCount - aCount;
+                      return String(a.name || "").localeCompare(
+                        String(b.name || ""),
+                        undefined,
+                        { numeric: true, sensitivity: "base" }
+                      );
+                    })
+                    .map((tag) => {
+                      const displayCount =
+                        readStatusFilter === "unread"
+                          ? tag.unreadCount ?? 0
+                          : tag.totalCount ?? tag.articleCount ?? 0;
+                      const isSelected = selectedTagId === tag.id;
+
+                      return (
+                        <button
+                          key={tag.id}
+                          onClick={() => onTagSelect(tag.id)}
+                          className={cn(
+                            "w-full rounded-md px-3 py-2 text-left text-sm transition-colors",
+                            isSelected
+                              ? "bg-accent text-accent-foreground"
+                              : "hover:bg-accent/50"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="line-clamp-2 text-sm font-medium">
+                              {tag.name}
+                            </span>
+                            <span 
+                              className={`ml-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-primary/10 text-primary"
+                              }`}
+                            >
+                              {displayCount > 99 ? "99+" : displayCount}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })
+                )}
+              </div>
+            </CollapsibleFilterSection>
           </>
+        )}
+
+        {/* Sync Error Display */}
+        {syncError && (
+          <div className="border-t bg-destructive/5 p-4">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 text-destructive" />
+              <div className="flex-1 text-sm">
+                <div className="font-medium text-destructive">Sync Failed</div>
+                <div className="mt-1 text-muted-foreground">{syncError}</div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -705,7 +619,7 @@ export function SimpleFeedSidebar({
               </span>
             </div>
           )}
-          {/* API usage (no feeds total; it's already at the top) */}
+          {/* API usage */}
           {apiUsage ? (
             <div className="mt-1 md:mt-1">
               <span className="font-medium">API Usage:</span>

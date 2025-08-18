@@ -849,13 +849,6 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         }
       });
 
-      // RR-163: Optimistically update selected tag unread count by -N
-      const tagStore = (
-        await import("@/lib/stores/tag-store")
-      ).useTagStore.getState();
-      if (tagStore.selectedTagIds.size === 1) {
-        tagStore.updateSelectedTagUnreadCount(-articlesToMark.length);
-      }
 
       console.log(
         `[RR-197] Marked ${articlesToMark.length} articles as read with localStorage optimization`

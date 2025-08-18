@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[RR-193] Eliminate nested scrollbars in sidebar with mutex accordion and CSS Grid layout** (Monday, August 18, 2025 at 7:31 AM)
+  - **Scrollbar Elimination**: Removed all nested `max-h-[30vh]` and `max-h-[60vh]` constraints with `overflow-y-auto` for clean single-scroll experience
+  - **Mutex Accordion**: Only Topics OR Feeds sections open simultaneously, never both, preventing UI confusion
+  - **Layout Restructure**: Feeds section moved above Topics section for improved visual hierarchy
+  - **Default State**: Topics open, Feeds closed on every page load for consistent user experience
+  - **Mobile Optimization**: Full-width sidebar overlay (`w-full md:w-80`) replacing restrictive width constraints
+  - **Text Handling**: Line-clamp-2 truncation for long feed/topic names preventing layout breaks
+  - **Empty States**: Proper fallback messages for no feeds/topics scenarios
+  - **Symbol-Level Implementation**:
+    - `src/components/feeds/simple-feed-sidebar.tsx` - Main component restructure with CSS Grid layout
+    - `src/lib/stores/ui-store.ts` - Mutex state management with toggleFeedsSection/toggleTagsSection
+    - `src/components/ui/collapsible-filter-section.tsx` - Enhanced prop synchronization with defaultOpen changes
+  - **Test Coverage**: 7/7 unit tests passing for mutex accordion behavior, integration and E2E mobile tests implemented
+  - **Performance**: Optimized React Hook dependencies for efficient re-renders and smooth 60fps interactions
+  - **Impact**: Users now enjoy intuitive single-section accordion behavior with cleaner mobile experience and eliminated nested scrolling issues
+
 - **[RR-179] iOS 26 Liquid Glass Mark All Read with <1ms UI Response** (Sunday, August 17, 2025 at 7:01 PM)
   - **TagState/updateTagUnreadCount**: Immediate optimistic tag counter updates for instant UI feedback
   - **ArticleStoreState/markAllAsReadForTag**: Cross-feed tag operations (163 lines) affecting articles across multiple feeds

@@ -77,15 +77,32 @@ This directory contains all technical documentation for the RSS News Reader appl
       - Adaptive filter button display (icons-only on mobile/tablet, full text on desktop)
       - Performance-optimized with smooth 60fps transitions
 
+### Sidebar Navigation System (RR-193)
+
+11. **Mutex Accordion Sidebar Architecture**
+    - **Description**: Eliminated nested scrollbars with intuitive mutex accordion behavior and CSS Grid layout
+    - **Status**: Implemented ✅
+    - **Contents**: Scrollbar elimination, mutex state management, mobile optimization, layout restructure
+    - **Key Features**:
+      - **Scrollbar Elimination**: Removed all nested `max-h-[30vh]` and `max-h-[60vh]` constraints with `overflow-y-auto`
+      - **Mutex Accordion**: Only Topics OR Feeds sections open simultaneously via UIStore state management
+      - **CSS Grid Layout**: Clean single-scroll experience replacing restrictive height constraints
+      - **Visual Hierarchy**: Feeds section moved above Topics section for improved organization
+      - **Mobile Optimization**: Full-width sidebar overlay (`w-full md:w-80`) with enhanced touch targets
+      - **Smart Defaults**: Topics open, Feeds closed on page load for consistent user experience
+      - **Text Handling**: Line-clamp-2 truncation preventing layout breaks with long names
+      - **Empty States**: Proper fallback messages for no feeds/topics scenarios
+      - **Performance**: Optimized React Hook dependencies with 60fps smooth interactions
+
 ### Monitoring & Infrastructure
 
-11. **uptime-kuma-setup.md**
+12. **uptime-kuma-setup.md**
 
 - **Description**: Setup guide for Uptime Kuma monitoring service
 - **Status**: Current ✅
 - **Contents**: Docker setup, monitor configuration, alert rules
 
-12. **uptime-kuma-monitoring-strategy.md**
+13. **uptime-kuma-monitoring-strategy.md**
 
 - **Description**: Comprehensive monitoring strategy using Uptime Kuma
 - **Status**: Current ✅
@@ -93,12 +110,12 @@ This directory contains all technical documentation for the RSS News Reader appl
 
 ### Issues & Maintenance
 
-13. **known-issues.md**
+14. **known-issues.md**
     - **Description**: Documentation of known issues, limitations, and workarounds
     - **Status**: Living Document 🔄
     - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-14. **security.md**
+15. **security.md**
     - **Description**: Security measures, policies, and incident documentation
     - **Status**: Current ✅ (Updated for RR-128)
     - **Contents**: Network security, authentication, security fixes (RR-69, RR-128), XSS protection, best practices

@@ -292,8 +292,9 @@ export default function HomePage() {
 
   // Compute sidebar classes for better readability
   const getSidebarClasses = () => {
+    // RR-193: Full-width mobile sidebar overlay
     const baseClasses =
-      "h-full w-[280px] transition-transform duration-200 ease-in-out md:w-80";
+      "h-full transition-transform duration-200 ease-in-out w-full md:w-80";
     const positionClasses = viewport.shouldCollapseSidebar
       ? "fixed inset-y-0 left-0 z-50 transform"
       : "relative";
@@ -303,7 +304,7 @@ export default function HomePage() {
         : "translate-x-0";
 
     return `${positionClasses} ${translateClasses} ${baseClasses}`;
-  };
+  };;
 
   // Compute header classes
   const getHeaderClasses = () => {
