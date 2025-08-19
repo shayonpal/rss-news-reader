@@ -69,21 +69,35 @@ const createStorage = () => {
   };
 };
 
-// Only define if not already present
-if (!window.localStorage) {
-  Object.defineProperty(window, "localStorage", {
-    value: createStorage(),
-    writable: true,
-    configurable: true,
-  });
-}
-if (!window.sessionStorage) {
-  Object.defineProperty(window, "sessionStorage", {
-    value: createStorage(),
-    writable: true,
-    configurable: true,
-  });
-}
+// RR-222: Configurability detection to handle jsdom thread pool isolation
+// Check if properties can be redefined before attempting defineProperty
+const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => {
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
+    const isConfigurable = descriptor?.configurable !== false;
+    
+    if (!window[storageName] || isConfigurable) {
+      // Property doesn't exist or is configurable - safe to defineProperty
+      Object.defineProperty(window, storageName, {
+        value: createStorage(),
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      // Property exists and is not configurable - fall back to prototype mocking
+      console.warn(`[RR-222] ${storageName} not configurable, using prototype fallback`);
+      const mockStorage = createStorage();
+      Object.assign(Storage.prototype, mockStorage);
+    }
+  } catch (error) {
+    // Last resort: directly assign to window if all else fails
+    console.warn(`[RR-222] Failed to mock ${storageName}, using direct assignment:`, error);
+    (window as any)[storageName] = createStorage();
+  }
+};
+
+setupStorageMock('localStorage');
+setupStorageMock('sessionStorage');
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
