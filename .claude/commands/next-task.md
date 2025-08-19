@@ -72,19 +72,20 @@ mcp__serena__search_for_pattern("@deprecated")
 mcp__serena__list_memories()  # Check for known issues in memories
 ```
 
-### E. Project Memory Context (via Memory MCP)
+### E. Project Memory Context (via Serena MCP)
 
 ```
 # Search for RSS News Reader related memories
-mcp__memory__search_nodes("RSS News Reader")
-mcp__memory__search_nodes("rss-news-reader")
-mcp__memory__search_nodes("sync issue")
-mcp__memory__search_nodes("bug fix")
+mcp__serena__read_memory("RSS News Reader")
+mcp__serena__read_memory("rss-news-reader")
+mcp__serena__read_memory("sync issue")
+mcp__serena__read_memory("bug fix")
 
 # Get recent task memories
-mcp__memory__search_nodes("RR-")  # Linear issue references
-mcp__memory__search_nodes("fixed")
-mcp__memory__search_nodes("TODO")
+mcp__serena__list_memories()  # Get all project memories
+mcp__serena__read_memory("RR-")  # Linear issue references
+mcp__serena__read_memory("fixed")
+mcp__serena__read_memory("TODO")
 ```
 
 ### F. Test Health (if applicable)
@@ -134,7 +135,7 @@ For each potential task:
 1. RR-XXX: [Title] ⚡ Quick Win
    - Why: Isolated to single file (article-store.ts)
    - Code: Only affects 1 symbol, 3 references
-   - Memory: Found similar fix in memory graph (RR-102)
+   - Memory: Found similar fix in project memories (RR-102)
    - Pattern: 2 similar patterns already fixed
    - Time: ~30 mins
    - Tests: Existing tests cover this area
@@ -143,7 +144,7 @@ For each potential task:
 2. RR-YYY: [Title] 🐛 Bug Fix
    - Why: Users experiencing issue in SimpleFeedSidebar
    - Code: Root cause in `loadTags()` function
-   - Memory: Related to "iOS PWA cache issues" entity
+   - Memory: Related to "iOS PWA cache issues" in project memories
    - Impact: 5 components reference this
    - Time: ~2 hours
    - Risk: Medium - needs careful testing
@@ -165,13 +166,7 @@ After reviewing the recommendations above, you can:
 
 ### 🎯 Start Working on a Task
 
-Reply with: `/analyze RR-XXX` to:
-
-- Get deep code analysis for the issue
-- Understand implementation approach
-- See affected files and dependencies
-- Review acceptance criteria
-- Begin implementation planning
+Start working on the recommended task by running the appropriate workflow command based on your next step needs.
 
 ### 📋 See More Options
 
@@ -204,15 +199,13 @@ Reply with: `/next-task [specific-area]` like:
 
 ```
 > /next-task cc          # Show current cycle only
-> /analyze RR-123        # Start working on task
 > /next-task more        # See more recommendations
 > /next-task quick       # Show only quick wins
-> /analyze RR-456        # Switch to different task
 ```
 
-## 5. Pre-Task Preparation (When Using /analyze)
+## 5. Task Selection Guidelines
 
-When task is selected via `/analyze RR-XXX`:
+When you've identified a task to work on:
 
 ### A. Update Task Tracking
 
@@ -278,47 +271,33 @@ Use Serena to find:
 
 ## Memory Integration
 
-### A. Check Existing Knowledge (Memory MCP)
+### A. Check Existing Knowledge (Serena MCP)
 
 Before starting any task:
 
 ```
 # Search for related past work
-mcp__memory__search_nodes("[feature-name]")
-mcp__memory__search_nodes("[error-message]")
-mcp__memory__search_nodes("[component-name]")
+mcp__serena__read_memory("[feature-name]")
+mcp__serena__read_memory("[error-message]")
+mcp__serena__read_memory("[component-name]")
 
-# Open specific relevant memories
-mcp__memory__open_nodes(["sync-issues", "oauth-problems", "pwa-fixes"])
+# List and access specific relevant memories
+mcp__serena__list_memories()
+mcp__serena__read_memory("sync-issues")
+mcp__serena__read_memory("oauth-problems")
+mcp__serena__read_memory("pwa-fixes")
 ```
 
-### B. Write Task Memory (Both MCPs)
+### B. Write Task Memory (Serena MCP)
 
 After selection, if significant:
 
-**Serena Memory** (project-specific):
+**Project-specific memory storage:**
 
 ```
 mcp__serena__write_memory("task_RR-XXX_approach", "[implementation strategy]")
 mcp__serena__write_memory("gotcha_[component]", "[discovered issue]")
-```
-
-**Memory MCP** (cross-project knowledge):
-
-```
-# Create entities for significant findings
-mcp__memory__create_entities([{
-  "name": "RR-XXX Fix",
-  "entityType": "Solution",
-  "observations": ["Fixed by updating X", "Root cause was Y"]
-}])
-
-# Link related concepts
-mcp__memory__create_relations([{
-  "from": "RSS News Reader",
-  "to": "RR-XXX Fix",
-  "relationType": "has_solution"
-}])
+mcp__serena__write_memory("solution_[feature]", "[successful pattern]")
 ```
 
 ### C. Check Past Learnings
@@ -327,10 +306,8 @@ mcp__memory__create_relations([{
 # Serena memories (project-specific)
 mcp__serena__list_memories()
 mcp__serena__read_memory("task_completion_checklist")
-
-# Memory MCP (broader context)
-mcp__memory__read_graph()  # If small enough
-mcp__memory__search_nodes("lesson learned")
+mcp__serena__read_memory("project_overview")
+mcp__serena__read_memory("lessons_learned")
 ```
 
 ## Important Rules

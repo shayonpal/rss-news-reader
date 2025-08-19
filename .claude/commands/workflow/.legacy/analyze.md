@@ -61,13 +61,13 @@ Use `linear-expert` to:
 
 ### 3B. Project Memory Context
 
-Use memory MCP in two steps:
+Use Serena MCP to access project memories:
 
-1. **Search for relevant nodes** using `mcp__memory__search_nodes`:
-   - Search with query "RSS Reader" OR "RSS News Reader" for project context
+1. **Read project memories** using `mcp__serena__read_memory`:
+   - Search for project-specific context with query "RSS Reader" OR "RSS News Reader"
    - Also search with keywords from the issue title/description
    - Look for technical terms mentioned in the issue
-2. **Open found nodes** using `mcp__memory__open_nodes` to retrieve:
+2. **Retrieve relevant memories** to get:
    - Project-specific technical decisions and patterns
    - Stored knowledge about similar features
    - Historical context about architectural choices

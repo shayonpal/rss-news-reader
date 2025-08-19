@@ -3,7 +3,7 @@ description: Complete implementation and delivery phase delivering working, test
 argument_hint: [#issue|"feature description"]
 ---
 
-# Flow Execute - Vertical Slice Implementation Phase
+# Execute - Implementation Phase
 
 Complete implementation and delivery phase that takes a prepared specification and delivers a working, tested, and deployed feature. This command follows vertical slicing principles where implementation delivers complete, production-ready functionality.
 
@@ -14,13 +14,13 @@ Complete implementation and delivery phase that takes a prepared specification a
 If user provides `--help` or `help` parameter, display this usage guide instead of running the command:
 
 ```
-flow-execute - Complete implementation and delivery phase
+execute - Complete implementation and delivery phase
 
 USAGE:
-  flow-execute #123           Implement prepared GitHub issue
-  flow-execute "description"  Implement feature (will run prepare first if needed)
-  flow-execute                Implement current prepared work
-  flow-execute help           Show this help
+  execute RR-123              Implement prepared Linear issue
+  execute "description"       Implement feature (will run prepare first if needed)
+  execute                     Implement current prepared work
+  execute help                Show this help
 
 DELIVERABLES:
   ✅ Complete feature implementation
@@ -30,21 +30,10 @@ DELIVERABLES:
   ✅ Production-ready deployment
 
 EXAMPLES:
-  flow-execute #67
-  flow-execute "add user preferences API"
-  flow-execute
+  execute RR-67
+  execute "add user preferences API"
+  execute
 ```
-
-## Prerequisites
-
-**Expected Input**: A fully prepared specification from `flow-prepare` including:
-
-- Written and verified test specifications
-- Complete implementation plan
-- API documentation (if applicable)
-- Clear acceptance criteria
-
-**Auto-Preparation**: If no preparation found, will automatically run `flow-prepare` first
 
 ## Instructions
 
@@ -66,9 +55,9 @@ mcp__serena__activate_project
 1. **Check for Existing Preparation**
 
    ```bash
-   # Look for prepared specifications
-   # Check GitHub issue for preparation comments
-   gh issue view <number> --comments --json comments
+   # Look for staged specifications
+   # Check Linear issue for staging comments and implementation documentation
+   # Use linear-expert to get issue details and comments
 
    # Look for existing test files that define the feature
    find src/__tests__ -name "*[feature-name]*" -type f
@@ -76,19 +65,19 @@ mcp__serena__activate_project
    # Check TodoWrite tasks for implementation plan
    ```
 
-2. **Auto-Prepare if Needed**
-   - If no preparation found, automatically run `flow-prepare` first
-   - Wait for preparation to complete before continuing
-   - Verify all preparation deliverables are ready
+2. **Auto-Stage if Needed**
+   - If no staging found, automatically run `flow-stage` first
+   - Wait for staging to complete before continuing
+   - Verify all staging deliverables are ready
 
 3. **Implementation Context Setup**
 
    ```bash
    # Update issue status
-   gh issue edit <number> --remove-label "preparing" --add-label "implementing"
+   # Use linear-expert to update issue status to "In Progress"
 
    # Post implementation start comment
-   gh issue comment <number> --body "🔧 **Implementation Phase Started**\n\nBeginning implementation against prepared specifications..."
+   # Use linear-expert to add implementation start comment
 
    # Load prepared task list
    # Verify test files exist and fail correctly
@@ -130,8 +119,8 @@ mcp__serena__activate_project
 4. **Progress Tracking and Communication**
 
    ```bash
-   # Update GitHub issue with progress
-   gh issue comment <number> --body "✅ Implemented: [completed-feature]\n🔄 Working on: [current-task]\n📋 Remaining: [remaining-tasks]"
+   # Update Linear issue with progress
+   # Use linear-expert to add progress updates
 
    # Commit incrementally with descriptive messages
    git add -A
@@ -251,7 +240,7 @@ mcp__serena__activate_project
    )"
 
    # Close issue
-   gh issue close <number> --comment "Implementation complete and ready for production."
+   # Use linear-expert to update issue status to "Done" with completion comment
    ```
 
 ## Output Format
@@ -371,7 +360,7 @@ This feature is now complete and production-ready. All tests pass, code quality 
 ## Tool Usage Best Practices
 
 - **Serena MCP**: Primary tool for code implementation and symbol modification
-- **GitHub CLI**: Progress tracking and issue management
+- **Linear MCP**: Progress tracking and issue management
 - **TodoWrite**: Implementation progress tracking
 - **Bash**: Test execution and quality checks
 - **Edit/MultiEdit**: File modifications when Serena isn't optimal
@@ -422,7 +411,8 @@ npm test              # Test suite
 
 ## Workflow Integration
 
-- **Requires**: `flow-prepare` (preparation phase with specifications)
+- **Requires**: `flow-stage` (staging phase with Linear docs and test specifications)
+- **Follows**: `flow-plan` → `flow-stage` → **`flow-execute`**
 - **Precedes**: `flow-ship` (deployment and monitoring)
 - **Integrates with**: `manage-issue` (issue management)
-- **Supports**: Implementing multiple prepared features independently
+- **Supports**: Implementing multiple staged features independently

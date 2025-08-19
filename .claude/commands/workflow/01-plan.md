@@ -1,9 +1,9 @@
 ---
-description: Enhanced Linear issue analysis with comprehensive context, expert review, and pattern recognition
+description: Comprehensive Linear issue analysis and implementation strategy development (no Linear updates)
 argument_hint: <issue-id>
 ---
 
-# Flow Analyze - Comprehensive Linear Issue Analysis
+# Flow Plan - Comprehensive Linear Issue Planning
 
 ## Project Activation
 
@@ -16,7 +16,7 @@ mcp__serena__activate_project with:
 
 Analyze the Linear issue provided in $ARGUMENTS with comprehensive project understanding, technical expert review, pattern recognition, and automated feasibility validation.
 
-This is a `read-only` mode discussion session. No files will be written during analysis.
+This is a `read-only` mode discussion session. No files will be written during analysis. **No Linear issue status updates will be made.**
 
 ## 1. Parse Input
 
@@ -61,13 +61,13 @@ Use `linear-expert` to:
 
 ### 3B. Project Memory Context
 
-Use memory MCP in two steps:
+Use Serena MCP to access project memories:
 
-1. **Search for relevant nodes** using `mcp__memory__search_nodes`:
-   - Search with query "RSS Reader" OR "RSS News Reader" for project context
+1. **Read project memories** using `mcp__serena__read_memory`:
+   - Search for project-specific context with query "RSS Reader" OR "RSS News Reader"
    - Also search with keywords from the issue title/description
    - Look for technical terms mentioned in the issue
-2. **Open found nodes** using `mcp__memory__open_nodes` to retrieve:
+2. **Retrieve relevant memories** to get:
    - Project-specific technical decisions and patterns
    - Stored knowledge about similar features
    - Historical context about architectural choices
@@ -136,13 +136,7 @@ Use Serena MCP for precise symbolic analysis:
    - Build decision trees based on issue characteristics
    - Document required adaptations for different contexts
 
-## 4. Update Linear Status
-
-Use `linear-expert` to:
-
-- Move issue to "In Progress"
-
-## 4A. Automated Feasibility Validation
+## 4. Automated Feasibility Validation
 
 **NEW ENHANCEMENT:** Systematic validation before deep analysis:
 
@@ -375,7 +369,24 @@ Please respond with 1, 2, or 3.
 
 ### If 1 (Agree):
 
-Continue to step 9
+**Strategy approved! Ready to proceed to implementation phase.**
+
+Show final summary:
+
+```
+✅ Planning Complete for RR-XXX
+
+📝 Implementation Strategy: APPROVED
+
+🔗 Next Step: 
+Proceed to the staging phase with `flow-stage`:
+- Linear issue updates
+- Test case generation
+- Implementation documentation
+- Status tracking
+
+The approved strategy will be carried forward to the staging phase.
+```
 
 ### If no option chosen:
 
@@ -466,197 +477,10 @@ Document expert findings:
 - [Integration dependencies]
 ```
 
-## 9. Mandatory Documentation
-
-**These steps are REQUIRED - do not skip:**
-
-### 9A. Generate Concrete Test Contracts
-
-Based on the approved strategy, create explicit contracts:
-
-```
-📝 Test Contracts for RR-XXX:
-
-API Contracts:
-- Endpoint: [exact path]
-- Method: [GET/POST/PUT/DELETE]
-- Request Body: [exact JSON structure]
-- Success Response: [exact JSON with status code]
-- Error Responses:
-  - 400: [exact error format]
-  - 404: [exact error format]
-  - 500: [exact error format]
-
-Database Contracts:
-- Table: [table name]
-- Operation: [INSERT/UPDATE/DELETE]
-- Fields Changed: [field: old_value → new_value]
-- Constraints: [any constraints that must be checked]
-
-State Transitions:
-- Before: [exact database state]
-- Action: [what triggers the change]
-- After: [exact expected state]
-```
-
-### 9B. Update Linear with Strategy and Contracts
-
-Use `linear-expert` to add comment:
-
-```
-**Implementation Strategy (Approved)**
-[Full strategy details]
-
-**Test Contracts**
-[All contracts from 9A]
-
-Timestamp: [current time]
-```
-
-### 9C. Gather Symbol-Level Context for test-expert
-
-Use Serena for precise test context:
-
-1. **Symbol Signatures** (via `find_symbol`):
-   - Exact function signatures with parameter types
-   - Return types and error conditions
-   - Class constructors and methods
-
-2. **Test Pattern Discovery** (via `search_for_pattern`):
-   - Find test files: pattern "_.test.ts" or "_.spec.ts"
-   - Use `get_symbols_overview` on test files to understand test structure
-   - Find test utilities: `find_symbol` with "beforeEach|afterEach|describe|it"
-
-3. **Implementation Patterns** (via `find_referencing_symbols`):
-   - Trace how similar features are tested
-   - Find mock patterns and test helpers
-   - Identify integration points needing test coverage
-
-### 9D. Generate Symbol-Aware Test Cases
-
-Provide test-expert with symbol-precise specifications:
-
-```
-Symbols to Test:
-- Primary: [Exact symbol path with file location]
-- Dependencies: [List of dependent symbols from find_referencing_symbols]
-- API: [Route handler symbols from get_symbols_overview]
-
-Symbol Contracts:
-- Input: [Exact parameters from symbol signature]
-- Output: [Return type from symbol analysis]
-- Side Effects: [Store updates and service calls traced via references]
-
-Coverage Requirements:
-- Unit: Test symbol in isolation with mocked dependencies
-- Integration: Test symbol interaction with dependent symbols
-- E2E: Test complete flow through symbol call chain
-```
-
-IMPORTANT: These tests are the SPECIFICATION. Write them to define exact behavior that implementation must conform to. Tests should NOT be modified later to match implementation.
-
-### 9E. Update Linear with Test Cases
-
-Use `linear-expert` to add comment:
-
-```
-**Test Cases (Specification)**
-[All test scenarios with exact input/output]
-
-Note: These tests define the specification. Implementation must conform to these tests.
-```
-
-## 10. Enhanced Synthesis and Final Summary
-
-**NEW ENHANCEMENT:** Comprehensive synthesis of all analysis components:
-
-### Integration of All Analysis Components
-
-Combine insights from:
-
-1. **Technical Expert Review**: Architecture, security, performance feedback
-2. **Pattern Recognition**: Historical success patterns and gotchas
-3. **Feasibility Validation**: Automated compatibility and constraint checks
-4. **Implementation Strategy**: Detailed technical approach
-
-### Comprehensive Recommendations with Confidence Scores
-
-```
-🎯 Enhanced Analysis Summary for RR-XXX:
-
-📊 Confidence Scores:
-- Technical Feasibility: [85%] - Based on compatibility checks and expert review
-- Implementation Success: [92%] - Based on similar pattern success rates
-- Performance Impact: [78%] - Based on benchmark analysis
-- Resource Requirements: [67%] - Based on complexity and constraint assessment
-
-🔄 Pattern-Based Insights:
-- Similar Issues: [List of 3-5 similar completed issues]
-- Success Rate: [X/Y similar issues completed successfully]
-- Common Gotchas: [List of frequently encountered problems]
-- Proven Solutions: [Reusable patterns from successful implementations]
-
-🏗️ Architecture Validation:
-- Expert Approval: [APPROVED/CONDITIONAL/REJECTED]
-- Security Assessment: [SECURE/NEEDS_REVIEW/VULNERABLE]
-- Performance Validation: [OPTIMAL/ACCEPTABLE/CONCERNING]
-- Scalability Rating: [EXCELLENT/GOOD/LIMITED]
-
-🚦 Final Recommendation:
-[PROCEED/PROCEED_WITH_CAUTION/REDESIGN_REQUIRED/REJECT]
-
-Justification: [Comprehensive reasoning based on all analysis components]
-```
-
-### Actionable Next Steps with Risk Mitigation
-
-```
-✅ Analysis Complete for RR-XXX
-
-📝 Actions Completed:
-1. ✅ Comprehensive context gathered (memory, recent work, DB, existing code)
-2. ✅ Cross-issue pattern analysis completed
-3. ✅ Automated feasibility validation performed
-4. ✅ Technical expert review conducted
-5. ✅ Implementation strategy documented in Linear
-6. ✅ Test cases generated and documented
-7. ✅ Issue status updated to "In Progress"
-
-🔍 Key Findings:
-- Existing code to reuse: [list with confidence scores]
-- New code required: [list with complexity estimates]
-- API Endpoints:
-  - Existing to reuse/extend: [list with modification effort]
-  - New to create: [list with implementation complexity]
-- Database changes: [with migration complexity assessment]
-- Historical patterns: [relevant successful implementations]
-- Expert recommendations: [key architectural guidance]
-
-⚠️ Risk Factors and Mitigations:
-- [Risk 1]: [probability] - [mitigation strategy]
-- [Risk 2]: [probability] - [mitigation strategy]
-- [Risk 3]: [probability] - [mitigation strategy]
-
-📋 Prioritized Next Steps:
-1. [High Priority]: [action with timeline estimate]
-2. [Medium Priority]: [action with dependencies]
-3. [Low Priority]: [action for future consideration]
-
-🎯 Success Metrics:
-- Implementation Time: [estimated range based on patterns]
-- Test Coverage: [target percentage with key scenarios]
-- Performance Impact: [acceptable thresholds]
-- User Experience: [measurable improvements]
-
-🔗 Linear Issue: [Link with all documentation]
-📊 Pattern Analysis: [Reference to similar successful issues]
-🧠 Expert Review: [Summary of technical validation]
-```
-
 ## Important Rules
 
 - 🚫 NO file operations during analysis
-- ✅ ALWAYS update Linear with strategy and tests
+- 🚫 NO Linear issue status updates (this is planning only)
 - ✅ ALWAYS check CHANGELOG.md and recent commits
 - ✅ ALWAYS check database schema
 - ✅ ALWAYS search for existing code patterns
@@ -667,3 +491,4 @@ Justification: [Comprehensive reasoning based on all analysis components]
 - Use read-only agents for all analysis
 - Be pragmatic and challenge assumptions
 - Integrate all analysis components for comprehensive recommendations
+- Strategy must be approved before proceeding to implementation phase

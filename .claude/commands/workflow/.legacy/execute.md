@@ -74,12 +74,12 @@ Check that Linear issue has:
 1. **Status**: Must be "In Progress"
 2. **Plan**: Implementation approach documented in comments
 3. **Tests**: Test scenarios documented in comments
-4. **Analysis**: Shows `/analyze` was run (look for analysis comment)
+4. **Planning**: Shows planning and implementation phases were completed (look for strategy and test contracts in comments)
 
 If any gate fails:
 
 - 🛑 **STOP** - Do not write any files
-- Suggest next steps (e.g., "Run /analyze RR-XXX first")
+- Suggest next steps (e.g., "Complete planning and implementation phases first")
 
 ### Add Implementation Start Comment
 
