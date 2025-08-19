@@ -29,6 +29,7 @@ import { FetchContentButton } from "./fetch-content-button";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
+import { ScrollHideFloatingElement } from "@/components/ui/scroll-hide-floating-element";
 import { useContentState } from "@/hooks/use-content-state";
 import {
   ContentParsingIndicator,
@@ -317,60 +318,16 @@ export function ArticleDetail({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNavigate, onBack]);
 
-  // Header/toolbar show/hide on scroll
+  // iOS scroll to top button
   useEffect(() => {
-    let ticking = false;
-
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const scrollDelta = currentScrollY - lastScrollY.current;
-
-          if (!headerRef.current) return;
-
-          // Scrolling down - hide header after scrolling 50px down
-          if (scrollDelta > 0 && currentScrollY > 50) {
-            headerRef.current.classList.add("is-hidden");
-          }
-          // Scrolling up or at the top - show header
-          else if (scrollDelta < 0 || currentScrollY < 5) {
-            headerRef.current.classList.remove("is-hidden");
-          }
-
-          // Show/hide scroll to top button on iOS
-          if (isIOS) {
-            setShowScrollToTop(currentScrollY > 300);
-          }
-
-          lastScrollY.current = currentScrollY;
-          // Scroll-aware contrast for Liquid Glass
-          headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
-
-          // Footer slide + scroll-aware contrast
-          const footer = document.getElementById("article-footer");
-          if (footer) {
-            if (scrollDelta > 0 && currentScrollY > 50) {
-              footer.style.transform = "translateY(100%)";
-            } else if (scrollDelta < 0) {
-              footer.style.transform = "translateY(0)";
-            } else if (currentScrollY < 5) {
-              footer.style.transform = "translateY(0)";
-            }
-            footer.classList.toggle("is-scrolled", currentScrollY > 8);
-          }
-          ticking = false;
-        });
-
-        ticking = true;
+      if (isIOS) {
+        setShowScrollToTop(window.scrollY > 300);
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [isIOS]);
 
   // Hide viewport scrollbar while on detail view (apply to html and body)
@@ -466,55 +423,46 @@ export function ArticleDetail({
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900">
-      {/* Header */}
-      {/* Floating controls container (no top pane) */}
-      <div
-        ref={headerRef}
-        className="article-header-controls fixed left-0 right-0 z-10 transition-opacity transition-transform duration-300 ease-in-out"
-        style={{ top: "24px" }}
+      {/* Unified floating controls using standard component positioning */}
+      <ScrollHideFloatingElement
+        position="top-left"
+        hideThreshold={50}
       >
-        <div className="mx-auto flex w-full max-w-4xl items-start justify-between px-4 sm:px-6 lg:px-8">
-          {/* Back button aligned with content */}
-          <div className="pointer-events-auto">
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label="Back to list"
-              className="glass-icon-btn"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          </div>
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back to list"
+          className="glass-icon-btn glass-adaptive"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      </ScrollHideFloatingElement>
 
-          {/* Actions toolbar constrained to article width */}
-          <div
-            className="pointer-events-auto"
-            style={{ touchAction: "manipulation" }}
-          >
-            <ArticleActionsToolbar
-              articleId={currentArticle.id}
-              isStarred={currentArticle.tags?.includes("starred") || false}
-              hasSummary={!!currentArticle.summary}
-              hasFullContent={hasFullContentState}
-              onToggleStar={onToggleStar}
-              onSummarySuccess={handleSummarySuccess}
-              onFetchSuccess={handleFetchContentSuccess}
-              onFetchRevert={handleRevertContent}
-              feed={feed}
-              onTogglePartialFeed={handleToggleFeedPartialContent}
-              isUpdatingFeed={isUpdatingFeed}
-              onShare={handleShare}
-              articleUrl={currentArticle.url}
-            />
-          </div>
-        </div>
-      </div>
+      <ScrollHideFloatingElement
+        position="top-right"
+        hideThreshold={50}
+      >
+        <ArticleActionsToolbar
+          articleId={currentArticle.id}
+          isStarred={currentArticle.tags?.includes("starred") || false}
+          hasSummary={!!currentArticle.summary}
+          hasFullContent={hasFullContentState}
+          onToggleStar={onToggleStar}
+          onSummarySuccess={handleSummarySuccess}
+          onFetchSuccess={handleFetchContentSuccess}
+          onFetchRevert={handleRevertContent}
+          feed={feed}
+          onTogglePartialFeed={handleToggleFeedPartialContent}
+          isUpdatingFeed={isUpdatingFeed}
+          onShare={handleShare}
+          articleUrl={currentArticle.url}
+        />
+      </ScrollHideFloatingElement>
 
-      {/* Spacer for fixed header */}
-      <div className="h-[60px] pwa-standalone:h-[calc(60px+env(safe-area-inset-top))]" />
+      {/* No spacer needed - floating elements don't take layout space */}
 
       {/* Article Content */}
-      <article className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <article className="mx-auto max-w-4xl px-4 pb-6 pt-[80px] pwa-standalone:pt-[calc(80px+env(safe-area-inset-top))] sm:px-6 sm:pb-8 lg:px-8">
         {/* Metadata */}
         <div className="mb-6 sm:mb-8">
           <h1 className="mb-3 text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100 sm:mb-4 sm:text-3xl md:text-4xl">

@@ -12,6 +12,10 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **No Client Authentication**: Access controlled by Tailscale network
 - **Progressive Web App**: Install on mobile and desktop devices with iOS touch-optimized interface
 - **iOS 26 Liquid Glass Design**: Advanced morphing animations with spring easing and enhanced glass effects
+- **Floating Controls Architecture**: iOS-inspired floating controls replacing traditional fixed headers
+  - **Reusable ScrollHideFloatingElement**: Standardized scroll-responsive behavior for floating UI components
+  - **Adaptive Glass System**: Enhanced translucency with automatic dark mode content visibility adjustments
+  - **PWA Safe Area Integration**: Consistent spacing and positioning across all iOS devices and orientations
 - **Full Content Extraction**: Extract complete articles beyond RSS snippets (v0.6.0)
   - Manual fetch button for any article
   - Smart content priority display

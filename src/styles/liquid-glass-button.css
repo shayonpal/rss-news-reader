@@ -20,6 +20,11 @@
 
 /* Base Liquid Glass Button Styles */
 .liquid-glass-mark-all-read {
+  /* Normalize button appearance to prevent UA default borders */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  
   /* Layout - exact alignment with glass-segment */
   display: inline-flex;
   align-items: center;

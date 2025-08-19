@@ -6,6 +6,7 @@ import { SimpleFeedSidebar } from "@/components/feeds/simple-feed-sidebar";
 import { ArticleList } from "@/components/articles/article-list";
 import { ArticleHeader } from "@/components/articles/article-header";
 import { ReadStatusFilter } from "@/components/articles/read-status-filter";
+import { ScrollHideFloatingElement } from "@/components/ui/scroll-hide-floating-element";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useTagStore } from "@/lib/stores/tag-store";
@@ -108,18 +109,23 @@ export default function HomePage() {
   }, [searchParams, pathname]);
 
   const viewport = useViewport();
+  // Initialize sidebar state to prevent flash - start with mobile assumption
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Fix iOS detection hydration issue - use state instead of direct check
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     setIsIOS(/iPhone|iPad|iPod/i.test(navigator.userAgent));
+    setIsHydrated(true);
   }, []);
 
-  // Auto-manage sidebar state based on viewport
+  // Auto-manage sidebar state based on viewport - only after hydration
   useEffect(() => {
+    if (!isHydrated) return; // Wait for hydration to prevent flash
+    
     if (!viewport.shouldCollapseSidebar) {
       // On tablet/desktop, sidebar should always be open
       setIsSidebarOpen(true);
@@ -127,7 +133,7 @@ export default function HomePage() {
       // On mobile, sidebar starts closed
       setIsSidebarOpen(false);
     }
-  }, [viewport.shouldCollapseSidebar]);
+  }, [viewport.shouldCollapseSidebar, isHydrated]);
 
   const handleArticleClick = (articleId: string) => {
     // RR-27 Fix: Set navigation intent to prevent preservation clearing
@@ -427,7 +433,7 @@ export default function HomePage() {
     const baseClasses =
       "h-full transition-transform duration-200 ease-in-out w-full md:w-80";
     const positionClasses = viewport.shouldCollapseSidebar
-      ? "fixed inset-y-0 left-0 z-50 transform"
+      ? "fixed inset-y-0 left-0 z-[60] transform"
       : "relative";
     const translateClasses =
       viewport.shouldCollapseSidebar && !isSidebarOpen
@@ -450,7 +456,7 @@ export default function HomePage() {
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && viewport.shouldCollapseSidebar && (
         <div
-          className="fixed inset-0 z-40 bg-black/50"
+          className="fixed inset-0 z-[55] bg-black/50"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -485,19 +491,31 @@ export default function HomePage() {
       {/* Main Content Area - Independent scroll container */}
       <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         {/* Floating Hamburger Button - Only on mobile when sidebar is closed */}
-        {viewport.shouldCollapseSidebar && !isSidebarOpen && (
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="glass-icon-btn fixed left-4 top-2 z-50 pwa-standalone:top-[calc(0px+env(safe-area-inset-top))]"
-            aria-label="Toggle sidebar"
+        {viewport.shouldCollapseSidebar && (
+          <ScrollHideFloatingElement
+            position="top-left"
+            scrollContainer={articleListRef}
+            hideThreshold={50}
+            visible={!isSidebarOpen}
           >
-            <Menu className="h-5 w-5" />
-          </button>
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="glass-icon-btn glass-adaptive"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </ScrollHideFloatingElement>
         )}
 
         {/* Floating Filter Controls - Show on desktop always, mobile only when sidebar closed */}
-        {(!viewport.shouldCollapseSidebar || !isSidebarOpen) && (
-          <div className="fixed right-4 top-2 z-50 flex items-center gap-2 pwa-standalone:top-[calc(0px+env(safe-area-inset-top))]">
+        <ScrollHideFloatingElement
+          position="top-right"
+          scrollContainer={articleListRef}
+          hideThreshold={50}
+          visible={!viewport.shouldCollapseSidebar || !isSidebarOpen}
+        >
+          <div className="flex items-center gap-2">
             {/* Collapsible Filter Controls */}
             <div className={`${waitingConfirmation ? "collapsed" : ""}`}>
               <ReadStatusFilter />
@@ -508,7 +526,7 @@ export default function HomePage() {
               <button
                 onClick={handleMarkAllClick}
                 disabled={isMarkingAllRead || counts.unread === 0}
-                className={`liquid-glass-mark-all-read state-${getButtonState()}`}
+                className={`liquid-glass-mark-all-read glass-adaptive state-${getButtonState()}`}
                 title={
                   waitingConfirmation
                     ? "Click again to confirm"
@@ -541,7 +559,7 @@ export default function HomePage() {
               </button>
             )}
           </div>
-        )}
+        </ScrollHideFloatingElement>
 
         {/* Article List Container with its own scroll */}
         <div
@@ -550,11 +568,13 @@ export default function HomePage() {
         >
           {/* Scrolling Page Title */}
           <div
-            className={`border-b py-6 pt-[24px] pwa-standalone:pt-[calc(8px+env(safe-area-inset-top))] ${
-              viewport.shouldShowHamburger ? "pl-20 pr-4" : "px-4"
+            className={`pb-4 transition-all duration-300 ease-out ${
+              viewport.shouldCollapseSidebar 
+                ? "pt-[80px] px-4 pwa-standalone:pt-[calc(80px+env(safe-area-inset-top))]" // Mobile: +8px extra spacing when hamburger shows
+                : "pt-[24px] px-6 pwa-standalone:pt-[calc(24px+env(safe-area-inset-top))]"  // Desktop: title centered with button clusters (48px buttons → 24px title position)
             }`}
           >
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-foreground transition-all duration-300 ease-out">
               {selectedFeedId
                 ? getFeed(selectedFeedId)?.title || "Feed"
                 : selectedTagId
@@ -582,7 +602,7 @@ export default function HomePage() {
                   });
                 }
               }}
-              className="liquid-glass-btn"
+              className="liquid-glass-btn glass-adaptive"
               aria-label="Scroll to top"
             >
               <ArrowUp className="h-5 w-5" />

@@ -7,7 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **[Critical] Comprehensive Floating Controls Architecture Debug and Glass Styling Unification** (Tuesday, August 19, 2025 at 12:06 PM)
+  - **ScrollHideFloatingElement Over-Translation Issue**: Fixed buttons drifting off-screen during scroll due to `translateY(-currentScrollY)` over-translation
+    - **Root Cause**: Fixed-position elements getting double-translation (scroll + transform) causing buttons to drift beyond viewport (-1000px+)
+    - **Solution**: Implemented fixed 64px translation distance with directional logic instead of dynamic scroll-based translation
+    - **Technical Fix**: `translateY = shouldHide ? hideDistance * translateDirection : 0` replacing unbounded scroll-based positioning
+  - **Glass Button Black Border Issue**: Resolved thick black borders appearing on glass buttons instead of subtle liquid glass styling
+    - **Root Cause**: UA default button styling overriding CSS glass variables, missing light mode glass-adaptive variables
+    - **Solution**: Added `appearance: none` normalization + comprehensive light/dark mode glass variable definitions
+    - **CSS Enhancement**: Added missing `--glass-adaptive-bg` and `--glass-adaptive-border` variables for proper light mode support
+  - **Content Overlap Issue**: Fixed floating controls overlapping article content with inconsistent positioning
+    - **Root Cause**: Different positioning systems (8px vs 24px baseline), inadequate content clearance calculations
+    - **Solution**: Unified positioning with content-type-aware spacing (listing vs article detail views)
+    - **Layout Enhancement**: Article listing gets centered spacing with buttons, article detail gets dedicated breathing room
+  - **ChunkLoadError Runtime Issue**: Resolved app failing to load with webpack chunk loading errors
+    - **Root Cause**: Stale build artifacts and Service Worker cache corruption after architectural changes
+    - **Solution**: Clean build restart + browser cache clearing + PM2 ecosystem restart
+  - **Architecture Unification**: Consolidated dual positioning systems into single unified approach
+    - **Before**: Separate systems causing maintenance overhead and visual inconsistencies
+    - **After**: Single ScrollHideFloatingElement system with content-type-aware positioning logic
+    - **Benefits**: Maintainable patterns, consistent behavior, extensible for future floating elements
+  - **Technical Implementation Details**:
+    - **ScrollHideFloatingElement Improvements**: Fixed distance with proper directional logic (64px translation)
+    - **Glass Styling Normalization**: `appearance: none` for all glass button classes + missing CSS variables
+    - **Unified Positioning Architecture**: Content-aware spacing with PWA safe area integration
+    - **Cross-Platform Testing**: Verified across iOS/Android PWA, desktop browsers, and responsive breakpoints
+  - **Files Modified**:
+    - `src/components/ui/scroll-hide-floating-element.tsx` - Fixed over-translation, unified positioning system
+    - `src/app/page.tsx` - Content-aware spacing logic, glass-adaptive classes integration
+    - `src/components/articles/article-detail.tsx` - Unified positioning, consistent content spacing
+    - `src/app/globals.css` - Button appearance normalization, comprehensive glass variable definitions
+    - `src/styles/liquid-glass-button.css` - Mark all read button appearance normalization
+  - **Impact**: Eliminated UI breakage, restored design language consistency, improved mobile UX with proper content flow
+  - **Testing Verification**: All floating controls behaviors verified across listing/detail pages, scroll interactions, and PWA integration
+
 ### Added
+
+- **[RR-215] iOS 26 Liquid Glass Scrollable Header with Floating Controls Architecture** (Monday, August 18, 2025 at 8:05 PM)
+  - **Enhanced Floating Controls Architecture**: Removed fixed header container, replaced with floating controls system for enhanced mobile experience
+    - **Floating Hamburger Button**: Mobile-only glass-icon-btn with PWA-safe positioning (48px + safe area support)
+    - **Floating Filter Controls**: ReadStatusFilter with mark-all-read button functionality preserved
+    - **Scrolling Page Title**: Dynamic titles inside article container with responsive spacing (Articles/Feed name/Topic name)
+    - **Viewport-Aware Visibility**: Hide floating controls when sidebar open to prevent interference
+  - **Progressive Scroll Enhancement**: Synchronized scroll movement (buttons move at same velocity as page content)
+  - **ScrollHideFloatingElement Component**: Reusable component for standardized scroll behavior across floating elements
+  - **Symbol-Level Implementation**:
+    - `src/services/scroll-coordinator.ts` - NEW (187 lines) unified scroll management preventing listener conflicts
+    - `src/hooks/use-ios-header-scroll.ts` - NEW (69 lines) iOS-style scroll behavior with three-state system
+    - `src/components/ui/morphing-nav-button.tsx` - NEW (90 lines) hamburger/back morphing with iOS 26 animations  
+    - `src/components/articles/scrollable-article-header.tsx` - NEW (164 lines) liquid glass wrapper with spring physics
+    - `src/components/ui/scroll-hide-floating-element.tsx` - NEW reusable scroll-responsive floating element
+    - `src/app/page.tsx` - MODIFIED replaced fixed header with floating controls architecture
+  - **Original POC Foundation**: Built upon comprehensive POC with three-state scroll system (expanded/transitioning/collapsed)
+    - Spring physics animations with iOS cubic-bezier timing (cubic-bezier(0.34, 1.56, 0.64, 1))
+    - Progressive enhancement with backdrop-filter fallbacks for browser compatibility
+    - ScrollCoordinator service preventing multiple scroll listener conflicts
+  - **Test Coverage**: Comprehensive test suite with 129 total test cases across 4 test files
+    - `src/__tests__/unit/rr-215-ios-scrollable-header.test.tsx` - Unit tests for individual components
+    - `src/__tests__/integration/rr-215-scroll-coordination.test.tsx` - Integration tests for scroll coordination
+    - `src/__tests__/e2e/rr-215-mobile-scroll-behavior.test.ts` - E2E mobile scroll behavior validation
+    - `src/__tests__/performance/rr-215-scroll-performance.test.ts` - Performance benchmarking and optimization validation
+  - **Accessibility Compliance**: WCAG AA compliant with 44px touch targets, proper ARIA labeling, and reduced motion fallbacks
+  - **Performance Optimization**: RequestAnimationFrame throttling, passive scroll listeners, GPU acceleration for 60fps
+  - **PWA Integration**: Full PWA safe area support with dynamic spacing calculations for all floating elements
+  - **Impact**: Enhanced mobile user experience with iOS 26-inspired design patterns, improved touch interactions, and professional floating controls architecture
+
+- **[Documentation] Comprehensive RR-215 Floating Controls Architecture Documentation** (Monday, August 18, 2025 at 9:35 PM)
+  - **Updated README.md**: Enhanced Features section to reflect new floating controls architecture replacing traditional fixed headers
+    - Added detailed descriptions of ScrollHideFloatingElement pattern, adaptive glass system, and PWA safe area integration
+    - Updated architecture overview to showcase iOS-inspired floating controls implementation
+  - **New Technical Documentation**: Created comprehensive documentation suite for floating controls system
+    - `docs/ui-ux/scroll-hide-floating-element.md` - Complete component API reference with usage patterns, performance considerations, and migration guide
+    - `docs/tech/floating-controls-architecture.md` - In-depth architectural guide covering ScrollCoordinator service, three-state scroll system, and PWA integration patterns
+    - `docs/ui-ux/pwa-safe-areas.md` - Comprehensive PWA safe area integration guide with device-specific calculations and responsive behavior patterns
+  - **Enhanced Liquid Glass Documentation**: Updated `docs/ui-ux/liquid-glass-design-system.md` with RR-215 adaptive glass improvements
+    - Added enhanced translucency system for improved dark mode content visibility
+    - Documented dynamic background opacity and adaptive border system with scroll-responsive calculations
+    - Included scroll-responsive glass effects with progressive enhancement patterns
+  - **Inline Code Documentation**: Comprehensive JSDoc comments added to all new components and services
+    - ScrollHideFloatingElement component with detailed prop interfaces and usage examples
+    - ScrollCoordinator service with method documentation and performance optimization notes
+    - MorphingNavButton component with state management and animation documentation
+  - **Cross-Reference Integration**: Linked all documentation with proper cross-references for developer navigation
+  - **Impact**: Complete technical documentation coverage enabling future developers to understand, maintain, and extend the floating controls architecture
 
 - **[RR-193] Eliminate nested scrollbars in sidebar with mutex accordion and CSS Grid layout** (Monday, August 18, 2025 at 7:31 AM)
   - **Scrollbar Elimination**: Removed all nested `max-h-[30vh]` and `max-h-[60vh]` constraints with `overflow-y-auto` for clean single-scroll experience
