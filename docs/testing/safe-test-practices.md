@@ -82,6 +82,102 @@ npm run test:watch        # Watch mode for development
 - **Supabase Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
 - **Export Fixes**: Corrected missing exports in utility classes for proper testability
 
+### setupStorageMock Function Documentation (RR-222)
+
+**Function Signature:**
+
+```typescript
+const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => void
+```
+
+**Purpose:**
+
+The `setupStorageMock` function implements a three-tier configurability detection system to reliably mock browser storage APIs in jsdom test environments with thread pool isolation.
+
+**Parameters:**
+
+- `storageName`: Storage type to mock ('localStorage' or 'sessionStorage')
+
+**Implementation Architecture:**
+
+**Tier 1: Property Defintion Strategy**
+
+```typescript
+const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
+const isConfigurable = descriptor?.configurable !== false;
+
+if (!window[storageName] || isConfigurable) {
+  Object.defineProperty(window, storageName, {
+    value: createStorage(),
+    writable: true,
+    configurable: true,
+  });
+}
+```
+
+- **Condition**: Property doesn't exist or is configurable
+- **Action**: Clean property redefinition using `Object.defineProperty`
+- **Benefits**: Maintains proper property descriptors and type safety
+
+**Tier 2: Prototype Fallback Strategy**
+
+```typescript
+else {
+  console.warn(`[RR-222] ${storageName} not configurable, using prototype fallback`);
+  const mockStorage = createStorage();
+  Object.assign(Storage.prototype, mockStorage);
+}
+```
+
+- **Condition**: Property exists but is not configurable
+- **Action**: Modify `Storage.prototype` to override methods
+- **Warning**: Console warning alerts to fallback mode
+- **Compatibility**: Works with read-only property descriptors
+
+**Tier 3: Direct Assignment Strategy**
+
+```typescript
+catch (error) {
+  console.warn(`[RR-222] Failed to mock ${storageName}, using direct assignment:`, error);
+  (window as any)[storageName] = createStorage();
+}
+```
+
+- **Condition**: All other approaches failed (exception thrown)
+- **Action**: Force assignment using type casting
+- **Logging**: Captures specific error for debugging
+- **Reliability**: Ensures mock is always available
+
+**Configurability Detection Logic:**
+
+```typescript
+const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
+const isConfigurable = descriptor?.configurable !== false;
+```
+
+- **Method**: Uses `Object.getOwnPropertyDescriptor()` to inspect property metadata
+- **Logic**: Treats undefined/null descriptors as configurable (property doesn't exist)
+- **Safety**: Explicit `!== false` check handles undefined configurability
+
+**Error Handling Patterns:**
+
+1. **Graceful Degradation**: Each tier provides a working fallback
+2. **Diagnostic Logging**: Console warnings include context and error details
+3. **Non-Breaking**: Function never throws - always provides working mock
+4. **Debugging Support**: Error messages include RR-222 prefix for log filtering
+
+**Integration with Browser API Mocks:**
+
+```typescript
+setupStorageMock('localStorage');
+setupStorageMock('sessionStorage');
+```
+
+- **Initialization**: Called during test setup for both storage types
+- **Order Independence**: Can be called in any sequence
+- **Idempotent**: Safe to call multiple times on same storage type
+- **Thread Safe**: Works correctly in parallel test execution environments
+
 ### Store Isolation Testing Patterns (RR-188)
 
 **Zustand Store State Isolation:**

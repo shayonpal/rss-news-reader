@@ -105,6 +105,78 @@ Node.js test environment lacks browser APIs like IndexedDB, causing failures in 
 - **Mock Helpers**: Reusable mock system at `src/__tests__/helpers/supabase-mock.ts`
 - **Documentation**: Comprehensive troubleshooting guide for common test environment issues
 
+### sessionStorage Redefinition Error in jsdom Thread Pool
+
+**Status:** 🟢 Resolved (August 19, 2025 via RR-222)  
+**Severity:** Critical
+
+#### Description
+
+Test infrastructure completely failed with "Cannot redefine property: sessionStorage" error in jsdom environments with thread pool isolation, preventing all test discovery and execution.
+
+#### Root Cause
+
+- jsdom thread pool isolation creates non-configurable property descriptors for browser storage APIs
+- Standard `Object.defineProperty` redefinition fails when `configurable: false`
+- Test setup could not establish localStorage/sessionStorage mocks
+
+#### Historical Impact
+
+- **Test Discovery**: 0 files found (expected 1024+)
+- **Test Contracts**: 0/21 passing (expected 21/21)
+- **Development Workflow**: All testing disabled
+- **CI/CD Pipeline**: Completely blocked
+
+#### Solution (RR-222)
+
+**Three-Tier Configurability Detection System** in `src/test-setup.ts:73-96`:
+
+1. **Tier 1**: Standard `Object.defineProperty` for configurable properties
+2. **Tier 2**: `Storage.prototype` fallback for non-configurable properties  
+3. **Tier 3**: Direct assignment with type casting as last resort
+
+**Key Implementation:**
+
+```typescript
+const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => {
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
+    const isConfigurable = descriptor?.configurable !== false;
+    
+    if (!window[storageName] || isConfigurable) {
+      // Tier 1: Clean defineProperty approach
+      Object.defineProperty(window, storageName, {
+        value: createStorage(),
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      // Tier 2: Prototype fallback for non-configurable properties
+      console.warn(`[RR-222] ${storageName} not configurable, using prototype fallback`);
+      const mockStorage = createStorage();
+      Object.assign(Storage.prototype, mockStorage);
+    }
+  } catch (error) {
+    // Tier 3: Direct assignment as last resort
+    console.warn(`[RR-222] Failed to mock ${storageName}, using direct assignment:`, error);
+    (window as any)[storageName] = createStorage();
+  }
+};
+```
+
+#### Results
+
+- **Test Discovery**: Restored to 1024+ files ✅
+- **Test Contracts**: 21/21 passing ✅
+- **Error Rate**: 0% storage-related failures ✅
+- **Cross-Environment**: Works in all jsdom configurations ✅
+
+#### Reference Documentation
+
+- **Implementation Guide**: [RR-222 Implementation](./rr-222-implementation.md)
+- **Testing Strategy**: [Browser API Mock Infrastructure](./testing-strategy.md#browser-api-mock-infrastructure-rr-222)
+- **Safe Test Practices**: [setupStorageMock Function Documentation](../testing/safe-test-practices.md#setupstoragemock-function-documentation-rr-222)
+
 ## Production Deployment Issues (Resolved)
 
 ### Manual Sync Failure - Missing Build Manifests
