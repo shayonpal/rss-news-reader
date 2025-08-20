@@ -64,6 +64,7 @@ export default function HomePage() {
   // Header show/hide refs
   const lastScrollY = useRef(0);
   const headerRef = useRef<HTMLDivElement>(null);
+  const filterControlsRef = useRef<HTMLDivElement>(null);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize states - we'll set them from URL/sessionStorage in useEffect
@@ -406,6 +407,12 @@ export default function HomePage() {
           lastScrollY.current = currentScrollY;
           // Scroll-aware contrast for Liquid Glass
           headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
+          
+          // Enhanced legibility for filter controls when scrolling
+          if (filterControlsRef.current) {
+            filterControlsRef.current.classList.toggle("glass-enhanced-legibility", currentScrollY > 50);
+          }
+          
           ticking = false;
         });
 
@@ -515,7 +522,7 @@ export default function HomePage() {
           hideThreshold={50}
           visible={!viewport.shouldCollapseSidebar || !isSidebarOpen}
         >
-          <div className="flex items-center gap-2">
+          <div ref={filterControlsRef} className="flex items-center gap-2">
             {/* Collapsible Filter Controls */}
             <div className={`${waitingConfirmation ? "collapsed" : ""}`}>
               <ReadStatusFilter />

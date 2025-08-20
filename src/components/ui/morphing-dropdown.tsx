@@ -250,13 +250,13 @@ export function MorphingDropdown({
         backdropFilter: "blur(16px) saturate(180%)",
         WebkitBackdropFilter: "blur(16px) saturate(180%)",
         background: isDark
-          ? "rgba(10, 10, 10, 0.18)"
-          : "rgba(255, 255, 255, 0.18)",
+          ? "rgba(40, 40, 40, 0.35)"
+          : "rgba(255, 255, 255, 0.35)",
         border: isDark
-          ? "1px solid rgba(255, 255, 255, 0.08)"
-          : "1px solid rgba(0, 0, 0, 0.04)",
+          ? "1px solid rgba(255, 255, 255, 0.18)"
+          : "1px solid rgba(0, 0, 0, 0.08)",
         boxShadow: isDark
-          ? "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06)"
+          ? "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5)"
           : "0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
         borderRadius: "22px",
         width: isOpen ? "200px" : "auto",

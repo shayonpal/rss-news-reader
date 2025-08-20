@@ -27,9 +27,12 @@ The iOS 26 Liquid Glass design system provides a modern, performant foundation f
 
 ```css
 .liquid-glass-base {
-  /* Core glass properties */
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  /* Core glass properties - unified (RR-224) */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  /* Unified background */
+  background: var(--glass-adaptive-bg);
 
   /* Performance optimizations */
   transform: translateZ(0);
@@ -41,6 +44,16 @@ The iOS 26 Liquid Glass design system provides a modern, performant foundation f
   align-items: center;
   justify-content: center;
   border-radius: var(--glass-control-border-radius);
+  
+  /* Enhanced borders and shadows */
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.dark .liquid-glass-base {
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 ```
 
@@ -62,11 +75,40 @@ The iOS 26 Liquid Glass design system provides a modern, performant foundation f
   --glass-confirm: rgb(220, 53, 69);
   --glass-confirm-alpha: rgba(255, 182, 193, 0.2);
 
-  /* Effects */
-  --glass-blur-strength: 8px;
-  --glass-saturation: 140%;
-  --glass-shadow-base: 0 4px 16px;
-  --glass-shadow-hover: 0 6px 20px;
+  /* Unified transparency system (RR-224) */
+  --glass-nav-bg: rgba(255, 255, 255, 0.35);
+  --glass-chip-bg: rgba(255, 255, 255, 0.35);
+  --glass-adaptive-bg: rgba(255, 255, 255, 0.35);
+  --glass-enhanced-bg: rgba(255, 255, 255, 0.55);
+  
+  /* Scrolled states */
+  --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.45);
+  --glass-chip-bg-scrolled: rgba(255, 255, 255, 0.45);
+  --glass-adaptive-bg-scrolled: rgba(255, 255, 255, 0.45);
+
+  /* Enhanced effects (RR-224) */
+  --glass-blur-strength: 16px;
+  --glass-saturation: 180%;
+  --glass-shadow-base: 0 8px 32px;
+  --glass-shadow-hover: 0 10px 40px;
+  --glass-border-light: rgba(255, 255, 255, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] {
+  /* Dark mode unified transparency */
+  --glass-nav-bg: rgba(40, 40, 40, 0.35);
+  --glass-chip-bg: rgba(40, 40, 40, 0.35);
+  --glass-adaptive-bg: rgba(40, 40, 40, 0.35);
+  --glass-enhanced-bg: rgba(40, 40, 40, 0.55);
+  
+  /* Dark mode scrolled states */
+  --glass-nav-bg-scrolled: rgba(40, 40, 40, 0.45);
+  --glass-chip-bg-scrolled: rgba(40, 40, 40, 0.45);
+  --glass-adaptive-bg-scrolled: rgba(40, 40, 40, 0.45);
+  
+  /* Dark mode borders */
+  --glass-border-light: rgba(0, 0, 0, 0.08);
 }
 ```
 
@@ -304,6 +346,139 @@ The RR-215 implementation introduces an enhanced adaptive glass system with auto
 }
 ```
 
+### Comprehensive Liquid Glass Styling Unification (RR-224 - August 20, 2025)
+
+#### Transparency Unification System
+
+Implemented comprehensive transparency unification across all button clusters for visual consistency:
+
+```css
+:root {
+  /* Unified base transparency values (most opaque for legibility) */
+  --glass-nav-bg: rgba(255, 255, 255, 0.35);
+  --glass-chip-bg: rgba(255, 255, 255, 0.35);
+  --glass-adaptive-bg: rgba(255, 255, 255, 0.35);
+  
+  /* Enhanced legibility for busy content */
+  --glass-enhanced-bg: rgba(255, 255, 255, 0.55);
+  
+  /* Scrolled states (enhanced opacity) */
+  --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.45);
+  --glass-chip-bg-scrolled: rgba(255, 255, 255, 0.45);
+  --glass-adaptive-bg-scrolled: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="dark"] {
+  /* Dark mode unified transparency */
+  --glass-nav-bg: rgba(40, 40, 40, 0.35);
+  --glass-chip-bg: rgba(40, 40, 40, 0.35);
+  --glass-adaptive-bg: rgba(40, 40, 40, 0.35);
+  
+  /* Enhanced legibility for dark mode */
+  --glass-enhanced-bg: rgba(40, 40, 40, 0.55);
+  
+  /* Dark mode scrolled states */
+  --glass-nav-bg-scrolled: rgba(40, 40, 40, 0.45);
+  --glass-chip-bg-scrolled: rgba(40, 40, 40, 0.45);
+  --glass-adaptive-bg-scrolled: rgba(40, 40, 40, 0.45);
+}
+```
+
+#### Enhanced Glass Effects Standard
+
+Updated all glass components to use enhanced backdrop filters and consistent effects:
+
+```css
+.liquid-glass-unified {
+  /* Enhanced backdrop effects */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  /* Unified background */
+  background: var(--glass-adaptive-bg);
+  
+  /* Enhanced borders */
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  
+  /* Improved shadows with inset highlights */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.dark .liquid-glass-unified {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+```
+
+#### Scroll-Aware Enhanced Legibility
+
+Implemented automatic opacity enhancement for improved legibility over busy content:
+
+```css
+.glass-enhanced-legibility {
+  background: var(--glass-enhanced-bg) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+/* Auto-application based on scroll position */
+.glass-component {
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* Applied when scrollY > 50px via JavaScript */
+.glass-component.enhanced-legibility {
+  background: var(--glass-enhanced-bg);
+}
+```
+
+#### Mark All Read Button Neutralization
+
+Converted mark all read button from purple-tinted glass to neutral liquid glass:
+
+```css
+.liquid-glass-mark-all-read {
+  /* Neutral glass background instead of purple */
+  background: var(--glass-nav-bg);
+  
+  /* Enhanced backdrop filter */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  /* Purple preserved for content only */
+  color: rgb(139, 92, 246);
+  
+  /* Proportional size increase */
+  height: 52px;
+  border-radius: 26px;
+  min-width: 52px;
+}
+```
+
+#### Segmented Controls Enhancement
+
+Improved glass effects to match hamburger menu quality:
+
+```css
+.glass-segment {
+  /* Enhanced saturation */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  /* Deeper shadows */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  
+  /* Stronger highlights */
+  --segment-highlight: rgba(255, 255, 255, 0.5);
+}
+
+.glass-segment-btn {
+  /* Enhanced icon brightness */
+  color: hsl(var(--foreground));
+}
+```
+
 ### Critical Styling Fixes (August 19, 2025)
 
 #### Button Appearance Normalization
@@ -340,12 +515,23 @@ Added missing CSS variables for proper light mode glass styling:
 }
 ```
 
-#### Impact of Fixes
+#### RR-224 Unification Impact
+
+- **Visual Consistency**: All button clusters now use identical 35% base transparency
+- **Enhanced Legibility**: Automatic 55% opacity enhancement for busy content areas  
+- **Neutral Glass Material**: Mark all read button uses neutral glass instead of purple tinting
+- **Quality Standardization**: All glass effects match hamburger menu quality (blur 16px, saturate 180%)
+- **Scroll-Aware Adaptation**: Automatic legibility enhancement when scrolling over complex content
+- **Cross-Component Harmony**: Unified appearance between listing and detail page controls
+
+#### Impact of All Fixes
 
 - **Eliminated Black Borders**: User Agent styling no longer overrides glass design tokens
 - **Proper Light Mode Support**: Glass elements now display correctly in both light and dark themes
 - **Consistent Glass Language**: All glass buttons maintain subtle translucent borders as designed
 - **Cross-Platform Compatibility**: Fixes apply across all browsers including iOS Safari
+- **Unified Transparency**: Eliminated visual inconsistencies between different button clusters
+- **Enhanced Mobile UX**: Better legibility on mobile devices over busy article content
 
 ## Integration Patterns
 

@@ -425,43 +425,49 @@ html.reduce-transparency .liquid-glass-btn {
 /* Liquid Glass Navigation (iOS 26-inspired) */
 @layer base {
   :root {
-    /* RR-180: Enhanced iOS 26 Liquid Glass */
+    /* RR-180: Enhanced iOS 26 Liquid Glass - Unified Transparency */
     --glass-blur: 16px; /* Increased from 14px */
     --glass-saturation: 180%; /* Increased from 140% */
-    --glass-nav-bg: rgba(255, 255, 255, 0.18);
-    --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.22);
-    --glass-nav-border: rgba(0, 0, 0, 0.04);
+    --glass-nav-bg: rgba(255, 255, 255, 0.35);
+    --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.45);
+    --glass-nav-border: rgba(0, 0, 0, 0.08);
     --opaque-nav-bg: rgba(255, 255, 255, 0.95);
     /* Segmented control (clear glass) */
-    --glass-chip-bg: rgba(255, 255, 255, 0.12);
-    --glass-chip-indicator: rgba(255, 255, 255, 0.2);
+    --glass-chip-bg: rgba(255, 255, 255, 0.35);
+    --glass-chip-indicator: rgba(255, 255, 255, 0.45);
     
-    /* Adaptive glass for light mode - higher contrast for better visibility */
-    --glass-adaptive-bg: rgba(255, 255, 255, 0.25);
+    /* Adaptive glass for light mode - enhanced for legibility */
+    --glass-adaptive-bg: rgba(255, 255, 255, 0.35);
     --glass-adaptive-border: rgba(0, 0, 0, 0.08);
+    /* Enhanced legibility when scrolling over busy content */
+    --glass-enhanced-bg: rgba(255, 255, 255, 0.55);
+    --glass-enhanced-border: rgba(0, 0, 0, 0.12);
     /* Animation timing functions */
     --spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
     --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    /* RR-180: Enhanced iOS 26 Liquid Glass - Adaptive Transparency */
+    /* RR-180: Enhanced iOS 26 Liquid Glass - Unified Transparency */
     --glass-blur: 20px; /* Increased blur for better content visibility */
     --glass-saturation: 140%; /* Balanced saturation */
     
-    /* Adaptive glass backgrounds - more translucent for better content flow */
-    --glass-nav-bg: rgba(20, 20, 20, 0.15); /* Slightly lighter dark with more transparency */
-    --glass-nav-bg-scrolled: rgba(20, 20, 20, 0.25); /* More opaque when scrolled */
-    --glass-nav-border: rgba(255, 255, 255, 0.12); /* More visible border */
+    /* Unified glass backgrounds using least transparent values */
+    --glass-nav-bg: rgba(40, 40, 40, 0.35); /* Unified with adaptive values */
+    --glass-nav-bg-scrolled: rgba(40, 40, 40, 0.45); /* Increased opacity when scrolled */
+    --glass-nav-border: rgba(255, 255, 255, 0.18); /* Unified border visibility */
     --opaque-nav-bg: rgba(0, 0, 0, 0.85); /* Slightly more transparent fallback */
     
-    /* Segmented control (adaptive glass) */
-    --glass-chip-bg: rgba(20, 20, 20, 0.12); /* Better balance */
-    --glass-chip-indicator: rgba(255, 255, 255, 0.15); /* Light indicator for dark mode */
+    /* Segmented control (unified transparency) */
+    --glass-chip-bg: rgba(40, 40, 40, 0.35); /* Unified with nav background */
+    --glass-chip-indicator: rgba(255, 255, 255, 0.25); /* More visible indicator */
     
-    /* High contrast adaptation for dark/busy backgrounds */
-    --glass-adaptive-bg: rgba(40, 40, 40, 0.35); /* Used when background is very dark */
+    /* Adaptive glass now matches base values */
+    --glass-adaptive-bg: rgba(40, 40, 40, 0.35); /* Consistent with nav background */
     --glass-adaptive-border: rgba(255, 255, 255, 0.18);
+    /* Enhanced legibility when scrolling over busy content */
+    --glass-enhanced-bg: rgba(40, 40, 40, 0.55);
+    --glass-enhanced-border: rgba(255, 255, 255, 0.25);
   }
 }
 
@@ -528,8 +534,9 @@ html.reduce-transparency .liquid-glass-btn {
     padding: 0 12px;
     border-radius: 9999px;
     color: hsl(var(--foreground));
+    /* No individual glass effects - rely on container glass */
     background: transparent;
-    border: none; /* Explicit border removal */
+    border: none;
     transition:
       transform 160ms var(--ease-out),
       background-color 160ms var(--ease-out);
@@ -598,6 +605,14 @@ html.reduce-transparency .liquid-glass-btn {
     border-color: var(--glass-adaptive-border);
     backdrop-filter: blur(24px) saturate(120%);
     -webkit-backdrop-filter: blur(24px) saturate(120%);
+  }
+
+  /* Enhanced legibility when scrolling over busy content */
+  .glass-enhanced-legibility {
+    background: var(--glass-enhanced-bg) !important;
+    border-color: var(--glass-enhanced-border) !important;
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
   }
 
   /* Glass popover menu */
@@ -718,13 +733,13 @@ html.reduce-transparency .glass-sidebar-info {
     gap: 0;
     padding: var(--segment-pad);
     border-radius: 9999px;
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-chip-bg);
     border: 1px solid var(--glass-nav-border);
     box-shadow:
-      0 6px 24px rgba(0, 0, 0, 0.08),
-      inset 0 1px 1px rgba(255, 255, 255, 0.18);
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
   /* Compact variant for tight headers */
@@ -751,8 +766,8 @@ html.reduce-transparency .glass-sidebar-info {
     background: var(--glass-chip-indicator);
     border-radius: 9999px;
     box-shadow:
-      0 2px 10px rgba(0, 0, 0, 0.08),
-      inset 0 1px 1px rgba(255, 255, 255, 0.25);
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
     transform: translateX(0%);
     transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 0;
@@ -778,7 +793,7 @@ html.reduce-transparency .glass-sidebar-info {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--foreground));
     transition:
       color 150ms cubic-bezier(0.4, 0, 0.2, 1),
       transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1);

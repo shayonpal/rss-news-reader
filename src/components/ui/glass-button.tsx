@@ -31,11 +31,11 @@ const glassButtonVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-white/10 dark:bg-white/10",
+          "bg-white/35 dark:bg-white/35",
           "text-gray-900 dark:text-white",
-          "hover:bg-white/15 dark:hover:bg-white/20",
+          "hover:bg-white/45 dark:hover:bg-white/45",
           "shadow-lg shadow-black/5 dark:shadow-white/5",
-          "border border-white/5 dark:border-white/10",
+          "border border-white/18 dark:border-white/18",
         ].join(" "),
         primary: [
           "bg-blue-500/20 dark:bg-blue-400/20",
@@ -52,8 +52,8 @@ const glassButtonVariants = cva(
         ghost: [
           "bg-transparent",
           "text-gray-700 dark:text-white",
-          "hover:bg-white/10 dark:hover:bg-white/15",
-          "border-transparent hover:border-white/10 dark:hover:border-white/15",
+          "hover:bg-white/35 dark:hover:bg-white/35",
+          "border-transparent hover:border-white/18 dark:hover:border-white/18",
         ].join(" "),
         danger: [
           "bg-red-500/20 dark:bg-red-400/20",

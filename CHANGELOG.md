@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### UI/UX
+
+- **[RR-224] Comprehensive Liquid Glass Styling Unification Across Application** (Wednesday, August 20, 2025 at 4:09 AM)
+  - **Transparency Unification**: Standardized all button cluster transparency to use least transparent (most opaque) values
+    - Light mode: 18% → 35% base opacity, 22% → 45% scrolled opacity
+    - Dark mode: 15% → 35% base opacity, 25% → 45% scrolled opacity
+    - Updated CSS variables: --glass-nav-bg, --glass-chip-bg, --glass-adaptive-bg
+  - **Glass Button Component Updates**: Enhanced default and hover variants in src/components/ui/glass-button.tsx
+    - Default variant: bg-white/10 → bg-white/35
+    - Hover states: bg-white/15-20 → bg-white/45
+    - Ghost variant hover: bg-white/10-15 → bg-white/35
+    - Updated borders: border-white/5-10 → border-white/18
+  - **Segmented Controls Enhancement**: Improved glass effects in globals.css
+    - Enhanced saturation: 140% → 180% (matches hamburger menu quality)
+    - Improved shadows: 0 6px 24px → 0 8px 32px (deeper depth perception)
+    - Stronger highlights: rgba(255,255,255,0.18-0.25) → rgba(255,255,255,0.5)
+    - Icon brightness: hsl(var(--muted-foreground)) → hsl(var(--foreground))
+  - **Article Detail Toolbar Fixes**: Unified glass capsule appearance instead of separate glass bubbles
+    - MorphingDropdown container: Updated inline styles from 18% → 35% opacity
+    - Removed individual glass effects from .glass-toolbar-btn buttons
+    - Enhanced border and shadow values to match hamburger menu quality
+  - **Mark All Read Button Liquid Glass Conversion**: Replaced purple-tinted glass with neutral liquid glass
+    - Enhanced backdrop filter: blur(8px) saturate(140%) → blur(16px) saturate(180%)
+    - Neutral glass background: var(--glass-nav-bg) instead of purple rgba values
+    - Purple color preserved for content (icon/text) only, not glass material
+    - Button height increased: 48px → 52px with proportional border radius: 24px → 26px
+  - **Scroll-Aware Enhanced Legibility**: Added automatic opacity enhancement for busy content
+    - Added --glass-enhanced-bg variables: 55% opacity for enhanced legibility
+    - Created .glass-enhanced-legibility class with stronger glass effects
+    - Added scroll detection logic: applies enhanced legibility when scrollY > 50px
+    - Automatic transition between 35% (top) and 55% (scrolling) opacity
+  - **Core Liquid Glass Properties**:
+    - backdrop-filter: blur(16px) saturate(180%) (light mode), blur(20px) saturate(140%) (dark mode)
+    - Background: rgba(255,255,255,0.35) / rgba(40,40,40,0.35) base
+    - Enhanced legibility: rgba(255,255,255,0.55) / rgba(40,40,40,0.55)
+    - Borders: rgba(255,255,255,0.18) / rgba(0,0,0,0.08)
+    - Shadows: 0 8px 32px + inset 0 1px 0 rgba(255,255,255,0.5)
+  - **Files Modified**: src/app/globals.css, src/components/ui/glass-button.tsx, src/components/ui/morphing-dropdown.tsx, src/styles/liquid-glass-button.css, src/app/page.tsx
+  - **Impact**: Unified liquid glass appearance across all button clusters, enhanced legibility while preserving authentic glass aesthetic, consistent 35% base transparency with 55% enhanced legibility, better visual cohesion between listing and detail pages
+
 ### Documentation
 
 - **[RR-222] Comprehensive Documentation Coverage for Environment Setup - Browser API Mocking** (Tuesday, August 19, 2025 at 4:37 PM)
