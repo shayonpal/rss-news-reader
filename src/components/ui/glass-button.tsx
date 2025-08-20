@@ -61,6 +61,23 @@ const glassButtonVariants = cva(
           "hover:bg-red-500/25 dark:hover:bg-red-400/25",
           "shadow-lg shadow-red-500/10 dark:shadow-red-400/10",
         ].join(" "),
+        // RR-229: New adaptive variants for context-aware styling
+        adaptive: [
+          "bg-[var(--glass-adaptive-bg)] dark:bg-[var(--glass-adaptive-bg)]",
+          "border-[var(--glass-adaptive-border)] dark:border-[var(--glass-adaptive-border)]",
+          "backdrop-blur-[24px] backdrop-saturate-[120%]",
+          "text-gray-900 dark:text-white",
+          "hover:bg-[var(--glass-enhanced-bg)] dark:hover:bg-[var(--glass-enhanced-bg)]",
+          "shadow-lg shadow-black/8 dark:shadow-white/8",
+        ].join(" "),
+        enhanced: [
+          "bg-[var(--glass-enhanced-bg)] dark:bg-[var(--glass-enhanced-bg)]",
+          "border-[var(--glass-enhanced-border)] dark:border-[var(--glass-enhanced-border)]",
+          "backdrop-blur-[20px] backdrop-saturate-[160%]",
+          "text-gray-900 dark:text-white",
+          "hover:opacity-90",
+          "shadow-xl shadow-black/12 dark:shadow-white/12",
+        ].join(" "),
       },
       size: {
         default: "px-4 py-2 text-sm gap-2",

@@ -1,4 +1,5 @@
 import "fake-indexeddb/auto";
+import "@testing-library/jest-dom";
 import { vi, expect, beforeEach, afterEach, afterAll } from "vitest";
 
 // Mock environment - ensure NODE_ENV is set

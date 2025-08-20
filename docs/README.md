@@ -32,3 +32,4 @@ The documentation is organized into the following categories to ensure informati
 | [**Testing (`testing/`)**](./testing/)                                                       | The project's testing strategy, details on different test types (unit, integration, E2E), and how to run them. |
 | [**Troubleshooting (`troubleshooting/`)**](./troubleshooting/)                               | Guides for diagnosing and resolving common issues and errors.                                                  |
 | [**UI/UX (`ui-ux/`)**](./ui-ux/)                                                             | Documentation related to user interface design, user experience principles, and component libraries.           |
+| [**Features (`features/`)**](./features/)                                                    | Feature implementation guides, component migration documentation, and architectural foundations.               |

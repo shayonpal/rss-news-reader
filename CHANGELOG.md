@@ -47,6 +47,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Files Modified**: src/app/globals.css, src/components/ui/glass-button.tsx, src/components/ui/morphing-dropdown.tsx, src/styles/liquid-glass-button.css, src/app/page.tsx
   - **Impact**: Unified liquid glass appearance across all button clusters, enhanced legibility while preserving authentic glass aesthetic, consistent 35% base transparency with 55% enhanced legibility, better visual cohesion between listing and detail pages
 
+- **[RR-229] Glass Components API Documentation and Migration Guide** (Wednesday, August 20, 2025 at 1:41 PM)
+  - **Glass Components API Reference**: Created comprehensive API documentation in docs/ui-ux/glass-components-api.md
+    - **GlassPopover**: Complete TypeScript interface, CVA variants, Radix integration details
+    - **GlassSegmentedControl**: Props specification, keyboard navigation, ARIA compliance
+    - Usage examples with code snippets for both components
+    - Performance characteristics and design token integration
+  - **Component Library Foundation**: Created migration guide in docs/features/component-library-foundation.md
+    - ReadStatusFilter migration success story as template example
+    - CSS class to component mapping (.glass-segment\* → GlassSegmentedControl)
+    - CVA implementation patterns and type safety guidelines
+    - Performance impact analysis (~5KB gzipped, under 3KB target achieved)
+    - Violet theme rollout preparation documentation
+  - **Documentation Index Update**: Added Features category to docs/README.md table
+  - **Migration Benefits**: 80 lines (CSS + JSX) → 25 lines (JSX only), built-in accessibility, GPU optimization
+  - **Foundation for RR-230+**: Documentation prepared for upcoming Violet Theme Rollout phases
+
 ### Documentation
 
 - **[RR-222] Comprehensive Documentation Coverage for Environment Setup - Browser API Mocking** (Tuesday, August 19, 2025 at 4:37 PM)
