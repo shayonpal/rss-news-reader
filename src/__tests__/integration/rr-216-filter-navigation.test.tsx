@@ -36,7 +36,7 @@ import ArticlePage from "@/app/article/[id]/page";
 import { ArticleList } from "@/components/articles/article-list";
 import { SimpleFeedSidebar } from "@/components/feeds/simple-feed-sidebar";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
-import type { Article, Feed } from "@/types";
+import type { Article, Feed, FeedWithUnreadCount } from "@/types";
 
 // CRITICAL: These tests define the SPECIFICATION
 // The implementation MUST be modified to pass these tests
@@ -57,6 +57,7 @@ vi.mock("next/navigation", () => ({
   })),
   useSearchParams: vi.fn(() => new URLSearchParams()),
   useParams: vi.fn(() => ({ id: "test-article-1" })),
+  usePathname: vi.fn(() => "/"),
 }));
 
 // Mock stores
@@ -81,12 +82,35 @@ const mockArticleStore = {
 const mockFeedStore = {
   feeds: new Map<string, Feed>(),
   folders: new Map(),
+  feedsWithCounts: new Map<string, FeedWithUnreadCount>(),
+  folderUnreadCounts: new Map<string, number>(),
+  totalUnreadCount: 0,
   tags: [],
   loadingFeeds: false,
   feedsError: null,
+  isSkeletonLoading: false,
   loadFeeds: vi.fn(),
   refreshFeeds: vi.fn(),
   updateFeedStats: vi.fn(),
+  loadFeedHierarchy: vi.fn().mockResolvedValue(undefined),
+  getFeed: vi.fn(),
+  getFolder: vi.fn(),
+  getFeedsInFolder: vi.fn(() => []),
+  getSubfolders: vi.fn(() => []),
+  getFeedPath: vi.fn(() => []),
+  updateUnreadCounts: vi.fn(),
+  incrementUnreadCount: vi.fn(),
+  updateFeedPartialContent: vi.fn().mockResolvedValue(undefined),
+  updateFeedTitle: vi.fn().mockResolvedValue(undefined),
+  toggleFeedActive: vi.fn().mockResolvedValue(undefined),
+  moveFeedToFolder: vi.fn().mockResolvedValue(undefined),
+  createFolder: vi.fn().mockResolvedValue(undefined),
+  updateFolderTitle: vi.fn().mockResolvedValue(undefined),
+  deleteFolder: vi.fn().mockResolvedValue(undefined),
+  clearError: vi.fn(),
+  applySidebarCounts: vi.fn(),
+  applyLocalStorageCounterUpdates: vi.fn(),
+  setSkeletonLoading: vi.fn(),
 };
 
 vi.mock("@/lib/stores/article-store", () => ({

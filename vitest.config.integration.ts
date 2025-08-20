@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: "node", // Use node environment for integration tests
+    environment: "jsdom", // Use jsdom for React component integration tests
     setupFiles: ["./src/test-setup-integration.ts"], // Different setup file
     include: ["**/src/__tests__/integration/**"],
     // Resource limits to prevent memory exhaustion (RR-123)

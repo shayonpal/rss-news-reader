@@ -2,7 +2,188 @@
 
 This document tracks test failures encountered during development to identify patterns and systemic issues.
 
-## Entry: Wednesday, August 20, 2025 at 01:40 AM EDT
+## Entry: Wednesday, August 20, 2025 at 03:05 AM EDT
+
+### Context
+
+- **Linear Issue**: RR-224 - Integration Tests Stability
+- **Task**: Fixing integration test infrastructure after emergency repairs
+- **Environment**: Development (Mac Mini, local)
+- **Workflow**: Test infrastructure stabilization (workflow:03-execute)
+
+### What I Was Trying to Do
+
+1. Complete RR-224 implementation by fixing remaining integration test mock issues
+2. Resolve missing `feedsWithCounts` property in feed store mocks
+3. Fix missing `usePathname` export in next/navigation mocks
+4. Address lucide-react icon mock coverage gaps
+5. Validate integration test infrastructure stability after emergency repairs
+
+### Test Commands Executed
+
+```bash
+# Primary integration test validation
+npm run test:integration  # Timed out after 2m
+npx vitest run --config vitest.config.integration.ts --no-coverage src/__tests__/integration/rr-216-filter-navigation.test.tsx
+npx vitest run --config vitest.config.integration.ts --no-coverage src/__tests__/integration/rr-216-filter-navigation.test.tsx --reporter=verbose
+
+# Quality checks
+npm run type-check
+npm run lint
+npm run build
+```
+
+### Failures Encountered
+
+#### 1. Missing Next.js Navigation Mock Export
+
+**Error**: `[vitest] No "usePathname" export is defined on the "next/navigation" mock`
+
+**Files Affected**:
+
+- `src/__tests__/integration/rr-216-filter-navigation.test.tsx`
+- Any component using `usePathname` from next/navigation
+
+**Root Cause**: Integration test mock for next/navigation was incomplete
+
+**Solution Applied**:
+
+```typescript
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    /* existing mocks */
+  })),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+  useParams: vi.fn(() => ({ id: "test-article-1" })),
+  usePathname: vi.fn(() => "/"), // ADDED: Missing export
+}));
+```
+
+#### 2. Missing Store Property in Feed Store Mock
+
+**Error**: `TypeError: Cannot read properties of undefined (reading 'feedsWithCounts')`
+
+**Files Affected**:
+
+- `src/__tests__/integration/rr-216-filter-navigation.test.tsx` (34/44 test failures)
+- Any test using feed store mocks
+
+**Root Cause**: Production store interface evolved to include `feedsWithCounts: Map<string, FeedWithUnreadCount>` but mocks weren't updated
+
+**Solution Applied**:
+
+```typescript
+const mockFeedStore = {
+  feeds: new Map<string, Feed>(),
+  folders: new Map(),
+  feedsWithCounts: new Map<string, FeedWithUnreadCount>(), // ADDED: Critical missing property
+  folderUnreadCounts: new Map<string, number>(),
+  totalUnreadCount: 0,
+  // ... all other required methods
+};
+```
+
+#### 3. Missing Lucide-React Icon Exports
+
+**Error**: `[vitest] No "BarChart3" export is defined on the "lucide-react" mock`
+
+**Files Affected**: Multiple integration tests importing components that use icons
+
+**Root Cause**: Icon mock system in test-setup-integration.ts missing specific icons
+
+**Solution Applied**: Added comprehensive icon coverage including:
+
+- `BarChart3`
+- `CheckCheck`
+- `LayoutDashboard`
+- `Sparkles`
+- `UnfoldVertical`
+- `Activity`
+
+#### 4. Missing Browser API Mocks
+
+**Error**: `ReferenceError: IntersectionObserver is not defined`
+
+**Files Affected**: Tests rendering components that use browser APIs
+
+**Root Cause**: Integration test environment missing browser API mocks
+
+**Solution Applied**:
+
+```typescript
+// Added to test-setup-integration.ts
+Object.defineProperty(global, "IntersectionObserver", {
+  value: vi.fn().mockImplementation((callback) => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+    // ... complete API
+  })),
+  writable: true,
+});
+```
+
+#### 5. ESLint Code Quality Issues
+
+**Error**: `Component definition is missing display name  react/display-name`
+
+**Files Affected**:
+
+- `src/test-setup-integration.ts:76`
+- `src/test-setup.ts:146`
+
+**Root Cause**: Mock icon factory functions missing display names for React DevTools
+
+**Solution Applied**: Added `displayName` properties to all mock components
+
+#### 6. URL Parsing Errors (Expected in Test Environment)
+
+**Error**: `TypeError: Failed to parse URL from /reader/api/sync/last-sync`
+
+**Files Affected**: Components making API calls during test execution
+
+**Root Cause**: Relative URLs not supported in test environment, components try to fetch from real APIs
+
+**Status**: Expected behavior - these are runtime API calls that should be mocked at component level, not infrastructure level
+
+### Results After Fixes
+
+**Test Success Rate Improvement**:
+
+- **Before**: 1/44 tests passing (2.3%)
+- **After**: 21/44 tests passing (47.7%)
+- **Infrastructure Status**: ✅ Stable (was completely broken)
+
+**Quality Metrics**:
+
+- TypeScript: ✅ Clean compilation
+- Build: ✅ Successful
+- ESLint: ✅ Only pre-existing warnings
+- Test Discovery: ✅ Working (was showing 0 tests)
+
+### Pattern Insights
+
+1. **Mock Interface Drift**: Production store interfaces evolve but test mocks don't get updated
+2. **Incomplete Export Mocking**: next/navigation, lucide-react require complete interface coverage
+3. **Environment Separation**: Integration tests need different setup than unit tests
+4. **Browser API Dependencies**: React components need comprehensive browser API mocking
+5. **Systematic Failures**: Infrastructure issues cascade across multiple test files
+
+### Preventive Measures
+
+1. **Mock Validation**: Add TypeScript `satisfies` operator to ensure mocks match production interfaces
+2. **Automated Coverage**: Script to validate all imported modules have complete mock coverage
+3. **Environment Validation**: Runtime checks for required environment variables and APIs
+4. **Regular Mock Audits**: Periodic review of mock completeness vs production interfaces
+
+### Future Actions
+
+- Monitor test stability over multiple runs
+- Document comprehensive mock patterns for team reference
+- Consider implementing mock interface validation in CI/CD pipeline
+- Establish mock maintenance process when production interfaces change
+
+---
 
 ### Context
 
@@ -38,6 +219,7 @@ npm run pre-commit
 #### 1. **MEDIUM**: Component Import Failures (Multiple tests affected)
 
 **Test Files**:
+
 - `src/__tests__/unit/rr-179-mark-all-read-tag-button.test.tsx` - Missing MarkAllReadTagButton component
 - `src/__tests__/unit/rr-215-ios-scrollable-header.test.tsx` - Missing ScrollableArticleHeader, MorphingNavButton components
 - `src/__tests__/unit/rr-180-glass-morphing.test.tsx` - Missing GlassButton, MorphingDropdown components

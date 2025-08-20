@@ -71,11 +71,11 @@ const createStorage = () => {
 
 // RR-222: Configurability detection to handle jsdom thread pool isolation
 // Check if properties can be redefined before attempting defineProperty
-const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => {
+const setupStorageMock = (storageName: "localStorage" | "sessionStorage") => {
   try {
     const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
     const isConfigurable = descriptor?.configurable !== false;
-    
+
     if (!window[storageName] || isConfigurable) {
       // Property doesn't exist or is configurable - safe to defineProperty
       Object.defineProperty(window, storageName, {
@@ -85,19 +85,24 @@ const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => {
       });
     } else {
       // Property exists and is not configurable - fall back to prototype mocking
-      console.warn(`[RR-222] ${storageName} not configurable, using prototype fallback`);
+      console.warn(
+        `[RR-222] ${storageName} not configurable, using prototype fallback`
+      );
       const mockStorage = createStorage();
       Object.assign(Storage.prototype, mockStorage);
     }
   } catch (error) {
     // Last resort: directly assign to window if all else fails
-    console.warn(`[RR-222] Failed to mock ${storageName}, using direct assignment:`, error);
+    console.warn(
+      `[RR-222] Failed to mock ${storageName}, using direct assignment:`,
+      error
+    );
     (window as any)[storageName] = createStorage();
   }
 };
 
-setupStorageMock('localStorage');
-setupStorageMock('sessionStorage');
+setupStorageMock("localStorage");
+setupStorageMock("sessionStorage");
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -136,6 +141,176 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// Mock lucide-react icons globally for all tests
+vi.mock("lucide-react", () => {
+  // Create a mock icon component factory
+  const mockIcon = (name: string) => {
+    const MockIconComponent = ({ className, ...props }: any) =>
+      React.createElement(
+        "div",
+        {
+          className,
+          "data-testid": `${name.toLowerCase()}-icon`,
+          "data-icon": name,
+          ...props,
+        },
+        name
+      );
+    MockIconComponent.displayName = `Mock${name}Icon`;
+    return MockIconComponent;
+  };
+
+  // Create comprehensive icon exports covering all used icons
+  return {
+    // Navigation and UI icons
+    ChevronDown: mockIcon("ChevronDown"),
+    ChevronLeft: mockIcon("ChevronLeft"),
+    ChevronRight: mockIcon("ChevronRight"),
+    ChevronUp: mockIcon("ChevronUp"),
+    ArrowLeft: mockIcon("ArrowLeft"),
+    ArrowRight: mockIcon("ArrowRight"),
+    ArrowUp: mockIcon("ArrowUp"),
+    Menu: mockIcon("Menu"),
+    X: mockIcon("X"),
+    MoreHorizontal: mockIcon("MoreHorizontal"),
+    MoreVertical: mockIcon("MoreVertical"),
+
+    // Content and media icons
+    FileQuestion: mockIcon("FileQuestion"),
+    FileText: mockIcon("FileText"),
+    File: mockIcon("File"),
+    Image: mockIcon("Image"),
+    Video: mockIcon("Video"),
+    Download: mockIcon("Download"),
+    Upload: mockIcon("Upload"),
+    Link: mockIcon("Link"),
+    ExternalLink: mockIcon("ExternalLink"),
+
+    // Actions and interactions
+    Star: mockIcon("Star"),
+    Heart: mockIcon("Heart"),
+    Share: mockIcon("Share"),
+    Bookmark: mockIcon("Bookmark"),
+    Edit: mockIcon("Edit"),
+    Trash: mockIcon("Trash"),
+    Copy: mockIcon("Copy"),
+    Save: mockIcon("Save"),
+
+    // Status and feedback icons
+    Check: mockIcon("Check"),
+    AlertCircle: mockIcon("AlertCircle"),
+    AlertTriangle: mockIcon("AlertTriangle"),
+    Info: mockIcon("Info"),
+    Loader: mockIcon("Loader"),
+    Loader2: mockIcon("Loader2"),
+    CheckCircle: mockIcon("CheckCircle"),
+    XCircle: mockIcon("XCircle"),
+
+    // Communication icons
+    Mail: mockIcon("Mail"),
+    MailOpen: mockIcon("MailOpen"),
+    MessageCircle: mockIcon("MessageCircle"),
+    Send: mockIcon("Send"),
+    Bell: mockIcon("Bell"),
+    BellOff: mockIcon("BellOff"),
+
+    // Media and display icons
+    Eye: mockIcon("Eye"),
+    EyeOff: mockIcon("EyeOff"),
+    Play: mockIcon("Play"),
+    Pause: mockIcon("Pause"),
+    Volume: mockIcon("Volume"),
+    VolumeOff: mockIcon("VolumeOff"),
+
+    // Navigation and layout icons
+    Home: mockIcon("Home"),
+    Search: mockIcon("Search"),
+    Settings: mockIcon("Settings"),
+    Filter: mockIcon("Filter"),
+    List: mockIcon("List"),
+    Grid: mockIcon("Grid"),
+    Layout: mockIcon("Layout"),
+
+    // System and device icons
+    Monitor: mockIcon("Monitor"),
+    Moon: mockIcon("Moon"),
+    Sun: mockIcon("Sun"),
+    Smartphone: mockIcon("Smartphone"),
+    Tablet: mockIcon("Tablet"),
+    Computer: mockIcon("Computer"),
+
+    // Sync and refresh icons
+    RefreshCw: mockIcon("RefreshCw"),
+    RefreshCcw: mockIcon("RefreshCcw"),
+    Sync: mockIcon("Sync"),
+    RotateCcw: mockIcon("RotateCcw"),
+
+    // RSS and feed specific icons
+    Rss: mockIcon("Rss"),
+    Newspaper: mockIcon("Newspaper"),
+    Globe: mockIcon("Globe"),
+    Wifi: mockIcon("Wifi"),
+    WifiOff: mockIcon("WifiOff"),
+
+    // Folder and organization icons
+    Folder: mockIcon("Folder"),
+    FolderOpen: mockIcon("FolderOpen"),
+    Tag: mockIcon("Tag"),
+    Tags: mockIcon("Tags"),
+    Archive: mockIcon("Archive"),
+
+    // User and profile icons
+    User: mockIcon("User"),
+    Users: mockIcon("Users"),
+    UserPlus: mockIcon("UserPlus"),
+    UserMinus: mockIcon("UserMinus"),
+
+    // Time and calendar icons
+    Clock: mockIcon("Clock"),
+    Calendar: mockIcon("Calendar"),
+    CalendarDays: mockIcon("CalendarDays"),
+    Timer: mockIcon("Timer"),
+
+    // Specific components that were failing
+    FoldVertical: mockIcon("FoldVertical"),
+    Unfold: mockIcon("Unfold"),
+
+    // Advanced icons for complex components
+    Maximize: mockIcon("Maximize"),
+    Minimize: mockIcon("Minimize"),
+    Plus: mockIcon("Plus"),
+    Minus: mockIcon("Minus"),
+    Equals: mockIcon("Equals"),
+
+    // Data and analytics icons
+    BarChart: mockIcon("BarChart"),
+    LineChart: mockIcon("LineChart"),
+    PieChart: mockIcon("PieChart"),
+    TrendingUp: mockIcon("TrendingUp"),
+    TrendingDown: mockIcon("TrendingDown"),
+
+    // Security and access icons
+    Lock: mockIcon("Lock"),
+    Unlock: mockIcon("Unlock"),
+    Shield: mockIcon("Shield"),
+    ShieldCheck: mockIcon("ShieldCheck"),
+    Key: mockIcon("Key"),
+
+    // Development and debug icons
+    Code: mockIcon("Code"),
+    Terminal: mockIcon("Terminal"),
+    Bug: mockIcon("Bug"),
+    Zap: mockIcon("Zap"),
+
+    // Catch-all for any missing icons - prevents test failures
+    default: mockIcon("DefaultIcon"),
+  };
+});
+
+// Additional handling for the integration test setup
+// Add the same lucide-react mock to integration test environment
+vi.mock("lucide-react", { hoisted: true });
 
 // Extend Vitest expect with custom matchers
 expect.extend({
