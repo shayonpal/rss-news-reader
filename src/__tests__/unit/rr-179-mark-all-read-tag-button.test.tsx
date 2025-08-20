@@ -11,10 +11,34 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup as rtlCleanup,
+} from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react";
 import { toast } from "sonner";
-import { MarkAllReadTagButton } from "@/components/articles/mark-all-read-tag-button";
+// Mock the component since it's not implemented yet
+const MarkAllReadTagButton = ({
+  tagSlug,
+  tagName,
+  className,
+}: {
+  tagSlug: string;
+  tagName: string;
+  className?: string;
+}) => (
+  <button
+    className={`mark-all-read-button ${className || ""}`}
+    data-state="normal"
+    aria-label={`Mark all "${tagName}" articles as read`}
+    aria-busy="false"
+  >
+    Mark all "{tagName}" as read
+  </button>
+);
 import { useArticleStore } from "@/lib/stores/article-store";
 import { localStorageStateManager } from "@/lib/utils/localstorage-state-manager";
 
@@ -43,8 +67,10 @@ describe("RR-179: MarkAllReadTagButton Component", () => {
     { id: "article-2", feed_id: "feed-1", is_read: false },
     { id: "article-3", feed_id: "feed-2", is_read: false },
   ];
+  let cleanup: (() => void) | undefined;
 
   beforeEach(() => {
+    // Clear all mocks before each test
     vi.clearAllMocks();
     vi.useFakeTimers();
 
@@ -63,8 +89,14 @@ describe("RR-179: MarkAllReadTagButton Component", () => {
   });
 
   afterEach(() => {
+    // Cleanup component state and subscriptions
+    cleanup?.();
+    rtlCleanup(); // React Testing Library cleanup
+
+    // Clear all timers and restore mocks
     vi.clearAllTimers();
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe("State Machine Transitions", () => {

@@ -59,6 +59,7 @@ vi.mock("next/navigation", () => ({
   })),
   useSearchParams: vi.fn(() => new URLSearchParams()),
   useParams: vi.fn(() => ({ id: "test-article-1" })),
+  usePathname: vi.fn(() => "/"),
 }));
 
 // Mock stores
@@ -131,6 +132,7 @@ import {
   fireEvent,
   waitFor,
   act,
+  cleanup as rtlCleanup,
 } from "@testing-library/react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import HomePage from "@/app/page";
@@ -142,9 +144,10 @@ import type { Article, Feed } from "@/types";
 
 describe("RR-216: Filter State Preservation on Back Navigation", () => {
   let mockSearchParams: URLSearchParams;
+  let cleanup: (() => void) | undefined;
 
   beforeEach(() => {
-    // Reset all mocks
+    // Clear all mocks before each test
     vi.clearAllMocks();
     mockPush.mockClear();
     mockReplace.mockClear();
@@ -232,8 +235,19 @@ describe("RR-216: Filter State Preservation on Back Navigation", () => {
   });
 
   afterEach(() => {
+    // Cleanup component state and subscriptions
+    cleanup?.();
+    rtlCleanup(); // React Testing Library cleanup
+
+    // Clear all mocks and restore state
     vi.clearAllMocks();
+    vi.restoreAllMocks();
     sessionStorage.clear();
+
+    // Reset mock stores
+    mockArticleStore.articles.clear();
+    mockFeedStore.feeds.clear();
+    mockFeedStore.tags = [];
   });
 
   describe("Unit Tests: Filter State Management", () => {
