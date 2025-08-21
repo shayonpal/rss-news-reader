@@ -4,6 +4,7 @@ import React from "react";
 import { IOSButton } from "./ios-button";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { GlassToolbarButton } from "./glass-button";
 
 export type ArticleActionButtonSize = "sm" | "md" | "lg";
 
@@ -76,28 +77,31 @@ export function ArticleActionButton({
   const DisplayIcon = loading && LoadingIcon ? LoadingIcon : Icon;
 
   return (
-    <button
+    <GlassToolbarButton
       type="button"
       onClick={onPress}
       disabled={disabled || loading}
-      className={cn("glass-toolbar-btn", className)}
+      className={className}
       aria-label={label}
       title={title || label}
+      icon={
+        <DisplayIcon
+          className={cn(
+            iconSize,
+            loading && "animate-spin",
+            active && activeClassName
+              ? activeClassName
+              : active
+                ? "text-primary"
+                : "text-muted-foreground"
+          )}
+        />
+      }
+      hideOnMobile={!showLabel}
     >
-      <DisplayIcon
-        className={cn(
-          iconSize,
-          loading && "animate-spin",
-          active && activeClassName
-            ? activeClassName
-            : active
-              ? "text-primary"
-              : "text-muted-foreground"
-        )}
-      />
       {showLabel && (
         <span className="ml-2 hidden text-sm md:inline">{label}</span>
       )}
-    </button>
+    </GlassToolbarButton>
   );
 }

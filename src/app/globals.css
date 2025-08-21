@@ -261,7 +261,7 @@ button:not(:disabled) {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
+
     position: fixed;
     bottom: 80px; /* Increased to account for navigation footer */
     right: 24px;
@@ -435,7 +435,7 @@ html.reduce-transparency .liquid-glass-btn {
     /* Segmented control (clear glass) */
     --glass-chip-bg: rgba(255, 255, 255, 0.35);
     --glass-chip-indicator: rgba(255, 255, 255, 0.45);
-    
+
     /* Adaptive glass for light mode - enhanced for legibility */
     --glass-adaptive-bg: rgba(255, 255, 255, 0.35);
     --glass-adaptive-border: rgba(0, 0, 0, 0.08);
@@ -451,19 +451,44 @@ html.reduce-transparency .liquid-glass-btn {
     /* RR-180: Enhanced iOS 26 Liquid Glass - Unified Transparency */
     --glass-blur: 20px; /* Increased blur for better content visibility */
     --glass-saturation: 140%; /* Balanced saturation */
-    
+
     /* Unified glass backgrounds using least transparent values */
     --glass-nav-bg: rgba(40, 40, 40, 0.35); /* Unified with adaptive values */
-    --glass-nav-bg-scrolled: rgba(40, 40, 40, 0.45); /* Increased opacity when scrolled */
-    --glass-nav-border: rgba(255, 255, 255, 0.18); /* Unified border visibility */
-    --opaque-nav-bg: rgba(0, 0, 0, 0.85); /* Slightly more transparent fallback */
-    
+    --glass-nav-bg-scrolled: rgba(
+      40,
+      40,
+      40,
+      0.45
+    ); /* Increased opacity when scrolled */
+    --glass-nav-border: rgba(
+      255,
+      255,
+      255,
+      0.18
+    ); /* Unified border visibility */
+    --opaque-nav-bg: rgba(
+      0,
+      0,
+      0,
+      0.85
+    ); /* Slightly more transparent fallback */
+
     /* Segmented control (unified transparency) */
     --glass-chip-bg: rgba(40, 40, 40, 0.35); /* Unified with nav background */
-    --glass-chip-indicator: rgba(255, 255, 255, 0.25); /* More visible indicator */
-    
+    --glass-chip-indicator: rgba(
+      255,
+      255,
+      255,
+      0.25
+    ); /* More visible indicator */
+
     /* Adaptive glass now matches base values */
-    --glass-adaptive-bg: rgba(40, 40, 40, 0.35); /* Consistent with nav background */
+    --glass-adaptive-bg: rgba(
+      40,
+      40,
+      40,
+      0.35
+    ); /* Consistent with nav background */
     --glass-adaptive-border: rgba(255, 255, 255, 0.18);
     /* Enhanced legibility when scrolling over busy content */
     --glass-enhanced-bg: rgba(40, 40, 40, 0.55);
@@ -525,12 +550,12 @@ html.reduce-transparency .liquid-glass-btn {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 44px;
-    min-width: 44px;
+    height: calc(var(--glass-control-height) - 8px); /* 40px to fit within 48px container with 4px padding */
+    min-width: calc(var(--glass-control-height) - 8px);
     padding: 0 12px;
     border-radius: 9999px;
     color: hsl(var(--foreground));
@@ -557,14 +582,14 @@ html.reduce-transparency .liquid-glass-btn {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
+
     -webkit-backdrop-filter: blur(var(--glass-blur))
       saturate(var(--glass-saturation));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-nav-bg);
     border: 1px solid var(--glass-nav-border);
-    width: 48px; /* Increased from 44px for iOS HIG */
-    height: 48px; /* Increased from 44px for iOS HIG */
+    width: var(--glass-control-height); /* Standardized */
+    height: var(--glass-control-height); /* Standardized */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -733,7 +758,8 @@ html.reduce-transparency .glass-sidebar-info {
     gap: 0;
     padding: var(--segment-pad);
     border-radius: 9999px;
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur))
+      saturate(var(--glass-saturation));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
     background: var(--glass-chip-bg);
     border: 1px solid var(--glass-nav-border);

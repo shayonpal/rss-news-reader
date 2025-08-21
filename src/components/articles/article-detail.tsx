@@ -424,24 +424,18 @@ export function ArticleDetail({
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900">
       {/* Unified floating controls using standard component positioning */}
-      <ScrollHideFloatingElement
-        position="top-left"
-        hideThreshold={50}
-      >
-        <button
+      <ScrollHideFloatingElement position="top-left" hideThreshold={50}>
+        <GlassIconButton
           type="button"
           onClick={onBack}
+          variant="adaptive"
           aria-label="Back to list"
-          className="glass-icon-btn glass-adaptive"
         >
           <ArrowLeft className="h-5 w-5" />
-        </button>
+        </GlassIconButton>
       </ScrollHideFloatingElement>
 
-      <ScrollHideFloatingElement
-        position="top-right"
-        hideThreshold={50}
-      >
+      <ScrollHideFloatingElement position="top-right" hideThreshold={50}>
         <ArticleActionsToolbar
           articleId={currentArticle.id}
           isStarred={currentArticle.tags?.includes("starred") || false}

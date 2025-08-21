@@ -78,6 +78,31 @@ const glassButtonVariants = cva(
           "hover:opacity-90",
           "shadow-xl shadow-black/12 dark:shadow-white/12",
         ].join(" "),
+        // RR-230: Exact CSS class replication
+        "css-toolbar-btn": [
+          "appearance-none -webkit-appearance-none -moz-appearance-none",
+          "inline-flex items-center justify-center",
+          "h-[44px] min-w-[44px] px-3",
+          "rounded-full",
+          "text-[color:hsl(var(--foreground))]",
+          "bg-transparent border-none",
+          "transition-[transform,background-color] duration-[160ms] ease-[var(--ease-out)]",
+          "hover:bg-[var(--glass-chip-indicator)]",
+          "active:scale-[0.98]",
+        ].join(" "),
+        "css-icon-btn": [
+          "appearance-none -webkit-appearance-none -moz-appearance-none",
+          "backdrop-blur-[var(--glass-blur)] backdrop-saturate-[var(--glass-saturation)]",
+          "bg-[var(--glass-nav-bg)]",
+          "border border-[var(--glass-nav-border)]",
+          "w-[48px] h-[48px]",
+          "inline-flex items-center justify-center",
+          "rounded-full",
+          "text-[color:hsl(var(--foreground))]",
+          "transition-[transform,background-color] duration-[160ms] ease-[var(--ease-out)]",
+          "hover:bg-[var(--glass-nav-bg-scrolled)]",
+          "active:scale-[0.96]",
+        ].join(" "),
       },
       size: {
         default: "px-4 py-2 text-sm gap-2",
@@ -161,7 +186,7 @@ const GlassIconButton = React.forwardRef<
   (
     {
       className,
-      variant,
+      variant = "css-icon-btn",
       asChild = false,
       springAnimation = true,
       style,
@@ -203,7 +228,7 @@ const GlassToolbarButton = React.forwardRef<
   (
     {
       className,
-      variant,
+      variant = "css-toolbar-btn",
       size = "toolbar",
       icon,
       iconPosition = "left",

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { GlassIconButton } from "./glass-button";
+import { GlassIconButton, GlassToolbarButton } from "./glass-button";
 
 /**
  * RR-180: iOS 26 Liquid Glass Morphing Dropdown
@@ -200,28 +200,28 @@ export function MorphingDropdown({
   // Add more button to toolbar elements
   const extendedToolbarElements = React.useMemo(() => {
     const moreButton = (
-      <GlassIconButton
+      <GlassToolbarButton
         key="more-button"
-        variant="ghost"
         aria-label="More options"
         aria-expanded={isOpen}
         onClick={() => setOpen(!isOpen)}
         className="flex-shrink-0"
-      >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-          />
-        </svg>
-      </GlassIconButton>
+        icon={
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+            />
+          </svg>
+        }
+      />
     );
 
     return [...toolbarElements, moreButton];

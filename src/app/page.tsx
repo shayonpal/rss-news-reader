@@ -25,13 +25,18 @@ import DOMPurify from "dompurify";
 import { toast } from "sonner";
 import { ArticleCountManager } from "@/lib/article-count-manager";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
+import { GlassIconButton } from "@/components/ui/glass-button";
 
 export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { setNavigatingToArticle, markAllAsRead, markAllAsReadForTag, readStatusFilter } =
-    useArticleStore();
+  const {
+    setNavigatingToArticle,
+    markAllAsRead,
+    markAllAsReadForTag,
+    readStatusFilter,
+  } = useArticleStore();
   const { getFeed } = useFeedStore();
   const { tags } = useTagStore();
 
@@ -126,7 +131,7 @@ export default function HomePage() {
   // Auto-manage sidebar state based on viewport - only after hydration
   useEffect(() => {
     if (!isHydrated) return; // Wait for hydration to prevent flash
-    
+
     if (!viewport.shouldCollapseSidebar) {
       // On tablet/desktop, sidebar should always be open
       setIsSidebarOpen(true);
@@ -407,12 +412,15 @@ export default function HomePage() {
           lastScrollY.current = currentScrollY;
           // Scroll-aware contrast for Liquid Glass
           headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
-          
+
           // Enhanced legibility for filter controls when scrolling
           if (filterControlsRef.current) {
-            filterControlsRef.current.classList.toggle("glass-enhanced-legibility", currentScrollY > 50);
+            filterControlsRef.current.classList.toggle(
+              "glass-enhanced-legibility",
+              currentScrollY > 50
+            );
           }
-          
+
           ticking = false;
         });
 
@@ -505,13 +513,13 @@ export default function HomePage() {
             hideThreshold={50}
             visible={!isSidebarOpen}
           >
-            <button
+            <GlassIconButton
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="glass-icon-btn glass-adaptive"
+              variant="adaptive"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5" />
-            </button>
+            </GlassIconButton>
           </ScrollHideFloatingElement>
         )}
 
@@ -576,9 +584,9 @@ export default function HomePage() {
           {/* Scrolling Page Title */}
           <div
             className={`pb-4 transition-all duration-300 ease-out ${
-              viewport.shouldCollapseSidebar 
-                ? "pt-[80px] px-4 pwa-standalone:pt-[calc(80px+env(safe-area-inset-top))]" // Mobile: +8px extra spacing when hamburger shows
-                : "pt-[24px] px-6 pwa-standalone:pt-[calc(24px+env(safe-area-inset-top))]"  // Desktop: title centered with button clusters (48px buttons → 24px title position)
+              viewport.shouldCollapseSidebar
+                ? "px-4 pt-[80px] pwa-standalone:pt-[calc(80px+env(safe-area-inset-top))]" // Mobile: +8px extra spacing when hamburger shows
+                : "px-6 pt-[24px] pwa-standalone:pt-[calc(24px+env(safe-area-inset-top))]" // Desktop: title centered with button clusters (48px buttons → 24px title position)
             }`}
           >
             <h1 className="text-2xl font-bold text-foreground transition-all duration-300 ease-out">
