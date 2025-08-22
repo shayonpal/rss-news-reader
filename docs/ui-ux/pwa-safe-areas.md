@@ -68,10 +68,14 @@ The `ScrollHideFloatingElement` component implements comprehensive safe area sup
 ```typescript
 // PWA safe area classes mapping
 const pwaClasses = {
-  "top-left": "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
-  "top-right": "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
-  "bottom-left": "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
-  "bottom-right": "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
+  "top-left":
+    "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
+  "top-right":
+    "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
+  "bottom-left":
+    "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
+  "bottom-right":
+    "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
 };
 ```
 
@@ -89,30 +93,30 @@ const pwaClasses = {
 
 ```css
 /* Typical values */
-env(safe-area-inset-top): 59px;     /* Dynamic Island + status bar */
-env(safe-area-inset-bottom): 34px;   /* Home indicator */
-env(safe-area-inset-left): 0px;      /* Portrait mode */
-env(safe-area-inset-right): 0px;     /* Portrait mode */
+env(safe-area-inset-top): 59px; /* Dynamic Island + status bar */
+env(safe-area-inset-bottom): 34px; /* Home indicator */
+env(safe-area-inset-left): 0px; /* Portrait mode */
+env(safe-area-inset-right): 0px; /* Portrait mode */
 ```
 
 #### iPhone 14 (Standard Notch)
 
 ```css
 /* Typical values */
-env(safe-area-inset-top): 47px;     /* Notch + status bar */
-env(safe-area-inset-bottom): 34px;   /* Home indicator */
-env(safe-area-inset-left): 0px;      /* Portrait mode */
-env(safe-area-inset-right): 0px;     /* Portrait mode */
+env(safe-area-inset-top): 47px; /* Notch + status bar */
+env(safe-area-inset-bottom): 34px; /* Home indicator */
+env(safe-area-inset-left): 0px; /* Portrait mode */
+env(safe-area-inset-right): 0px; /* Portrait mode */
 ```
 
 #### iPhone SE (Traditional)
 
 ```css
 /* Typical values */
-env(safe-area-inset-top): 20px;     /* Status bar only */
-env(safe-area-inset-bottom): 0px;    /* Home button device */
-env(safe-area-inset-left): 0px;      /* No rounded corners */
-env(safe-area-inset-right): 0px;     /* No rounded corners */
+env(safe-area-inset-top): 20px; /* Status bar only */
+env(safe-area-inset-bottom): 0px; /* Home button device */
+env(safe-area-inset-left): 0px; /* No rounded corners */
+env(safe-area-inset-right): 0px; /* No rounded corners */
 ```
 
 ### Landscape Orientation
@@ -121,10 +125,10 @@ Landscape mode introduces side safe areas and modified top/bottom values:
 
 ```css
 /* Landscape safe areas */
-env(safe-area-inset-top): 0px;      /* Minimal in landscape */
-env(safe-area-inset-bottom): 21px;   /* Reduced home indicator */
-env(safe-area-inset-left): 47px;     /* Notch on left side */
-env(safe-area-inset-right): 47px;    /* Camera housing on right */
+env(safe-area-inset-top): 0px; /* Minimal in landscape */
+env(safe-area-inset-bottom): 21px; /* Reduced home indicator */
+env(safe-area-inset-left): 47px; /* Notch on left side */
+env(safe-area-inset-right): 47px; /* Camera housing on right */
 ```
 
 ## Implementation Examples
@@ -133,7 +137,7 @@ env(safe-area-inset-right): 47px;    /* Camera housing on right */
 
 ```typescript
 // Top-left positioned navigation with safe area support
-<ScrollHideFloatingElement 
+<ScrollHideFloatingElement
   position="top-left"
   className="pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]"
 >
@@ -142,6 +146,7 @@ env(safe-area-inset-right): 47px;    /* Camera housing on right */
 ```
 
 **Resulting Positioning**:
+
 - iPhone 14 Pro: `top: 67px; left: 16px;` (8px + 59px safe area)
 - iPhone SE: `top: 28px; left: 16px;` (8px + 20px safe area)
 - Landscape: `top: 8px; left: 63px;` (8px + 47px side safe area)
@@ -150,7 +155,7 @@ env(safe-area-inset-right): 47px;    /* Camera housing on right */
 
 ```typescript
 // Bottom-right positioned controls with safe area support
-<ScrollHideFloatingElement 
+<ScrollHideFloatingElement
   position="bottom-right"
   className="pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]"
 >
@@ -159,6 +164,7 @@ env(safe-area-inset-right): 47px;    /* Camera housing on right */
 ```
 
 **Resulting Positioning**:
+
 - iPhone 14 Pro: `bottom: 50px; right: 16px;` (16px + 34px safe area)
 - iPhone SE: `bottom: 16px; right: 16px;` (16px + 0px safe area)
 - Landscape: `bottom: 37px; right: 63px;` (16px + 21px + 47px safe areas)
@@ -173,7 +179,7 @@ All floating elements maintain minimum 44px touch targets as per Apple's Human I
 .floating-touch-target {
   min-width: 44px;
   min-height: 44px;
-  
+
   /* Ensure spacing for comfortable tapping */
   margin: 4px;
 }
@@ -185,7 +191,7 @@ For improved accessibility, invisible touch areas extend beyond visual boundarie
 
 ```css
 .enhanced-touch-area::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -8px;
   right: -8px;
@@ -259,12 +265,12 @@ For dynamic adjustments, JavaScript can detect safe area values:
 ```typescript
 function getSafeAreaInsets() {
   const style = getComputedStyle(document.documentElement);
-  
+
   return {
-    top: parseInt(style.getPropertyValue('--safe-area-inset-top') || '0'),
-    right: parseInt(style.getPropertyValue('--safe-area-inset-right') || '0'),
-    bottom: parseInt(style.getPropertyValue('--safe-area-inset-bottom') || '0'),
-    left: parseInt(style.getPropertyValue('--safe-area-inset-left') || '0'),
+    top: parseInt(style.getPropertyValue("--safe-area-inset-top") || "0"),
+    right: parseInt(style.getPropertyValue("--safe-area-inset-right") || "0"),
+    bottom: parseInt(style.getPropertyValue("--safe-area-inset-bottom") || "0"),
+    left: parseInt(style.getPropertyValue("--safe-area-inset-left") || "0"),
   };
 }
 ```
@@ -279,7 +285,7 @@ For browsers without safe area support:
   .floating-element-top {
     top: 24px; /* Standard spacing fallback */
   }
-  
+
   .floating-element-bottom {
     bottom: 24px; /* Standard spacing fallback */
   }
@@ -290,31 +296,36 @@ For browsers without safe area support:
 
 ### Device Testing Matrix
 
-| Device            | Portrait Top | Portrait Bottom | Landscape Left | Landscape Right |
-|-------------------|-------------|----------------|----------------|-----------------|
-| iPhone 14 Pro     | 67px        | 50px           | 55px           | 63px            |
-| iPhone 14         | 55px        | 50px           | 55px           | 63px            |
-| iPhone 13 Pro     | 55px        | 50px           | 55px           | 63px            |
-| iPhone 12         | 55px        | 50px           | 55px           | 63px            |
-| iPhone SE (3rd)   | 28px        | 16px           | 16px           | 16px            |
-| iPad Pro 11"      | 32px        | 24px           | 24px           | 24px            |
+| Device          | Portrait Top | Portrait Bottom | Landscape Left | Landscape Right |
+| --------------- | ------------ | --------------- | -------------- | --------------- |
+| iPhone 14 Pro   | 67px         | 50px            | 55px           | 63px            |
+| iPhone 14       | 55px         | 50px            | 55px           | 63px            |
+| iPhone 13 Pro   | 55px         | 50px            | 55px           | 63px            |
+| iPhone 12       | 55px         | 50px            | 55px           | 63px            |
+| iPhone SE (3rd) | 28px         | 16px            | 16px           | 16px            |
+| iPad Pro 11"    | 32px         | 24px            | 24px           | 24px            |
 
 ### Automated Testing
 
 ```typescript
 // E2E test for safe area compliance
-test('floating elements respect safe areas on all devices', async ({ page }) => {
+test("floating elements respect safe areas on all devices", async ({
+  page,
+}) => {
   // Test on iPhone 14 Pro
   await page.setViewportSize({ width: 393, height: 852 });
   await page.addInitScript(() => {
     // Simulate Dynamic Island safe areas
-    document.documentElement.style.setProperty('--safe-area-inset-top', '59px');
-    document.documentElement.style.setProperty('--safe-area-inset-bottom', '34px');
+    document.documentElement.style.setProperty("--safe-area-inset-top", "59px");
+    document.documentElement.style.setProperty(
+      "--safe-area-inset-bottom",
+      "34px"
+    );
   });
-  
+
   const floatingButton = page.locator('[data-testid="floating-nav-button"]');
   const boundingBox = await floatingButton.boundingBox();
-  
+
   // Verify minimum top spacing (8px base + 59px safe area)
   expect(boundingBox.y).toBeGreaterThanOrEqual(67);
 });
@@ -346,7 +357,7 @@ Safe area aware animations maintain 60fps performance:
 .floating-element {
   /* Use transform instead of changing top/bottom for animations */
   transform: translateY(var(--scroll-offset));
-  
+
   /* Avoid animating properties that trigger layout */
   transition: transform 300ms ease-out;
 }
@@ -390,7 +401,7 @@ Safe area integration works seamlessly with liquid glass effects:
 .liquid-glass-floating {
   /* Safe area positioning */
   top: calc(8px + env(safe-area-inset-top));
-  
+
   /* Glass effects */
   backdrop-filter: blur(8px) saturate(180%);
   background: rgba(255, 255, 255, 0.18);

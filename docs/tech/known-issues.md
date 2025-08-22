@@ -132,17 +132,17 @@ Test infrastructure completely failed with "Cannot redefine property: sessionSto
 **Three-Tier Configurability Detection System** in `src/test-setup.ts:73-96`:
 
 1. **Tier 1**: Standard `Object.defineProperty` for configurable properties
-2. **Tier 2**: `Storage.prototype` fallback for non-configurable properties  
+2. **Tier 2**: `Storage.prototype` fallback for non-configurable properties
 3. **Tier 3**: Direct assignment with type casting as last resort
 
 **Key Implementation:**
 
 ```typescript
-const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => {
+const setupStorageMock = (storageName: "localStorage" | "sessionStorage") => {
   try {
     const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
     const isConfigurable = descriptor?.configurable !== false;
-    
+
     if (!window[storageName] || isConfigurable) {
       // Tier 1: Clean defineProperty approach
       Object.defineProperty(window, storageName, {
@@ -152,13 +152,18 @@ const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => {
       });
     } else {
       // Tier 2: Prototype fallback for non-configurable properties
-      console.warn(`[RR-222] ${storageName} not configurable, using prototype fallback`);
+      console.warn(
+        `[RR-222] ${storageName} not configurable, using prototype fallback`
+      );
       const mockStorage = createStorage();
       Object.assign(Storage.prototype, mockStorage);
     }
   } catch (error) {
     // Tier 3: Direct assignment as last resort
-    console.warn(`[RR-222] Failed to mock ${storageName}, using direct assignment:`, error);
+    console.warn(
+      `[RR-222] Failed to mock ${storageName}, using direct assignment:`,
+      error
+    );
     (window as any)[storageName] = createStorage();
   }
 };

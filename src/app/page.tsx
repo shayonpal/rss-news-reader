@@ -515,7 +515,7 @@ export default function HomePage() {
           >
             <GlassIconButton
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              variant="adaptive"
+              variant="liquid-glass"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5" />

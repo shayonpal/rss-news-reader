@@ -177,7 +177,6 @@ class RefreshManager {
 
     // Apply feed counts
     if (sidebarData.feedCounts) {
-      // This will be implemented to update the feed store with counts
       const feedStore = await this.getFeedStore();
       if (feedStore) {
         feedStore.applySidebarCounts(sidebarData.feedCounts);
@@ -190,6 +189,12 @@ class RefreshManager {
       if (tagStore) {
         tagStore.applySidebarTags(sidebarData.tags);
       }
+    }
+
+    // Refresh article list to show new articles after sync
+    const articleStore = await this.getArticleStore();
+    if (articleStore) {
+      await articleStore.refreshArticles();
     }
   }
 

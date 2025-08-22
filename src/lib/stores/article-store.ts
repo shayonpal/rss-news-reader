@@ -849,7 +849,6 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         }
       });
 
-
       console.log(
         `[RR-197] Marked ${articlesToMark.length} articles as read with localStorage optimization`
       );

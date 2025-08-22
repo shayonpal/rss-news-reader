@@ -54,7 +54,7 @@ interface ScrollCallback {
   }): void;
 }
 
-type ScrollState = 'expanded' | 'transitioning' | 'collapsed';
+type ScrollState = "expanded" | "transitioning" | "collapsed";
 ```
 
 #### Implementation Pattern
@@ -94,7 +94,7 @@ Reusable wrapper component providing standardized scroll-responsive behavior for
 </ScrollHideFloatingElement>
 
 // Conditional visibility
-<ScrollHideFloatingElement 
+<ScrollHideFloatingElement
   visible={showControls && !sidebarOpen}
   position="top-left"
 >
@@ -173,15 +173,15 @@ Intelligent navigation button that morphs between hamburger and back button base
 </main>
 
 {/* Floating navigation */}
-<ScrollHideFloatingElement 
-  position="top-left" 
+<ScrollHideFloatingElement
+  position="top-left"
   visible={isMobile && !sidebarOpen}
 >
   <MorphingNavButton onClick={toggleMenu} />
 </ScrollHideFloatingElement>
 
 {/* Floating controls */}
-<ScrollHideFloatingElement 
+<ScrollHideFloatingElement
   position="top-right"
   visible={!sidebarOpen}
 >
@@ -232,10 +232,10 @@ const handleScroll = useCallback(() => {
   const currentScrollY = window.scrollY;
   const scrollDelta = currentScrollY - lastScrollY;
   const isScrollingUp = scrollDelta < 0 && currentScrollY > 10;
-  
+
   // Update visibility based on direction
   setElementVisible(isScrollingUp || currentScrollY < hideThreshold);
-  
+
   setLastScrollY(currentScrollY);
 }, [lastScrollY, hideThreshold]);
 ```
@@ -262,7 +262,7 @@ const handleScroll = useCallback(() => {
   /* GPU acceleration */
   transform: translateZ(0);
   will-change: transform, opacity;
-  
+
   /* Optimized transitions */
   transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -278,8 +278,10 @@ Automatic adjustment for iOS device safe areas across all positions:
 const pwaClasses = {
   "top-left": "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))]",
   "top-right": "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))]",
-  "bottom-left": "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))]",
-  "bottom-right": "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))]",
+  "bottom-left":
+    "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))]",
+  "bottom-right":
+    "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))]",
 };
 ```
 
@@ -353,10 +355,11 @@ Current test suite includes 129 test cases across:
 ### Critical Architecture Fixes (August 19, 2025)
 
 #### ScrollHideFloatingElement Over-Translation Issue
+
 - **Problem**: Fixed-position floating elements experiencing double-translation during scroll, causing buttons to drift off-screen beyond viewport boundaries (-1000px+)
 - **Root Cause**: `translateY(-currentScrollY)` applying unbounded scroll-based translation to already positioned fixed elements
 - **Solution**: Implemented fixed 64px translation distance with directional logic
-- **Technical Implementation**: 
+- **Technical Implementation**:
   ```typescript
   const hideDistance = 64;
   const translateDirection = position.startsWith("top") ? -1 : 1;
@@ -364,10 +367,11 @@ Current test suite includes 129 test cases across:
   ```
 
 #### Glass Button Styling Normalization
+
 - **Problem**: Thick black borders appearing on glass buttons instead of subtle liquid glass styling
 - **Root Cause**: User Agent default button styling overriding CSS glass variables, missing light mode variables
 - **Solution**: Added comprehensive appearance normalization and CSS variable definitions
-- **CSS Enhancement**: 
+- **CSS Enhancement**:
   ```css
   .glass-icon-btn,
   .glass-toolbar-btn,
@@ -380,12 +384,14 @@ Current test suite includes 129 test cases across:
   ```
 
 #### Content-Aware Positioning Architecture
+
 - **Problem**: Floating controls overlapping article content with inconsistent positioning systems
 - **Root Cause**: Different baseline spacing (8px vs 24px) without content-type awareness
 - **Solution**: Unified positioning system with content-type-aware spacing logic
 - **Implementation**: Article listing centers content with buttons, article detail provides dedicated breathing room
 
 #### Architecture Unification Benefits
+
 - **Single Source of Truth**: All floating element positioning centralized in ScrollHideFloatingElement
 - **Maintainable Patterns**: Consistent behavior patterns extensible to future floating elements
 - **Performance Optimized**: Fixed translation distance with proper GPU acceleration

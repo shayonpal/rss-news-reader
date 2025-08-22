@@ -271,8 +271,8 @@ export function SimpleFeedSidebar({
       </div>
 
       {/* Feed List - RR-193: Updated to CSS Grid layout */}
-      <div 
-        className="relative flex-1 overflow-y-auto" 
+      <div
+        className="relative flex-1 overflow-y-auto"
         ref={scrollContainerRef}
         data-testid="sidebar-main-container"
       >
@@ -353,7 +353,7 @@ export function SimpleFeedSidebar({
               className="mt-2 border-t"
               testId="feeds-collapsible"
             >
-              <div 
+              <div
                 className="space-y-0.5 pl-6 pr-1"
                 data-testid="feeds-scrollable-section"
               >
@@ -426,7 +426,7 @@ export function SimpleFeedSidebar({
                               {feed.title || "Untitled"}
                             </span>
                             {unreadCount > 0 && (
-                              <span 
+                              <span
                                 className={`ml-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium ${
                                   isSelected
                                     ? "bg-primary text-primary-foreground"
@@ -454,7 +454,8 @@ export function SimpleFeedSidebar({
 
                   if (readStatusFilter === "unread") {
                     const hasUnread = (tag.unreadCount ?? 0) > 0;
-                    const hasArticles = (tag.totalCount ?? tag.articleCount) > 0;
+                    const hasArticles =
+                      (tag.totalCount ?? tag.articleCount) > 0;
 
                     if (hasUnread) return true;
 
@@ -482,7 +483,7 @@ export function SimpleFeedSidebar({
               className="mt-2 border-t"
               testId="topics-collapsible"
             >
-              <div 
+              <div
                 className="space-y-0.5 pl-6 pr-1"
                 data-testid="topics-scrollable-section"
               >
@@ -554,8 +555,8 @@ export function SimpleFeedSidebar({
                     .map((tag) => {
                       const displayCount =
                         readStatusFilter === "unread"
-                          ? tag.unreadCount ?? 0
-                          : tag.totalCount ?? tag.articleCount ?? 0;
+                          ? (tag.unreadCount ?? 0)
+                          : (tag.totalCount ?? tag.articleCount ?? 0);
                       const isSelected = selectedTagId === tag.id;
 
                       return (
@@ -573,7 +574,7 @@ export function SimpleFeedSidebar({
                             <span className="line-clamp-2 text-sm font-medium">
                               {tag.name}
                             </span>
-                            <span 
+                            <span
                               className={`ml-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium ${
                                 isSelected
                                   ? "bg-primary text-primary-foreground"

@@ -19,20 +19,21 @@ The `ScrollHideFloatingElement` is a reusable React component that provides stan
 
 ```typescript
 interface ScrollHideFloatingElementProps {
-  children: React.ReactNode;                    // Content to display in floating element
-  className?: string;                           // Additional CSS classes
+  children: React.ReactNode; // Content to display in floating element
+  className?: string; // Additional CSS classes
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
-  offset?: {                                    // Custom positioning offsets
+  offset?: {
+    // Custom positioning offsets
     top?: string;
     right?: string;
     bottom?: string;
     left?: string;
   };
   scrollContainer?: React.RefObject<HTMLElement>; // Custom scroll container reference
-  hideThreshold?: number;                       // Pixels scrolled before hiding (default: 50)
-  showOnScrollUp?: boolean;                     // Show immediately when scrolling up (default: true)
-  animationDuration?: number;                   // Animation duration in ms (default: 300)
-  visible?: boolean;                            // External visibility control (default: true)
+  hideThreshold?: number; // Pixels scrolled before hiding (default: 50)
+  showOnScrollUp?: boolean; // Show immediately when scrolling up (default: true)
+  animationDuration?: number; // Animation duration in ms (default: 300)
+  visible?: boolean; // External visibility control (default: true)
 }
 ```
 
@@ -65,7 +66,7 @@ function MyComponent() {
 ### Custom Positioning
 
 ```typescript
-<ScrollHideFloatingElement 
+<ScrollHideFloatingElement
   position="bottom-left"
   offset={{
     bottom: "24px",
@@ -81,9 +82,9 @@ function MyComponent() {
 ```typescript
 function ComponentWithConditionalFloating() {
   const [showFloating, setShowFloating] = useState(true);
-  
+
   return (
-    <ScrollHideFloatingElement 
+    <ScrollHideFloatingElement
       visible={showFloating && !sidebarOpen}
       position="top-left"
     >
@@ -98,14 +99,14 @@ function ComponentWithConditionalFloating() {
 ```typescript
 function ScrollableArea() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   return (
     <div>
       <div ref={scrollRef} className="overflow-y-auto h-96">
         {/* Scrollable content */}
       </div>
-      
-      <ScrollHideFloatingElement 
+
+      <ScrollHideFloatingElement
         scrollContainer={scrollRef}
         position="bottom-right"
       >
@@ -136,7 +137,7 @@ Previous implementation used unbounded scroll-based translation causing buttons 
 // OLD: Over-translation causing off-screen drift
 const translateY = -currentScrollY; // Could be -1000px+
 
-// NEW: Fixed distance with proper directional logic  
+// NEW: Fixed distance with proper directional logic
 const hideDistance = 64;
 const translateDirection = position.startsWith("top") ? -1 : 1;
 const translateY = shouldHide ? hideDistance * translateDirection : 0;
@@ -157,10 +158,14 @@ The component automatically handles PWA safe areas:
 ```typescript
 // PWA safe area classes
 const pwaClasses = {
-  "top-left": "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
-  "top-right": "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
-  "bottom-left": "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
-  "bottom-right": "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
+  "top-left":
+    "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
+  "top-right":
+    "pwa-standalone:top-[calc(8px+env(safe-area-inset-top))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
+  "bottom-left":
+    "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:left-[calc(16px+env(safe-area-inset-left))]",
+  "bottom-right":
+    "pwa-standalone:bottom-[calc(16px+env(safe-area-inset-bottom))] pwa-standalone:right-[calc(16px+env(safe-area-inset-right))]",
 };
 ```
 
@@ -170,11 +175,11 @@ const pwaClasses = {
 
 ```typescript
 // src/app/page.tsx
-<ScrollHideFloatingElement 
-  position="top-left" 
+<ScrollHideFloatingElement
+  position="top-left"
   visible={isMobile && !sidebarOpen}
 >
-  <MorphingNavButton 
+  <MorphingNavButton
     onClick={() => setSidebarOpen(true)}
     ariaLabel="Open sidebar"
   />
@@ -185,7 +190,7 @@ const pwaClasses = {
 
 ```typescript
 // Used for floating ReadStatusFilter and Mark All Read buttons
-<ScrollHideFloatingElement 
+<ScrollHideFloatingElement
   position="top-right"
   visible={!sidebarOpen}
 >
@@ -232,6 +237,7 @@ The component is covered by comprehensive tests:
 ### Replacing Fixed Elements
 
 Before (fixed positioning):
+
 ```typescript
 <div className="fixed top-4 right-4 z-50">
   <ActionButton />
@@ -239,6 +245,7 @@ Before (fixed positioning):
 ```
 
 After (scroll-responsive floating):
+
 ```typescript
 <ScrollHideFloatingElement position="top-right">
   <ActionButton />

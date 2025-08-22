@@ -169,8 +169,8 @@ const isConfigurable = descriptor?.configurable !== false;
 **Integration with Browser API Mocks:**
 
 ```typescript
-setupStorageMock('localStorage');
-setupStorageMock('sessionStorage');
+setupStorageMock("localStorage");
+setupStorageMock("sessionStorage");
 ```
 
 - **Initialization**: Called during test setup for both storage types

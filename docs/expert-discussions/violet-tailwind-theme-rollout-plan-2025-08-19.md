@@ -92,7 +92,7 @@ interface GlassFabProps {
 
 ### Slice A1 — Core Glass Primitives (2-3 days)
 
-*Implementation of the developer tasks listed above.*
+_Implementation of the developer tasks listed above._
 
 ### Slice A2 — Migration Wave 1 (3-4 days)
 
@@ -444,11 +444,12 @@ This restructured approach **prioritizes solving the technical debt problem firs
 
 ## Reference: Original Design Specifications
 
-*The following sections contain detailed color and implementation specifications for reference during development.*
+_The following sections contain detailed color and implementation specifications for reference during development._
 
 ### Violet Palette & Token Values
 
 **Light Mode:**
+
 - `--primary: 262 83% 67%` (Violet 500 #8b5cf6)
 - `--primary-foreground: 0 0% 98%` (Near-white)
 - `--accent: 262 100% 97%` (Violet 50 surface tint)
@@ -456,6 +457,7 @@ This restructured approach **prioritizes solving the technical debt problem firs
 - `--ring: 262 83% 67%` (Match primary)
 
 **Dark Mode:**
+
 - `--primary: 262 70% 72%` (Brighter Violet 400-450)
 - `--primary-foreground: 240 6% 10%` (Near-black)
 - `--accent: 262 40% 22%` (Deep violet surface)
@@ -465,12 +467,14 @@ This restructured approach **prioritizes solving the technical debt problem firs
 ### Design Principles
 
 **Goals:**
+
 - Tasteful Violet theme consistent with Apple aesthetics
 - Maintain WCAG AA contrast across light/dark modes
 - Preserve Liquid Glass hierarchy (floating controls, minimal solid fills)
 - Minimize code churn via semantic tokens
 
 **Liquid Glass Alignment:**
+
 - Glass layers remain translucent neutrals
 - Brand color used for interactive emphasis (buttons, links, focus rings)
 - Hover/selected surfaces use brand tint at 6-12% alpha maximum
@@ -480,14 +484,16 @@ This restructured approach **prioritizes solving the technical debt problem firs
 ### Status Colors & Charts
 
 **Status Palette:**
+
 - Success (Emerald): 500 #10b981, hover 600, surface 100-200
-- Warning (Amber): 500 #f59e0b, hover 600, surface 100-200  
+- Warning (Amber): 500 #f59e0b, hover 600, surface 100-200
 - Error (Rose): 500 #f43f5e, hover 600, surface 100-200
 - Info (Sky): 500 #0ea5e9, hover 600, surface 100-200
 
 **Chart Colors:**
+
 - `--chart-1: 262 83% 67%` (Violet)
-- `--chart-2: 239 84% 67%` (Indigo)  
+- `--chart-2: 239 84% 67%` (Indigo)
 - `--chart-3: 199 84% 55%` (Sky)
 - `--chart-4: 43 84% 60%` (Amber)
 - `--chart-5: 340 75% 60%` (Rose)

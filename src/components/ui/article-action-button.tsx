@@ -93,7 +93,7 @@ export function ArticleActionButton({
               ? activeClassName
               : active
                 ? "text-primary"
-                : "text-muted-foreground"
+                : "text-foreground" // Changed from muted to full brightness
           )}
         />
       }

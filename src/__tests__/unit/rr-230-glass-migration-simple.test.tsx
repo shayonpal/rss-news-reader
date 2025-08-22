@@ -27,22 +27,26 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 describe("RR-230: Core Glass Migration", () => {
-  test("GlassToolbarButton defaults to toolbarChild variant", () => {
-    render(<GlassToolbarButton>Test</GlassToolbarButton>);
-    const button = screen.getByRole("button");
+  test("GlassToolbarButton defaults to transparent styling", () => {
+    render(
+      <GlassToolbarButton data-testid="toolbar-btn">Test</GlassToolbarButton>
+    );
+    const button = screen.getByTestId("toolbar-btn");
 
     // Key requirement: should be transparent for container glass
     expect(button.className).toContain("bg-transparent");
-    expect(button.className).toContain("glass-toolbar-btn");
+    expect(button.className).toContain("border-none");
+    expect(button.className).toContain("backdrop-blur-none");
   });
 
-  test("GlassIconButton defaults to nav variant", () => {
-    render(<GlassIconButton>Icon</GlassIconButton>);
-    const button = screen.getByRole("button");
+  test("GlassIconButton has standalone glass styling", () => {
+    render(<GlassIconButton data-testid="icon-btn">Icon</GlassIconButton>);
+    const button = screen.getByTestId("icon-btn");
 
     // Key requirement: should use CSS variables for standalone glass
     expect(button.className).toContain("bg-[var(--glass-nav-bg)]");
-    expect(button.className).toContain("glass-icon-btn");
+    expect(button.className).toContain("backdrop-blur-[var(--glass-blur)]");
+    expect(button.className).toContain("border-[var(--glass-nav-border)]");
   });
 
   test("size constraints maintained for unified design", () => {
@@ -62,8 +66,10 @@ describe("RR-230: Core Glass Migration", () => {
   });
 
   test("UA appearance normalization applied", () => {
-    render(<GlassIconButton>Test</GlassIconButton>);
-    const button = screen.getByRole("button");
+    render(
+      <GlassIconButton data-testid="appearance-test">Test</GlassIconButton>
+    );
+    const button = screen.getByTestId("appearance-test");
 
     expect(button.className).toContain("appearance-none");
     expect(button.className).toContain("-webkit-appearance-none");

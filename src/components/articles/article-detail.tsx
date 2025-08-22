@@ -428,7 +428,7 @@ export function ArticleDetail({
         <GlassIconButton
           type="button"
           onClick={onBack}
-          variant="adaptive"
+          variant="liquid-glass"
           aria-label="Back to list"
         >
           <ArrowLeft className="h-5 w-5" />

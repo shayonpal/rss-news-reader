@@ -599,11 +599,13 @@ export function ArticleList({
                           size="sm"
                         />
                       )}
+                    {/* TODO: Temporarily commented out star button from article listing cards
                     <StarButton
                       onToggleStar={() => toggleStar(article.id)}
                       isStarred={article.tags?.includes("starred") || false}
                       size="sm"
                     />
+                    */}
                   </div>
                 </div>
 

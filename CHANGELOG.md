@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **[RR-230] Complete CSS-to-Component Migration for Glass Button System** (Friday, August 22, 2025 at 12:56 PM)
+  - **Component Architecture Achievement**: Successfully implemented "glass container + transparent children" model eliminating all CSS classes and inline styles for glass effects
+  - **Enhanced Liquid Glass Variants**: Added sophisticated component variants: css-toolbar-btn (transparent), css-icon-btn, liquid-glass (enhanced styling)
+  - **Height Standardization**: Unified all glass buttons to --glass-control-height: 48px with consistent design language
+  - **Color System Consistency**: Implemented full brightness foreground colors across all variants (purple mark all read preserved as design accent)
+  - **True Componentization**: Achieved zero CSS classes, zero inline styles for glass effects - pure component-based architecture
+  - **Glass Container Architecture**: Enhanced .glass-toolbar class with sophisticated styling matching liquid-glass-btn patterns
+  - **CSS Variable Optimization**: Updated opacity values to 0.55 for better contrast and visual hierarchy
+  - **Production Migration Success**: Migrated all production glass styling to component system with comprehensive test coverage
+  - **Foundation for Scaling**: Established proven migration patterns and component library infrastructure for RR-231 Wave 2
+  - **Files Modified**: src/components/ui/glass-button.tsx (new variants), src/components/ui/article-action-button.tsx (GlassToolbarButton migration), src/components/ui/morphing-dropdown.tsx (container architecture), src/components/ui/dropdown-menu.tsx (eliminated glass-popover class), src/app/page.tsx (hamburger componentization), src/components/articles/article-detail.tsx (back button componentization), src/app/globals.css (enhanced glass styling)
+  - **Testing Coverage**: Complete test suite with component validation and regression prevention ensuring production stability
+  - **Architecture Impact**: Establishes component library foundation needed for RR-231 Wave 2 scaling and Phase B violet theme application
+
+### Fixed
+
+- **[RR-236] Manual Sync UI Update Issue - Article List Not Refreshing After Successful Sync** (Wednesday, August 21, 2025 at 3:40 PM)
+  - **Problem**: Manual sync succeeded in background but new articles didn't appear in UI, sidebar counts updated correctly but article list remained stale
+  - **Root Cause**: RefreshManager.applySidebarData() was updating sidebar counts and tags but missing critical article list refresh to show new articles
+  - **Solution**: Added `await articleStore.refreshArticles()` to RefreshManager.applySidebarData() method ensuring complete UI refresh after sync
+  - **Technical Fix**: Enhanced the applySidebarData() method in src/lib/refresh-manager.ts to include article store refresh alongside feed counts and tag updates
+  - **User Impact**: Manual sync now properly shows new articles immediately after completion, eliminating confusion where sync appeared successful but no new content appeared
+  - **Architecture**: Maintains existing RefreshManager pattern while ensuring all three stores (feeds, tags, articles) update consistently after sync operations
+  - **Files Modified**: src/lib/refresh-manager.ts (lines 194-198) - Added article store refresh to complete the UI update cycle
+  - **Related**: Not a duplicate of RR-171 - RR-171 solved sidebar refresh coordination, RR-236 addressed missing article list refresh in the same system
+  - **Impact**: Users now see immediate visual feedback when manual sync discovers new articles, creating consistent sync experience across all UI elements
+
 ### UI/UX
 
 - **[RR-224] Comprehensive Liquid Glass Styling Unification Across Application** (Wednesday, August 20, 2025 at 4:09 AM)
@@ -249,6 +278,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Three-Tier Architecture**: localStorage → Memory → Database pipeline for optimal performance at each layer
 
 ### Changed
+
+- **Star Button Temporarily Removed from Article Listing Cards** (Thursday, August 21, 2025 at 6:00 AM)
+  - **User Impact**: Cleaner article listing interface while maintaining star functionality in detail view
+  - **Technical Implementation**: Star button code temporarily commented out in article listing cards (lines 602-608)
+  - **Preserved Functionality**: Star functionality remains fully available in article detail view
+  - **Code Preservation**: Commented code preserved with TODO comment for future restoration when UI layout is optimized
+  - **File Modified**: src/components/articles/article-list.tsx - Star button JSX commented out while preserving all supporting logic
+  - **Rationale**: Temporary removal to reduce visual clutter in article cards while design team evaluates optimal button placement
+  - **Future Plans**: Will be restored once optimal layout solution for multiple action buttons is determined
 
 - **[RR-197] Enhanced ArticleStore/markMultipleAsRead**: Integrated instant localStorage feedback with immediate UI state updates before database operations
 - **[RR-197] Updated ArticleList Component**: Integrated localStorage state manager initialization for coordinated state management

@@ -17,45 +17,55 @@ import { cn } from "@/lib/utils";
 
 const glassButtonVariants = cva(
   [
+    // Base styles - NO glass effects (those go in variants)
     "inline-flex items-center justify-center",
     "rounded-[22px] font-medium transition-all duration-300",
-    "backdrop-blur-[16px] backdrop-saturate-[180%]",
-    "border border-white/10 dark:border-white/5",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
     "focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400",
     "disabled:pointer-events-none disabled:opacity-50",
     "active:scale-[0.96]",
     "min-h-[48px] min-w-[48px]", // iOS HIG touch target
+    // Touch and performance optimizations (moved from inline styles)
+    "glass-touch-optimized",
   ].join(" "),
   {
     variants: {
       variant: {
         default: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-white/10 dark:border-white/5",
           "bg-white/35 dark:bg-white/35",
           "text-gray-900 dark:text-white",
           "hover:bg-white/45 dark:hover:bg-white/45",
           "shadow-lg shadow-black/5 dark:shadow-white/5",
-          "border border-white/18 dark:border-white/18",
         ].join(" "),
         primary: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-blue-500/20 dark:border-blue-400/20",
           "bg-blue-500/20 dark:bg-blue-400/20",
           "text-blue-700 dark:text-blue-300",
           "hover:bg-blue-500/25 dark:hover:bg-blue-400/25",
           "shadow-lg shadow-blue-500/10 dark:shadow-blue-400/10",
         ].join(" "),
         secondary: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-gray-500/10 dark:border-gray-400/10",
           "bg-gray-500/10 dark:bg-gray-400/10",
           "text-gray-700 dark:text-gray-300",
           "hover:bg-gray-500/15 dark:hover:bg-gray-400/15",
           "shadow-lg shadow-gray-500/5 dark:shadow-gray-400/5",
         ].join(" "),
         ghost: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border-transparent",
           "bg-transparent",
           "text-gray-700 dark:text-white",
           "hover:bg-white/35 dark:hover:bg-white/35",
-          "border-transparent hover:border-white/18 dark:hover:border-white/18",
+          "hover:border-white/18 dark:hover:border-white/18",
         ].join(" "),
         danger: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-red-500/20 dark:border-red-400/20",
           "bg-red-500/20 dark:bg-red-400/20",
           "text-red-700 dark:text-red-300",
           "hover:bg-red-500/25 dark:hover:bg-red-400/25",
@@ -63,17 +73,17 @@ const glassButtonVariants = cva(
         ].join(" "),
         // RR-229: New adaptive variants for context-aware styling
         adaptive: [
-          "bg-[var(--glass-adaptive-bg)] dark:bg-[var(--glass-adaptive-bg)]",
-          "border-[var(--glass-adaptive-border)] dark:border-[var(--glass-adaptive-border)]",
           "backdrop-blur-[24px] backdrop-saturate-[120%]",
+          "border border-[var(--glass-adaptive-border)] dark:border-[var(--glass-adaptive-border)]",
+          "bg-[var(--glass-adaptive-bg)] dark:bg-[var(--glass-adaptive-bg)]",
           "text-gray-900 dark:text-white",
           "hover:bg-[var(--glass-enhanced-bg)] dark:hover:bg-[var(--glass-enhanced-bg)]",
           "shadow-lg shadow-black/8 dark:shadow-white/8",
         ].join(" "),
         enhanced: [
-          "bg-[var(--glass-enhanced-bg)] dark:bg-[var(--glass-enhanced-bg)]",
-          "border-[var(--glass-enhanced-border)] dark:border-[var(--glass-enhanced-border)]",
           "backdrop-blur-[20px] backdrop-saturate-[160%]",
+          "border border-[var(--glass-enhanced-border)] dark:border-[var(--glass-enhanced-border)]",
+          "bg-[var(--glass-enhanced-bg)] dark:bg-[var(--glass-enhanced-bg)]",
           "text-gray-900 dark:text-white",
           "hover:opacity-90",
           "shadow-xl shadow-black/12 dark:shadow-white/12",
@@ -86,6 +96,8 @@ const glassButtonVariants = cva(
           "rounded-full",
           "text-[color:hsl(var(--foreground))]",
           "bg-transparent border-none",
+          "backdrop-blur-none backdrop-saturate-none", // Override base glass effects
+          "shadow-none", // Override base shadows
           "transition-[transform,background-color] duration-[160ms] ease-[var(--ease-out)]",
           "hover:bg-[var(--glass-chip-indicator)]",
           "active:scale-[0.98]",
@@ -102,6 +114,23 @@ const glassButtonVariants = cva(
           "transition-[transform,background-color] duration-[160ms] ease-[var(--ease-out)]",
           "hover:bg-[var(--glass-nav-bg-scrolled)]",
           "active:scale-[0.96]",
+        ].join(" "),
+        // RR-230: Enhanced liquid glass using unified RR-224 system with glossy overlay
+        "liquid-glass": [
+          "liquid-glass-enhanced", // Includes ::before glossy overlay
+          "appearance-none -webkit-appearance-none -moz-appearance-none",
+          "backdrop-blur-[var(--glass-blur)] backdrop-saturate-[180%]",
+          "bg-[var(--glass-enhanced-bg)]",
+          "border border-[var(--glass-nav-border)]",
+          // Enhanced layered shadows matching liquid-glass-btn
+          "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.25)]",
+          "w-[var(--glass-control-height)] h-[var(--glass-control-height)]",
+          "inline-flex items-center justify-center",
+          "rounded-full",
+          "text-[color:hsl(var(--foreground))]",
+          "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "hover:bg-[var(--glass-nav-bg-scrolled)] hover:scale-105",
+          "active:scale-[0.98]",
         ].join(" "),
       },
       size: {
@@ -151,20 +180,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
         ref={ref}
         type={props.type || "button"}
         {...props}
-        style={{
-          // iOS touch optimizations
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
-          WebkitTouchCallout: "none",
-          WebkitUserSelect: "none",
-          userSelect: "none",
-          // Spring animation timing
-          transitionTimingFunction: springAnimation ? SPRING_TIMING : undefined,
-          // GPU acceleration
-          transform: "translateZ(0)",
-          willChange: "transform",
-          ...style,
-        }}
+        style={style}
       />
     );
   }

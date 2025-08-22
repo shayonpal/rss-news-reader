@@ -8,6 +8,7 @@
 import React from "react";
 import { Menu, ArrowLeft } from "lucide-react";
 import type { ScrollState } from "@/services/scroll-coordinator";
+import { GlassIconButton } from "./glass-button";
 
 interface MorphingNavButtonProps {
   scrollState: ScrollState;
@@ -38,17 +39,13 @@ export function MorphingNavButton({
   const transitionDuration = prefersReducedMotion ? "0.01s" : "0.25s";
 
   return (
-    <button
+    <GlassIconButton
       onClick={onClick}
       aria-label={ariaLabel}
       data-testid="morphing-nav-button"
       data-scroll-state={scrollState}
-      className={`glass-icon-btn ${className}`}
-      style={{
-        WebkitTapHighlightColor: "transparent",
-        WebkitUserSelect: "none",
-        userSelect: "none",
-      }}
+      variant="liquid-glass"
+      className={className}
     >
       {/* Icon container for morphing animation */}
       <div
@@ -85,6 +82,6 @@ export function MorphingNavButton({
           }}
         />
       </div>
-    </button>
+    </GlassIconButton>
   );
 }

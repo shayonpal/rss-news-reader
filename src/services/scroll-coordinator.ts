@@ -63,7 +63,10 @@ export class ScrollCoordinator {
 
     const scrollState = this.calculateScrollState(normalizedScrollY);
     const isScrollingUp = normalizedScrollY < this.lastScrollY;
-    const contentVisible = this.calculateContentVisibility(normalizedScrollY, isScrollingUp);
+    const contentVisible = this.calculateContentVisibility(
+      normalizedScrollY,
+      isScrollingUp
+    );
 
     const position: ScrollPosition = {
       scrollY: normalizedScrollY,
@@ -115,11 +118,16 @@ export class ScrollCoordinator {
   private addScrollListener(): void {
     // Skip adding window scroll listener if we're on article list page
     // since HomePage manually drives scroll updates via article container
-    if (typeof window !== "undefined" && window.location.pathname.endsWith("/reader")) {
-      console.log('[ScrollCoordinator] Skipping window listener on article list page');
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname.endsWith("/reader")
+    ) {
+      console.log(
+        "[ScrollCoordinator] Skipping window listener on article list page"
+      );
       return;
     }
-    
+
     if (!this.scrollListener) {
       this.scrollListener = this.handleScroll;
       window.addEventListener("scroll", this.scrollListener, { passive: true });
@@ -153,7 +161,10 @@ export class ScrollCoordinator {
     }
   }
 
-  private calculateContentVisibility(scrollY: number, isScrollingUp: boolean): boolean {
+  private calculateContentVisibility(
+    scrollY: number,
+    isScrollingUp: boolean
+  ): boolean {
     // Content header visibility logic:
     // - Show when at top (0-50px) OR scrolling up
     // - Hide when scrolling down AND past 50px threshold

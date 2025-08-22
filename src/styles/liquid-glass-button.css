@@ -24,7 +24,7 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  
+
   /* Layout - exact alignment with glass-segment */
   display: inline-flex;
   align-items: center;
@@ -44,7 +44,8 @@
 
   /* Enhanced liquid glass effect matching hamburger menu */
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur))
+    saturate(var(--glass-saturation));
 
   /* Neutral glass background - not purple tinted */
   background: var(--glass-nav-bg);

@@ -5,7 +5,13 @@
 
 "use client";
 
-import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { MorphingNavButton } from "@/components/ui/morphing-nav-button";
 import { useIOSHeaderScroll } from "@/hooks/use-ios-header-scroll";
 import { ReadStatusFilter } from "./read-status-filter";
@@ -44,27 +50,32 @@ interface ArticleCounts {
  */
 export function ScrollableArticleHeader({
   selectedFeedId,
-  selectedFolderId, 
+  selectedFolderId,
   selectedTagId,
   onMenuClick,
   ...props
 }: ScrollableArticleHeaderProps) {
-  const { 
-    scrollState, 
-    scrollY, 
-    titleScale, 
-    headerHeight, 
-    blurIntensity, 
-    contentVisible 
+  const {
+    scrollState,
+    scrollY,
+    titleScale,
+    headerHeight,
+    blurIntensity,
+    contentVisible,
   } = useIOSHeaderScroll();
 
   // Content functionality from ScrollableContentHeader
-  const { readStatusFilter, markAllAsRead, markAllAsReadForTag } = useArticleStore();
-  const getFeed = useFeedStore(state => state.getFeed);
-  const getFolder = useFeedStore(state => state.getFolder);
-  const tags = useTagStore(state => state.tags);
-  
-  const [counts, setCounts] = useState<ArticleCounts>({ total: 0, unread: 0, read: 0 });
+  const { readStatusFilter, markAllAsRead, markAllAsReadForTag } =
+    useArticleStore();
+  const getFeed = useFeedStore((state) => state.getFeed);
+  const getFolder = useFeedStore((state) => state.getFolder);
+  const tags = useTagStore((state) => state.tags);
+
+  const [counts, setCounts] = useState<ArticleCounts>({
+    total: 0,
+    unread: 0,
+    read: 0,
+  });
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const [waitingConfirmation, setWaitingConfirmation] = useState(false);
@@ -74,16 +85,16 @@ export function ScrollableArticleHeader({
   const countManager = useRef(new ArticleCountManager());
 
   // Get selected feed/folder/tag objects (memoized to prevent re-renders)
-  const selectedFeed = useMemo(() => 
-    selectedFeedId ? getFeed(selectedFeedId) : undefined, 
+  const selectedFeed = useMemo(
+    () => (selectedFeedId ? getFeed(selectedFeedId) : undefined),
     [selectedFeedId, getFeed]
   );
-  const selectedFolder = useMemo(() => 
-    selectedFolderId ? getFolder(selectedFolderId) : undefined, 
+  const selectedFolder = useMemo(
+    () => (selectedFolderId ? getFolder(selectedFolderId) : undefined),
     [selectedFolderId, getFolder]
   );
-  const selectedTag = useMemo(() => 
-    selectedTagId ? tags.get(selectedTagId) : undefined, 
+  const selectedTag = useMemo(
+    () => (selectedTagId ? tags.get(selectedTagId) : undefined),
     [selectedTagId, tags]
   );
 
@@ -213,11 +224,11 @@ export function ScrollableArticleHeader({
     // First click - show confirmation state
     if (!waitingConfirmation) {
       setWaitingConfirmation(true);
-      
+
       confirmTimeoutRef.current = setTimeout(() => {
         setWaitingConfirmation(false);
       }, 3000);
-      
+
       return;
     }
 
@@ -243,7 +254,8 @@ export function ScrollableArticleHeader({
       );
       setCounts(newCounts);
 
-      const contextName = selectedTag?.name || selectedFeed?.title || "articles";
+      const contextName =
+        selectedTag?.name || selectedFeed?.title || "articles";
       const sanitizedName = selectedTag?.name
         ? DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] })
         : contextName;
@@ -306,7 +318,7 @@ export function ScrollableArticleHeader({
         </div>
 
         {/* Content Section - Slides up/down with scroll */}
-        <div 
+        <div
           className="px-4 pb-4 transition-all duration-300 ease-out"
           style={{
             transform: contentVisible ? "translateY(0)" : "translateY(-100%)",
@@ -315,36 +327,31 @@ export function ScrollableArticleHeader({
         >
           {/* Page Title and Count */}
           <div className="mb-3">
-            <h2 className="text-xl font-semibold text-foreground mb-1">
+            <h2 className="mb-1 text-xl font-semibold text-foreground">
               {pageTitle}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {getCountDisplay()}
-            </p>
+            <p className="text-sm text-muted-foreground">{getCountDisplay()}</p>
           </div>
 
           {/* Filter Controls and Actions */}
           <div className="flex items-center justify-between gap-4">
             {/* Read Status Filter */}
             <ReadStatusFilter />
-            
+
             {/* Mark All Read Button */}
             {(selectedFeedId || selectedTagId) && (
               <button
                 onClick={handleMarkAllClick}
                 disabled={counts.unread === 0 && !waitingConfirmation}
-                className={`
-                  liquid-glass-btn h-10 px-4 rounded-full
-                  transition-all duration-200 ease-out
-                  ${getButtonState() === "disabled" ? "opacity-50 cursor-not-allowed" : ""}
-                  ${getButtonState() === "confirming" ? "ring-2 ring-primary/50" : ""}
-                `}
+                className={`liquid-glass-btn h-10 rounded-full px-4 transition-all duration-200 ease-out ${getButtonState() === "disabled" ? "cursor-not-allowed opacity-50" : ""} ${getButtonState() === "confirming" ? "ring-2 ring-primary/50" : ""} `}
               >
                 <span className="text-sm font-medium">
                   {getButtonState() === "loading" && (
-                    <Loader2 className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   )}
-                  {getButtonState() === "confirming" ? "Click again to confirm" : "Mark All Read"}
+                  {getButtonState() === "confirming"
+                    ? "Click again to confirm"
+                    : "Mark All Read"}
                 </span>
               </button>
             )}

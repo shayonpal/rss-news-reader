@@ -428,12 +428,12 @@ html.reduce-transparency .liquid-glass-btn {
     /* RR-180: Enhanced iOS 26 Liquid Glass - Unified Transparency */
     --glass-blur: 16px; /* Increased from 14px */
     --glass-saturation: 180%; /* Increased from 140% */
-    --glass-nav-bg: rgba(255, 255, 255, 0.35);
+    --glass-nav-bg: rgba(255, 255, 255, 0.55);
     --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.45);
     --glass-nav-border: rgba(0, 0, 0, 0.08);
     --opaque-nav-bg: rgba(255, 255, 255, 0.95);
     /* Segmented control (clear glass) */
-    --glass-chip-bg: rgba(255, 255, 255, 0.35);
+    --glass-chip-bg: rgba(255, 255, 255, 0.55);
     --glass-chip-indicator: rgba(255, 255, 255, 0.45);
 
     /* Adaptive glass for light mode - enhanced for legibility */
@@ -453,7 +453,12 @@ html.reduce-transparency .liquid-glass-btn {
     --glass-saturation: 140%; /* Balanced saturation */
 
     /* Unified glass backgrounds using least transparent values */
-    --glass-nav-bg: rgba(40, 40, 40, 0.35); /* Unified with adaptive values */
+    --glass-nav-bg: rgba(
+      40,
+      40,
+      40,
+      0.55
+    ); /* Enhanced opacity for consistency */
     --glass-nav-bg-scrolled: rgba(
       40,
       40,
@@ -474,7 +479,12 @@ html.reduce-transparency .liquid-glass-btn {
     ); /* Slightly more transparent fallback */
 
     /* Segmented control (unified transparency) */
-    --glass-chip-bg: rgba(40, 40, 40, 0.35); /* Unified with nav background */
+    --glass-chip-bg: rgba(
+      40,
+      40,
+      40,
+      0.55
+    ); /* Enhanced opacity for consistency */
     --glass-chip-indicator: rgba(
       255,
       255,
@@ -512,18 +522,29 @@ html.reduce-transparency .liquid-glass-btn {
 
   /* Glass toolbar container (clustered capsule) */
   .glass-toolbar {
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-      saturate(var(--glass-saturation));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    background: var(--glass-chip-bg);
+    /* Enhanced liquid glass effect matching standalone buttons */
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    background: var(
+      --glass-enhanced-bg
+    ); /* Use enhanced background for better contrast */
     border: 1px solid var(--glass-nav-border);
-    border-radius: 22px; /* Updated to 22px for consistency */
+    border-radius: 22px;
+    /* Enhanced layered shadows for depth */
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      inset 0 1px 1px rgba(255, 255, 255, 0.25);
     padding: 4px;
     display: inline-flex;
     gap: 4px;
+    /* Add glossy overlay for enhanced depth */
+    position: relative;
+    overflow: hidden;
+    /* Performance */
+    transform: translateZ(0);
+    will-change: transform;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-toolbar .toolbar-group {
@@ -554,7 +575,9 @@ html.reduce-transparency .liquid-glass-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: calc(var(--glass-control-height) - 8px); /* 40px to fit within 48px container with 4px padding */
+    height: calc(
+      var(--glass-control-height) - 8px
+    ); /* 40px to fit within 48px container with 4px padding */
     min-width: calc(var(--glass-control-height) - 8px);
     padding: 0 12px;
     border-radius: 9999px;
@@ -697,6 +720,54 @@ html.reduce-transparency .liquid-glass-btn {
   width: 0;
   margin-left: 0;
   pointer-events: none;
+}
+
+/* Touch and performance optimizations for glass buttons */
+.glass-touch-optimized {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Enhanced liquid glass button styling */
+.liquid-glass-enhanced {
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass-enhanced::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 1;
+  border-radius: inherit;
+}
+
+/* Enhanced glass toolbar with glossy overlay */
+.glass-toolbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 1;
+  border-radius: inherit;
 }
 
 /* PWA top safe helpers for fixed elements */

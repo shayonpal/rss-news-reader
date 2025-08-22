@@ -22,8 +22,8 @@ interface UIState {
   toggleTagsSection: () => void;
 
   // RR-193: Mutex accordion state (session-only, not persisted)
-  mutexSection: 'feeds' | 'tags' | null;
-  setMutexSection: (section: 'feeds' | 'tags' | null) => void;
+  mutexSection: "feeds" | "tags" | null;
+  setMutexSection: (section: "feeds" | "tags" | null) => void;
   resetMutexState: () => void;
 
   // Article View
@@ -61,39 +61,52 @@ export const useUIStore = create<UIState>()(
       toggleSidebar: () =>
         set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
-      // Collapsible Sections (session-only, not persisted) 
+      // Collapsible Sections (session-only, not persisted)
       // RR-193: Updated default state - Feeds closed, Topics open
-      feedsSectionCollapsed: true,  // Changed from false - Feeds closed by default
+      feedsSectionCollapsed: true, // Changed from false - Feeds closed by default
       setFeedsSectionCollapsed: (collapsed) =>
         set((state) => {
           const newCollapsed = Boolean(collapsed);
           return {
             feedsSectionCollapsed: newCollapsed,
             // RR-193: Mutex logic for direct setter - if opening feeds, close topics
-            tagsSectionCollapsed: newCollapsed ? state.tagsSectionCollapsed : true,
-            mutexSection: newCollapsed ? (state.tagsSectionCollapsed ? null : 'tags') : 'feeds',
+            tagsSectionCollapsed: newCollapsed
+              ? state.tagsSectionCollapsed
+              : true,
+            mutexSection: newCollapsed
+              ? state.tagsSectionCollapsed
+                ? null
+                : "tags"
+              : "feeds",
           };
         }),
-      tagsSectionCollapsed: false,  // Topics open by default (unchanged)
+      tagsSectionCollapsed: false, // Topics open by default (unchanged)
       setTagsSectionCollapsed: (collapsed) =>
         set((state) => {
           const newCollapsed = Boolean(collapsed);
           return {
             tagsSectionCollapsed: newCollapsed,
             // RR-193: Mutex logic for direct setter - if opening topics, close feeds
-            feedsSectionCollapsed: newCollapsed ? state.feedsSectionCollapsed : true,
-            mutexSection: newCollapsed ? (state.feedsSectionCollapsed ? null : 'feeds') : 'tags',
+            feedsSectionCollapsed: newCollapsed
+              ? state.feedsSectionCollapsed
+              : true,
+            mutexSection: newCollapsed
+              ? state.feedsSectionCollapsed
+                ? null
+                : "feeds"
+              : "tags",
           };
         }),
 
       // RR-193: Mutex accordion (session-only, not persisted)
-      mutexSection: 'tags', // Default: Topics open
+      mutexSection: "tags", // Default: Topics open
       setMutexSection: (section) => set({ mutexSection: section }),
-      resetMutexState: () => set({ 
-        mutexSection: 'tags', // Default state
-        feedsSectionCollapsed: true, // Feeds closed by default
-        tagsSectionCollapsed: false, // Topics open by default
-      }),
+      resetMutexState: () =>
+        set({
+          mutexSection: "tags", // Default state
+          feedsSectionCollapsed: true, // Feeds closed by default
+          tagsSectionCollapsed: false, // Topics open by default
+        }),
 
       // RR-193: Update existing toggle methods to implement mutex behavior
       toggleFeedsSection: () =>
@@ -102,19 +115,23 @@ export const useUIStore = create<UIState>()(
           return {
             feedsSectionCollapsed: newCollapsed,
             // Mutex logic: if opening feeds, close topics
-            tagsSectionCollapsed: newCollapsed ? state.tagsSectionCollapsed : true,
-            mutexSection: newCollapsed ? null : 'feeds',
+            tagsSectionCollapsed: newCollapsed
+              ? state.tagsSectionCollapsed
+              : true,
+            mutexSection: newCollapsed ? null : "feeds",
           };
         }),
-        
+
       toggleTagsSection: () =>
         set((state) => {
           const newCollapsed = !state.tagsSectionCollapsed;
           return {
             tagsSectionCollapsed: newCollapsed,
-            // Mutex logic: if opening topics, close feeds  
-            feedsSectionCollapsed: newCollapsed ? state.feedsSectionCollapsed : true,
-            mutexSection: newCollapsed ? null : 'tags',
+            // Mutex logic: if opening topics, close feeds
+            feedsSectionCollapsed: newCollapsed
+              ? state.feedsSectionCollapsed
+              : true,
+            mutexSection: newCollapsed ? null : "tags",
           };
         }),
 
@@ -148,4 +165,4 @@ export const useUIStore = create<UIState>()(
       }),
     }
   )
-);;;
+);

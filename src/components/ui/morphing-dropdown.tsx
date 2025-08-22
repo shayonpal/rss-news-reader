@@ -242,161 +242,91 @@ export function MorphingDropdown({
     <div
       ref={containerRef}
       className={cn(
-        "pointer-events-auto relative z-20 overflow-hidden",
+        "glass-toolbar pointer-events-auto relative z-20",
+        isOpen && "menu-open",
         className
       )}
-      style={{
-        // Enhanced glass effect matching POC exactly
-        backdropFilter: "blur(16px) saturate(180%)",
-        WebkitBackdropFilter: "blur(16px) saturate(180%)",
-        background: isDark
-          ? "rgba(40, 40, 40, 0.35)"
-          : "rgba(255, 255, 255, 0.35)",
-        border: isDark
-          ? "1px solid rgba(255, 255, 255, 0.18)"
-          : "1px solid rgba(0, 0, 0, 0.08)",
-        boxShadow: isDark
-          ? "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5)"
-          : "0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
-        borderRadius: "22px",
-        width: isOpen ? "200px" : "auto",
-        minHeight: "48px",
-        padding: isOpen ? "8px" : "2px",
-        transformOrigin: "top center",
-        transition: reducedMotion
-          ? "none"
-          : `width ${getAnimationDuration()} ${getEasingFunction()}, padding ${getAnimationDuration()} ${getEasingFunction()}`,
-        transform: "translateZ(0)",
-        willChange: "width, padding",
-      }}
       data-morphing-dropdown
       data-state={isOpen ? "open" : "closed"}
     >
-      <div style={{ position: "relative", minHeight: "44px" }}>
-        {/* Toolbar elements layer */}
-        <div
-          ref={toolbarRef}
-          style={{
-            position: isOpen ? "absolute" : "static",
-            top: 0,
-            left: 0,
-            right: 0,
-            opacity: isOpen ? 0 : 1,
-            transform: isOpen
-              ? animationMode === "sequential"
-                ? "translateX(-20px)"
-                : "scale(0.95)"
-              : "translateX(0) scale(1)",
-            transition:
-              animationMode === "sequential"
-                ? `opacity 150ms ${getEasingFunction()}, transform 150ms ${getEasingFunction()}`
-                : `opacity ${getAnimationDuration()} ${getEasingFunction()}, transform ${getAnimationDuration()} ${getEasingFunction()}`,
-            pointerEvents: isOpen ? "none" : "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            willChange: "opacity, transform",
-          }}
-        >
-          {extendedToolbarElements}
-        </div>
+      <div className="toolbar-group">{extendedToolbarElements}</div>
 
-        {/* Dropdown content layer */}
+      {/* Dropdown content layer */}
+      {isOpen && (
         <div
           ref={dropdownRef}
           role="menu"
           aria-orientation="vertical"
-          style={{
-            position: isOpen ? "static" : "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            opacity: isOpen ? 1 : 0,
-            transform: isOpen
-              ? "translateY(0) scale(1)"
-              : "translateY(-10px) scale(0.95)",
-            transformOrigin: "top center",
-            transition:
-              animationMode === "sequential"
-                ? `opacity 200ms ${getEasingFunction()} ${isOpen ? "150ms" : "0ms"}, transform 200ms ${getEasingFunction()} ${isOpen ? "150ms" : "0ms"}`
-                : `opacity ${getAnimationDuration()} ${getEasingFunction()}, transform ${getAnimationDuration()} ${getEasingFunction()}`,
-            pointerEvents: isOpen ? "auto" : "none",
-            display: "flex",
-            flexDirection: "column",
-            padding: "0",
-            willChange: "opacity, transform",
-          }}
+          className="mt-2 flex flex-col space-y-1"
         >
-          <div className="space-y-1">
-            {items.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <button
-                  role="menuitem"
-                  tabIndex={-1}
-                  disabled={item.disabled}
-                  data-focused={focusedIndex === index}
-                  onClick={() => {
-                    if (!item.disabled) {
-                      item.onClick();
-                      setOpen(false);
-                    }
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-[14px] px-3 py-3",
-                    "duration-160 text-left text-sm transition-all",
-                    "min-h-[44px]", // iOS touch target
-                    "text-gray-900 dark:text-gray-100",
-                    item.disabled && "cursor-not-allowed opacity-50",
-                    !item.disabled && "active:scale-[0.98]",
-                    item.className
-                  )}
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    touchAction: "manipulation",
-                    background:
-                      focusedIndex === index
-                        ? isDark
-                          ? "rgba(255, 255, 255, 0.08)"
-                          : "rgba(0, 0, 0, 0.04)"
-                        : "transparent",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!item.disabled) {
-                      e.currentTarget.style.background = isDark
-                        ? "rgba(255, 255, 255, 0.08)"
-                        : "rgba(0, 0, 0, 0.04)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!item.disabled && focusedIndex !== index) {
-                      e.currentTarget.style.background = "transparent";
-                    }
-                  }}
-                >
-                  {item.checked !== undefined && (
-                    <span className="mr-1 text-base" aria-hidden="true">
-                      {item.checked ? "☑" : "☐"}
-                    </span>
-                  )}
-                  {item.icon && (
-                    <span className="h-5 w-5 flex-shrink-0" aria-hidden="true">
-                      {item.icon}
-                    </span>
-                  )}
-                  <span className="flex-1">{item.label}</span>
-                </button>
-                {item.separator && (
-                  <div
-                    className="my-1 h-px bg-gray-200/50 dark:bg-gray-700/50"
-                    role="separator"
-                    aria-orientation="horizontal"
-                  />
+          {items.map((item, index) => (
+            <React.Fragment key={item.id}>
+              <button
+                role="menuitem"
+                tabIndex={-1}
+                disabled={item.disabled}
+                data-focused={focusedIndex === index}
+                onClick={() => {
+                  if (!item.disabled) {
+                    item.onClick();
+                    setOpen(false);
+                  }
+                }}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-[14px] px-3 py-3",
+                  "duration-160 text-left text-sm transition-all",
+                  "min-h-[44px]", // iOS touch target
+                  "text-gray-900 dark:text-gray-100",
+                  item.disabled && "cursor-not-allowed opacity-50",
+                  !item.disabled && "active:scale-[0.98]",
+                  item.className
                 )}
-              </React.Fragment>
-            ))}
-          </div>
+                style={{
+                  WebkitTapHighlightColor: "transparent",
+                  touchAction: "manipulation",
+                  background:
+                    focusedIndex === index
+                      ? isDark
+                        ? "rgba(255, 255, 255, 0.08)"
+                        : "rgba(0, 0, 0, 0.04)"
+                      : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!item.disabled) {
+                    e.currentTarget.style.background = isDark
+                      ? "rgba(255, 255, 255, 0.08)"
+                      : "rgba(0, 0, 0, 0.04)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!item.disabled && focusedIndex !== index) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                {item.checked !== undefined && (
+                  <span className="mr-1 text-base" aria-hidden="true">
+                    {item.checked ? "☑" : "☐"}
+                  </span>
+                )}
+                {item.icon && (
+                  <span className="h-5 w-5 flex-shrink-0" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                )}
+                <span className="flex-1">{item.label}</span>
+              </button>
+              {item.separator && (
+                <div
+                  className="my-1 h-px bg-gray-200/50 dark:bg-gray-700/50"
+                  role="separator"
+                  aria-orientation="horizontal"
+                />
+              )}
+            </React.Fragment>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
