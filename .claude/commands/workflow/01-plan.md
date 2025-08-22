@@ -34,7 +34,6 @@ Check $ARGUMENTS:
 # Critical checks - ALL must pass
 npm run type-check  # TypeScript compilation
 npm run lint  # Code quality
-npx vitest run --no-coverage src/__tests__/unit/rr-176-auto-parse-logic.test.ts  # Test discovery
 ```
 
 **If ANY check fails:**
