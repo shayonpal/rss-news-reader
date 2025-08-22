@@ -8,6 +8,7 @@ argument_hint: [#issue|"feature description"]
 Focused test creation phase that prevents test skipping and ensures quality gates before implementation.
 
 ## Help Mode
+
 If user provides `--help` or `help` parameter, display this usage guide:
 
 ```
@@ -32,6 +33,7 @@ INTEGRATION:
 ## Instructions
 
 **CRITICAL: Always activate Serena MCP at session start:**
+
 ```bash
 mcp__serena__activate_project
 ```
@@ -39,15 +41,18 @@ mcp__serena__activate_project
 ### Phase 1: Contract Analysis
 
 **Parse Requirements:**
+
 - Extract issue number or feature description from $ARGUMENTS
 - If Linear issue: Use `linear-expert` to get issue details and acceptance criteria
 - If feature description: Parse requirements from staging documentation
 
 **Map Test Scenarios:**
+
 ```bash
 # Get current staging contracts
 ls -la docs/staging/ | head -10
 ```
+
 - Identify symbols and components requiring tests
 - Map acceptance criteria to specific test scenarios
 - Document test coverage requirements
@@ -57,6 +62,7 @@ ls -la docs/staging/ | head -10
 **Engage test-expert with RSS Reader context:**
 
 **Domain Context Package:**
+
 - **RSS Feed System**: Parse feeds, sync articles, handle feed failures
 - **Inoreader Integration**: OAuth flow, API rate limits, token refresh
 - **Database Layer**: Supabase RLS, article deduplication, user preferences
@@ -64,6 +70,7 @@ ls -la docs/staging/ | head -10
 - **Performance**: Mobile-first, 60fps animations, memory efficiency
 
 **Test Pattern Requirements:**
+
 - **API Tests**: Mock Inoreader responses, test rate limiting, error handling
 - **Database Tests**: Fixtures for articles/feeds, RLS policy validation
 - **Component Tests**: Glass morphing states, gesture interactions
@@ -71,6 +78,7 @@ ls -la docs/staging/ | head -10
 - **Performance Tests**: Mobile benchmarks, animation smoothness
 
 **Test Creation Process:**
+
 1. Generate failing tests first (TDD approach)
 2. Cover happy path, edge cases, and error scenarios
 3. Include performance benchmarks for mobile
@@ -79,12 +87,14 @@ ls -la docs/staging/ | head -10
 ### Phase 3: Test Quality Validation
 
 **Test Completeness Check:**
+
 - Every acceptance criterion has corresponding tests
 - Edge cases covered (network failures, invalid data, rate limits)
 - Error scenarios tested (auth failures, parsing errors)
 - Performance thresholds defined and tested
 
 **Quality Gates:**
+
 ```bash
 # Validate test structure
 npm run test:lint
@@ -92,6 +102,7 @@ npm run test:dry-run  # Ensure tests fail appropriately
 ```
 
 **Test Coverage Mapping:**
+
 - Document which tests validate which acceptance criteria
 - Identify any gaps in test coverage
 - Ensure mobile-specific scenarios are covered
@@ -99,12 +110,14 @@ npm run test:dry-run  # Ensure tests fail appropriately
 ### Phase 4: Handoff Documentation
 
 **Package for Execute Phase:**
+
 - Summary of created tests and coverage
 - Test execution strategy
 - Dependencies and setup requirements
 - Expected test failures before implementation
 
 **Integration with 04-execute:**
+
 - All tests are validated and comprehensive
 - Implementation contracts clearly defined
 - Quality gates passed - no further test validation needed
@@ -151,6 +164,7 @@ npm run test:dry-run  # Ensure tests fail appropriately
 ## RSS Reader Test Patterns
 
 **Common Test Scenarios:**
+
 - Feed parsing with malformed XML
 - OAuth token refresh during sync
 - Offline reading with cached articles
@@ -158,6 +172,7 @@ npm run test:dry-run  # Ensure tests fail appropriately
 - Mobile scroll performance under load
 
 **Performance Benchmarks:**
+
 - Article list render < 100ms
 - Glass animations 60fps
 - Feed sync < 5 seconds for 100 articles

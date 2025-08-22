@@ -1,0 +1,30 @@
+{
+  "limits": {
+    "daily": 10,
+    "perTask": 5
+  },
+  "dailyUsage": [["2025-08-22", 0.1054175]],
+  "taskUsage": [["task_1755899751229", 0.1054175]],
+  "history": [
+    {
+      "timestamp": "2025-08-22T21:55:51.229Z",
+      "taskId": "task_1755899751229",
+      "cost": 0.0573175,
+      "tokens": {
+        "input": 1054,
+        "output": 5600
+      }
+    },
+    {
+      "timestamp": "2025-08-22T21:57:05.162Z",
+      "taskId": "task_1755899751229",
+      "cost": 0.0481,
+      "tokens": {
+        "input": 667,
+        "output": 4722,
+        "reasoning": 0
+      }
+    }
+  ],
+  "currentTaskId": "task_1755899751229"
+}

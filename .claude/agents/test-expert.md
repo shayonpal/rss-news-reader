@@ -167,12 +167,13 @@ The Linear issue (description + comments) forms the testing contract. Test every
 ### Essential Test Patterns
 
 **API Testing Patterns:**
+
 ```typescript
 // Inoreader OAuth flow mocking
 const mockInoreaderResponse = (data: any, status = 200) => ({
   status,
   json: async () => data,
-  headers: new Headers({ 'X-Reader-Google-RateLimit-Remaining': '95' })
+  headers: new Headers({ "X-Reader-Google-RateLimit-Remaining": "95" }),
 });
 
 // RSS feed parsing validation
@@ -181,22 +182,23 @@ const createTestFeed = (overrides = {}) => ({
   title: "Test Feed",
   htmlUrl: "https://example.com",
   categories: [{ id: "cat_001", label: "Technology" }],
-  ...overrides
+  ...overrides,
 });
 
 // Supabase RLS policy testing
-const mockSupabaseQuery = (tableName: string, expectedData: any[]) => 
+const mockSupabaseQuery = (tableName: string, expectedData: any[]) =>
   vi.mocked(supabase.from).mockReturnValue({
-    select: () => ({ data: expectedData, error: null })
+    select: () => ({ data: expectedData, error: null }),
   });
 ```
 
 **Component Testing Patterns:**
+
 ```typescript
 // Liquid glass morphing behaviors
 const expectGlassMorphing = (element: HTMLElement) => {
-  expect(element).toHaveClass('glass-morphing');
-  expect(element.style.backdropFilter).toContain('blur');
+  expect(element).toHaveClass("glass-morphing");
+  expect(element.style.backdropFilter).toContain("blur");
   expect(element.style.background).toMatch(/rgba.*0\.[0-9]+\)/);
 };
 
@@ -209,22 +211,26 @@ const expectMobilePerformance = async (component: RenderResult) => {
 
 // Touch interactions (iOS focus)
 const expectAccessibility = (element: HTMLElement) => {
-  expect(element).toHaveAttribute('role');
+  expect(element).toHaveAttribute("role");
   expect(element.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
   expect(element.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
 };
 ```
 
 **Integration Testing Patterns:**
+
 ```typescript
 // Feed sync workflows
 describe("FeedSync/syncWorkflow", () => {
   it("should handle complete sync pipeline", async () => {
-    const mockTokens = { access_token: "valid_token", expires_at: Date.now() + 3600000 };
+    const mockTokens = {
+      access_token: "valid_token",
+      expires_at: Date.now() + 3600000,
+    };
     vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockTokens));
-    
+
     const result = await syncFeeds();
-    
+
     expect(result.success).toBe(true);
     expect(result.processed).toBeGreaterThan(0);
     expect(result.rateLimitRemaining).toBeGreaterThan(80);
@@ -235,11 +241,11 @@ describe("FeedSync/syncWorkflow", () => {
 describe("ArticleStore/stateManagement", () => {
   it("should handle optimistic UI updates", async () => {
     const { result } = renderHook(() => useArticleStore());
-    
+
     await act(async () => {
       result.current.toggleRead("article_123", true);
     });
-    
+
     expect(result.current.articles[0].isRead).toBe(true);
     await waitFor(() => {
       expect(mockSupabaseUpdate).toHaveBeenCalledWith({ is_read: true });
@@ -249,6 +255,7 @@ describe("ArticleStore/stateManagement", () => {
 ```
 
 **Performance Testing Patterns:**
+
 ```typescript
 // Mobile load times (<3s)
 const expectMobilePerformance = async (operation: () => Promise<void>) => {
@@ -293,6 +300,7 @@ const expectBundleSize = () => {
 ### Domain-Specific Test Utilities (Reference)
 
 **Common RSS Reader Test Fixtures:**
+
 ```typescript
 // Standard test article
 const createTestArticle = (overrides = {}) => ({
@@ -305,14 +313,14 @@ const createTestArticle = (overrides = {}) => ({
   isStarred: false,
   publishedAt: new Date().toISOString(),
   feedId: "feed_001",
-  ...overrides
+  ...overrides,
 });
 
 // Mock Inoreader API response
 const mockInoreaderApiResponse = {
   subscriptions: [createTestFeed()],
   items: [createTestArticle()],
-  continuation: "continuation_token_123"
+  continuation: "continuation_token_123",
 };
 
 // Mock Supabase client
@@ -321,36 +329,37 @@ const mockSupabaseClient = {
     select: vi.fn(() => ({ data: [], error: null })),
     insert: vi.fn(() => ({ data: [], error: null })),
     update: vi.fn(() => ({ data: [], error: null })),
-    delete: vi.fn(() => ({ data: [], error: null }))
+    delete: vi.fn(() => ({ data: [], error: null })),
   })),
   auth: {
-    getUser: vi.fn(() => ({ data: { user: { id: "test-user" } } }))
-  }
+    getUser: vi.fn(() => ({ data: { user: { id: "test-user" } } })),
+  },
 };
 ```
 
 **RSS Reader Custom Matchers:**
+
 ```typescript
 // Custom Jest/Vitest matchers for RSS Reader
 expect.extend({
   toBeValidRSSItem(received) {
-    const required = ['id', 'title', 'url', 'publishedAt'];
-    const missing = required.filter(key => !(key in received));
+    const required = ["id", "title", "url", "publishedAt"];
+    const missing = required.filter((key) => !(key in received));
     return {
       pass: missing.length === 0,
-      message: () => `Expected valid RSS item, missing: ${missing.join(', ')}`
+      message: () => `Expected valid RSS item, missing: ${missing.join(", ")}`,
     };
   },
-  
+
   toHaveGlassMorphing(received) {
     const styles = window.getComputedStyle(received);
-    const hasBackdropFilter = styles.backdropFilter.includes('blur');
-    const hasTransparency = styles.background.includes('rgba');
+    const hasBackdropFilter = styles.backdropFilter.includes("blur");
+    const hasTransparency = styles.background.includes("rgba");
     return {
       pass: hasBackdropFilter && hasTransparency,
-      message: () => 'Expected element to have glass morphing styles'
+      message: () => "Expected element to have glass morphing styles",
     };
-  }
+  },
 });
 ```
 

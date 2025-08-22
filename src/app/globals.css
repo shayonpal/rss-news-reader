@@ -422,87 +422,136 @@ html.reduce-transparency .liquid-glass-btn {
   }
 }
 
+/* ========================================
+ * RR-231 FOUNDATION FINALIZATION
+ * Complete component library & CSS cleanup
+ * 
+ * CHANGES MADE:
+ * - Removed: .glass-segment* classes (replaced by GlassSegmentedControl)
+ * - Removed: .glass-nav, .glass-footer, .glass-sidebar-info CSS classes
+ * - Preserved: All --glass-* CSS variables for RR-232 violet tokens
+ * - Added: Three-tier semantic token hierarchy
+ * - Added: Component token compatibility layer
+ * 
+ * ARCHITECTURE: Reference → Semantic → Component tokens
+ * PURPOSE: Clean foundation for Violet Theme Rollout (RR-232-234)
+ * ======================================== */
+
 /* Liquid Glass Navigation (iOS 26-inspired) */
 @layer base {
   :root {
-    /* RR-180: Enhanced iOS 26 Liquid Glass - Unified Transparency */
-    --glass-blur: 16px; /* Increased from 14px */
-    --glass-saturation: 180%; /* Increased from 140% */
-    --glass-nav-bg: rgba(255, 255, 255, 0.55);
-    --glass-nav-bg-scrolled: rgba(255, 255, 255, 0.45);
-    --glass-nav-border: rgba(0, 0, 0, 0.08);
-    --opaque-nav-bg: rgba(255, 255, 255, 0.95);
-    /* Segmented control (clear glass) */
-    --glass-chip-bg: rgba(255, 255, 255, 0.55);
-    --glass-chip-indicator: rgba(255, 255, 255, 0.45);
+    /* ========================================
+     * RR-231: Semantic Token System
+     * Reference → Semantic → Component hierarchy
+     * ======================================== */
 
-    /* Adaptive glass for light mode - enhanced for legibility */
-    --glass-adaptive-bg: rgba(255, 255, 255, 0.35);
-    --glass-adaptive-border: rgba(0, 0, 0, 0.08);
-    /* Enhanced legibility when scrolling over busy content */
-    --glass-enhanced-bg: rgba(255, 255, 255, 0.55);
-    --glass-enhanced-border: rgba(0, 0, 0, 0.12);
-    /* Animation timing functions */
-    --spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    /* Reference Tokens - Physical properties */
+    --glass-blur-base: 16px;
+    --glass-blur-enhanced: 20px;
+    --glass-saturation-base: 180%;
+    --glass-saturation-reduced: 140%;
+    --glass-opacity-base: 0.35;
+    --glass-opacity-enhanced: 0.55;
+    --glass-opacity-hover: 0.45;
+    --glass-border-light: 0.08;
+    --glass-border-enhanced: 0.12;
+    --glass-border-subtle: 0.05;
+
+    /* Semantic Tokens - Design intent */
+    --color-surface-glass: rgba(255, 255, 255, var(--glass-opacity-enhanced));
+    --color-surface-glass-hover: rgba(
+      255,
+      255,
+      255,
+      var(--glass-opacity-hover)
+    );
+    --color-surface-glass-subtle: rgba(
+      255,
+      255,
+      255,
+      var(--glass-opacity-base)
+    );
+    --color-border-glass: rgba(0, 0, 0, var(--glass-border-light));
+    --color-border-glass-enhanced: rgba(0, 0, 0, var(--glass-border-enhanced));
+    --color-surface-opaque: rgba(255, 255, 255, 0.95);
+
+    /* Motion Tokens */
+    --motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --motion-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    /* ========================================
+     * Legacy Alias Bridge - DO NOT USE IN NEW CODE
+     * Maps old variables to new semantic tokens
+     * ======================================== */
+
+    /* Legacy glass variables → semantic tokens */
+    --glass-blur: var(--glass-blur-base);
+    --glass-saturation: var(--glass-saturation-base);
+    --glass-nav-bg: var(--color-surface-glass);
+    --glass-nav-bg-scrolled: var(--color-surface-glass-hover);
+    --glass-nav-border: var(--color-border-glass);
+    --opaque-nav-bg: var(--color-surface-opaque);
+    --glass-chip-bg: var(--color-surface-glass);
+    --glass-chip-indicator: var(--color-surface-glass-hover);
+    --glass-adaptive-bg: var(--color-surface-glass-subtle);
+    --glass-adaptive-border: var(--color-border-glass);
+    --glass-enhanced-bg: var(--color-surface-glass);
+    --glass-enhanced-border: var(--color-border-glass-enhanced);
+
+    /* Legacy motion variables → semantic tokens */
+    --spring-timing: var(--motion-spring);
+    --ease-smooth: var(--motion-smooth);
+    --ease-out: var(--motion-ease-out);
   }
 
   .dark {
-    /* RR-180: Enhanced iOS 26 Liquid Glass - Unified Transparency */
-    --glass-blur: 20px; /* Increased blur for better content visibility */
-    --glass-saturation: 140%; /* Balanced saturation */
+    /* ========================================
+     * RR-231: Dark Mode Semantic Tokens
+     * Override light mode with dark-specific values
+     * ======================================== */
 
-    /* Unified glass backgrounds using least transparent values */
-    --glass-nav-bg: rgba(
-      40,
-      40,
-      40,
-      0.55
-    ); /* Enhanced opacity for consistency */
-    --glass-nav-bg-scrolled: rgba(
-      40,
-      40,
-      40,
-      0.45
-    ); /* Increased opacity when scrolled */
-    --glass-nav-border: rgba(
-      255,
-      255,
-      255,
-      0.18
-    ); /* Unified border visibility */
-    --opaque-nav-bg: rgba(
-      0,
-      0,
-      0,
-      0.85
-    ); /* Slightly more transparent fallback */
+    /* Reference Tokens - Dark mode adjustments */
+    --glass-blur-base: 20px; /* Enhanced blur for dark mode */
+    --glass-saturation-base: 140%; /* Reduced saturation for dark mode */
+    --glass-border-light: 0.18;
+    --glass-border-enhanced: 0.25;
 
-    /* Segmented control (unified transparency) */
-    --glass-chip-bg: rgba(
-      40,
-      40,
-      40,
-      0.55
-    ); /* Enhanced opacity for consistency */
+    /* Semantic Tokens - Dark mode colors */
+    --color-surface-glass: rgba(40, 40, 40, var(--glass-opacity-enhanced));
+    --color-surface-glass-hover: rgba(40, 40, 40, var(--glass-opacity-hover));
+    --color-surface-glass-subtle: rgba(40, 40, 40, var(--glass-opacity-base));
+    --color-border-glass: rgba(255, 255, 255, var(--glass-border-light));
+    --color-border-glass-enhanced: rgba(
+      255,
+      255,
+      255,
+      var(--glass-border-enhanced)
+    );
+    --color-surface-opaque: rgba(0, 0, 0, 0.85);
+
+    /* ========================================
+     * Legacy Alias Bridge Updates for Dark Mode
+     * ======================================== */
+
+    /* Update legacy variables to use dark semantic tokens */
+    --glass-blur: var(--glass-blur-base);
+    --glass-saturation: var(--glass-saturation-base);
+    --glass-nav-bg: var(--color-surface-glass);
+    --glass-nav-bg-scrolled: var(--color-surface-glass-hover);
+    --glass-nav-border: var(--color-border-glass);
+    --opaque-nav-bg: var(--color-surface-opaque);
+    --glass-chip-bg: var(--color-surface-glass);
     --glass-chip-indicator: rgba(
       255,
       255,
       255,
       0.25
-    ); /* More visible indicator */
-
-    /* Adaptive glass now matches base values */
-    --glass-adaptive-bg: rgba(
-      40,
-      40,
-      40,
-      0.35
-    ); /* Consistent with nav background */
-    --glass-adaptive-border: rgba(255, 255, 255, 0.18);
-    /* Enhanced legibility when scrolling over busy content */
-    --glass-enhanced-bg: rgba(40, 40, 40, 0.55);
-    --glass-enhanced-border: rgba(255, 255, 255, 0.25);
+    ); /* Special case for indicator visibility */
+    --glass-adaptive-bg: var(--color-surface-glass-subtle);
+    --glass-adaptive-border: var(--color-border-glass);
+    --glass-enhanced-bg: var(--color-surface-glass);
+    --glass-enhanced-border: var(--color-border-glass-enhanced);
   }
 }
 

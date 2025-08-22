@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { ArticleCountManager } from "@/lib/article-count-manager";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 import { GlassIconButton } from "@/components/ui/glass-button";
+import { GlassNav } from "@/components/ui/glass-nav";
 
 export default function HomePage() {
   const router = useRouter();
@@ -458,13 +459,8 @@ export default function HomePage() {
     return `${positionClasses} ${translateClasses} ${baseClasses}`;
   };
 
-  // Compute header classes
-  const getHeaderClasses = () => {
-    const baseClasses =
-      "glass-nav fixed left-0 right-0 top-0 z-30 border-b transition-transform duration-300 ease-in-out";
-    const offsetClasses = !viewport.shouldCollapseSidebar ? "md:left-80" : "";
-    return `${baseClasses} ${offsetClasses}`;
-  };
+  // RR-231: Removed unused getHeaderClasses function containing .glass-nav
+  // Glass navigation functionality extracted to GlassNav component
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background">

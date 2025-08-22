@@ -8,6 +8,7 @@ argument_hint: [#issue|"feature description"]
 Complete implementation phase that takes prepared specifications and tests, then implements code to make tests pass. Assumes tests are already validated and comprehensive from the test-design phase.
 
 **Prerequisites from 03-test-design:**
+
 - Comprehensive test suite with quality gates passed
 - Implementation contracts clearly defined
 - Test validation completed (no further test quality analysis needed)
@@ -63,7 +64,7 @@ mcp__serena__activate_project
    ```bash
    # Look for validated test files from 03-test-design
    find src/__tests__ -name "*[feature-name]*" -type f
-   
+
    # Verify test quality validation completed
    # (Should show comprehensive test coverage from test-design phase)
    ```
@@ -94,7 +95,7 @@ mcp__serena__activate_project
    # Implement to make tests pass (no test quality analysis needed)
    # Use Serena MCP for targeted code modifications
    mcp__serena__replace_symbol_body symbol:"[component-name]" new_body:"[implementation]"
-   
+
    # Re-run tests to verify progress
    npm test -- --testPathPattern="[feature-name]"
    ```
@@ -149,7 +150,7 @@ mcp__serena__activate_project
    # Verify all changes are ready (but do not commit)
    git status
    git diff
-   
+
    # Prepare commit message for later use
    # "feat(#[issue-number]): implement [feature-name]
    # - [key implementation detail]
@@ -179,9 +180,11 @@ mcp__serena__activate_project
 
 **Initial Test Status:**
 ```
-FAIL src/__tests__/unit/[feature].test.tsx
+
+FAIL src/**tests**/unit/[feature].test.tsx
 ✗ [test-case-1] (not implemented)
 ✗ [test-case-2] (not implemented)
+
 ```
 
 **Implementation Progress:**
@@ -193,12 +196,14 @@ FAIL src/__tests__/unit/[feature].test.tsx
 
 **Feature Tests:**
 ```
-PASS src/__tests__/unit/[feature].test.tsx
+
+PASS src/**tests**/unit/[feature].test.tsx
 ✓ [test-case-1] (12ms)
 ✓ [test-case-2] (8ms)
 
 Test Suites: 1 passed, 1 total
 Tests: 3 passed, 3 total
+
 ```
 
 **Quality Checks:**
@@ -237,12 +242,14 @@ Tests: 3 passed, 3 total
 ## Workflow Integration
 
 **Input Assumptions (from 03-test-design):**
+
 - Tests are comprehensive and validated
 - Quality gates have been passed
 - Implementation contracts are clear
 - No additional test quality analysis needed
 
 **Handoff Deliverables (to 05-document):**
+
 - Complete working implementation
 - All tests passing
 - Code quality validated
