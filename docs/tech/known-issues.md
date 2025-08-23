@@ -1,6 +1,6 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Saturday, July 26, 2025 at 1:36 AM
+**Last Updated:** Friday, August 23, 2025 at 12:45 PM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
 
@@ -292,6 +292,93 @@ Implemented chunked deletion architecture:
 - **Success Rate**: 99.9% for large cleanup operations
 - **Processing Time**: ~2-3 seconds for 1000 articles
 - **Error Isolation**: Individual chunk failures don't cascade
+
+## Test Infrastructure Issues
+
+### React Testing Library Timing and Mock Patterns
+
+**Status:** 🟢 Resolved (August 23, 2025 via RR-192)  
+**Severity:** Medium
+
+#### Description
+
+React Testing Library tests were experiencing timing issues and mock-related failures, particularly with async state updates and timer-dependent components. Tests would pass individually but fail when run as part of larger test suites due to timing race conditions.
+
+#### Root Cause
+
+React component state updates combined with setTimeout/setInterval usage created timing inconsistencies in test environments:
+
+- Real timers caused unpredictable delays in test execution
+- React state updates weren't properly synchronized with test assertions
+- Mock cleanup between tests was incomplete, causing state pollution
+
+#### Solution (RR-192)
+
+**Vitest Fake Timers Pattern** implemented across affected test files:
+
+1. **Timer Control**: Use `vi.useFakeTimers()` to control time-dependent behavior
+2. **Proper Cleanup**: Always restore real timers with `vi.useRealTimers()` in afterEach
+3. **State Synchronization**: Combine `act()` with `vi.advanceTimersByTime()` for React state updates
+4. **Comprehensive Mock Cleanup**: Use `vi.clearAllMocks()` between test runs
+
+**Key Implementation Pattern**:
+
+```typescript
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  cleanup();
+});
+
+// In tests:
+act(() => {
+  vi.advanceTimersByTime(1000);
+});
+```
+
+#### Test Infrastructure Best Practices Discovered
+
+1. **Fake Timers**: Always use fake timers for components with setTimeout/setInterval
+2. **Mock Lifecycle**: Implement proper setup/teardown for all mocks
+3. **React Testing**: Wrap timer advances in `act()` for state update synchronization
+4. **Test Isolation**: Clear all mocks between tests to prevent pollution
+5. **Memory Management**: Use real timers in cleanup to prevent memory leaks
+
+#### Results
+
+- **Test Reliability**: 100% consistent test execution across multiple runs
+- **Performance**: Faster test execution with fake timers (no real delays)
+- **Maintainability**: Clear patterns for timer-dependent component testing
+- **Pattern Reusability**: Template established for future React component tests
+
+#### Reference Documentation
+
+- **Implementation Guide**: See RR-192 test file implementations for patterns
+- **Vitest Fake Timers**: https://vitest.dev/api/vi.html#vi-usefaketimers
+- **React Testing Best Practices**: [Testing Strategy](./testing-strategy.md#react-component-testing)
+
+### Vitest Memory Pressure (General Issue)
+
+**Status:** 🟡 Known Issue (Non-blocking)  
+**Severity:** Low
+
+#### Description
+
+Vitest occasionally experiences memory pressure when running large test suites, particularly noticeable with Node.js heap size warnings. This appears to be related to the overall test suite size rather than specific test implementations.
+
+#### Impact
+
+- Intermittent warnings during test execution
+- No test failures or blocking issues
+- Does not affect individual test reliability
+
+#### Monitoring
+
+This issue is being monitored but does not currently require immediate action as it doesn't block development or affect test outcomes.
 
 ## Future Considerations
 

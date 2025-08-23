@@ -3,8 +3,11 @@
     "daily": 10,
     "perTask": 5
   },
-  "dailyUsage": [["2025-08-22", 0.1054175]],
-  "taskUsage": [["task_1755899751229", 0.1054175]],
+  "dailyUsage": [["2025-08-22", 0.285995]],
+  "taskUsage": [
+    ["task_1755899751229", 0.1054175],
+    ["task_1755905867002", 0.1805775]
+  ],
   "history": [
     {
       "timestamp": "2025-08-22T21:55:51.229Z",
@@ -24,7 +27,26 @@
         "output": 4722,
         "reasoning": 0
       }
+    },
+    {
+      "timestamp": "2025-08-22T23:37:47.002Z",
+      "taskId": "task_1755905867002",
+      "cost": 0.1410775,
+      "tokens": {
+        "input": 862,
+        "output": 14000
+      }
+    },
+    {
+      "timestamp": "2025-08-22T23:38:39.299Z",
+      "taskId": "task_1755905867002",
+      "cost": 0.0395,
+      "tokens": {
+        "input": 527,
+        "output": 3888,
+        "reasoning": 0
+      }
     }
   ],
-  "currentTaskId": "task_1755899751229"
+  "currentTaskId": "task_1755905867002"
 }

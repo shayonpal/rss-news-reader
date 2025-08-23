@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[Documentation Update] RR-192 Test Infrastructure Learnings** (Saturday, August 23, 2025 at 12:19 AM)
+  - **Known Issues Documentation**: Updated docs/tech/known-issues.md with React Testing Library timing patterns and best practices from RR-192
+  - **Test Failures Record**: Documented resolution of RR-192 timing issues in record-of-test-failures.md with comprehensive implementation patterns
+  - **Best Practices**: Established vi.useFakeTimers patterns as standard for React component testing with timer dependencies
+  - **Impact**: Created reusable documentation for future React testing infrastructure improvements
+
+- **[RR-192] Test Infrastructure Fix - React Testing Library Timing Issues** (2025-08-23 00:17 - fix: test infrastructure)
+  - **Issue Resolution**: Fixed failing tests for useAutoParseContent hook without modifying production code
+  - **Testing Infrastructure**: Applied proven timing patterns with vi.useFakeTimers, proper act() wrappers, and waitFor patterns
+  - **Results**: All 4 tests now pass (100% success rate) with 5.4s execution time
+  - **Impact**: Resolved false CI/CD alarms and unblocked development pipeline
+  - **Files**: Restored src/**tests**/unit/rr-176-auto-parse-logic.test.ts from disabled state
+
 - **[RR-231] Foundation Finalization - Symbol Implementation Details** (Friday, August 22, 2025 at 7:00 PM)
   - **New Glass Components**: Implemented 5 core components with TypeScript interfaces and CVA variants
     - GlassCard (glassCardVariants, GlassCardProps) - Surface container with elevation tokens

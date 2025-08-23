@@ -30,18 +30,20 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
     // Reset fetch mock to initial state
     (global.fetch as any).mockClear();
     (global.fetch as any).mockReset();
-    
+
     // Reset counter for test isolation
     testIdCounter = 0;
-    
+
     // Default mock implementation for unexpected calls
     (global.fetch as any).mockImplementation(() => {
-      throw new Error("Unexpected fetch call - mock not configured for this test");
+      throw new Error(
+        "Unexpected fetch call - mock not configured for this test"
+      );
     });
   });
 
   afterEach(() => {
-    // Don't restore mocks - keep the global.fetch mock active for the whole test suite
+    // Clean up mocks properly
     vi.clearAllMocks();
     (global.fetch as any).mockClear();
     (global.fetch as any).mockReset();
@@ -129,6 +131,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         updatedAt: new Date().toISOString(),
       };
 
+      // Use resolved mock for immediate response
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -145,24 +148,23 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         })
       );
 
-      // Primary test: Verify fetch is called (business logic works)
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining("/reader/api/articles/"),
-          expect.objectContaining({
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ forceRefresh: false }),
-          })
-        );
-      }, { timeout: 2000 });
+      // Wait for auto-parse to trigger
+      await waitFor(
+        () => {
+          expect(global.fetch).toHaveBeenCalledTimes(1);
+        },
+        { timeout: 3000, interval: 50 }
+      );
 
-      // Verify parsing state is managed correctly
-      expect(global.fetch).toHaveBeenCalledTimes(1);
-      
-      // Note: parsedContent state update is affected by test infrastructure timing issues
-      // This test validates that the core business logic (auto-parsing decision) works correctly
-      // The state management is tested separately in integration tests
+      // Verify correct API call
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/reader/api/articles/"),
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ forceRefresh: false }),
+        })
+      );
     });
 
     it("should trigger for truncation indicators in normal feeds", async () => {
@@ -177,6 +179,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
 
       const contentWithTruncation = "a".repeat(600) + "... Read more";
 
+      // Use resolved mock for immediate response
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -193,21 +196,23 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         })
       );
 
-      // Primary test: Verify truncation detection triggers fetch
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining("/reader/api/articles/"),
-          expect.objectContaining({
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ forceRefresh: false }),
-          })
-        );
-      }, { timeout: 2000 });
+      // Wait for fetch to be called
+      await waitFor(
+        () => {
+          expect(global.fetch).toHaveBeenCalledTimes(1);
+        },
+        { timeout: 3000, interval: 50 }
+      );
 
-      expect(global.fetch).toHaveBeenCalledTimes(1);
-      
-      // Note: parsedContent state update testing moved to integration tests due to test infrastructure timing issues
+      // Verify correct API call
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/reader/api/articles/"),
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ forceRefresh: false }),
+        })
+      );
     });
 
     it("should NOT trigger when article already has full content", async () => {
@@ -231,7 +236,8 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         })
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait a bit for useEffect to complete
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(global.fetch).not.toHaveBeenCalled();
       expect(result.current.isParsing).toBe(false);
@@ -241,7 +247,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
       // Reset fetch mock to ensure clean state
       (global.fetch as any).mockClear();
       (global.fetch as any).mockReset();
-      
+
       const { result } = renderHook(() =>
         useAutoParseContent({
           article: createMockArticle({ content: "a".repeat(600) }),
@@ -338,23 +344,28 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       expect(global.fetch).not.toHaveBeenCalled();
 
-      // Manual trigger
-      await result.current.triggerParse();
+      // Manual trigger with proper act wrapper
+      await act(async () => {
+        await result.current.triggerParse();
+      });
 
       // Verify manual trigger works
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining("/reader/api/articles/"),
-          expect.objectContaining({
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ forceRefresh: false }),
-          })
-        );
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(global.fetch).toHaveBeenCalledWith(
+            expect.stringContaining("/reader/api/articles/"),
+            expect.objectContaining({
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ forceRefresh: false }),
+            })
+          );
+        },
+        { timeout: 2000 }
+      );
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
-      
+
       // Note: parsedContent state update testing moved to integration tests due to test infrastructure timing issues
     });
 
@@ -389,7 +400,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         result.current.triggerParse();
       });
 
-      // Verify parsing has started
+      // Check isParsing immediately after trigger
       expect(result.current.isParsing).toBe(true);
 
       // Additional triggers should be ignored while parsing
@@ -398,10 +409,13 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         result.current.triggerParse();
       });
 
-      // Wait for the parsing to complete
-      await waitFor(() => {
-        expect(result.current.isParsing).toBe(false);
-      });
+      // Wait for parsing to complete
+      await waitFor(
+        () => {
+          expect(result.current.isParsing).toBe(false);
+        },
+        { timeout: 3000, interval: 50 }
+      );
 
       // Should only call fetch once due to duplicate prevention
       expect(global.fetch).toHaveBeenCalledTimes(1);
