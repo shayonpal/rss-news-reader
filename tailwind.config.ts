@@ -7,6 +7,14 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   darkMode: "class",
+  safelist: [
+    "bg-[var(--counter-unselected-bg)]",
+    "text-[var(--counter-unselected-text)]",
+    "bg-[var(--counter-selected-bg)]",
+    "text-[var(--counter-selected-text)]",
+    // Ensure all counter utilities are generated
+    { pattern: /^(bg|text)-\[var\(--counter-.+\)\]$/ },
+  ],
   theme: {
     extend: {
       colors: {

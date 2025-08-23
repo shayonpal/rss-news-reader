@@ -353,6 +353,10 @@ Confirm with git-expert:
 - CI/CD pipeline triggered
 - No merge conflicts
 
+### 6C. Verify Issue Status
+
+Use `linear-expert` to verify the the issue has been resolved. If not, then do so.
+
 ## 7. Symbol-Level Commit Report
 
 ```

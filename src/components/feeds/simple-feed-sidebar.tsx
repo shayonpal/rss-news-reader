@@ -322,11 +322,11 @@ export function SimpleFeedSidebar({
                   <span>All Articles</span>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
+                  className={
                     !selectedFeedId && !selectedTagId
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-primary/10 text-primary"
-                  }`}
+                      ? "rounded-full bg-[var(--counter-selected-bg)] px-2 py-0.5 text-xs font-extrabold text-[var(--counter-selected-text)]"
+                      : "rounded-full bg-[var(--counter-unselected-bg)] px-2 py-0.5 text-xs text-[var(--counter-unselected-text)]"
+                  }
                 >
                   {totalUnreadCount}
                 </span>
@@ -427,11 +427,11 @@ export function SimpleFeedSidebar({
                             </span>
                             {unreadCount > 0 && (
                               <span
-                                className={`ml-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium ${
+                                className={
                                   isSelected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-primary/10 text-primary"
-                                }`}
+                                    ? "ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--counter-selected-bg)] text-xs font-extrabold text-[var(--counter-selected-text)]"
+                                    : "ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--counter-unselected-bg)] text-xs font-medium text-[var(--counter-unselected-text)]"
+                                }
                               >
                                 {unreadCount > 99 ? "99+" : unreadCount}
                               </span>
@@ -575,11 +575,11 @@ export function SimpleFeedSidebar({
                               {tag.name}
                             </span>
                             <span
-                              className={`ml-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium ${
+                              className={
                                 isSelected
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-primary/10 text-primary"
-                              }`}
+                                  ? "ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--counter-selected-bg)] text-xs font-extrabold text-[var(--counter-selected-text)]"
+                                  : "ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--counter-unselected-bg)] text-xs font-medium text-[var(--counter-unselected-text)]"
+                              }
                             >
                               {displayCount > 99 ? "99+" : displayCount}
                             </span>

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[Code Cleanup] Archived Unused Feed Components** (August 23, 2025 at 3:18 AM)
+  - **Archived Components**: Moved `FeedTreeItem` and `FeedList` to `archived-components/` directory
+  - **Reason**: Legacy hierarchical feed components unused in current flat sidebar implementation
+  - **Impact**: Prevents future developer confusion (caused incorrect file editing during RR-232 violet theme implementation)
+  - **Current Implementation**: Main sidebar uses `SimpleFeedSidebar` component exclusively
+
 - **[Documentation Update] RR-192 Test Infrastructure Learnings** (Saturday, August 23, 2025 at 12:19 AM)
   - **Known Issues Documentation**: Updated docs/tech/known-issues.md with React Testing Library timing patterns and best practices from RR-192
   - **Test Failures Record**: Documented resolution of RR-192 timing issues in record-of-test-failures.md with comprehensive implementation patterns
