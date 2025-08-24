@@ -1,15 +1,14 @@
 /* 
  * RR-179 Liquid Glass Mark All Read Button Styles
- * iOS 26 Morphing Pattern Implementation
+ * iOS 26 Morphing Pattern Implementation - Unified System
  * 
- * Based on POC: src/app/pocs/mark-all-read-liquid-glass/page.tsx
- * Integration: Slice 2 of RR-179 vertical implementation
+ * Clean refactored implementation using unified liquid glass base
+ * Preserves all functionality: states, animations, responsive behavior
  */
 
-/* CSS Custom Properties for standardized heights (synchronized with glass-segment-sm) */
+/* CSS Custom Properties for standardized heights */
 :root {
-  --glass-control-height: 48px; /* Match total glass-segment height: 40px + 4px padding top/bottom */
-  --glass-control-border-radius: 24px; /* Proportionally adjusted for 48px height */
+  --glass-control-height: 48px;
   --glass-spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -18,9 +17,22 @@
   --segment-height: 40px; /* 40px + 4px padding = 48px total to match button */
 }
 
-/* Base Liquid Glass Button Styles */
+/* ========================================
+ * Clean Mark All Read Button Implementation
+ * Uses unified liquid glass system as foundation
+ * ======================================== */
+
 .liquid-glass-mark-all-read {
-  /* Normalize button appearance to prevent UA default borders */
+  /* Foundation: Unified liquid glass styling */
+  background: var(--glass-surface);
+  border: var(--glass-border-style);
+  border-radius: var(--glass-border-radius-primary);
+  box-shadow: var(--glass-depth-shadow);
+  backdrop-filter: var(--glass-blur-effect);
+  -webkit-backdrop-filter: var(--glass-blur-effect);
+  transition: all 200ms var(--motion-smooth);
+
+  /* Normalize button appearance */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -33,7 +45,6 @@
   padding: 0 16px;
   height: calc(var(--glass-control-height) + 4px);
   min-width: calc(var(--glass-control-height) + 4px);
-  border-radius: calc(var(--glass-control-border-radius) + 2px);
 
   /* Typography - match segmented control weight */
   font-size: 0.875rem;
@@ -42,25 +53,18 @@
   white-space: nowrap;
   line-height: 1.2;
 
-  /* Enhanced liquid glass effect matching hamburger menu */
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  -webkit-backdrop-filter: blur(var(--glass-blur))
-    saturate(var(--glass-saturation));
-
-  /* Neutral glass background - not purple tinted */
-  background: var(--glass-nav-bg);
-  border: 1px solid var(--glass-nav-border);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-
   /* Interactions */
   cursor: pointer;
 
   /* Performance */
   transform: translateZ(0);
   will-change: transform, background-color;
-  transition: all 300ms var(--glass-spring-timing);
+}
+
+/* Hover state using unified system */
+.liquid-glass-mark-all-read:hover:not(:disabled) {
+  background: var(--glass-surface-hover);
+  transform: translateY(-1px);
 }
 
 /* Touch feedback */
@@ -68,105 +72,91 @@
   transform: scale(0.98);
 }
 
-/* Fixed width for desktop to prevent jarring (RR-206 integration) */
+/* ========================================
+ * State-Specific Styling
+ * Only override what's necessary for each state
+ * ======================================== */
+
+/* Normal State - violet text on unified glass */
+.liquid-glass-mark-all-read.state-normal {
+  color: hsl(var(--primary));
+}
+
+/* Dark mode normal state - custom OKLCH violet */
+:root.dark .liquid-glass-mark-all-read.state-normal {
+  color: oklch(0.702 0.183 293.541);
+}
+
+/* Confirming State - warning colors */
+.liquid-glass-mark-all-read.state-confirming {
+  background: rgba(255, 182, 193, 0.2) !important;
+  border-color: rgba(255, 182, 193, 0.5) !important;
+  color: rgb(220, 53, 69) !important;
+  animation: liquid-glass-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+:root.dark .liquid-glass-mark-all-read.state-confirming {
+  background: rgba(255, 182, 193, 0.15) !important;
+  border-color: rgba(255, 182, 193, 0.4) !important;
+  color: rgb(255, 123, 123) !important;
+}
+
+/* Loading State - same as normal with spinner */
+.liquid-glass-mark-all-read.state-loading {
+  color: hsl(var(--primary));
+}
+
+/* Dark mode loading state - custom OKLCH violet */
+:root.dark .liquid-glass-mark-all-read.state-loading {
+  color: oklch(0.702 0.183 293.541);
+}
+
+/* Disabled State - reduced opacity */
+.liquid-glass-mark-all-read.state-disabled,
+.liquid-glass-mark-all-read:disabled {
+  color: hsl(var(--primary));
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(100%) contrast(1.3);
+}
+
+:root.dark .liquid-glass-mark-all-read.state-disabled,
+:root.dark .liquid-glass-mark-all-read:disabled {
+  opacity: 0.65;
+  filter: grayscale(100%) contrast(1.6);
+}
+
+/* ========================================
+ * Responsive Behavior
+ * ======================================== */
+
+/* Desktop sizing */
 @media (min-width: 768px) {
   .liquid-glass-mark-all-read {
     min-width: 140px;
   }
 
-  /* Desktop confirmation - slightly expand into collapsed segmented control space */
   .liquid-glass-mark-all-read.state-confirming {
-    min-width: 160px; /* Slightly wider when segmented control collapses */
+    min-width: 160px;
   }
 }
 
-/* Purple Normal State - Neutral glass with purple content */
-.liquid-glass-mark-all-read.state-normal {
-  color: rgb(139, 92, 246);
-  /* Use neutral glass styling - no purple tinting */
-}
-
-.liquid-glass-mark-all-read.state-normal:hover:not(:disabled) {
-  background: var(--glass-nav-bg-scrolled);
-  transform: translateY(-1px);
-}
-
-/* Dark mode normal state */
-.dark .liquid-glass-mark-all-read.state-normal {
-  color: rgb(167, 139, 250);
-  /* Use neutral glass styling - no purple tinting */
-}
-
-.dark .liquid-glass-mark-all-read.state-normal:hover:not(:disabled) {
-  background: var(--glass-nav-bg-scrolled);
-}
-
-/* Confirming State - Muted pastel red (regardless of theme) */
-.liquid-glass-mark-all-read.state-confirming {
-  background: rgba(255, 182, 193, 0.2) !important;
-  color: rgb(220, 53, 69) !important;
-  border: 1px solid rgba(255, 182, 193, 0.5) !important;
-  animation: liquid-glass-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.dark .liquid-glass-mark-all-read.state-confirming {
-  background: rgba(255, 182, 193, 0.15) !important;
-  color: rgb(255, 123, 123) !important;
-  border: 1px solid rgba(255, 182, 193, 0.4) !important;
-}
-
-/* Mobile confirmation - expand when segmented control collapses (RR-206 integration) */
+/* Mobile confirmation - expand when segmented control collapses */
 @media (max-width: 767px) {
   .liquid-glass-mark-all-read.state-confirming {
     flex: 1;
-    min-width: 180px; /* Expand into space left by collapsed segmented control */
+    min-width: 180px;
   }
 }
 
-/* Loading State - neutral glass with purple content */
-.liquid-glass-mark-all-read.state-loading {
-  color: rgb(139, 92, 246);
-  /* Use neutral glass styling */
-}
-
-.dark .liquid-glass-mark-all-read.state-loading {
-  color: rgb(167, 139, 250);
-  /* Use neutral glass styling */
-}
-
-/* Disabled State - neutral glass with dimmed purple content */
-.liquid-glass-mark-all-read.state-disabled {
-  color: rgb(139, 92, 246);
-  opacity: 0.4;
-  cursor: not-allowed;
-  filter: grayscale(100%) contrast(1.3);
-  /* Use neutral glass styling */
-}
-
-.dark .liquid-glass-mark-all-read.state-disabled {
-  color: rgb(167, 139, 250);
-  opacity: 0.65;
-  filter: grayscale(100%) contrast(1.6);
-  /* Use neutral glass styling */
-}
-
-/* Enhanced disabled state */
-.liquid-glass-mark-all-read:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-  filter: grayscale(100%) contrast(1.3);
-}
-
-.dark .liquid-glass-mark-all-read:disabled {
-  opacity: 0.65;
-  filter: grayscale(100%) contrast(1.6);
-}
+/* ========================================
+ * Touch and Accessibility Optimizations
+ * ======================================== */
 
 /* Touch-first interactions - remove hover on touch devices */
 @media (hover: none) and (pointer: coarse) {
   .liquid-glass-mark-all-read:hover {
-    background: transparent !important;
-    border-color: inherit !important;
+    background: var(--glass-surface) !important;
     transform: none !important;
   }
 }
@@ -174,18 +164,17 @@
 /* Progressive enhancement - backdrop filter fallback */
 @supports not (backdrop-filter: blur(1px)) {
   .liquid-glass-mark-all-read {
-    background: rgba(255, 255, 255, 0.8);
-  }
-
-  .dark .liquid-glass-mark-all-read {
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--color-surface-opaque);
   }
 }
 
+/* ========================================
+ * Animations
+ * ======================================== */
+
 /* Pulse animation for confirming state */
 @keyframes liquid-glass-pulse {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -195,7 +184,7 @@
   }
 }
 
-/* RR-179: Segmented control collapse animation (iOS 26 pattern) */
+/* Segmented control collapse animation */
 .segmented-control-wrapper {
   transition: all 300ms var(--glass-spring-timing);
   overflow: hidden;

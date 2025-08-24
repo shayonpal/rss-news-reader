@@ -220,6 +220,34 @@ button:not(:disabled) {
     --counter-unselected-text: oklch(0.943 0.029 294.588);
     --counter-selected-bg: oklch(0.541 0.281 293.009);
     --counter-selected-text: oklch(0.969 0.016 293.756);
+    
+    /* ========================================
+     * Master Liquid Glass System (iOS 26 based)
+     * Single-source depth control for all glass components
+     * ======================================== */
+     
+    /* Master depth shadow (3-layer Apple iOS 26 specification) */
+    --glass-depth-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.12),    /* Ambient shadow - matches inline styles */
+      0 2px 8px rgba(0, 0, 0, 0.04),     /* Key shadow */
+      inset 0 1px 1px rgba(255, 255, 255, 0.25); /* Glass highlight */
+      
+    /* Simplified shadow for inline style compatibility */
+    --glass-shadow-ambient: 0 8px 32px rgba(0, 0, 0, 0.12);
+      
+    /* Secondary depth (75% intensity for toolbars) */
+    --glass-depth-shadow-secondary: 
+      0 6px 24px rgba(0, 0, 0, 0.09),    /* Reduced ambient */
+      0 1px 6px rgba(0, 0, 0, 0.03),     /* Reduced key */
+      inset 0 1px 1px rgba(255, 255, 255, 0.19); /* Reduced highlight */
+    
+    /* Master glass effects */
+    --glass-blur-effect: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    --glass-border-style: 1px solid var(--glass-nav-border);
+    --glass-surface: var(--glass-chip-bg);
+    --glass-surface-hover: var(--glass-chip-indicator);
+    --glass-border-radius-primary: 9999px;  /* Fully rounded for primary controls */
+    --glass-border-radius-secondary: 22px;  /* Less rounded for clusters */
   }
 }
 
@@ -620,6 +648,38 @@ html.reduce-transparency .liquid-glass-btn {
 }
 
 @layer components {
+  /* ========================================
+   * Unified Liquid Glass Base Classes (iOS 26)
+   * ======================================== */
+   
+  .liquid-glass-primary {
+    background: var(--glass-surface);
+    border: var(--glass-border-style);
+    border-radius: var(--glass-border-radius-primary);
+    box-shadow: var(--glass-depth-shadow);
+    backdrop-filter: var(--glass-blur-effect);
+    -webkit-backdrop-filter: var(--glass-blur-effect);
+    transition: all 200ms var(--motion-smooth);
+  }
+  
+  .liquid-glass-primary:hover {
+    background: var(--glass-surface-hover);
+  }
+  
+  .liquid-glass-secondary {
+    background: var(--glass-surface);
+    border: var(--glass-border-style);
+    border-radius: var(--glass-border-radius-secondary);
+    box-shadow: var(--glass-depth-shadow-secondary);
+    backdrop-filter: var(--glass-blur-effect);
+    -webkit-backdrop-filter: var(--glass-blur-effect);
+    transition: all 200ms var(--motion-smooth);
+  }
+  
+  .liquid-glass-secondary:hover {
+    background: var(--glass-surface-hover);
+  }
+
   .glass-nav {
     /* Translucent background that lenses content underneath */
     -webkit-backdrop-filter: blur(var(--glass-blur))
@@ -635,19 +695,9 @@ html.reduce-transparency .liquid-glass-btn {
 
   /* Glass toolbar container (clustered capsule) */
   .glass-toolbar {
-    /* Enhanced liquid glass effect matching standalone buttons */
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-    background: var(
-      --glass-enhanced-bg
-    ); /* Use enhanced background for better contrast */
-    border: 1px solid var(--glass-nav-border);
-    border-radius: 22px;
-    /* Enhanced layered shadows for depth */
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.12),
-      0 1px 3px rgba(0, 0, 0, 0.04),
-      inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    /* Inherit unified liquid glass styling */
+    @apply liquid-glass-secondary;
+    
     padding: 4px;
     display: inline-flex;
     gap: 4px;
@@ -657,7 +707,6 @@ html.reduce-transparency .liquid-glass-btn {
     /* Performance */
     transform: translateZ(0);
     will-change: transform;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-toolbar .toolbar-group {
@@ -714,28 +763,20 @@ html.reduce-transparency .liquid-glass-btn {
 
   /* Circular icon button (e.g., back button) */
   .glass-icon-btn {
+    /* Inherit unified liquid glass styling */
+    @apply liquid-glass-primary;
+    
     /* Normalize button appearance to prevent UA default borders */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-      saturate(var(--glass-saturation));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    background: var(--glass-nav-bg);
-    border: 1px solid var(--glass-nav-border);
+    
     width: var(--glass-control-height); /* Standardized */
     height: var(--glass-control-height); /* Standardized */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transition:
-      transform 160ms var(--ease-out),
-      background-color 160ms var(--ease-out);
+    transition: transform 160ms var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -933,6 +974,9 @@ html.reduce-transparency .glass-sidebar-info {
 /* Glass Segmented Control */
 @layer components {
   .glass-segment {
+    /* Inherit unified liquid glass styling */
+    @apply liquid-glass-primary;
+    
     /* Size tokens for compact vs regular variants */
     --segment-pad: 4px;
     --segment-height: 36px;
@@ -941,15 +985,6 @@ html.reduce-transparency .glass-sidebar-info {
     display: inline-flex;
     gap: 0;
     padding: var(--segment-pad);
-    border-radius: 9999px;
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-      saturate(var(--glass-saturation));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    background: var(--glass-chip-bg);
-    border: 1px solid var(--glass-nav-border);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
   /* Compact variant for tight headers */

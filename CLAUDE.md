@@ -32,6 +32,13 @@ This file provides guidance to Claude Code when working with this repository.
 - `task_completion_checklist.md` - Pre-commit requirements
 - `project_structure.md` - Directory organization
 
+## UI/UX Design System
+
+**Unified Liquid Glass System**: [`docs/ui-ux/unified-liquid-glass-system.md`](docs/ui-ux/unified-liquid-glass-system.md)
+- Complete CSS class reference and component mapping
+- Master control variables for single-source design adjustments
+- iOS 26 specification compliance and implementation guidelines
+
 ### Use Serena Instead Of:
 
 - **Read/Grep** → `find_symbol`, `search_for_pattern`, `get_symbols_overview`

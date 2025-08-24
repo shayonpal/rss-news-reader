@@ -537,7 +537,7 @@ export default function HomePage() {
               <button
                 onClick={handleMarkAllClick}
                 disabled={isMarkingAllRead || counts.unread === 0}
-                className={`liquid-glass-mark-all-read glass-adaptive state-${getButtonState()}`}
+                className={`liquid-glass-mark-all-read state-${getButtonState()}`}
                 title={
                   waitingConfirmation
                     ? "Click again to confirm"

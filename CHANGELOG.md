@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[Documentation] Comprehensive Unified Liquid Glass System Guide** (Sunday, August 24, 2025 at 1:08 PM)
+  - **Complete System Documentation**: Created comprehensive guide covering master CSS variables, two-tier hierarchy, and single-source depth control system
+  - **Component Mapping Table**: Detailed mapping of all UI elements to their implementations and CSS classes across article listing and detail pages
+  - **Implementation Guidelines**: Best practices for new glass components, CSS patterns, and responsive considerations
+  - **Recent Changes Documentation**: Covered component archival, CSS cascade fixes, Tailwind safelist configuration, and expert consultation process
+  - **Quality Validation**: Comprehensive checklist for visual consistency, functional requirements, and performance validation
+  - **Cross-References**: Linked to existing documentation (RR-224, RR-230, RR-231 implementations) for complete development context
+  - **Impact**: Provides single source of truth for liquid glass system maintenance and future development
+
+- **[RR-232] Unified Liquid Glass System Implementation** (August 23, 2025 at 3:45 AM)
+  - **Unified CSS Variables**: Created master liquid glass definition with single-source depth control following iOS 26 specifications
+  - **Two-Tier Hierarchy**: Implemented primary (segmented controls, individual buttons) and secondary (toolbars, clusters) elevation levels
+  - **Counter Styling Optimization**: Applied custom OKLCH colors for improved dark mode counter visibility with theme-agnostic bold text for selected states
+  - **Component Architecture**: Updated glass-segment, glass-toolbar, and glass-icon-btn to use unified liquid-glass-primary/secondary base classes
+  - **Expert Consultation**: Resolved CSS cascade issues and Tailwind arbitrary value compilation through comprehensive debugging with multiple experts
+  - **Impact**: All glass components now share consistent depth effects, violet theming, and single-point control for design adjustments
+
 - **[Code Cleanup] Archived Unused Feed Components** (August 23, 2025 at 3:18 AM)
   - **Archived Components**: Moved `FeedTreeItem` and `FeedList` to `archived-components/` directory
   - **Reason**: Legacy hierarchical feed components unused in current flat sidebar implementation
