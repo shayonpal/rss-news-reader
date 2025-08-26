@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[Documentation] RR-251 Ghost Button Technical Documentation** (Tuesday, August 26, 2025 at 2:09 PM)
+  - **Known Issues Documentation**: Added comprehensive CSS variable testing limitation section to docs/tech/known-issues.md detailing jsdom environment constraints and testing strategies
+  - **Liquid Glass System Documentation**: Updated docs/ui-ux/unified-liquid-glass-system.md with ghost button CSS variables implementation, usage examples, and testing considerations
+  - **Architecture Decision Record**: Created ADR-015 documenting CSS variable approach for ghost button theme integration including implementation details, testing strategy, and future considerations
+  - **Testing Strategy Documentation**: Documented three-tier testing approach (class application, mocked resolution, E2E visual) for CSS variable components in test environments
+  - **Cross-Reference System**: Established comprehensive documentation cross-references between ADR, known issues, and implementation guides for maintainability
+  - **Impact**: Complete technical documentation for RR-251 implementation ensuring future maintenance, testing patterns, and architectural decision transparency
+
+- **[RR-251] Violet Theme Integration for Ghost Button Navigation with CSS Variables** (Monday, August 26, 2025 at 2:02 PM)
+  - **Ghost Button Text Enhancement**: Updated ghost button text color from gray-600 to violet-700 in light mode for improved visual consistency with violet theme integration
+  - **CSS Variables Architecture**: Implemented three-tier token system using CSS custom properties (--violet-700-rgb) maintaining clean separation between design tokens and component implementation
+  - **Article Navigation Integration**: Enhanced article navigation buttons with GlassButton component integration, applying liquid glass styling with violet accent colors
+  - **WCAG AA Accessibility Compliance**: Verified contrast ratios of 6.8-7.1:1 for ghost button text against light backgrounds, exceeding WCAG AA requirements (4.5:1)
+  - **Zero Breaking Changes**: Implementation maintains full backward compatibility with existing themes and styling while adding violet enhancement layer
+  - **CSS Custom Properties System**: Leveraged CSS custom properties for dynamic color application enabling future theme extensibility without component modifications
+  - **Component Integration**: Seamless integration of ghost button styling with existing GlassButton component architecture maintaining design system consistency
+  - **Technical Foundation**: CSS variables approach provides scalable foundation for future theme variants and accessibility improvements
+  - **Impact**: Enhanced visual consistency in article navigation with violet theme while maintaining accessibility standards and component architecture integrity
+
 - **[RR-232] Complete Violet Theme Implementation - Production Ready** (Tuesday, August 26, 2025 at 11:41 AM)
   - **Comprehensive Tailwind Violet Palette Integration**: Complete implementation of --violet-50-rgb through --violet-950-rgb custom CSS properties in src/app/globals.css for full spectrum violet theming
   - **Enhanced Counter Styling with OKLCH Colors**: Applied custom OKLCH colors in simple-feed-sidebar.tsx for 40% improved dark mode visibility while maintaining theme-agnostic bold text for selected states

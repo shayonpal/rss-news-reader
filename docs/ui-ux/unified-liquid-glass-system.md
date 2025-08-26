@@ -184,6 +184,10 @@ The unified system provides single-source control for all glass effects. To glob
   /* Animation Curves */
   --glass-spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
   --motion-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Ghost Button Theme Variables (RR-251) */
+  --ghost-text-light: rgb(var(--violet-700-rgb)); /* rgb(109, 40, 217) */
+  --ghost-text-dark: rgb(255 255 255); /* white for dark mode readability */
 }
 
 :root.dark {
@@ -237,6 +241,60 @@ Counter selection uses bold styling that works across all themes:
   color: var(--counter-unselected-text);
 }
 ```
+
+## Ghost Button Variant (RR-251)
+
+The ghost button variant represents a transparent, minimalist button style integrated with the violet theme system. This implementation demonstrates the flexible CSS variable approach for theme-aware component styling.
+
+### CSS Variable Implementation
+
+```css
+/* Ghost Button Theme Variables */
+--ghost-text-light: rgb(var(--violet-700-rgb)); /* rgb(109, 40, 217) */
+--ghost-text-dark: rgb(255 255 255); /* white for dark mode readability */
+```
+
+### Component Integration
+
+The ghost variant is implemented in the `GlassButton` component using CSS variables for responsive theme switching:
+
+```typescript
+// In glass-button.tsx - Ghost variant implementation
+ghost: [
+  "backdrop-blur-[16px] backdrop-saturate-[180%]",
+  "border-transparent",
+  "bg-transparent",
+  "text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]",
+  "hover:bg-white/35 dark:hover:bg-white/35",
+  "hover:border-white/18 dark:hover:border-white/18",
+].join(" ")
+```
+
+### Usage Examples
+
+**Article Navigation Controls**:
+```tsx
+<GlassButton variant="ghost" onClick={() => onNavigate("prev")}>
+  <ChevronLeft className="h-4 w-4" />
+  Previous
+</GlassButton>
+```
+
+**Key Features**:
+- ✅ **Theme Responsive**: Automatically switches colors based on light/dark mode
+- ✅ **CSS Variable Based**: Uses `--ghost-text-light` and `--ghost-text-dark` for consistency
+- ✅ **Transparent Background**: Maintains glass aesthetic while providing text contrast
+- ✅ **Touch Optimized**: Includes `touchAction: "manipulation"` for iOS PWA compatibility
+
+### Testing Considerations
+
+Due to jsdom limitations in test environments, ghost button testing uses a layered approach:
+
+1. **Class Application Tests**: Verify CSS variable classes are correctly applied
+2. **Mocked Resolution Tests**: Use `getComputedStyle` mocks to simulate color resolution
+3. **E2E Visual Tests**: Validate actual color rendering in browser environment
+
+**Reference**: See `docs/tech/known-issues.md` for detailed testing limitations and workarounds.
 
 ## Recent Changes and Evolution
 

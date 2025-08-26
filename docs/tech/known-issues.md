@@ -295,6 +295,82 @@ Implemented chunked deletion architecture:
 
 ## Test Infrastructure Issues
 
+### CSS Variable Resolution in Test Environments (RR-251)
+
+**Status:** 🟡 Known Limitation  
+**Severity:** Low  
+**First Identified:** August 26, 2025
+
+#### Description
+
+The jsdom test environment used by Vitest/Jest cannot resolve CSS custom properties (CSS variables) in the same way that real browsers do. This limitation affects tests for components that use CSS variables for styling, particularly the ghost button variant with `--ghost-text-light` and `--ghost-text-dark` variables.
+
+#### Technical Details
+
+- **Root Cause**: jsdom lacks a full CSS engine and cannot compute final CSS variable values
+- **Affected Components**: Ghost button variant with `text-[color:var(--ghost-text-light)]` classes
+- **Test Impact**: Unit tests cannot verify actual color resolution, only class application
+- **Workarounds Available**: Mocked `getComputedStyle` tests simulate browser behavior
+
+#### Implementation Context (RR-251)
+
+The ghost button implementation uses CSS variables for theme-aware text colors:
+
+```css
+/* In globals.css */
+--ghost-text-light: rgb(var(--violet-700-rgb)); /* rgb(109, 40, 217) */
+--ghost-text-dark: rgb(255 255 255); /* white for dark mode */
+```
+
+```typescript
+// In glass-button.tsx
+"text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]"
+```
+
+#### Testing Strategy
+
+**What Can Be Tested:**
+- ✅ CSS class application (`text-[color:var(--ghost-text-light)]` is present)
+- ✅ Component functionality (clicks, props, attributes)
+- ✅ Variant-specific class combinations
+- ✅ Mocked CSS variable resolution with `getComputedStyle` simulation
+
+**What Cannot Be Tested in Unit Tests:**
+- ❌ Actual color value resolution from CSS variables
+- ❌ Browser-specific CSS cascade behavior
+- ❌ Real theme switching color changes
+
+#### Test Files Implementing Workarounds
+
+1. **`rr-251-ghost-button-classes.test.tsx`**: Tests class application without CSS resolution
+2. **`rr-251-ghost-button-mocked.test.tsx`**: Uses `getComputedStyle` mocks to simulate resolution
+3. **`rr-251-ghost-visual.spec.ts`**: E2E visual tests verify actual color rendering
+
+#### Impact Assessment
+
+**Development Impact**: ✅ Low
+- CSS variable approach still works correctly in browsers
+- Mocked tests provide sufficient coverage for logic validation
+- E2E tests cover actual visual behavior
+
+**Maintenance Impact**: ✅ Low
+- Pattern is well-documented and reusable
+- Clear separation between unit and visual testing
+- Workarounds don't require external dependencies
+
+#### Best Practices Established
+
+1. **Test Class Application**: Verify CSS classes are applied correctly
+2. **Mock Resolution**: Use `getComputedStyle` mocks for CSS variable testing
+3. **Visual Validation**: Rely on E2E tests for actual color verification
+4. **Documentation**: Clearly document test limitations and workarounds
+
+#### Future Considerations
+
+- **Happy-DOM**: Alternative test environment with better CSS support (evaluation pending)
+- **Visual Regression Testing**: Automated screenshot comparison for CSS variable changes
+- **CSS Testing Tools**: Specialized tools for CSS-in-browser testing
+
 ### React Testing Library Timing and Mock Patterns
 
 **Status:** 🟢 Resolved (August 23, 2025 via RR-192)  

@@ -36,6 +36,7 @@ import {
   ContentLoadingSkeleton,
 } from "./content-parsing-indicator";
 import {
+  GlassButton,
   GlassToolbarButton,
   GlassIconButton,
 } from "@/components/ui/glass-button";
@@ -551,27 +552,37 @@ export function ArticleDetail({
         id="article-footer"
       >
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <IOSButton
+          <GlassButton
             variant="ghost"
             size="sm"
-            onPress={() => onNavigate("prev")}
+            onClick={() => onNavigate("prev")}
             aria-label="Previous article"
-            className="flex items-center gap-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+            className="flex items-center gap-2"
+            style={{
+              WebkitTouchCallout: "none",
+              WebkitUserSelect: "none",
+              touchAction: "manipulation",
+            }}
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
-          </IOSButton>
+          </GlassButton>
 
-          <IOSButton
+          <GlassButton
             variant="ghost"
             size="sm"
-            onPress={() => onNavigate("next")}
+            onClick={() => onNavigate("next")}
             aria-label="Next article"
-            className="flex items-center gap-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+            className="flex items-center gap-2"
+            style={{
+              WebkitTouchCallout: "none",
+              WebkitUserSelect: "none",
+              touchAction: "manipulation",
+            }}
           >
             Next
             <ChevronRight className="h-4 w-4" />
-          </IOSButton>
+          </GlassButton>
         </div>
       </footer>
 

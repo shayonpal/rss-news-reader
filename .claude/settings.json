@@ -1,0 +1,66 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$*\" =~ npm[[:space:]]+run[[:space:]]+dev(:network)?([[:space:]]|$) ]]; then echo -e '\\n❌ BLOCKED: npm run dev commands are not recommended for this project\\n\\n✅ Use PM2 instead:\\n   pm2 start ecosystem.config.js        # Start all services\\n   pm2 restart rss-reader-dev           # Restart the main app\\n   pm2 logs rss-reader-dev              # View logs\\n   pm2 status                           # Check service status\\n\\nThe app will be available at: http://100.96.166.53:3000/reader\\n'; exit 1; fi"
+          },
+          {
+            "type": "command",
+            "command": "if [[ \"$*\" =~ npm[[:space:]]+run[[:space:]]+test([[:space:]]|$) ]]; then echo -e '\\n⚠️  REMINDER: npm run test uses safe-test-runner.sh which enforces resource limits\\n\\n📋 Consider these safer alternatives for specific test scenarios:\\n\\n   npm run test:unit              # Run only unit tests (faster, jsdom environment)\\n   npm run test:watch             # Run tests in watch mode for development\\n   npm run test:integration       # Run only integration tests (node environment)\\n   npm run test:integration:safe  # Stop PM2 services before integration tests\\n   \\n   # For debugging hanging tests:\\n   npx vitest run --no-coverage --reporter=verbose    # Verbose output\\n   npx vitest run --no-coverage --bail=1              # Stop on first failure\\n   npx vitest run --no-coverage --run --no-threads    # Single thread mode\\n\\n🔍 Current settings in safe-test-runner.sh:\\n   - Max test timeout: 30s per test\\n   - Total runtime limit: 30 minutes\\n   - Memory monitoring with auto-kill\\n   - Sequential execution (no concurrent tests)\\n   - Auto-cleanup of orphaned processes\\n\\n💡 If tests are hanging, check:\\n   - Database connections not being closed\\n   - Async operations without proper cleanup\\n   - Timer/interval cleanup in afterEach hooks\\n\\nPress Enter to continue with npm run test, or Ctrl+C to cancel...\\n'; read -t 20 -n 1 || true; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read|LS|Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f .git-status-shown ] || (git status --porcelain && touch .git-status-shown)"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__supabase__apply_migration|mcp__supabase__execute_sql",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo -e '\\n🗄️  DATABASE OPERATION EXECUTED\\n\\n📋 Post-execution checklist:\\n   1. If table structure changed → Update RLS policies\\n   2. If feed/article tables modified → Refresh materialized view:\\n      Use: mcp__supabase__execute_sql with\\n      \"REFRESH MATERIALIZED VIEW CONCURRENTLY feed_stats;\"\\n   3. If schema changed → Update TypeScript types:\\n      Use: mcp__supabase__generate_typescript_types\\n   4. Test changes on both dev and prod databases\\n   5. Document migration in changelog\\n\\n⚠️  Remember: The RSS Reader uses feed_stats materialized view for performance\\n'"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$*\" | grep -qE '/Users/shayon/DevProjects/rss-news-reader/.*\\.(tsx?|jsx?)$'; then echo \"$1\" >> ~/.claude/.rss-edited-files-list; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Ready for input\" with title \"Claude Code\" sound name \"Glass\"'"
+          },
+          {
+            "type": "command",
+            "command": "rm -f .git-status-shown 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "if [ -f ~/.claude/.rss-edited-files-list ]; then echo -e '\\n📝 CODE QUALITY REMINDER\\n\\nThe following TypeScript/JavaScript files were edited:\\n'; cat ~/.claude/.rss-edited-files-list | sort | uniq | sed 's/^/   - /'; echo -e '\\n💡 Consider running quality checks:\\n   npm run type-check        # Type checking only\\n   npm run lint              # Linting only\\n   npm run pre-commit        # Both type-check and lint\\n\\n🔒 Safe execution tip: Run these in the project directory:\\n   cd /Users/shayon/DevProjects/rss-news-reader\\n'; rm -f ~/.claude/.rss-edited-files-list; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

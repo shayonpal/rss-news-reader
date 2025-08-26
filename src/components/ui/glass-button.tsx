@@ -59,7 +59,7 @@ const glassButtonVariants = cva(
           "backdrop-blur-[16px] backdrop-saturate-[180%]",
           "border-transparent",
           "bg-transparent",
-          "text-gray-700 dark:text-white",
+          "text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]",
           "hover:bg-white/35 dark:hover:bg-white/35",
           "hover:border-white/18 dark:hover:border-white/18",
         ].join(" "),
