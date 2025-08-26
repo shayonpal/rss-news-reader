@@ -1,6 +1,8 @@
-This is still not working. Here's what I'd like you to do now. I am planning to reach out to 2 of my experts, Siri & Gemini.
+This is still not working. Here's what I'd like you to do now. I am planning to reach out to 2 of my experts, Siri & Gemini. Also add to the note all the code and documentations files they they should ideally look into, for troubleshooting.
 
-I want you to create a new note in docs/expert-discussions. Start the note with this pattern, with today's date and time, of course:
+I want you to create a new note in docs/expert-discussions. Start the note with this pattern, with today's date and time, of course. Run the `date` command to get the current timestamp.
+
+Name the file in the format "<yyyy-mm-dd-HH-mm-ss | file_name>.md" where the timestamp is the current time in EDT and the filename is in kebab case.
 
 `# Claude's Message (Aug 15, 11.45pm)`
 

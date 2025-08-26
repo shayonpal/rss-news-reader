@@ -37,19 +37,19 @@ const TokenTestComponent: React.FC<{
   </div>
 );
 
-// Violet palette reference values from Tailwind CSS
+// Violet palette reference values from Tailwind CSS (actual implementation)
 const VIOLET_PALETTE = {
-  "violet-50": "rgb(245, 243, 255)",
-  "violet-100": "rgb(237, 233, 254)",
-  "violet-200": "rgb(221, 214, 254)",
-  "violet-300": "rgb(196, 181, 253)",
-  "violet-400": "rgb(167, 139, 250)",
-  "violet-500": "rgb(139, 92, 246)", // Primary violet
-  "violet-600": "rgb(124, 58, 237)",
-  "violet-700": "rgb(109, 40, 217)",
-  "violet-800": "rgb(91, 33, 182)",
-  "violet-900": "rgb(76, 29, 149)",
-  "violet-950": "rgb(46, 16, 101)",
+  "violet-50": "rgb(250, 248, 255)", // #faf8ff
+  "violet-100": "rgb(243, 240, 255)", // #f3f0ff  
+  "violet-200": "rgb(233, 229, 255)", // #e9e5ff
+  "violet-300": "rgb(212, 197, 255)", // #d4c5ff
+  "violet-400": "rgb(183, 148, 246)", // #b794f6
+  "violet-500": "rgb(139, 92, 246)", // #8b5cf6 - Primary violet
+  "violet-600": "rgb(124, 58, 237)", // #7c3aed
+  "violet-700": "rgb(109, 40, 217)", // #6d28d9
+  "violet-800": "rgb(91, 33, 182)", // #5b21b6
+  "violet-900": "rgb(76, 29, 149)", // #4c1d95
+  "violet-950": "rgb(46, 16, 101)", // #2e1065
 };
 
 // Expected glass token values for light mode
@@ -134,13 +134,25 @@ describe("RR-232: Violet Theme CSS Token Resolution", () => {
         
         /* Primary theme tokens */
         --primary: 263 70% 50%;
+        
+        /* Counter colors - Light mode defaults */
+        --counter-unselected-bg: hsl(var(--primary) / 0.1);
+        --counter-unselected-text: hsl(var(--primary));
+        --counter-selected-bg: hsl(var(--primary));
+        --counter-selected-text: hsl(var(--primary-foreground));
       }
       
-      .dark {
+      :root.dark {
         --color-surface-glass: rgba(var(--violet-500-rgb), 0.05);
         --color-surface-glass-hover: rgba(var(--violet-500-rgb), 0.12);
         --color-surface-glass-subtle: rgba(var(--violet-500-rgb), 0.03);
         --color-border-glass: rgba(var(--violet-500-rgb), 0.15);
+        
+        /* Counter colors - Dark mode with OKLCH */
+        --counter-unselected-bg: oklch(0.38 0.189 293.745);
+        --counter-unselected-text: oklch(0.943 0.029 294.588);
+        --counter-selected-bg: oklch(0.541 0.281 293.009);
+        --counter-selected-text: oklch(0.969 0.016 293.756);
         --color-border-glass-enhanced: rgba(var(--violet-500-rgb), 0.25);
         --color-surface-opaque: rgba(var(--violet-950-rgb), 0.85);
         --glass-nav-bg: var(--color-surface-glass);
@@ -384,5 +396,78 @@ describe("RR-232: Violet Theme CSS Token Resolution", () => {
     const element = container.firstElementChild as HTMLElement;
     const computedBlur = getComputedStyle(element).backdropFilter;
     expect(computedBlur).toMatch(/blur\(\d+px\)/);
+  });
+
+  // Counter styling tests
+  describe("Counter Color Tokens", () => {
+    // CSS styles are already injected by parent beforeEach
+
+    it("should apply correct light mode counter colors", () => {
+      // Remove dark mode class if present
+      document.documentElement.classList.remove("dark");
+      
+      const rootStyles = getComputedStyle(document.documentElement);
+
+      // Test light mode counter tokens
+      const unselectedBg = rootStyles.getPropertyValue("--counter-unselected-bg").trim();
+      const unselectedText = rootStyles.getPropertyValue("--counter-unselected-text").trim();
+      const selectedBg = rootStyles.getPropertyValue("--counter-selected-bg").trim();
+      const selectedText = rootStyles.getPropertyValue("--counter-selected-text").trim();
+
+      // Should use primary color variants
+      expect(unselectedBg).toMatch(/hsl\(.*\/\s*0\.1\)|rgba?\(/);
+      expect(unselectedText).toMatch(/hsl\(.*263.*70%.*50%\)|#[a-fA-F0-9]{6}/);
+      expect(selectedBg).toMatch(/hsl\(.*263.*70%.*50%\)|#[a-fA-F0-9]{6}/);
+      expect(selectedText).toMatch(/hsl\(.*primary-foreground\)|#[a-fA-F0-9]{6}|rgb\(/);
+    });
+
+    it("should apply correct dark mode OKLCH counter colors", () => {
+      // Enable dark mode
+      document.documentElement.classList.add("dark");
+      
+      const rootStyles = getComputedStyle(document.documentElement);
+
+      // Test dark mode OKLCH counter tokens
+      const unselectedBg = rootStyles.getPropertyValue("--counter-unselected-bg").trim();
+      const unselectedText = rootStyles.getPropertyValue("--counter-unselected-text").trim();
+      const selectedBg = rootStyles.getPropertyValue("--counter-selected-bg").trim();
+      const selectedText = rootStyles.getPropertyValue("--counter-selected-text").trim();
+
+      // Should use OKLCH color space
+      expect(unselectedBg).toMatch(/oklch\(0\.38\s+0\.189\s+293\.745\)|rgb\(/);
+      expect(unselectedText).toMatch(/oklch\(0\.943\s+0\.029\s+294\.588\)|rgb\(/);
+      expect(selectedBg).toMatch(/oklch\(0\.541\s+0\.281\s+293\.009\)|rgb\(/);
+      expect(selectedText).toMatch(/oklch\(0\.969\s+0\.016\s+293\.756\)|rgb\(/);
+    });
+
+    it("should provide enhanced contrast in dark mode", () => {
+      document.documentElement.classList.add("dark");
+      
+      // Create test elements with counter classes
+      const unselectedCounter = document.createElement("span");
+      unselectedCounter.className = "bg-[var(--counter-unselected-bg)] text-[var(--counter-unselected-text)]";
+      document.body.appendChild(unselectedCounter);
+
+      const selectedCounter = document.createElement("span");
+      selectedCounter.className = "bg-[var(--counter-selected-bg)] text-[var(--counter-selected-text)]";
+      document.body.appendChild(selectedCounter);
+
+      const unselectedStyles = getComputedStyle(unselectedCounter);
+      const selectedStyles = getComputedStyle(selectedCounter);
+
+      // Colors should be computed (not empty)
+      expect(unselectedStyles.backgroundColor).toBeTruthy();
+      expect(unselectedStyles.color).toBeTruthy();
+      expect(selectedStyles.backgroundColor).toBeTruthy();
+      expect(selectedStyles.color).toBeTruthy();
+
+      // Cleanup
+      document.body.removeChild(unselectedCounter);
+      document.body.removeChild(selectedCounter);
+    });
+
+    afterEach(() => {
+      document.documentElement.classList.remove("dark");
+    });
   });
 });

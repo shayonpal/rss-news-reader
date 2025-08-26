@@ -61,7 +61,9 @@ Implemented "glass container + transparent children" architecture:
 
 - **Containers**: Apply glass effects (blur, saturation, shadows)
 - **Children**: Remain transparent, inherit parent glass properties
-- **Height Standardization**: All components use --glass-control-height: 48px
+- **Height Standardization**: All components use semantic height tokens:
+  - `--control-height-external: 56px` for outer dimensions
+  - `--control-height-internal: 48px` for inner elements
 
 ### Enhanced Visual Hierarchy
 
@@ -109,8 +111,10 @@ Implemented "glass container + transparent children" architecture:
 
 ```css
 :root {
-  /* Dimensional standards */
-  --glass-control-height: 48px;
+  /* Semantic height tokens (RR-232 August 2025) */
+  --control-height-external: 56px;     /* All external component heights */
+  --control-height-internal: 48px;     /* Buttons inside containers */
+  --glass-control-height: var(--control-height-external); /* Legacy alias */
   --glass-control-border-radius: 24px;
 
   /* Animation curves */

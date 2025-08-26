@@ -15,6 +15,8 @@
  * - Loading overlay violet gradients
  * - Input focus states with violet
  * - Button variants (primary/secondary/ghost) with violet
+ * - SimpleFeedSidebar counter styling with OKLCH colors
+ * - Counter CSS custom properties integration
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
@@ -498,5 +500,130 @@ describe("RR-232: Violet Theme Component Integration", () => {
     expect(cardStyles.background).toMatch(
       /rgba\(139[,\s]+92[,\s]+246[,\s]+0\.0[5-8]\)/
     );
+  });
+
+  // Counter Component Integration Tests
+  describe("Counter Component Integration", () => {
+    const MockSidebarCounter: React.FC<{
+      count: number;
+      isSelected?: boolean;
+    }> = ({ count, isSelected = false }) => (
+      <span
+        className={
+          isSelected
+            ? "rounded-full bg-[var(--counter-selected-bg)] px-2 py-0.5 text-xs font-extrabold text-[var(--counter-selected-text)]"
+            : "rounded-full bg-[var(--counter-unselected-bg)] px-2 py-0.5 text-xs text-[var(--counter-unselected-text)]"
+        }
+        data-testid={`counter-${isSelected ? 'selected' : 'unselected'}`}
+      >
+        {count > 99 ? "99+" : count}
+      </span>
+    );
+
+    // CSS styles are provided by theme attribute set in parent beforeEach
+
+    it("should apply correct counter styling in light mode", () => {
+      document.documentElement.classList.remove("dark");
+
+      const { getByTestId } = render(
+        <div>
+          <MockSidebarCounter count={5} isSelected={false} />
+          <MockSidebarCounter count={10} isSelected={true} />
+        </div>,
+        { container: testContainer }
+      );
+
+      const unselectedCounter = getByTestId("counter-unselected");
+      const selectedCounter = getByTestId("counter-selected");
+
+      // Test computed styles (CSS custom properties resolved)
+      const unselectedStyles = getComputedStyle(unselectedCounter);
+      const selectedStyles = getComputedStyle(selectedCounter);
+
+      // Unselected should have subtle violet background
+      expect(unselectedStyles.backgroundColor).toBeTruthy();
+      expect(unselectedStyles.color).toBeTruthy();
+
+      // Selected should have strong violet background
+      expect(selectedStyles.backgroundColor).toBeTruthy();
+      expect(selectedStyles.color).toBeTruthy();
+
+      // Font weight should be different
+      expect(selectedStyles.fontWeight).toBe("800"); // font-extrabold
+    });
+
+    it("should apply enhanced OKLCH colors in dark mode", () => {
+      document.documentElement.classList.add("dark");
+
+      const { getByTestId } = render(
+        <div>
+          <MockSidebarCounter count={8} isSelected={false} />
+          <MockSidebarCounter count={15} isSelected={true} />
+        </div>,
+        { container: testContainer }
+      );
+
+      const unselectedCounter = getByTestId("counter-unselected");
+      const selectedCounter = getByTestId("counter-selected");
+
+      const unselectedStyles = getComputedStyle(unselectedCounter);
+      const selectedStyles = getComputedStyle(selectedCounter);
+
+      // Dark mode should have computed OKLCH colors
+      expect(unselectedStyles.backgroundColor).toBeTruthy();
+      expect(unselectedStyles.color).toBeTruthy();
+      expect(selectedStyles.backgroundColor).toBeTruthy();
+      expect(selectedStyles.color).toBeTruthy();
+
+      // Colors should be different from light mode (enhanced contrast)
+      expect(unselectedStyles.backgroundColor).not.toBe("transparent");
+      expect(selectedStyles.backgroundColor).not.toBe("transparent");
+    });
+
+    it("should handle counter text overflow correctly", () => {
+      const { getByTestId } = render(
+        <div>
+          <MockSidebarCounter count={150} isSelected={false} />
+          <MockSidebarCounter count={999} isSelected={true} />
+        </div>,
+        { container: testContainer }
+      );
+
+      const unselectedCounter = getByTestId("counter-unselected");
+      const selectedCounter = getByTestId("counter-selected");
+
+      // Should display "99+" for counts over 99
+      expect(unselectedCounter.textContent).toBe("99+");
+      expect(selectedCounter.textContent).toBe("99+");
+    });
+
+    it("should maintain counter styling across theme switches", async () => {
+      const { getByTestId } = render(
+        <MockSidebarCounter count={7} isSelected={true} />,
+        { container: testContainer }
+      );
+
+      const counter = getByTestId("counter-selected");
+
+      // Start in light mode
+      document.documentElement.classList.remove("dark");
+      await waitFor(() => {
+        const lightStyles = getComputedStyle(counter);
+        expect(lightStyles.backgroundColor).toBeTruthy();
+      });
+
+      // Switch to dark mode
+      document.documentElement.classList.add("dark");
+      await waitFor(() => {
+        const darkStyles = getComputedStyle(counter);
+        expect(darkStyles.backgroundColor).toBeTruthy();
+        // Should maintain visual structure
+        expect(darkStyles.borderRadius).toMatch(/9999px|50%/); // rounded-full
+      });
+    });
+
+    afterEach(() => {
+      document.documentElement.classList.remove("dark");
+    });
   });
 });

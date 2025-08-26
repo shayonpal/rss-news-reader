@@ -8,13 +8,14 @@
 
 /* CSS Custom Properties for standardized heights */
 :root {
-  --glass-control-height: 48px;
+  --glass-control-height: 56px; /* Updated to 56px standard height */
+  --glass-control-internal-height: 48px; /* Internal button height for containers */
   --glass-spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* RR-179: Ensure glass-segment-sm height matches button visual height */
 .article-header .glass-segment-sm {
-  --segment-height: 40px; /* 40px + 4px padding = 48px total to match button */
+  --segment-height: 44px; /* 44px + 6px padding = 56px total to match new standard */
 }
 
 /* ========================================
@@ -37,14 +38,14 @@
   -webkit-appearance: none;
   -moz-appearance: none;
 
-  /* Layout - exact alignment with glass-segment */
+  /* Layout - exact alignment with glass-segment using 56px standard */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
   padding: 0 16px;
-  height: calc(var(--glass-control-height) + 4px);
-  min-width: calc(var(--glass-control-height) + 4px);
+  height: var(--glass-control-height); /* Now uses 56px standard directly */
+  min-width: var(--glass-control-height);
 
   /* Typography - match segmented control weight */
   font-size: 0.875rem;

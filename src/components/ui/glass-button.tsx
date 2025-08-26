@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * RR-180: iOS 26 Liquid Glass Button Components
  *
  * Implementation Requirements:
- * - 48px minimum touch targets (iOS HIG)
+ * - 56px standard component height with 48px internal buttons for containers
  * - Glass effects: blur(16px) saturate(180%)
  * - Spring animation: 300ms cubic-bezier(0.34, 1.56, 0.64, 1)
  * - Active state: scale(0.96)
@@ -24,7 +24,7 @@ const glassButtonVariants = cva(
     "focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400",
     "disabled:pointer-events-none disabled:opacity-50",
     "active:scale-[0.96]",
-    "min-h-[48px] min-w-[48px]", // iOS HIG touch target
+    "min-h-[48px] min-w-[48px]", // Internal button size (48px) within 56px containers
     // Touch and performance optimizations (moved from inline styles)
     "glass-touch-optimized",
   ].join(" "),
@@ -92,7 +92,7 @@ const glassButtonVariants = cva(
         "css-toolbar-btn": [
           "appearance-none -webkit-appearance-none -moz-appearance-none",
           "inline-flex items-center justify-center",
-          "h-[44px] min-w-[44px] px-3",
+          "h-[var(--control-height-internal,48px)] min-w-[var(--control-height-internal,48px)] px-3",
           "rounded-full",
           "text-[color:hsl(var(--foreground))]",
           "bg-transparent border-none",
@@ -115,22 +115,11 @@ const glassButtonVariants = cva(
           "hover:bg-[var(--glass-nav-bg-scrolled)]",
           "active:scale-[0.96]",
         ].join(" "),
-        // RR-230: Enhanced liquid glass using unified RR-224 system with glossy overlay
+        // RR-230: Enhanced liquid glass using semantic height system
         "liquid-glass": [
+          "glass-icon-button-liquid", // Uses @apply liquid-glass-primary with 56px height
           "liquid-glass-enhanced", // Includes ::before glossy overlay
-          "appearance-none -webkit-appearance-none -moz-appearance-none",
-          "backdrop-blur-[var(--glass-blur)] backdrop-saturate-[180%]",
-          "bg-[var(--glass-enhanced-bg)]",
-          "border border-[var(--glass-nav-border)]",
-          // Enhanced layered shadows matching liquid-glass-btn
-          "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.25)]",
-          "w-[var(--glass-control-height)] h-[var(--glass-control-height)]",
-          "inline-flex items-center justify-center",
-          "rounded-full",
           "text-[color:hsl(var(--foreground))]",
-          "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          "hover:bg-[var(--glass-nav-bg-scrolled)] hover:scale-105",
-          "active:scale-[0.98]",
         ].join(" "),
       },
       size: {
@@ -192,7 +181,8 @@ export interface GlassIconButtonProps extends Omit<GlassButtonProps, "size"> {
 }
 
 /**
- * Icon-only glass button with enforced 48x48px dimensions
+ * Icon-only glass button with enforced 48x48px internal dimensions
+ * Uses 56px container height standard with computed padding for centering
  * Requires aria-label for accessibility
  */
 const GlassIconButton = React.forwardRef<

@@ -205,7 +205,7 @@ export function MorphingDropdown({
         aria-label="More options"
         aria-expanded={isOpen}
         onClick={() => setOpen(!isOpen)}
-        className="flex-shrink-0"
+        className="more-trigger flex-shrink-0"
         icon={
           <svg
             className="h-6 w-6"
@@ -251,13 +251,16 @@ export function MorphingDropdown({
     >
       <div className="toolbar-group">{extendedToolbarElements}</div>
 
-      {/* Dropdown content layer */}
+      {/* Dropdown content layer - overlay positioned */}
       {isOpen && (
         <div
           ref={dropdownRef}
           role="menu"
           aria-orientation="vertical"
-          className="mt-2 flex flex-col space-y-1"
+          className="absolute top-0 right-0 z-[1000] w-max flex flex-col space-y-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl p-2"
+          style={{
+            transformOrigin: "top right",
+          }}
         >
           {items.map((item, index) => (
             <React.Fragment key={item.id}>

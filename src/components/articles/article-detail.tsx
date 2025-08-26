@@ -103,18 +103,14 @@ function ArticleActionsToolbar({
 
   // Build dropdown items dynamically
   const dropdownItems: DropdownItem[] = [
-    ...(feed
-      ? [
-          {
-            id: "partial-feed",
-            label: "Partial Feed",
-            checked: feed.isPartialContent,
-            onClick: onTogglePartialFeed,
-            disabled: isUpdatingFeed,
-            separator: true,
-          },
-        ]
-      : []),
+    {
+      id: "partial-feed",
+      label: "Partial Feed",
+      checked: feed?.isPartialContent || false,
+      onClick: onTogglePartialFeed,
+      disabled: isUpdatingFeed, // Note: Should never disable based on feed availability - always allow user to toggle
+      separator: true,
+    },
     {
       id: "share",
       label: "Share",

@@ -10,9 +10,19 @@ The Unified Liquid Glass System represents the culmination of iOS 26 liquid glas
 
 ### Single-Source Master Control
 
-The unified system is governed by master CSS variables that control depth and appearance across all glass components:
+The unified system is governed by master CSS variables that control depth and appearance across all glass components. The latest implementation uses a streamlined single-source opacity system:
 
 ```css
+/* Brand Color (Single Source) */
+--brand-accent-rgb: 139, 92, 246; /* violet-500 */
+
+/* Glass Opacity System (Single Source) */
+--glass-surface-opacity: 0.03;
+--glass-surface-hover-opacity: 0.08;
+--glass-surface-subtle-opacity: 0.02;
+--glass-border-opacity: 0.1;
+--glass-border-enhanced-opacity: 0.15;
+
 /* Master depth shadow (3-layer Apple iOS 26 specification) */
 --glass-depth-shadow: 
   0 8px 32px rgba(0, 0, 0, 0.12),    /* Ambient shadow */
@@ -42,13 +52,18 @@ Used for individual controls and primary interactive elements.
 
 ```css
 .liquid-glass-primary {
-  background: var(--glass-surface);
-  border: var(--glass-border-style);
-  border-radius: var(--glass-border-radius-primary); /* 9999px - fully rounded */
+  /* Single-source glass implementation with fallbacks */
+  background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
+  border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+  border-radius: 9999px; /* Fully rounded */
   box-shadow: var(--glass-depth-shadow);
   backdrop-filter: var(--glass-blur-effect);
   -webkit-backdrop-filter: var(--glass-blur-effect);
   transition: all 200ms var(--motion-smooth);
+}
+
+.liquid-glass-primary:hover:not(:disabled) {
+  background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-hover-opacity, 0.08));
 }
 ```
 
@@ -62,9 +77,10 @@ Used for containers, toolbars, and clustered elements.
 
 ```css
 .liquid-glass-secondary {
-  background: var(--glass-surface);
-  border: var(--glass-border-style);
-  border-radius: var(--glass-border-radius-secondary); /* 22px - less rounded */
+  /* Single-source glass implementation for containers/toolbars */
+  background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
+  border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+  border-radius: 22px; /* Less rounded for containers */
   box-shadow: var(--glass-depth-shadow-secondary);
   backdrop-filter: var(--glass-blur-effect);
   -webkit-backdrop-filter: var(--glass-blur-effect);
@@ -104,7 +120,10 @@ The system follows a **"glass container + transparent children"** architecture:
 
 - **Containers**: Apply glass effects (blur, saturation, shadows)
 - **Children**: Remain transparent, inherit parent glass properties
-- **Height Standardization**: All components use `--glass-control-height: 48px`
+- **Height Standardization**: All components use semantic height tokens:
+  - `--control-height-external: 56px` for outer component dimensions
+  - `--control-height-internal: 48px` for buttons inside containers
+  - `--container-pad-block: 4px` for computed container padding (centers 48px inside 56px)
 
 ## Master Control Variables
 
@@ -126,20 +145,39 @@ The unified system provides single-source control for all glass effects. To glob
 
 ```css
 :root {
-  /* Dimensional Standards */
-  --glass-control-height: 48px;
-  --glass-border-radius-primary: 9999px;    /* Fully rounded */
-  --glass-border-radius-secondary: 22px;    /* Less rounded */
+  /* Semantic Height Tokens */
+  --control-height-external: 56px;     /* All external component heights */
+  --control-height-internal: 48px;     /* Buttons inside containers */
+  --container-pad-block: calc((var(--control-height-external) - var(--control-height-internal)) / 2); /* 4px */
+  
+  /* Legacy Alias (maintains compatibility) */
+  --glass-control-height: var(--control-height-external);
+  
+  /* Brand Color (Single Source) */
+  --brand-accent-rgb: 139, 92, 246; /* violet-500 */
+  
+  /* Glass Opacity System (Single Source) */
+  --glass-surface-opacity: 0.03;
+  --glass-surface-hover-opacity: 0.08;
+  --glass-surface-subtle-opacity: 0.02;
+  --glass-border-opacity: 0.1;
+  --glass-border-enhanced-opacity: 0.15;
   
   /* Master Glass Effects */
   --glass-blur-effect: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  --glass-border-style: 1px solid var(--glass-nav-border);
-  --glass-surface: var(--glass-chip-bg);
-  --glass-surface-hover: var(--glass-chip-indicator);
   
   /* Animation Curves */
   --glass-spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
   --motion-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root.dark {
+  /* Dark Mode Opacity Adjustments (Single Source Changes) */
+  --glass-surface-opacity: 0.05;
+  --glass-surface-hover-opacity: 0.12;
+  --glass-surface-subtle-opacity: 0.03;
+  --glass-border-opacity: 0.15;
+  --glass-border-enhanced-opacity: 0.25;
 }
 ```
 
@@ -186,6 +224,38 @@ Counter selection uses bold styling that works across all themes:
 ```
 
 ## Recent Changes and Evolution
+
+### Height Unification Completion (RR-232 - August 2025)
+
+**CSS Variable Architecture Overhaul**: 
+
+The system was completely restructured to use a single-source opacity system for better maintainability and consistency:
+
+**Before**: Complex variable chains with multiple indirection levels
+```css
+--glass-surface: var(--glass-chip-bg);
+--glass-border-style: 1px solid var(--glass-nav-border);
+```
+
+**After**: Direct RGB with opacity tokens for cleaner implementation
+```css
+background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
+border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+```
+
+**Semantic Height System**: 
+
+Replaced fixed 48px height with semantic tokens that support both standalone components and container-based layouts:
+
+- **External Height**: 56px for all component outer dimensions
+- **Internal Height**: 48px for buttons inside containers  
+- **Computed Padding**: 4px (calculated) to center internal elements
+
+**Component Updates**:
+- **Mark All Read Button**: Moved to @layer components, uses @apply liquid-glass-primary
+- **GlassIconButton**: Updated "liquid-glass" variant to use CSS class instead of Tailwind utilities
+- **MorphingDropdown**: Added .more-trigger class, updated positioning logic
+- **Container Components**: Now use computed padding for perfect internal button centering
 
 ### Component Archival (RR-232)
 

@@ -4,7 +4,7 @@ import { test, expect, devices, Page } from "@playwright/test";
  * RR-180: Complete E2E Integration Test for iOS 26 Liquid Glass Morphing Animation
  *
  * Test Requirements:
- * - Glass buttons with 48px touch targets (iOS HIG)
+ * - Glass buttons with 56px standard height and 48px internal touch targets
  * - Morphing dropdown with smooth 300ms spring animation
  * - Enhanced glass effects: blur(16px) saturate(180%)
  * - No gray flash or touch delays

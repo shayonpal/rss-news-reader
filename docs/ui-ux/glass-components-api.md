@@ -31,7 +31,9 @@ RR-230 achieved **complete CSS-to-component migration** for the glass button sys
 - **Zero CSS Classes**: Eliminated all `.glass-*` CSS classes in favor of pure component variants
 - **Zero Inline Styles**: Removed all inline glass styling throughout the application
 - **Glass Container Model**: Implemented "glass container + transparent children" architecture pattern
-- **Height Standardization**: Unified all glass buttons to `--glass-control-height: 48px`
+- **Height Standardization**: Unified all glass buttons using semantic height tokens:
+  - `--control-height-external: 56px` for component outer dimensions
+  - `--control-height-internal: 48px` for buttons inside containers
 - **Enhanced Liquid Glass**: Added sophisticated styling with improved opacity (0.55) and visual hierarchy
 
 ### New Component Variants
