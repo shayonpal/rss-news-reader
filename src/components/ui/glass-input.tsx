@@ -15,7 +15,7 @@ const glassInputVariants = cva(
     "text-sm text-[color:hsl(var(--foreground))]",
     "placeholder:text-[color:hsl(var(--muted-foreground))]",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-    "focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400",
+    "focus-visible:ring-violet-500 dark:focus-visible:ring-violet-500",
     "disabled:cursor-not-allowed disabled:opacity-50",
     "transition-all duration-200",
     // Glass effect base

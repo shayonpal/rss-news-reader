@@ -267,12 +267,13 @@ ghost: [
   "text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]",
   "hover:bg-white/35 dark:hover:bg-white/35",
   "hover:border-white/18 dark:hover:border-white/18",
-].join(" ")
+].join(" ");
 ```
 
 ### Usage Examples
 
 **Article Navigation Controls**:
+
 ```tsx
 <GlassButton variant="ghost" onClick={() => onNavigate("prev")}>
   <ChevronLeft className="h-4 w-4" />
@@ -281,6 +282,7 @@ ghost: [
 ```
 
 **Key Features**:
+
 - ✅ **Theme Responsive**: Automatically switches colors based on light/dark mode
 - ✅ **CSS Variable Based**: Uses `--ghost-text-light` and `--ghost-text-dark` for consistency
 - ✅ **Transparent Background**: Maintains glass aesthetic while providing text contrast

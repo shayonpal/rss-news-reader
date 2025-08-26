@@ -84,7 +84,7 @@ const glassSegmentButtonVariants = cva(
     "inline-flex items-center justify-center gap-1.5",
     "text-foreground transition-all duration-150 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
     "transform-gpu will-change-transform",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2",
     "active:scale-[0.98]",
     // iOS touch optimizations
     "-webkit-tap-highlight-color-transparent touch-action-manipulation",

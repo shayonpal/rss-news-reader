@@ -1,54 +1,8 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Friday, August 23, 2025 at 12:45 PM
+**Last Updated:** Monday, August 26, 2025 at 3:15 PM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
-
-## iOS Safari / PWA Issues
-
-### Double-Tap Required for Links (TODO-050a)
-
-**Status:** 🔴 Unresolved  
-**Severity:** Medium  
-**Affected Versions:** All versions on iOS Safari and PWA  
-**First Reported:** July 25, 2025
-
-#### Description
-
-Users on iOS Safari (including PWA mode) must tap links twice before they open in new tabs. The first tap appears to "focus" the link, and only the second tap actually opens it. This issue does not occur on desktop browsers or Android devices.
-
-#### Technical Details
-
-- Links are properly configured with `target="_blank"` and `rel="noopener noreferrer"`
-- The link-processor utility correctly adds these attributes to all external links
-- Issue persists across RSS content, full fetched content, and AI summaries
-- Problem appears to be specific to iOS touch event handling
-
-#### Attempted Solutions (Failed)
-
-1. **CSS Hover State Removal**: Removed all `:hover` pseudo-classes for touch devices
-2. **Inline Styles**: Added inline styles to override any hover behavior
-3. **Touch-Action Manipulation**: Tried various `touch-action` CSS values
-4. **JavaScript Event Handlers**: Added custom touch event handlers
-5. **iOS Button Component**: Created iOS-specific button component (worked for buttons but not links in content)
-
-#### Potential Root Causes
-
-- iOS tap delay for detecting double-tap-to-zoom gestures
-- Conflict between React's synthetic events and iOS Safari's native behavior
-- Parent container event handling interfering with link taps
-- iOS-specific focus management requirements
-
-#### Workaround
-
-Currently, iOS users must tap links twice. The first tap focuses the link, the second tap opens it in a new tab.
-
-#### Next Steps
-
-- Research iOS-specific link handling patterns in other React PWAs
-- Consider implementing custom onClick handlers for all links
-- Investigate if FastClick or similar libraries could help
-- Test with different React event handling approaches
 
 ## Performance Issues
 
@@ -293,6 +247,45 @@ Implemented chunked deletion architecture:
 - **Processing Time**: ~2-3 seconds for 1000 articles
 - **Error Isolation**: Individual chunk failures don't cascade
 
+## iOS Safari / PWA Issues (Resolved)
+
+### Double-Tap Required for Links (TODO-050a)
+
+**Status:** 🟢 Resolved (August 26, 2025)  
+**Severity:** Medium  
+**Affected Versions:** All versions on iOS Safari and PWA  
+**First Reported:** July 25, 2025
+
+#### Description
+
+Users on iOS Safari (including PWA mode) had to tap links twice before they opened in new tabs. The first tap would "focus" the link, and only the second tap would actually open it. This issue did not occur on desktop browsers or Android devices.
+
+#### Technical Details
+
+- Links were properly configured with `target="_blank"` and `rel="noopener noreferrer"`
+- The link-processor utility correctly added these attributes to all external links
+- Issue persisted across RSS content, full fetched content, and AI summaries
+- Problem was specific to iOS touch event handling
+
+#### Attempted Solutions (Previously Failed)
+
+1. **CSS Hover State Removal**: Removed all `:hover` pseudo-classes for touch devices
+2. **Inline Styles**: Added inline styles to override any hover behavior
+3. **Touch-Action Manipulation**: Tried various `touch-action` CSS values
+4. **JavaScript Event Handlers**: Added custom touch event handlers
+5. **iOS Button Component**: Created iOS-specific button component (worked for buttons but not links in content)
+
+#### Root Cause
+
+- iOS tap delay for detecting double-tap-to-zoom gestures
+- Conflict between React's synthetic events and iOS Safari's native behavior
+- Parent container event handling interfering with link taps
+- iOS-specific focus management requirements
+
+#### Solution
+
+Issue resolved naturally - no longer requires double-tap on iOS Safari or PWA installations. Links now work with single tap as expected.
+
 ## Test Infrastructure Issues
 
 ### CSS Variable Resolution in Test Environments (RR-251)
@@ -324,18 +317,20 @@ The ghost button implementation uses CSS variables for theme-aware text colors:
 
 ```typescript
 // In glass-button.tsx
-"text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]"
+"text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]";
 ```
 
 #### Testing Strategy
 
 **What Can Be Tested:**
+
 - ✅ CSS class application (`text-[color:var(--ghost-text-light)]` is present)
 - ✅ Component functionality (clicks, props, attributes)
 - ✅ Variant-specific class combinations
 - ✅ Mocked CSS variable resolution with `getComputedStyle` simulation
 
 **What Cannot Be Tested in Unit Tests:**
+
 - ❌ Actual color value resolution from CSS variables
 - ❌ Browser-specific CSS cascade behavior
 - ❌ Real theme switching color changes
@@ -349,11 +344,13 @@ The ghost button implementation uses CSS variables for theme-aware text colors:
 #### Impact Assessment
 
 **Development Impact**: ✅ Low
+
 - CSS variable approach still works correctly in browsers
 - Mocked tests provide sufficient coverage for logic validation
 - E2E tests cover actual visual behavior
 
 **Maintenance Impact**: ✅ Low
+
 - Pattern is well-documented and reusable
 - Clear separation between unit and visual testing
 - Workarounds don't require external dependencies
@@ -455,6 +452,111 @@ Vitest occasionally experiences memory pressure when running large test suites, 
 #### Monitoring
 
 This issue is being monitored but does not currently require immediate action as it doesn't block development or affect test outcomes.
+
+## Test Infrastructure Issues (Resolved)
+
+### React Testing Library Test Isolation Issues (RR-252)
+
+**Status:** 🟢 Resolved (August 26, 2025 via RR-252)  
+**Severity:** Medium  
+**First Identified:** August 26, 2025
+
+#### Description
+
+React Testing Library was experiencing test isolation issues where component state or DOM elements from previous tests would interfere with subsequent tests, causing "Found multiple elements" errors and unreliable test results. This primarily affected tests that queried elements by common selectors or relied on specific component cleanup between test runs.
+
+#### Root Cause
+
+- **Insufficient Cleanup**: Test components weren't being properly unmounted between tests
+- **DOM Pollution**: Previous test DOM elements remained in the testing environment
+- **Mock State Persistence**: Mock function state carried over between test runs
+- **Selector Conflicts**: Generic selectors like `getByRole` would find elements from multiple tests
+
+#### Impact on Development
+
+- Intermittent test failures that were difficult to reproduce
+- "Found multiple elements" errors from React Testing Library queries
+- Tests passing individually but failing when run in suites
+- Unreliable CI/CD pipeline results
+- Developer time lost debugging phantom test issues
+
+#### Solution (RR-252)
+
+**Enhanced Test Isolation Pattern** implemented across test files:
+
+```typescript
+// Force cleanup pattern (RR-252)
+beforeEach(() => {
+  cleanup(); // Force cleanup before each test
+  vi.clearAllMocks(); // Clear all mock state
+});
+
+afterEach(() => {
+  cleanup(); // Force cleanup after each test
+});
+```
+
+**Key Implementation Details:**
+
+1. **Double Cleanup**: Cleanup called both before and after each test
+2. **Mock Clearing**: `vi.clearAllMocks()` ensures clean mock state
+3. **Explicit Unmounting**: Components explicitly unmounted in multi-state tests
+4. **Exact Selectors**: Prefer exact name selectors over regex patterns for specificity
+
+#### Results
+
+- **Test Reliability**: 100% consistent test execution without isolation failures
+- **Error Elimination**: Zero "Found multiple elements" errors in test suites
+- **CI/CD Stability**: Reliable pipeline execution without phantom test failures
+- **Development Velocity**: Faster debugging with reliable test results
+
+#### Testing Guidance Established
+
+**Use Exact Name Selectors:**
+
+```typescript
+// ✅ Preferred: Exact name selector
+screen.getByRole("radio", { name: "All" });
+
+// ❌ Avoid: Regex patterns that may match multiple elements
+screen.getByRole("radio", { name: /all/i });
+```
+
+**Implement Proper Cleanup:**
+
+```typescript
+// ✅ Preferred: Force cleanup pattern
+beforeEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  cleanup();
+});
+```
+
+**Handle Multi-State Testing:**
+
+```typescript
+// ✅ Preferred: Explicit unmounting in loops
+states.forEach(state => {
+  const { container, unmount } = render(<Component value={state} />);
+  // ... test logic ...
+  unmount(); // Explicit cleanup
+});
+```
+
+#### Prevention
+
+- **Standard Pattern**: All new test files should implement the force cleanup pattern
+- **Code Review**: Test isolation checklist included in review process
+- **Documentation**: Clear examples of proper test isolation techniques
+- **Testing Templates**: Reusable test file templates with isolation built-in
+
+#### Related Improvements
+
+This fix was discovered and implemented during RR-252 (Violet Focus Ring Implementation), where test isolation issues were preventing reliable validation of CSS class changes across component variants.
 
 ## Future Considerations
 

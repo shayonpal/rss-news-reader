@@ -1,5 +1,6 @@
 import "fake-indexeddb/auto";
 import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
 import { vi, expect, beforeEach, afterEach, afterAll } from "vitest";
 
 // Mock environment - ensure NODE_ENV is set
@@ -9,6 +10,9 @@ if (!process.env.NODE_ENV) {
 
 // RR-183: Global test cleanup hooks for resource management
 beforeEach(() => {
+  // CRITICAL: Clean up DOM before each test to ensure fresh state
+  cleanup();
+
   // Clear all mocks before each test
   vi.clearAllMocks();
 
@@ -27,6 +31,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // CRITICAL: Clean up DOM between tests to prevent component persistence
+  cleanup();
+
   // Restore all mocks after each test
   vi.restoreAllMocks();
 
@@ -37,7 +44,13 @@ afterEach(() => {
 // Global cleanup after all tests
 afterAll(() => {
   // Final cleanup of any resources
+  cleanup();
   vi.resetAllMocks();
+
+  // Force DOM cleanup by clearing document body
+  if (typeof document !== "undefined" && document.body) {
+    document.body.innerHTML = "";
+  }
 });
 
 // Mock fetch globally

@@ -21,7 +21,7 @@ const glassButtonVariants = cva(
     "inline-flex items-center justify-center",
     "rounded-[22px] font-medium transition-all duration-300",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-    "focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400",
+    "focus-visible:ring-violet-500 dark:focus-visible:ring-violet-500",
     "disabled:pointer-events-none disabled:opacity-50",
     "active:scale-[0.96]",
     "min-h-[48px] min-w-[48px]", // Internal button size (48px) within 56px containers
@@ -41,11 +41,11 @@ const glassButtonVariants = cva(
         ].join(" "),
         primary: [
           "backdrop-blur-[16px] backdrop-saturate-[180%]",
-          "border border-blue-500/20 dark:border-blue-400/20",
-          "bg-blue-500/20 dark:bg-blue-400/20",
-          "text-blue-700 dark:text-blue-300",
-          "hover:bg-blue-500/25 dark:hover:bg-blue-400/25",
-          "shadow-lg shadow-blue-500/10 dark:shadow-blue-400/10",
+          "border border-violet-500/20 dark:border-violet-500/20",
+          "bg-violet-500/20 dark:bg-violet-500/20",
+          "text-violet-700 dark:text-violet-300",
+          "hover:bg-violet-500/25 dark:hover:bg-violet-500/25",
+          "shadow-lg shadow-violet-500/10 dark:shadow-violet-500/10",
         ].join(" "),
         secondary: [
           "backdrop-blur-[16px] backdrop-saturate-[180%]",
