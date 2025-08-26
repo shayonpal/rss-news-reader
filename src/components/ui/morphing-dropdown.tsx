@@ -257,7 +257,7 @@ export function MorphingDropdown({
           ref={dropdownRef}
           role="menu"
           aria-orientation="vertical"
-          className="absolute top-0 right-0 z-[1000] w-max flex flex-col space-y-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl p-2"
+          className="absolute right-0 top-0 z-[1000] flex w-max flex-col space-y-1 rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-900"
           style={{
             transformOrigin: "top right",
           }}

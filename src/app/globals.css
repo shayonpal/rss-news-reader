@@ -219,34 +219,35 @@ button:not(:disabled) {
     --counter-unselected-text: oklch(0.943 0.029 294.588);
     --counter-selected-bg: oklch(0.541 0.281 293.009);
     --counter-selected-text: oklch(0.969 0.016 293.756);
-    
+
     /* ========================================
      * Master Liquid Glass System (iOS 26 based)
      * Single-source depth control for all glass components
      * ======================================== */
-     
+
     /* Master depth shadow (3-layer Apple iOS 26 specification) */
-    --glass-depth-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.12),    /* Ambient shadow - matches inline styles */
-      0 2px 8px rgba(0, 0, 0, 0.04),     /* Key shadow */
-      inset 0 1px 1px rgba(255, 255, 255, 0.25); /* Glass highlight */
-      
+    --glass-depth-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      /* Ambient shadow - matches inline styles */ 0 2px 8px rgba(0, 0, 0, 0.04),
+      /* Key shadow */ inset 0 1px 1px rgba(255, 255, 255, 0.25); /* Glass highlight */
+
     /* Simplified shadow for inline style compatibility */
     --glass-shadow-ambient: 0 8px 32px rgba(0, 0, 0, 0.12);
-      
+
     /* Secondary depth (75% intensity for toolbars) */
-    --glass-depth-shadow-secondary: 
-      0 6px 24px rgba(0, 0, 0, 0.09),    /* Reduced ambient */
-      0 1px 6px rgba(0, 0, 0, 0.03),     /* Reduced key */
-      inset 0 1px 1px rgba(255, 255, 255, 0.19); /* Reduced highlight */
-    
+    --glass-depth-shadow-secondary:
+      0 6px 24px rgba(0, 0, 0, 0.09),
+      /* Reduced ambient */ 0 1px 6px rgba(0, 0, 0, 0.03),
+      /* Reduced key */ inset 0 1px 1px rgba(255, 255, 255, 0.19); /* Reduced highlight */
+
     /* Master glass effects */
-    --glass-blur-effect: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    --glass-blur-effect: blur(var(--glass-blur))
+      saturate(var(--glass-saturation));
     --glass-border-style: 1px solid var(--glass-nav-border);
     --glass-surface: var(--glass-chip-bg);
     --glass-surface-hover: var(--glass-chip-indicator);
-    --glass-border-radius-primary: 9999px;  /* Fully rounded for primary controls */
-    --glass-border-radius-secondary: 22px;  /* Less rounded for clusters */
+    --glass-border-radius-primary: 9999px; /* Fully rounded for primary controls */
+    --glass-border-radius-secondary: 22px; /* Less rounded for clusters */
   }
 }
 
@@ -520,24 +521,28 @@ html.reduce-transparency .liquid-glass-btn {
     --glass-blur-enhanced: 20px;
     --glass-saturation-base: 180%;
     --glass-saturation-reduced: 140%;
-    
+
     /* Dimensional Standards - Semantic Height System */
     --size-48: 48px;
     --size-56: 56px;
-    
+
     /* Semantic Height Tokens */
-    --control-height-external: var(--size-56);     /* All external component heights */
-    --control-height-internal: var(--size-48);     /* Buttons inside containers */
-    
+    --control-height-external: var(
+      --size-56
+    ); /* All external component heights */
+    --control-height-internal: var(--size-48); /* Buttons inside containers */
+
     /* Computed Container Padding (centers 48px inside 56px) */
-    --container-pad-block: calc((var(--control-height-external) - var(--control-height-internal)) / 2); /* 4px */
-    
+    --container-pad-block: calc(
+      (var(--control-height-external) - var(--control-height-internal)) / 2
+    ); /* 4px */
+
     /* Legacy Alias (maintains compatibility) */
     --glass-control-height: var(--control-height-external);
-    
+
     /* Brand Color (Single Source) */
     --brand-accent-rgb: 139, 92, 246; /* violet-500 */
-    
+
     /* Glass Opacity System (Single Source) */
     --glass-surface-opacity: 0.03;
     --glass-surface-hover-opacity: 0.08;
@@ -584,7 +589,7 @@ html.reduce-transparency .liquid-glass-btn {
     /* Dark Mode Adjustments - Only Override What Changes */
     --glass-blur-base: 20px; /* Enhanced blur for dark mode */
     --glass-saturation-base: 140%; /* Reduced saturation for dark mode */
-    
+
     /* Glass Opacity Overrides (Single Source Changes) */
     --glass-surface-opacity: 0.05;
     --glass-surface-hover-opacity: 0.12;
@@ -621,41 +626,61 @@ html.reduce-transparency .liquid-glass-btn {
   /* ========================================
    * Unified Liquid Glass Base Classes (iOS 26)
    * ======================================== */
-   
+
   .liquid-glass-primary {
     /* Single-source glass implementation with fallbacks */
-    background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
-    border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+    background-color: rgb(
+      var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03)
+    );
+    border: 1px solid
+      rgb(
+        var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1)
+      );
     border-radius: 9999px;
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.12),
       0 2px 8px rgba(0, 0, 0, 0.04),
       inset 0 1px 1px rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(var(--glass-blur-base, 16px)) saturate(var(--glass-saturation-base, 180%));
-    -webkit-backdrop-filter: blur(var(--glass-blur-base, 16px)) saturate(var(--glass-saturation-base, 180%));
+    backdrop-filter: blur(var(--glass-blur-base, 16px))
+      saturate(var(--glass-saturation-base, 180%));
+    -webkit-backdrop-filter: blur(var(--glass-blur-base, 16px))
+      saturate(var(--glass-saturation-base, 180%));
     transition: all 200ms var(--motion-smooth, cubic-bezier(0.4, 0, 0.2, 1));
   }
-  
+
   .liquid-glass-primary:hover {
-    background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-hover-opacity, 0.08));
+    background-color: rgb(
+      var(--brand-accent-rgb, 139 92 246) /
+        var(--glass-surface-hover-opacity, 0.08)
+    );
   }
-  
+
   .liquid-glass-secondary {
     /* Single-source glass implementation for containers/toolbars */
-    background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
-    border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+    background-color: rgb(
+      var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03)
+    );
+    border: 1px solid
+      rgb(
+        var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1)
+      );
     border-radius: 22px; /* Less rounded for containers */
-    box-shadow: 
+    box-shadow:
       0 6px 24px rgba(0, 0, 0, 0.09),
       0 1px 6px rgba(0, 0, 0, 0.03),
       inset 0 1px 1px rgba(255, 255, 255, 0.19);
-    backdrop-filter: blur(var(--glass-blur-base, 16px)) saturate(var(--glass-saturation-base, 180%));
-    -webkit-backdrop-filter: blur(var(--glass-blur-base, 16px)) saturate(var(--glass-saturation-base, 180%));
+    backdrop-filter: blur(var(--glass-blur-base, 16px))
+      saturate(var(--glass-saturation-base, 180%));
+    -webkit-backdrop-filter: blur(var(--glass-blur-base, 16px))
+      saturate(var(--glass-saturation-base, 180%));
     transition: all 200ms var(--motion-smooth, cubic-bezier(0.4, 0, 0.2, 1));
   }
-  
+
   .liquid-glass-secondary:hover {
-    background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-hover-opacity, 0.08));
+    background-color: rgb(
+      var(--brand-accent-rgb, 139 92 246) /
+        var(--glass-surface-hover-opacity, 0.08)
+    );
   }
 
   .glass-nav {
@@ -675,7 +700,7 @@ html.reduce-transparency .liquid-glass-btn {
   .glass-toolbar {
     /* Inherit unified liquid glass styling */
     @apply liquid-glass-secondary;
-    
+
     /* Semantic height - natural expansion like original */
     min-height: var(--control-height-external); /* 56px minimum for alignment */
     padding: 4px; /* Original padding restored */
@@ -696,7 +721,9 @@ html.reduce-transparency .liquid-glass-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: var(--control-height-internal); /* 48px centered within container */
+    min-height: var(
+      --control-height-internal
+    ); /* 48px centered within container */
     gap: 4px;
     position: relative;
     z-index: 1;
@@ -756,12 +783,12 @@ html.reduce-transparency .liquid-glass-btn {
   .glass-icon-btn {
     /* Inherit unified liquid glass styling */
     @apply liquid-glass-primary;
-    
+
     /* Normalize button appearance to prevent UA default borders */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
+
     width: var(--glass-control-height); /* Standardized */
     height: var(--glass-control-height); /* Standardized */
     display: inline-flex;
@@ -968,11 +995,13 @@ html.reduce-transparency .glass-sidebar-info {
   .glass-segment {
     /* Inherit unified liquid glass styling */
     @apply liquid-glass-primary;
-    
+
     /* Semantic height system - container with internal centering */
     height: var(--control-height-external);
-    padding: var(--container-pad-block); /* Centers 48px segments inside 56px container */
-    
+    padding: var(
+      --container-pad-block
+    ); /* Centers 48px segments inside 56px container */
+
     /* Size tokens for internal segments */
     --segment-height: var(--control-height-internal); /* 48px */
 
@@ -1052,12 +1081,12 @@ html.reduce-transparency .glass-sidebar-info {
   .liquid-glass-mark-all-read {
     /* Foundation: Inherit unified liquid glass styling */
     @apply liquid-glass-primary;
-    
+
     /* Normalize button appearance */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
+
     /* Layout - semantic height tokens */
     display: inline-flex;
     align-items: center;
@@ -1066,17 +1095,17 @@ html.reduce-transparency .glass-sidebar-info {
     padding: 0 16px;
     height: var(--control-height-external);
     min-width: var(--control-height-external);
-    
+
     /* Typography - match segmented control weight */
     font-size: 0.875rem;
     font-weight: 500;
     text-align: center;
     white-space: nowrap;
     line-height: 1.2;
-    
+
     /* Interactions */
     cursor: pointer;
-    
+
     /* Performance */
     transform: translateZ(0);
   }
@@ -1093,7 +1122,7 @@ html.reduce-transparency .glass-sidebar-info {
   /* Glass Icon Button - unified with other primary components */
   .glass-icon-button-liquid {
     @apply liquid-glass-primary;
-    
+
     /* Icon button specific layout - semantic tokens */
     width: var(--control-height-external);
     height: var(--control-height-external);
@@ -1101,25 +1130,28 @@ html.reduce-transparency .glass-sidebar-info {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    
+
     /* Ensure perfect circle */
     min-width: var(--control-height-external);
     min-height: var(--control-height-external);
     max-width: var(--control-height-external);
     max-height: var(--control-height-external);
-    
+
     /* Normalize button appearance */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
+
     /* Performance */
     transform: translateZ(0);
     will-change: transform, background-color;
   }
 
   .glass-icon-button-liquid:hover:not(:disabled) {
-    background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-hover-opacity, 0.08));
+    background-color: rgb(
+      var(--brand-accent-rgb, 139 92 246) /
+        var(--glass-surface-hover-opacity, 0.08)
+    );
     transform: scale(1.05);
   }
 
@@ -1153,7 +1185,8 @@ html.reduce-transparency .glass-sidebar-info {
 
   /* Pulse animation for confirming state */
   @keyframes liquid-glass-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
       transform: scale(1);
     }

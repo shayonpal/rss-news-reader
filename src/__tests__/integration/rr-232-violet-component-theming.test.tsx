@@ -514,7 +514,7 @@ describe("RR-232: Violet Theme Component Integration", () => {
             ? "rounded-full bg-[var(--counter-selected-bg)] px-2 py-0.5 text-xs font-extrabold text-[var(--counter-selected-text)]"
             : "rounded-full bg-[var(--counter-unselected-bg)] px-2 py-0.5 text-xs text-[var(--counter-unselected-text)]"
         }
-        data-testid={`counter-${isSelected ? 'selected' : 'unselected'}`}
+        data-testid={`counter-${isSelected ? "selected" : "unselected"}`}
       >
         {count > 99 ? "99+" : count}
       </span>

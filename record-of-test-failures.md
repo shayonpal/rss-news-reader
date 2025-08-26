@@ -41,6 +41,7 @@ npm run build
 **Error**: `DatabaseClosedError Database has been closed` and `ConstraintError: A mutation operation failed`
 
 **Files Affected**:
+
 - Multiple integration test files running concurrently
 - Database lifecycle tests in `src/lib/stores/__tests__/database-lifecycle.test.ts`
 - Article store and sync store integration tests
@@ -54,12 +55,14 @@ npm run build
 **Error**: `expected '243 47% 59%' to match /139[,\s]+92[,\s]+246/`
 
 **Files Affected**:
+
 - `src/__tests__/unit/rr-232-violet-token-resolution.test.tsx` (11/13 tests failed)
 
 **Specific Failures**:
+
 ```
 × should correctly map violet palette to reference tokens
-× should resolve semantic tokens from reference layer  
+× should resolve semantic tokens from reference layer
 × should apply correct light mode glass values
 × should apply correct dark mode glass values
 × should cascade primary theme tokens correctly
@@ -80,6 +83,7 @@ npm run build
 **Error**: `No test files found, exiting with code 1` for integration tests
 
 **Files Affected**:
+
 - `src/__tests__/integration/rr-232-violet-component-theming.test.tsx`
 
 **Root Cause**: Integration tests excluded by Vitest configuration (`exclude: **/src/__tests__/integration/**`)
@@ -91,9 +95,11 @@ npm run build
 **Error**: `expected false to be true // Object.is equality` for content path validation
 
 **Files Affected**:
+
 - `src/__tests__/unit/rr-232-tailwind-safelist.test.tsx`
 
 **Specific Failure**:
+
 ```
 × should include proper content paths
   expected contentPaths.some((path: string) => path.includes("**/*.tsx")) to be true
@@ -106,6 +112,7 @@ npm run build
 **Error**: `The node to be removed is not a child of this node.`
 
 **Files Affected**:
+
 - Multiple RR-232 token resolution tests
 
 **Root Cause**: Improper cleanup of injected style elements between test runs

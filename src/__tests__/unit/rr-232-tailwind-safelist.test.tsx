@@ -17,7 +17,7 @@ import tailwindConfig from "../../../tailwind.config";
 describe("RR-232: Tailwind Safelist Configuration", () => {
   it("should include counter CSS variable utilities in safelist", () => {
     const config = tailwindConfig as any;
-    
+
     expect(config.safelist).toBeDefined();
     expect(Array.isArray(config.safelist)).toBe(true);
 
@@ -30,10 +30,10 @@ describe("RR-232: Tailwind Safelist Configuration", () => {
 
   it("should include pattern matching for counter variables", () => {
     const config = tailwindConfig as any;
-    
+
     // Find pattern object in safelist
-    const patternEntry = config.safelist.find((entry: any) => 
-      typeof entry === 'object' && entry.pattern
+    const patternEntry = config.safelist.find(
+      (entry: any) => typeof entry === "object" && entry.pattern
     );
 
     expect(patternEntry).toBeDefined();
@@ -41,15 +41,15 @@ describe("RR-232: Tailwind Safelist Configuration", () => {
 
     // Test pattern matching
     const pattern = patternEntry.pattern;
-    
+
     // Should match background counter utilities
     expect(pattern.test("bg-[var(--counter-selected-bg)]")).toBe(true);
     expect(pattern.test("bg-[var(--counter-unselected-bg)]")).toBe(true);
-    
+
     // Should match text counter utilities
     expect(pattern.test("text-[var(--counter-selected-text)]")).toBe(true);
     expect(pattern.test("text-[var(--counter-unselected-text)]")).toBe(true);
-    
+
     // Should not match non-counter variables
     expect(pattern.test("bg-[var(--other-variable)]")).toBe(false);
     expect(pattern.test("text-[var(--glass-bg)]")).toBe(false);
@@ -57,21 +57,27 @@ describe("RR-232: Tailwind Safelist Configuration", () => {
 
   it("should enable dark mode configuration", () => {
     const config = tailwindConfig as any;
-    
+
     expect(config.darkMode).toBe("class");
   });
 
   it("should include proper content paths", () => {
     const config = tailwindConfig as any;
-    
+
     expect(config.content).toBeDefined();
     expect(Array.isArray(config.content)).toBe(true);
-    
+
     // Should scan all relevant file types
     const contentPaths = config.content;
-    expect(contentPaths.some((path: string) => path.includes("**/*.tsx"))).toBe(true);
-    expect(contentPaths.some((path: string) => path.includes("**/*.ts"))).toBe(true);
-    expect(contentPaths.some((path: string) => path.includes("src/"))).toBe(true);
+    expect(contentPaths.some((path: string) => path.includes("**/*.tsx"))).toBe(
+      true
+    );
+    expect(contentPaths.some((path: string) => path.includes("**/*.ts"))).toBe(
+      true
+    );
+    expect(contentPaths.some((path: string) => path.includes("src/"))).toBe(
+      true
+    );
   });
 
   it("should generate utilities for CSS variables in development", () => {
@@ -80,7 +86,7 @@ describe("RR-232: Tailwind Safelist Configuration", () => {
 
     const testUtilities = [
       "bg-[var(--counter-selected-bg)]",
-      "text-[var(--counter-selected-text)]", 
+      "text-[var(--counter-selected-text)]",
       "bg-[var(--counter-unselected-bg)]",
       "text-[var(--counter-unselected-text)]",
       "bg-[var(--counter-hover-bg)]", // Future-proofing
@@ -93,11 +99,11 @@ describe("RR-232: Tailwind Safelist Configuration", () => {
       "counter-[var(--selected-bg)]", // Wrong utility type
     ];
 
-    testUtilities.forEach(utility => {
+    testUtilities.forEach((utility) => {
       expect(testPattern.test(utility)).toBe(true);
     });
 
-    invalidUtilities.forEach(utility => {
+    invalidUtilities.forEach((utility) => {
       expect(testPattern.test(utility)).toBe(false);
     });
   });

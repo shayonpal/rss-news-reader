@@ -112,8 +112,8 @@ Implemented "glass container + transparent children" architecture:
 ```css
 :root {
   /* Semantic height tokens (RR-232 August 2025) */
-  --control-height-external: 56px;     /* All external component heights */
-  --control-height-internal: 48px;     /* Buttons inside containers */
+  --control-height-external: 56px; /* All external component heights */
+  --control-height-internal: 48px; /* Buttons inside containers */
   --glass-control-height: var(--control-height-external); /* Legacy alias */
   --glass-control-border-radius: 24px;
 

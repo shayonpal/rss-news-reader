@@ -40,7 +40,7 @@ const TokenTestComponent: React.FC<{
 // Violet palette reference values from Tailwind CSS (actual implementation)
 const VIOLET_PALETTE = {
   "violet-50": "rgb(250, 248, 255)", // #faf8ff
-  "violet-100": "rgb(243, 240, 255)", // #f3f0ff  
+  "violet-100": "rgb(243, 240, 255)", // #f3f0ff
   "violet-200": "rgb(233, 229, 255)", // #e9e5ff
   "violet-300": "rgb(212, 197, 255)", // #d4c5ff
   "violet-400": "rgb(183, 148, 246)", // #b794f6
@@ -405,51 +405,73 @@ describe("RR-232: Violet Theme CSS Token Resolution", () => {
     it("should apply correct light mode counter colors", () => {
       // Remove dark mode class if present
       document.documentElement.classList.remove("dark");
-      
+
       const rootStyles = getComputedStyle(document.documentElement);
 
       // Test light mode counter tokens
-      const unselectedBg = rootStyles.getPropertyValue("--counter-unselected-bg").trim();
-      const unselectedText = rootStyles.getPropertyValue("--counter-unselected-text").trim();
-      const selectedBg = rootStyles.getPropertyValue("--counter-selected-bg").trim();
-      const selectedText = rootStyles.getPropertyValue("--counter-selected-text").trim();
+      const unselectedBg = rootStyles
+        .getPropertyValue("--counter-unselected-bg")
+        .trim();
+      const unselectedText = rootStyles
+        .getPropertyValue("--counter-unselected-text")
+        .trim();
+      const selectedBg = rootStyles
+        .getPropertyValue("--counter-selected-bg")
+        .trim();
+      const selectedText = rootStyles
+        .getPropertyValue("--counter-selected-text")
+        .trim();
 
       // Should use primary color variants
       expect(unselectedBg).toMatch(/hsl\(.*\/\s*0\.1\)|rgba?\(/);
       expect(unselectedText).toMatch(/hsl\(.*263.*70%.*50%\)|#[a-fA-F0-9]{6}/);
       expect(selectedBg).toMatch(/hsl\(.*263.*70%.*50%\)|#[a-fA-F0-9]{6}/);
-      expect(selectedText).toMatch(/hsl\(.*primary-foreground\)|#[a-fA-F0-9]{6}|rgb\(/);
+      expect(selectedText).toMatch(
+        /hsl\(.*primary-foreground\)|#[a-fA-F0-9]{6}|rgb\(/
+      );
     });
 
     it("should apply correct dark mode OKLCH counter colors", () => {
       // Enable dark mode
       document.documentElement.classList.add("dark");
-      
+
       const rootStyles = getComputedStyle(document.documentElement);
 
       // Test dark mode OKLCH counter tokens
-      const unselectedBg = rootStyles.getPropertyValue("--counter-unselected-bg").trim();
-      const unselectedText = rootStyles.getPropertyValue("--counter-unselected-text").trim();
-      const selectedBg = rootStyles.getPropertyValue("--counter-selected-bg").trim();
-      const selectedText = rootStyles.getPropertyValue("--counter-selected-text").trim();
+      const unselectedBg = rootStyles
+        .getPropertyValue("--counter-unselected-bg")
+        .trim();
+      const unselectedText = rootStyles
+        .getPropertyValue("--counter-unselected-text")
+        .trim();
+      const selectedBg = rootStyles
+        .getPropertyValue("--counter-selected-bg")
+        .trim();
+      const selectedText = rootStyles
+        .getPropertyValue("--counter-selected-text")
+        .trim();
 
       // Should use OKLCH color space
       expect(unselectedBg).toMatch(/oklch\(0\.38\s+0\.189\s+293\.745\)|rgb\(/);
-      expect(unselectedText).toMatch(/oklch\(0\.943\s+0\.029\s+294\.588\)|rgb\(/);
+      expect(unselectedText).toMatch(
+        /oklch\(0\.943\s+0\.029\s+294\.588\)|rgb\(/
+      );
       expect(selectedBg).toMatch(/oklch\(0\.541\s+0\.281\s+293\.009\)|rgb\(/);
       expect(selectedText).toMatch(/oklch\(0\.969\s+0\.016\s+293\.756\)|rgb\(/);
     });
 
     it("should provide enhanced contrast in dark mode", () => {
       document.documentElement.classList.add("dark");
-      
+
       // Create test elements with counter classes
       const unselectedCounter = document.createElement("span");
-      unselectedCounter.className = "bg-[var(--counter-unselected-bg)] text-[var(--counter-unselected-text)]";
+      unselectedCounter.className =
+        "bg-[var(--counter-unselected-bg)] text-[var(--counter-unselected-text)]";
       document.body.appendChild(unselectedCounter);
 
       const selectedCounter = document.createElement("span");
-      selectedCounter.className = "bg-[var(--counter-selected-bg)] text-[var(--counter-selected-text)]";
+      selectedCounter.className =
+        "bg-[var(--counter-selected-bg)] text-[var(--counter-selected-text)]";
       document.body.appendChild(selectedCounter);
 
       const unselectedStyles = getComputedStyle(unselectedCounter);

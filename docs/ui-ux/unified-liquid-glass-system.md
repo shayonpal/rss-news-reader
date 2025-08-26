@@ -24,16 +24,16 @@ The unified system is governed by master CSS variables that control depth and ap
 --glass-border-enhanced-opacity: 0.15;
 
 /* Master depth shadow (3-layer Apple iOS 26 specification) */
---glass-depth-shadow: 
-  0 8px 32px rgba(0, 0, 0, 0.12),    /* Ambient shadow */
-  0 2px 8px rgba(0, 0, 0, 0.04),     /* Key shadow */
-  inset 0 1px 1px rgba(255, 255, 255, 0.25); /* Glass highlight */
+--glass-depth-shadow:
+  0 8px 32px rgba(0, 0, 0, 0.12),
+  /* Ambient shadow */ 0 2px 8px rgba(0, 0, 0, 0.04),
+  /* Key shadow */ inset 0 1px 1px rgba(255, 255, 255, 0.25); /* Glass highlight */
 
 /* Secondary depth (75% intensity for toolbars) */
---glass-depth-shadow-secondary: 
-  0 6px 24px rgba(0, 0, 0, 0.09),    /* Reduced ambient */
-  0 1px 6px rgba(0, 0, 0, 0.03),     /* Reduced key */
-  inset 0 1px 1px rgba(255, 255, 255, 0.19); /* Reduced highlight */
+--glass-depth-shadow-secondary:
+  0 6px 24px rgba(0, 0, 0, 0.09),
+  /* Reduced ambient */ 0 1px 6px rgba(0, 0, 0, 0.03),
+  /* Reduced key */ inset 0 1px 1px rgba(255, 255, 255, 0.19); /* Reduced highlight */
 ```
 
 ### Two-Tier Hierarchy
@@ -48,13 +48,17 @@ The system implements a clear hierarchy for different UI element types:
 ### Core Unified Classes
 
 #### `.liquid-glass-primary`
+
 Used for individual controls and primary interactive elements.
 
 ```css
 .liquid-glass-primary {
   /* Single-source glass implementation with fallbacks */
-  background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
-  border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+  background-color: rgb(
+    var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03)
+  );
+  border: 1px solid
+    rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
   border-radius: 9999px; /* Fully rounded */
   box-shadow: var(--glass-depth-shadow);
   backdrop-filter: var(--glass-blur-effect);
@@ -63,23 +67,31 @@ Used for individual controls and primary interactive elements.
 }
 
 .liquid-glass-primary:hover:not(:disabled) {
-  background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-hover-opacity, 0.08));
+  background-color: rgb(
+    var(--brand-accent-rgb, 139 92 246) /
+      var(--glass-surface-hover-opacity, 0.08)
+  );
 }
 ```
 
 **Usage Examples**:
+
 - Segmented control segments (`.glass-segment`)
 - Mark All Read button (`.liquid-glass-mark-all-read`)
 - Individual action buttons
 
 #### `.liquid-glass-secondary`
+
 Used for containers, toolbars, and clustered elements.
 
 ```css
 .liquid-glass-secondary {
   /* Single-source glass implementation for containers/toolbars */
-  background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
-  border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+  background-color: rgb(
+    var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03)
+  );
+  border: 1px solid
+    rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
   border-radius: 22px; /* Less rounded for containers */
   box-shadow: var(--glass-depth-shadow-secondary);
   backdrop-filter: var(--glass-blur-effect);
@@ -89,6 +101,7 @@ Used for containers, toolbars, and clustered elements.
 ```
 
 **Usage Examples**:
+
 - Toolbar containers (`.glass-toolbar`)
 - Button clusters
 - Navigation containers
@@ -97,22 +110,22 @@ Used for containers, toolbars, and clustered elements.
 
 ### Article Listing Page Components
 
-| UI Element | Implementation | Hierarchy Level | CSS Classes |
-|------------|----------------|-----------------|-------------|
-| **1.1 Hamburger Menu** | `GlassIconButton` | **Primary** | `.liquid-glass-primary` |
-| **1.2 Segmented Controls (All/Unread/Read)** | `GlassSegmentedControl` | **Primary** | `.glass-segment` → `.liquid-glass-primary` |
-| **1.3 Mark All Read** (3 size variants) | Custom button component | **Primary** | `.liquid-glass-mark-all-read` → `.liquid-glass-primary` |
+| UI Element                                   | Implementation          | Hierarchy Level | CSS Classes                                             |
+| -------------------------------------------- | ----------------------- | --------------- | ------------------------------------------------------- |
+| **1.1 Hamburger Menu**                       | `GlassIconButton`       | **Primary**     | `.liquid-glass-primary`                                 |
+| **1.2 Segmented Controls (All/Unread/Read)** | `GlassSegmentedControl` | **Primary**     | `.glass-segment` → `.liquid-glass-primary`              |
+| **1.3 Mark All Read** (3 size variants)      | Custom button component | **Primary**     | `.liquid-glass-mark-all-read` → `.liquid-glass-primary` |
 
 ### Article Detail Page Components
 
-| UI Element | Implementation | Hierarchy Level | CSS Classes |
-|------------|----------------|-----------------|-------------|
-| **2.1 Back Button** | `GlassIconButton` | **Primary** | `.liquid-glass-primary` |
-| **2.2 Combined Cluster Container** | `MorphingDropdown` | **Secondary** | `.glass-toolbar` → `.liquid-glass-secondary` |
-| **2.2.1 Star Button** (within cluster) | `StarButton` | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
-| **2.2.2 Summarize/Re-summarize** (within cluster) | `SummaryButton` | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
+| UI Element                                             | Implementation       | Hierarchy Level | CSS Classes                                  |
+| ------------------------------------------------------ | -------------------- | --------------- | -------------------------------------------- |
+| **2.1 Back Button**                                    | `GlassIconButton`    | **Primary**     | `.liquid-glass-primary`                      |
+| **2.2 Combined Cluster Container**                     | `MorphingDropdown`   | **Secondary**   | `.glass-toolbar` → `.liquid-glass-secondary` |
+| **2.2.1 Star Button** (within cluster)                 | `StarButton`         | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
+| **2.2.2 Summarize/Re-summarize** (within cluster)      | `SummaryButton`      | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
 | **2.2.3 Fetch Full Content/Re-fetch** (within cluster) | `FetchContentButton` | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
-| **2.2.4 More Menu** (within cluster) | `DropdownMenu` | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
+| **2.2.4 More Menu** (within cluster)                   | `DropdownMenu`       | **Transparent** | `.glass-toolbar-btn` (inherits parent glass) |
 
 ### Implementation Pattern
 
@@ -134,10 +147,10 @@ The unified system provides single-source control for all glass effects. To glob
 ```css
 :root {
   /* Increase ambient shadows by 10% */
-  --glass-depth-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.132),  /* 0.12 + 10% = 0.132 */
-    0 2px 8px rgba(0, 0, 0, 0.044),   /* 0.04 + 10% = 0.044 */
-    inset 0 1px 1px rgba(255, 255, 255, 0.275); /* 0.25 + 10% = 0.275 */
+  --glass-depth-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.132),
+    /* 0.12 + 10% = 0.132 */ 0 2px 8px rgba(0, 0, 0, 0.044),
+    /* 0.04 + 10% = 0.044 */ inset 0 1px 1px rgba(255, 255, 255, 0.275); /* 0.25 + 10% = 0.275 */
 }
 ```
 
@@ -146,26 +159,28 @@ The unified system provides single-source control for all glass effects. To glob
 ```css
 :root {
   /* Semantic Height Tokens */
-  --control-height-external: 56px;     /* All external component heights */
-  --control-height-internal: 48px;     /* Buttons inside containers */
-  --container-pad-block: calc((var(--control-height-external) - var(--control-height-internal)) / 2); /* 4px */
-  
+  --control-height-external: 56px; /* All external component heights */
+  --control-height-internal: 48px; /* Buttons inside containers */
+  --container-pad-block: calc(
+    (var(--control-height-external) - var(--control-height-internal)) / 2
+  ); /* 4px */
+
   /* Legacy Alias (maintains compatibility) */
   --glass-control-height: var(--control-height-external);
-  
+
   /* Brand Color (Single Source) */
   --brand-accent-rgb: 139, 92, 246; /* violet-500 */
-  
+
   /* Glass Opacity System (Single Source) */
   --glass-surface-opacity: 0.03;
   --glass-surface-hover-opacity: 0.08;
   --glass-surface-subtle-opacity: 0.02;
   --glass-border-opacity: 0.1;
   --glass-border-enhanced-opacity: 0.15;
-  
+
   /* Master Glass Effects */
   --glass-blur-effect: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  
+
   /* Animation Curves */
   --glass-spring-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
   --motion-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -227,31 +242,37 @@ Counter selection uses bold styling that works across all themes:
 
 ### Height Unification Completion (RR-232 - August 2025)
 
-**CSS Variable Architecture Overhaul**: 
+**CSS Variable Architecture Overhaul**:
 
 The system was completely restructured to use a single-source opacity system for better maintainability and consistency:
 
 **Before**: Complex variable chains with multiple indirection levels
+
 ```css
 --glass-surface: var(--glass-chip-bg);
 --glass-border-style: 1px solid var(--glass-nav-border);
 ```
 
 **After**: Direct RGB with opacity tokens for cleaner implementation
+
 ```css
-background-color: rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03));
-border: 1px solid rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
+background-color: rgb(
+  var(--brand-accent-rgb, 139 92 246) / var(--glass-surface-opacity, 0.03)
+);
+border: 1px solid
+  rgb(var(--brand-accent-rgb, 139 92 246) / var(--glass-border-opacity, 0.1));
 ```
 
-**Semantic Height System**: 
+**Semantic Height System**:
 
 Replaced fixed 48px height with semantic tokens that support both standalone components and container-based layouts:
 
 - **External Height**: 56px for all component outer dimensions
-- **Internal Height**: 48px for buttons inside containers  
+- **Internal Height**: 48px for buttons inside containers
 - **Computed Padding**: 4px (calculated) to center internal elements
 
 **Component Updates**:
+
 - **Mark All Read Button**: Moved to @layer components, uses @apply liquid-glass-primary
 - **GlassIconButton**: Updated "liquid-glass" variant to use CSS class instead of Tailwind utilities
 - **MorphingDropdown**: Added .more-trigger class, updated positioning logic
@@ -260,6 +281,7 @@ Replaced fixed 48px height with semantic tokens that support both standalone com
 ### Component Archival (RR-232)
 
 **Archived Components**:
+
 - `FeedTreeItem` → `archived-components/FeedTreeItem.tsx`
 - `FeedList` → `archived-components/FeedList.tsx`
 
@@ -293,12 +315,12 @@ Replaced fixed 48px height with semantic tokens that support both standalone com
 module.exports = {
   safelist: [
     // CSS variable utilities for glass system
-    'bg-[var(--glass-surface)]',
-    'border-[var(--glass-nav-border)]',
-    'shadow-[var(--glass-depth-shadow)]',
+    "bg-[var(--glass-surface)]",
+    "border-[var(--glass-nav-border)]",
+    "shadow-[var(--glass-depth-shadow)]",
     // Additional CSS variable patterns...
-  ]
-}
+  ],
+};
 ```
 
 ### Expert Consultation Process
@@ -306,7 +328,7 @@ module.exports = {
 The RR-232 implementation involved comprehensive expert consultation:
 
 1. **CSS Expert**: Resolved cascade specificity and variable compilation issues
-2. **Tailwind Expert**: Configured safelist for CSS variable utilities  
+2. **Tailwind Expert**: Configured safelist for CSS variable utilities
 3. **UI Expert**: Validated visual consistency across all glass components
 4. **Testing Expert**: Verified no regressions in existing functionality
 
@@ -327,7 +349,7 @@ The RR-232 implementation involved comprehensive expert consultation:
 .new-glass-component {
   /* Extend base class */
   @apply liquid-glass-primary;
-  
+
   /* Add component-specific properties */
   padding: 0 16px;
   height: var(--glass-control-height);
@@ -355,7 +377,7 @@ All glass components should follow mobile-first responsive patterns:
     /* Desktop enhancements */
     min-width: 140px;
   }
-  
+
   .glass-component:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: var(--glass-depth-shadow-enhanced);
@@ -380,7 +402,7 @@ The unified glass system is fully integrated with the violet theme:
   /* GPU acceleration */
   transform: translateZ(0);
   will-change: transform, background-color;
-  
+
   /* Optimized transitions */
   transition: all 200ms var(--motion-smooth);
 }
@@ -408,18 +430,21 @@ All unified glass components maintain accessibility standards:
 ## Quality Validation Checklist
 
 ### Visual Consistency
+
 - [ ] All components use unified depth variables
-- [ ] Primary/secondary hierarchy is correctly applied  
+- [ ] Primary/secondary hierarchy is correctly applied
 - [ ] Glass effects use consistent blur and saturation values
 - [ ] Counter styling works across all themes
 
 ### Functional Requirements
+
 - [ ] Hover states work correctly on desktop
 - [ ] Touch interactions are optimized for mobile
 - [ ] Transitions are smooth (200ms timing)
 - [ ] Dark mode theming is consistent
 
 ### Performance Validation
+
 - [ ] No layout shifts during transitions
 - [ ] Smooth 60fps animations maintained
 - [ ] GPU acceleration properly applied
@@ -428,12 +453,14 @@ All unified glass components maintain accessibility standards:
 ## Browser Support
 
 ### Full Glass Effect Support
+
 - Chrome 76+ (backdrop-filter)
 - Safari 14+
-- Firefox 103+  
+- Firefox 103+
 - Edge 79+
 
 ### Fallback Behavior
+
 Components gracefully degrade to solid backgrounds in unsupported browsers through CSS feature queries:
 
 ```css
@@ -467,6 +494,7 @@ When adding new glass component types:
 ### Performance Monitoring
 
 Monitor glass system performance for:
+
 - **Memory usage**: Excessive backdrop-filter can impact performance
 - **Frame rate**: Ensure smooth animations across devices
 - **Battery usage**: Glass effects increase power consumption on mobile
@@ -485,7 +513,7 @@ Monitor glass system performance for:
 This unified system represents the culmination of several major implementations:
 
 - **RR-224**: Transparency unification and enhanced glass effects
-- **RR-230**: Component-based architecture migration  
+- **RR-230**: Component-based architecture migration
 - **RR-231**: Foundation finalization with TypeScript interfaces
 - **RR-232**: Final unification with master variables and depth control
 
