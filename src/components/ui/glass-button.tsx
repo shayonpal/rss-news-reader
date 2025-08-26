@@ -49,11 +49,11 @@ const glassButtonVariants = cva(
         ].join(" "),
         secondary: [
           "backdrop-blur-[16px] backdrop-saturate-[180%]",
-          "border border-gray-500/10 dark:border-gray-400/10",
-          "bg-gray-500/10 dark:bg-gray-400/10",
-          "text-gray-700 dark:text-gray-300",
-          "hover:bg-gray-500/15 dark:hover:bg-gray-400/15",
-          "shadow-lg shadow-gray-500/5 dark:shadow-gray-400/5",
+          "border border-violet-500/10 dark:border-violet-400/10",
+          "bg-violet-500/10 dark:bg-violet-400/10",
+          "text-violet-700 dark:text-violet-300",
+          "hover:bg-violet-500/15 dark:hover:bg-violet-400/15",
+          "shadow-lg shadow-violet-500/5 dark:shadow-violet-400/5",
         ].join(" "),
         ghost: [
           "backdrop-blur-[16px] backdrop-saturate-[180%]",
