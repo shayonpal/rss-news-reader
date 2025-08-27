@@ -17,6 +17,8 @@ interface UseAutoParseContentResult {
   clearParsedContent: () => void;
 }
 
+type JobState = "idle" | "scheduled" | "running" | "done" | "failed";
+
 /**
  * Auto-parse content hook for RSS articles
  *
@@ -26,10 +28,11 @@ interface UseAutoParseContentResult {
  * - Content contains truncation indicators
  *
  * Features:
- * - Race condition protection
+ * - Race condition protection via state machine
  * - Request cancellation on component unmount
  * - Manual parsing support
  * - Proper error handling
+ * - Stable callback identity
  */
 export function useAutoParseContent({
   article,
@@ -40,18 +43,46 @@ export function useAutoParseContent({
   const [parseError, setParseError] = useState<string | null>(null);
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
+  
+  // Refs for stable callback pattern
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Use ref to track processed articles to prevent infinite loops
-  const processedArticlesRef = useRef<Set<string>>(new Set());
   const mountedRef = useRef(true);
+  
+  // RR-245 fix: Article ref to access current article in stable callback
+  const articleRef = useRef(article);
+  useEffect(() => {
+    articleRef.current = article;
+  }, [article]);
+  
+  // RR-245 fix: State machine for tracking parse jobs per article
+  const jobsRef = useRef(
+    new Map<string, JobState>()
+  );
+  
+  // RR-245 fix: Sync isParsing state with ref for stable callback access
+  const isParsingRef = useRef(false);
+  useEffect(() => {
+    isParsingRef.current = isParsing;
+  }, [isParsing]);
 
+  // RR-245 fix: Stable callback with empty dependencies
   const triggerParse = useCallback(
     async (isManual = false) => {
-      if (!isManual && isParsing) return;
-      if (!article.url || !mountedRef.current) return;
+      const currentArticle = articleRef.current;
+      if (!currentArticle?.url || !mountedRef.current) return;
+      
+      const job = jobsRef.current.get(currentArticle.id);
+      
+      // Skip if already processing (unless manual)
+      if (
+        !isManual &&
+        (job === "running" || job === "scheduled")
+      ) {
+        return;
+      }
 
-      const currentArticleId = article.id;
+      const currentArticleId = currentArticle.id;
+      jobsRef.current.set(currentArticleId, "running");
 
       // Cancel any existing request
       if (abortControllerRef.current) {
@@ -67,7 +98,7 @@ export function useAutoParseContent({
 
       try {
         const response = await fetch(
-          `/reader/api/articles/${article.id}/fetch-content`,
+          `/reader/api/articles/${currentArticleId}/fetch-content`,
           {
             method: "POST",
             headers: {
@@ -80,7 +111,8 @@ export function useAutoParseContent({
           }
         );
 
-        if (currentArticleId !== article.id || !mountedRef.current) {
+        // Check if component is still mounted and article hasn't changed
+        if (!mountedRef.current || articleRef.current.id !== currentArticleId) {
           return;
         }
 
@@ -101,38 +133,44 @@ export function useAutoParseContent({
 
         const data = await response.json();
 
-        if (currentArticleId !== article.id || !mountedRef.current) {
+        // Double-check mount and article ID
+        if (!mountedRef.current || articleRef.current.id !== currentArticleId) {
           return;
         }
 
         if (data.success && data.content) {
           setParsedContent(data.content);
           setParseError(null);
+          jobsRef.current.set(currentArticleId, "done");
         } else if (data.fallbackContent) {
           setParsedContent(data.fallbackContent);
           setParseError(data.error || "Using partial content");
+          jobsRef.current.set(currentArticleId, "done");
         }
       } catch (err) {
-        if (currentArticleId !== article.id || !mountedRef.current) {
+        // Check mount and article ID before setting error state
+        if (
+          !mountedRef.current || 
+          articleRef.current.id !== currentArticleId ||
+          (err instanceof Error && err.name === "AbortError")
+        ) {
           return;
         }
 
         if (err instanceof Error) {
-          if (err.name === "AbortError") {
-            return;
-          }
           setParseError(err.message);
         } else {
           setParseError("An unexpected error occurred");
         }
+        jobsRef.current.set(currentArticleId, "failed");
       } finally {
-        if (currentArticleId === article.id && mountedRef.current) {
+        if (mountedRef.current && articleRef.current.id === currentArticleId) {
           setIsParsing(false);
         }
         abortControllerRef.current = null;
       }
     },
-    [article.id, article.url, isParsing]
+    [] // Empty dependencies for stable identity
   );
 
   // Reset state when article changes
@@ -151,13 +189,22 @@ export function useAutoParseContent({
   // Auto-parse logic
   useEffect(() => {
     if (!enabled || !mountedRef.current) return;
-    if (processedArticlesRef.current.has(article.id)) return;
-    if (article.hasFullContent && article.fullContent) return;
-    if (article.parseFailed === true) return;
+    
+    const job = jobsRef.current.get(article.id);
+    
+    // Skip if already processed or in progress
+    if (
+      job === "running" ||
+      job === "scheduled" ||
+      (article.hasFullContent && article.fullContent) ||
+      article.parseFailed === true
+    ) {
+      return;
+    }
 
     let needsParsing = false;
 
-    // Auto-parse logic
+    // Determine if parsing is needed
     if (feed?.isPartialContent === true) {
       needsParsing = true;
     } else if (article.content && article.content.length < 500) {
@@ -176,19 +223,20 @@ export function useAutoParseContent({
     }
 
     if (needsParsing) {
-      // Mark as processed to prevent re-triggering
-      processedArticlesRef.current.add(article.id);
+      // RR-245 fix: Mark as scheduled and trigger parse
+      // Direct call is safe since triggerParse is stable and checks job state
+      jobsRef.current.set(article.id, "scheduled");
       triggerParse(false);
     }
   }, [
     enabled,
     article.id,
+    article.content,
     article.hasFullContent,
     article.fullContent,
     article.parseFailed,
-    article.content,
     feed?.isPartialContent,
-    triggerParse,
+    // Note: triggerParse is NOT in dependencies (stable identity)
   ]);
 
   // Cleanup on unmount
