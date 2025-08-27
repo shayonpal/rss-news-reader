@@ -148,9 +148,10 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         })
       });
 
+      const shortArticle = createMockArticle({ content: "Short content" });
       const { result } = renderHook(() =>
         useAutoParseContent({
-          article: createMockArticle({ content: "Short content" }), // < 500 chars
+          article: shortArticle, // keep article stable across renders
           feed,
           enabled: true,
         })
@@ -194,9 +195,10 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         })
       });
 
+      const truncArticle = createMockArticle({ content: contentWithTruncation });
       const { result } = renderHook(() =>
         useAutoParseContent({
-          article: createMockArticle({ content: contentWithTruncation }),
+          article: truncArticle,
           feed,
           enabled: true,
         })
@@ -379,22 +381,12 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
     });
 
     it("should prevent duplicate fetches while loading", async () => {
-      // RR-245 fix: Mock with proper delay
-      (global.fetch as any).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  ok: true,
-                  json: async () => ({
-                    success: true,
-                    content: "<p>Content</p>",
-                  }),
-                }),
-              100
-            )
-          )
+      // Use a controllable promise instead of timers to avoid flakiness
+      let resolveFetch: any;
+      (global.fetch as any).mockImplementation(() =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
       );
 
       const { result } = renderHook(() =>
@@ -419,8 +411,13 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         result.current.triggerParse();
       });
 
-      // RR-245 fix: Advance timers to complete the fetch
-
+      // Complete the in-flight request
+      await act(async () => {
+        resolveFetch({
+          ok: true,
+          json: async () => ({ success: true, content: "<p>Content</p>" }),
+        });
+      });
       // Wait for parsing to complete
       await waitFor(
         () => {
@@ -461,7 +458,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
     });
 
     it("should handle rate limit errors specially", async () => {
-      // RR-245 fix: Mock with delay for React initialization
+      // Stable article + immediate 429 response
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 429,
@@ -470,16 +467,14 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         })
       });
 
+      const article429 = createMockArticle();
       const { result } = renderHook(() =>
         useAutoParseContent({
-          article: createMockArticle(),
+          article: article429,
           feed: { isPartialContent: true } as Feed,
           enabled: true,
         })
       );
-
-      // RR-245 fix: Let microtasks run for queueMicrotask
-      await act(async () => {});
 
       await waitFor(() => {
         expect(result.current.parseError).toBe(

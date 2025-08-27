@@ -58,6 +58,10 @@ export function useAutoParseContent({
   const jobsRef = useRef(
     new Map<string, JobState>()
   );
+  // Lightweight cooldown to avoid burst re-triggers when parents recreate article objects every render
+  const lastTriggerKeyRef = useRef<string | null>(null);
+  const lastTriggerAtRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
   
   // RR-245 fix: Sync isParsing state with ref for stable callback access
   const isParsingRef = useRef(false);
@@ -74,15 +78,14 @@ export function useAutoParseContent({
       const job = jobsRef.current.get(currentArticle.id);
       
       // Skip if already processing (unless manual)
-      if (
-        !isManual &&
-        (job === "running" || job === "scheduled")
-      ) {
+      if (!isManual && (job === "running" || inFlightRef.current)) {
         return;
       }
 
       const currentArticleId = currentArticle.id;
-      jobsRef.current.set(currentArticleId, "running");
+      const currentArticleUrl = currentArticle.url;
+      jobsRef.current.set(currentArticleUrl, "running");
+      inFlightRef.current = true;
 
       // Cancel any existing request
       if (abortControllerRef.current) {
@@ -112,7 +115,7 @@ export function useAutoParseContent({
         );
 
         // Check if component is still mounted and article hasn't changed
-        if (!mountedRef.current || articleRef.current.id !== currentArticleId) {
+        if (!mountedRef.current || articleRef.current.url !== currentArticleUrl) {
           return;
         }
 
@@ -134,18 +137,18 @@ export function useAutoParseContent({
         const data = await response.json();
 
         // Double-check mount and article ID
-        if (!mountedRef.current || articleRef.current.id !== currentArticleId) {
+        if (!mountedRef.current || articleRef.current.url !== currentArticleUrl) {
           return;
         }
 
         if (data.success && data.content) {
           setParsedContent(data.content);
           setParseError(null);
-          jobsRef.current.set(currentArticleId, "done");
+          jobsRef.current.set(currentArticleUrl, "done");
         } else if (data.fallbackContent) {
           setParsedContent(data.fallbackContent);
           setParseError(data.error || "Using partial content");
-          jobsRef.current.set(currentArticleId, "done");
+          jobsRef.current.set(currentArticleUrl, "done");
         }
       } catch (err) {
         // Check mount and article ID before setting error state
@@ -162,40 +165,58 @@ export function useAutoParseContent({
         } else {
           setParseError("An unexpected error occurred");
         }
-        jobsRef.current.set(currentArticleId, "failed");
+        jobsRef.current.set(currentArticleUrl, "failed");
       } finally {
-        if (mountedRef.current && articleRef.current.id === currentArticleId) {
+        if (mountedRef.current && articleRef.current.url === currentArticleUrl) {
           setIsParsing(false);
         }
         abortControllerRef.current = null;
+        inFlightRef.current = false;
       }
     },
     [] // Empty dependencies for stable identity
   );
 
-  // Reset state when article changes
+  // Reset state when article URL changes (treat as true article change)
   useEffect(() => {
     setParsedContent(null);
     setParseError(null);
     setParseAttempted(false);
-    setIsParsing(false);
+    // Do not force isParsing=false here to avoid clobbering a just-started manual trigger
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+
+    // Reset cooldown on explicit article change so a new article can auto-parse
+    lastTriggerKeyRef.current = null;
+    lastTriggerAtRef.current = 0;
+  }, [article.url]);
+
+  // When the article identity changes even with the same URL, allow re-triggering
+  useEffect(() => {
+    if (article.url) {
+      jobsRef.current.delete(article.url);
+      // also clear cooldown so the next effect can fire immediately
+      lastTriggerKeyRef.current = null;
+      lastTriggerAtRef.current = 0;
+    }
+    // do not clear parsedContent here; next fetch will overwrite if needed
   }, [article.id]);
 
   // Auto-parse logic
   useEffect(() => {
     if (!enabled || !mountedRef.current) return;
     
-    const job = jobsRef.current.get(article.id);
-    
+    const job = jobsRef.current.get(article.url);
+
     // Skip if already processed or in progress
     if (
       job === "running" ||
       job === "scheduled" ||
+      job === "done" ||
+      job === "failed" ||
       (article.hasFullContent && article.fullContent) ||
       article.parseFailed === true
     ) {
@@ -223,9 +244,13 @@ export function useAutoParseContent({
     }
 
     if (needsParsing) {
-      // RR-245 fix: Mark as scheduled and trigger parse
-      // Direct call is safe since triggerParse is stable and checks job state
-      jobsRef.current.set(article.id, "scheduled");
+      const key = article.url || article.id;
+      const now = Date.now();
+      if (lastTriggerKeyRef.current === key && now - lastTriggerAtRef.current < 100) {
+        return; // Cooldown: avoid tight re-triggers across rapid re-renders
+      }
+      lastTriggerKeyRef.current = key;
+      lastTriggerAtRef.current = now;
       triggerParse(false);
     }
   }, [
