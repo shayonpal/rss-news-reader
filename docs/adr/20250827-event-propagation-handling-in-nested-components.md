@@ -26,8 +26,8 @@ This is a common issue in React applications with nested interactive elements wh
 ```typescript
 const handleSummaryClick = (event: React.MouseEvent) => {
   event.stopPropagation(); // Prevents bubbling to parent
-  event.preventDefault();  // Prevents default browser behavior
-  
+  event.preventDefault(); // Prevents default browser behavior
+
   // Execute intended action
   onGenerateSummary();
 };
@@ -40,6 +40,7 @@ Child components that contain interactive elements must explicitly handle their 
 ### 3. Defensive Programming
 
 Parent components should be designed to handle both scenarios:
+
 - Direct clicks on the parent element
 - Clicks that may bubble from child elements
 
@@ -53,11 +54,13 @@ Parent components should be designed to handle both scenarios:
 ## Consequences
 
 ### Positive
+
 - Users can confidently click buttons without unexpected navigation
 - Component behaviors are more predictable and testable
 - Clear separation of concerns between parent and child interactions
 
 ### Negative
+
 - **Requires Careful Implementation**: Developers must remember to add event control
 - **More Verbose Code**: Each interactive child needs explicit event handling
 - **Potential Over-stopping**: May need to be selective about which events to stop
@@ -82,7 +85,7 @@ const SummaryButton = ({ onGenerateSummary }: SummaryButtonProps) => {
     event.preventDefault();  // No default button behavior
     onGenerateSummary();
   };
-  
+
   return (
     <button onClick={handleClick}>
       Generate Summary
@@ -95,7 +98,7 @@ const ArticleCard = ({ article, onNavigate }: ArticleCardProps) => {
   const handleCardClick = () => {
     onNavigate(article.id);
   };
-  
+
   return (
     <div onClick={handleCardClick} className="cursor-pointer">
       <h3>{article.title}</h3>

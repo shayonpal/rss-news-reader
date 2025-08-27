@@ -77,11 +77,11 @@ export function ArticleActionButton({
 
   /**
    * Handle button click with proper event isolation
-   * 
+   *
    * RR-255 Fix: Prevents event propagation to parent article card.
    * This ensures clicking the summary button generates a summary
    * instead of navigating to the article detail view.
-   * 
+   *
    * @param e - The mouse event from the button click
    */
   const handleClick = (e: React.MouseEvent) => {

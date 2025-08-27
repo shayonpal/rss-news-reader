@@ -1,6 +1,6 @@
 /**
  * RR-255: Fix Summary button opens article + retire IOSButton
- * 
+ *
  * Test suite validates:
  * 1. Event propagation prevention (critical path)
  * 2. IOSButton component removal
@@ -10,7 +10,12 @@
  */
 
 import React from "react";
-import { render, screen, waitFor, cleanup as rtlCleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  cleanup as rtlCleanup,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
@@ -93,7 +98,7 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Manually trigger event with spy
       const clickEvent = new MouseEvent("click", { bubbles: true });
       Object.defineProperty(clickEvent, "stopPropagation", {
@@ -111,7 +116,11 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
 
       render(
         <div onClick={cardHandler}>
-          <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+          <SummaryButton
+            articleId="test-123"
+            hasSummary={false}
+            variant="icon"
+          />
         </div>
       );
 
@@ -135,7 +144,11 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       render(
         <div onClick={containerHandler}>
           <div onClick={cardHandler}>
-            <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+            <SummaryButton
+              articleId="test-123"
+              hasSummary={false}
+              variant="icon"
+            />
           </div>
         </div>
       );
@@ -155,7 +168,11 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
 
       render(
         <div onClick={cardHandler} data-testid="card">
-          <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+          <SummaryButton
+            articleId="test-123"
+            hasSummary={false}
+            variant="icon"
+          />
           <button onClick={otherButtonHandler}>Other Action</button>
         </div>
       );
@@ -187,7 +204,7 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       expect(container.querySelector(".ios-button")).toBeNull();
       expect(container.querySelector("[data-ios-button]")).toBeNull();
       expect(container.querySelector("[data-ios]")).toBeNull();
-      
+
       // Legacy iOS-specific classes should not exist
       const button = screen.getByRole("button");
       const classes = button.className;
@@ -200,15 +217,15 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Should have Glass button classes
       expect(button).toHaveClass("glass-surface");
       expect(button).toHaveAttribute("data-glass-button");
-      
+
       // Should have toolbar-specific attributes
       const classList = Array.from(button.classList);
-      const hasGlassClasses = classList.some(cls => 
-        cls.includes("glass") || cls.includes("toolbar")
+      const hasGlassClasses = classList.some(
+        (cls) => cls.includes("glass") || cls.includes("toolbar")
       );
       expect(hasGlassClasses).toBe(true);
     });
@@ -242,14 +259,18 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       );
 
       // Should still work with different props
-      expect(screen.getByRole("button", { name: /re-summarize/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /re-summarize/i })
+      ).toBeInTheDocument();
     });
 
     it("should not import IOSButton anywhere in component tree", () => {
       // This test validates at build time that IOSButton import is removed
       // The test itself passing indicates no import errors occurred
       expect(() => {
-        render(<SummaryButton articleId="test" hasSummary={false} variant="icon" />);
+        render(
+          <SummaryButton articleId="test" hasSummary={false} variant="icon" />
+        );
       }).not.toThrow();
     });
   });
@@ -262,10 +283,10 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
 
       const button = screen.getByRole("button");
       expect(button).toHaveClass("glass-surface");
-      
+
       // Check for glass morphing classes
       const hasGlassMorphing = Array.from(button.classList).some(
-        cls => cls.includes("morph") || cls.includes("blur")
+        (cls) => cls.includes("morph") || cls.includes("blur")
       );
       expect(hasGlassMorphing).toBe(true);
     });
@@ -277,23 +298,28 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
 
       const button = screen.getByRole("button");
       const hasVioletClasses = Array.from(button.classList).some(
-        cls => cls.includes("violet") || cls.includes("primary")
+        (cls) => cls.includes("violet") || cls.includes("primary")
       );
       expect(hasVioletClasses).toBe(true);
     });
 
     it("should maintain 44x44px minimum touch target", () => {
       const { container } = render(
-        <SummaryButton articleId="test-123" hasSummary={false} variant="icon" size="sm" />
+        <SummaryButton
+          articleId="test-123"
+          hasSummary={false}
+          variant="icon"
+          size="sm"
+        />
       );
 
       const button = screen.getByRole("button");
       const styles = window.getComputedStyle(button);
-      
+
       // Parse dimensions (handle 'px' suffix)
       const width = parseInt(styles.minWidth || styles.width);
       const height = parseInt(styles.minHeight || styles.height);
-      
+
       // WCAG 2.1 AA requires 44x44px minimum
       expect(width).toBeGreaterThanOrEqual(44);
       expect(height).toBeGreaterThanOrEqual(44);
@@ -303,10 +329,12 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       const user = userEvent.setup({ delay: null });
       mockGenerateSummary.mockClear();
       mockGenerateSummary.mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100))
       );
 
-      render(<SummaryButton articleId="test-123" hasSummary={false} variant="icon" />);
+      render(
+        <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+      );
 
       const button = screen.getByRole("button");
       await user.click(button);
@@ -317,7 +345,7 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
 
       // Advance timers to complete
       vi.advanceTimersByTime(100);
-      
+
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
         expect(button).not.toBeDisabled();
@@ -329,10 +357,15 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       let resolveGeneration: () => void;
       mockGenerateSummary.mockClear();
       mockGenerateSummary.mockImplementation(
-        () => new Promise(resolve => { resolveGeneration = resolve; })
+        () =>
+          new Promise((resolve) => {
+            resolveGeneration = resolve;
+          })
       );
 
-      render(<SummaryButton articleId="test-123" hasSummary={false} variant="icon" />);
+      render(
+        <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+      );
 
       const button = screen.getByRole("button");
       expect(button).not.toBeDisabled();
@@ -356,7 +389,9 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
         new Error("API rate limit exceeded")
       );
 
-      render(<SummaryButton articleId="test-123" hasSummary={false} variant="icon" />);
+      render(
+        <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+      );
 
       const button = screen.getByRole("button");
       await user.click(button);
@@ -377,11 +412,11 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Check for accessible properties
       expect(button).toHaveAttribute("aria-label");
       expect(button.getAttribute("aria-label")).toMatch(/summarize/i);
-      
+
       // Check for proper focus management
       expect(button).not.toHaveAttribute("tabindex", "-1");
     });
@@ -392,19 +427,22 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       );
 
       const button = screen.getByRole("button");
-      expect(button).toHaveAttribute("aria-label", expect.stringMatching(/summarize/i));
-      
+      expect(button).toHaveAttribute(
+        "aria-label",
+        expect.stringMatching(/summarize/i)
+      );
+
       // Loading state
       rerender(
         <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
       );
-      
+
       // During loading (simulate)
       mockGenerateSummary.mockClear();
       mockGenerateSummary.mockImplementation(() => new Promise(() => {}));
-      
+
       userEvent.click(button);
-      
+
       waitFor(() => {
         expect(button).toHaveAttribute("aria-busy", "true");
         expect(button).toHaveAttribute("aria-disabled", "true");
@@ -440,7 +478,7 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       );
 
       // Check for live region
-      const liveRegion = container.querySelector('[aria-live]');
+      const liveRegion = container.querySelector("[aria-live]");
       expect(liveRegion).toBeInTheDocument();
       expect(liveRegion).toHaveAttribute("aria-live", "polite");
     });
@@ -482,7 +520,7 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
 
       const button = screen.getByRole("button");
       const styles = window.getComputedStyle(button);
-      
+
       // Check for touch-action CSS to prevent zoom
       expect(styles.touchAction).toMatch(/manipulation|none/);
     });
@@ -492,7 +530,9 @@ describe("RR-255: SummaryButton Event Propagation Fix", () => {
       mockGenerateSummary.mockResolvedValue({ success: true });
 
       const user = userEvent.setup({ delay: null });
-      render(<SummaryButton articleId="test-123" hasSummary={false} variant="icon" />);
+      render(
+        <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
+      );
 
       const button = screen.getByRole("button");
 
