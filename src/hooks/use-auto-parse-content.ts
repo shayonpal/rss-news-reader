@@ -17,7 +17,7 @@ interface UseAutoParseContentResult {
   clearParsedContent: () => void;
 }
 
-type JobState = "idle" | "scheduled" | "running" | "done" | "failed";
+type JobState = "idle" | "running" | "done" | "failed";
 
 /**
  * Auto-parse content hook for RSS articles
@@ -75,7 +75,7 @@ export function useAutoParseContent({
       const currentArticle = articleRef.current;
       if (!currentArticle?.url || !mountedRef.current) return;
       
-      const job = jobsRef.current.get(currentArticle.id);
+      const job = jobsRef.current.get(currentArticle.url);
       
       // Skip if already processing (unless manual)
       if (!isManual && (job === "running" || inFlightRef.current)) {
@@ -203,7 +203,8 @@ export function useAutoParseContent({
       lastTriggerAtRef.current = 0;
     }
     // do not clear parsedContent here; next fetch will overwrite if needed
-  }, [article.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article.id, article.url]); // article.url added to properly track URL changes
 
   // Auto-parse logic
   useEffect(() => {
@@ -214,7 +215,6 @@ export function useAutoParseContent({
     // Skip if already processed or in progress
     if (
       job === "running" ||
-      job === "scheduled" ||
       job === "done" ||
       job === "failed" ||
       (article.hasFullContent && article.fullContent) ||
@@ -256,12 +256,13 @@ export function useAutoParseContent({
   }, [
     enabled,
     article.id,
+    article.url, // Added for consistency
     article.content,
     article.hasFullContent,
     article.fullContent,
     article.parseFailed,
     feed?.isPartialContent,
-    // Note: triggerParse is NOT in dependencies (stable identity)
+    triggerParse, // Added since it's now stable with empty deps
   ]);
 
   // Cleanup on unmount
