@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SimpleFeedSidebar } from "@/components/feeds/simple-feed-sidebar";
 import { ArticleList } from "@/components/articles/article-list";
@@ -28,7 +28,8 @@ import { articleListStateManager } from "@/lib/utils/article-list-state-manager"
 import { GlassIconButton } from "@/components/ui/glass-button";
 import { GlassNav } from "@/components/ui/glass-nav";
 
-export default function HomePage() {
+// Separate component that uses useSearchParams
+function HomePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -622,5 +623,20 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary for useSearchParams
+export default function HomePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <HomePageContent />
+    </Suspense>
   );
 }

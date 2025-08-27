@@ -19,6 +19,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { CollapsibleFilterSection } from "@/components/ui/collapsible-filter-section";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -285,12 +286,7 @@ export function SimpleFeedSidebar({
             </p>
             {syncProgress > 0 && (
               <div className="mt-3 w-full max-w-xs">
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${syncProgress}%` }}
-                  />
-                </div>
+                <ProgressBar value={syncProgress} variant="sync" />
                 <div className="mt-1 text-center text-xs text-muted-foreground">
                   {Math.round(syncProgress)}%
                 </div>
@@ -363,9 +359,10 @@ export function SimpleFeedSidebar({
                     {[...Array(6)].map((_, i) => (
                       <div key={`skeleton-feed-${i}`} className="px-3 py-2">
                         <div className="flex items-center justify-between">
-                          <div
-                            className="h-4 animate-pulse rounded bg-muted"
-                            style={{ width: `${60 + Math.random() * 40}%` }}
+                          <ProgressBar
+                            value={60 + Math.random() * 40}
+                            variant="skeleton"
+                            className="h-4 rounded"
                           />
                           <div className="h-4 w-8 animate-pulse rounded bg-muted" />
                         </div>
@@ -493,9 +490,10 @@ export function SimpleFeedSidebar({
                     {[...Array(4)].map((_, i) => (
                       <div key={`skeleton-tag-${i}`} className="px-3 py-2">
                         <div className="flex items-center justify-between">
-                          <div
-                            className="h-4 animate-pulse rounded bg-muted"
-                            style={{ width: `${50 + Math.random() * 30}%` }}
+                          <ProgressBar
+                            value={50 + Math.random() * 30}
+                            variant="skeleton"
+                            className="h-4 rounded"
                           />
                           <div className="h-4 w-6 animate-pulse rounded bg-muted" />
                         </div>

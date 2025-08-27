@@ -84,6 +84,12 @@ export function ScrollableArticleHeader({
   const confirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countManager = useRef(new ArticleCountManager());
 
+  // RR-248: Performance optimization refs
+  const headerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const lastScrollYRef = useRef(0);
+
   // Get selected feed/folder/tag objects (memoized to prevent re-renders)
   const selectedFeed = useMemo(
     () => (selectedFeedId ? getFeed(selectedFeedId) : undefined),
@@ -101,6 +107,69 @@ export function ScrollableArticleHeader({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  // RR-248: Performance-optimized scroll handler with requestAnimationFrame
+  useEffect(() => {
+    const updateHeaderStyles = () => {
+      if (!headerRef.current || !titleRef.current) return;
+
+      const currentScrollY = scrollY;
+      if (Math.abs(currentScrollY - lastScrollYRef.current) < 1) {
+        // Skip update if scroll change is minimal
+        return;
+      }
+
+      lastScrollYRef.current = currentScrollY;
+
+      // Use CSS custom properties for GPU-accelerated animations
+      const header = headerRef.current;
+      const title = titleRef.current;
+
+      // Batch CSS variable updates
+      header.style.setProperty("--scroll-y", currentScrollY.toString());
+      header.style.setProperty("--blur-intensity", blurIntensity.toString());
+      header.style.setProperty("--header-height", `${headerHeight}px`);
+      header.style.setProperty(
+        "--background-opacity",
+        Math.min(0.22, 0.18 + currentScrollY / 1000).toString()
+      );
+      header.style.setProperty(
+        "--border-opacity",
+        Math.min(0.08, 0.04 + currentScrollY / 2000).toString()
+      );
+
+      title.style.setProperty("--title-scale", titleScale.toString());
+      title.style.setProperty(
+        "--title-opacity",
+        Math.max(0.7, 1 - currentScrollY / 200).toString()
+      );
+
+      const fontSize =
+        currentScrollY <= 44
+          ? 34
+          : currentScrollY <= 150
+            ? 34 - (currentScrollY - 44) * 0.17
+            : 17;
+      title.style.setProperty("--title-font-size", `${fontSize}px`);
+    };
+
+    // Use requestAnimationFrame for smooth updates
+    const scheduleUpdate = () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+
+      rafIdRef.current = requestAnimationFrame(updateHeaderStyles);
+    };
+
+    scheduleUpdate();
+
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, [scrollY, titleScale, headerHeight, blurIntensity]);
 
   // Fetch counts when filters change
   useEffect(() => {
@@ -129,6 +198,9 @@ export function ScrollableArticleHeader({
       if (confirmTimeoutRef.current) {
         clearTimeout(confirmTimeoutRef.current);
       }
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
     };
   }, []);
 
@@ -139,49 +211,6 @@ export function ScrollableArticleHeader({
         CSS.supports?.("-webkit-backdrop-filter", "blur(1px)") ||
         false
       : true;
-
-  // Dynamic styles based on scroll position
-  const containerStyles: React.CSSProperties = {
-    // iOS Liquid Glass effect
-    backdropFilter: supportsBackdropFilter
-      ? `blur(${blurIntensity}px) saturate(180%)`
-      : undefined,
-    WebkitBackdropFilter: supportsBackdropFilter
-      ? `blur(${blurIntensity}px) saturate(180%)`
-      : undefined,
-
-    // Background with progressive enhancement
-    background: supportsBackdropFilter
-      ? `rgba(255, 255, 255, ${Math.min(0.22, 0.18 + scrollY / 1000)})`
-      : "rgba(255, 255, 255, 0.95)",
-
-    // Height animation
-    height: `${headerHeight}px`,
-
-    // Transition timing with iOS spring physics
-    transition: "all 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
-
-    // Glass border
-    borderBottom: `1px solid rgba(0, 0, 0, ${Math.min(0.08, 0.04 + scrollY / 2000)})`,
-
-    // Performance optimizations
-    willChange: "transform, backdrop-filter, background, height",
-    transform: "translateZ(0)", // Force GPU acceleration
-  };
-
-  const titleStyles: React.CSSProperties = {
-    transform: `scale(${titleScale})`,
-    opacity: Math.max(0.7, 1 - scrollY / 200),
-    fontSize:
-      scrollY <= 44
-        ? "34px"
-        : scrollY <= 150
-          ? `${34 - (scrollY - 44) * 0.17}px`
-          : "17px",
-    transition: "all 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
-    willChange: "transform",
-    transformOrigin: "left center",
-  };
 
   const handleMenuClick = () => {
     if (onMenuClick) {
@@ -275,16 +304,20 @@ export function ScrollableArticleHeader({
 
   return (
     <header
+      ref={headerRef}
       data-testid="scrollable-header-container"
       data-scroll-state={scrollState}
       data-owner="UnifiedScrollableHeader"
       role="banner"
-      className="fixed left-0 right-0 top-0 z-40 overflow-hidden"
-      style={{
-        ...containerStyles,
-        height: "auto", // Let content determine height
-        minHeight: headerHeight,
-      }}
+      className="scrollable-article-header fixed left-0 right-0 top-0 z-40 overflow-hidden"
+      style={
+        {
+          // Static styles for non-animated properties
+          minHeight: `${headerHeight}px`,
+          // CSS custom properties will handle dynamic values via RAF updates
+          "--supports-backdrop-filter": supportsBackdropFilter ? "1" : "0",
+        } as React.CSSProperties
+      }
     >
       <div className="relative">
         {/* Navigation Section */}
@@ -300,79 +333,47 @@ export function ScrollableArticleHeader({
             />
           )}
 
-          {/* Dynamic Navigation Title */}
-          <h1
-            data-testid="header-title"
-            role="heading"
-            aria-level={1}
-            className={`truncate font-bold text-foreground ${
-              onMenuClick ? "mx-4 flex-1" : "mx-auto text-center"
-            }`}
-            style={titleStyles}
+          {/* Page Title with Scroll Effects */}
+          <div
+            ref={titleRef}
+            className="scrollable-title flex-1 px-2 text-center"
+            data-testid="scrollable-title"
           >
-            RSS News Reader
-          </h1>
-
-          {/* Spacer for layout balance - only when hamburger is shown */}
-          {onMenuClick && <div className="h-12 w-12" />}
-        </div>
-
-        {/* Content Section - Slides up/down with scroll */}
-        <div
-          className="px-4 pb-4 transition-all duration-300 ease-out"
-          style={{
-            transform: contentVisible ? "translateY(0)" : "translateY(-100%)",
-            opacity: contentVisible ? 1 : 0,
-          }}
-        >
-          {/* Page Title and Count */}
-          <div className="mb-3">
-            <h2 className="mb-1 text-xl font-semibold text-foreground">
+            <h1 className="scrollable-title-text truncate font-bold text-foreground">
               {pageTitle}
-            </h2>
-            <p className="text-sm text-muted-foreground">{getCountDisplay()}</p>
+            </h1>
           </div>
 
-          {/* Filter Controls and Actions */}
-          <div className="flex items-center justify-between gap-4">
-            {/* Read Status Filter */}
-            <ReadStatusFilter />
-
-            {/* Mark All Read Button */}
-            {(selectedFeedId || selectedTagId) && (
-              <button
-                onClick={handleMarkAllClick}
-                disabled={counts.unread === 0 && !waitingConfirmation}
-                className={`liquid-glass-btn h-10 rounded-full px-4 transition-all duration-200 ease-out ${getButtonState() === "disabled" ? "cursor-not-allowed opacity-50" : ""} ${getButtonState() === "confirming" ? "ring-2 ring-primary/50" : ""} `}
-              >
-                <span className="text-sm font-medium">
-                  {getButtonState() === "loading" && (
-                    <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  )}
-                  {getButtonState() === "confirming"
-                    ? "Click again to confirm"
-                    : "Mark All Read"}
-                </span>
-              </button>
-            )}
-          </div>
+          {/* Mark All Read Button */}
+          {selectedFeedId || selectedTagId ? (
+            <button
+              onClick={handleMarkAllClick}
+              disabled={getButtonState() === "disabled"}
+              className={`liquid-glass-mark-all-read state-${getButtonState()} relative h-12 w-12 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50`}
+              aria-label="Mark all articles as read"
+            >
+              {getButtonState() === "loading" ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : getButtonState() === "confirming" ? (
+                <AlertTriangle className="h-5 w-5" />
+              ) : (
+                <CircleCheckBig className="h-5 w-5" />
+              )}
+            </button>
+          ) : (
+            <div className="w-14" /> /* Spacer for alignment */
+          )}
         </div>
-      </div>
 
-      {/* Dark mode support */}
-      <style jsx>{`
-        .dark [data-testid="scrollable-header-container"] {
-          background: ${supportsBackdropFilter
-            ? `rgba(10, 10, 10, ${Math.min(0.22, 0.18 + scrollY / 1000)})`
-            : "rgba(0, 0, 0, 0.9)"};
-          border-bottom-color: rgba(
-            255,
-            255,
-            255,
-            ${Math.min(0.08, 0.04 + scrollY / 2000)}
-          );
-        }
-      `}</style>
+        {/* Content Visible Section */}
+        {contentVisible && (
+          <div className="border-t border-border/50 px-4 pb-3 pt-2">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span data-testid="article-count">{getCountDisplay()}</span>
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   );
 }

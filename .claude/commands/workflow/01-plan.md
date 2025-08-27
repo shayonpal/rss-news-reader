@@ -378,7 +378,7 @@ Show final summary:
 📝 Implementation Strategy: APPROVED
 
 🔗 Next Step:
-Proceed to the staging phase with `flow-stage`:
+Proceed to the staging phase with `02-stage`:
 - Linear issue updates
 - Test case generation
 - Implementation documentation

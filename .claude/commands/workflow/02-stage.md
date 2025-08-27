@@ -274,14 +274,8 @@ Documentation:
 - Risk mitigation strategies documented
 - Development environment validated
 
-🔧 Next Step - Use 04-execute:
-1. Run `04-execute RR-XXX` to begin actual implementation
-2. 04-execute will handle:
-   - Feature branch creation
-   - Test-driven development approach
-   - Following the documented implementation strategy
-   - Using test contracts as specification
-   - Symbol-level code modifications
+🔧 Next Step - Use 03-test-design:
+Run `03-test-design RR-XXX` to begin creating the tests
 
 📊 Progress Tracking:
 - Update Linear with regular progress comments
@@ -320,6 +314,6 @@ Run `npm run pre-commit` regularly to ensure:
 - ✅ Update Linear issue status to "In Progress"
 - 🚫 NO file modifications during this phase (staging/documentation only)
 - Be pragmatic about risk assessment and mitigation
-- Ensure comprehensive handoff to implementation phase (04-execute)
+- Ensure comprehensive handoff to test design phase (03-test-design)
 - Document everything for future reference and pattern learning
 - This command STAGES for implementation, it doesn't implement

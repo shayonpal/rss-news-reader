@@ -145,6 +145,10 @@ button:not(:disabled) {
     --input: 265 20% 90%; /* violet-100 */
     --ring: 263 70% 50%; /* violet-500 */
 
+    /* Progress component fallbacks */
+    --progress-bg: hsl(var(--muted));
+    --progress-text: hsl(var(--primary));
+
     /* Counter colors - Light mode defaults */
     --counter-unselected-bg: hsl(var(--primary) / 0.1);
     --counter-unselected-text: hsl(var(--primary));
@@ -212,6 +216,11 @@ button:not(:disabled) {
     --border: 242 56% 33%; /* violet-800 */
     --input: 242 56% 33%; /* violet-800 */
     --ring: 243 47% 70%; /* violet-400 */
+
+    /* Progress component fallbacks */
+    --progress-bg: hsl(var(--muted));
+    --progress-text: hsl(var(--primary));
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -582,6 +591,13 @@ html.reduce-transparency .liquid-glass-btn {
     --spring-timing: var(--motion-spring);
     --ease-smooth: var(--motion-smooth);
     --ease-out: var(--motion-ease-out);
+
+    /* ========================================
+     * RR-248: Progress Bar Component Tokens
+     * Performance-optimized progress indicators
+     * ======================================== */
+    --progress-bg: rgba(var(--brand-accent-rgb), 0.1);
+    --progress-text: rgba(var(--brand-accent-rgb), 1);
   }
 
   :root.dark {
@@ -623,6 +639,13 @@ html.reduce-transparency .liquid-glass-btn {
     --glass-adaptive-border: var(--color-border-glass);
     --glass-enhanced-bg: var(--color-surface-glass);
     --glass-enhanced-border: var(--color-border-glass-enhanced);
+
+    /* ========================================
+     * RR-248: Progress Bar Component Tokens - Dark Mode
+     * Enhanced visibility for dark backgrounds
+     * ======================================== */
+    --progress-bg: rgba(var(--brand-accent-rgb), 0.15);
+    --progress-text: rgba(var(--brand-accent-rgb), 1);
   }
 }
 
@@ -1198,6 +1221,92 @@ html.reduce-transparency .glass-sidebar-info {
       opacity: 0.85;
       transform: scale(1.02);
     }
+  }
+
+  /* ========================================
+   * RR-248: Progress Bar Animations
+   * Performance-optimized with GPU acceleration
+   * ======================================== */
+
+  /* Shimmer animation for skeleton variant */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) translateZ(0);
+    }
+    100% {
+      transform: translateX(100%) translateZ(0);
+    }
+  }
+
+  /* Indeterminate progress animation */
+  @keyframes indeterminate {
+    0% {
+      transform: translateX(-100%) translateZ(0);
+    }
+    50% {
+      transform: translateX(0%) translateZ(0);
+    }
+    100% {
+      transform: translateX(100%) translateZ(0);
+    }
+  }
+
+  /* ========================================
+   * RR-248: ScrollableArticleHeader Optimizations
+   * Performance-optimized scroll animations
+   * ======================================== */
+
+  .scrollable-article-header {
+    /* GPU acceleration */
+    will-change: transform, backdrop-filter, background, height;
+    transform: translateZ(0);
+
+    /* Dynamic styles using CSS custom properties set via RAF */
+    height: var(--header-height, auto);
+    backdrop-filter: blur(calc(var(--blur-intensity, 0) * 1px)) saturate(180%);
+    -webkit-backdrop-filter: blur(calc(var(--blur-intensity, 0) * 1px))
+      saturate(180%);
+
+    /* Background opacity based on scroll */
+    background: rgba(255, 255, 255, var(--background-opacity, 0.18));
+    border-bottom: 1px solid rgba(0, 0, 0, var(--border-opacity, 0.04));
+
+    /* Smooth transitions with iOS spring physics */
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .scrollable-title {
+    /* GPU acceleration for title scaling */
+    transform: scale(var(--title-scale, 1));
+    opacity: var(--title-opacity, 1);
+    will-change: transform, opacity, font-size;
+    transform-origin: left center;
+
+    /* Dynamic font-size via CSS custom property */
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .scrollable-title-text {
+    font-size: var(--title-font-size, 34px);
+    line-height: 1.1;
+  }
+
+  /* Dark mode support for scrollable header */
+  :root.dark .scrollable-article-header {
+    background: rgba(10, 10, 10, var(--background-opacity, 0.18));
+    border-bottom-color: rgba(255, 255, 255, var(--border-opacity, 0.04));
+  }
+
+  /* Fallback for browsers without backdrop-filter support */
+  .scrollable-article-header[style*="--supports-backdrop-filter: 0"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  :root.dark
+    .scrollable-article-header[style*="--supports-backdrop-filter: 0"] {
+    background: rgba(0, 0, 0, 0.9) !important;
   }
 }
 
