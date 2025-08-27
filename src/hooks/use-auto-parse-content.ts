@@ -17,6 +17,8 @@ interface UseAutoParseContentResult {
   clearParsedContent: () => void;
 }
 
+type JobState = "idle" | "running" | "done" | "failed";
+
 /**
  * Auto-parse content hook for RSS articles
  *
@@ -26,10 +28,11 @@ interface UseAutoParseContentResult {
  * - Content contains truncation indicators
  *
  * Features:
- * - Race condition protection
+ * - Race condition protection via state machine
  * - Request cancellation on component unmount
  * - Manual parsing support
  * - Proper error handling
+ * - Stable callback identity
  */
 export function useAutoParseContent({
   article,
@@ -40,18 +43,49 @@ export function useAutoParseContent({
   const [parseError, setParseError] = useState<string | null>(null);
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
+  
+  // Refs for stable callback pattern
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Use ref to track processed articles to prevent infinite loops
-  const processedArticlesRef = useRef<Set<string>>(new Set());
   const mountedRef = useRef(true);
+  
+  // RR-245 fix: Article ref to access current article in stable callback
+  const articleRef = useRef(article);
+  useEffect(() => {
+    articleRef.current = article;
+  }, [article]);
+  
+  // RR-245 fix: State machine for tracking parse jobs per article
+  const jobsRef = useRef(
+    new Map<string, JobState>()
+  );
+  // Lightweight cooldown to avoid burst re-triggers when parents recreate article objects every render
+  const lastTriggerKeyRef = useRef<string | null>(null);
+  const lastTriggerAtRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
+  
+  // RR-245 fix: Sync isParsing state with ref for stable callback access
+  const isParsingRef = useRef(false);
+  useEffect(() => {
+    isParsingRef.current = isParsing;
+  }, [isParsing]);
 
+  // RR-245 fix: Stable callback with empty dependencies
   const triggerParse = useCallback(
     async (isManual = false) => {
-      if (!isManual && isParsing) return;
-      if (!article.url || !mountedRef.current) return;
+      const currentArticle = articleRef.current;
+      if (!currentArticle?.url || !mountedRef.current) return;
+      
+      const job = jobsRef.current.get(currentArticle.url);
+      
+      // Skip if already processing (unless manual)
+      if (!isManual && (job === "running" || inFlightRef.current)) {
+        return;
+      }
 
-      const currentArticleId = article.id;
+      const currentArticleId = currentArticle.id;
+      const currentArticleUrl = currentArticle.url;
+      jobsRef.current.set(currentArticleUrl, "running");
+      inFlightRef.current = true;
 
       // Cancel any existing request
       if (abortControllerRef.current) {
@@ -67,7 +101,7 @@ export function useAutoParseContent({
 
       try {
         const response = await fetch(
-          `/reader/api/articles/${article.id}/fetch-content`,
+          `/reader/api/articles/${currentArticleId}/fetch-content`,
           {
             method: "POST",
             headers: {
@@ -80,7 +114,8 @@ export function useAutoParseContent({
           }
         );
 
-        if (currentArticleId !== article.id || !mountedRef.current) {
+        // Check if component is still mounted and article hasn't changed
+        if (!mountedRef.current || articleRef.current.url !== currentArticleUrl) {
           return;
         }
 
@@ -101,63 +136,96 @@ export function useAutoParseContent({
 
         const data = await response.json();
 
-        if (currentArticleId !== article.id || !mountedRef.current) {
+        // Double-check mount and article ID
+        if (!mountedRef.current || articleRef.current.url !== currentArticleUrl) {
           return;
         }
 
         if (data.success && data.content) {
           setParsedContent(data.content);
           setParseError(null);
+          jobsRef.current.set(currentArticleUrl, "done");
         } else if (data.fallbackContent) {
           setParsedContent(data.fallbackContent);
           setParseError(data.error || "Using partial content");
+          jobsRef.current.set(currentArticleUrl, "done");
         }
       } catch (err) {
-        if (currentArticleId !== article.id || !mountedRef.current) {
+        // Check mount and article ID before setting error state
+        if (
+          !mountedRef.current || 
+          articleRef.current.id !== currentArticleId ||
+          (err instanceof Error && err.name === "AbortError")
+        ) {
           return;
         }
 
         if (err instanceof Error) {
-          if (err.name === "AbortError") {
-            return;
-          }
           setParseError(err.message);
         } else {
           setParseError("An unexpected error occurred");
         }
+        jobsRef.current.set(currentArticleUrl, "failed");
       } finally {
-        if (currentArticleId === article.id && mountedRef.current) {
+        if (mountedRef.current && articleRef.current.url === currentArticleUrl) {
           setIsParsing(false);
         }
         abortControllerRef.current = null;
+        inFlightRef.current = false;
       }
     },
-    [article.id, article.url, isParsing]
+    [] // Empty dependencies for stable identity
   );
 
-  // Reset state when article changes
+  // Reset state when article URL changes (treat as true article change)
   useEffect(() => {
     setParsedContent(null);
     setParseError(null);
     setParseAttempted(false);
-    setIsParsing(false);
+    // Do not force isParsing=false here to avoid clobbering a just-started manual trigger
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-  }, [article.id]);
+
+    // Reset cooldown on explicit article change so a new article can auto-parse
+    lastTriggerKeyRef.current = null;
+    lastTriggerAtRef.current = 0;
+  }, [article.url]);
+
+  // When the article identity changes even with the same URL, allow re-triggering
+  useEffect(() => {
+    if (article.url) {
+      jobsRef.current.delete(article.url);
+      // also clear cooldown so the next effect can fire immediately
+      lastTriggerKeyRef.current = null;
+      lastTriggerAtRef.current = 0;
+    }
+    // do not clear parsedContent here; next fetch will overwrite if needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article.id, article.url]); // article.url added to properly track URL changes
 
   // Auto-parse logic
   useEffect(() => {
     if (!enabled || !mountedRef.current) return;
-    if (processedArticlesRef.current.has(article.id)) return;
-    if (article.hasFullContent && article.fullContent) return;
-    if (article.parseFailed === true) return;
+    
+    const job = jobsRef.current.get(article.url);
+
+    // Skip if already processed or in progress
+    if (
+      job === "running" ||
+      job === "done" ||
+      job === "failed" ||
+      (article.hasFullContent && article.fullContent) ||
+      article.parseFailed === true
+    ) {
+      return;
+    }
 
     let needsParsing = false;
 
-    // Auto-parse logic
+    // Determine if parsing is needed
     if (feed?.isPartialContent === true) {
       needsParsing = true;
     } else if (article.content && article.content.length < 500) {
@@ -176,19 +244,25 @@ export function useAutoParseContent({
     }
 
     if (needsParsing) {
-      // Mark as processed to prevent re-triggering
-      processedArticlesRef.current.add(article.id);
+      const key = article.url || article.id;
+      const now = Date.now();
+      if (lastTriggerKeyRef.current === key && now - lastTriggerAtRef.current < 100) {
+        return; // Cooldown: avoid tight re-triggers across rapid re-renders
+      }
+      lastTriggerKeyRef.current = key;
+      lastTriggerAtRef.current = now;
       triggerParse(false);
     }
   }, [
     enabled,
     article.id,
+    article.url, // Added for consistency
+    article.content,
     article.hasFullContent,
     article.fullContent,
     article.parseFailed,
-    article.content,
     feed?.isPartialContent,
-    triggerParse,
+    triggerParse, // Added since it's now stable with empty deps
   ]);
 
   // Cleanup on unmount
