@@ -14,6 +14,11 @@ const config: Config = {
     "text-[var(--counter-selected-text)]",
     // Ensure all counter utilities are generated
     { pattern: /^(bg|text)-\[var\(--counter-.+\)\]$/ },
+    // RR-247: Toast utility classes for semantic styling
+    "toast-success",
+    "toast-warning",
+    "toast-error",
+    "toast-info",
   ],
   theme: {
     extend: {

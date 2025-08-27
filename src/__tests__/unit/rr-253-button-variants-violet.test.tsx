@@ -25,7 +25,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
     it("should generate correct classes for primary variant", () => {
       // Test the CVA function directly
       const classes = glassButtonVariants({ variant: "primary" });
-      
+
       // Verify all 6 violet classes for primary variant
       expect(classes).toContain("border-violet-500/20");
       expect(classes).toContain("dark:border-violet-500/20");
@@ -42,7 +42,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
     it("should generate correct classes for secondary variant", () => {
       // Test the CVA function directly
       const classes = glassButtonVariants({ variant: "secondary" });
-      
+
       // Verify all 6 violet classes for secondary variant
       expect(classes).toContain("border-violet-500/10");
       expect(classes).toContain("dark:border-violet-400/10");
@@ -59,7 +59,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
     it("should include violet focus rings in base classes", () => {
       // Test any variant to get base classes
       const classes = glassButtonVariants({ variant: "primary" });
-      
+
       // Verify violet focus rings are in base classes
       expect(classes).toContain("focus-visible:ring-violet-500");
       expect(classes).toContain("dark:focus-visible:ring-violet-500");
@@ -74,7 +74,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Check for primary violet classes
       expect(button).toHaveClass("border-violet-500/20");
       expect(button).toHaveClass("bg-violet-500/20");
@@ -113,7 +113,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Check for secondary violet classes
       expect(button).toHaveClass("border-violet-500/10");
       expect(button).toHaveClass("bg-violet-500/10");
@@ -128,7 +128,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Check for dark mode violet classes
       expect(button).toHaveClass("dark:border-violet-400/10");
       expect(button).toHaveClass("dark:bg-violet-400/10");
@@ -156,7 +156,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Focus rings should be violet for all variants
       expect(button).toHaveClass("focus-visible:ring-violet-500");
       expect(button).toHaveClass("dark:focus-visible:ring-violet-500");
@@ -174,7 +174,9 @@ describe("RR-253: Button Variant Violet Theming", () => {
 
     it("should handle disabled state correctly", () => {
       const { container } = render(
-        <GlassButton variant="primary" disabled>Disabled Test</GlassButton>
+        <GlassButton variant="primary" disabled>
+          Disabled Test
+        </GlassButton>
       );
       const button = container.querySelector("button");
 
@@ -201,67 +203,67 @@ describe("RR-253: Button Variant Violet Theming", () => {
   describe("Regression Testing: Other Variants", () => {
     it("should not affect default variant styling (except focus rings)", () => {
       const classes = glassButtonVariants({ variant: "default" });
-      
+
       // Should maintain original gray/white styling
       expect(classes).toContain("border-white/10");
       expect(classes).toContain("bg-white/35");
       expect(classes).toContain("text-gray-900");
-      
+
       // Should NOT contain violet in variant-specific classes (only in base focus rings)
       expect(classes).not.toContain("border-violet");
       expect(classes).not.toContain("bg-violet");
       expect(classes).not.toContain("text-violet");
       expect(classes).not.toContain("shadow-violet");
-      
+
       // But SHOULD have violet focus rings (base class change)
       expect(classes).toContain("focus-visible:ring-violet-500");
     });
 
     it("should not affect ghost variant styling", () => {
       const classes = glassButtonVariants({ variant: "ghost" });
-      
+
       // Ghost variant should use CSS variables, not direct violet classes
       expect(classes).toContain("text-[color:var(--ghost-text-light)]");
-      
+
       // Should not have violet in variant-specific styling
       expect(classes).not.toContain("text-violet");
       expect(classes).not.toContain("bg-violet");
       expect(classes).not.toContain("border-violet");
-      
+
       // But SHOULD have violet focus rings (base class change)
       expect(classes).toContain("focus-visible:ring-violet-500");
     });
 
     it("should not affect danger variant styling (except focus rings)", () => {
       const classes = glassButtonVariants({ variant: "danger" });
-      
+
       // Should maintain red colors
       expect(classes).toContain("border-red-500/20");
       expect(classes).toContain("bg-red-500/20");
       expect(classes).toContain("text-red-700");
-      
+
       // Should NOT contain violet in variant-specific classes
       expect(classes).not.toContain("border-violet");
       expect(classes).not.toContain("bg-violet");
       expect(classes).not.toContain("text-violet");
       expect(classes).not.toContain("shadow-violet");
-      
+
       // But SHOULD have violet focus rings (base class change)
       expect(classes).toContain("focus-visible:ring-violet-500");
     });
 
     it("should not affect adaptive variant styling (except focus rings)", () => {
       const classes = glassButtonVariants({ variant: "adaptive" });
-      
+
       // Should use CSS variables
       expect(classes).toContain("border-[var(--glass-adaptive-border)]");
       expect(classes).toContain("bg-[var(--glass-adaptive-bg)]");
-      
+
       // Should NOT contain violet in variant-specific classes
       expect(classes).not.toContain("border-violet");
       expect(classes).not.toContain("bg-violet");
       expect(classes).not.toContain("text-violet");
-      
+
       // But SHOULD have violet focus rings (base class change)
       expect(classes).toContain("focus-visible:ring-violet-500");
     });
@@ -282,7 +284,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
           const button = container.querySelector("button");
 
           expect(button).not.toBeNull();
-          
+
           // Should have both variant and size classes
           if (variant === "primary") {
             expect(button).toHaveClass("bg-violet-500/20");
@@ -297,16 +299,16 @@ describe("RR-253: Button Variant Violet Theming", () => {
   describe("Performance Testing", () => {
     it("should render primary variant without performance impact", () => {
       const startTime = performance.now();
-      
+
       const { container } = render(
         <GlassButton variant="primary">Performance Test</GlassButton>
       );
-      
+
       const renderTime = performance.now() - startTime;
-      
+
       // Render should complete quickly (under 50ms for a simple button)
       expect(renderTime).toBeLessThan(50);
-      
+
       const button = container.querySelector("button");
       expect(button).not.toBeNull();
     });
@@ -315,9 +317,9 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const { rerender } = render(
         <GlassButton variant="primary">Dynamic Test</GlassButton>
       );
-      
+
       const startTime = performance.now();
-      
+
       // Simulate rapid variant changes
       for (let i = 0; i < 10; i++) {
         rerender(
@@ -326,9 +328,9 @@ describe("RR-253: Button Variant Violet Theming", () => {
           </GlassButton>
         );
       }
-      
+
       const totalTime = performance.now() - startTime;
-      
+
       // Should handle 10 re-renders efficiently
       expect(totalTime).toBeLessThan(100);
     });
@@ -342,11 +344,11 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Button should have proper text color classes for contrast
       expect(button).toHaveClass("text-violet-700");
       expect(button).toHaveClass("dark:text-violet-300");
-      
+
       // Should maintain minimum touch target size
       expect(button).toHaveClass("min-h-[48px]");
       expect(button).toHaveClass("min-w-[48px]");
@@ -359,7 +361,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Button should have proper text color classes for contrast
       expect(button).toHaveClass("text-violet-700");
       expect(button).toHaveClass("dark:text-violet-300");
@@ -372,7 +374,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
       const button = container.querySelector("button");
 
       expect(button).not.toBeNull();
-      
+
       // Should have visible focus indicators
       expect(button).toHaveClass("focus-visible:outline-none");
       expect(button).toHaveClass("focus-visible:ring-2");
@@ -384,7 +386,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
 
 /**
  * Test Coverage Summary:
- * 
+ *
  * ✅ Symbol Contract Validation
  * ✅ Primary Variant Classes (all 6 updates)
  * ✅ Secondary Variant Classes (all 6 updates)
@@ -394,7 +396,7 @@ describe("RR-253: Button Variant Violet Theming", () => {
  * ✅ Size Compatibility
  * ✅ Performance Benchmarking
  * ✅ Accessibility Compliance (WCAG AA)
- * 
+ *
  * Total Tests: 25
  * Coverage: 100% of acceptance criteria
  */

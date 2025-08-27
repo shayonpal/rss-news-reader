@@ -370,15 +370,12 @@ export function ArticleDetail({
     const feedName = feed.title || "Feed";
     const toastId = `partial-feed-${article.feedId}`;
 
-    // Show loading toast with amber styling
+    // Show loading toast with semantic warning styling
     toast.loading(
       `${newState ? "Marking" : "Unmarking"} ${feedName} as partial feed...`,
       {
         id: toastId,
-        style: {
-          background: "#f59e0b", // amber-500
-          color: "white",
-        },
+        className: "toast-warning",
       }
     );
 
@@ -387,16 +384,13 @@ export function ArticleDetail({
       // Toggle the partial content setting
       await updateFeedPartialContent(article.feedId, newState);
 
-      // Show success toast with green styling
+      // Show success toast with semantic success styling
       toast.success(
         `${feedName} ${newState ? "marked" : "unmarked"} as partial feed`,
         {
           id: toastId,
           duration: 3000,
-          style: {
-            background: "#10b981", // green-500
-            color: "white",
-          },
+          className: "toast-success",
         }
       );
 
@@ -404,14 +398,11 @@ export function ArticleDetail({
     } catch (error) {
       console.error("Failed to update feed partial content setting:", error);
 
-      // Show error toast with red styling
+      // Show error toast with semantic error styling
       toast.error(`Failed to update ${feedName}. Please try again.`, {
         id: toastId,
         duration: 0, // Manual dismiss for errors
-        style: {
-          background: "#ef4444", // red-500
-          color: "white",
-        },
+        className: "toast-error",
       });
     } finally {
       setIsUpdatingFeed(false);

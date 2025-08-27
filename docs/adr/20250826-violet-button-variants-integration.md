@@ -125,7 +125,7 @@ outline: [
 
 1. `default` variant: `text-gray-700` → `text-violet-700`
 2. `secondary` variant: 4 class updates (background, border, text, hover states)
-3. `outline` variant: 4 class updates (border, text, hover states)  
+3. `outline` variant: 4 class updates (border, text, hover states)
 4. `destructive` variant: 3 class updates (maintaining red destructive semantics with violet accents)
 
 ## Consequences
@@ -191,16 +191,16 @@ outline: [
 
 ```typescript
 // Light mode colors
-text-violet-700     // Primary text (#6d28d9)
-bg-violet-100/40    // Light backgrounds with opacity
-border-violet-200/30 // Subtle borders with opacity
-hover:bg-violet-200/50 // Light hover states
+text - violet - 700; // Primary text (#6d28d9)
+bg - violet - 100 / 40; // Light backgrounds with opacity
+border - violet - 200 / 30; // Subtle borders with opacity
+hover: bg - violet - 200 / 50; // Light hover states
 
-// Dark mode colors  
-text-violet-200     // Light text for dark backgrounds (#c4b5fd)
-bg-violet-900/40    // Dark backgrounds with opacity
-border-violet-700/30 // Dark borders with opacity
-hover:bg-violet-800/30 // Dark hover states
+// Dark mode colors
+text - violet - 200; // Light text for dark backgrounds (#c4b5fd)
+bg - violet - 900 / 40; // Dark backgrounds with opacity
+border - violet - 700 / 30; // Dark borders with opacity
+hover: bg - violet - 800 / 30; // Dark hover states
 ```
 
 **Accessibility Validation:**
@@ -255,7 +255,7 @@ expect(button.className).toContain("border-violet-200/30");
 ### Success Metrics
 
 1. **Visual Integration**: All button variants display violet color palette ✅
-2. **Dark Mode Functionality**: Appropriate violet shades in dark mode ✅  
+2. **Dark Mode Functionality**: Appropriate violet shades in dark mode ✅
 3. **Theme Consistency**: Buttons align with overall violet theme system ✅
 4. **Accessibility Compliance**: Text contrast ratios meet WCAG AA standards ✅
 5. **Component Library Unity**: Consistent theming across all interactive elements ✅
@@ -326,7 +326,7 @@ If multiple themes become necessary, the component could be refactored to use CS
 // Future evolution possibility
 const themeClasses = {
   violet: "text-violet-700 dark:text-violet-200",
-  blue: "text-blue-700 dark:text-blue-200", 
+  blue: "text-blue-700 dark:text-blue-200",
   green: "text-green-700 dark:text-green-200",
 };
 ```

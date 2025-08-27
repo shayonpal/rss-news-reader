@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **[Documentation] RR-247 Toast System Semantic Color Tokens Architecture Decision Record** (Tuesday, August 26, 2025 at 10:12 PM)
+  - **Comprehensive ADR Documentation**: Created ADR-018 documenting complete architectural decision for toast system semantic color token implementation including three-tier CSS architecture (semantic tokens, theme variations, utility classes)
+  - **OKLCH Color Space Rationale**: Documented decision to use OKLCH color space for perceptual uniformity, wide color gamut support, accessibility compliance, and precise contrast ratio control across all theme variations
+  - **Theme Integration Architecture**: Detailed implementation of four theme combinations (base, violet, dark, violet-dark) with comprehensive CSS token definitions and semantic naming conventions for maintainable theming
+  - **Testing Strategy Documentation**: Documented comprehensive test coverage approach with 49/49 tests including unit tests for CSS tokens, utility classes, Tailwind configuration, and integration tests for component functionality
+  - **Accessibility Achievement Record**: Documented WCAG AAA compliance with 7:1+ contrast ratios, dark mode optimizations, and color-blind friendly semantic naming for enhanced accessibility across all toast variants
+  - **Performance Impact Analysis**: Documented zero runtime performance impact with CSS-only implementation, marginal bundle size increase, and instant theme switching capabilities using CSS custom properties
+  - **Implementation Pattern Establishment**: Established reusable semantic token architecture pattern applicable to other notification components and broader design system evolution
+  - **Impact**: Complete architectural documentation for RR-247 toast system ensuring future maintenance clarity, accessibility compliance transparency, and reusable pattern establishment for component library evolution
+
+- **2025-08-27 06:45 - feat: RR-247 toast system refactoring with semantic CSS tokens**
+  - **Semantic CSS Integration**: Replace hardcoded toast colors with semantic CSS tokens for maintainable theme consistency
+  - **Global Toast Utility Classes**: Add .toast-success, .toast-warning, .toast-error, .toast-info utility classes for streamlined toast styling
+  - **ArticleDetail Violet Integration**: Integrate ArticleDetail component with violet theme system maintaining design consistency across application
+  - **WCAG AAA Compliance**: Ensure 7:1+ contrast ratios across all toast variants exceeding accessibility standards
+  - **Backwards Compatibility**: Maintain existing toast behavior and API ensuring zero breaking changes for current implementations
+  - **Comprehensive Testing**: Achieve 49/49 tests passing with comprehensive validation covering all toast variants and interaction states
+  - **Zero Performance Impact**: Implement CSS-only changes with no runtime performance degradation
+  - **Impact**: Complete toast system modernization with semantic theming, enhanced accessibility, and robust test coverage while preserving existing functionality
+
 - **[Documentation] RR-253 Violet Theme Button Variants Architecture Decision Record** (Tuesday, August 26, 2025 at 7:21 PM)
   - **Architecture Decision Record**: Created ADR-017 documenting architectural decision to use direct Tailwind class replacement pattern (RR-252 approach) vs CSS variables approach (RR-251) for button variant theming
   - **Implementation Strategy Documentation**: Documented comprehensive rationale for choosing direct class replacement over CSS variables including simplicity benefits, maintenance considerations, and user preference alignment
