@@ -254,6 +254,7 @@ Expected outcome
 ## Implementation Status
 
 Implemented the state machine solution as suggested:
+
 - Created `articleRef` to sync article prop with stable callback
 - Added `jobsRef` with state machine states (`idle`, `scheduled`, `running`, `done`, `failed`)
 - Made `triggerParse` stable with `useCallback([])` and empty dependencies
@@ -265,6 +266,7 @@ Implemented the state machine solution as suggested:
 ### 1. Auto-parse Not Triggering in Tests
 
 Despite implementing the state machine, fetch is never called in tests that expect auto-parsing:
+
 - Tests fail with "expected spy to be called 1 times, but got 0 times"
 - The auto-parse effect runs but `triggerParse` doesn't execute fetch
 - Job state correctly sets to "scheduled" but fetch never happens
@@ -272,6 +274,7 @@ Despite implementing the state machine, fetch is never called in tests that expe
 ### 2. Timing Issues with Direct Call vs Deferred Execution
 
 Tried multiple approaches:
+
 1. **With `queueMicrotask`**: Tests hang waiting for fetch that never happens
 2. **With `Promise.resolve().then()`**: Same issue as queueMicrotask
 3. **Direct call**: Still no fetch execution
@@ -282,7 +285,8 @@ The issue persists regardless of deferral strategy.
 ### 3. State Synchronization Problem
 
 When `triggerParse` is called directly from the effect:
-- Job state is "scheduled" 
+
+- Job state is "scheduled"
 - But the function still early returns without calling fetch
 - Removing `isParsingRef.current` check didn't help
 - The job state check `(job === "running" || job === "scheduled")` might be the issue
@@ -290,14 +294,16 @@ When `triggerParse` is called directly from the effect:
 ## Code Analysis
 
 The current implementation in the auto-parse effect:
+
 ```typescript
 if (needsParsing) {
   jobsRef.current.set(article.id, "scheduled");
-  triggerParse(false);  // Direct call
+  triggerParse(false); // Direct call
 }
 ```
 
 And in `triggerParse`:
+
 ```typescript
 const job = jobsRef.current.get(currentArticle.id);
 if (!isManual && (job === "running" || job === "scheduled")) {

@@ -43,26 +43,24 @@ export function useAutoParseContent({
   const [parseError, setParseError] = useState<string | null>(null);
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
-  
+
   // Refs for stable callback pattern
   const abortControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
-  
+
   // RR-245 fix: Article ref to access current article in stable callback
   const articleRef = useRef(article);
   useEffect(() => {
     articleRef.current = article;
   }, [article]);
-  
+
   // RR-245 fix: State machine for tracking parse jobs per article
-  const jobsRef = useRef(
-    new Map<string, JobState>()
-  );
+  const jobsRef = useRef(new Map<string, JobState>());
   // Lightweight cooldown to avoid burst re-triggers when parents recreate article objects every render
   const lastTriggerKeyRef = useRef<string | null>(null);
   const lastTriggerAtRef = useRef<number>(0);
   const inFlightRef = useRef<boolean>(false);
-  
+
   // RR-245 fix: Sync isParsing state with ref for stable callback access
   const isParsingRef = useRef(false);
   useEffect(() => {
@@ -74,9 +72,9 @@ export function useAutoParseContent({
     async (isManual = false) => {
       const currentArticle = articleRef.current;
       if (!currentArticle?.url || !mountedRef.current) return;
-      
+
       const job = jobsRef.current.get(currentArticle.url);
-      
+
       // Skip if already processing (unless manual)
       if (!isManual && (job === "running" || inFlightRef.current)) {
         return;
@@ -115,7 +113,10 @@ export function useAutoParseContent({
         );
 
         // Check if component is still mounted and article hasn't changed
-        if (!mountedRef.current || articleRef.current.url !== currentArticleUrl) {
+        if (
+          !mountedRef.current ||
+          articleRef.current.url !== currentArticleUrl
+        ) {
           return;
         }
 
@@ -137,7 +138,10 @@ export function useAutoParseContent({
         const data = await response.json();
 
         // Double-check mount and article ID
-        if (!mountedRef.current || articleRef.current.url !== currentArticleUrl) {
+        if (
+          !mountedRef.current ||
+          articleRef.current.url !== currentArticleUrl
+        ) {
           return;
         }
 
@@ -153,7 +157,7 @@ export function useAutoParseContent({
       } catch (err) {
         // Check mount and article ID before setting error state
         if (
-          !mountedRef.current || 
+          !mountedRef.current ||
           articleRef.current.id !== currentArticleId ||
           (err instanceof Error && err.name === "AbortError")
         ) {
@@ -167,7 +171,10 @@ export function useAutoParseContent({
         }
         jobsRef.current.set(currentArticleUrl, "failed");
       } finally {
-        if (mountedRef.current && articleRef.current.url === currentArticleUrl) {
+        if (
+          mountedRef.current &&
+          articleRef.current.url === currentArticleUrl
+        ) {
           setIsParsing(false);
         }
         abortControllerRef.current = null;
@@ -209,7 +216,7 @@ export function useAutoParseContent({
   // Auto-parse logic
   useEffect(() => {
     if (!enabled || !mountedRef.current) return;
-    
+
     const job = jobsRef.current.get(article.url);
 
     // Skip if already processed or in progress
@@ -246,7 +253,10 @@ export function useAutoParseContent({
     if (needsParsing) {
       const key = article.url || article.id;
       const now = Date.now();
-      if (lastTriggerKeyRef.current === key && now - lastTriggerAtRef.current < 100) {
+      if (
+        lastTriggerKeyRef.current === key &&
+        now - lastTriggerAtRef.current < 100
+      ) {
         return; // Cooldown: avoid tight re-triggers across rapid re-renders
       }
       lastTriggerKeyRef.current = key;

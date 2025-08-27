@@ -11,6 +11,7 @@ We will use a stable callback pattern with refs for complex React hooks that man
 ## Context
 
 The `useAutoParseContent` hook experienced memory exhaustion due to a circular dependency:
+
 - The `triggerParse` callback depended on `isParsing` state
 - The auto-parse effect depended on `triggerParse`
 - When `isParsing` changed, `triggerParse` was recreated, triggering the effect again

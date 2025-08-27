@@ -28,7 +28,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
   beforeEach(() => {
     // RR-245 fix: Clear mocks for test isolation
     vi.clearAllMocks();
-    
+
     // Reset fetch mock to initial state
     (global.fetch as any).mockClear();
     (global.fetch as any).mockReset();
@@ -47,7 +47,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
   afterEach(() => {
     // RR-245 fix: Cleanup components to prevent memory leaks
     cleanup();
-    
+
     // Clean up mocks properly
     vi.clearAllMocks();
     (global.fetch as any).mockClear();
@@ -97,7 +97,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         json: async () => ({
           success: true,
           content: "<p>Full parsed content</p>",
-        })
+        }),
       });
 
       const article = createMockArticle({ content: "a".repeat(1000) }); // Long content
@@ -145,7 +145,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         json: async () => ({
           success: true,
           content: "<p>Full content for short article</p>",
-        })
+        }),
       });
 
       const shortArticle = createMockArticle({ content: "Short content" });
@@ -192,10 +192,12 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         json: async () => ({
           success: true,
           content: "<p>Full expanded content</p>",
-        })
+        }),
       });
 
-      const truncArticle = createMockArticle({ content: contentWithTruncation });
+      const truncArticle = createMockArticle({
+        content: contentWithTruncation,
+      });
       const { result } = renderHook(() =>
         useAutoParseContent({
           article: truncArticle,
@@ -341,7 +343,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         json: async () => ({
           success: true,
           content: "<p>Manually fetched content</p>",
-        })
+        }),
       });
 
       const { result } = renderHook(() =>
@@ -383,10 +385,11 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
     it("should prevent duplicate fetches while loading", async () => {
       // Use a controllable promise instead of timers to avoid flakiness
       let resolveFetch: any;
-      (global.fetch as any).mockImplementation(() =>
-        new Promise((resolve) => {
-          resolveFetch = resolve;
-        })
+      (global.fetch as any).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve;
+          })
       );
 
       const { result } = renderHook(() =>
@@ -464,7 +467,7 @@ describe("RR-176: useAutoParseContent Hook - Auto-Parse Logic", () => {
         status: 429,
         json: async () => ({
           message: "Rate limited",
-        })
+        }),
       });
 
       const article429 = createMockArticle();
