@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **2025-08-27 13:00 - fix(RR-255): Fix summary button opens article + retire IOSButton**
+  - **Event Propagation Fix**: Prevent event propagation when clicking summary button in article cards ensuring summary button correctly generates summaries without navigation
+  - **IOSButton Retirement**: Replaced deprecated IOSButton with modern GlassToolbarButton improving component consistency and maintainability
+  - **Event Isolation Enhancement**: Added proper event isolation with stopPropagation() and preventDefault() methods preventing unintended click-through behavior
+  - **Accessibility Improvements**: Enhanced accessibility with proper ARIA labels and touch targets meeting modern interaction standards
+  - **Visual Styling Modernization**: Fixed visual styling to use flat css-toolbar-btn variant maintaining consistent appearance across toolbar components
+  - **Component Architecture Upgrade**: Modernized button architecture from legacy iOS-style components to unified glass design system approach
+  - **Impact**: Summary button now functions correctly without triggering article navigation, improving user experience and component reliability while retiring deprecated IOSButton component
+
 - **2025-08-27 12:12 - chore: Temporarily disable CI/CD pipeline workflow**
   - **CI/CD Pipeline Disabled**: Temporarily disabled the failing CI/CD pipeline workflow by renaming `ci-cd-pipeline.yml` to `ci-cd-pipeline.yml.disabled` to prevent build failures
   - **Other Workflows Preserved**: Kept `pr-checks.yml`, `project-automation.yml`, and `add-to-project5-workflow.yml` workflows active for continued development support
@@ -16,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Impact**: Temporary suspension of automated testing and deployment pipeline while maintaining PR checks and project automation functionality
 
 ### Added
+
+- **2025-08-27 09:12 - docs: ADR for event propagation handling in nested components (ADR-020)**
+  - **Architectural Decision Record**: Created ADR-020 documenting the decision to use explicit event.stopPropagation() and event.preventDefault() for handling nested click events in article cards addressing RR-255 summary button navigation conflicts
+  - **Event Handling Pattern Documentation**: Established standard pattern for preventing event bubbling when child component actions should not trigger parent behaviors ensuring component isolation and predictable interactions
+  - **Implementation Guidelines**: Provided comprehensive guidelines for identifying event conflicts, selective propagation stopping, and testing both child and parent behaviors in nested interactive components
+  - **Alternative Analysis**: Documented consideration of event delegation, conditional parent handlers, and CSS pointer-events solutions with rationale for explicit event control approach
+  - **Developer Best Practices**: Established clear implementation guidelines for nested interactive components ensuring consistent event handling across the application preventing similar UX issues
+  - **Impact**: Complete documentation of event propagation solution for RR-255 providing reusable pattern for nested component event handling preventing unintended navigation and interaction conflicts
 
 - **2025-08-27 06:38 - docs: ADR for stable callback pattern for React hooks (ADR-019)**
   - **Architectural Decision Record**: Created ADR-019 documenting stable callback pattern with refs for complex React hooks managing async operations to prevent dependency cycles and infinite re-renders

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { IOSButton } from "./ios-button";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { GlassToolbarButton } from "./glass-button";
@@ -76,14 +75,36 @@ export function ArticleActionButton({
   const iconSize = sizeClasses[size];
   const DisplayIcon = loading && LoadingIcon ? LoadingIcon : Icon;
 
+  /**
+   * Handle button click with proper event isolation
+   * 
+   * RR-255 Fix: Prevents event propagation to parent article card.
+   * This ensures clicking the summary button generates a summary
+   * instead of navigating to the article detail view.
+   * 
+   * @param e - The mouse event from the button click
+   */
+  const handleClick = (e: React.MouseEvent) => {
+    // Stop the event from bubbling up to parent card click handlers
+    e.stopPropagation();
+    // Prevent any default link/button behavior
+    e.preventDefault();
+    // Execute the intended action (generate summary, star, etc.)
+    onPress();
+  };
+
   return (
     <GlassToolbarButton
       type="button"
-      onClick={onPress}
+      onClick={handleClick}
       disabled={disabled || loading}
       className={className}
       aria-label={label}
       title={title || label}
+      data-active={active || undefined}
+      data-error={false}
+      variant="css-toolbar-btn"
+      size={size === "lg" ? "default" : "sm"}
       icon={
         <DisplayIcon
           className={cn(
@@ -93,15 +114,13 @@ export function ArticleActionButton({
               ? activeClassName
               : active
                 ? "text-primary"
-                : "text-foreground" // Changed from muted to full brightness
+                : "text-foreground"
           )}
         />
       }
       hideOnMobile={!showLabel}
     >
-      {showLabel && (
-        <span className="ml-2 hidden text-sm md:inline">{label}</span>
-      )}
+      {showLabel && <span className="hidden md:inline-block">{label}</span>}
     </GlassToolbarButton>
   );
 }
