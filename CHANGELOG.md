@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **2025-08-27 06:38 - docs: ADR for stable callback pattern for React hooks (ADR-019)**
+  - **Architectural Decision Record**: Created ADR-019 documenting stable callback pattern with refs for complex React hooks managing async operations to prevent dependency cycles and infinite re-renders
+  - **Memory Exhaustion Pattern Documentation**: Documented solution for useAutoParseContent hook circular dependency that caused memory exhaustion in tests with triggerParse callback dependency loop
+  - **Implementation Guidelines**: Established five-point implementation pattern including stable callbacks with empty dependencies, state synchronization via refs, job state machine, URL-based tracking, and cooldown mechanisms
+  - **Alternative Analysis**: Documented consideration of useEvent RFC pattern, dependency arrays with all deps, and useMemo approaches with rationale for chosen solution
+  - **Developer Guidelines**: Provided clear implementation guidelines for stable callback pattern application in future hook development ensuring consistent approach across codebase
+  - **Impact**: Complete documentation of RR-245 memory exhaustion fix establishing reusable pattern for complex async hooks preventing similar issues in future development
+
+- **2025-08-27 10:30 - Fix: Auto-parse content memory exhaustion (RR-245)**
+  - **Memory Exhaustion Resolution**: Resolved memory exhaustion in auto-parse content tests caused by circular dependency and infinite re-render loop in useAutoParseContent hook using state machine pattern
+  - **Test Stability Achievement**: Stabilized test execution from timeout/OOM to ~100ms completion time with 100% pass rate (improved from 4 failing tests with heap exhaustion)
+  - **URL-Based Job Tracking**: Implemented URL-based job tracking instead of ID-based for better stability and reduced memory footprint
+  - **Cooldown Mechanism**: Added cooldown mechanism to prevent burst re-triggers from parent re-renders ensuring stable hook behavior
+  - **Hook Refactoring**: Refactored useAutoParseContent hook to use stable callback pattern with refs eliminating problematic circular dependencies
+  - **Test Infrastructure Enhancement**: Updated test infrastructure to use controllable promises instead of timer-based mocks for reliable test execution
+  - **State Management Optimization**: Removed problematic 'scheduled' state from JobState type definition streamlining state transitions
+  - **Impact**: PR #45 merged with comprehensive fix achieving 100% test pass rate and eliminating memory exhaustion issues in auto-parse content functionality
+
 - **2025-08-27 01:19 - feat(RR-248): Dynamic Styling Components Refactoring with GPU-Accelerated Performance Optimizations**
   - **GPU-Accelerated ProgressBar Component**: Created new reusable ProgressBar component with three variants (sync, skeleton, indeterminate) using transform: scaleX() for hardware acceleration achieving <3ms scripting time performance target
   - **RequestAnimationFrame Scroll Optimization**: Refactored ScrollableArticleHeader with RAF-based scroll handling, eliminating inline style calculations and implementing CSS custom property batching for smooth 60fps performance
