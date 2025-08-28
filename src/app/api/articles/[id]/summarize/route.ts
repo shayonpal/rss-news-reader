@@ -143,6 +143,7 @@ const postHandler = async (
       summary,
       model: claudeModel,
       regenerated: forceRegenerate,
+      content_source: wasFetched ? 'full' : 'partial',
       full_content_fetched: wasFetched,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens,

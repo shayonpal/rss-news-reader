@@ -4,7 +4,6 @@
  */
 
 import { supabase } from "@/lib/db/supabase";
-import { ContentParsingService } from "./content-parsing-service";
 
 interface FetchResult {
   content: string;
@@ -21,15 +20,18 @@ interface FetchLogEntry {
   error_details?: any;
 }
 
+import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
+
 export class ArticleContentService {
   private static instance: ArticleContentService;
-  private parsingService: ContentParsingService;
   private activeParses: Map<string, Promise<string | null>>;
+  private pendingQueue: Array<() => void> = [];
+  private articleLocks: Map<string, Promise<FetchResult>> = new Map();
   private readonly MAX_CONCURRENT_PARSES = 3;
   private readonly PARSE_TIMEOUT = 30000; // 30 seconds
 
   private constructor() {
-    this.parsingService = ContentParsingService.getInstance();
     this.activeParses = new Map();
   }
 
@@ -48,16 +50,47 @@ export class ArticleContentService {
     articleId: string,
     feedId: string
   ): Promise<FetchResult> {
+    // Check if already processing this article
+    const lockKey = `${articleId}-${feedId}`;
+    if (this.articleLocks.has(lockKey)) {
+      console.log(`🔒 Article ${articleId} already being processed, waiting for result...`);
+      return await this.articleLocks.get(lockKey)!;
+    }
+
+    // Create promise for this article processing
+    const processPromise = this.processArticleContent(articleId, feedId);
+    this.articleLocks.set(lockKey, processPromise);
+
+    try {
+      const result = await processPromise;
+      return result;
+    } finally {
+      // Clean up the lock after processing (success or failure)
+      this.articleLocks.delete(lockKey);
+    }
+  }
+
+  /**
+   * Processes article content fetching with proper concurrency control
+   * This is the actual implementation, wrapped by ensureFullContent for de-duplication
+   */
+  private async processArticleContent(
+    articleId: string,
+    feedId: string
+  ): Promise<FetchResult> {
     const startTime = Date.now();
+    let article: any = null;  // Cache article data to avoid re-fetching
 
     try {
       // Fetch article and feed data
-      const { data: article, error: articleError } = await supabase
+      const { data: articleData, error: articleError } = await supabase
         .from("articles")
         .select("*, feeds!inner(*)")
         .eq("id", articleId)
         .eq("feed_id", feedId)
         .single();
+      
+      article = articleData;
 
       if (articleError || !article) {
         throw new Error(`Article not found: ${articleId}`);
@@ -83,18 +116,16 @@ export class ArticleContentService {
         };
       }
 
-      // Check concurrent parse limit
-      if (this.activeParses.size >= this.MAX_CONCURRENT_PARSES) {
-        // Wait for one to complete
-        await Promise.race(Array.from(this.activeParses.values()));
-      }
+      // Implement proper semaphore for concurrent parse limit
+      await this.acquireSemaphore();
 
-      // Fetch full content with timeout
-      const fetchPromise = this.fetchFullContent(articleId, article.link);
       const parseKey = `${articleId}-${Date.now()}`;
-      this.activeParses.set(parseKey, fetchPromise);
-
+      
       try {
+        // Fetch full content with timeout
+        const fetchPromise = this.fetchFullContent(articleId, article.link);
+        this.activeParses.set(parseKey, fetchPromise);
+
         const fullContent = await Promise.race([
           fetchPromise,
           this.createTimeoutPromise(),
@@ -134,6 +165,7 @@ export class ArticleContentService {
         };
       } finally {
         this.activeParses.delete(parseKey);
+        this.releaseSemaphore();
       }
     } catch (error) {
       // Log failure
@@ -152,13 +184,8 @@ export class ArticleContentService {
         },
       });
 
-      // Return original content on failure
-      const { data: article } = await supabase
-        .from("articles")
-        .select("content, full_content")
-        .eq("id", articleId)
-        .single();
-
+      // Return original content on failure (use cached article data)
+      // No need to re-fetch from database as we already have the article
       return {
         content: article?.full_content || article?.content || "",
         wasFetched: false,
@@ -198,8 +225,13 @@ export class ArticleContentService {
     url: string
   ): Promise<string | null> {
     try {
+      // Build absolute URL for server-side fetch
+      // Use NEXT_PUBLIC_APP_URL which already includes the port
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const absoluteUrl = `${baseUrl}/reader/api/articles/${articleId}/fetch-content`;
+      
       // Make API call to the fetch-content endpoint as expected by tests
-      const response = await fetch(`/api/articles/${articleId}/fetch-content`, {
+      const response = await fetch(absoluteUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -225,45 +257,6 @@ export class ArticleContentService {
     }
   }
 
-  /**
-   * Direct content extraction using the same logic as ContentParsingService
-   */
-  private async directExtractContent(url: string): Promise<string | null> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        this.PARSE_TIMEOUT
-      );
-
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; RSS Reader Bot/1.0; +http://example.com/bot)",
-        },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const html = await response.text();
-
-      // Simple content extraction - in a real implementation you'd use Readability
-      // For now, just return the HTML content
-      return html;
-    } catch (error) {
-      if ((error as any)?.name === "AbortError") {
-        console.error("Content extraction timeout");
-      } else {
-        console.error("Content extraction error:", error);
-      }
-      return null;
-    }
-  }
 
   /**
    * Checks if a feed is configured as partial content
@@ -311,64 +304,90 @@ export class ArticleContentService {
   }
 
   /**
-   * Sanitizes extracted HTML content
+   * Acquires a semaphore slot for concurrent parsing
+   * Implements proper queue-based concurrency control
    */
-  private sanitizeContent(content: string): string {
-    // Remove script tags and dangerous elements
-    let sanitized = content.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      ""
-    );
-    sanitized = sanitized.replace(
-      /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
-      ""
-    );
-
-    // Remove inline event handlers
-    sanitized = sanitized.replace(/\son\w+\s*=\s*"[^"]*"/gi, "");
-    sanitized = sanitized.replace(/\son\w+\s*=\s*'[^']*'/gi, "");
-
-    // Trim whitespace
-    sanitized = sanitized.trim();
-
-    return sanitized;
+  private async acquireSemaphore(): Promise<void> {
+    while (this.activeParses.size >= this.MAX_CONCURRENT_PARSES) {
+      // Create a promise that will be resolved when a slot becomes available
+      // Add timeout to prevent indefinite waiting
+      const QUEUE_TIMEOUT = 60000; // 60 seconds max wait time
+      
+      await Promise.race([
+        new Promise<void>((resolve) => {
+          this.pendingQueue.push(resolve);
+        }),
+        new Promise<void>((_, reject) => {
+          setTimeout(() => {
+            // Remove from queue if still pending
+            const index = this.pendingQueue.findIndex(fn => fn === reject);
+            if (index > -1) {
+              this.pendingQueue.splice(index, 1);
+            }
+            reject(new Error(`Semaphore queue timeout after ${QUEUE_TIMEOUT}ms`));
+          }, QUEUE_TIMEOUT);
+        })
+      ]);
+    }
   }
 
   /**
-   * Updates article content atomically with retry logic
+   * Releases a semaphore slot and processes pending queue
    */
-  private async updateArticleContent(
-    articleId: string,
-    content: string
-  ): Promise<void> {
-    const maxRetries = 3;
-    let attempt = 0;
-
-    while (attempt < maxRetries) {
+  private releaseSemaphore(): void {
+    // Process the next waiting request if any
+    const nextResolve = this.pendingQueue.shift();
+    if (nextResolve) {
       try {
-        const { error } = await supabase
-          .from("articles")
-          .update({
-            full_content: content,
-            has_full_content: true,
-          })
-          .eq("id", articleId);
-
-        if (!error) {
-          return;
-        }
-
-        if (attempt === maxRetries - 1) {
-          throw error;
-        }
+        nextResolve();
       } catch (error) {
-        if (attempt === maxRetries - 1) {
-          throw error;
-        }
+        console.error('Error releasing semaphore to queued request:', error);
+        // Continue to process queue even if one resolution fails
+        // This prevents the queue from getting stuck
+        this.releaseSemaphore();
       }
-
-      attempt++;
-      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
+
+  /**
+   * Sanitizes extracted HTML content
+   */
+  private sanitizeContent(content: string): string {
+    // Create a new JSDOM instance for server-side DOMPurify
+    const window = new JSDOM('').window;
+    // @ts-ignore - DOMPurify types don't perfectly match JSDOM window
+    const purify = DOMPurify(window);
+    
+    // Configure DOMPurify with secure defaults
+    const config = {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'blockquote', 'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'div', 'span',
+        'table', 'thead', 'tbody', 'tr', 'td', 'th', 'caption', 'article', 'section',
+        'aside', 'figure', 'figcaption', 'mark', 'small', 'del', 'ins', 'sub', 'sup'
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'width', 'height', 'class', 'id', 
+        'target', 'rel', 'loading', 'decoding', 'style'
+      ],
+      ALLOW_DATA_ATTR: false,
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+      KEEP_CONTENT: true,
+      SAFE_FOR_TEMPLATES: true,
+      SANITIZE_DOM: true,
+      WHOLE_DOCUMENT: false,
+      RETURN_DOM: false,
+      RETURN_DOM_FRAGMENT: false,
+      FORCE_BODY: false,
+      IN_PLACE: false
+    };
+    
+    // Sanitize the content
+    const sanitized = purify.sanitize(content, config);
+    
+    // Trim whitespace
+    return sanitized.trim();
+  }
+
 }

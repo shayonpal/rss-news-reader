@@ -80,7 +80,8 @@ export function useArticleListState({
       console.log(
         `⛳ RR-27: Skipping preservation clear due to article navigation intent`
       );
-      setNavigatingToArticle(false); // Reset the flag
+      // DON'T reset the flag here - let ArticleList handle it to prevent race condition
+      // setNavigatingToArticle(false);
     } else {
       // Only clear if the CHANGED dimension had a previous value (prevents first-mount clearing)
       const shouldClear =
