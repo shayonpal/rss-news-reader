@@ -149,6 +149,16 @@ export function useAutoParseContent({
     }
   }, [article.id]);
 
+  // Clear parsed content when article gets full content from database
+  // This ensures database content takes precedence over auto-parsed content
+  useEffect(() => {
+    if (article.hasFullContent && article.fullContent && parsedContent) {
+      console.log("🔄 Auto-parse: Clearing parsed content in favor of database content");
+      setParsedContent(null);
+      setParseError(null);
+    }
+  }, [article.hasFullContent, article.fullContent]);
+
   // Check if auto-parsing should be triggered
   useEffect(() => {
     // Skip if auto-parsing is disabled

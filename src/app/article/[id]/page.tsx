@@ -15,7 +15,13 @@ export default function ArticlePage() {
   const router = useRouter();
   const articleId = params.id ? decodeURIComponent(params.id as string) : "";
 
-  const { articles, getArticle, markAsRead, toggleStar } = useArticleStore();
+  const {
+    articles,
+    getArticle,
+    markAsRead,
+    toggleStar,
+    setNavigatingToArticle,
+  } = useArticleStore();
   const { feeds } = useFeedStore();
   const [article, setArticle] = useState<Article | null>(null);
   const [articleTags, setArticleTags] = useState<any[]>([]);
@@ -24,6 +30,9 @@ export default function ArticlePage() {
 
   useEffect(() => {
     const loadArticle = async () => {
+      // RR-27: Reset navigation intent when article page loads
+      setNavigatingToArticle(false);
+
       try {
         const fetchedArticle = await getArticle(articleId);
 
@@ -68,7 +77,7 @@ export default function ArticlePage() {
     };
 
     loadArticle();
-  }, [articleId, getArticle, markAsRead]);
+  }, [articleId, getArticle, markAsRead, setNavigatingToArticle]);
 
   const handleToggleStar = async () => {
     if (article) {
@@ -155,6 +164,8 @@ export default function ArticlePage() {
           url += "?" + queryString;
         }
 
+        // Siri's Fix: Set navigation intent before going back to preserve list state
+        setNavigatingToArticle(true);
         router.push(url as any);
       }}
     />

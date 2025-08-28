@@ -1,6 +1,6 @@
 /**
  * RR-255: Integration Tests for Summary Generation Flow
- * 
+ *
  * Validates end-to-end summary generation workflow:
  * - Article card interactions
  * - API endpoint integration
@@ -74,7 +74,11 @@ vi.mock("@/hooks/use-article-store", () => ({
   useArticleStore: () => ({
     articles: [
       createMockArticle({ id: "article-1", title: "First Article" }),
-      createMockArticle({ id: "article-2", title: "Second Article", ai_summary: "Existing summary" }),
+      createMockArticle({
+        id: "article-2",
+        title: "Second Article",
+        ai_summary: "Existing summary",
+      }),
       createMockArticle({ id: "article-3", title: "Third Article" }),
     ],
     isLoading: false,
@@ -95,15 +99,17 @@ vi.mock("@/hooks/use-feed-store", () => ({
   useFeedStore: () => ({
     feeds: [
       createMockFeed({ id: "feed-1", title: "Normal Feed" }),
-      createMockFeed({ 
-        id: "feed-2", 
-        title: "BBC News", 
-        is_partial_content: true 
+      createMockFeed({
+        id: "feed-2",
+        title: "BBC News",
+        is_partial_content: true,
       }),
     ],
     feedsWithCounts: new Map(),
-    getFeed: (feedId: string) => 
-      feedId === "feed-1" ? createMockFeed() : createMockFeed({ is_partial_content: true }),
+    getFeed: (feedId: string) =>
+      feedId === "feed-1"
+        ? createMockFeed()
+        : createMockFeed({ is_partial_content: true }),
   }),
 }));
 
@@ -135,7 +141,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
     it("should generate summary without navigating to article", async () => {
       const user = userEvent.setup({ delay: null });
       const mockPush = vi.fn();
-      
+
       vi.mocked(useRouter).mockReturnValue({
         push: mockPush,
         back: vi.fn(),
@@ -151,8 +157,8 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
 
       // Find the summary button in article card
       const articleCard = screen.getByTestId("article-card-article-1");
-      const summaryButton = within(articleCard).getByRole("button", { 
-        name: /summarize/i 
+      const summaryButton = within(articleCard).getByRole("button", {
+        name: /summarize/i,
       });
 
       // Click summary button
@@ -163,7 +169,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
 
       // Wait for summary to be generated
       vi.advanceTimersByTime(100);
-      
+
       await waitFor(() => {
         expect(screen.getByText(/AI-generated summary/i)).toBeInTheDocument();
       });
@@ -178,7 +184,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       // Delay API response
       server.use(
         http.post("/api/articles/:id/summarize", async () => {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
           return HttpResponse.json({
             success: true,
             summary: "Delayed summary",
@@ -199,13 +205,13 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       // Should immediately show loading
       expect(screen.getByRole("progressbar")).toBeInTheDocument();
       expect(summaryButton).toBeDisabled();
-      
+
       // Should have loading text
       expect(screen.getByText(/generating/i)).toBeInTheDocument();
 
       // Advance time and wait for completion
       vi.advanceTimersByTime(600);
-      
+
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
         expect(summaryButton).not.toBeDisabled();
@@ -231,7 +237,9 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       await waitFor(() => {
         // Summary should appear in the card
         const articleCard = screen.getByTestId("article-card-article-1");
-        expect(within(articleCard).getByText(/AI-generated summary/i)).toBeInTheDocument();
+        expect(
+          within(articleCard).getByText(/AI-generated summary/i)
+        ).toBeInTheDocument();
       });
     });
 
@@ -241,8 +249,8 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       render(
         <ArticleList
           articles={[
-            createMockArticle({ 
-              id: "article-2", 
+            createMockArticle({
+              id: "article-2",
               ai_summary: "Old summary",
               ai_summary_generated_at: new Date().toISOString(),
             }),
@@ -252,8 +260,8 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       );
 
       // Button should show re-summarize
-      const resummaryButton = screen.getByRole("button", { 
-        name: /re-summarize/i 
+      const resummaryButton = screen.getByRole("button", {
+        name: /re-summarize/i,
       });
 
       await user.click(resummaryButton);
@@ -300,10 +308,10 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       await waitFor(() => {
         // Should show error state
         expect(summaryButton).toHaveAttribute("data-error", "true");
-        
+
         // Should show error message
         expect(screen.getByText(/too many requests/i)).toBeInTheDocument();
-        
+
         // Button should be re-enabled for retry
         expect(summaryButton).not.toBeDisabled();
       });
@@ -319,7 +327,10 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
           if (attempt === 1) {
             // First attempt fails
             return HttpResponse.json(
-              { error: "temporary_error", message: "Service temporarily unavailable" },
+              {
+                error: "temporary_error",
+                message: "Service temporarily unavailable",
+              },
               { status: 503 }
             );
           }
@@ -339,13 +350,15 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       );
 
       const summaryButton = screen.getByRole("button", { name: /summarize/i });
-      
+
       // First click - fails
       await user.click(summaryButton);
       vi.advanceTimersByTime(100);
 
       await waitFor(() => {
-        expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/temporarily unavailable/i)
+        ).toBeInTheDocument();
       });
 
       // Retry click - succeeds
@@ -381,7 +394,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       await waitFor(() => {
         // Should show network error
         expect(screen.getByText(/network error/i)).toBeInTheDocument();
-        
+
         // Button should allow retry
         expect(summaryButton).not.toBeDisabled();
         expect(summaryButton).toHaveAttribute("data-error", "true");
@@ -394,7 +407,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       server.use(
         http.post("/api/articles/:id/summarize", async () => {
           // Simulate timeout (>30 seconds)
-          await new Promise(resolve => setTimeout(resolve, 35000));
+          await new Promise((resolve) => setTimeout(resolve, 35000));
           return HttpResponse.json({ success: true });
         })
       );
@@ -423,7 +436,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
     it("should navigate to article when card clicked (not button)", async () => {
       const user = userEvent.setup({ delay: null });
       const mockPush = vi.fn();
-      
+
       vi.mocked(useRouter).mockReturnValue({
         push: mockPush,
         back: vi.fn(),
@@ -438,7 +451,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       );
 
       const articleCard = screen.getByTestId("article-card-article-1");
-      
+
       // Click on card title (not button)
       const title = within(articleCard).getByText("Test Article Title");
       await user.click(title);
@@ -452,7 +465,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
     it("should NOT navigate when summary button clicked", async () => {
       const user = userEvent.setup({ delay: null });
       const mockPush = vi.fn();
-      
+
       vi.mocked(useRouter).mockReturnValue({
         push: mockPush,
         back: vi.fn(),
@@ -476,7 +489,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
     it("should handle multiple buttons in card correctly", async () => {
       const user = userEvent.setup({ delay: null });
       const mockPush = vi.fn();
-      
+
       vi.mocked(useRouter).mockReturnValue({
         push: mockPush,
         back: vi.fn(),
@@ -493,12 +506,16 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       const articleCard = screen.getByTestId("article-card-article-1");
 
       // Click star button - should not navigate
-      const starButton = within(articleCard).getByRole("button", { name: /star/i });
+      const starButton = within(articleCard).getByRole("button", {
+        name: /star/i,
+      });
       await user.click(starButton);
       expect(mockPush).not.toHaveBeenCalled();
 
       // Click summary button - should not navigate
-      const summaryButton = within(articleCard).getByRole("button", { name: /summarize/i });
+      const summaryButton = within(articleCard).getByRole("button", {
+        name: /summarize/i,
+      });
       await user.click(summaryButton);
       expect(mockPush).not.toHaveBeenCalled();
 
@@ -518,7 +535,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       );
 
       const summaryButton = screen.getByRole("button", { name: /summarize/i });
-      
+
       // Focus button
       summaryButton.focus();
       expect(summaryButton).toHaveFocus();
@@ -545,7 +562,7 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
 
       render(
         <ArticleList
-          articles={Array.from({ length: 20 }, (_, i) => 
+          articles={Array.from({ length: 20 }, (_, i) =>
             createMockArticle({ id: `article-${i}` })
           )}
           feeds={[createMockFeed()]}
@@ -553,7 +570,9 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       );
 
       // Find a summary button in the middle of the list
-      const summaryButtons = screen.getAllByRole("button", { name: /summarize/i });
+      const summaryButtons = screen.getAllByRole("button", {
+        name: /summarize/i,
+      });
       await user.click(summaryButtons[10]);
 
       vi.advanceTimersByTime(100);
@@ -590,8 +609,8 @@ describe("RR-255: Summary Generation Workflow Integration", () => {
       // API should receive indicator about partial content
       await waitFor(() => {
         const requests = server.events.requests;
-        const summarizeRequest = requests.find(
-          req => req.url.includes("/summarize")
+        const summarizeRequest = requests.find((req) =>
+          req.url.includes("/summarize")
         );
         expect(summarizeRequest).toBeDefined();
       });

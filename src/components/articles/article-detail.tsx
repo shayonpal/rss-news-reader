@@ -87,7 +87,7 @@ function ArticleActionsToolbar({
       key="summary"
       articleId={articleId}
       hasSummary={hasSummary}
-      variant="icon"
+      variant="full"
       size="lg"
       onSuccess={onSummarySuccess}
     />,
@@ -210,7 +210,12 @@ export function ArticleDetail({
 
   // Handle summary success
   const handleSummarySuccess = async () => {
-    // Refresh the article to get the updated summary
+    // Clear auto-parsed content immediately since we'll have fresh DB content
+    if (parsedContent) {
+      clearParsedContent();
+    }
+
+    // Refresh the article to get the updated summary and full content
     const updatedArticle = await getArticle(article.id);
     if (updatedArticle) {
       setCurrentArticle(updatedArticle);
@@ -279,6 +284,18 @@ export function ArticleDetail({
       "figcaption",
       "iframe",
       "video",
+      // Siri's Fix: Add structural tags for direct HTML content
+      "div",
+      "span",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "td",
+      "th",
+      "hr",
+      "section",
+      "article",
     ],
     ALLOWED_ATTR: [
       "href",

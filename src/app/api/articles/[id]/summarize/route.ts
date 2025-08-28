@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { SummaryPromptBuilder } from "@/lib/ai/summary-prompt";
 import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
+import { ArticleContentService } from "@/lib/services/article-content-service";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -36,10 +37,10 @@ const postHandler = async (
       );
     }
 
-    // Get article from database
+    // Get article from database with feed information
     const { data: article, error: fetchError } = await supabase
       .from("articles")
-      .select("*")
+      .select("*, feeds!inner(*)")
       .eq("id", id)
       .single();
 
@@ -66,11 +67,10 @@ const postHandler = async (
       });
     }
 
-    // Get content to summarize (prefer full content over RSS content)
-    // TODO: Once US-104 (Content Extraction) is fully implemented with UI,
-    // consider requiring full_content for all summarizations to ensure
-    // complete and accurate summaries. RSS content may be truncated.
-    const contentToSummarize = article.full_content || article.content;
+    // RR-256: Auto-fetch full content for partial feeds before summarization
+    const contentService = ArticleContentService.getInstance();
+    const { content: contentToSummarize, wasFetched } =
+      await contentService.ensureFullContent(article.id, article.feed_id);
 
     if (!contentToSummarize) {
       return NextResponse.json(
@@ -143,6 +143,7 @@ const postHandler = async (
       summary,
       model: claudeModel,
       regenerated: forceRegenerate,
+      full_content_fetched: wasFetched,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens,
       config: SummaryPromptBuilder.getConfig(),

@@ -315,6 +315,7 @@ Use `git-expert` with symbol-level context:
 
 - Include specific symbol paths in commit message
 - Reference Linear issue and acceptance criteria
+- Inform them exactly which files should be committed and pushed
 - Highlight integration points affected
 - Push to dev/feature branch (never main)
 
@@ -346,11 +347,10 @@ Quality Metrics:
 
 ### 6B. Verify Push Success
 
-Confirm with git-expert:
+Confirm yourself (and not use git-expert):
 
 - Commit SHA and message recorded
 - Push successful to correct branch
-- CI/CD pipeline triggered
 - No merge conflicts
 
 ### 6C. Verify Issue Status

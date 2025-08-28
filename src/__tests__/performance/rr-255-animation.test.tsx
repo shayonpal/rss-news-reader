@@ -1,6 +1,6 @@
 /**
  * RR-255: Performance Tests for Glass Button Animations
- * 
+ *
  * Validates:
  * - 60fps animation performance on mobile
  * - Debouncing for rapid interactions
@@ -16,7 +16,10 @@ import { SummaryButton } from "@/components/articles/summary-button";
 import { GlassToolbarButton } from "@/components/ui/glass-button";
 
 // Performance measurement utilities
-const measureFrameRate = async (callback: () => void, duration: number = 1000): Promise<number> => {
+const measureFrameRate = async (
+  callback: () => void,
+  duration: number = 1000
+): Promise<number> => {
   const frames: number[] = [];
   let animationId: number;
   let startTime: number;
@@ -24,7 +27,7 @@ const measureFrameRate = async (callback: () => void, duration: number = 1000): 
   const countFrame = (timestamp: number) => {
     if (!startTime) startTime = timestamp;
     frames.push(timestamp);
-    
+
     if (timestamp - startTime < duration) {
       animationId = requestAnimationFrame(countFrame);
     }
@@ -33,7 +36,7 @@ const measureFrameRate = async (callback: () => void, duration: number = 1000): 
   callback();
   animationId = requestAnimationFrame(countFrame);
 
-  await new Promise(resolve => setTimeout(resolve, duration + 100));
+  await new Promise((resolve) => setTimeout(resolve, duration + 100));
   cancelAnimationFrame(animationId!);
 
   // Calculate FPS
@@ -59,7 +62,7 @@ const measureLayoutThrashing = (element: HTMLElement): number => {
     HTMLElement.prototype,
     "style"
   );
-  
+
   Object.defineProperty(element, "style", {
     get: originalStyle?.get,
     set: (value) => {
@@ -116,10 +119,10 @@ describe("RR-255: Glass Button Animation Performance", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Trigger animation
       button.classList.add("morphing");
-      
+
       // Measure frame rate during animation
       const fps = await measureFrameRate(() => {
         // Simulate glass morphing animation
@@ -128,7 +131,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
           progress += 0.016; // ~60fps step
           button.style.transform = `scale(${1 + Math.sin(progress) * 0.1})`;
           button.style.opacity = `${0.8 + Math.sin(progress) * 0.2}`;
-          
+
           if (progress < Math.PI * 2) {
             requestAnimationFrame(animate);
           }
@@ -142,9 +145,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
 
     it("should use GPU acceleration for transforms", () => {
       const { container } = render(
-        <GlassToolbarButton className="glass-morph">
-          Summary
-        </GlassToolbarButton>
+        <GlassToolbarButton className="glass-morph">Summary</GlassToolbarButton>
       );
 
       const button = screen.getByRole("button");
@@ -152,7 +153,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
 
       // Check for GPU-accelerated properties
       expect(styles.willChange).toMatch(/transform|opacity/);
-      
+
       // Check for 3D transforms (triggers GPU)
       const transform = styles.transform || styles.webkitTransform;
       expect(transform).toMatch(/translate3d|translateZ/);
@@ -168,18 +169,18 @@ describe("RR-255: Glass Button Animation Performance", () => {
       );
 
       const buttons = screen.getAllByRole("button");
-      
+
       // Track layout operations
       let totalLayoutOps = 0;
-      
+
       buttons.forEach((button, index) => {
         // Simulate hover animation
         const ops = measureLayoutThrashing(button);
-        
+
         // Trigger style changes
         button.style.transform = `scale(1.05)`;
         button.style.opacity = "0.9";
-        
+
         totalLayoutOps += ops;
       });
 
@@ -192,20 +193,18 @@ describe("RR-255: Glass Button Animation Performance", () => {
       const { container } = render(
         <div style={{ height: "2000px" }}>
           {Array.from({ length: 20 }, (_, i) => (
-            <GlassToolbarButton key={i}>
-              Button {i}
-            </GlassToolbarButton>
+            <GlassToolbarButton key={i}>Button {i}</GlassToolbarButton>
           ))}
         </div>
       );
 
       const buttons = screen.getAllByRole("button");
-      
+
       // Simulate scroll event
       let scrollFrames = 0;
       const scrollHandler = () => {
         scrollFrames++;
-        buttons.forEach(button => {
+        buttons.forEach((button) => {
           // Check if button is using transform instead of position changes
           const transform = button.style.transform;
           expect(transform).not.toContain("translate");
@@ -213,7 +212,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
       };
 
       window.addEventListener("scroll", scrollHandler);
-      
+
       // Trigger scroll
       window.scrollY = 500;
       window.dispatchEvent(new Event("scroll"));
@@ -239,21 +238,21 @@ describe("RR-255: Glass Button Animation Performance", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Measure performance during rapid clicks
       const startTime = performance.now();
-      
+
       // Perform rapid clicks
       for (let i = 0; i < 10; i++) {
         await user.click(button);
       }
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
 
       // Should handle rapidly without blocking UI
       expect(totalTime).toBeLessThan(100); // < 100ms for 10 clicks
-      
+
       // Should only call API once (debounced)
       expect(mockGenerateSummary).toHaveBeenCalledTimes(1);
     });
@@ -268,7 +267,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
 
       // Should have touch-action CSS to prevent zoom
       expect(styles.touchAction).toMatch(/manipulation|none/);
-      
+
       // Should have user-select none to prevent text selection
       expect(styles.userSelect).toBe("none");
       expect(styles.webkitUserSelect).toBe("none");
@@ -280,7 +279,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Track touch event handling time
       let touchStartTime: number;
       let touchEndTime: number;
@@ -320,12 +319,12 @@ describe("RR-255: Glass Button Animation Performance", () => {
       );
 
       const addedListeners = addEventListenerSpy.mock.calls.length;
-      
+
       // Unmount component
       unmount();
 
       const removedListeners = removeEventListenerSpy.mock.calls.length;
-      
+
       // Should remove all added listeners
       expect(removedListeners).toBeGreaterThanOrEqual(addedListeners);
     });
@@ -333,17 +332,17 @@ describe("RR-255: Glass Button Animation Performance", () => {
     it("should not leak memory with repeated renders", () => {
       // Track memory usage (simplified)
       const memorySnapshots: number[] = [];
-      
+
       for (let i = 0; i < 10; i++) {
         const { unmount } = render(
           <GlassToolbarButton>Button {i}</GlassToolbarButton>
         );
-        
+
         // Simulate memory snapshot
         if (performance.memory) {
           memorySnapshots.push(performance.memory.usedJSHeapSize);
         }
-        
+
         unmount();
       }
 
@@ -352,7 +351,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
         const firstSnapshot = memorySnapshots[0];
         const lastSnapshot = memorySnapshots[memorySnapshots.length - 1];
         const memoryGrowth = lastSnapshot - firstSnapshot;
-        
+
         // Allow max 10% memory growth
         expect(memoryGrowth).toBeLessThan(firstSnapshot * 0.1);
       }
@@ -360,11 +359,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
 
     it("should lazy-load summary content", async () => {
       const { container } = render(
-        <SummaryButton
-          articleId="test-123"
-          hasSummary={false}
-          variant="icon"
-        />
+        <SummaryButton articleId="test-123" hasSummary={false} variant="icon" />
       );
 
       // Initially, no summary content should be loaded
@@ -377,7 +372,9 @@ describe("RR-255: Glass Button Animation Performance", () => {
 
       await waitFor(() => {
         // Summary content should now be present
-        expect(container.querySelector("[data-summary-loading]")).toBeInTheDocument();
+        expect(
+          container.querySelector("[data-summary-loading]")
+        ).toBeInTheDocument();
       });
     });
   });
@@ -406,12 +403,12 @@ describe("RR-255: Glass Button Animation Performance", () => {
 
       // Trigger state changes
       const buttons = screen.getAllByRole("button");
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         button.classList.add("active");
       });
 
       // Allow mutations to process
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       observer.disconnect();
 
@@ -438,17 +435,22 @@ describe("RR-255: Glass Button Animation Performance", () => {
       );
 
       const button = screen.getByRole("button");
-      
+
       // Track reflows
       let reflows = 0;
-      const properties = ["offsetWidth", "offsetHeight", "clientWidth", "clientHeight"];
-      
-      properties.forEach(prop => {
+      const properties = [
+        "offsetWidth",
+        "offsetHeight",
+        "clientWidth",
+        "clientHeight",
+      ];
+
+      properties.forEach((prop) => {
         const originalDescriptor = Object.getOwnPropertyDescriptor(
           HTMLElement.prototype,
           prop
         );
-        
+
         Object.defineProperty(button, prop, {
           get: () => {
             reflows++;
@@ -460,7 +462,7 @@ describe("RR-255: Glass Button Animation Performance", () => {
       // Simulate hover
       button.dispatchEvent(new MouseEvent("mouseenter"));
       button.classList.add("hover");
-      
+
       // Check styles (may trigger reflow)
       const styles = window.getComputedStyle(button);
       const opacity = styles.opacity;

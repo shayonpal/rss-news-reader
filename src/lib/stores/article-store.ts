@@ -1013,13 +1013,29 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       const result = await response.json();
 
-      // Update the article in store with the new summary
-      const { articles } = get();
-      const article = articles.get(articleId);
-      if (article) {
+      // Siri's Fix: Refresh full article from database after summarization
+      // This ensures we get updated hasFullContent and fullContent fields
+      const { getArticle } = get();
+      const refreshedArticle = await getArticle(articleId);
+
+      if (refreshedArticle) {
+        // Update store with refreshed article data (includes full content + summary)
+        const { articles } = get();
         const updatedArticles = new Map(articles);
-        updatedArticles.set(articleId, { ...article, summary: result.summary });
+        updatedArticles.set(articleId, refreshedArticle);
         set({ articles: updatedArticles });
+      } else {
+        // Fallback: Update just the summary if refresh fails
+        const { articles } = get();
+        const article = articles.get(articleId);
+        if (article) {
+          const updatedArticles = new Map(articles);
+          updatedArticles.set(articleId, {
+            ...article,
+            summary: result.summary,
+          });
+          set({ articles: updatedArticles });
+        }
       }
 
       return {

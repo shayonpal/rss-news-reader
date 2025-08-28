@@ -23,18 +23,18 @@ export function useContentState(
     ? "rss" // User explicitly wants original RSS content
     : fetchedContent
       ? "manual" // User manually fetched content
-      : parsedContent
-        ? "auto" // Auto-parsed from partial feed
-        : article.fullContent
-          ? "stored" // Previously fetched and stored in DB
+      : article.fullContent
+        ? "stored" // Previously fetched and stored in DB (higher priority)
+        : parsedContent
+          ? "auto" // Auto-parsed from partial feed
           : "rss"; // Original RSS content
 
   // Get the actual content to display based on priority
   const displayContent = forceOriginalContent
     ? article.content || "" // Force original RSS content
     : fetchedContent ||
-      parsedContent ||
-      article.fullContent ||
+      article.fullContent || // Database content has higher priority
+      parsedContent || // Auto-parsed content as fallback
       article.content ||
       "";
 
