@@ -60,6 +60,8 @@ export function ArticleList({
     refreshArticles,
     clearError,
     readStatusFilter,
+    navigatingToArticle,
+    setNavigatingToArticle,
   } = useArticleStore();
 
   // Integrate article list state preservation
@@ -106,8 +108,16 @@ export function ArticleList({
   // Load articles on mount or when feed/folder changes
   useEffect(() => {
     if (!filtersReady) {
-      // <-- ADD THIS GUARD
       console.log("🚫 Filters not ready, skipping article load.");
+      return;
+    }
+
+    // RR-27: Skip reload when navigating back from article
+    if (navigatingToArticle) {
+      console.log(
+        "🔄 Skipping article reload - returning from article navigation"
+      );
+      setNavigatingToArticle(false);
       return;
     }
 
@@ -117,13 +127,19 @@ export function ArticleList({
       clearTimeout(markAsReadTimer.current);
     }
 
-    // RR-216 Fix: Force fresh load when filters change
-    // This ensures we get the correct filtered articles from the database
     console.log(`🔄 Loading articles for feedId: ${feedId}, tagId: ${tagId}`);
 
     // Always load fresh articles based on current filters
     loadArticles(feedId, folderId, tagId);
-  }, [feedId, folderId, tagId, loadArticles, filtersReady]); // <-- ADD filtersReady to dependency array
+  }, [
+    feedId,
+    folderId,
+    tagId,
+    loadArticles,
+    filtersReady,
+    navigatingToArticle,
+    setNavigatingToArticle,
+  ]);
 
   // Batch mark as read with debounce - now tracking auto-read articles
   const processPendingMarkAsRead = useCallback(() => {

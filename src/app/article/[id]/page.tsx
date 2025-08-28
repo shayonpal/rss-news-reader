@@ -79,6 +79,20 @@ export default function ArticlePage() {
     loadArticle();
   }, [articleId, getArticle, markAsRead, setNavigatingToArticle]);
 
+  // Watch for store updates (e.g., after summarization) and update local article state
+  useEffect(() => {
+    if (articleId && articles.has(articleId)) {
+      const storeArticle = articles.get(articleId);
+      if (
+        storeArticle &&
+        (!article || storeArticle.updatedAt > article.updatedAt)
+      ) {
+        console.log("📄 Article updated in store, refreshing local state");
+        setArticle(storeArticle);
+      }
+    }
+  }, [articles, articleId, article]);
+
   const handleToggleStar = async () => {
     if (article) {
       await toggleStar(article.id);
