@@ -440,7 +440,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           fullContent: article.full_content || undefined,
           summary: article.ai_summary || undefined,
           isPartial: false,
-          feedTitle: article.feed?.title || "",
+          feedTitle: (article as any).feed?.title || "",
         });
       });
 
@@ -602,7 +602,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           fullContent: article.full_content || undefined,
           summary: article.ai_summary || undefined,
           isPartial: false,
-          feedTitle: article.feed?.title || "",
+          feedTitle: (article as any).feed?.title || "",
         });
       });
 
@@ -622,7 +622,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     try {
       const { data: article, error } = await supabase
         .from("articles")
-        .select("*")
+        .select(`*, feed:feeds(*)`)
         .eq("id", id)
         .single();
 
@@ -648,7 +648,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
           fullContent: article.full_content || undefined,
           summary: article.ai_summary || undefined,
           isPartial: false,
-          feedTitle: article.feed?.title || "",
+          feedTitle: (article as any).feed?.title || "",
         };
 
         // Update in store if loaded

@@ -90,7 +90,7 @@ export class ArticleContentService {
       }
 
       // Fetch full content with timeout
-      const fetchPromise = this.fetchFullContent(article.link);
+      const fetchPromise = this.fetchFullContent(articleId, article.link);
       const parseKey = `${articleId}-${Date.now()}`;
       this.activeParses.set(parseKey, fetchPromise);
 
@@ -193,19 +193,32 @@ export class ArticleContentService {
   /**
    * Fetches full content from article URL using existing extraction infrastructure
    */
-  async fetchFullContent(url: string): Promise<string | null> {
+  async fetchFullContent(
+    articleId: string,
+    url: string
+  ): Promise<string | null> {
     try {
-      // We need an article ID to use the ContentParsingService
-      // For now, create a temporary article record or use direct extraction
-      // This is a simplified approach for RR-256 implementation
-      const result = await this.directExtractContent(url);
+      // Make API call to the fetch-content endpoint as expected by tests
+      const response = await fetch(`/api/articles/${articleId}/fetch-content`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
 
-      if (!result) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success || !data.content) {
         return null;
       }
 
       // Sanitize and return content
-      return this.sanitizeContent(result);
+      return this.sanitizeContent(data.content);
     } catch (error) {
       console.error(`Failed to fetch content from ${url}:`, error);
       return null;
