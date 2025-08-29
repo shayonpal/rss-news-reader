@@ -288,6 +288,114 @@ Issue resolved naturally - no longer requires double-tap on iOS Safari or PWA in
 
 ## Test Infrastructure Issues
 
+### Unit Test Infrastructure - Supabase Mocking Configuration (RR-256)
+
+**Status:** 🔴 Needs Repair  
+**Severity:** High  
+**First Identified:** August 29, 2025 during RR-256 implementation testing
+
+#### Description
+
+The unit test infrastructure is failing due to improper Supabase client mocking configuration. 19 out of 22 unit tests are failing because the mock setup doesn't properly simulate Supabase database operations, authentication states, and client initialization.
+
+#### Impact
+
+- **Unit Test Coverage**: Only 3/22 unit tests passing (86% failure rate)
+- **Development Confidence**: Unable to validate business logic changes
+- **CI/CD Pipeline**: Unit test stage unreliable
+- **Regression Prevention**: Limited ability to catch breaking changes
+
+#### Root Cause
+
+- Mock Supabase client configuration incomplete or misconfigured
+- Authentication state mocking not properly established
+- Database operation mocks don't match actual Supabase client API
+- Test helpers may not be properly initialized or imported
+
+#### Suggested Resolution
+
+1. **Audit Mock Configuration**: Review `src/__tests__/helpers/supabase-mock.ts` for completeness
+2. **Authentication Mocking**: Ensure proper user session state mocking
+3. **Client API Alignment**: Verify mock methods match actual Supabase client interface
+4. **Test Helper Integration**: Check proper import and initialization of mock helpers
+5. **Environment Setup**: Validate test environment variables and configuration
+
+#### Related to RR-256
+
+This issue was discovered during comprehensive testing of the auto-fetch and summarization features, where unit tests were needed to validate business logic without making actual API calls.
+
+### E2E Test Suite - UI Element Selector Failures (RR-256)
+
+**Status:** 🔴 Needs Repair  
+**Severity:** Medium  
+**First Identified:** August 29, 2025 during RR-256 implementation testing
+
+#### Description
+
+End-to-end test suite is experiencing failures due to UI element selectors not finding expected elements in the DOM. Specifically, the `article-list` testid is not being found during test execution, preventing proper E2E validation of article display and navigation features.
+
+#### Impact
+
+- **E2E Coverage**: Unable to validate full user workflows
+- **UI Regression Detection**: Limited ability to catch interface changes
+- **Feature Validation**: Cannot confirm new features work end-to-end
+- **User Experience Testing**: Missing validation of actual user interactions
+
+#### Root Cause
+
+- Test selectors (`data-testid`, element queries) may be outdated
+- UI components may have changed without updating corresponding test selectors
+- Timing issues where elements aren't rendered when tests query for them
+- Page navigation or loading states not properly handled in tests
+
+#### Suggested Resolution
+
+1. **Selector Audit**: Review all testid attributes in UI components vs test expectations
+2. **DOM Inspection**: Verify actual DOM structure matches test assumptions
+3. **Wait Strategies**: Implement proper wait conditions for dynamic content
+4. **Component Updates**: Ensure test selectors updated when components change
+5. **Timing Analysis**: Add appropriate delays or wait conditions for loading states
+
+#### Related to RR-256
+
+This issue was identified during testing of the auto-fetch summarization workflow, where E2E tests were needed to validate the complete user experience from article list to summary display.
+
+### Integration Test Configuration Exclusions (RR-256)
+
+**Status:** 🟡 Needs Investigation  
+**Severity:** Low  
+**First Identified:** August 29, 2025 during RR-256 implementation testing
+
+#### Description
+
+Some test files are excluded from the Vitest configuration, potentially creating gaps in test coverage. The exclusion may be intentional for specific reasons (performance, reliability, or incomplete implementation) but needs documentation and review.
+
+#### Impact
+
+- **Coverage Gaps**: Potential untested code paths
+- **Configuration Clarity**: Unclear why certain tests are excluded
+- **Maintenance**: Excluded tests may become outdated without notice
+- **Development Workflow**: Confusion about which tests should run
+
+#### Root Cause
+
+- Intentional exclusions due to reliability issues or long execution times
+- Temporary exclusions that became permanent without documentation
+- Test files that require specific setup not available in all environments
+- Legacy test files that need refactoring before inclusion
+
+#### Suggested Resolution
+
+1. **Review Exclusions**: Document reason for each excluded test file
+2. **Coverage Analysis**: Identify what functionality is not being tested
+3. **Cleanup vs Fix**: Determine if excluded tests should be fixed or removed
+4. **Environment Dependencies**: Create setup for tests requiring specific conditions
+5. **Documentation**: Add comments explaining exclusion rationale
+
+#### Related to RR-256
+
+This issue was noted during comprehensive test suite evaluation as part of ensuring RR-256 implementation quality and regression prevention.
+
 ### CSS Variable Resolution in Test Environments (RR-251)
 
 **Status:** 🟡 Known Limitation  

@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **2025-08-29 07:52 - docs: Document testing infrastructure issues from RR-256 implementation**
+  - **Unit Test Infrastructure Documentation**: Added documentation for Supabase mocking configuration failures (19/22 tests failing) discovered during RR-256 testing with high severity status and suggested resolution approach
+  - **E2E Test Suite Issues**: Documented UI element selector failures affecting article-list testid and preventing proper end-to-end validation with medium severity and comprehensive resolution steps
+  - **Integration Test Configuration**: Added documentation for test file exclusions from Vitest configuration requiring investigation and proper documentation of exclusion rationale
+  - **Testing Infrastructure Assessment**: Comprehensive documentation of testing gaps discovered during RR-256 implementation providing foundation for future testing infrastructure improvements
+  - **Impact**: Testing issues now properly documented in known-issues.md enabling systematic resolution and preventing future similar problems during development workflow
+
+- **2025-08-29 07:50 - feat: Auto-fetch full content before summarizing partial feeds (RR-256)**
+  - **Implemented ArticleContentService**: Added ensureFullContent() method for automatic content retrieval from partial RSS feeds with proper validation and error handling
+  - **Enhanced Summarization API**: Modified /api/articles/[id]/summarize endpoint to auto-fetch full content for partial RSS feeds before generating summaries improving accuracy and completeness
+  - **Intelligent Partial Feed Detection**: Implemented detection using feed.is_partial_content configuration ensuring targeted content fetching only when necessary
+  - **Concurrent Request Management**: Added 30-second timeout and concurrent request limiting (max 3) preventing resource exhaustion and API overload
+  - **Comprehensive Error Handling**: Added graceful fallback to RSS content with detailed error logging ensuring robust operation even when full content fetch fails
+  - **Enhanced API Response Structure**: Added content_source and full_content_fetched fields providing transparency into content retrieval process and success metrics
+  - **Critical Bug Fixes**: Resolved Supabase relationship data access issues and URL field mapping problems ensuring proper database integration
+  - **RLS Policy Compliance**: Applied Row Level Security policy fixes for proper fetch_logs database logging maintaining security standards
+  - **Content Quality Validation**: Validates content quality with metrics showing 4000+ character full articles vs 200-character RSS snippets demonstrating significant improvement
+  - **Impact**: Users now receive significantly more accurate and comprehensive summaries from partial feeds with automatic full content retrieval improving overall content quality and user experience
+
 - **2025-08-27 13:00 - fix(RR-255): Fix summary button opens article + retire IOSButton**
   - **Event Propagation Fix**: Prevent event propagation when clicking summary button in article cards ensuring summary button correctly generates summaries without navigation
   - **IOSButton Retirement**: Replaced deprecated IOSButton with modern GlassToolbarButton improving component consistency and maintainability

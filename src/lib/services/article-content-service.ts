@@ -20,8 +20,8 @@ interface FetchLogEntry {
   error_details?: any;
 }
 
-import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
+import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
 
 export class ArticleContentService {
   private static instance: ArticleContentService;
@@ -53,7 +53,9 @@ export class ArticleContentService {
     // Check if already processing this article
     const lockKey = `${articleId}-${feedId}`;
     if (this.articleLocks.has(lockKey)) {
-      console.log(`🔒 Article ${articleId} already being processed, waiting for result...`);
+      console.log(
+        `🔒 Article ${articleId} already being processed, waiting for result...`
+      );
       return await this.articleLocks.get(lockKey)!;
     }
 
@@ -79,7 +81,8 @@ export class ArticleContentService {
     feedId: string
   ): Promise<FetchResult> {
     const startTime = Date.now();
-    let article: any = null;  // Cache article data to avoid re-fetching
+    let article: any = null; // Cache article data to avoid re-fetching
+    let semaphoreAcquired = false; // Track if we've acquired the semaphore
 
     try {
       // Fetch article and feed data
@@ -89,14 +92,24 @@ export class ArticleContentService {
         .eq("id", articleId)
         .eq("feed_id", feedId)
         .single();
-      
+
       article = articleData;
 
       if (articleError || !article) {
         throw new Error(`Article not found: ${articleId}`);
       }
 
-      const feed = article.feeds as any;
+      console.log("🔍 Article data structure:", {
+        articleId: article.id,
+        hasFeeds: !!article.feeds,
+        feedsType: typeof article.feeds,
+        articleKeys: Object.keys(article).filter(
+          (k) => k.includes("partial") || k.includes("feed") || k === "feeds"
+        ),
+        sampleFeedData: article.feeds,
+      });
+
+      const feed = article.feeds;
 
       // Skip conditions
       if (!this.shouldFetchContent(article, feed)) {
@@ -116,14 +129,16 @@ export class ArticleContentService {
         };
       }
 
-      // Implement proper semaphore for concurrent parse limit
+      // Acquire semaphore BEFORE starting the fetch operation
+      // This ensures we properly limit concurrent parse operations
       await this.acquireSemaphore();
+      semaphoreAcquired = true; // Mark that we've acquired it
 
       const parseKey = `${articleId}-${Date.now()}`;
-      
+
       try {
         // Fetch full content with timeout
-        const fetchPromise = this.fetchFullContent(articleId, article.link);
+        const fetchPromise = this.fetchFullContent(articleId, article.url);
         this.activeParses.set(parseKey, fetchPromise);
 
         const fullContent = await Promise.race([
@@ -165,9 +180,17 @@ export class ArticleContentService {
         };
       } finally {
         this.activeParses.delete(parseKey);
-        this.releaseSemaphore();
+        // Only release if we acquired it
+        if (semaphoreAcquired) {
+          this.releaseSemaphore();
+        }
       }
     } catch (error) {
+      // Only release semaphore if we acquired it
+      if (semaphoreAcquired) {
+        this.releaseSemaphore();
+      }
+
       // Log failure
       await this.logFetchAttempt({
         article_id: articleId,
@@ -197,23 +220,39 @@ export class ArticleContentService {
    * Determines if content should be fetched based on feed and article state
    */
   private shouldFetchContent(article: any, feed: any): boolean {
+    console.log("🔍 shouldFetchContent debug:", {
+      articleId: article.id,
+      feedIsPartial: feed.is_partial_content,
+      hasFullContent: article.has_full_content,
+      fullContentExists: !!article.full_content,
+      fetchFullContentFlag: feed.fetch_full_content,
+    });
+
     // Check acceptance criteria from RR-256
     // 1. Feed must be marked as partial
     if (!feed.is_partial_content) {
+      console.log(
+        "❌ Auto-fetch skipped: feed is not marked as partial content"
+      );
       return false;
     }
 
     // 2. Article must not already have full content
     if (article.has_full_content && article.full_content) {
+      console.log("❌ Auto-fetch skipped: article already has full content");
       return false;
     }
 
     // Additional check: User preference (if feed has fetch_full_content flag)
     // This allows users to opt-out even for partial feeds
     if (feed.fetch_full_content === false) {
+      console.log(
+        "❌ Auto-fetch skipped: fetch_full_content disabled for this feed"
+      );
       return false;
     }
 
+    console.log("✅ Auto-fetch should proceed - all conditions met");
     return true;
   }
 
@@ -225,11 +264,18 @@ export class ArticleContentService {
     url: string
   ): Promise<string | null> {
     try {
+      // Validate URL to prevent SSRF attacks
+      if (!this.isValidArticleUrl(url)) {
+        console.warn(`Invalid or unsafe URL rejected: ${url}`);
+        return null;
+      }
+
       // Build absolute URL for server-side fetch
       // Use NEXT_PUBLIC_APP_URL which already includes the port
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
       const absoluteUrl = `${baseUrl}/reader/api/articles/${articleId}/fetch-content`;
-      
+
       // Make API call to the fetch-content endpoint as expected by tests
       const response = await fetch(absoluteUrl, {
         method: "POST",
@@ -255,24 +301,6 @@ export class ArticleContentService {
       console.error(`Failed to fetch content from ${url}:`, error);
       return null;
     }
-  }
-
-
-  /**
-   * Checks if a feed is configured as partial content
-   */
-  async checkPartialFeedStatus(feedId: string): Promise<boolean> {
-    const { data: feed, error } = await supabase
-      .from("feeds")
-      .select("is_partial_content")
-      .eq("id", feedId)
-      .single();
-
-    if (error || !feed) {
-      return false;
-    }
-
-    return feed.is_partial_content || false;
   }
 
   /**
@@ -312,21 +340,29 @@ export class ArticleContentService {
       // Create a promise that will be resolved when a slot becomes available
       // Add timeout to prevent indefinite waiting
       const QUEUE_TIMEOUT = 60000; // 60 seconds max wait time
-      
+
+      // Store the resolve function so we can remove it on timeout
+      let resolveFunc: (() => void) | null = null;
+
       await Promise.race([
         new Promise<void>((resolve) => {
+          resolveFunc = resolve;
           this.pendingQueue.push(resolve);
         }),
         new Promise<void>((_, reject) => {
           setTimeout(() => {
             // Remove from queue if still pending
-            const index = this.pendingQueue.findIndex(fn => fn === reject);
-            if (index > -1) {
-              this.pendingQueue.splice(index, 1);
+            if (resolveFunc) {
+              const index = this.pendingQueue.indexOf(resolveFunc);
+              if (index > -1) {
+                this.pendingQueue.splice(index, 1);
+              }
             }
-            reject(new Error(`Semaphore queue timeout after ${QUEUE_TIMEOUT}ms`));
+            reject(
+              new Error(`Semaphore queue timeout after ${QUEUE_TIMEOUT}ms`)
+            );
           }, QUEUE_TIMEOUT);
-        })
+        }),
       ]);
     }
   }
@@ -341,7 +377,7 @@ export class ArticleContentService {
       try {
         nextResolve();
       } catch (error) {
-        console.error('Error releasing semaphore to queued request:', error);
+        console.error("Error releasing semaphore to queued request:", error);
         // Continue to process queue even if one resolution fails
         // This prevents the queue from getting stuck
         this.releaseSemaphore();
@@ -354,40 +390,216 @@ export class ArticleContentService {
    */
   private sanitizeContent(content: string): string {
     // Create a new JSDOM instance for server-side DOMPurify
-    const window = new JSDOM('').window;
+    const window = new JSDOM("").window;
     // @ts-ignore - DOMPurify types don't perfectly match JSDOM window
     const purify = DOMPurify(window);
-    
-    // Configure DOMPurify with secure defaults
+
+    // Configure DOMPurify with secure defaults - strengthened for better XSS protection
     const config = {
       ALLOWED_TAGS: [
-        'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'blockquote', 'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'div', 'span',
-        'table', 'thead', 'tbody', 'tr', 'td', 'th', 'caption', 'article', 'section',
-        'aside', 'figure', 'figcaption', 'mark', 'small', 'del', 'ins', 'sub', 'sup'
+        // Text content
+        "p",
+        "br",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "u",
+        "mark",
+        "small",
+        "del",
+        "ins",
+        "sub",
+        "sup",
+        // Headings
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        // Lists
+        "ul",
+        "ol",
+        "li",
+        // Quotes and code
+        "blockquote",
+        "code",
+        "pre",
+        // Links and images (with restrictions)
+        "a",
+        "img",
+        // Tables
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "td",
+        "th",
+        "caption",
+        // Semantic HTML5
+        "article",
+        "section",
+        "aside",
+        "figure",
+        "figcaption",
       ],
       ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'width', 'height', 'class', 'id', 
-        'target', 'rel', 'loading', 'decoding', 'style'
+        // Link attributes - restricted
+        "href",
+        "title",
+        // Image attributes - restricted
+        "src",
+        "alt",
+        "width",
+        "height",
+        // Accessibility
+        "loading",
+        "decoding",
       ],
-      ALLOW_DATA_ATTR: false,
-      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
-      KEEP_CONTENT: true,
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?:)?\/\/)|(?:\/|#)/i, // Only allow http(s), relative URLs, and anchors
+      ALLOW_DATA_ATTR: false, // Block all data-* attributes
+      ALLOW_UNKNOWN_PROTOCOLS: false, // Block unknown protocols
+      FORBID_TAGS: [
+        "script",
+        "iframe",
+        "object",
+        "embed",
+        "form",
+        "input",
+        "button",
+        "select",
+        "textarea",
+        "style",
+        "link",
+        "meta",
+        "base",
+      ],
+      FORBID_ATTR: [
+        "style",
+        "class",
+        "id",
+        "onerror",
+        "onload",
+        "onclick",
+        "onmouseover",
+        "onfocus",
+        "onblur",
+        "onchange",
+        "onsubmit",
+      ],
+      KEEP_CONTENT: true, // Keep text content when removing tags
       SAFE_FOR_TEMPLATES: true,
       SANITIZE_DOM: true,
       WHOLE_DOCUMENT: false,
       RETURN_DOM: false,
       RETURN_DOM_FRAGMENT: false,
       FORCE_BODY: false,
-      IN_PLACE: false
+      IN_PLACE: false,
+      // Additional security hooks
+      ADD_TAGS: [], // Don't allow adding any tags
+      ADD_ATTR: [], // Don't allow adding any attributes
+      // Force target="_blank" and rel="noopener noreferrer" on all links
+      SANITIZE_NAMED_PROPS: true,
+      ADD_URI_SAFE_ATTR: [],
     };
-    
+
+    // Additional processing for links to add security attributes
+    const preprocess = (node: any) => {
+      if (node.tagName === "A") {
+        node.setAttribute("target", "_blank");
+        node.setAttribute("rel", "noopener noreferrer");
+      }
+      return node;
+    };
+
+    // Add hook to process links
+    purify.addHook("afterSanitizeElements", preprocess);
+
     // Sanitize the content
     const sanitized = purify.sanitize(content, config);
-    
+
+    // Remove the hook after use to prevent memory leaks
+    purify.removeHook("afterSanitizeElements");
+
     // Trim whitespace
     return sanitized.trim();
   }
 
+  /**
+   * Validates article URL to prevent SSRF attacks
+   * Blocks internal IPs, local networks, and non-HTTP(S) protocols
+   */
+  private isValidArticleUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+
+      // Only allow HTTP and HTTPS protocols
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return false;
+      }
+
+      // Block localhost and loopback addresses (including IPv6)
+      const hostname = parsed.hostname.toLowerCase();
+      if (
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "0.0.0.0" ||
+        hostname === "::1" ||
+        hostname === "[::1]" || // IPv6 in brackets
+        hostname.startsWith("[::") // Any IPv6 loopback
+      ) {
+        return false;
+      }
+
+      // Block private IP ranges (RFC 1918)
+      const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (ipPattern.test(hostname)) {
+        const parts = hostname.split(".").map(Number);
+        // 10.0.0.0/8
+        if (parts[0] === 10) return false;
+        // 172.16.0.0/12
+        if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return false;
+        // 192.168.0.0/16
+        if (parts[0] === 192 && parts[1] === 168) return false;
+        // 169.254.0.0/16 (link-local)
+        if (parts[0] === 169 && parts[1] === 254) return false;
+      }
+
+      // Block internal domains
+      const internalDomains = [
+        ".local",
+        ".internal",
+        ".corp",
+        ".home",
+        ".lan",
+        ".localdomain",
+      ];
+
+      if (internalDomains.some((domain) => hostname.endsWith(domain))) {
+        return false;
+      }
+
+      // Block metadata service endpoints (cloud providers)
+      const metadataEndpoints = [
+        "169.254.169.254", // AWS/GCP/Azure
+        "metadata.google.internal",
+        "metadata.amazonaws.com",
+      ];
+
+      if (metadataEndpoints.includes(hostname)) {
+        return false;
+      }
+
+      // Additional validation: ensure URL is well-formed
+      if (!parsed.hostname || parsed.hostname.length === 0) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      // Invalid URL format
+      return false;
+    }
+  }
 }

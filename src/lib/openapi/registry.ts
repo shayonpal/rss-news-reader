@@ -1557,6 +1557,16 @@ const SummarizeResponseSchema = registry.register(
         .openapi({
           description: "Summary configuration used",
         }),
+      content_source: z.enum(["full", "partial"]).optional().openapi({
+        description:
+          "Whether summary was generated from full article content or partial RSS feed content",
+        example: "full",
+      }),
+      full_content_fetched: z.boolean().optional().openapi({
+        description:
+          "Whether full content was fetched in this request (false for cached summaries)",
+        example: true,
+      }),
     })
     .openapi({
       description: "Article summarization result",
@@ -2018,6 +2028,8 @@ registry.registerPath({
                   focus: ["key_points", "innovations"],
                   maxLength: 300,
                 },
+                content_source: "full",
+                full_content_fetched: true,
               },
             },
             cached: {
@@ -2027,6 +2039,8 @@ registry.registerPath({
                 summary:
                   "Previously generated summary about the article's main points...",
                 cached: true,
+                content_source: "partial",
+                full_content_fetched: false,
               },
             },
           },

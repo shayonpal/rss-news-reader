@@ -60,10 +60,16 @@ const postHandler = async (
     const forceRegenerate = body.regenerate === true;
 
     if (article.ai_summary && !forceRegenerate) {
+      // Determine content source based on whether article has full content
+      const contentSource =
+        article.has_full_content && article.full_content ? "full" : "partial";
+
       return NextResponse.json({
         success: true,
         summary: article.ai_summary,
         cached: true,
+        content_source: contentSource,
+        full_content_fetched: false, // Not fetched in this request since it's cached
       });
     }
 
@@ -143,7 +149,7 @@ const postHandler = async (
       summary,
       model: claudeModel,
       regenerated: forceRegenerate,
-      content_source: wasFetched ? 'full' : 'partial',
+      content_source: wasFetched ? "full" : "partial",
       full_content_fetched: wasFetched,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens,
