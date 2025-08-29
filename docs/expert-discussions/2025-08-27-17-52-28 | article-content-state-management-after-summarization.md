@@ -209,8 +209,10 @@ Why these will work
 ## What I Implemented Based on Siri's Recommendations
 
 ### ✅ Store Refresh After Summarization
+
 **File Modified**: `src/lib/stores/article-store.ts`
 **Change**: Enhanced `generateSummary()` method to refresh complete article data after API call:
+
 ```typescript
 // Siri's Fix: Refresh full article from database after summarization
 const { getArticle } = get();
@@ -224,9 +226,11 @@ if (refreshedArticle) {
 }
 ```
 
-### ✅ Back Navigation Intent Setting  
+### ✅ Back Navigation Intent Setting
+
 **File Modified**: `src/app/article/[id]/page.tsx`
 **Change**: Added navigation intent before back navigation:
+
 ```typescript
 // Siri's Fix: Set navigation intent before going back to preserve list state
 setNavigatingToArticle(true);
@@ -234,17 +238,29 @@ router.push(url as any);
 ```
 
 ### ✅ DOMPurify Structural Tags Enhancement
+
 **File Modified**: `src/components/articles/article-detail.tsx`  
 **Change**: Added structural HTML tags to prevent content stripping:
+
 ```typescript
-// Siri's Fix: Add structural tags for direct HTML content  
-"div", "span", "table", "thead", "tbody", "tr", "td", "th", 
-"hr", "section", "article"
+// Siri's Fix: Add structural tags for direct HTML content
+("div",
+  "span",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "td",
+  "th",
+  "hr",
+  "section",
+  "article");
 ```
 
 ## Current Status After Implementation
 
 ### ✅ What's Working
+
 - Auto-fetch and summarization process (unchanged - still working)
 - Database updates with full content and summary (unchanged - still working)
 - Store now refreshes article data after summarization (new fix)
@@ -254,23 +270,29 @@ router.push(url as any);
 ### ❌ What's Still Not Working
 
 #### Issue 1: Publisher Name Disappearing
+
 When summarizing from listing page, the publisher name (BBC) vanishes from the article card. This suggests the store refresh might be affecting feed metadata display.
 
 #### Issue 2: Content Display Still Using Partial Content
+
 Even after summarization, opening the article still shows partial RSS content instead of full content, despite `has_full_content: true` in database. The store refresh should have fixed this, but it hasn't.
 
 ## Technical Investigation Needed
 
 ### Publisher Name Issue
-**Question**: Is the store refresh overwriting feed-related display data? 
+
+**Question**: Is the store refresh overwriting feed-related display data?
 **Files to Check**:
+
 - `src/components/articles/article-list.tsx` - How publisher name is displayed
 - `src/lib/stores/article-store.ts` - What fields the refresh includes/excludes
 - Database schema - Relationship between articles and feeds tables
 
-### Content Display Issue  
+### Content Display Issue
+
 **Question**: Is the store refresh actually happening, or is there still a state management issue?
 **Potential Issues**:
+
 1. **Store refresh timing**: Maybe `getArticle()` isn't including the updated fields
 2. **Type mismatch**: Snake_case database fields vs camelCase types might prevent proper updates
 3. **Component state lag**: `setCurrentArticle()` might not trigger immediate re-render
@@ -279,53 +301,64 @@ Even after summarization, opening the article still shows partial RSS content in
 ## Files That May Need Additional Investigation
 
 ### Store and Data Layer
+
 1. `src/lib/stores/article-store.ts` - Verify `getArticle()` includes full content fields
 2. `src/types/index.ts` - Check Article interface for fullContent vs full_content mismatch
 3. Database schema - Verify field names and join relationships
 
-### Component State Management  
+### Component State Management
+
 4. `src/components/articles/article-detail.tsx` - State update sequence after summarization
 5. `src/hooks/use-auto-parse-content-broken.ts` - Auto-parse clearing effectiveness
 6. `src/hooks/use-content-state.ts` - Content prioritization logic verification
 
 ### Display Components
+
 7. `src/components/articles/article-list.tsx` - Publisher name rendering logic
 8. `src/components/articles/summary-display.tsx` - How summary affects article display
 
 ## Follow-up Questions
 
 ### Data Flow Questions
+
 1. When `generateSummary()` calls `getArticle(articleId)`, does it return the updated `full_content` and `has_full_content` fields?
 2. Are we experiencing a database replication delay where the write hasn't propagated to the read query?
 3. Is the article store's `getArticle()` method using the correct table joins to fetch feed metadata?
 
-### State Management Questions  
+### State Management Questions
+
 4. Could there be multiple article objects in different parts of the state tree that aren't being synchronized?
 5. Is the `currentArticle` state in ArticleDetail getting properly updated when the store changes?
 6. Are we properly handling the async nature of `setCurrentArticle()` vs immediate re-renders?
 
 ### UI Consistency Questions
+
 7. Why would the publisher name disappear specifically after summarization? What's the relationship between summary generation and feed metadata display?
 8. Is the article list component re-rendering with incomplete data after the store refresh?
 
 ## Debugging Recommendations
 
 ### Console Logging
+
 Add temporary debug logs to trace the data flow:
+
 1. In `generateSummary()`: Log the `refreshedArticle` object to verify it contains `fullContent`
 2. In `handleSummarySuccess()`: Log `currentArticle` before and after `setCurrentArticle()`
 3. In `useContentState`: Log all input parameters and the selected `displayContent`
 
 ### Database Verification
+
 Check if the article in database actually has the expected structure:
+
 ```sql
-SELECT id, title, full_content IS NOT NULL as has_full_content, 
+SELECT id, title, full_content IS NOT NULL as has_full_content,
        has_full_content, length(full_content) as content_length
-FROM articles 
+FROM articles
 WHERE id = '39119dec-660d-4cc7-853a-12fb320525c9';
 ```
 
 ### State Inspection
+
 Verify the article store contains the updated data after `generateSummary()` completes by inspecting the store state in browser dev tools.
 
 Claude

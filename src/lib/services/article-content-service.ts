@@ -4,7 +4,6 @@
  */
 
 import { supabase } from "@/lib/db/supabase";
-import { ContentParsingService } from "./content-parsing-service";
 
 interface FetchResult {
   content: string;
@@ -21,15 +20,18 @@ interface FetchLogEntry {
   error_details?: any;
 }
 
+import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
+
 export class ArticleContentService {
   private static instance: ArticleContentService;
-  private parsingService: ContentParsingService;
   private activeParses: Map<string, Promise<string | null>>;
+  private pendingQueue: Array<() => void> = [];
+  private articleLocks: Map<string, Promise<FetchResult>> = new Map();
   private readonly MAX_CONCURRENT_PARSES = 3;
   private readonly PARSE_TIMEOUT = 30000; // 30 seconds
 
   private constructor() {
-    this.parsingService = ContentParsingService.getInstance();
     this.activeParses = new Map();
   }
 
@@ -48,22 +50,66 @@ export class ArticleContentService {
     articleId: string,
     feedId: string
   ): Promise<FetchResult> {
+    // Check if already processing this article
+    const lockKey = `${articleId}-${feedId}`;
+    if (this.articleLocks.has(lockKey)) {
+      console.log(
+        `🔒 Article ${articleId} already being processed, waiting for result...`
+      );
+      return await this.articleLocks.get(lockKey)!;
+    }
+
+    // Create promise for this article processing
+    const processPromise = this.processArticleContent(articleId, feedId);
+    this.articleLocks.set(lockKey, processPromise);
+
+    try {
+      const result = await processPromise;
+      return result;
+    } finally {
+      // Clean up the lock after processing (success or failure)
+      this.articleLocks.delete(lockKey);
+    }
+  }
+
+  /**
+   * Processes article content fetching with proper concurrency control
+   * This is the actual implementation, wrapped by ensureFullContent for de-duplication
+   */
+  private async processArticleContent(
+    articleId: string,
+    feedId: string
+  ): Promise<FetchResult> {
     const startTime = Date.now();
+    let article: any = null; // Cache article data to avoid re-fetching
+    let semaphoreAcquired = false; // Track if we've acquired the semaphore
 
     try {
       // Fetch article and feed data
-      const { data: article, error: articleError } = await supabase
+      const { data: articleData, error: articleError } = await supabase
         .from("articles")
         .select("*, feeds!inner(*)")
         .eq("id", articleId)
         .eq("feed_id", feedId)
         .single();
 
+      article = articleData;
+
       if (articleError || !article) {
         throw new Error(`Article not found: ${articleId}`);
       }
 
-      const feed = article.feeds as any;
+      console.log("🔍 Article data structure:", {
+        articleId: article.id,
+        hasFeeds: !!article.feeds,
+        feedsType: typeof article.feeds,
+        articleKeys: Object.keys(article).filter(
+          (k) => k.includes("partial") || k.includes("feed") || k === "feeds"
+        ),
+        sampleFeedData: article.feeds,
+      });
+
+      const feed = article.feeds;
 
       // Skip conditions
       if (!this.shouldFetchContent(article, feed)) {
@@ -83,18 +129,18 @@ export class ArticleContentService {
         };
       }
 
-      // Check concurrent parse limit
-      if (this.activeParses.size >= this.MAX_CONCURRENT_PARSES) {
-        // Wait for one to complete
-        await Promise.race(Array.from(this.activeParses.values()));
-      }
+      // Acquire semaphore BEFORE starting the fetch operation
+      // This ensures we properly limit concurrent parse operations
+      await this.acquireSemaphore();
+      semaphoreAcquired = true; // Mark that we've acquired it
 
-      // Fetch full content with timeout
-      const fetchPromise = this.fetchFullContent(article.link);
       const parseKey = `${articleId}-${Date.now()}`;
-      this.activeParses.set(parseKey, fetchPromise);
 
       try {
+        // Fetch full content with timeout
+        const fetchPromise = this.fetchFullContent(articleId, article.url);
+        this.activeParses.set(parseKey, fetchPromise);
+
         const fullContent = await Promise.race([
           fetchPromise,
           this.createTimeoutPromise(),
@@ -134,8 +180,17 @@ export class ArticleContentService {
         };
       } finally {
         this.activeParses.delete(parseKey);
+        // Only release if we acquired it
+        if (semaphoreAcquired) {
+          this.releaseSemaphore();
+        }
       }
     } catch (error) {
+      // Only release semaphore if we acquired it
+      if (semaphoreAcquired) {
+        this.releaseSemaphore();
+      }
+
       // Log failure
       await this.logFetchAttempt({
         article_id: articleId,
@@ -152,13 +207,8 @@ export class ArticleContentService {
         },
       });
 
-      // Return original content on failure
-      const { data: article } = await supabase
-        .from("articles")
-        .select("content, full_content")
-        .eq("id", articleId)
-        .single();
-
+      // Return original content on failure (use cached article data)
+      // No need to re-fetch from database as we already have the article
       return {
         content: article?.full_content || article?.content || "",
         wasFetched: false,
@@ -170,103 +220,87 @@ export class ArticleContentService {
    * Determines if content should be fetched based on feed and article state
    */
   private shouldFetchContent(article: any, feed: any): boolean {
+    console.log("🔍 shouldFetchContent debug:", {
+      articleId: article.id,
+      feedIsPartial: feed.is_partial_content,
+      hasFullContent: article.has_full_content,
+      fullContentExists: !!article.full_content,
+      fetchFullContentFlag: feed.fetch_full_content,
+    });
+
     // Check acceptance criteria from RR-256
     // 1. Feed must be marked as partial
     if (!feed.is_partial_content) {
+      console.log(
+        "❌ Auto-fetch skipped: feed is not marked as partial content"
+      );
       return false;
     }
 
     // 2. Article must not already have full content
     if (article.has_full_content && article.full_content) {
+      console.log("❌ Auto-fetch skipped: article already has full content");
       return false;
     }
 
     // Additional check: User preference (if feed has fetch_full_content flag)
     // This allows users to opt-out even for partial feeds
     if (feed.fetch_full_content === false) {
+      console.log(
+        "❌ Auto-fetch skipped: fetch_full_content disabled for this feed"
+      );
       return false;
     }
 
+    console.log("✅ Auto-fetch should proceed - all conditions met");
     return true;
   }
 
   /**
    * Fetches full content from article URL using existing extraction infrastructure
    */
-  async fetchFullContent(url: string): Promise<string | null> {
+  async fetchFullContent(
+    articleId: string,
+    url: string
+  ): Promise<string | null> {
     try {
-      // We need an article ID to use the ContentParsingService
-      // For now, create a temporary article record or use direct extraction
-      // This is a simplified approach for RR-256 implementation
-      const result = await this.directExtractContent(url);
-
-      if (!result) {
+      // Validate URL to prevent SSRF attacks
+      if (!this.isValidArticleUrl(url)) {
+        console.warn(`Invalid or unsafe URL rejected: ${url}`);
         return null;
       }
 
-      // Sanitize and return content
-      return this.sanitizeContent(result);
-    } catch (error) {
-      console.error(`Failed to fetch content from ${url}:`, error);
-      return null;
-    }
-  }
+      // Build absolute URL for server-side fetch
+      // Use NEXT_PUBLIC_APP_URL which already includes the port
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const absoluteUrl = `${baseUrl}/reader/api/articles/${articleId}/fetch-content`;
 
-  /**
-   * Direct content extraction using the same logic as ContentParsingService
-   */
-  private async directExtractContent(url: string): Promise<string | null> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        this.PARSE_TIMEOUT
-      );
-
-      const response = await fetch(url, {
-        signal: controller.signal,
+      // Make API call to the fetch-content endpoint as expected by tests
+      const response = await fetch(absoluteUrl, {
+        method: "POST",
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; RSS Reader Bot/1.0; +http://example.com/bot)",
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ url }),
       });
-
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const html = await response.text();
+      const data = await response.json();
 
-      // Simple content extraction - in a real implementation you'd use Readability
-      // For now, just return the HTML content
-      return html;
-    } catch (error) {
-      if ((error as any)?.name === "AbortError") {
-        console.error("Content extraction timeout");
-      } else {
-        console.error("Content extraction error:", error);
+      if (!data.success || !data.content) {
+        return null;
       }
+
+      // Sanitize and return content
+      return this.sanitizeContent(data.content);
+    } catch (error) {
+      console.error(`Failed to fetch content from ${url}:`, error);
       return null;
     }
-  }
-
-  /**
-   * Checks if a feed is configured as partial content
-   */
-  async checkPartialFeedStatus(feedId: string): Promise<boolean> {
-    const { data: feed, error } = await supabase
-      .from("feeds")
-      .select("is_partial_content")
-      .eq("id", feedId)
-      .single();
-
-    if (error || !feed) {
-      return false;
-    }
-
-    return feed.is_partial_content || false;
   }
 
   /**
@@ -298,64 +332,274 @@ export class ArticleContentService {
   }
 
   /**
-   * Sanitizes extracted HTML content
+   * Acquires a semaphore slot for concurrent parsing
+   * Implements proper queue-based concurrency control
    */
-  private sanitizeContent(content: string): string {
-    // Remove script tags and dangerous elements
-    let sanitized = content.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      ""
-    );
-    sanitized = sanitized.replace(
-      /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
-      ""
-    );
+  private async acquireSemaphore(): Promise<void> {
+    while (this.activeParses.size >= this.MAX_CONCURRENT_PARSES) {
+      // Create a promise that will be resolved when a slot becomes available
+      // Add timeout to prevent indefinite waiting
+      const QUEUE_TIMEOUT = 60000; // 60 seconds max wait time
 
-    // Remove inline event handlers
-    sanitized = sanitized.replace(/\son\w+\s*=\s*"[^"]*"/gi, "");
-    sanitized = sanitized.replace(/\son\w+\s*=\s*'[^']*'/gi, "");
+      // Store the resolve function so we can remove it on timeout
+      let resolveFunc: (() => void) | null = null;
 
-    // Trim whitespace
-    sanitized = sanitized.trim();
-
-    return sanitized;
+      await Promise.race([
+        new Promise<void>((resolve) => {
+          resolveFunc = resolve;
+          this.pendingQueue.push(resolve);
+        }),
+        new Promise<void>((_, reject) => {
+          setTimeout(() => {
+            // Remove from queue if still pending
+            if (resolveFunc) {
+              const index = this.pendingQueue.indexOf(resolveFunc);
+              if (index > -1) {
+                this.pendingQueue.splice(index, 1);
+              }
+            }
+            reject(
+              new Error(`Semaphore queue timeout after ${QUEUE_TIMEOUT}ms`)
+            );
+          }, QUEUE_TIMEOUT);
+        }),
+      ]);
+    }
   }
 
   /**
-   * Updates article content atomically with retry logic
+   * Releases a semaphore slot and processes pending queue
    */
-  private async updateArticleContent(
-    articleId: string,
-    content: string
-  ): Promise<void> {
-    const maxRetries = 3;
-    let attempt = 0;
-
-    while (attempt < maxRetries) {
+  private releaseSemaphore(): void {
+    // Process the next waiting request if any
+    const nextResolve = this.pendingQueue.shift();
+    if (nextResolve) {
       try {
-        const { error } = await supabase
-          .from("articles")
-          .update({
-            full_content: content,
-            has_full_content: true,
-          })
-          .eq("id", articleId);
-
-        if (!error) {
-          return;
-        }
-
-        if (attempt === maxRetries - 1) {
-          throw error;
-        }
+        nextResolve();
       } catch (error) {
-        if (attempt === maxRetries - 1) {
-          throw error;
-        }
+        console.error("Error releasing semaphore to queued request:", error);
+        // Continue to process queue even if one resolution fails
+        // This prevents the queue from getting stuck
+        this.releaseSemaphore();
+      }
+    }
+  }
+
+  /**
+   * Sanitizes extracted HTML content
+   */
+  private sanitizeContent(content: string): string {
+    // Create a new JSDOM instance for server-side DOMPurify
+    const window = new JSDOM("").window;
+    // @ts-ignore - DOMPurify types don't perfectly match JSDOM window
+    const purify = DOMPurify(window);
+
+    // Configure DOMPurify with secure defaults - strengthened for better XSS protection
+    const config = {
+      ALLOWED_TAGS: [
+        // Text content
+        "p",
+        "br",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "u",
+        "mark",
+        "small",
+        "del",
+        "ins",
+        "sub",
+        "sup",
+        // Headings
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        // Lists
+        "ul",
+        "ol",
+        "li",
+        // Quotes and code
+        "blockquote",
+        "code",
+        "pre",
+        // Links and images (with restrictions)
+        "a",
+        "img",
+        // Tables
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "td",
+        "th",
+        "caption",
+        // Semantic HTML5
+        "article",
+        "section",
+        "aside",
+        "figure",
+        "figcaption",
+      ],
+      ALLOWED_ATTR: [
+        // Link attributes - restricted
+        "href",
+        "title",
+        // Image attributes - restricted
+        "src",
+        "alt",
+        "width",
+        "height",
+        // Accessibility
+        "loading",
+        "decoding",
+      ],
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?:)?\/\/)|(?:\/|#)/i, // Only allow http(s), relative URLs, and anchors
+      ALLOW_DATA_ATTR: false, // Block all data-* attributes
+      ALLOW_UNKNOWN_PROTOCOLS: false, // Block unknown protocols
+      FORBID_TAGS: [
+        "script",
+        "iframe",
+        "object",
+        "embed",
+        "form",
+        "input",
+        "button",
+        "select",
+        "textarea",
+        "style",
+        "link",
+        "meta",
+        "base",
+      ],
+      FORBID_ATTR: [
+        "style",
+        "class",
+        "id",
+        "onerror",
+        "onload",
+        "onclick",
+        "onmouseover",
+        "onfocus",
+        "onblur",
+        "onchange",
+        "onsubmit",
+      ],
+      KEEP_CONTENT: true, // Keep text content when removing tags
+      SAFE_FOR_TEMPLATES: true,
+      SANITIZE_DOM: true,
+      WHOLE_DOCUMENT: false,
+      RETURN_DOM: false,
+      RETURN_DOM_FRAGMENT: false,
+      FORCE_BODY: false,
+      IN_PLACE: false,
+      // Additional security hooks
+      ADD_TAGS: [], // Don't allow adding any tags
+      ADD_ATTR: [], // Don't allow adding any attributes
+      // Force target="_blank" and rel="noopener noreferrer" on all links
+      SANITIZE_NAMED_PROPS: true,
+      ADD_URI_SAFE_ATTR: [],
+    };
+
+    // Additional processing for links to add security attributes
+    const preprocess = (node: any) => {
+      if (node.tagName === "A") {
+        node.setAttribute("target", "_blank");
+        node.setAttribute("rel", "noopener noreferrer");
+      }
+      return node;
+    };
+
+    // Add hook to process links
+    purify.addHook("afterSanitizeElements", preprocess);
+
+    // Sanitize the content
+    const sanitized = purify.sanitize(content, config);
+
+    // Remove the hook after use to prevent memory leaks
+    purify.removeHook("afterSanitizeElements");
+
+    // Trim whitespace
+    return sanitized.trim();
+  }
+
+  /**
+   * Validates article URL to prevent SSRF attacks
+   * Blocks internal IPs, local networks, and non-HTTP(S) protocols
+   */
+  private isValidArticleUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+
+      // Only allow HTTP and HTTPS protocols
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return false;
       }
 
-      attempt++;
-      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      // Block localhost and loopback addresses (including IPv6)
+      const hostname = parsed.hostname.toLowerCase();
+      if (
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "0.0.0.0" ||
+        hostname === "::1" ||
+        hostname === "[::1]" || // IPv6 in brackets
+        hostname.startsWith("[::") // Any IPv6 loopback
+      ) {
+        return false;
+      }
+
+      // Block private IP ranges (RFC 1918)
+      const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (ipPattern.test(hostname)) {
+        const parts = hostname.split(".").map(Number);
+        // 10.0.0.0/8
+        if (parts[0] === 10) return false;
+        // 172.16.0.0/12
+        if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return false;
+        // 192.168.0.0/16
+        if (parts[0] === 192 && parts[1] === 168) return false;
+        // 169.254.0.0/16 (link-local)
+        if (parts[0] === 169 && parts[1] === 254) return false;
+      }
+
+      // Block internal domains
+      const internalDomains = [
+        ".local",
+        ".internal",
+        ".corp",
+        ".home",
+        ".lan",
+        ".localdomain",
+      ];
+
+      if (internalDomains.some((domain) => hostname.endsWith(domain))) {
+        return false;
+      }
+
+      // Block metadata service endpoints (cloud providers)
+      const metadataEndpoints = [
+        "169.254.169.254", // AWS/GCP/Azure
+        "metadata.google.internal",
+        "metadata.amazonaws.com",
+      ];
+
+      if (metadataEndpoints.includes(hostname)) {
+        return false;
+      }
+
+      // Additional validation: ensure URL is well-formed
+      if (!parsed.hostname || parsed.hostname.length === 0) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      // Invalid URL format
+      return false;
     }
   }
 }

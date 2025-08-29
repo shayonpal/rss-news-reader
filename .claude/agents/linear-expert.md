@@ -163,7 +163,7 @@ When checking duplicates:
 - Never make value judgments about priority or importance
 - Return data efficiently in structured format
 
-## Key Linear Concepts (from deprecated program-manager)
+## Key Linear Concepts
 
 ### Living Specifications
 

@@ -57,25 +57,34 @@ describe("ArticleContentService", () => {
     mockSupabase.from.mockClear();
     mockFetch.mockClear();
 
-    // Set up default mock implementation that always handles fetch_logs
-    const defaultMock = {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    // Set up default mock implementation that handles all tables including fetch_logs
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === "fetch_logs") {
+        return {
+          insert: vi.fn(() =>
+            Promise.resolve({ data: { id: "log-1" }, error: null })
+          ),
+        };
+      }
+
+      // Default mock for other tables
+      return {
+        select: vi.fn(() => ({
           eq: vi.fn(() => ({
             single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+            eq: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+            })),
           })),
         })),
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
-      insert: vi.fn(() =>
-        Promise.resolve({ data: { id: "log-1" }, error: null })
-      ),
-    };
-
-    mockSupabase.from.mockReturnValue(defaultMock);
+        update: vi.fn(() => ({
+          eq: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        })),
+        insert: vi.fn(() =>
+          Promise.resolve({ data: { id: "log-1" }, error: null })
+        ),
+      };
+    });
   });
 
   afterEach(() => {
