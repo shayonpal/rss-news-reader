@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **2025-08-29 15:30 - fix(RR-261): Validate feed filter persistence on page refresh**
+  - **Filter Persistence Validation**: Validated that feed and tag filters correctly persist when page is refreshed ensuring users maintain their filter selections across browser refresh cycles
+  - **Test Timeout Resolution**: Fixed test timeout issues by changing from `networkidle` to `domcontentloaded` wait condition improving test reliability and execution speed
+  - **RR-216 Implementation Validation**: Confirmed RR-216 implementation also fixes the refresh scenario demonstrating robust solution coverage across multiple use cases
+  - **Comprehensive E2E Test Suite**: Added 8 test scenarios covering feed filters, tag filters, no filters, and edge cases with 62 total tests across browsers ensuring comprehensive validation
+  - **Root Cause Analysis**: Identified race condition where articles load before URL filters are parsed with two-layer protection through filtersReady gating and loadSeq sequencing
+  - **Test Coverage**: Added test file `src/__tests__/e2e/rr-261-feed-filter-refresh.spec.ts` providing automated validation of filter persistence behavior
+  - **Production Code Status**: No production code changes needed as fix was already implemented in RR-216 through `filtersReady` dependency in useEffect hook
+  - **Impact**: Users can now refresh the page while maintaining their feed and tag filter selections with comprehensive test coverage ensuring reliable filter persistence behavior
+
 ### Added
 
 - **2025-08-29 08:17 - feat: RR-257: Add comprehensive error feedback for summarization failures**
