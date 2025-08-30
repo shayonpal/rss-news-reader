@@ -6,6 +6,7 @@
 .pnp.js
 .yarn/install-state.gz
 .next*
+.kiro/
 
 # testing
 /coverage
@@ -78,8 +79,15 @@ docs/revised-priority.md
 ~/.rss-reader/tokens.json
 documentation-analysis-report.json
 
-# Accidental tilde dir
-~/
+# Performance and infrastructure reports (auto-generated)
+performance-*.json
+infrastructure-*.json
+
+# Test SQL files (debug artifacts)
+test-*.sql
+
+# Accidental tilde dir (specific to project root only)
+/~/
 
 # Uptime Kuma configuration
 .kuma-push-urls
@@ -89,4 +97,5 @@ kuma-monitor.config.js
 *.log
 rr-*.log
 test-output.log
+# Coverage reports (auto-generated)
 coverage-report.json

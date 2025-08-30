@@ -29,12 +29,14 @@ import { FetchContentButton } from "./fetch-content-button";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { useAutoParseContent } from "@/hooks/use-auto-parse-content";
+import { ScrollHideFloatingElement } from "@/components/ui/scroll-hide-floating-element";
 import { useContentState } from "@/hooks/use-content-state";
 import {
   ContentParsingIndicator,
   ContentLoadingSkeleton,
 } from "./content-parsing-indicator";
 import {
+  GlassButton,
   GlassToolbarButton,
   GlassIconButton,
 } from "@/components/ui/glass-button";
@@ -85,7 +87,7 @@ function ArticleActionsToolbar({
       key="summary"
       articleId={articleId}
       hasSummary={hasSummary}
-      variant="icon"
+      variant="full"
       size="lg"
       onSuccess={onSummarySuccess}
     />,
@@ -102,18 +104,14 @@ function ArticleActionsToolbar({
 
   // Build dropdown items dynamically
   const dropdownItems: DropdownItem[] = [
-    ...(feed
-      ? [
-          {
-            id: "partial-feed",
-            label: "Partial Feed",
-            checked: feed.isPartialContent,
-            onClick: onTogglePartialFeed,
-            disabled: isUpdatingFeed,
-            separator: true,
-          },
-        ]
-      : []),
+    {
+      id: "partial-feed",
+      label: "Partial Feed",
+      checked: feed?.isPartialContent || false,
+      onClick: onTogglePartialFeed,
+      disabled: isUpdatingFeed, // Note: Should never disable based on feed availability - always allow user to toggle
+      separator: true,
+    },
     {
       id: "share",
       label: "Share",
@@ -173,9 +171,13 @@ export function ArticleDetail({
   const { updateFeedPartialContent } = useFeedStore();
   const [isUpdatingFeed, setIsUpdatingFeed] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const isIOS =
-    typeof window !== "undefined" &&
-    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Fix iOS detection hydration issue - use state instead of direct check
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    setIsIOS(/iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
 
   // Auto-parse content for partial feeds
   const {
@@ -208,7 +210,12 @@ export function ArticleDetail({
 
   // Handle summary success
   const handleSummarySuccess = async () => {
-    // Refresh the article to get the updated summary
+    // Clear auto-parsed content immediately since we'll have fresh DB content
+    if (parsedContent) {
+      clearParsedContent();
+    }
+
+    // Refresh the article to get the updated summary and full content
     const updatedArticle = await getArticle(article.id);
     if (updatedArticle) {
       setCurrentArticle(updatedArticle);
@@ -277,6 +284,18 @@ export function ArticleDetail({
       "figcaption",
       "iframe",
       "video",
+      // Siri's Fix: Add structural tags for direct HTML content
+      "div",
+      "span",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "td",
+      "th",
+      "hr",
+      "section",
+      "article",
     ],
     ALLOWED_ATTR: [
       "href",
@@ -313,60 +332,16 @@ export function ArticleDetail({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNavigate, onBack]);
 
-  // Header/toolbar show/hide on scroll
+  // iOS scroll to top button
   useEffect(() => {
-    let ticking = false;
-
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const scrollDelta = currentScrollY - lastScrollY.current;
-
-          if (!headerRef.current) return;
-
-          // Scrolling down - hide header after scrolling 50px down
-          if (scrollDelta > 0 && currentScrollY > 50) {
-            headerRef.current.classList.add("is-hidden");
-          }
-          // Scrolling up or at the top - show header
-          else if (scrollDelta < 0 || currentScrollY < 5) {
-            headerRef.current.classList.remove("is-hidden");
-          }
-
-          // Show/hide scroll to top button on iOS
-          if (isIOS) {
-            setShowScrollToTop(currentScrollY > 300);
-          }
-
-          lastScrollY.current = currentScrollY;
-          // Scroll-aware contrast for Liquid Glass
-          headerRef.current.classList.toggle("is-scrolled", currentScrollY > 8);
-
-          // Footer slide + scroll-aware contrast
-          const footer = document.getElementById("article-footer");
-          if (footer) {
-            if (scrollDelta > 0 && currentScrollY > 50) {
-              footer.style.transform = "translateY(100%)";
-            } else if (scrollDelta < 0) {
-              footer.style.transform = "translateY(0)";
-            } else if (currentScrollY < 5) {
-              footer.style.transform = "translateY(0)";
-            }
-            footer.classList.toggle("is-scrolled", currentScrollY > 8);
-          }
-          ticking = false;
-        });
-
-        ticking = true;
+      if (isIOS) {
+        setShowScrollToTop(window.scrollY > 300);
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [isIOS]);
 
   // Hide viewport scrollbar while on detail view (apply to html and body)
@@ -412,15 +387,12 @@ export function ArticleDetail({
     const feedName = feed.title || "Feed";
     const toastId = `partial-feed-${article.feedId}`;
 
-    // Show loading toast with amber styling
+    // Show loading toast with semantic warning styling
     toast.loading(
       `${newState ? "Marking" : "Unmarking"} ${feedName} as partial feed...`,
       {
         id: toastId,
-        style: {
-          background: "#f59e0b", // amber-500
-          color: "white",
-        },
+        className: "toast-warning",
       }
     );
 
@@ -429,16 +401,13 @@ export function ArticleDetail({
       // Toggle the partial content setting
       await updateFeedPartialContent(article.feedId, newState);
 
-      // Show success toast with green styling
+      // Show success toast with semantic success styling
       toast.success(
         `${feedName} ${newState ? "marked" : "unmarked"} as partial feed`,
         {
           id: toastId,
           duration: 3000,
-          style: {
-            background: "#10b981", // green-500
-            color: "white",
-          },
+          className: "toast-success",
         }
       );
 
@@ -446,14 +415,11 @@ export function ArticleDetail({
     } catch (error) {
       console.error("Failed to update feed partial content setting:", error);
 
-      // Show error toast with red styling
+      // Show error toast with semantic error styling
       toast.error(`Failed to update ${feedName}. Please try again.`, {
         id: toastId,
         duration: 0, // Manual dismiss for errors
-        style: {
-          background: "#ef4444", // red-500
-          color: "white",
-        },
+        className: "toast-error",
       });
     } finally {
       setIsUpdatingFeed(false);
@@ -462,55 +428,40 @@ export function ArticleDetail({
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white dark:bg-gray-900">
-      {/* Header */}
-      {/* Floating controls container (no top pane) */}
-      <div
-        ref={headerRef}
-        className="article-header-controls fixed left-0 right-0 z-10 transition-opacity transition-transform duration-300 ease-in-out"
-        style={{ top: "24px" }}
-      >
-        <div className="mx-auto flex w-full max-w-4xl items-start justify-between px-4 sm:px-6 lg:px-8">
-          {/* Back button aligned with content */}
-          <div className="pointer-events-auto">
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label="Back to list"
-              className="glass-icon-btn"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          </div>
+      {/* Unified floating controls using standard component positioning */}
+      <ScrollHideFloatingElement position="top-left" hideThreshold={50}>
+        <GlassIconButton
+          type="button"
+          onClick={onBack}
+          variant="liquid-glass"
+          aria-label="Back to list"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </GlassIconButton>
+      </ScrollHideFloatingElement>
 
-          {/* Actions toolbar constrained to article width */}
-          <div
-            className="pointer-events-auto"
-            style={{ touchAction: "manipulation" }}
-          >
-            <ArticleActionsToolbar
-              articleId={currentArticle.id}
-              isStarred={currentArticle.tags?.includes("starred") || false}
-              hasSummary={!!currentArticle.summary}
-              hasFullContent={hasFullContentState}
-              onToggleStar={onToggleStar}
-              onSummarySuccess={handleSummarySuccess}
-              onFetchSuccess={handleFetchContentSuccess}
-              onFetchRevert={handleRevertContent}
-              feed={feed}
-              onTogglePartialFeed={handleToggleFeedPartialContent}
-              isUpdatingFeed={isUpdatingFeed}
-              onShare={handleShare}
-              articleUrl={currentArticle.url}
-            />
-          </div>
-        </div>
-      </div>
+      <ScrollHideFloatingElement position="top-right" hideThreshold={50}>
+        <ArticleActionsToolbar
+          articleId={currentArticle.id}
+          isStarred={currentArticle.tags?.includes("starred") || false}
+          hasSummary={!!currentArticle.summary}
+          hasFullContent={hasFullContentState}
+          onToggleStar={onToggleStar}
+          onSummarySuccess={handleSummarySuccess}
+          onFetchSuccess={handleFetchContentSuccess}
+          onFetchRevert={handleRevertContent}
+          feed={feed}
+          onTogglePartialFeed={handleToggleFeedPartialContent}
+          isUpdatingFeed={isUpdatingFeed}
+          onShare={handleShare}
+          articleUrl={currentArticle.url}
+        />
+      </ScrollHideFloatingElement>
 
-      {/* Spacer for fixed header */}
-      <div className="h-[60px] pwa-standalone:h-[calc(60px+env(safe-area-inset-top))]" />
+      {/* No spacer needed - floating elements don't take layout space */}
 
       {/* Article Content */}
-      <article className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <article className="mx-auto max-w-4xl px-4 pb-6 pt-[80px] pwa-standalone:pt-[calc(80px+env(safe-area-inset-top))] sm:px-6 sm:pb-8 lg:px-8">
         {/* Metadata */}
         <div className="mb-6 sm:mb-8">
           <h1 className="mb-3 text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100 sm:mb-4 sm:text-3xl md:text-4xl">
@@ -526,7 +477,10 @@ export function ArticleDetail({
                 <span>•</span>
               </>
             )}
-            <time dateTime={currentArticle.publishedAt.toISOString()}>
+            <time
+              dateTime={currentArticle.publishedAt.toISOString()}
+              suppressHydrationWarning
+            >
               {formatDistanceToNow(currentArticle.publishedAt, {
                 addSuffix: true,
               })}
@@ -606,27 +560,37 @@ export function ArticleDetail({
         id="article-footer"
       >
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <IOSButton
+          <GlassButton
             variant="ghost"
             size="sm"
-            onPress={() => onNavigate("prev")}
+            onClick={() => onNavigate("prev")}
             aria-label="Previous article"
-            className="flex items-center gap-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+            className="flex items-center gap-2"
+            style={{
+              WebkitTouchCallout: "none",
+              WebkitUserSelect: "none",
+              touchAction: "manipulation",
+            }}
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
-          </IOSButton>
+          </GlassButton>
 
-          <IOSButton
+          <GlassButton
             variant="ghost"
             size="sm"
-            onPress={() => onNavigate("next")}
+            onClick={() => onNavigate("next")}
             aria-label="Next article"
-            className="flex items-center gap-2 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+            className="flex items-center gap-2"
+            style={{
+              WebkitTouchCallout: "none",
+              WebkitUserSelect: "none",
+              touchAction: "manipulation",
+            }}
           >
             Next
             <ChevronRight className="h-4 w-4" />
-          </IOSButton>
+          </GlassButton>
         </div>
       </footer>
 

@@ -455,7 +455,7 @@ class SummaryQueue {
 
 ## Full Content Extraction
 
-For articles with partial content in RSS feeds, we implement direct content extraction from the original URLs. See **[Content Extraction Strategy](./content-extraction-strategy.md)** for detailed implementation.
+For articles with partial content in RSS feeds, we implement direct content extraction from the original URLs using Mozilla Readability integration (see Implementation Strategy document for detailed implementation).
 
 ### Key Components:
 

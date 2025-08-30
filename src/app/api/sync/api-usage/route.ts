@@ -10,6 +10,9 @@ export async function GET() {
   try {
     const usage = await getCurrentApiUsage();
 
+    // Determine data reliability based on whether we have header data
+    const dataReliability = usage.lastUpdated !== null ? "headers" : "fallback";
+
     return NextResponse.json(
       {
         zone1: {
@@ -24,11 +27,17 @@ export async function GET() {
         },
         resetAfterSeconds: usage.resetAfterSeconds,
         timestamp: new Date().toISOString(),
+        dataReliability,
+        lastHeaderUpdate: usage.lastUpdated,
       },
       {
         headers: {
           // Cache for 30 seconds for near real-time updates
           "Cache-Control": "public, max-age=30",
+
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },
       }
     );
@@ -42,4 +51,15 @@ export async function GET() {
       { status: 500 }
     );
   }
+}
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

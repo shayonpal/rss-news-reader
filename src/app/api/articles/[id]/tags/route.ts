@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -9,10 +10,10 @@ const supabase = createClient(
 );
 
 // GET /api/articles/[id]/tags - Get tags for an article
-export async function GET(
+const getHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const articleId = params.id;
 
@@ -54,4 +55,7 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+};
+
+// Export the wrapped handler with UUID validation
+export const GET = withArticleIdValidation(getHandler);

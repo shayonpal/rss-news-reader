@@ -8,8 +8,67 @@ export async function POST(request: Request) {
   try {
     const updates = await request.json();
 
+    // Validate input
+    if (!updates || typeof updates !== "object") {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+
+    // Whitelist of allowed metadata keys
+    const allowedKeys = [
+      "sync_interval",
+      "last_sync_time",
+      "last_sync_count",
+      "api_calls_count",
+      "sync_in_progress",
+      "sync_errors_count",
+      "last_error",
+      "refresh_token",
+      "access_token",
+      "token_expires_at",
+    ];
+
+    // Validate keys
+    const invalidKeys = Object.keys(updates).filter(
+      (key) => !allowedKeys.includes(key)
+    );
+    if (invalidKeys.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Invalid metadata keys",
+          invalidKeys,
+          allowedKeys,
+        },
+        {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+
+    let updatedCount = 0;
+
+    // Use a transaction for bulk operations
+    const updatePromises = [];
+
     // Process each update
     for (const [key, value] of Object.entries(updates)) {
+      // Sanitize value
+      let sanitizedValue: string;
+
       if (typeof value === "object" && value !== null && "increment" in value) {
         // Handle increment operations
         const { data: existing } = await supabase
@@ -19,35 +78,68 @@ export async function POST(request: Request) {
           .single();
 
         const currentValue = parseInt(existing?.value || "0");
-        const newValue = currentValue + (value as any).increment;
+        const incrementValue = Number((value as any).increment);
 
-        await supabase.from("sync_metadata").upsert(
-          {
-            key,
-            value: newValue.toString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "key" }
-        );
+        if (isNaN(incrementValue)) {
+          continue; // Skip invalid increment values
+        }
+
+        sanitizedValue = String(currentValue + incrementValue);
       } else {
-        // Direct value update
-        await supabase.from("sync_metadata").upsert(
+        // Direct value update - sanitize
+        sanitizedValue = String(value).substring(0, 1000); // Limit value length
+      }
+
+      updatePromises.push(
+        supabase.from("sync_metadata").upsert(
           {
             key,
-            value: String(value),
+            value: sanitizedValue,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "key" }
-        );
-      }
+        )
+      );
+      updatedCount++;
     }
 
-    return NextResponse.json({ success: true });
+    // Execute all updates
+    await Promise.all(updatePromises);
+
+    return NextResponse.json(
+      { success: true, updatedCount },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+      }
+    );
   } catch (error) {
     console.error("Failed to update sync metadata:", error);
     return NextResponse.json(
       { error: "Failed to update sync metadata" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+      }
     );
   }
+}
+
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

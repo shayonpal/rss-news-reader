@@ -9,6 +9,9 @@ import { SummaryButton } from "./summary-button";
 import { StarButton } from "./star-button";
 import { useArticleListState } from "@/hooks/use-article-list-state";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
+// RR-197: localStorage optimization imports
+import { localStorageStateManager } from "@/lib/utils/localstorage-state-manager";
+import { performanceMonitor } from "@/lib/utils/performance-monitor";
 import type { Article } from "@/types";
 
 interface ArticleListProps {
@@ -17,6 +20,7 @@ interface ArticleListProps {
   tagId?: string;
   onArticleClick?: (articleId: string) => void;
   scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  filtersReady: boolean; // <-- ADD THIS
 }
 
 export function ArticleList({
@@ -25,6 +29,7 @@ export function ArticleList({
   tagId,
   onArticleClick,
   scrollContainerRef,
+  filtersReady, // <-- ADD THIS
 }: ArticleListProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -55,6 +60,8 @@ export function ArticleList({
     refreshArticles,
     clearError,
     readStatusFilter,
+    navigatingToArticle,
+    setNavigatingToArticle,
   } = useArticleStore();
 
   // Integrate article list state preservation
@@ -76,15 +83,63 @@ export function ArticleList({
     autoMarkObserverRef,
   });
 
+  // RR-197: Initialize localStorage state manager for instant UI updates
+  useEffect(() => {
+    const initializeLocalStorage = async () => {
+      try {
+        await localStorageStateManager.initialize();
+        console.log("🚀 [RR-197] localStorage state manager initialized");
+      } catch (error) {
+        console.warn(
+          "⚠️ [RR-197] localStorage initialization failed, using fallback:",
+          error
+        );
+      }
+    };
+
+    initializeLocalStorage();
+
+    // Cleanup on unmount
+    return () => {
+      localStorageStateManager.cleanup();
+    };
+  }, []); // Initialize once on mount
+
   // Load articles on mount or when feed/folder changes
   useEffect(() => {
+    if (!filtersReady) {
+      console.log("🚫 Filters not ready, skipping article load.");
+      return;
+    }
+
+    // RR-27: Skip reload when navigating back from article
+    if (navigatingToArticle) {
+      console.log(
+        "🔄 Skipping article reload - returning from article navigation"
+      );
+      setNavigatingToArticle(false);
+      return;
+    }
+
     // Clear pending marks when view changes
     pendingMarkAsRead.current.clear();
     if (markAsReadTimer.current) {
       clearTimeout(markAsReadTimer.current);
     }
+
+    console.log(`🔄 Loading articles for feedId: ${feedId}, tagId: ${tagId}`);
+
+    // Always load fresh articles based on current filters
     loadArticles(feedId, folderId, tagId);
-  }, [feedId, folderId, tagId, loadArticles]);
+  }, [
+    feedId,
+    folderId,
+    tagId,
+    loadArticles,
+    filtersReady,
+    navigatingToArticle,
+    setNavigatingToArticle,
+  ]);
 
   // Batch mark as read with debounce - now tracking auto-read articles
   const processPendingMarkAsRead = useCallback(() => {
@@ -92,16 +147,45 @@ export function ArticleList({
       const articleIds = Array.from(pendingMarkAsRead.current);
       pendingMarkAsRead.current.clear();
 
-      // Update state manager to track auto-read articles
+      // RR-197: Apply immediate localStorage updates for instant UI feedback
+      const articlesWithFeeds = articleIds
+        .map((id) => {
+          const article = articles.get(id);
+          return article ? { articleId: id, feedId: article.feedId } : null;
+        })
+        .filter(Boolean) as { articleId: string; feedId: string }[];
+
+      if (articlesWithFeeds.length > 0) {
+        // Immediate localStorage update for instant counter changes
+        localStorageStateManager
+          .batchMarkArticlesRead(articlesWithFeeds)
+          .then((result) => {
+            if (result.success && result.responseTime < 1) {
+              console.log(
+                `🚀 [RR-197] localStorage batch update: ${result.responseTime.toFixed(2)}ms for ${articlesWithFeeds.length} articles`
+              );
+            } else if (!result.success && result.fallbackUsed) {
+              console.warn(
+                `⚠️ [RR-197] localStorage unavailable, using fallback behavior`
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("[RR-197] localStorage batch update failed:", error);
+          });
+      }
+
+      // Update state manager to track auto-read articles (existing behavior)
       const updates = articleIds.map((id) => ({
         id,
         changes: { isRead: true, wasAutoRead: true },
       }));
       articleListStateManager.batchUpdateArticles(updates);
 
+      // Call existing database batching (preserves 500ms timing)
       markMultipleAsRead(articleIds);
     }
-  }, [markMultipleAsRead]);
+  }, [markMultipleAsRead, articles]);
 
   // Set up auto-mark as read observer
   useEffect(() => {
@@ -531,11 +615,13 @@ export function ArticleList({
                           size="sm"
                         />
                       )}
+                    {/* TODO: Temporarily commented out star button from article listing cards
                     <StarButton
                       onToggleStar={() => toggleStar(article.id)}
                       isStarred={article.tags?.includes("starred") || false}
                       size="sm"
                     />
+                    */}
                   </div>
                 </div>
 

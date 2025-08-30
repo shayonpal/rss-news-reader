@@ -82,6 +82,102 @@ npm run test:watch        # Watch mode for development
 - **Supabase Helper**: Reusable mock at `src/__tests__/helpers/supabase-mock.ts` with method chaining support
 - **Export Fixes**: Corrected missing exports in utility classes for proper testability
 
+### setupStorageMock Function Documentation (RR-222)
+
+**Function Signature:**
+
+```typescript
+const setupStorageMock = (storageName: 'localStorage' | 'sessionStorage') => void
+```
+
+**Purpose:**
+
+The `setupStorageMock` function implements a three-tier configurability detection system to reliably mock browser storage APIs in jsdom test environments with thread pool isolation.
+
+**Parameters:**
+
+- `storageName`: Storage type to mock ('localStorage' or 'sessionStorage')
+
+**Implementation Architecture:**
+
+**Tier 1: Property Defintion Strategy**
+
+```typescript
+const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
+const isConfigurable = descriptor?.configurable !== false;
+
+if (!window[storageName] || isConfigurable) {
+  Object.defineProperty(window, storageName, {
+    value: createStorage(),
+    writable: true,
+    configurable: true,
+  });
+}
+```
+
+- **Condition**: Property doesn't exist or is configurable
+- **Action**: Clean property redefinition using `Object.defineProperty`
+- **Benefits**: Maintains proper property descriptors and type safety
+
+**Tier 2: Prototype Fallback Strategy**
+
+```typescript
+else {
+  console.warn(`[RR-222] ${storageName} not configurable, using prototype fallback`);
+  const mockStorage = createStorage();
+  Object.assign(Storage.prototype, mockStorage);
+}
+```
+
+- **Condition**: Property exists but is not configurable
+- **Action**: Modify `Storage.prototype` to override methods
+- **Warning**: Console warning alerts to fallback mode
+- **Compatibility**: Works with read-only property descriptors
+
+**Tier 3: Direct Assignment Strategy**
+
+```typescript
+catch (error) {
+  console.warn(`[RR-222] Failed to mock ${storageName}, using direct assignment:`, error);
+  (window as any)[storageName] = createStorage();
+}
+```
+
+- **Condition**: All other approaches failed (exception thrown)
+- **Action**: Force assignment using type casting
+- **Logging**: Captures specific error for debugging
+- **Reliability**: Ensures mock is always available
+
+**Configurability Detection Logic:**
+
+```typescript
+const descriptor = Object.getOwnPropertyDescriptor(window, storageName);
+const isConfigurable = descriptor?.configurable !== false;
+```
+
+- **Method**: Uses `Object.getOwnPropertyDescriptor()` to inspect property metadata
+- **Logic**: Treats undefined/null descriptors as configurable (property doesn't exist)
+- **Safety**: Explicit `!== false` check handles undefined configurability
+
+**Error Handling Patterns:**
+
+1. **Graceful Degradation**: Each tier provides a working fallback
+2. **Diagnostic Logging**: Console warnings include context and error details
+3. **Non-Breaking**: Function never throws - always provides working mock
+4. **Debugging Support**: Error messages include RR-222 prefix for log filtering
+
+**Integration with Browser API Mocks:**
+
+```typescript
+setupStorageMock("localStorage");
+setupStorageMock("sessionStorage");
+```
+
+- **Initialization**: Called during test setup for both storage types
+- **Order Independence**: Can be called in any sequence
+- **Idempotent**: Safe to call multiple times on same storage type
+- **Thread Safe**: Works correctly in parallel test execution environments
+
 ### Store Isolation Testing Patterns (RR-188)
 
 **Zustand Store State Isolation:**
@@ -820,6 +916,204 @@ test("storage functionality", () => {
 // ❌ Don't manually redefine storage APIs
 Object.defineProperty(window, 'localStorage', { ... });
 ```
+
+## localStorage Performance Testing Patterns (RR-197)
+
+**Three-Tier Architecture Testing:**
+The RR-197 localStorage optimization introduces sophisticated performance testing patterns to validate the three-tier architecture (localStorage → Memory → Database) and ensure performance targets are met.
+
+**Performance Testing Components:**
+
+```typescript
+// Performance test utilities for RR-197
+import {
+  LocalStorageQueue,
+  PerformanceMonitor,
+  ArticleCounterManager,
+} from "@/lib/utils";
+
+describe("RR-197 localStorage Performance", () => {
+  let performanceMonitor: PerformanceMonitor;
+  let localStorageQueue: LocalStorageQueue;
+  let counterManager: ArticleCounterManager;
+
+  beforeEach(() => {
+    // Initialize isolated testing environment
+    localStorage.clear();
+    performanceMonitor = new PerformanceMonitor({
+      targetFps: 60,
+      maxResponseTime: 1,
+    });
+    localStorageQueue = new LocalStorageQueue();
+    counterManager = new ArticleCounterManager();
+  });
+
+  test("localStorage operations complete under 1ms", () => {
+    const operation = () => {
+      localStorageQueue.enqueue({
+        articleId: "test-article",
+        updates: { isRead: true },
+        timestamp: Date.now(),
+      });
+    };
+
+    const metrics = performanceMonitor.monitorOperation(operation);
+    expect(metrics.duration).toBeLessThan(1); // <1ms target
+    expect(metrics.withinTarget).toBe(true);
+  });
+
+  test("FIFO cleanup prevents localStorage bloat", () => {
+    // Add 1000+ operations to test cleanup
+    for (let i = 0; i < 1200; i++) {
+      localStorageQueue.enqueue({
+        articleId: `article-${i}`,
+        updates: { isRead: true },
+        timestamp: Date.now(),
+      });
+    }
+
+    const operations = localStorageQueue.getOperations();
+    expect(operations.length).toBeLessThanOrEqual(1000); // FIFO limit
+    expect(operations[0].articleId).toBe("article-200"); // First 200 removed
+  });
+
+  test("race condition prevention in counter updates", () => {
+    const processedEntries = new Set<string>();
+
+    // Simulate rapid article marking (5+ per second)
+    const articleIds = ["article-1", "article-2", "article-3", "article-1"]; // Duplicate
+
+    articleIds.forEach((id) => {
+      const entryKey = `${id}-${Date.now()}`;
+
+      if (!processedEntries.has(entryKey)) {
+        processedEntries.add(entryKey);
+        counterManager.updateCounters(id, false, true);
+      }
+    });
+
+    // Verify no duplicate processing
+    expect(processedEntries.size).toBe(4); // All entries tracked
+    // Counter should only decrement 3 times (not 4 due to duplicate)
+  });
+});
+```
+
+**Integration Testing Patterns:**
+
+```typescript
+describe('RR-197 Integration Tests', () => {
+  test('article marking with immediate UI feedback', async () => {
+    const { user } = render(<ArticleList />);
+    const markButton = screen.getByTestId('mark-read-button');
+
+    // Measure UI response time
+    const startTime = performance.now();
+    await user.click(markButton);
+    const responseTime = performance.now() - startTime;
+
+    // Should show immediate visual feedback
+    expect(responseTime).toBeLessThan(1); // <1ms target
+    expect(screen.getByTestId('article-read-indicator')).toBeVisible();
+  });
+
+  test('database batching after 500ms', async () => {
+    const mockDatabaseUpdate = vi.fn();
+    const { user } = render(<ArticleList onDatabaseUpdate={mockDatabaseUpdate} />);
+
+    // Rapid marking of multiple articles
+    const buttons = screen.getAllByTestId('mark-read-button');
+    for (const button of buttons.slice(0, 5)) {
+      await user.click(button);
+    }
+
+    // Should not call database immediately
+    expect(mockDatabaseUpdate).not.toHaveBeenCalled();
+
+    // Should batch after 500ms
+    await waitFor(() => {
+      expect(mockDatabaseUpdate).toHaveBeenCalledOnce();
+    }, { timeout: 600 });
+  });
+});
+```
+
+**Performance Benchmarking:**
+
+```typescript
+describe('RR-197 Performance Benchmarks', () => {
+  test('maintains 60fps during rapid article marking', async () => {
+    const { user } = render(<ArticleList articles={createMockArticles(100)} />);
+    const markButtons = screen.getAllByTestId('mark-read-button');
+
+    const frameRates: number[] = [];
+    let lastFrameTime = performance.now();
+
+    // Monitor frame rate during rapid interactions
+    const frameObserver = () => {
+      const currentTime = performance.now();
+      const frameTime = currentTime - lastFrameTime;
+      frameRates.push(1000 / frameTime); // Convert to FPS
+      lastFrameTime = currentTime;
+
+      if (frameRates.length < 60) {
+        requestAnimationFrame(frameObserver);
+      }
+    };
+
+    requestAnimationFrame(frameObserver);
+
+    // Rapid article marking (5 per second)
+    for (let i = 0; i < 10; i++) {
+      await user.click(markButtons[i]);
+      await new Promise(resolve => setTimeout(resolve, 200)); // 5/sec
+    }
+
+    // Wait for frame rate collection
+    await waitFor(() => {
+      expect(frameRates.length).toBeGreaterThan(50);
+    });
+
+    // Calculate average FPS
+    const averageFps = frameRates.reduce((a, b) => a + b, 0) / frameRates.length;
+    expect(averageFps).toBeGreaterThan(55); // Target: 60fps (allow 5fps margin)
+  });
+});
+```
+
+**Memory Management Testing:**
+
+```typescript
+describe("RR-197 Memory Management", () => {
+  test("graceful degradation when localStorage unavailable", () => {
+    // Mock localStorage failure
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = vi.fn(() => {
+      throw new Error("QuotaExceededError");
+    });
+
+    const fallbackHandler = new LocalStorageFallback();
+
+    expect(() => {
+      fallbackHandler.enqueue({ articleId: "test", updates: { isRead: true } });
+    }).not.toThrow();
+
+    // Should fall back to memory-only mode
+    expect(fallbackHandler.getMode()).toBe("memory-only");
+
+    // Restore original
+    localStorage.setItem = originalSetItem;
+  });
+});
+```
+
+**Key Testing Principles for RR-197:**
+
+1. **Performance Validation**: Every operation tested against <1ms and 60fps targets
+2. **Memory Management**: FIFO cleanup and quota handling tested extensively
+3. **Race Condition Prevention**: Set-based tracking validated under rapid interaction scenarios
+4. **Graceful Degradation**: Fallback behavior tested when localStorage unavailable
+5. **Integration Testing**: End-to-end validation of three-tier architecture coordination
 
 ## Configuration Reference
 

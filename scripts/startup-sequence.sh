@@ -9,9 +9,9 @@ echo "🚀 Starting RSS Reader services..."
 
 # Clean webpack cache on startup to prevent corruption
 echo "Cleaning webpack cache..."
-if [ -d ".next" ]; then
-    echo "Removing .next directory to ensure clean build..."
-    rm -rf .next
+if ls .next-dev .next-build 2> /dev/null 1>&2; then
+    echo "Removing build directories to ensure clean build..."
+    rm -rf .next-dev .next-build
     echo "✓ Webpack cache cleaned"
 else
     echo "✓ No webpack cache to clean"

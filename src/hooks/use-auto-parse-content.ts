@@ -17,6 +17,23 @@ interface UseAutoParseContentResult {
   clearParsedContent: () => void;
 }
 
+type JobState = "idle" | "running" | "done" | "failed";
+
+/**
+ * Auto-parse content hook for RSS articles
+ *
+ * Automatically parses article content when:
+ * - Feed has partial content
+ * - Article content is short (< 500 chars)
+ * - Content contains truncation indicators
+ *
+ * Features:
+ * - Race condition protection via state machine
+ * - Request cancellation on component unmount
+ * - Manual parsing support
+ * - Proper error handling
+ * - Stable callback identity
+ */
 export function useAutoParseContent({
   article,
   feed,
@@ -26,17 +43,47 @@ export function useAutoParseContent({
   const [parseError, setParseError] = useState<string | null>(null);
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const lastTriggeredRef = useRef<string | null>(null);
 
+  // Refs for stable callback pattern
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  // RR-245 fix: Article ref to access current article in stable callback
+  const articleRef = useRef(article);
+  useEffect(() => {
+    articleRef.current = article;
+  }, [article]);
+
+  // RR-245 fix: State machine for tracking parse jobs per article
+  const jobsRef = useRef(new Map<string, JobState>());
+  // Lightweight cooldown to avoid burst re-triggers when parents recreate article objects every render
+  const lastTriggerKeyRef = useRef<string | null>(null);
+  const lastTriggerAtRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
+
+  // RR-245 fix: Sync isParsing state with ref for stable callback access
+  const isParsingRef = useRef(false);
+  useEffect(() => {
+    isParsingRef.current = isParsing;
+  }, [isParsing]);
+
+  // RR-245 fix: Stable callback with empty dependencies
   const triggerParse = useCallback(
     async (isManual = false) => {
-      // Don't start a new parse if one is already in progress (unless manual)
-      if (!isManual && isParsing) return;
-      if (!article.url) return;
+      const currentArticle = articleRef.current;
+      if (!currentArticle?.url || !mountedRef.current) return;
 
-      // Track the current article ID to detect if it changes during fetch
-      const currentArticleId = article.id;
+      const job = jobsRef.current.get(currentArticle.url);
+
+      // Skip if already processing (unless manual)
+      if (!isManual && (job === "running" || inFlightRef.current)) {
+        return;
+      }
+
+      const currentArticleId = currentArticle.id;
+      const currentArticleUrl = currentArticle.url;
+      jobsRef.current.set(currentArticleUrl, "running");
+      inFlightRef.current = true;
 
       // Cancel any existing request
       if (abortControllerRef.current) {
@@ -52,7 +99,7 @@ export function useAutoParseContent({
 
       try {
         const response = await fetch(
-          `/reader/api/articles/${article.id}/fetch-content`,
+          `/reader/api/articles/${currentArticleId}/fetch-content`,
           {
             method: "POST",
             headers: {
@@ -65,114 +112,132 @@ export function useAutoParseContent({
           }
         );
 
-        // Check if article changed while fetching
-        if (currentArticleId !== article.id) {
-          return; // Discard result for old article
+        // Check if component is still mounted and article hasn't changed
+        if (
+          !mountedRef.current ||
+          articleRef.current.url !== currentArticleUrl
+        ) {
+          return;
         }
 
         if (!response.ok) {
           const data = await response.json();
-
-          // Check if it's a rate limit error
           if (response.status === 429) {
             throw new Error(
               "Too many requests. Please wait a moment and try again."
             );
           }
-
-          // Check if parsing has failed permanently
           if (data.parseFailed) {
             throw new Error(
               "Content extraction failed. The original article may no longer be available."
             );
           }
-
           throw new Error(data.message || "Failed to fetch content");
         }
 
         const data = await response.json();
 
-        // Check again if article changed
-        if (currentArticleId !== article.id) {
-          return; // Discard result for old article
+        // Double-check mount and article ID
+        if (
+          !mountedRef.current ||
+          articleRef.current.url !== currentArticleUrl
+        ) {
+          return;
         }
 
         if (data.success && data.content) {
           setParsedContent(data.content);
           setParseError(null);
+          jobsRef.current.set(currentArticleUrl, "done");
         } else if (data.fallbackContent) {
-          // Use fallback content but show that parsing failed
           setParsedContent(data.fallbackContent);
           setParseError(data.error || "Using partial content");
+          jobsRef.current.set(currentArticleUrl, "done");
         }
       } catch (err) {
-        // Check if article changed before updating error state
-        if (currentArticleId !== article.id) {
-          return; // Discard error for old article
+        // Check mount and article ID before setting error state
+        if (
+          !mountedRef.current ||
+          articleRef.current.id !== currentArticleId ||
+          (err instanceof Error && err.name === "AbortError")
+        ) {
+          return;
         }
 
         if (err instanceof Error) {
-          if (err.name === "AbortError") {
-            // Request was cancelled, don't show error
-            return;
-          }
           setParseError(err.message);
         } else {
           setParseError("An unexpected error occurred");
         }
+        jobsRef.current.set(currentArticleUrl, "failed");
       } finally {
-        // Only update isParsing if this is still the current article
-        if (currentArticleId === article.id) {
+        if (
+          mountedRef.current &&
+          articleRef.current.url === currentArticleUrl
+        ) {
           setIsParsing(false);
         }
         abortControllerRef.current = null;
+        inFlightRef.current = false;
       }
     },
-    [article.id, article.url, isParsing]
+    [] // Empty dependencies for stable identity
   );
 
-  // Reset state when article changes
+  // Reset state when article URL changes (treat as true article change)
   useEffect(() => {
     setParsedContent(null);
     setParseError(null);
     setParseAttempted(false);
-    setIsParsing(false);
-    lastTriggeredRef.current = null;
+    // Do not force isParsing=false here to avoid clobbering a just-started manual trigger
 
-    // Cancel any in-flight request from previous article
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-  }, [article.id]);
 
-  // Check if auto-parsing should be triggered
+    // Reset cooldown on explicit article change so a new article can auto-parse
+    lastTriggerKeyRef.current = null;
+    lastTriggerAtRef.current = 0;
+  }, [article.url]);
+
+  // When the article identity changes even with the same URL, allow re-triggering
   useEffect(() => {
-    // Skip if auto-parsing is disabled
-    if (!enabled) return;
+    if (article.url) {
+      jobsRef.current.delete(article.url);
+      // also clear cooldown so the next effect can fire immediately
+      lastTriggerKeyRef.current = null;
+      lastTriggerAtRef.current = 0;
+    }
+    // do not clear parsedContent here; next fetch will overwrite if needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article.id, article.url]); // article.url added to properly track URL changes
 
-    // Skip if already triggered for this article
-    if (lastTriggeredRef.current === article.id) return;
+  // Auto-parse logic
+  useEffect(() => {
+    if (!enabled || !mountedRef.current) return;
 
-    // Skip if already has full content
-    if (article.hasFullContent && article.fullContent) return;
+    const job = jobsRef.current.get(article.url);
 
-    // Skip if parsing failed permanently
-    if (article.parseFailed) return;
+    // Skip if already processed or in progress
+    if (
+      job === "running" ||
+      job === "done" ||
+      job === "failed" ||
+      (article.hasFullContent && article.fullContent) ||
+      article.parseFailed === true
+    ) {
+      return;
+    }
 
-    // Determine if auto-parsing is needed
     let needsParsing = false;
 
-    // Always parse partial feeds
+    // Determine if parsing is needed
     if (feed?.isPartialContent === true) {
       needsParsing = true;
-    }
-    // Parse short content
-    else if (article.content && article.content.length < 500) {
+    } else if (article.content && article.content.length < 500) {
       needsParsing = true;
-    }
-    // Parse content with truncation indicators
-    else if (article.content) {
+    } else if (article.content) {
       const truncationIndicators = [
         "Read more",
         "Continue reading",
@@ -186,41 +251,43 @@ export function useAutoParseContent({
     }
 
     if (needsParsing) {
-      lastTriggeredRef.current = article.id;
-      // Use setTimeout to avoid triggering during render
-      const timeoutId = setTimeout(() => {
-        triggerParse(false);
-      }, 0);
-
-      return () => clearTimeout(timeoutId);
+      const key = article.url || article.id;
+      const now = Date.now();
+      if (
+        lastTriggerKeyRef.current === key &&
+        now - lastTriggerAtRef.current < 100
+      ) {
+        return; // Cooldown: avoid tight re-triggers across rapid re-renders
+      }
+      lastTriggerKeyRef.current = key;
+      lastTriggerAtRef.current = now;
+      triggerParse(false);
     }
   }, [
     enabled,
     article.id,
+    article.url, // Added for consistency
+    article.content,
     article.hasFullContent,
     article.fullContent,
     article.parseFailed,
-    article.content,
     feed?.isPartialContent,
-    triggerParse,
+    triggerParse, // Added since it's now stable with empty deps
   ]);
 
   // Cleanup on unmount
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
   }, []);
 
-  const clearError = () => {
-    setParseError(null);
-  };
-
-  const clearParsedContent = () => {
-    setParsedContent(null);
-  };
+  const clearError = () => setParseError(null);
+  const clearParsedContent = () => setParsedContent(null);
 
   const shouldShowRetry = Boolean(
     parseError &&

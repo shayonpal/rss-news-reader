@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * RR-180: iOS 26 Liquid Glass Button Components
  *
  * Implementation Requirements:
- * - 48px minimum touch targets (iOS HIG)
+ * - 56px standard component height with 48px internal buttons for containers
  * - Glass effects: blur(16px) saturate(180%)
  * - Spring animation: 300ms cubic-bezier(0.34, 1.56, 0.64, 1)
  * - Active state: scale(0.96)
@@ -17,49 +17,109 @@ import { cn } from "@/lib/utils";
 
 const glassButtonVariants = cva(
   [
+    // Base styles - NO glass effects (those go in variants)
     "inline-flex items-center justify-center",
     "rounded-[22px] font-medium transition-all duration-300",
-    "backdrop-blur-[16px] backdrop-saturate-[180%]",
-    "border border-white/10 dark:border-white/5",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-    "focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400",
+    "focus-visible:ring-violet-500 dark:focus-visible:ring-violet-500",
     "disabled:pointer-events-none disabled:opacity-50",
     "active:scale-[0.96]",
-    "min-h-[48px] min-w-[48px]", // iOS HIG touch target
+    "min-h-[48px] min-w-[48px]", // Internal button size (48px) within 56px containers
+    // Touch and performance optimizations (moved from inline styles)
+    "glass-touch-optimized",
   ].join(" "),
   {
     variants: {
       variant: {
         default: [
-          "bg-white/10 dark:bg-white/10",
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-white/10 dark:border-white/5",
+          "bg-white/35 dark:bg-white/35",
           "text-gray-900 dark:text-white",
-          "hover:bg-white/15 dark:hover:bg-white/20",
+          "hover:bg-white/45 dark:hover:bg-white/45",
           "shadow-lg shadow-black/5 dark:shadow-white/5",
-          "border border-white/5 dark:border-white/10",
         ].join(" "),
         primary: [
-          "bg-blue-500/20 dark:bg-blue-400/20",
-          "text-blue-700 dark:text-blue-300",
-          "hover:bg-blue-500/25 dark:hover:bg-blue-400/25",
-          "shadow-lg shadow-blue-500/10 dark:shadow-blue-400/10",
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-violet-500/20 dark:border-violet-500/20",
+          "bg-violet-500/20 dark:bg-violet-500/20",
+          "text-violet-700 dark:text-violet-300",
+          "hover:bg-violet-500/25 dark:hover:bg-violet-500/25",
+          "shadow-lg shadow-violet-500/10 dark:shadow-violet-500/10",
         ].join(" "),
         secondary: [
-          "bg-gray-500/10 dark:bg-gray-400/10",
-          "text-gray-700 dark:text-gray-300",
-          "hover:bg-gray-500/15 dark:hover:bg-gray-400/15",
-          "shadow-lg shadow-gray-500/5 dark:shadow-gray-400/5",
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-violet-500/10 dark:border-violet-400/10",
+          "bg-violet-500/10 dark:bg-violet-400/10",
+          "text-violet-700 dark:text-violet-300",
+          "hover:bg-violet-500/15 dark:hover:bg-violet-400/15",
+          "shadow-lg shadow-violet-500/5 dark:shadow-violet-400/5",
         ].join(" "),
         ghost: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border-transparent",
           "bg-transparent",
-          "text-gray-700 dark:text-white",
-          "hover:bg-white/10 dark:hover:bg-white/15",
-          "border-transparent hover:border-white/10 dark:hover:border-white/15",
+          "text-[color:var(--ghost-text-light)] dark:text-[color:var(--ghost-text-dark)]",
+          "hover:bg-white/35 dark:hover:bg-white/35",
+          "hover:border-white/18 dark:hover:border-white/18",
         ].join(" "),
         danger: [
+          "backdrop-blur-[16px] backdrop-saturate-[180%]",
+          "border border-red-500/20 dark:border-red-400/20",
           "bg-red-500/20 dark:bg-red-400/20",
           "text-red-700 dark:text-red-300",
           "hover:bg-red-500/25 dark:hover:bg-red-400/25",
           "shadow-lg shadow-red-500/10 dark:shadow-red-400/10",
+        ].join(" "),
+        // RR-229: New adaptive variants for context-aware styling
+        adaptive: [
+          "backdrop-blur-[24px] backdrop-saturate-[120%]",
+          "border border-[var(--glass-adaptive-border)] dark:border-[var(--glass-adaptive-border)]",
+          "bg-[var(--glass-adaptive-bg)] dark:bg-[var(--glass-adaptive-bg)]",
+          "text-gray-900 dark:text-white",
+          "hover:bg-[var(--glass-enhanced-bg)] dark:hover:bg-[var(--glass-enhanced-bg)]",
+          "shadow-lg shadow-black/8 dark:shadow-white/8",
+        ].join(" "),
+        enhanced: [
+          "backdrop-blur-[20px] backdrop-saturate-[160%]",
+          "border border-[var(--glass-enhanced-border)] dark:border-[var(--glass-enhanced-border)]",
+          "bg-[var(--glass-enhanced-bg)] dark:bg-[var(--glass-enhanced-bg)]",
+          "text-gray-900 dark:text-white",
+          "hover:opacity-90",
+          "shadow-xl shadow-black/12 dark:shadow-white/12",
+        ].join(" "),
+        // RR-230: Exact CSS class replication
+        "css-toolbar-btn": [
+          "appearance-none -webkit-appearance-none -moz-appearance-none",
+          "inline-flex items-center justify-center",
+          "h-[var(--control-height-internal,48px)] min-w-[var(--control-height-internal,48px)] px-3",
+          "rounded-full",
+          "text-[color:hsl(var(--foreground))]",
+          "bg-transparent border-none",
+          "backdrop-blur-none backdrop-saturate-none", // Override base glass effects
+          "shadow-none", // Override base shadows
+          "transition-[transform,background-color] duration-[160ms] ease-[var(--ease-out)]",
+          "hover:bg-[var(--glass-chip-indicator)]",
+          "active:scale-[0.98]",
+        ].join(" "),
+        "css-icon-btn": [
+          "appearance-none -webkit-appearance-none -moz-appearance-none",
+          "backdrop-blur-[var(--glass-blur)] backdrop-saturate-[var(--glass-saturation)]",
+          "bg-[var(--glass-nav-bg)]",
+          "border border-[var(--glass-nav-border)]",
+          "w-[48px] h-[48px]",
+          "inline-flex items-center justify-center",
+          "rounded-full",
+          "text-[color:hsl(var(--foreground))]",
+          "transition-[transform,background-color] duration-[160ms] ease-[var(--ease-out)]",
+          "hover:bg-[var(--glass-nav-bg-scrolled)]",
+          "active:scale-[0.96]",
+        ].join(" "),
+        // RR-230: Enhanced liquid glass using semantic height system
+        "liquid-glass": [
+          "glass-icon-button-liquid", // Uses @apply liquid-glass-primary with 56px height
+          "liquid-glass-enhanced", // Includes ::before glossy overlay
+          "text-[color:hsl(var(--foreground))]",
         ].join(" "),
       },
       size: {
@@ -109,20 +169,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
         ref={ref}
         type={props.type || "button"}
         {...props}
-        style={{
-          // iOS touch optimizations
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
-          WebkitTouchCallout: "none",
-          WebkitUserSelect: "none",
-          userSelect: "none",
-          // Spring animation timing
-          transitionTimingFunction: springAnimation ? SPRING_TIMING : undefined,
-          // GPU acceleration
-          transform: "translateZ(0)",
-          willChange: "transform",
-          ...style,
-        }}
+        style={style}
       />
     );
   }
@@ -134,7 +181,8 @@ export interface GlassIconButtonProps extends Omit<GlassButtonProps, "size"> {
 }
 
 /**
- * Icon-only glass button with enforced 48x48px dimensions
+ * Icon-only glass button with enforced 48x48px internal dimensions
+ * Uses 56px container height standard with computed padding for centering
  * Requires aria-label for accessibility
  */
 const GlassIconButton = React.forwardRef<
@@ -144,7 +192,7 @@ const GlassIconButton = React.forwardRef<
   (
     {
       className,
-      variant,
+      variant = "css-icon-btn",
       asChild = false,
       springAnimation = true,
       style,
@@ -186,7 +234,7 @@ const GlassToolbarButton = React.forwardRef<
   (
     {
       className,
-      variant,
+      variant = "css-toolbar-btn",
       size = "toolbar",
       icon,
       iconPosition = "left",

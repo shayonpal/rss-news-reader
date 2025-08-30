@@ -148,28 +148,58 @@ export async function getCurrentApiUsage() {
       };
     }
 
-    // Hybrid: use the larger of header usage or daily call count for Zone 1 to mitigate header lag
-    const zone1Limit = data.zone1_limit || 100;
-    const zone1UsedHeader = data.zone1_usage || 0;
+    // Use header values directly - headers are authoritative source
+    // Standardized default limit to 10000 for consistency
+    const zone1Limit = data.zone1_limit || 10000;
+    const zone1UsedHeader = data.zone1_usage ?? null;
     const dailyCount = data.count || 0;
-    const zone1Used = Math.min(
-      Math.max(zone1UsedHeader, dailyCount),
-      zone1Limit
-    );
+
+    // Use header value when available, otherwise fallback to 0 (not count)
+    const zone1Used = zone1UsedHeader !== null ? zone1UsedHeader : 0;
+
+    // Log warning if there's a significant discrepancy between header and local count
+    if (zone1UsedHeader !== null && dailyCount > 0) {
+      const discrepancy = Math.abs(zone1UsedHeader - dailyCount);
+      const discrepancyPercentage =
+        zone1UsedHeader > 0
+          ? (discrepancy / zone1UsedHeader) * 100
+          : dailyCount > 0
+            ? 100
+            : 0;
+
+      if (discrepancyPercentage > 20) {
+        console.warn(
+          "[GetApiUsage] Warning: Large discrepancy detected between header and local count",
+          {
+            headerValue: zone1UsedHeader,
+            localCount: dailyCount,
+            discrepancyPercentage: Math.round(discrepancyPercentage),
+          }
+        );
+      }
+    }
+
+    // Calculate percentage - handle zero limits gracefully
+    const zone1Percentage =
+      data.zone1_limit && data.zone1_limit > 0
+        ? (zone1Used / data.zone1_limit) * 100
+        : 0;
+
+    const zone2Percentage =
+      data.zone2_limit && data.zone2_limit > 0
+        ? ((data.zone2_usage || 0) / data.zone2_limit) * 100
+        : 0;
 
     return {
       zone1: {
         used: zone1Used,
         limit: zone1Limit,
-        percentage: zone1Limit ? (zone1Used / zone1Limit) * 100 : 0,
+        percentage: zone1Percentage,
       },
       zone2: {
         used: data.zone2_usage || 0,
-        limit: data.zone2_limit || 100,
-        percentage:
-          data.zone2_limit || 100
-            ? ((data.zone2_usage || 0) / (data.zone2_limit || 100)) * 100
-            : 0,
+        limit: data.zone2_limit || 2000,
+        percentage: zone2Percentage,
       },
       resetAfterSeconds: data.reset_after || 86400,
       lastUpdated: data.updated_at,

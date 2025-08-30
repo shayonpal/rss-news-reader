@@ -22,6 +22,7 @@ This document outlines the security measures and policies implemented in the RSS
 - **Rate Limiting**: Inoreader API calls limited to 100 per day
 - **Service Role Protection**: Database service role key only used server-side
 - **Input Validation**: All API endpoints validate input parameters
+- **UUID Validation Middleware (RR-202)**: Comprehensive UUID parameter validation using Zod schemas
 - **Error Handling**: Consistent error responses without sensitive information leakage
 - **XSS Protection**: HTML escaping implemented for all user-generated content and tag names (RR-128)
 
@@ -129,6 +130,54 @@ This document outlines the security measures and policies implemented in the RSS
 
 **Testing**: Test-first development with 32 unit tests defining exact expected behavior
 
+### RR-202: UUID Validation Middleware Implementation (August 15, 2025)
+
+**Issue**: API endpoints accepting UUID parameters needed comprehensive validation to prevent malformed UUIDs from reaching database queries and causing potential security issues.
+
+**Implementation**:
+
+**New Middleware**: `src/lib/utils/uuid-validation-middleware.ts`
+
+- **validateUUID()** - Core UUID validation function using Zod schemas
+- **validateUUIDParams()** - Middleware function for parameter validation in route handlers
+- **withUUIDValidation()** - Higher-order function wrapper for route handlers
+- **Convenience functions** - `withArticleIdValidation()` and `withTagIdValidation()` for common use cases
+
+**Protected API Routes (6 total)**:
+
+- `POST /api/articles/{id}/fetch-content` - Article content fetching with UUID validation
+- `POST /api/articles/{id}/summarize` - AI summarization with UUID validation
+- `GET /api/articles/{id}/tags` - Article tags retrieval with UUID validation
+- `GET /api/tags/{id}` - Tag details with UUID validation
+- `PATCH /api/tags/{id}` - Tag updates with UUID validation
+- `DELETE /api/tags/{id}` - Tag deletion with UUID validation
+
+**Error Response Format**:
+
+```json
+{
+  "error": "Invalid parameter format",
+  "message": "Invalid UUID format: [invalid-value]",
+  "details": "Parameter 'id' must be a valid UUID"
+}
+```
+
+**Security Benefits**:
+
+- **SQL Injection Prevention**: Malformed UUIDs blocked before reaching database
+- **Input Validation**: Parameter format validation at middleware level
+- **Clear Error Messages**: Helpful debugging without sensitive information exposure
+- **Type Safety**: Full TypeScript integration with proper constraints
+- **Consistent Error Handling**: Standardized error responses across all protected endpoints
+
+**Impact**:
+
+- Enhanced API security with comprehensive UUID parameter validation
+- Prevented potential SQL injection via malformed UUID parameters
+- Improved developer experience with clear validation error messages
+- Zero impact on legitimate API usage - only blocks invalid requests
+- Established pattern for future parameter validation middleware
+
 ## Security Best Practices
 
 ### Development
@@ -209,6 +258,8 @@ The application implements security headers:
 - [ ] Security tests pass
 - [ ] XSS protection verified for all user-generated content
 - [ ] HTML entity decoding implemented for tag names with React XSS protection
+- [ ] UUID validation middleware applied to all ID-based API endpoints
+- [ ] Parameter validation error responses tested and documented
 
 ### Regular Security Reviews
 
@@ -219,6 +270,9 @@ The application implements security headers:
 - [ ] Test authentication mechanisms
 - [ ] Verify XSS protection in all user input areas
 - [ ] Check HTML entity decoding and React XSS protection in tag features
+- [ ] Validate UUID parameter validation middleware coverage
+- [ ] Test malformed UUID handling in all API endpoints
+- [ ] Review parameter validation error responses for information leakage
 
 ## Related Documentation
 

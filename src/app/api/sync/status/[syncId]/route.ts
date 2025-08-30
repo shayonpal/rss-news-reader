@@ -56,18 +56,27 @@ export async function GET(
       }, 5000);
     }
 
-    return NextResponse.json({
-      status: status.status,
-      progress: status.progress,
-      message: status.message,
-      error: status.error,
-      // RR-171: Include metrics and sidebar data
-      metrics: status.metrics,
-      sidebar: status.sidebar,
-      // Calculate items processed based on progress
-      itemsProcessed: status.progress > 0 ? Math.floor(status.progress) : 0,
-      totalItems: 100, // Approximate
-    });
+    return NextResponse.json(
+      {
+        status: status.status,
+        progress: status.progress,
+        message: status.message,
+        error: status.error,
+        // RR-171: Include metrics and sidebar data
+        metrics: status.metrics,
+        sidebar: status.sidebar,
+        // Calculate items processed based on progress
+        itemsProcessed: status.progress > 0 ? Math.floor(status.progress) : 0,
+        totalItems: 100, // Approximate
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+      }
+    );
   } catch (fileError) {
     // 2. File not found - try database fallback
     console.log(
@@ -96,17 +105,26 @@ export async function GET(
         }, 5000);
       }
 
-      return NextResponse.json({
-        status: data.status,
-        progress: data.progress_percentage,
-        message: data.current_step,
-        error: data.error_message,
-        itemsProcessed:
-          data.progress_percentage > 0
-            ? Math.floor(data.progress_percentage)
-            : 0,
-        totalItems: 100,
-      });
+      return NextResponse.json(
+        {
+          status: data.status,
+          progress: data.progress_percentage,
+          message: data.current_step,
+          error: data.error_message,
+          itemsProcessed:
+            data.progress_percentage > 0
+              ? Math.floor(data.progress_percentage)
+              : 0,
+          totalItems: 100,
+        },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
     } catch (dbError) {
       // Neither file nor database has the sync status
       return NextResponse.json(
@@ -114,8 +132,27 @@ export async function GET(
           error: "sync_not_found",
           message: "Sync ID not found or expired",
         },
-        { status: 404 }
+        {
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
       );
     }
   }
+}
+
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

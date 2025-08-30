@@ -33,6 +33,11 @@ export function CollapsibleFilterSection({
 }: CollapsibleFilterSectionProps) {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
+  // RR-193: Sync internal state with defaultOpen prop changes for mutex behavior
+  React.useEffect(() => {
+    setIsOpen(defaultOpen);
+  }, [defaultOpen]);
+
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     onToggle?.(open);

@@ -15,7 +15,13 @@ export default function ArticlePage() {
   const router = useRouter();
   const articleId = params.id ? decodeURIComponent(params.id as string) : "";
 
-  const { articles, getArticle, markAsRead, toggleStar } = useArticleStore();
+  const {
+    articles,
+    getArticle,
+    markAsRead,
+    toggleStar,
+    setNavigatingToArticle,
+  } = useArticleStore();
   const { feeds } = useFeedStore();
   const [article, setArticle] = useState<Article | null>(null);
   const [articleTags, setArticleTags] = useState<any[]>([]);
@@ -24,6 +30,9 @@ export default function ArticlePage() {
 
   useEffect(() => {
     const loadArticle = async () => {
+      // RR-27: Reset navigation intent when article page loads
+      setNavigatingToArticle(false);
+
       try {
         const fetchedArticle = await getArticle(articleId);
 
@@ -68,7 +77,21 @@ export default function ArticlePage() {
     };
 
     loadArticle();
-  }, [articleId, getArticle, markAsRead]);
+  }, [articleId, getArticle, markAsRead, setNavigatingToArticle]);
+
+  // Watch for store updates (e.g., after summarization) and update local article state
+  useEffect(() => {
+    if (articleId && articles.has(articleId)) {
+      const storeArticle = articles.get(articleId);
+      if (
+        storeArticle &&
+        (!article || storeArticle.updatedAt > article.updatedAt)
+      ) {
+        console.log("📄 Article updated in store, refreshing local state");
+        setArticle(storeArticle);
+      }
+    }
+  }, [articles, articleId, article]);
 
   const handleToggleStar = async () => {
     if (article) {
@@ -106,6 +129,7 @@ export default function ArticlePage() {
         // Note: markAsRead already handles all session state updates via markArticlesAsReadWithSession
       }
 
+      // Next.js automatically prepends basePath to router operations
       router.push(`/article/${encodeURIComponent(targetArticle.id)}`);
     }
   };
@@ -133,8 +157,30 @@ export default function ArticlePage() {
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}
       onBack={() => {
-        // Always navigate to listing page to ensure consistent behavior
-        router.push("/");
+        // Check sessionStorage for active filters and build appropriate URL
+        const feedFilter = sessionStorage.getItem("articleListFilter");
+        const tagFilter = sessionStorage.getItem("articleListTagFilter");
+
+        // Next.js automatically prepends basePath to router operations
+        let url = "/";
+        const params = new URLSearchParams();
+
+        // Only add params if filters are actually set (not null or "null" string)
+        if (feedFilter && feedFilter !== "null") {
+          params.set("feed", feedFilter);
+        }
+        if (tagFilter && tagFilter !== "null") {
+          params.set("tag", tagFilter);
+        }
+
+        const queryString = params.toString();
+        if (queryString) {
+          url += "?" + queryString;
+        }
+
+        // Siri's Fix: Set navigation intent before going back to preserve list state
+        setNavigatingToArticle(true);
+        router.push(url as any);
       }}
     />
   );

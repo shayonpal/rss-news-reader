@@ -1,5 +1,6 @@
 // Custom Vitest matcher type definitions
 import "vitest";
+import "@testing-library/jest-dom";
 
 declare module "vitest" {
   interface Assertion<T = any> {

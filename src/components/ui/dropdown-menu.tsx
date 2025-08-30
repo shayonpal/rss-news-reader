@@ -65,7 +65,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 glass-popover z-50 min-w-[12rem] overflow-hidden rounded-[18px] border p-2 text-popover-foreground will-change-transform",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[12rem] overflow-hidden rounded-[22px] border border-[var(--glass-nav-border)] bg-[var(--glass-enhanced-bg)] p-2 text-popover-foreground shadow-[0_24px_60px_rgba(0,0,0,0.25),0_4px_12px_rgba(0,0,0,0.12)] backdrop-blur-[var(--glass-blur)] backdrop-saturate-[var(--glass-saturation)] will-change-transform",
         className
       )}
       {...props}

@@ -12,6 +12,10 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **No Client Authentication**: Access controlled by Tailscale network
 - **Progressive Web App**: Install on mobile and desktop devices with iOS touch-optimized interface
 - **iOS 26 Liquid Glass Design**: Advanced morphing animations with spring easing and enhanced glass effects
+- **Floating Controls Architecture**: iOS-inspired floating controls replacing traditional fixed headers
+  - **Reusable ScrollHideFloatingElement**: Standardized scroll-responsive behavior for floating UI components
+  - **Adaptive Glass System**: Enhanced translucency with automatic dark mode content visibility adjustments
+  - **PWA Safe Area Integration**: Consistent spacing and positioning across all iOS devices and orientations
 - **Full Content Extraction**: Extract complete articles beyond RSS snippets (v0.6.0)
   - Manual fetch button for any article
   - Smart content priority display
@@ -26,6 +30,11 @@ A self-hosted RSS reader with server-client architecture, AI-powered summaries, 
 - **Clean Design**: Minimalist interface inspired by Reeder 5
 - **Inoreader Integration**: Server syncs with existing subscriptions
 - **Feed Hierarchy**: Collapsible folder structure with unread counts
+- **Intuitive Sidebar Navigation (RR-193)**: Mutex accordion behavior with clean single-scroll experience
+  - Only one sidebar section (Topics OR Feeds) open at a time preventing UI confusion
+  - Eliminated nested scrollbars with CSS Grid layout for smooth navigation
+  - Mobile-optimized full-width overlay with improved touch targets
+  - Smart default state: Topics open, Feeds closed for consistent user experience
 - **Responsive Design**: Adaptive layout for mobile and desktop
 - **Dark/Light Mode**: Manual theme control
 - **Supabase Backend**: All client data served from PostgreSQL
@@ -309,11 +318,13 @@ npm run dev:network      # Start with network access (0.0.0.0)
 npm run dev:debug        # Start with Node.js debugger
 npm run dev:turbo        # Start with Turbo mode
 
-# Quality Checks
+# Quality Checks & Pre-commit Hook (RR-210)
 npm run type-check       # TypeScript compilation check
 npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
-npm run pre-commit      # Run all quality checks
+npm run format          # Fix Prettier formatting issues
+npm run docs:validate   # OpenAPI documentation coverage (45/45 endpoints)
+npm run pre-commit      # Run all quality checks (same as pre-commit hook)
 
 # Testing (Optimized Execution - RR-183)
 npm run test            # ✅ RECOMMENDED: Optimized runner (8-20 seconds)
@@ -337,12 +348,54 @@ npm run start           # Start production server
 npm run analyze         # Bundle size analysis
 npm run clean           # Clean build artifacts
 
+# API Documentation Workflow (RR-208)
+npm run docs:validate   # ✅ Validate OpenAPI coverage (45/45 endpoints, <2s)
+npm run docs:coverage   # ✅ Generate detailed coverage report
+npm run docs:serve      # ✅ Start dev server and open Swagger UI
+
 # Build Validation & Safety
 ./scripts/validate-build.sh --mode basic   # Quick validation
 ./scripts/validate-build.sh --mode full    # Comprehensive validation
 ./scripts/build-and-start-prod.sh          # Safe production deployment
 ./scripts/rollback-last-build.sh           # Emergency rollback
 ```
+
+### Git Pre-commit Hook (RR-210)
+
+**Automated Quality Gates**: Every commit automatically triggers comprehensive validation through the pre-commit hook:
+
+```bash
+# Hook runs automatically on every commit
+git commit -m "your changes"
+
+# Manual hook testing
+./.git/hooks/pre-commit
+
+# Emergency bypass (not recommended)
+git commit --no-verify -m "emergency commit"
+```
+
+**Validation Steps** (individual failure tracking with timeouts):
+
+1. **Type Check** (30s): `npm run type-check` - TypeScript compilation
+2. **Lint Check** (30s): `npm run lint` - ESLint code quality
+3. **Format Check** (30s): `npm run format:check` - Prettier formatting
+4. **OpenAPI Documentation** (60s): `npm run docs:validate` - Ensures 100% API coverage (45/45 endpoints)
+
+**Key Features**:
+
+- **Quality Assurance**: Prevents committing code with quality issues
+- **Documentation Enforcement**: All API endpoints must be properly documented
+- **Fast Feedback**: Individual failure tracking with clear error messages
+- **Performance Optimized**: Completes in under 90 seconds with timeout protection
+- **Graceful Fallback**: Continues validation when development server unavailable
+
+**Benefits for Development**:
+
+- Catches issues before they reach the CI/CD pipeline
+- Ensures consistent code quality across all contributions
+- Maintains 100% OpenAPI documentation coverage automatically
+- Provides immediate feedback with specific recovery instructions
 
 ## CI/CD Pipeline (GitHub Actions)
 
@@ -434,6 +487,21 @@ npm test  # Optimized runner with thread pool (8-20 seconds)
 - `npm run test:sequential` - Most reliable (15-20s) for debugging
 - `npm run test:watch` - Development mode with hot reload
 - `npm run test:progressive` - Detailed feedback and progress tracking
+
+### Auto-Generated Files
+
+The following files are automatically generated during build/test processes and should NOT be committed to the repository:
+
+- `performance-baseline.json` - Performance baseline metrics (generated during build)
+- `performance-report.json` - Current performance metrics (generated during build)
+- `infrastructure-readiness-report.json` - Infrastructure validation report (archived versions kept in docs/infrastructure/)
+- `*.tsbuildinfo` - TypeScript incremental build cache
+- `next-env.d.ts` - Next.js TypeScript definitions
+- `.next/` directories - Next.js build output
+- `playwright-report/` - Playwright test results
+- `test-results/` - Test execution artifacts
+
+These files are properly configured in `.gitignore` and will be regenerated as needed during build processes.
 
 ### Test Types
 
@@ -607,8 +675,15 @@ src/
   - Real-time database counts with 5-minute cache
   - Dynamic page titles based on active filters
   - Automatic cache invalidation on user actions
+- **localStorage Performance Optimization (RR-197)**: Three-tier architecture for instant UI response
+  - **LocalStorageQueue**: FIFO queue with 1000-entry limit and graceful degradation
+  - **PerformanceMonitor**: 60fps tracking with <1ms response time monitoring
+  - **ArticleCounterManager**: Real-time counter updates with race condition prevention
+  - **LocalStorageStateManager**: Coordination layer providing 500ms database batching
+  - **Performance Targets**: <1ms UI response, 60fps scrolling, 500ms database batching
+  - **Memory Management**: FIFO cleanup at 1000 operations to prevent localStorage bloat
 - **Installable PWA**: Install on mobile and desktop
-- **Responsive Design**: Mobile-first layout with sidebar
+- **Responsive Design**: Mobile-first layout with intuitive mutex accordion sidebar (RR-193)
 - **Theme System**: Manual light/dark mode control
 - **Feed Hierarchy**: Collapsible folders with unread counts
 - **Article List**: Infinite scroll with read/unread states
@@ -622,10 +697,23 @@ src/
 - **[Monitoring and Alerting](docs/tech/monitoring-and-alerting.md)**: Multi-layered monitoring system with Discord alerts
 - **[Health Monitoring](docs/monitoring/health-monitoring-overview.md)**: Comprehensive health monitoring (client & server)
 - **[Automatic Sync](docs/deployment/automatic-sync.md)**: Daily sync service documentation
+- **[API Testing with Insomnia](docs/api/insomnia-setup.md)**: Complete guide for importing API collection into Insomnia REST client
 - Deployment docs focus on the dev-only, Tailscale-protected setup. See `docs/deployment/`.
 - **[RR-26 Analysis](docs/issues/RR-26-freshness-perception-analysis.md)**: Article freshness perception issue analysis
 
 ## API Integration
+
+### API Documentation & Testing
+
+- **📚 Interactive API Documentation**: Complete Swagger UI with **100% OpenAPI coverage (45/45 endpoints)**
+  - **Access URL**: http://100.96.166.53:3000/reader/api-docs
+  - **Try it out functionality**: Test all endpoints directly in the browser with operationId support
+  - **Real-time validation**: OpenAPI spec validates in <2 seconds
+  - **Complete coverage**: Health (6), Sync (7), Articles (4), Tags (5), Inoreader (8), Auth (1), Test (7), Analytics (1), Feeds (2), Users (2), Logs (1), Insomnia (1)
+- **🔧 Developer Tools**:
+  - **Insomnia Export**: One-click export via "Export to Insomnia" button in Swagger UI
+  - **Direct Export Endpoint**: `/api/insomnia.json` for programmatic access to Insomnia v4 collection format
+  - **OpenAPI Spec**: `/api-docs/openapi.json` for integration with other tools
 
 ### Inoreader API
 

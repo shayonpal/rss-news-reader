@@ -1,6 +1,12 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup as rtlCleanup,
+} from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
@@ -40,8 +46,20 @@ Object.defineProperty(window, "matchMedia", {
  */
 
 describe("RR-180: Glass Button Components", () => {
+  let cleanup: (() => void) | undefined;
+
   beforeEach(() => {
+    // Clear all mocks before each test
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Cleanup component state and subscriptions
+    cleanup?.();
+    rtlCleanup(); // React Testing Library cleanup
+
+    // Restore all mocks
+    vi.restoreAllMocks();
   });
 
   describe("GlassButton Component", () => {
@@ -189,13 +207,23 @@ describe("RR-180: Glass Button Components", () => {
 });
 
 describe("RR-180: Morphing Dropdown Component", () => {
+  let cleanup: (() => void) | undefined;
+
   beforeEach(() => {
+    // Clear all mocks before each test
     vi.clearAllMocks();
     vi.useFakeTimers();
   });
 
   afterEach(() => {
+    // Cleanup component state and subscriptions
+    cleanup?.();
+    rtlCleanup(); // React Testing Library cleanup
+
+    // Clear all timers and restore mocks
+    vi.clearAllTimers();
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe("Animation Behavior", () => {

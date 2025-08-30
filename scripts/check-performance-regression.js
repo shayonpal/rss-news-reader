@@ -9,6 +9,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Configuration
+// NOTE: These files are auto-generated and gitignored. If missing, baseline will be created.
 const BASELINE_FILE = "performance-baseline.json";
 const REPORT_FILE = "performance-report.json";
 const BUILD_SIZE_FILE = "build-size.txt";

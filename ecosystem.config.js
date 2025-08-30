@@ -34,6 +34,8 @@ module.exports = {
         INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
         INOREADER_REDIRECT_URI: process.env.INOREADER_REDIRECT_URI,
         TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
+        // Token path (expand ~ to full path)
+        RSS_READER_TOKENS_PATH: "/Users/shayon/.rss-reader/tokens.json",
         CLAUDE_SUMMARIZATION_MODEL: process.env.CLAUDE_SUMMARIZATION_MODEL,
         SYNC_MAX_ARTICLES: process.env.SYNC_MAX_ARTICLES,
         ARTICLES_RETENTION_LIMIT: process.env.ARTICLES_RETENTION_LIMIT,
