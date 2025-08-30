@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { supabase } from "@/lib/db/supabase";
 import type { Feed, Folder, FeedWithUnreadCount } from "@/types";
 import type { Database } from "@/lib/db/types";
-import { debugLog, debugTiming } from "@/lib/utils/debug";
 // RR-197: localStorage optimization imports
 import { articleCounterManager } from "@/lib/utils/article-counter-manager";
 import { localStorageQueue } from "@/lib/utils/localstorage-queue";
@@ -82,7 +81,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Load feed hierarchy
   loadFeedHierarchy: async () => {
     const startTime = performance.now();
-    debugLog("[FeedStore] Starting loadFeedHierarchy...");
+    // Debug logging removed as part of RR-242 debug archival
 
     set({ loadingFeeds: true, feedsError: null });
 
@@ -95,7 +94,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         .select("id")
         .eq("inoreader_id", SINGLE_USER_ID)
         .single();
-      debugTiming("[FeedStore] User query", userStartTime);
+      // Debug timing removed as part of RR-242
 
       if (!user) {
         throw new Error("User not found");
@@ -111,10 +110,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
           .eq("user_id", user.id)
           .order("name"),
       ]);
-      debugTiming("[FeedStore] Feeds/folders query", feedsStartTime);
-      debugLog(
-        `[FeedStore] Loaded ${feedsResult.data?.length || 0} feeds and ${foldersResult.data?.length || 0} folders`
-      );
+      // Debug timing and logging removed as part of RR-242
 
       if (feedsResult.error) throw feedsResult.error;
       if (foldersResult.error) throw foldersResult.error;
@@ -166,10 +162,10 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
 
       // Load unread counts
       await get().updateUnreadCounts();
-      debugTiming("[FeedStore] Total loadFeedHierarchy", startTime);
+      // Debug timing removed as part of RR-242
     } catch (error) {
       console.error("Failed to load feeds:", error);
-      debugTiming("[FeedStore] Failed after", startTime);
+      // Debug timing removed as part of RR-242
       set({
         loadingFeeds: false,
         feedsError: `Failed to load feeds: ${error}`,
@@ -423,7 +419,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
   // Update unread counts
   updateUnreadCounts: async () => {
     const startTime = performance.now();
-    debugLog("[FeedStore] Starting updateUnreadCounts...");
+    // Debug logging removed as part of RR-242
 
     try {
       const { feeds, folders } = get();
@@ -431,9 +427,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
       const folderCounts = new Map<string, number>();
       let totalUnread = 0;
 
-      debugLog(
-        `[FeedStore] Calculating unread counts for ${feeds.size} feeds...`
-      );
+      // Debug logging removed as part of RR-242
 
       // Get all unread counts in a single query
       const countStartTime = performance.now();
@@ -464,9 +458,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         error = result.error;
       } catch (e) {
         // Fallback if function doesn't exist
-        debugLog(
-          "[FeedStore] Database function not found, using fallback method"
-        );
+        // Debug logging removed as part of RR-242
         const result = await supabase
           .from("articles")
           .select("feed_id")
@@ -496,7 +488,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         }
       }
 
-      debugTiming("[FeedStore] Unread count query", countStartTime);
+      // debugTiming("[FeedStore] Unread count query", countStartTime);
 
       // Apply counts to feeds
       for (const [feedId, feed] of Array.from(feeds.entries())) {
@@ -512,7 +504,7 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         }
       }
 
-      debugLog(`[FeedStore] Total unread articles: ${totalUnread}`);
+      // Debug logging removed as part of RR-242
 
       // Propagate folder counts up the hierarchy
       const propagateCount = (folderId: string, count: number) => {
@@ -537,10 +529,10 @@ export const useFeedStore = create<FeedStoreState>((set, get) => ({
         totalUnreadCount: totalUnread,
       });
 
-      debugTiming("[FeedStore] updateUnreadCounts completed", startTime);
+      // debugTiming("[FeedStore] updateUnreadCounts completed", startTime);
     } catch (error) {
       console.error("Failed to update unread counts:", error);
-      debugTiming("[FeedStore] updateUnreadCounts failed", startTime);
+      // debugTiming("[FeedStore] updateUnreadCounts failed", startTime);
     }
   },
 
