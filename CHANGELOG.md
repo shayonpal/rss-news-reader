@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed problematic auto-fetch that was causing sync to hang
   - Users now manually fetch full content when needed
   - Significantly improves sync reliability and completion rates
-  
 - **[RR-175] Database security and performance overhaul**
   - Removed deprecated content_length field (only 4.8% utilized)
   - Optimized RLS policies with auth function subqueries
@@ -28,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests for timezone query caching with 24-hour TTL
   - RLS policy optimization validation
   - Cursor-based pagination performance tests
-  
 - **Enhanced agent system and commands**
   - Improved infrastructure expert with emergency bypass capabilities
   - Symbol-level analysis integration for precise debugging
@@ -40,20 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configured PM2 logrotate with 10MB max size and 7-day retention
   - Added missing critical JSONL logs to rotation (sync-cron.jsonl, monitor-services.jsonl)
   - Prevents disk space exhaustion from uncapped log growth
-  
 - **[RR-102] API base path redirect fixes for development**
   - Smart development-only redirects for API inconsistencies
   - Improved developer experience with helpful error messages
-  
 - **[RR-176] Auto-parse content hook performance improvements**
   - Refactored useAutoParseContent hook for better performance
   - Simplified parsing logic with direct useEffect implementation
   - Improved test isolation with unique ID generation
-  
 - **[RR-187] Database mock implementation improvements**
   - Simplified database mock to use getter pattern
   - Fixed test infrastructure issues with mock implementations
-  
 - **ESLint accessibility and React hooks warnings**
   - Fixed aria-pressed to aria-selected for tab roles
   - Added missing dependencies to useEffect and useCallback hooks
@@ -66,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+
 - **[RR-36] Log Management and Rotation Configuration for PM2 Services** (Thursday, August 14, 2025 at 1:00 PM)
   - **PM2 Logrotate Configuration**: Configured PM2 logrotate module with 10MB max size and 7-day retention for automatic log rotation
   - **Critical JSONL Log Coverage**: Added missing critical JSONL logs to rotation script (sync-cron.jsonl, monitor-services.jsonl, services-monitor.jsonl) preventing disk space exhaustion
@@ -73,8 +68,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Disk Space Protection**: Implemented comprehensive log management preventing log files from consuming excessive disk space in production environment
   - **Files Modified**: `scripts/test-log-rotation.sh` - Enhanced validation logic for PM2 logrotate configuration
   - **Impact**: Eliminated risk of disk space exhaustion from uncapped log growth, ensuring system stability with proper log retention policies
+- **[RR-242] Phase 1: Archive Debug/Exploratory Tests - Test Infrastructure Cleanup** (Saturday, August 30, 2025 at 6:37 AM)
+  - Archived 68 debug/manual/temp test files to tests/archive/ with proper categorization
+  - File reduction: 23% of test-related files (from ~301 to ~233 active files)
+  - Categories: 11 debug + 5 manual + 52 temp/exploratory files
+  - Removed debug utility dependencies from feed-store.ts
+  - Created comprehensive archive with recovery procedures
+  - Zero business logic regression, all quality gates pass
+  - Files organized: tests/archive/{debug,manual,temp}/ with README.md documentation
+  - Git history preserved for all moved files using git mv
+  - Impact: Reduced maintenance overhead and improved test directory navigation
+- **[RR-242] Updated Technical Documentation for Archive Structure** (Saturday, August 30, 2025 at 6:38 AM)
+  - Updated docs/tech/testing-strategy.md to document new archive structure at tests/archive/
+  - Added comprehensive test archive management section with maintenance procedures
+  - Updated tests/archive/README.md to correct all path references from tests-archive/ to tests/archive/
+  - Documented 68 files archived with comprehensive categorization and recovery procedures
+  - Added quarterly review process and cleanup policies for archived test files
+  - Part of epic RR-241 for test infrastructure optimization
+  - Impact: Complete documentation alignment with actual archive structure and procedures
 - Temporarily disabled failing useAutoParseContent hook tests to unblock development (RR-192) - Thursday, August 14, 2025 at 10:15 PM
-  - Tests were failing despite functionality working correctly in production  
+  - Tests were failing despite functionality working correctly in production
   - Manual testing confirmed auto-parse works for BBC articles and manual triggers work
   - Created Linear issue RR-192 to track proper test environment fixes
   - Tests disabled with `describe.skip()` in `src/__tests__/unit/rr-176-auto-parse-logic.test.ts`

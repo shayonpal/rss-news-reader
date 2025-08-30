@@ -52,7 +52,8 @@
     "src/constants/**/*.ts",
     ".next/types/**/*.ts",
     ".next-test/types/**/*.ts",
-    ".next-test-rr102/types/**/*.ts"
+    ".next-test-rr102/types/**/*.ts",
+    ".next-dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

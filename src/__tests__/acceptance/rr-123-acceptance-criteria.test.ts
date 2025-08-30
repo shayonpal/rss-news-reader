@@ -221,7 +221,7 @@ describe("RR-123: Acceptance Criteria Verification", () => {
       try {
         const monitorPath = path.join(
           projectRoot,
-          "scripts/monitor-test-processes.sh"
+          "tests/archive/temp/monitor-test-processes.sh"
         );
         const script = await fs.readFile(monitorPath, "utf-8");
 
@@ -247,7 +247,7 @@ describe("RR-123: Acceptance Criteria Verification", () => {
       try {
         const monitorPath = path.join(
           projectRoot,
-          "scripts/monitor-test-processes.sh"
+          "tests/archive/temp/monitor-test-processes.sh"
         );
         const script = await fs.readFile(monitorPath, "utf-8");
 

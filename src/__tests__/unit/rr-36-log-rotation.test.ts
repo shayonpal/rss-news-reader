@@ -48,7 +48,7 @@ describe("RR-36: Log Management and Rotation", () => {
 
     it("should include all critical JSONL files in rotation list", async () => {
       const scriptContent = fs.readFileSync(scriptPath, "utf-8");
-      
+
       for (const logFile of criticalLogs) {
         expect(scriptContent).toContain(`"${logFile}"`);
       }
@@ -91,16 +91,16 @@ describe("RR-36: Log Management and Rotation", () => {
         "scripts",
         "rotate-health-logs.sh"
       );
-      
+
       // Execute the rotation script
       const { stdout, stderr } = await execAsync(`bash ${scriptPath}`);
-      
+
       // Should complete without errors
       expect(stderr).toBe("");
-      
+
       // Should show completion message
       expect(stdout).toContain("Health Log Rotation Completed");
-      
+
       // Should list current log sizes
       expect(stdout).toContain("Current log sizes:");
     });
@@ -116,7 +116,7 @@ describe("RR-36: Log Management and Rotation", () => {
 
     it("should have log rotation configured for all PM2 services", async () => {
       const { stdout } = await execAsync("pm2 list");
-      
+
       for (const service of services) {
         if (stdout.includes(service)) {
           // Service exists, check that PM2 logrotate will handle it

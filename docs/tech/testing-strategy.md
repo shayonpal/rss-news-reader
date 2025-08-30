@@ -508,6 +508,31 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 - Service Worker registration problems
 - Installation banner timing
 
+## Test Archive Management (RR-242)
+
+### Archive Structure
+
+As part of the test infrastructure optimization epic (RR-241), debug, manual, and temporary test files have been systematically archived to reduce maintenance overhead and improve development velocity:
+
+**Archive Location**: `tests/archive/`
+
+**Archive Organization:**
+
+- **Debug Files** (`tests/archive/debug/`): 11 files including E2E debug tests, debug utilities, and associated unit tests
+- **Manual Files** (`tests/archive/manual/`): 5 files including manual testing procedures, OAuth setup scripts, and manual E2E tests
+- **Temp/Exploratory Files** (`tests/archive/temp/`): 52 files including test scripts, temporary logs, and exploratory validation files
+
+**Impact Summary:**
+
+- **Total Archived**: 68 files (23% reduction in test-related files)
+- **Business Value**: Zero regression - no critical test coverage lost
+- **Maintenance Reduction**: Eliminates maintenance overhead from non-essential test files
+- **Recovery**: All files easily recoverable with complete git history preserved
+
+**Recovery Procedures:**
+
+Comprehensive recovery procedures are documented in `tests/archive/README.md` for restoring individual files or entire categories when needed. All files maintain complete git history through `git mv` commands.
+
 ## Maintenance and Updates
 
 ### Test Suite Maintenance
@@ -518,6 +543,12 @@ npm run test:parallel -- --shard=${{ matrix.shard }}/4
 - New device profile additions
 - Test scenario expansion
 - Performance benchmark updates
+
+**Archive Maintenance (RR-242):**
+
+- Quarterly review of archived files to confirm they remain unnecessary
+- Pre-release validation that no archived files are needed for release testing
+- Periodic cleanup of files archived >6 months with no recovery requests
 
 **Monitoring:**
 
@@ -534,6 +565,7 @@ This testing strategy document is updated with:
 - Browser support matrix changes
 - Performance target adjustments
 - Tool and framework updates
+- Test archive management procedures (RR-242)
 
 ## Quality Gates
 
