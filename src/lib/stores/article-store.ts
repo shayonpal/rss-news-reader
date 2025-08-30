@@ -176,7 +176,7 @@ async function markArticlesAsReadWithSession(
     // Save updated session state
     articleListStateManager.saveListState(state);
 
-    // 5. Also store article IDs separately for the hybrid query
+    // 5. Also store article IDs separately for the hybrid query with feedId context
     // This ensures they can be loaded from the database even when filtered
     const allPreservedIds = [
       ...new Set([
@@ -187,39 +187,44 @@ async function markArticlesAsReadWithSession(
 
     if (allPreservedIds.length > 0) {
       try {
-        // Store with timestamps for expiry management
-        const preservedWithTimestamps = allPreservedIds.map((id) => ({
+        // Store with timestamps and feedId for expiry management and feed-specific filtering
+        const preservedWithMetadata = allPreservedIds.map((id) => ({
           id,
           timestamp: Date.now(),
+          feedId: context.feedId || undefined, // Store the feed context (optional)
         }));
 
         // Get existing preserved IDs
         const existingPreserved = sessionStorage.getItem(
           "preserved_article_ids"
         );
-        let allPreserved = preservedWithTimestamps;
+        
+        type PreservedItem = {
+          id: string;
+          timestamp: number;
+          feedId?: string;
+        };
+        
+        let allPreserved: PreservedItem[] = preservedWithMetadata;
 
         if (existingPreserved) {
           const parsed = JSON.parse(existingPreserved);
           // Merge with existing, keeping newer timestamps
-          const existingMap = new Map(
+          const existingMap = new Map<string, PreservedItem>(
             parsed.map((item: any) => [
               typeof item === "string" ? item : item.id,
               typeof item === "string"
-                ? { id: item, timestamp: Date.now() }
+                ? { id: item, timestamp: Date.now(), feedId: undefined } // Legacy format
                 : item,
             ])
           );
 
-          // Add new items
-          preservedWithTimestamps.forEach((item) => {
+          // Add/update new items with feedId
+          preservedWithMetadata.forEach((item) => {
             existingMap.set(item.id, item);
           });
 
-          allPreserved = Array.from(existingMap.values()) as {
-            id: string;
-            timestamp: number;
-          }[];
+          allPreserved = Array.from(existingMap.values());
         }
 
         // Clean up old entries (>30 minutes) and limit to 50 most recent
@@ -241,7 +246,7 @@ async function markArticlesAsReadWithSession(
           JSON.stringify(validPreserved)
         );
         console.log(
-          `💾 Stored ${validPreserved.length} preserved article IDs for hybrid query`
+          `📾 Stored ${validPreserved.length} preserved article IDs for hybrid query (feedId: ${context.feedId || 'all'})`
         );
       } catch (e) {
         console.error("Failed to store preserved article IDs:", e);
@@ -307,7 +312,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       const readStatusFilter = get().readStatusFilter;
 
       // Get preserved article IDs for hybrid query
-      const getPreservedArticleIds = (): string[] => {
+      const getPreservedArticleIds = (feedId?: string): string[] => {
         try {
           // First check the dedicated preserved IDs storage
           const preservedIds = sessionStorage.getItem("preserved_article_ids");
@@ -315,12 +320,25 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             const parsed = JSON.parse(preservedIds);
             // Clean up expired IDs (older than 30 minutes)
             const now = Date.now();
-            const validIds = parsed
+            const validItems = parsed
               .filter((item: any) => {
-                if (typeof item === "string") return true; // Legacy format
-                return item.timestamp && now - item.timestamp < 30 * 60 * 1000;
-              })
-              .map((item: any) => (typeof item === "string" ? item : item.id));
+                if (typeof item === "string") return true; // Legacy format - no feedId filtering
+                // Check timestamp validity
+                if (item.timestamp && now - item.timestamp >= 30 * 60 * 1000) {
+                  return false;
+                }
+                // Filter by feedId if provided
+                if (feedId && item.feedId && item.feedId !== feedId) {
+                  return false;
+                }
+                return true;
+              });
+            
+            // Extract IDs from valid items
+            const validIds = validItems.map((item: any) => 
+              typeof item === "string" ? item : item.id
+            );
+            
             return validIds;
           }
 
@@ -332,6 +350,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             parsed.expiresAt && new Date(parsed.expiresAt) > new Date();
           if (!isNotExpired) return [];
 
+          // Only use articles from current feed context if feedId matches
+          if (feedId && parsed.feedId && parsed.feedId !== feedId) {
+            return [];
+          }
+
           // Combine auto-read and manual-read articles
           const allPreserved = [
             ...(parsed.autoReadArticles || []),
@@ -341,9 +364,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         } catch {
           return [];
         }
-      };
+      };;
 
-      const preservedArticleIds = getPreservedArticleIds();
+      const preservedArticleIds = getPreservedArticleIds(feedId);
       const hasPreservedArticles = preservedArticleIds.length > 0;
 
       // Apply hybrid query for unread filter with preserved articles
@@ -519,7 +542,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
 
       // Apply read status filter with hybrid query support
       // Get preserved article IDs for hybrid query (same logic as loadArticles)
-      const getPreservedArticleIds = (): string[] => {
+      const getPreservedArticleIds = (feedId?: string): string[] => {
         try {
           // First check the dedicated preserved IDs storage
           const preservedIds = sessionStorage.getItem("preserved_article_ids");
@@ -527,12 +550,25 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             const parsed = JSON.parse(preservedIds);
             // Clean up expired IDs (older than 30 minutes)
             const now = Date.now();
-            const validIds = parsed
+            const validItems = parsed
               .filter((item: any) => {
-                if (typeof item === "string") return true; // Legacy format
-                return item.timestamp && now - item.timestamp < 30 * 60 * 1000;
-              })
-              .map((item: any) => (typeof item === "string" ? item : item.id));
+                if (typeof item === "string") return true; // Legacy format - no feedId filtering
+                // Check timestamp validity
+                if (item.timestamp && now - item.timestamp >= 30 * 60 * 1000) {
+                  return false;
+                }
+                // Filter by feedId if provided
+                if (feedId && item.feedId && item.feedId !== feedId) {
+                  return false;
+                }
+                return true;
+              });
+            
+            // Extract IDs from valid items
+            const validIds = validItems.map((item: any) => 
+              typeof item === "string" ? item : item.id
+            );
+            
             return validIds;
           }
 
@@ -544,6 +580,11 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             parsed.expiresAt && new Date(parsed.expiresAt) > new Date();
           if (!isNotExpired) return [];
 
+          // Only use articles from current feed context if feedId matches
+          if (feedId && parsed.feedId && parsed.feedId !== feedId) {
+            return [];
+          }
+
           // Combine auto-read and manual-read articles
           const allPreserved = [
             ...(parsed.autoReadArticles || []),
@@ -553,9 +594,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         } catch {
           return [];
         }
-      };
+      };;
 
-      const preservedArticleIds = getPreservedArticleIds();
+      const preservedArticleIds = getPreservedArticleIds(selectedFeedId);
       const hasPreservedArticles = preservedArticleIds.length > 0;
 
       if (readStatusFilter === "unread" && hasPreservedArticles) {
