@@ -21,6 +21,7 @@
 
 # caches and alt build dirs
 .cache/
+.serena/cache/
 
 # playwright reports
 playwright-report/

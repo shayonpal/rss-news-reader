@@ -1,6 +1,6 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Monday, August 26, 2025 at 3:15 PM
+**Last Updated:** Friday, August 29, 2025 at 10:20 PM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
 
@@ -665,6 +665,88 @@ states.forEach(state => {
 #### Related Improvements
 
 This fix was discovered and implemented during RR-252 (Violet Focus Ring Implementation), where test isolation issues were preventing reliable validation of CSS class changes across component variants.
+
+## Navigation State Issues
+
+### Feed-Filtered Views Regression in Article State Preservation (RR-240)
+
+**Status:** 🔴 Parked - Requires Architectural Changes  
+**Severity:** High  
+**First Identified:** August 30, 2025  
+**Branch:** `feature/rr-240-fix-feed-filtered-views-regression-in-rr-27-article-state`
+
+#### Description
+
+When navigating from a feed-filtered view to an article and then back to the feed, previously read articles disappear from the unread view instead of being preserved for context. This regression affects the RR-27 article state preservation system specifically for feed-filtered views (tag-filtered views work correctly).
+
+#### User Impact
+
+- Poor user experience when browsing feed-specific content
+- Lost context when returning from article reading
+- Inconsistent behavior between feed and tag filtering
+- Users lose track of what they were reading in specific feeds
+
+#### Root Cause
+
+The issue occurs in `use-article-list-state.ts` where navigation flow is incorrectly interpreted as "feed changes":
+
+1. Feed page: `feedId = 'abc'`
+2. Article page: `feedId = undefined` (no feed context in URL)
+3. Back to feed: `feedId = 'abc'`
+4. System detects this as two feed changes and clears preserved articles
+
+The global state management detecting "changes" from URL parameters is fundamentally unreliable during React/Next.js navigation transitions.
+
+#### Attempted Solutions (All Unsuccessful)
+
+1. **Core State Management Fix**: Enhanced sessionStorage structure to include feedId with preserved articles
+2. **URL Context Preservation**: Added feed/tag parameters to article URLs
+3. **Surgical Detection Logic**: Modified feed change detection to distinguish navigation types
+4. **Multiple Layer Protection**: Added safeguards in both state hooks and storage managers
+
+All approaches failed because multiple layers of state management clear preserved articles during navigation with complex timing dependencies.
+
+#### Required Architectural Solution
+
+**Current Architecture Problem:**
+
+- Global state management in hooks tries to detect "changes" from URL params
+- Article pages have no feed context, causing undefined transitions
+- State clearing happens across multiple components with timing dependencies
+
+**Recommended Solution: App Router Layout Architecture**
+
+```
+app/feeds/[feedId]/layout.tsx     # Feed-scoped state provider
+app/feeds/[feedId]/page.tsx       # Feed article list
+app/feeds/[feedId]/article/[id]/  # Article within feed context
+```
+
+**Why This Architecture Is Essential:**
+
+1. **Eliminates undefined transitions** - feedId always available in layout scope
+2. **Automatic state cleanup** - changing feeds unmounts old layout naturally
+3. **No heuristic detection needed** - feed changes become layout boundaries
+4. **State preservation** - Zustand store stays mounted during article navigation
+
+#### Implementation Complexity
+
+**Why Not Implemented:**
+
+- Requires significant refactoring of routing structure
+- Breaking changes to existing URLs and bookmarks
+- Complex migration strategy needed for existing user workflows
+- Risk of introducing regressions in other navigation flows
+
+#### Work Preserved
+
+Complete implementation and comprehensive test suite (2,366 lines) available in feature branch for future reference:
+
+- Core feedId filtering implementation
+- 43 test cases across unit/integration/E2E levels
+- Backward compatibility with legacy preserved article format
+
+The work demonstrates the technical feasibility but confirms that the architectural approach is necessary for a permanent solution.
 
 ## Future Considerations
 

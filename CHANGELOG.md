@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **2025-08-29 22:20 - docs: Add RR-240 feed-filtered views regression to known issues**
+  - **Navigation State Issues Documentation**: Added comprehensive documentation for RR-240 feed-filtered views regression where previously read articles disappear when navigating back from article view
+  - **Root Cause Analysis**: Documented that navigation flow is incorrectly interpreted as "feed changes" due to global state management detecting URL parameter changes during React/Next.js transitions
+  - **Attempted Solutions**: Documented four unsuccessful approaches including core state management fix, URL context preservation, surgical detection logic, and multiple layer protection
+  - **Architectural Solution Required**: Defined App Router Layout Architecture as necessary solution with feed-scoped state providers to eliminate undefined transitions and enable proper state preservation
+  - **Implementation Complexity**: Documented why architectural solution wasn't implemented due to breaking changes, routing refactoring requirements, and migration complexity
+  - **Work Preservation**: Documented that complete implementation and test suite (2,366 lines, 43 test cases) is preserved in feature branch for future reference
+  - **Status**: Marked as parked with high severity due to architectural changes required and available workarounds for current usage patterns
+  - **Impact**: Developers and stakeholders now have complete documentation of the issue, attempted solutions, and architectural requirements for future resolution
+
 - **2025-08-29 07:52 - docs: Document testing infrastructure issues from RR-256 implementation**
   - **Unit Test Infrastructure Documentation**: Added documentation for Supabase mocking configuration failures (19/22 tests failing) discovered during RR-256 testing with high severity status and suggested resolution approach
   - **E2E Test Suite Issues**: Documented UI element selector failures affecting article-list testid and preventing proper end-to-end validation with medium severity and comprehensive resolution steps

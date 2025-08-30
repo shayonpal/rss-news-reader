@@ -198,13 +198,13 @@ async function markArticlesAsReadWithSession(
         const existingPreserved = sessionStorage.getItem(
           "preserved_article_ids"
         );
-        
+
         type PreservedItem = {
           id: string;
           timestamp: number;
           feedId?: string;
         };
-        
+
         let allPreserved: PreservedItem[] = preservedWithMetadata;
 
         if (existingPreserved) {
@@ -246,7 +246,7 @@ async function markArticlesAsReadWithSession(
           JSON.stringify(validPreserved)
         );
         console.log(
-          `📾 Stored ${validPreserved.length} preserved article IDs for hybrid query (feedId: ${context.feedId || 'all'})`
+          `📾 Stored ${validPreserved.length} preserved article IDs for hybrid query (feedId: ${context.feedId || "all"})`
         );
       } catch (e) {
         console.error("Failed to store preserved article IDs:", e);
@@ -320,25 +320,24 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             const parsed = JSON.parse(preservedIds);
             // Clean up expired IDs (older than 30 minutes)
             const now = Date.now();
-            const validItems = parsed
-              .filter((item: any) => {
-                if (typeof item === "string") return true; // Legacy format - no feedId filtering
-                // Check timestamp validity
-                if (item.timestamp && now - item.timestamp >= 30 * 60 * 1000) {
-                  return false;
-                }
-                // Filter by feedId if provided
-                if (feedId && item.feedId && item.feedId !== feedId) {
-                  return false;
-                }
-                return true;
-              });
-            
+            const validItems = parsed.filter((item: any) => {
+              if (typeof item === "string") return true; // Legacy format - no feedId filtering
+              // Check timestamp validity
+              if (item.timestamp && now - item.timestamp >= 30 * 60 * 1000) {
+                return false;
+              }
+              // Filter by feedId if provided
+              if (feedId && item.feedId && item.feedId !== feedId) {
+                return false;
+              }
+              return true;
+            });
+
             // Extract IDs from valid items
-            const validIds = validItems.map((item: any) => 
+            const validIds = validItems.map((item: any) =>
               typeof item === "string" ? item : item.id
             );
-            
+
             return validIds;
           }
 
@@ -364,7 +363,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         } catch {
           return [];
         }
-      };;
+      };
 
       const preservedArticleIds = getPreservedArticleIds(feedId);
       const hasPreservedArticles = preservedArticleIds.length > 0;
@@ -550,25 +549,24 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
             const parsed = JSON.parse(preservedIds);
             // Clean up expired IDs (older than 30 minutes)
             const now = Date.now();
-            const validItems = parsed
-              .filter((item: any) => {
-                if (typeof item === "string") return true; // Legacy format - no feedId filtering
-                // Check timestamp validity
-                if (item.timestamp && now - item.timestamp >= 30 * 60 * 1000) {
-                  return false;
-                }
-                // Filter by feedId if provided
-                if (feedId && item.feedId && item.feedId !== feedId) {
-                  return false;
-                }
-                return true;
-              });
-            
+            const validItems = parsed.filter((item: any) => {
+              if (typeof item === "string") return true; // Legacy format - no feedId filtering
+              // Check timestamp validity
+              if (item.timestamp && now - item.timestamp >= 30 * 60 * 1000) {
+                return false;
+              }
+              // Filter by feedId if provided
+              if (feedId && item.feedId && item.feedId !== feedId) {
+                return false;
+              }
+              return true;
+            });
+
             // Extract IDs from valid items
-            const validIds = validItems.map((item: any) => 
+            const validIds = validItems.map((item: any) =>
               typeof item === "string" ? item : item.id
             );
-            
+
             return validIds;
           }
 
@@ -594,7 +592,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         } catch {
           return [];
         }
-      };;
+      };
 
       const preservedArticleIds = getPreservedArticleIds(selectedFeedId);
       const hasPreservedArticles = preservedArticleIds.length > 0;
