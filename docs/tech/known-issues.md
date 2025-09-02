@@ -666,6 +666,108 @@ states.forEach(state => {
 
 This fix was discovered and implemented during RR-252 (Violet Focus Ring Implementation), where test isolation issues were preventing reliable validation of CSS class changes across component variants.
 
+## Test Infrastructure Consolidation Issues (RR-243)
+
+### Core RR-27 Functionality Regressions
+
+**Status:** 🔴 Critical  
+**Severity:** High  
+**First Identified:** September 2, 2025 during RR-243 test consolidation
+
+#### Description
+
+During RR-243 test consolidation efforts, critical regressions were discovered in core RR-27 functionality. The "Unread Only" mode is not properly filtering articles, causing significant user experience degradation where users cannot effectively view only unread articles.
+
+#### Impact
+
+- **User Experience**: Unread Only filter not working correctly
+- **Article Visibility**: Articles not properly filtered based on read status
+- **Core Functionality**: Primary filtering mechanism compromised
+- **User Workflow**: Unable to effectively manage reading list
+
+#### Root Cause
+
+- Session storage state persistence failures in articleListState management
+- `articleListState` returning null instead of expected filter state
+- State management not properly maintaining filter preferences across page loads
+- Potential race conditions in filter state initialization
+
+#### Related Components
+
+- Article list filtering system
+- Session storage state management
+- useArticleListState hook
+- Read status filter components
+
+### Session Storage State Persistence Failures
+
+**Status:** 🔴 Critical  
+**Severity:** High  
+**First Identified:** September 2, 2025 during RR-243 test consolidation
+
+#### Description
+
+Session storage state management is experiencing critical failures, with `articleListState` frequently returning null instead of the expected state object. This breaks user preferences persistence and filter state management across page navigation.
+
+#### Technical Details
+
+- `articleListState` returns null when expected to contain filter state
+- Session storage read/write operations not completing successfully
+- State not persisting across browser refresh or navigation
+- Filter preferences reset to default instead of maintaining user selection
+
+#### Impact on User Experience
+
+- Filter settings reset on page reload
+- User must re-select "Unread Only" mode repeatedly
+- Poor user experience with lost state
+- Inconsistent application behavior
+
+#### Suggested Resolution
+
+1. **Debug Session Storage**: Investigate session storage read/write operations
+2. **State Validation**: Add null-checking and fallback state handling
+3. **Error Logging**: Implement logging to track state persistence failures
+4. **Alternative Storage**: Consider localStorage as fallback if sessionStorage fails
+
+### Performance Timeouts in Test Execution
+
+**Status:** 🟡 Known Issue  
+**Severity:** Medium  
+**First Identified:** September 2, 2025 during RR-243 test consolidation
+
+#### Description
+
+Test execution is experiencing significant performance degradation with timeouts affecting test reliability. Tests that should complete in seconds are timing out after extended periods, preventing effective automated validation.
+
+#### Impact
+
+- **Test Reliability**: 75% test failure rate due to timeouts
+- **Development Velocity**: Extended test execution times
+- **CI/CD Pipeline**: Unreliable automated testing
+- **Quality Assurance**: Difficulty validating changes through automated tests
+
+#### Performance Metrics
+
+- Expected execution time: <30 seconds for test suites
+- Actual execution time: 2+ minutes with frequent timeouts
+- Timeout rate: 75% of test scenarios failing
+- Memory pressure during extended test runs
+
+#### Contributing Factors
+
+- Network timeout issues affecting API test scenarios
+- Test infrastructure overhead
+- Concurrent test execution conflicts
+- Memory exhaustion in long-running test suites
+
+#### Mitigation Strategies
+
+- Implement test timeout configuration adjustments
+- Add network retry logic for API tests
+- Optimize test data setup and teardown
+- Consider test parallelization improvements
+
 ## Future Considerations
 
 ### Incremental Sync Limitations

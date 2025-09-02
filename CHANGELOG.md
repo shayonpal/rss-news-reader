@@ -32,6 +32,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Tuesday, September 2, 2025 at 3:11 AM - docs(RR-243): Document test consolidation methodology and discovered issues**
+  - **Technical Documentation Updates**: Created comprehensive RR-243 consolidation methodology documentation including scenario-driven consolidation approach, helper infrastructure patterns, and archive/recovery procedures
+  - **Known Issues Documentation**: Added critical RR-243 discovered issues to known-issues.md including core RR-27 functionality regressions (article visibility failures), session storage state persistence failures (articleListState returning null), and performance timeout issues affecting test reliability
+  - **Test Failure Record Updates**: Enhanced record-of-test-failures.md with detailed RR-243 test execution results documenting 75% test failure rate, performance degradation (4x slower execution), and systematic infrastructure breakdown during consolidation testing
+  - **Consolidation Methodology**: Documented scenario-driven consolidation approach with functional grouping principles, helper infrastructure patterns using modular design, and comprehensive archive structure with recovery procedures for systematic test suite management
+  - **Performance Analysis**: Documented performance optimization strategies including parallel execution configuration, resource management techniques, and expected vs actual performance improvements revealing consolidation challenges and optimization requirements
+  - **Critical Issue Documentation**: Comprehensive documentation of core functionality regressions, session storage failures, and performance degradation discovered during RR-243 implementation with detailed root cause analysis and prevention strategies
+  - **Impact**: Complete technical documentation of RR-243 consolidation methodology enabling systematic test suite management while documenting critical issues and lessons learned for future optimization efforts
+
+- **2025-09-02 03:07 - test(RR-243): Phase 2 test consolidation - 21 RR-27 files → 4 files (83% reduction)**
+  - **Test File Consolidation**: Successfully consolidated 21 individual RR-27 test files into 4 organized test files achieving 83% reduction in test file count while preserving complete scenario coverage
+  - **Helper Infrastructure**: Established comprehensive test helper infrastructure enabling efficient test data management and scenario execution across consolidated test suites
+  - **Archive Methodology**: Implemented systematic archiving approach for exploratory and debug test files maintaining development history while optimizing active test suite structure
+  - **Complete Scenario Preservation**: All original test scenarios maintained through consolidation process ensuring no loss of test coverage or validation capability during optimization
+  - **Known Regressions**: Core RR-27 functionality regressions identified requiring attention to restore original feature behavior while maintaining optimized test structure
+  - **Impact**: Significantly improved test suite maintainability and organization while establishing foundation for future test infrastructure optimization initiatives
+
 - **2025-08-29 07:52 - docs: Document testing infrastructure issues from RR-256 implementation**
   - **Unit Test Infrastructure Documentation**: Added documentation for Supabase mocking configuration failures (19/22 tests failing) discovered during RR-256 testing with high severity status and suggested resolution approach
   - **E2E Test Suite Issues**: Documented UI element selector failures affecting article-list testid and preventing proper end-to-end validation with medium severity and comprehensive resolution steps
