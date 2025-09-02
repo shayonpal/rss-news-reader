@@ -32,6 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- [RR-237] Replaced direct table updates with atomic RPC functions for API usage tracking
+  - Created database migration with `increment_api_usage` and `update_api_usage_zones` RPC functions
+  - Implemented ApiUsageTracker helper class (TypeScript & JavaScript versions) with improved type safety
+  - Updated all 33 occurrences across 10 production files to use new RPC approach
+  - Added comprehensive test suite with 67+ test cases (2400+ lines)
+  - Achieved 66% reduction in database queries (3 queries → 1 RPC call)
+  - Eliminated race conditions through atomic UPSERT operations
+  - Enhanced logging with service context for better debugging
+
 - **Tuesday, September 2, 2025 at 4:32 AM - feat(RR-244): Phase 3 test consolidation - merged 17 contract tests into 11 unit tests with Zod schemas**
   - **Contract Test Consolidation**: Successfully consolidated 17 contract test files into 11 unit test files achieving 35% reduction in test file count while preserving complete validation coverage through Zod schema integration
   - **Runtime Validation Infrastructure**: Created 4 new Zod schema files providing type-safe runtime validation for security (rr-67-security.ts), auto-fetch removal (rr-162-autofetch.ts), HTML entity decoding (rr-170-tags.ts), and sidebar sync (rr-171-sidebar.ts) functionality

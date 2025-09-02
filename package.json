@@ -25,6 +25,7 @@
     "test:e2e": "playwright test",
     "test:performance": "node scripts/check-performance-regression.js",
     "test:watch": "vitest --watch",
+    "test:health": "./scripts/test-health-check.sh",
     "analyze": "cross-env ANALYZE=true next build",
     "clean": "rm -rf .next out node_modules/.cache",
     "format": "prettier --write .",

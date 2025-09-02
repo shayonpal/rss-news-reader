@@ -1,8 +1,10 @@
 import { getAdminClient } from "@/lib/db/supabase-admin";
+import { ApiUsageTracker } from "./api-usage-tracker";
 
 /**
  * Captures and stores Inoreader API rate limit headers in the database
  * for RR-5: Sync Status Display
+ * RR-237: Updated to use ApiUsageTracker with RPC functions
  */
 export async function captureRateLimitHeaders(headers: Headers): Promise<void> {
   try {
@@ -24,7 +26,6 @@ export async function captureRateLimitHeaders(headers: Headers): Promise<void> {
     // If we have any relevant headers, update the database (only what we received)
     if (zone1Usage || zone1Limit || zone2Usage || zone2Limit || resetAfter) {
       const supabase = getAdminClient();
-      const today = new Date().toISOString().split("T")[0];
 
       // Parse values only if present
       const usage1 =
@@ -40,79 +41,36 @@ export async function captureRateLimitHeaders(headers: Headers): Promise<void> {
           ? parseInt(resetAfter.replace(/\.\d+$/, ""))
           : undefined;
 
-      // Check if record exists for today
-      const { data: existing } = await supabase
-        .from("api_usage")
-        .select("id")
-        .eq("service", "inoreader")
-        .eq("date", today)
-        .single();
+      // RR-237: Use ApiUsageTracker with RPC function for atomic updates
+      const tracker = new ApiUsageTracker(supabase);
+      const params: any = {
+        service: "inoreader",
+      };
 
-      if (existing) {
-        // Update existing record
-        console.log("[RateLimitCapture] Attempting to update record:", {
-          id: existing.id,
-          zone1_usage: usage1,
-          zone2_usage: usage2,
+      // Only include defined values in params
+      if (usage1 !== undefined) params.zone1_usage = usage1;
+      if (limit1 !== undefined) params.zone1_limit = limit1;
+      if (usage2 !== undefined) params.zone2_usage = usage2;
+      if (limit2 !== undefined) params.zone2_limit = limit2;
+      if (resetSeconds !== undefined) params.reset_after = resetSeconds;
+
+      const result = await tracker.trackUsageWithFallback(params);
+
+      if (result.success) {
+        console.log("[RateLimitCapture] Successfully updated:", result.data);
+        console.log("[RateLimitCapture] Updated zone usage:", {
+          zone1: `${usage1}/${limit1} (${((usage1 / limit1) * 100).toFixed(1)}%)`,
+          zone2: `${usage2}/${limit2} (${((usage2 / limit2) * 100).toFixed(1)}%)`,
+          resetAfter: `${resetSeconds}s`,
         });
-
-        const updateFields: Record<string, any> = {
-          updated_at: new Date().toISOString(),
-        };
-        if (usage1 !== undefined) updateFields.zone1_usage = usage1;
-        if (limit1 !== undefined) updateFields.zone1_limit = limit1;
-        if (usage2 !== undefined) updateFields.zone2_usage = usage2;
-        if (limit2 !== undefined) updateFields.zone2_limit = limit2;
-        if (resetSeconds !== undefined) updateFields.reset_after = resetSeconds;
-
-        const { data: updateData, error } = await supabase
-          .from("api_usage")
-          .update(updateFields)
-          .eq("id", existing.id)
-          .select();
-
-        if (error) {
-          console.error(
-            "[RateLimitCapture] Failed to update api_usage:",
-            error
-          );
-          console.error("[RateLimitCapture] Update details:", {
-            id: existing.id,
-            attempted_values: { zone1_usage: usage1, zone2_usage: usage2 },
-          });
-        } else {
-          console.log("[RateLimitCapture] Successfully updated:", updateData);
-          console.log("[RateLimitCapture] Updated zone usage:", {
-            zone1: `${usage1}/${limit1} (${((usage1 / limit1) * 100).toFixed(1)}%)`,
-            zone2: `${usage2}/${limit2} (${((usage2 / limit2) * 100).toFixed(1)}%)`,
-            resetAfter: `${resetSeconds}s`,
-          });
-        }
       } else {
-        // Insert new record
-        const insertFields: Record<string, any> = {
-          service: "inoreader",
-          date: today,
-        };
-        if (usage1 !== undefined) insertFields.zone1_usage = usage1;
-        if (limit1 !== undefined) insertFields.zone1_limit = limit1;
-        if (usage2 !== undefined) insertFields.zone2_usage = usage2;
-        if (limit2 !== undefined) insertFields.zone2_limit = limit2;
-        if (resetSeconds !== undefined) insertFields.reset_after = resetSeconds;
-
-        const { error } = await supabase.from("api_usage").insert(insertFields);
-
-        if (error) {
-          console.error(
-            "[RateLimitCapture] Failed to insert api_usage:",
-            error
-          );
-        } else {
-          console.log("[RateLimitCapture] Created zone usage record:", {
-            zone1: `${usage1}/${limit1}`,
-            zone2: `${usage2}/${limit2}`,
-          });
-        }
+        console.error(
+          "[RateLimitCapture] Failed to update api_usage:",
+          result.error
+        );
+        console.error("[RateLimitCapture] Update details:", {
+          attempted_values: { zone1_usage: usage1, zone2_usage: usage2 },
+        });
       }
     }
   } catch (error) {

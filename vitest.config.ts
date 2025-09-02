@@ -13,6 +13,7 @@ export default defineConfig({
       "**/src/__tests__/integration/**",
       "**/src/__tests__/e2e/**",
       "**/node_modules/**",
+      "**/tests/archive/**", // RR-246: Don't run archived tests
     ],
     // RR-183: Optimized configuration for mass test execution
     // RR-188: Store isolation implemented - parallelism restored

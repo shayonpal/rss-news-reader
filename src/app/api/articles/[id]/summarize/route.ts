@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { SummaryPromptBuilder } from "@/lib/ai/summary-prompt";
 import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
 import { ArticleContentService } from "@/lib/services/article-content-service";
+import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -195,34 +196,15 @@ const postHandler = async (
 // Export the wrapped handler with UUID validation
 export const POST = withArticleIdValidation(postHandler);
 
-// Track API usage for rate limiting
+// Track API usage for rate limiting - RR-237: Updated to use ApiUsageTracker
 async function trackApiUsage(service: string, count: number = 1) {
-  const today = new Date().toISOString().split("T")[0];
+  const tracker = new ApiUsageTracker(supabase);
+  const result = await tracker.trackUsageWithFallback({
+    service,
+    increment: count,
+  });
 
-  try {
-    // Try to update existing record
-    const { data: existing } = await supabase
-      .from("api_usage")
-      .select("count")
-      .eq("service", service)
-      .eq("date", today)
-      .single();
-
-    if (existing) {
-      await supabase
-        .from("api_usage")
-        .update({ count: existing.count + count })
-        .eq("service", service)
-        .eq("date", today);
-    } else {
-      // Create new record
-      await supabase.from("api_usage").insert({
-        service,
-        date: today,
-        count,
-      });
-    }
-  } catch (error) {
-    console.error("Failed to track API usage:", error);
+  if (!result.success) {
+    console.error("Failed to track API usage:", result.error);
   }
 }

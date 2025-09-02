@@ -7,6 +7,7 @@ import { SyncConflictDetector } from "@/lib/sync/conflict-detector";
 import { ArticleCleanupService } from "@/lib/services/cleanup-service";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import { captureRateLimitHeaders } from "@/lib/api/capture-rate-limit-headers";
+import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -1184,35 +1185,16 @@ async function checkRateLimit() {
   };
 }
 
-// Track API usage
+// Track API usage - RR-237: Updated to use ApiUsageTracker
 async function trackApiUsage(service: string, count: number = 1) {
-  const today = new Date().toISOString().split("T")[0];
+  const tracker = new ApiUsageTracker(supabase);
+  const result = await tracker.trackUsageWithFallback({
+    service,
+    increment: count,
+  });
 
-  try {
-    // Try to update existing record
-    const { data: existing } = await supabase
-      .from("api_usage")
-      .select("count")
-      .eq("service", service)
-      .eq("date", today)
-      .single();
-
-    if (existing) {
-      await supabase
-        .from("api_usage")
-        .update({ count: existing.count + count })
-        .eq("service", service)
-        .eq("date", today);
-    } else {
-      // Create new record
-      await supabase.from("api_usage").insert({
-        service,
-        date: today,
-        count,
-      });
-    }
-  } catch (error) {
-    console.error("Failed to track API usage:", error);
+  if (!result.success) {
+    console.error("Failed to track API usage:", result.error);
   }
 }
 // Handle OPTIONS requests for CORS preflight
