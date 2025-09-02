@@ -144,7 +144,7 @@ export class StatePreservationHelper {
     try {
       return await locator.inputValue();
     } catch (error) {
-      console.warn('Failed to get selected value:', error);
+      console.warn("Failed to get selected value:", error);
       return undefined;
     }
   }
@@ -157,7 +157,10 @@ export class StatePreservationHelper {
       const activeButton = locator.locator('[aria-pressed="true"], .active');
       return (await activeButton.textContent()) || "all";
     } catch (error) {
-      console.warn('Failed to get active filter value, defaulting to "all":', error);
+      console.warn(
+        'Failed to get active filter value, defaulting to "all":',
+        error
+      );
       return "all";
     }
   }
