@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- [RR-266] AI models table for storing model metadata in `ai_models` database table
+- [RR-266] TypeScript interface `AIModel` for type-safe model handling
+- [RR-266] Seed data for 5 Claude models (opus-4-1, opus-4-0, sonnet-4-0, 3-7-sonnet, 3-5-haiku)
+- [RR-266] RLS policy for public read access to AI models reference data
+
+### Database
+
+- [RR-266] Migration to create `ai_models` table with optimized indexing
+- [RR-266] Migration to remove redundant index on `model_id` column
+
 ## [1.1.0] - 2025-09-03
 
 ### Added
