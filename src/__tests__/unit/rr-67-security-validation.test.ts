@@ -6,15 +6,500 @@
 
 import { describe, it, expect } from "vitest";
 import {
-  ViewBehaviorContracts,
-  FunctionBehaviorContracts,
-  SecurityValidationContracts,
-  StateTransitionContracts,
-  AcceptanceCriteria,
-  IntegrationTestContracts,
-} from "../contracts/rr-67-security-fixes.contract";
+  SecurityIssue,
+  SecurityReport,
+  DatabaseState,
+  FunctionState,
+  ViewState,
+  SecurityIssueSchema,
+  SecurityReportSchema,
+  DatabaseStateSchema,
+  FunctionStateSchema,
+  ViewStateSchema,
+  SecurityValidation,
+  REQUIRED_MIGRATION_SQL,
+} from "@/contracts/rr-67-security";
+
+// Inline contracts to remove dependency on archived files
+const ViewBehaviorContracts = {
+  sync_queue_stats: {
+    before: {
+      securityMode: "SECURITY DEFINER" as const,
+      behavior: "Bypasses RLS - returns all rows regardless of user",
+    },
+    after: {
+      securityMode: "SECURITY INVOKER" as const,
+      behavior: "Respects RLS - returns only rows user has access to",
+      validation: {
+        asServiceRole: "Should return all rows when queried as service role",
+      },
+      expectedForNonOwner:
+        "Returns only rows matching RLS policies for current user",
+      expectedForOwner: "Returns rows based on owner RLS policies",
+    },
+  },
+  author_quality_report: {
+    before: {
+      securityMode: "SECURITY DEFINER" as const,
+      behavior: "Bypasses RLS - exposes all author data",
+    },
+    after: {
+      securityMode: "SECURITY INVOKER" as const,
+      behavior: "Respects RLS - returns only authorized author data",
+      validation: {
+        dataIsolation:
+          "User A should not see authors from User B's private feeds",
+      },
+      expectedForNonOwner:
+        "Returns only authors from user's accessible articles",
+      expectedForOwner: "Returns authors based on owner's article access",
+    },
+  },
+  author_statistics: {
+    before: {
+      securityMode: "SECURITY DEFINER" as const,
+      behavior: "Bypasses RLS - exposes all author metrics",
+    },
+    after: {
+      securityMode: "SECURITY INVOKER" as const,
+      behavior: "Respects RLS - returns only authorized metrics",
+      validation: {
+        countAccuracy: "Article counts should match user's accessible articles",
+      },
+      expectedForNonOwner: "Returns metrics only for accessible authors",
+      expectedForOwner: "Returns metrics based on RLS policies",
+    },
+  },
+  sync_author_health: {
+    before: {
+      securityMode: "SECURITY DEFINER" as const,
+      behavior: "Bypasses RLS - exposes all sync health data",
+    },
+    after: {
+      securityMode: "SECURITY INVOKER" as const,
+      behavior: "Respects RLS - returns only authorized sync data",
+      validation: {
+        userIsolation: "Should not expose other users' sync status",
+      },
+      expectedForNonOwner: "Returns only user's sync health data",
+      expectedForOwner: "Returns sync data based on RLS policies",
+    },
+  },
+};
+
+const FunctionBehaviorContracts = {
+  get_unread_counts_by_feed: {
+    before: {
+      hasSearchPath: false,
+      vulnerability: "Vulnerable to schema hijacking",
+      impact: "Could read from malicious table",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "Always reads from public schema",
+      testValidation: { expected: "Returns counts from public.articles only" },
+    },
+  },
+  get_articles_optimized: {
+    before: {
+      hasSearchPath: false,
+      vulnerability:
+        "Critical vulnerability - main article fetching could be hijacked",
+      impact: "Critical - Could return malicious content",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "Guarantees articles from legitimate tables",
+      testValidation: {
+        expectedBehavior: "Always returns articles from public.articles",
+      },
+    },
+  },
+  refresh_feed_stats: {
+    before: {
+      hasSearchPath: false,
+      vulnerability: "Could refresh wrong materialized view if hijacked",
+      impact: "Statistics could be corrupted",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "Always refreshes public.feed_stats",
+      testValidation: {
+        expected: "public.feed_stats.last_refreshed is updated",
+      },
+    },
+  },
+  add_to_sync_queue: {
+    before: {
+      hasSearchPath: false,
+      vulnerability: "Sync operations could be redirected",
+      impact: "Critical - could disrupt bi-directional sync",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "Ensures sync queue operations use correct table",
+      testValidation: { expectedTable: "public.sync_queue" },
+    },
+  },
+  update_updated_at_column: {
+    before: {
+      hasSearchPath: false,
+      vulnerability: "Trigger function could be manipulated",
+      impact: "Timestamp updates could fail",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "Timestamp updates always use correct schema",
+      testValidation: {
+        expected: "updated_at column in public.articles is updated",
+      },
+    },
+  },
+  increment_api_usage: {
+    before: {
+      hasSearchPath: false,
+      vulnerability: "API usage tracking could be bypassed",
+      impact: "Critical - Could exceed Inoreader API limits",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "API usage always tracked in correct table",
+      testValidation: { expectedTable: "public.api_usage" },
+    },
+  },
+  cleanup_old_sync_queue_entries: {
+    before: {
+      hasSearchPath: false,
+      vulnerability: "Could delete from wrong table",
+      impact: "Queue maintenance could fail",
+    },
+    after: {
+      hasSearchPath: true,
+      searchPath: "public",
+      protection: "Cleanup always targets correct sync_queue table",
+      testValidation: {
+        description: "Verify cleanup targets public.sync_queue only",
+      },
+    },
+  },
+};
+
+const SecurityValidationContracts = {
+  beforeMigration: {
+    errorCount: 4,
+    warningCount: 20,
+    totalIssues: 24,
+    criticalIssues: [
+      "sync_queue_stats uses SECURITY DEFINER",
+      "author_quality_report uses SECURITY DEFINER",
+      "author_statistics uses SECURITY DEFINER",
+      "sync_author_health uses SECURITY DEFINER",
+    ],
+    highPriorityIssues: [
+      "get_unread_counts_by_feed missing search_path",
+      "get_articles_optimized missing search_path",
+      "refresh_feed_stats missing search_path",
+      "add_to_sync_queue missing search_path",
+      "update_updated_at_column missing search_path",
+      "increment_api_usage missing search_path",
+      "cleanup_old_sync_queue_entries missing search_path",
+    ],
+  },
+  afterMigration: {
+    errorCount: 0,
+    warningCount: 13,
+    totalIssues: 13,
+    criticalIssues: [],
+    validation: {
+      query:
+        "SELECT viewname, definition FROM pg_views WHERE schemaname = 'public' AND definition ILIKE '%SECURITY DEFINER%';",
+      expectedRows: 0,
+    },
+  },
+  functionsValidation: {
+    query:
+      "SELECT p.proname, p.proconfig FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname IN ('get_unread_counts_by_feed', 'get_articles_optimized', 'refresh_feed_stats', 'add_to_sync_queue', 'update_updated_at_column', 'increment_api_usage', 'cleanup_old_sync_queue_entries');",
+  },
+};
+
+const StateTransitionContracts = {
+  migrationSteps: [
+    {
+      step: 1,
+      description: "Drop existing SECURITY DEFINER views",
+      action:
+        "DROP VIEW IF EXISTS sync_queue_stats, author_quality_report, author_statistics, sync_author_health CASCADE",
+    },
+    {
+      step: 2,
+      description: "Recreate views with SECURITY INVOKER",
+      action: "CREATE VIEW ... WITH (security_invoker = true)",
+    },
+    {
+      step: 3,
+      description: "Update functions with search_path",
+      action: "ALTER FUNCTION ... SET search_path = public",
+      validation: {
+        preserveBehavior: "Function logic remains unchanged",
+        onlySecurityImproved: true,
+      },
+    },
+  ],
+  rollbackStrategy: {
+    canRollback: true,
+    warning: "Rollback would reintroduce security vulnerabilities",
+  },
+  dataIntegrity: {
+    description: "No data should be lost during migration",
+    validation: [
+      { check: "Row counts remain same" },
+      { check: "View results remain consistent" },
+      { check: "Function results unchanged" },
+    ],
+  },
+  performanceImpact: {
+    expected: "Minimal to none",
+    acceptableThreshold: "< 5% performance degradation",
+  },
+};
+
+const AcceptanceCriteria = {
+  required: [
+    {
+      id: "AC-1",
+      description: "All 4 SECURITY DEFINER views converted to SECURITY INVOKER",
+      testQuery:
+        "SELECT COUNT(*) = 0 as passed FROM pg_views WHERE viewname IN ('sync_queue_stats', 'author_quality_report', 'author_statistics', 'sync_author_health') AND definition ILIKE '%SECURITY DEFINER%'",
+      mustPass: true,
+    },
+    {
+      id: "AC-2",
+      description: "All 7 critical functions have search_path set to public",
+      testQuery:
+        "SELECT COUNT(*) = 7 as passed FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid WHERE n.nspname = 'public' AND p.proname IN ('get_unread_counts_by_feed', 'get_articles_optimized', 'refresh_feed_stats', 'add_to_sync_queue', 'update_updated_at_column', 'increment_api_usage', 'cleanup_old_sync_queue_entries') AND p.proconfig::text LIKE '%search_path=public%'",
+      mustPass: true,
+    },
+    {
+      id: "AC-3",
+      description: "Security advisor shows 0 ERROR level issues",
+      validation: "Run Supabase security advisor and verify errorCount = 0",
+      mustPass: true,
+    },
+    {
+      id: "AC-4",
+      description: "46% reduction in total security warnings achieved",
+      validation: "Total warnings reduced from 24 to ~13",
+      mustPass: true,
+    },
+    {
+      id: "AC-5",
+      description: "All existing functionality continues to work",
+      tests: [
+        "Article fetching works",
+        "Sync pipeline operates correctly",
+        "Monitoring dashboards show correct data",
+        "RLS policies are respected",
+      ],
+      mustPass: true,
+    },
+  ],
+  optional: [
+    {
+      id: "OPT-1",
+      description: "Performance remains within 5% of baseline",
+      nice_to_have: true,
+    },
+    {
+      id: "OPT-2",
+      description: "Migration completes in under 1 second",
+      nice_to_have: true,
+    },
+  ],
+};
+
+const IntegrationTestContracts = {
+  syncPipeline: {
+    tests: [
+      {
+        name: "Manual sync trigger",
+        endpoint: "POST /api/sync",
+        affectedFunctions: ["add_to_sync_queue", "increment_api_usage"],
+      },
+      {
+        name: "Sync queue processing",
+        process: "sync_queue_processor",
+        affectedViews: ["sync_queue_stats"],
+      },
+      {
+        name: "API usage tracking",
+        validation: "API calls counted correctly with search_path",
+      },
+    ],
+  },
+  articleOperations: {
+    tests: [
+      {
+        name: "Fetch articles",
+        function: "get_articles_optimized",
+        expectedBehavior:
+          "Returns correct articles with search_path protection",
+      },
+      {
+        name: "Unread counts",
+        function: "get_unread_counts_by_feed",
+        expectedBehavior: "Returns accurate counts from correct schema",
+      },
+      {
+        name: "Feed statistics",
+        function: "refresh_feed_stats",
+        expectedBehavior: "Updates correct materialized view",
+      },
+    ],
+  },
+  monitoringDashboard: {
+    tests: [
+      {
+        name: "Author quality metrics",
+        view: "author_quality_report",
+        expectedBehavior: "Shows only user's author data",
+      },
+      {
+        name: "Author statistics",
+        view: "author_statistics",
+        expectedBehavior: "Statistics scoped to user's articles",
+      },
+      {
+        name: "Sync health",
+        view: "sync_author_health",
+        expectedBehavior: "Shows only user's sync status",
+      },
+    ],
+  },
+};
 
 describe("RR-67: Security Validation Unit Tests", () => {
+  describe("Zod Schema Validation", () => {
+    it("should validate security issues with Zod schema", () => {
+      const issue: SecurityIssue = {
+        type: "missing_rls",
+        severity: "error",
+        resource: "articles",
+        message: "Row Level Security is not enabled",
+      };
+
+      const validated = SecurityIssueSchema.parse(issue);
+      expect(validated.type).toBe("missing_rls");
+      expect(validated.severity).toBe("error");
+    });
+
+    it("should validate security reports", () => {
+      const report: SecurityReport = {
+        errorCount: 2,
+        warningCount: 1,
+        errors: [
+          {
+            type: "missing_permission",
+            severity: "error",
+            resource: "users",
+            message: "Missing SELECT permission",
+          },
+        ],
+        warnings: [
+          {
+            type: "exposed_field",
+            severity: "warning",
+            resource: "profiles",
+            message: "Email field exposed",
+            location: "public.profiles",
+          },
+        ],
+      };
+
+      const validated = SecurityValidation.validateReport(report);
+      expect(validated.errorCount).toBe(2);
+      expect(validated.errors).toHaveLength(1);
+    });
+
+    it("should validate database state requirements", () => {
+      const validState: DatabaseState = {
+        hasCorrectPermissions: true,
+        hasRequiredConstraints: true,
+        hasRLSEnabled: true,
+        exposedFields: [],
+      };
+
+      const validated = SecurityValidation.validateDatabaseState(validState);
+      expect(validated.hasRLSEnabled).toBe(true);
+
+      // Test invalid state
+      const invalidState: DatabaseState = {
+        hasCorrectPermissions: false,
+        hasRequiredConstraints: true,
+        hasRLSEnabled: false,
+        exposedFields: ["password", "api_key"],
+      };
+
+      expect(() =>
+        SecurityValidation.validateDatabaseState(invalidState)
+      ).toThrow("Row Level Security must be enabled");
+    });
+
+    it("should validate function security", () => {
+      const secureFunction: FunctionState = {
+        name: "get_user_data",
+        hasSecurityDefiner: false,
+        hasCorrectOwner: true,
+        performsAuthCheck: true,
+      };
+
+      const validated =
+        SecurityValidation.validateFunctionSecurity(secureFunction);
+      expect(validated.performsAuthCheck).toBe(true);
+
+      // Test insecure function
+      const insecureFunction: FunctionState = {
+        name: "get_all_data",
+        hasSecurityDefiner: true,
+        hasCorrectOwner: true,
+        performsAuthCheck: false,
+      };
+
+      expect(() =>
+        SecurityValidation.validateFunctionSecurity(insecureFunction)
+      ).toThrow("Function get_all_data does not perform authentication check");
+    });
+
+    it("should validate view security", () => {
+      const secureView: ViewState = {
+        name: "public_articles",
+        hasRLSEnabled: true,
+        hasCorrectPermissions: true,
+        exposesPrivateData: false,
+      };
+
+      const validated = SecurityValidation.validateViewSecurity(secureView);
+      expect(validated.exposesPrivateData).toBe(false);
+
+      // Test insecure view
+      const insecureView: ViewState = {
+        name: "user_secrets",
+        hasRLSEnabled: false,
+        hasCorrectPermissions: true,
+        exposesPrivateData: true,
+      };
+
+      expect(() =>
+        SecurityValidation.validateViewSecurity(insecureView)
+      ).toThrow("View user_secrets exposes private data");
+    });
+  });
+
   describe("Contract Validation", () => {
     it("should define all required views for security fixes", () => {
       const viewNames = Object.keys(ViewBehaviorContracts);
@@ -294,6 +779,26 @@ describe("RR-67: Security Validation Unit Tests", () => {
       expect(viewsCovered).toContain("author_statistics");
       expect(viewsCovered).toContain("sync_author_health");
     });
+  });
+});
+
+/**
+ * These tests validate the required migration SQL from Zod contracts
+ */
+describe("Required Migration SQL", () => {
+  it("should define all required migration SQL statements", () => {
+    expect(REQUIRED_MIGRATION_SQL.enableRLS).toBe(
+      "ALTER TABLE articles ENABLE ROW LEVEL SECURITY;"
+    );
+    expect(REQUIRED_MIGRATION_SQL.createPolicy).toContain(
+      'CREATE POLICY "authenticated_access"'
+    );
+    expect(REQUIRED_MIGRATION_SQL.revokePublicAccess).toContain(
+      "REVOKE ALL ON articles FROM public"
+    );
+    expect(REQUIRED_MIGRATION_SQL.grantAuthenticatedAccess).toContain(
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON articles TO authenticated"
+    );
   });
 });
 

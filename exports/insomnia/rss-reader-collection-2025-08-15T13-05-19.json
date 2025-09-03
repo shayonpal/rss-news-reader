@@ -1,0 +1,1018 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-08-15T13:05:19.009Z",
+  "__export_source": "rss-reader-openapi-converter",
+  "resources": [
+    {
+      "_id": "wrk_mecucalc0ua10xv",
+      "_type": "workspace",
+      "name": "RSS News Reader API",
+      "description": "Complete API documentation for the RSS News Reader application including health monitoring, sync operations, articles management, and tags CRUD operations",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_mecucalcm8yf766",
+      "_type": "environment",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Base Environment",
+      "data": {},
+      "dataPropertyOrder": {},
+      "color": null,
+      "metaSortKey": 1
+    },
+    {
+      "_id": "env_mecucalcije1f9v",
+      "_type": "environment",
+      "parentId": "env_mecucalcm8yf766",
+      "name": "RSS Reader Environment",
+      "data": {
+        "base_url": "http://localhost:3000/reader",
+        "api_key": "{{ _.api_key }}",
+        "auth_token": "{{ _.auth_token }}",
+        "syncId": "{{ _.syncId }}",
+        "id": "{{ _.id }}"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "api_key", "auth_token"]
+      },
+      "color": "#7d69cb",
+      "metaSortKey": 2
+    },
+    {
+      "_id": "fld_mecucalc081tl8o",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Health",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1000
+    },
+    {
+      "_id": "req_mecucalcvp8hh4i",
+      "_type": "request",
+      "parentId": "fld_mecucalc081tl8o",
+      "name": "Get overall application health status",
+      "description": "Main application health check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health",
+      "body": {},
+      "parameters": [
+        {
+          "name": "ping",
+          "value": "{{ _.ping }}",
+          "disabled": true,
+          "description": "Set to \"true\" for simple ping response"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2000,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcgrk4cvo",
+      "_type": "request",
+      "parentId": "fld_mecucalc081tl8o",
+      "name": "Get application health with version information",
+      "description": "Application-specific health check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health/app",
+      "body": {},
+      "parameters": [
+        {
+          "name": "ping",
+          "value": "{{ _.ping }}",
+          "disabled": true,
+          "description": "Set to \"true\" for simple ping response"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2001,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalccifhyv9",
+      "_type": "request",
+      "parentId": "fld_mecucalc081tl8o",
+      "name": "Get database connection status and performance",
+      "description": "Database connectivity health check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health/db",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2002,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcd16upvw",
+      "_type": "request",
+      "parentId": "fld_mecucalc081tl8o",
+      "name": "Get cron job status and recent execution history",
+      "description": "Cron job health check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health/cron",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2003,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalclwso4ph",
+      "_type": "request",
+      "parentId": "fld_mecucalc081tl8o",
+      "name": "Get parsing metrics and performance statistics",
+      "description": "Content parsing health check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health/parsing",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2004,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcpxojadd",
+      "_type": "request",
+      "parentId": "fld_mecucalc081tl8o",
+      "name": "Get Claude API connectivity and status",
+      "description": "Claude AI API health check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health/claude",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2005,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucalcnu5yigm",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Developer Tools",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1001
+    },
+    {
+      "_id": "req_mecucalcjyworu1",
+      "_type": "request",
+      "parentId": "fld_mecucalcnu5yigm",
+      "name": "Export OpenAPI as Insomnia collection",
+      "description": "Exports the entire OpenAPI specification as an Insomnia v4 collection file. Automatically detects the base URL from request headers (supports localhost, 127.0.0.1, and Tailscale IPs). The collection includes all documented endpoints organized by tags, with environment variables for configuration. Responses are cached for 5 minutes and support ETag-based caching. Rate limited to 1 request per minute per IP.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/insomnia.json",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2006,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucalcrimx7x9",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Sync Operations",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1002
+    },
+    {
+      "_id": "req_mecucalcxijirjo",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "✨ Trigger full sync (Uses Inoreader API)",
+      "description": "⚠️ **MAKES INOREADER API CALLS** - Trigger a full synchronization of RSS feeds and articles. This endpoint makes multiple API calls to Inoreader including: subscription list, tag list, unread counts, and article stream content. Use judiciously to avoid hitting API rate limits.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/sync",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2007,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcg3hcx4l",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "Get sync operation status (Local only)",
+      "description": "✅ **NO API CALLS** - Get the current status of a specific sync operation. This endpoint only reads from local file system or database and does not make any external API calls.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/sync/status/{{ _.syncId }}",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2008,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalc4l6z7ro",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "Get last sync timestamp (Local only)",
+      "description": "✅ **NO API CALLS** - Get the timestamp of the last successful sync operation. This endpoint only queries the local database and does not make any external API calls.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/sync/last-sync",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2009,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcitntxbs",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "Update sync metadata (Local only)",
+      "description": "✅ **NO API CALLS** - Update sync-related metadata key-value pairs. This endpoint only updates the local database and does not make any external API calls.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/sync/metadata",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"sync_interval\": \"30\",\n  \"last_sync_count\": 150,\n  \"api_calls_count\": {\n    \"increment\": 1\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2010,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalc7q1xjya",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "Refresh materialized view (Local only)",
+      "description": "✅ **NO API CALLS** - Refresh the feed_stats materialized view for updated article counts. This endpoint only refreshes the database view and does not make any external API calls.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/sync/refresh-view",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2011,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcmdz3cmf",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "Bidirectional sync (501 - Not Implemented)",
+      "description": "✅ **NO API CALLS** - Bidirectional sync endpoint (currently returns 501 - handled by background service). The actual sync runs as a separate background service on port 3001.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/sync/bidirectional",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2012,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcpba09if",
+      "_type": "request",
+      "parentId": "fld_mecucalcrimx7x9",
+      "name": "Get API usage statistics (Local only)",
+      "description": "✅ **NO API CALLS** - Get current API usage statistics and remaining quota. This endpoint reads cached rate limit data from the database (captured from previous API responses) and does not make any external API calls.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/sync/api-usage",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2013,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucalci2p0h1c",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Articles",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1003
+    },
+    {
+      "_id": "req_mecucalcffz1yaa",
+      "_type": "request",
+      "parentId": "fld_mecucalci2p0h1c",
+      "name": "Get paginated articles",
+      "description": "Retrieve articles with cursor-based pagination. Supports filtering by feed, user, and read status. Articles are sorted by publication date (newest first).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/articles/paginated",
+      "body": {},
+      "parameters": [
+        {
+          "name": "cursor",
+          "value": "{{ _.cursor }}",
+          "disabled": true,
+          "description": "Pagination cursor from previous response"
+        },
+        {
+          "name": "direction",
+          "value": "{{ _.direction }}",
+          "disabled": true,
+          "description": "Pagination direction"
+        },
+        {
+          "name": "pageSize",
+          "value": "{{ _.pageSize }}",
+          "disabled": true,
+          "description": "Number of articles per page (max 100)"
+        },
+        {
+          "name": "feedId",
+          "value": "{{ _.feedId }}",
+          "disabled": true,
+          "description": "Filter by feed ID"
+        },
+        {
+          "name": "userId",
+          "value": "{{ _.userId }}",
+          "disabled": true,
+          "description": "Filter by user ID"
+        },
+        {
+          "name": "isRead",
+          "value": "{{ _.isRead }}",
+          "disabled": true,
+          "description": "Filter by read status (true/false)"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2014,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcdq7uit3",
+      "_type": "request",
+      "parentId": "fld_mecucalci2p0h1c",
+      "name": "✨ Extract article content (External fetch)",
+      "description": "⚠️ **MAKES EXTERNAL HTTP CALLS** - Extract full content from article URL. This endpoint fetches the article webpage and extracts the main content. Rate limited to prevent abuse.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/articles/{{ _.id }}/fetch-content",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2015,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalclvfvcct",
+      "_type": "request",
+      "parentId": "fld_mecucalci2p0h1c",
+      "name": "✨ Generate AI summary (Claude API)",
+      "description": "⚠️ **USES CLAUDE API** - Generate AI summary for article using Claude. Requires ANTHROPIC_API_KEY. Caches summaries to avoid repeated API calls.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/articles/{{ _.id }}/summarize",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"regenerate\": false\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2016,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcx8k49ev",
+      "_type": "request",
+      "parentId": "fld_mecucalci2p0h1c",
+      "name": "Get article tags",
+      "description": "Get all tags associated with a specific article. Returns empty array if article has no tags.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/articles/{{ _.id }}/tags",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2017,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucalccy6inwx",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Tags",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1004
+    },
+    {
+      "_id": "req_mecucalcw5w8zua",
+      "_type": "request",
+      "parentId": "fld_mecucalccy6inwx",
+      "name": "List tags",
+      "description": "List all tags for the authenticated user with filtering, sorting, and pagination. Results are automatically scoped to the user's tags only. Includes article counts and unread counts for each tag.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/tags",
+      "body": {},
+      "parameters": [
+        {
+          "name": "search",
+          "value": "{{ _.search }}",
+          "disabled": true,
+          "description": "Search tags by name"
+        },
+        {
+          "name": "sortBy",
+          "value": "{{ _.sortBy }}",
+          "disabled": true,
+          "description": "Sort field"
+        },
+        {
+          "name": "order",
+          "value": "{{ _.order }}",
+          "disabled": true,
+          "description": "Sort order"
+        },
+        {
+          "name": "limit",
+          "value": "{{ _.limit }}",
+          "disabled": true,
+          "description": "Results per page"
+        },
+        {
+          "name": "offset",
+          "value": "{{ _.offset }}",
+          "disabled": true,
+          "description": "Pagination offset"
+        },
+        {
+          "name": "includeEmpty",
+          "value": "{{ _.includeEmpty }}",
+          "disabled": true,
+          "description": "Include tags with no articles (true/false)"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2018,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalc8oc99e6",
+      "_type": "request",
+      "parentId": "fld_mecucalccy6inwx",
+      "name": "Create tag",
+      "description": "Create a new tag. Automatically generates a URL-friendly slug from the name. Tags must have unique slugs per user. The user_id is automatically set from the authenticated session context.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/tags",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"AI Research\",\n  \"color\": \"#8B5CF6\",\n  \"description\": \"Articles about artificial intelligence research\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2019,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcp7na7s1",
+      "_type": "request",
+      "parentId": "fld_mecucalccy6inwx",
+      "name": "Get tag details",
+      "description": "Get details for a specific tag owned by the authenticated user. Access is automatically restricted to user's own tags. Optionally include associated articles.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/tags/{{ _.id }}",
+      "body": {},
+      "parameters": [
+        {
+          "name": "includeArticles",
+          "value": "{{ _.includeArticles }}",
+          "disabled": true,
+          "description": "Include associated articles (true/false)"
+        },
+        {
+          "name": "limit",
+          "value": "{{ _.limit }}",
+          "disabled": true,
+          "description": "Max articles to include"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2020,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalcn6hq184",
+      "_type": "request",
+      "parentId": "fld_mecucalccy6inwx",
+      "name": "Delete tag",
+      "description": "Delete a tag owned by the authenticated user. This will remove the tag and all article associations (CASCADE delete on article_tags). Access is automatically restricted to user's own tags.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/tags/{{ _.id }}",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2021,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucalclxc1pak",
+      "_type": "request",
+      "parentId": "fld_mecucalccy6inwx",
+      "name": "Update tag",
+      "description": "Update an existing tag owned by the authenticated user. All fields are optional. Updating the name will regenerate the slug. Access is automatically restricted to user's own tags.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/tags/{{ _.id }}",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Machine Learning\",\n  \"color\": \"#10B981\",\n  \"description\": \"Updated description for the tag\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2022,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucalcesjppgj",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Authentication",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1005
+    },
+    {
+      "_id": "req_mecucalcwmuibu6",
+      "_type": "request",
+      "parentId": "fld_mecucalcesjppgj",
+      "name": "Check OAuth authentication status",
+      "description": "Validates the local OAuth token file status without making API calls. Checks token existence, encryption, age, and expiration (365-day lifetime).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/auth/inoreader/status",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2023,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucalcm6lfya5",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Testing",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1006
+    },
+    {
+      "_id": "req_mecucald02qrauo",
+      "_type": "request",
+      "parentId": "fld_mecucalcm6lfya5",
+      "name": "Test API connectivity and rate limits",
+      "description": "Makes a single API call to Inoreader to validate token functionality and retrieve rate limit headers. Uses only 1 API call to check sync readiness.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/test/check-headers",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2024,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_mecucald16ie20i",
+      "_type": "request_group",
+      "parentId": "wrk_mecucalc0ua10xv",
+      "name": "Inoreader",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1007
+    },
+    {
+      "_id": "req_mecucald7gr9wd7",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Get Inoreader user information",
+      "description": "Retrieves authenticated user's profile information from Inoreader. Requires valid OAuth token stored in encrypted file (~/.rss-reader/tokens.json). Tokens are encrypted using AES-256-GCM algorithm with HMAC authentication for secure storage.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inoreader/user-info",
+      "body": {},
+      "parameters": [
+        {
+          "name": "trigger",
+          "value": "{{ _.trigger }}",
+          "disabled": true,
+          "description": "Source that triggered this request (for tracking)"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2025,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucald24x2h1f",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Get user's feed subscriptions",
+      "description": "Retrieves the list of RSS feeds the authenticated user is subscribed to. Uses encrypted OAuth tokens (AES-256-GCM) and automatically refreshes expired tokens when possible.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inoreader/subscriptions",
+      "body": {},
+      "parameters": [
+        {
+          "name": "trigger",
+          "value": "{{ _.trigger }}",
+          "disabled": true,
+          "description": "Source that triggered this request"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2026,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucaldqbzezup",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Get paginated article stream",
+      "description": "Retrieves articles from a specific stream (feed, folder, or tag). Supports pagination via continuation tokens. Authentication via encrypted OAuth tokens (AES-256-GCM with 16-byte IV and HMAC auth tag).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inoreader/stream-contents",
+      "body": {},
+      "parameters": [
+        {
+          "name": "streamId",
+          "value": "{{ _.streamId }}",
+          "disabled": false,
+          "description": "Stream identifier (required)"
+        },
+        {
+          "name": "n",
+          "value": "{{ _.n }}",
+          "disabled": true,
+          "description": "Number of items to return (default 20)"
+        },
+        {
+          "name": "r",
+          "value": "{{ _.r }}",
+          "disabled": true,
+          "description": "Sort order (n=newest first, o=oldest first)"
+        },
+        {
+          "name": "c",
+          "value": "{{ _.c }}",
+          "disabled": true,
+          "description": "Continuation token for pagination"
+        },
+        {
+          "name": "xt",
+          "value": "{{ _.xt }}",
+          "disabled": true,
+          "description": "Exclude target state (e.g., read items)"
+        },
+        {
+          "name": "ot",
+          "value": "{{ _.ot }}",
+          "disabled": true,
+          "description": "Only return items older than this timestamp"
+        },
+        {
+          "name": "trigger",
+          "value": "{{ _.trigger }}",
+          "disabled": true,
+          "description": "Source that triggered this request"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2027,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucald1xwmxgp",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Get unread counts per feed",
+      "description": "Retrieves the number of unread articles for each subscription and category.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inoreader/unread-counts",
+      "body": {},
+      "parameters": [
+        {
+          "name": "trigger",
+          "value": "{{ _.trigger }}",
+          "disabled": true,
+          "description": "Source that triggered this request"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2028,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucaldwtphlzz",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Edit article tags/states",
+      "description": "Modifies tags or states (read/starred/etc) for articles. Accepts form-encoded data with article IDs and actions. Uses encrypted OAuth tokens stored with AES-256-GCM encryption.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/inoreader/edit-tag",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": []
+      },
+      "parameters": [
+        {
+          "name": "trigger",
+          "value": "{{ _.trigger }}",
+          "disabled": true,
+          "description": "Source that triggered this request"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2029,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucaldyebx46v",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Debug token status",
+      "description": "[DEV ONLY] Displays current OAuth token status for debugging authentication issues. Tokens are stored in ~/.rss-reader/tokens.json using AES-256-GCM encryption:\n\n**Encryption Details:**\n- Algorithm: AES-256-GCM (Galois/Counter Mode)\n- Key: 256-bit key derived from TOKEN_ENCRYPTION_KEY env variable (base64 encoded)\n- IV: 16-byte random initialization vector\n- Auth Tag: 16-byte HMAC authentication tag for integrity\n- Storage Format: JSON with 'encrypted', 'iv', and 'authTag' fields\n\nThis endpoint reads the encrypted token file, decrypts it, and reports token age and validity.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inoreader/debug",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2030,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucaldzh93df3",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Development API proxy",
+      "description": "[DEV ONLY] Proxies arbitrary Inoreader API endpoints for testing and development. Returns response data with rate limit headers.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/inoreader/dev",
+      "body": {},
+      "parameters": [
+        {
+          "name": "endpoint",
+          "value": "{{ _.endpoint }}",
+          "disabled": false,
+          "description": "Inoreader API endpoint to call"
+        },
+        {
+          "name": "method",
+          "value": "{{ _.method }}",
+          "disabled": true,
+          "description": "HTTP method (default GET)"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 2031,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_mecucaldvicwwmf",
+      "_type": "request",
+      "parentId": "fld_mecucald16ie20i",
+      "name": "Development API proxy (POST)",
+      "description": "[DEV ONLY] Proxies POST requests to Inoreader API endpoints for testing write operations. Uses encrypted OAuth tokens stored with AES-256-GCM encryption for authentication.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/inoreader/dev",
+      "body": {
+        "mimeType": "application/json",
+        "text": "null"
+      },
+      "parameters": [
+        {
+          "name": "endpoint",
+          "value": "{{ _.endpoint }}",
+          "disabled": false,
+          "description": "Inoreader API endpoint to call"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2032,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    }
+  ]
+}

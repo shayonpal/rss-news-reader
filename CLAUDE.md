@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code when working with this repository.
 **Most project knowledge is maintained in Serena MCP memories (.serena/memories/)**
 
-## BEHAVIORAL RULES (MUST DISPLAY AT START OF EVERY RESPONSE)
+## BEHAVIORAL RULES
 
 1. NEVER commit code without explicit user permission
 2. ALWAYS run tests before declaring fixes complete
@@ -32,11 +32,43 @@ This file provides guidance to Claude Code when working with this repository.
 - `task_completion_checklist.md` - Pre-commit requirements
 - `project_structure.md` - Directory organization
 
+## UI/UX Design System
+
+**Unified Liquid Glass System**: [`docs/ui-ux/unified-liquid-glass-system.md`](docs/ui-ux/unified-liquid-glass-system.md)
+
+- Complete CSS class reference and component mapping
+- Master control variables for single-source design adjustments
+- iOS 26 specification compliance and implementation guidelines
+
 ### Use Serena Instead Of:
 
 - **Read/Grep** → `find_symbol`, `search_for_pattern`, `get_symbols_overview`
 - **Edit/Write** → `replace_symbol_body`, `insert_after_symbol`
 - **Full file reads** → Navigate to specific symbols
+
+## OpenAPI Documentation
+
+**Swagger UI**: http://100.96.166.53:3000/reader/api-docs
+**OpenAPI Spec**: http://100.96.166.53:3000/reader/api-docs/openapi.json
+
+### Documentation Requirements
+
+- ALL new API endpoints MUST be documented with Zod schemas in `src/lib/openapi/registry.ts`
+- Use `scripts/validate-openapi-coverage.js` to check coverage before commits
+- Health endpoints (6 total) are fully documented as MVP baseline
+- Interactive "Try it out" functionality enabled for all endpoints
+- Response examples required for 200/500 status codes
+
+### Current Coverage
+
+Health Endpoints (6/6):
+
+- ✅ GET /api/health - Main health check
+- ✅ GET /api/health/app - Application health with version (RR-114)
+- ✅ GET /api/health/db - Database health with connection alias (RR-114)
+- ✅ GET /api/health/cron - Cron job health and scheduling
+- ✅ GET /api/health/parsing - Content parsing metrics
+- ✅ GET /api/health/claude - Claude AI API connectivity
 
 ## Environment Variables
 
@@ -54,6 +86,21 @@ Key variables stored in `.env` (never commit):
 - Use Linear MCP Server for issue management
 - Update issue status when completing work
 - Reference issue numbers in commits (e.g., RR-102)
+
+### Testing Sync Without Consuming API Calls
+
+**Use `/api/test/check-headers` to validate sync readiness with only 1 API call:**
+
+```bash
+curl -s http://100.96.166.53:3000/reader/api/test/check-headers | jq .
+```
+
+- ✅ `success: true` → Token valid, sync will work
+- ❌ `success: false` → Token invalid or API unreachable
+- Returns rate limit headers and user info
+- Located at: `src/app/api/test/check-headers/route.ts`
+
+**Alternative (no API calls):** `/api/auth/inoreader/status` - Only checks if token file exists and is readable locally
 
 ## Sub-Agents
 

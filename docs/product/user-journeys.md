@@ -48,6 +48,14 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Experience_: Clear unread counts per feed
    - _Thought_: "I'll start with Ars Technica (12)"
 
+3a. **Navigating to Filtered View (RR-216 Enhancement)**
+
+- _Context_: Taps on Ars Technica feed
+- _Emotion_: Expectant
+- _Action_: Navigation to Articles tab with feed filter
+- _Experience_: Immediately sees only Ars Technica articles, no flash of all articles
+- _Thought_: "Perfect, exactly what I wanted to see"
+
 4. **Reading with AI Summaries**
    - _Context_: Limited time before work
    - _Emotion_: Efficient, satisfied
@@ -60,6 +68,7 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 - No authentication hassle → Direct Tailscale access
 - Information overload → AI summaries in list view
 - Time pressure → Efficient scanning
+- Navigation confusion → Reliable filter state preservation (RR-216)
 
 ### Journey 2: Deep Dive Research
 
@@ -77,8 +86,16 @@ This document maps out the emotional and contextual journeys of using the RSS Re
    - _Context_: Needs AI/ML specific articles
    - _Emotion_: Focused, professional
    - _Action_: Switches to Tags tab, taps "artificial-intelligence"
-   - _Experience_: Article list filters instantly
+   - _Experience_: Article list filters instantly, no delay or incorrect results
    - _Thought_: "Much faster than searching"
+
+1a. **Filter State Reliability (RR-216 Improvement)**
+
+- _Context_: Uses browser back button after reading an article
+- _Emotion_: Efficient
+- _Action_: Returns to filtered tag view
+- _Experience_: Still sees only AI/ML articles, filter state preserved
+- _Thought_: "Great, I don't have to re-filter"
 
 2. **Fetching Full Content**
    - _Context_: RSS snippet isn't enough
@@ -106,6 +123,7 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 - Finding specific content → Tag filtering
 - Partial feeds → Server-side content fetching
 - Need for summaries → On-demand generation
+- Filter state loss during navigation → Race condition prevention (RR-216)
 
 ### Journey 3: Commute Reading (Limited Connection)
 
@@ -152,6 +170,69 @@ This document maps out the emotional and contextual journeys of using the RSS Re
 - Spotty connection → Local Supabase caching
 - Can't fetch new content → Clear error messages
 - Read state tracking → Syncs when possible
+
+### Journey 5: Rapid Article Processing (RR-197 Optimization)
+
+**Scenario**: Power user quickly processing large batch of articles during break
+
+**Emotional Journey**:
+
+```
+⚡ Efficient → 🎯 Focused → 🚀 Flow State → ✨ Satisfied → 📊 Accomplished
+```
+
+**Touchpoints**:
+
+1. **Opening Large Article List**
+   - _Context_: 80+ unread articles accumulated over weekend
+   - _Emotion_: Determined to catch up quickly
+   - _Action_: Opens "All Articles" view with unread filter
+   - _Experience_: List loads instantly, smooth 60fps scrolling
+   - _Thought_: "This feels responsive, I can move fast"
+
+2. **Rapid Article Marking**
+   - _Context_: Scanning headlines and marking read quickly
+   - _Emotion_: In flow state, rapid decision making
+   - _Action_: Marks 5+ articles per second as read/unread
+   - _Experience_: **Instant UI feedback** - each tap shows immediate visual response (<1ms)
+   - _Thought_: "Perfect! No lag, I can keep my rhythm"
+
+3. **Counter Updates During Rapid Marking**
+   - _Context_: Watch unread count decrease while marking
+   - _Emotion_: Satisfied with progress tracking
+   - _Action_: Continues rapid marking while observing sidebar counts
+   - _Experience_: **Real-time counter updates** with race condition prevention
+   - _Thought_: "The counts are always accurate, even when I'm going fast"
+
+4. **Database Sync Transparency**
+   - _Context_: Marking 50+ articles in rapid succession
+   - _Emotion_: Confident in system reliability
+   - _Action_: Continues rapid marking without worrying about sync
+   - _Experience_: **Background batching** (500ms intervals) handles database updates invisibly
+   - _Thought_: "I don't even need to think about whether it's saving"
+
+5. **Memory Management During Long Sessions**
+   - _Context_: Extended marking session with 100+ operations
+   - _Emotion_: Trusting system performance
+   - _Action_: Continues rapid article processing
+   - _Experience_: **FIFO cleanup** prevents localStorage bloat, maintains performance
+   - _Thought_: "Still fast even after marking so many articles"
+
+**Performance Benefits Experienced**:
+
+- **<1ms Response Time**: Every tap provides instant visual feedback
+- **60fps Scrolling**: Smooth scrolling maintained during rapid interactions
+- **Race Condition Prevention**: Accurate counter updates even at 5+ articles/second
+- **Memory Management**: Consistent performance during extended sessions
+- **Background Batching**: Database operations don't block UI interactions
+
+**Pain Points Addressed**:
+
+- Sluggish UI during rapid marking → localStorage optimization provides instant feedback
+- Counter over-decrementing → Set-based tracking prevents duplicate decrements
+- Database blocking UI → Three-tier architecture with background batching
+- Memory bloat during long sessions → FIFO cleanup at 1000-entry limit
+- Performance degradation → Real-time monitoring maintains 60fps targets
 
 ### Journey 4: Weekend Leisure Reading
 
@@ -303,3 +384,6 @@ These are conscious trade-offs for the single-user architecture:
 - Understand API limits and work within them
 - Feel in control of my news consumption
 - Enjoy the reading experience every time
+- **Performance Excellence (RR-197)**: Can rapidly mark 5+ articles/second with instant feedback
+- **Smooth Interactions**: 60fps performance maintained during rapid article processing
+- **Reliable Counters**: Accurate unread counts even during high-speed article marking

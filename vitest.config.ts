@@ -13,6 +13,7 @@ export default defineConfig({
       "**/src/__tests__/integration/**",
       "**/src/__tests__/e2e/**",
       "**/node_modules/**",
+      "**/tests/archive/**", // RR-246: Don't run archived tests
     ],
     // RR-183: Optimized configuration for mass test execution
     // RR-188: Store isolation implemented - parallelism restored
@@ -27,7 +28,7 @@ export default defineConfig({
       },
     },
     // Progressive resource management
-    maxConcurrency: 4, // Allow up to 4 concurrent test files
+    maxConcurrency: 1, // CRITICAL: Force sequential execution to fix test isolation
     testTimeout: 30000, // 30 seconds per test
     hookTimeout: 10000, // 10 seconds for hooks
 
@@ -39,7 +40,7 @@ export default defineConfig({
     // Execution order optimization
     sequence: {
       shuffle: false, // Keep predictable test order
-      concurrent: true, // Allow concurrent execution within sequence
+      concurrent: false, // CRITICAL: Disable concurrent execution to fix test isolation
     },
 
     // Reporter configuration for progress monitoring

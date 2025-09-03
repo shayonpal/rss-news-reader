@@ -4,6 +4,7 @@ import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { logInoreaderApiCall } from "@/lib/api/log-api-call";
 import { ContentParsingService } from "@/lib/services/content-parsing-service";
+import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -16,10 +17,10 @@ const supabase = createClient(
 const activeParsing = new Map<string, Promise<any>>();
 const MAX_CONCURRENT_PARSES = 5;
 
-export async function POST(
+const postHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   console.log("=== FETCH CONTENT API CALLED ===", { params });
   const startTime = Date.now();
 
@@ -69,7 +70,7 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+};
 
 async function performParsing(
   request: NextRequest,
@@ -373,6 +374,9 @@ async function performParsing(
     );
   }
 }
+
+// Export the wrapped handler with UUID validation
+export const POST = withArticleIdValidation(postHandler);
 
 // Rate limiting for Inoreader API
 const checkRateLimit = async () => {

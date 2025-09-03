@@ -8,7 +8,7 @@ The RSS News Reader implements comprehensive health monitoring at both the clien
 
 **Purpose**: Enable external monitoring tools like Uptime Kuma to track service availability and performance.
 
-**Documentation**: [Server Health Endpoints Guide](./server-health-endpoints.md)
+**Documentation**: [Server Health Endpoints](./server-health-endpoints.md)
 
 **Key Features**:
 

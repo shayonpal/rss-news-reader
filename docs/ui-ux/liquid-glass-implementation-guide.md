@@ -227,7 +227,7 @@ useEffect(() => {
 ### Responsive Glass Segments
 
 ```tsx
-// Read status filter implementation
+// Read status filter implementation with race condition protection (RR-216)
 <div className="glass-segment" data-value={readStatus}>
   <div className="glass-segment-indicator" />
   {options.map((option) => (
@@ -236,6 +236,7 @@ useEffect(() => {
       className="glass-segment-btn"
       data-active={readStatus === option.value}
       onClick={() => setReadStatus(option.value)}
+      disabled={!filtersReady} // Prevent interaction until filters are ready
     >
       <Icon className="block sm:hidden" />
       <span className="hidden items-center gap-1.5 sm:inline-flex">
@@ -245,6 +246,21 @@ useEffect(() => {
     </button>
   ))}
 </div>
+```
+
+**State Coordination Pattern (RR-216)**:
+
+```tsx
+// Filter state management with race condition protection
+const [filtersReady, setFiltersReady] = useState(false);
+
+useEffect(() => {
+  const initializeFilters = async () => {
+    await parseUrlFilters();
+    setFiltersReady(true);
+  };
+  initializeFilters();
+}, []);
 ```
 
 ## Accessibility Implementation
@@ -449,6 +465,7 @@ Different blur values for performance optimization:
 
 - 🔄 Standardizing glass token usage across remaining components
 - 🔄 Performance optimization for lower-end devices
+- ✅ **Filter State Race Condition Fix (RR-216)**: Implemented two-layer protection for reliable filter state preservation during navigation
 
 ### Phase 3: Full Migration (Planned)
 

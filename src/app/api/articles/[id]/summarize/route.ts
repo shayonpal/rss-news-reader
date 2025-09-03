@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { SummaryPromptBuilder } from "@/lib/ai/summary-prompt";
+import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
+import { ArticleContentService } from "@/lib/services/article-content-service";
+import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -17,10 +20,10 @@ const anthropic = process.env.ANTHROPIC_API_KEY
     })
   : null;
 
-export async function POST(
+const postHandler = async (
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const { id } = params;
 
@@ -35,10 +38,10 @@ export async function POST(
       );
     }
 
-    // Get article from database
+    // Get article from database with feed information
     const { data: article, error: fetchError } = await supabase
       .from("articles")
-      .select("*")
+      .select("*, feeds!inner(*)")
       .eq("id", id)
       .single();
 
@@ -58,18 +61,23 @@ export async function POST(
     const forceRegenerate = body.regenerate === true;
 
     if (article.ai_summary && !forceRegenerate) {
+      // Determine content source based on whether article has full content
+      const contentSource =
+        article.has_full_content && article.full_content ? "full" : "partial";
+
       return NextResponse.json({
         success: true,
         summary: article.ai_summary,
         cached: true,
+        content_source: contentSource,
+        full_content_fetched: false, // Not fetched in this request since it's cached
       });
     }
 
-    // Get content to summarize (prefer full content over RSS content)
-    // TODO: Once US-104 (Content Extraction) is fully implemented with UI,
-    // consider requiring full_content for all summarizations to ensure
-    // complete and accurate summaries. RSS content may be truncated.
-    const contentToSummarize = article.full_content || article.content;
+    // RR-256: Auto-fetch full content for partial feeds before summarization
+    const contentService = ArticleContentService.getInstance();
+    const { content: contentToSummarize, wasFetched } =
+      await contentService.ensureFullContent(article.id, article.feed_id);
 
     if (!contentToSummarize) {
       return NextResponse.json(
@@ -142,6 +150,8 @@ export async function POST(
       summary,
       model: claudeModel,
       regenerated: forceRegenerate,
+      content_source: wasFetched ? "full" : "partial",
+      full_content_fetched: wasFetched,
       input_tokens: completion.usage.input_tokens,
       output_tokens: completion.usage.output_tokens,
       config: SummaryPromptBuilder.getConfig(),
@@ -181,36 +191,20 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+};
 
-// Track API usage for rate limiting
+// Export the wrapped handler with UUID validation
+export const POST = withArticleIdValidation(postHandler);
+
+// Track API usage for rate limiting - RR-237: Updated to use ApiUsageTracker
 async function trackApiUsage(service: string, count: number = 1) {
-  const today = new Date().toISOString().split("T")[0];
+  const tracker = new ApiUsageTracker(supabase);
+  const result = await tracker.trackUsageWithFallback({
+    service,
+    increment: count,
+  });
 
-  try {
-    // Try to update existing record
-    const { data: existing } = await supabase
-      .from("api_usage")
-      .select("count")
-      .eq("service", service)
-      .eq("date", today)
-      .single();
-
-    if (existing) {
-      await supabase
-        .from("api_usage")
-        .update({ count: existing.count + count })
-        .eq("service", service)
-        .eq("date", today);
-    } else {
-      // Create new record
-      await supabase.from("api_usage").insert({
-        service,
-        date: today,
-        count,
-      });
-    }
-  } catch (error) {
-    console.error("Failed to track API usage:", error);
+  if (!result.success) {
+    console.error("Failed to track API usage:", result.error);
   }
 }

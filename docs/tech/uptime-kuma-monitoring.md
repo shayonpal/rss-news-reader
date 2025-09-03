@@ -164,6 +164,75 @@ export KUMA_DB_URL="http://localhost:3080/api/push/IPaa8EaXSY"
 - Review and update uptime targets
 - Document any new issues or resolutions
 
+## Implementation Strategy
+
+### Architecture Summary
+
+- **Monitoring Tool**: Uptime Kuma (self-hosted, Docker-based) ✅ **DEPLOYED**
+- **Port**: 3080 (deployed on this port instead of planned 3001)
+- **Notification Channel**: Discord webhooks ✅ **CONFIGURED**
+- **Monitored Application**: RSS News Reader (PM2-managed Node.js app) ✅ **5 MONITORS ACTIVE**
+- **Access**: Via Tailscale network (100.96.166.53) ✅ **OPERATIONAL**
+
+### Prerequisites
+
+#### Required Components
+
+1. **Colima** (Docker runtime for macOS)
+
+   ```bash
+   brew install colima
+   colima start --cpu 2 --memory 4
+   ```
+
+2. **Discord Server & Webhook**
+   - Discord account with server creation permissions
+   - Ability to create webhooks in channels
+
+3. **Network Access**
+   - Tailscale connection to access monitoring dashboard
+   - Ports available: 3080 (for Uptime Kuma)
+
+### Setup Instructions (Completed)
+
+#### Docker Deployment
+
+```bash
+# Start Colima with adequate resources
+colima start --cpu 2 --memory 4 --disk 10
+
+# Create directory for Uptime Kuma data
+mkdir -p ~/uptime-kuma-data
+
+# Run Uptime Kuma container
+docker run -d \
+  --name uptime-kuma \
+  -p 3080:3001 \
+  -v ~/uptime-kuma-data:/app/data \
+  --restart unless-stopped \
+  louislam/uptime-kuma:1
+```
+
+#### Discord Integration Setup
+
+1. Create Discord server structure:
+
+   ```
+   📁 RSS Reader Monitoring
+   ├── 🚨 critical-alerts
+   ├── ⚠️ warnings
+   ├── ✅ status-updates
+   └── 📊 daily-reports
+   ```
+
+2. Configure webhooks in Uptime Kuma:
+   ```
+   Friendly Name: Discord Critical Alerts
+   Discord Webhook URL: [webhook URL]
+   Bot Username: RSS Monitor
+   Prefix Custom Message: 🚨 **RSS Reader Alert**
+   ```
+
 ## Integration Points
 
 ### PM2 Ecosystem
@@ -172,7 +241,7 @@ The kuma-push-monitor is now fully integrated into `ecosystem.config.js` for uni
 
 ### Discord Notifications
 
-Currently not configured but webhook URLs can be added to each monitor for alert notifications.
+Fully configured for critical alerts, warnings, and status updates through multiple webhook channels.
 
 ### Health Endpoints
 
@@ -182,13 +251,43 @@ All health endpoints follow standardized format returning JSON with status codes
 - 500: Unhealthy
 - 404: Endpoint not found (Next.js routing issue)
 
+## Alert Rules (From Strategy)
+
+### Critical Alerts (Immediate Action Required)
+
+- **Trigger**: Main app down for > 3 minutes
+- **Trigger**: Database connection lost
+- **Trigger**: PM2 process not running
+- **Channel**: #critical-alerts
+- **Action**: Restart services, check logs
+
+### Warnings (Monitor Closely)
+
+- **Trigger**: API calls remaining < 20
+- **Trigger**: Sync failed but app running
+- **Trigger**: Response time > 5 seconds
+- **Trigger**: Memory usage > 80%
+- **Channel**: #warnings
+- **Action**: Monitor trend, prepare intervention
+
+### Escalation Rules
+
+```
+1st failure: Log only
+2nd failure: Discord warning
+3rd failure: Discord critical + multiple mentions
+After resolution: Discord status update
+```
+
 ## Future Improvements
 
 1. ~~**Add kuma-push-monitor to ecosystem.config.js**~~ ✅ Completed 2025-08-06
-2. **Configure Discord webhook notifications** for critical failures
+2. ~~**Configure Discord webhook notifications**~~ ✅ Completed
 3. **Implement retry logic** in push script for failed pushes
 4. **Add monitoring for the monitor** - meta-monitoring to ensure push daemon stays alive
 5. **Create status page** for external visibility
+6. **Add custom health endpoints** with detailed metrics
+7. **Implement escalation rules** for repeated failures
 
 ## References
 

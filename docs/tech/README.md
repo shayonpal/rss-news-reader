@@ -62,15 +62,47 @@ This directory contains all technical documentation for the RSS News Reader appl
      - Sidebar "Topics" section display
      - Comprehensive test coverage
 
+### Responsive Design System (RR-206)
+
+10. **Responsive Architecture**
+    - **Description**: Comprehensive responsive design implementation with three-tier breakpoint system
+    - **Status**: Implemented ✅
+    - **Contents**: Viewport detection, breakpoint management, responsive component architecture
+    - **Key Features**:
+      - `useViewport()` hook with SSR support and 50ms debouncing
+      - Centralized breakpoint constants (`src/lib/constants/breakpoints.ts`)
+      - Three-tier responsive system: Mobile (<768px), Tablet (768-1023px), Desktop (≥1024px)
+      - Responsive components: ArticleHeader, ReadStatusFilter, main layout
+      - Automatic sidebar collapse and hamburger menu on mobile
+      - Adaptive filter button display (icons-only on mobile/tablet, full text on desktop)
+      - Performance-optimized with smooth 60fps transitions
+
+### Sidebar Navigation System (RR-193)
+
+11. **Mutex Accordion Sidebar Architecture**
+    - **Description**: Eliminated nested scrollbars with intuitive mutex accordion behavior and CSS Grid layout
+    - **Status**: Implemented ✅
+    - **Contents**: Scrollbar elimination, mutex state management, mobile optimization, layout restructure
+    - **Key Features**:
+      - **Scrollbar Elimination**: Removed all nested `max-h-[30vh]` and `max-h-[60vh]` constraints with `overflow-y-auto`
+      - **Mutex Accordion**: Only Topics OR Feeds sections open simultaneously via UIStore state management
+      - **CSS Grid Layout**: Clean single-scroll experience replacing restrictive height constraints
+      - **Visual Hierarchy**: Feeds section moved above Topics section for improved organization
+      - **Mobile Optimization**: Full-width sidebar overlay (`w-full md:w-80`) with enhanced touch targets
+      - **Smart Defaults**: Topics open, Feeds closed on page load for consistent user experience
+      - **Text Handling**: Line-clamp-2 truncation preventing layout breaks with long names
+      - **Empty States**: Proper fallback messages for no feeds/topics scenarios
+      - **Performance**: Optimized React Hook dependencies with 60fps smooth interactions
+
 ### Monitoring & Infrastructure
 
-10. **uptime-kuma-setup.md**
+12. **uptime-kuma-setup.md**
 
 - **Description**: Setup guide for Uptime Kuma monitoring service
 - **Status**: Current ✅
 - **Contents**: Docker setup, monitor configuration, alert rules
 
-11. **uptime-kuma-monitoring-strategy.md**
+13. **uptime-kuma-monitoring-strategy.md**
 
 - **Description**: Comprehensive monitoring strategy using Uptime Kuma
 - **Status**: Current ✅
@@ -78,12 +110,12 @@ This directory contains all technical documentation for the RSS News Reader appl
 
 ### Issues & Maintenance
 
-12. **known-issues.md**
+14. **known-issues.md**
     - **Description**: Documentation of known issues, limitations, and workarounds
     - **Status**: Living Document 🔄
     - **Contents**: Current bugs, API limitations, performance considerations, planned fixes
 
-13. **security.md**
+15. **security.md**
     - **Description**: Security measures, policies, and incident documentation
     - **Status**: Current ✅ (Updated for RR-128)
     - **Contents**: Network security, authentication, security fixes (RR-69, RR-128), XSS protection, best practices
@@ -116,6 +148,8 @@ This directory contains all technical documentation for the RSS News Reader appl
 3. **PM2 Process Management**: Reliable process management with auto-restart
 4. **Tailscale Access Control**: Network-level security instead of app auth
 5. **PWA Architecture**: Offline-first with service workers
+6. **Race Condition Prevention (RR-216)**: Two-layer protection for filter state preservation
+7. **localStorage Performance Optimization (RR-197)**: Three-tier architecture for instant UI response
 
 ## RR-171 RefreshManager Pattern
 
@@ -159,6 +193,242 @@ class RefreshManager {
 - **Sidebar Application**: Direct application of sync response data to avoid timing issues
 - **Toast Formatting**: Consistent user feedback with sync metrics (no emojis)
 - **Background Sync Behavior**: Silent updates with optional refresh action notifications
+
+## RR-216 Filter State Race Condition Architecture
+
+### Problem
+
+Filtered views (tag filters, feed filters) would intermittently show all articles instead of filtered results after back navigation, due to race conditions in the article loading pipeline.
+
+### Solution: Two-Layer Protection
+
+#### Layer 1: Gating with `filtersReady`
+
+```typescript
+// src/app/page.tsx
+const [filtersReady, setFiltersReady] = useState(false);
+
+useEffect(() => {
+  const initializeFilters = async () => {
+    await parseFiltersFromUrl(); // Parse URL parameters first
+    setFiltersReady(true); // Signal that filters are ready
+  };
+  initializeFilters();
+}, []);
+```
+
+#### Layer 2: Sequencing with `loadSeq`
+
+```typescript
+// src/lib/stores/article-store.ts
+class ArticleStore {
+  private loadSeq = 0;
+
+  async loadArticles() {
+    const currentSeq = ++this.loadSeq; // Increment sequence
+
+    const data = await api.getArticles();
+
+    // Only apply if this is still the current request
+    if (currentSeq === this.loadSeq) {
+      this.articles = data;
+    }
+    // Stale requests are discarded
+  }
+}
+```
+
+#### Component Integration
+
+```typescript
+// src/components/articles/article-list.tsx
+export function ArticleList() {
+  const { filtersReady } = usePageState();
+
+  if (!filtersReady) {
+    return <LoadingState />; // Prevent loading until filters ready
+  }
+
+  return <ArticleListContent />;
+}
+```
+
+### Benefits
+
+1. **Eliminates Race Conditions**: Filter state is established before article loading
+2. **Prevents Stale Data**: Sequence numbers discard outdated API responses
+3. **Improves Navigation**: Back button reliably shows filtered content
+4. **Maintains Performance**: Minimal overhead with immediate user feedback
+
+## RR-197 LocalStorage Performance Optimization Architecture
+
+### Problem
+
+Article marking operations (read/unread) required waiting for database operations (~500ms) before UI feedback, creating a sluggish user experience when rapidly marking multiple articles.
+
+### Solution: Three-Tier Architecture
+
+#### localStorage → Memory → Database Pipeline
+
+```typescript
+// Tier 1: Instant localStorage Operations (<1ms)
+class LocalStorageQueue {
+  private readonly maxEntries = 1000;
+  private readonly storageKey = 'rss-article-operations';
+
+  enqueue(operation: ArticleOperation): void {
+    const operations = this.getOperations();
+    operations.push({ ...operation, timestamp: Date.now() });
+
+    // FIFO cleanup to prevent bloat
+    if (operations.length > this.maxEntries) {
+      operations.shift();
+    }
+
+    localStorage.setItem(this.storageKey, JSON.stringify(operations));
+  }
+}
+
+// Tier 2: Memory Coordination Layer
+class LocalStorageStateManager {
+  private readonly batchInterval = 500; // ms
+  private batchTimer: NodeJS.Timeout | null = null;
+
+  coordinateStateUpdate(articleId: string, updates: ArticleUpdates): void {
+    // Instant localStorage feedback
+    this.localStorageQueue.enqueue({ articleId, updates });
+
+    // Instant UI state update
+    this.updateMemoryState(articleId, updates);
+
+    // Debounced database batch
+    this.scheduleDatabaseBatch();
+  }
+
+  private scheduleDatabaseBatch(): void {
+    if (this.batchTimer) clearTimeout(this.batchTimer);
+
+    this.batchTimer = setTimeout(() => {
+      this.flushToDatabase();
+    }, this.batchInterval);
+  }
+}
+
+// Tier 3: Database Batching (500ms intervals)
+async flushToDatabase(): Promise<void> {
+  const pendingOperations = this.localStorageQueue.dequeue();
+
+  // Batch database operations for efficiency
+  await this.articleStore.batchUpdate(pendingOperations);
+
+  // Update counters after successful database sync
+  await this.articleCounterManager.reconcileCounts();
+}
+```
+
+#### Performance Monitoring
+
+```typescript
+class PerformanceMonitor {
+  private readonly targetFps = 60;
+  private readonly maxResponseTime = 1; // ms
+
+  monitorOperation(operation: () => void): PerformanceMetrics {
+    const start = performance.now();
+
+    // Execute operation
+    operation();
+
+    const duration = performance.now() - start;
+
+    // Alert if performance targets missed
+    if (duration > this.maxResponseTime) {
+      console.warn(
+        `Operation exceeded ${this.maxResponseTime}ms: ${duration}ms`
+      );
+    }
+
+    return { duration, withinTarget: duration <= this.maxResponseTime };
+  }
+}
+```
+
+#### Race Condition Prevention
+
+```typescript
+class ArticleCounterManager {
+  private processedEntries = new Set<string>();
+
+  updateCounters(articleId: string, wasRead: boolean, isRead: boolean): void {
+    const entryKey = `${articleId}-${Date.now()}`;
+
+    // Prevent duplicate processing
+    if (this.processedEntries.has(entryKey)) return;
+    this.processedEntries.add(entryKey);
+
+    // Apply counter changes atomically
+    if (wasRead !== isRead) {
+      const delta = isRead ? -1 : 1;
+      this.feedStore.incrementUnreadCount(feedId, delta);
+    }
+
+    // Cleanup processed entries (memory management)
+    if (this.processedEntries.size > 1000) {
+      this.processedEntries.clear();
+    }
+  }
+}
+```
+
+### Architecture Benefits
+
+1. **Instant UI Response**: <1ms localStorage operations provide immediate user feedback
+2. **60fps Performance**: Optimized operations maintain smooth scrolling during rapid marking
+3. **Database Efficiency**: 500ms batching reduces database load while preserving UI responsiveness
+4. **Memory Management**: FIFO cleanup prevents localStorage bloat at 1000-entry limit
+5. **Race Condition Prevention**: Set-based tracking prevents duplicate counter decrements
+6. **Graceful Degradation**: Fallback system when localStorage unavailable or quota exceeded
+
+### Performance Targets
+
+- **UI Response**: <1ms for article marking operations
+- **Scrolling**: Maintain 60fps during rapid article interactions
+- **Database Batching**: 500ms intervals for optimal server performance
+- **Memory Cleanup**: FIFO cleanup at 1000 entries to prevent localStorage bloat
+- **Counter Accuracy**: Zero duplicate decrements through Set-based tracking
+
+### Integration Points
+
+```typescript
+// Enhanced ArticleStore integration
+class ArticleStore {
+  async markMultipleAsRead(articleIds: string[]): Promise<void> {
+    // Instant localStorage + UI feedback
+    for (const id of articleIds) {
+      this.localStorageStateManager.coordinateStateUpdate(id, {
+        isRead: true,
+        lastLocalUpdate: new Date(),
+      });
+    }
+
+    // Database operations handled by batching system
+    // User sees immediate feedback while batch processes in background
+  }
+}
+
+// ArticleList component integration
+export function ArticleList() {
+  useEffect(() => {
+    // Initialize localStorage state manager
+    const stateManager = new LocalStorageStateManager();
+
+    // Handle rapid marking scenarios
+    stateManager.enableRapidMarkingMode();
+
+    return () => stateManager.cleanup();
+  }, []);
+}
+```
 
 ## Development Guidelines
 
@@ -220,9 +490,49 @@ npm run build
 # Production
 npm start
 
-# Type check
-npm run type-check
+# Code Quality & Documentation
+npm run type-check          # TypeScript compilation check
+npm run lint                 # ESLint code quality check
+npm run format:check         # Prettier formatting check
+npm run format               # Fix formatting issues
+npm run docs:validate        # OpenAPI documentation coverage (45/45 endpoints)
+npm run docs:coverage        # Detailed documentation coverage report
+npm run docs:serve          # Launch dev server and open Swagger UI
+
+# Testing
+npm run test                 # Run test suite
+npm run test:parallel        # Optimized parallel test execution
+npm run pre-commit          # Full validation pipeline (same as pre-commit hook)
 ```
+
+### Git Pre-commit Hook (RR-210)
+
+**Automatic Quality Gates**: The project includes a comprehensive pre-commit hook that automatically runs before each commit:
+
+```bash
+# Hook runs automatically on commit
+git commit -m "your changes"
+
+# Manual hook testing
+./.git/hooks/pre-commit
+
+# Emergency bypass (not recommended)
+git commit --no-verify -m "emergency commit"
+```
+
+**Validation Steps** (run in sequence with individual failure tracking):
+
+1. **Type Check** (30s timeout): Ensures TypeScript compilation success
+2. **Lint Check** (30s timeout): Validates code quality standards
+3. **Format Check** (30s timeout): Verifies Prettier formatting (non-blocking)
+4. **OpenAPI Documentation** (60s timeout): Enforces 100% API documentation coverage
+
+**Benefits**:
+
+- **Quality Assurance**: Prevents committing code that fails basic quality checks
+- **Documentation Compliance**: Ensures all API endpoints maintain complete OpenAPI documentation
+- **Fast Feedback**: Fails early on critical issues, provides clear error messages
+- **Performance Optimized**: Completes in under 90 seconds with timeout protection
 
 ---
 

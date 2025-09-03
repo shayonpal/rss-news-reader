@@ -1,9 +1,0 @@
-{
-  "buildSize": 42.5,
-  "bundleSize": 11.2,
-  "startupTime": 1150,
-  "memoryUsage": 78.3,
-  "apiResponseTime": 110,
-  "timestamp": "2025-08-11T00:00:00.000Z",
-  "description": "Initial baseline for performance metrics"
-}

@@ -14,9 +14,21 @@
 
 import { List, MailOpen, CheckCheck } from "lucide-react";
 import { useArticleStore } from "@/lib/stores/article-store";
+import { GlassSegmentedControl } from "@/components/ui/glass-segmented-control";
 
 export function ReadStatusFilter() {
   const { readStatusFilter, setReadStatusFilter } = useArticleStore();
+
+  // Transform store data to component options format
+  const options = [
+    { value: "all", label: "All", icon: <List className="h-4 w-4" /> },
+    {
+      value: "unread",
+      label: "Unread",
+      icon: <MailOpen className="h-4 w-4" />,
+    },
+    { value: "read", label: "Read", icon: <CheckCheck className="h-4 w-4" /> },
+  ];
 
   // Determine current value across three options
   const value: "all" | "unread" | "read" =
@@ -27,46 +39,15 @@ export function ReadStatusFilter() {
         : "all";
 
   return (
-    <div
-      className="glass-segment glass-segment-sm glass-segment-3"
-      data-value={value}
-      role="tablist"
-      aria-label="Read status"
-    >
-      <div className="glass-segment-indicator" aria-hidden="true" />
-
-      <button
-        role="tab"
-        aria-selected={value === "all"}
-        className="glass-segment-btn"
-        onClick={() => setReadStatusFilter("all")}
-        title="All articles"
-      >
-        <List className="h-4 w-4" />
-        <span className="ml-2 hidden md:inline">All</span>
-      </button>
-
-      <button
-        role="tab"
-        aria-selected={value === "unread"}
-        className="glass-segment-btn"
-        onClick={() => setReadStatusFilter("unread")}
-        title="Unread only"
-      >
-        <MailOpen className="h-4 w-4" />
-        <span className="ml-2 hidden md:inline">Unread</span>
-      </button>
-
-      <button
-        role="tab"
-        aria-selected={value === "read"}
-        className="glass-segment-btn"
-        onClick={() => setReadStatusFilter("read")}
-        title="Read only"
-      >
-        <CheckCheck className="h-4 w-4" />
-        <span className="ml-2 hidden md:inline">Read</span>
-      </button>
-    </div>
+    <GlassSegmentedControl
+      options={options}
+      value={value}
+      onValueChange={(newValue: string) => {
+        setReadStatusFilter(newValue as typeof readStatusFilter);
+      }}
+      size="sm"
+      segments={3}
+      ariaLabel="Read status"
+    />
   );
 }

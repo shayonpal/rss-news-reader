@@ -8,7 +8,7 @@ set -euo pipefail
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BUILD_DIR="$PROJECT_ROOT/.next"
+BUILD_DIR="${NEXT_BUILD_DIR:-$PROJECT_ROOT/.next-build}"
 LOGS_DIR="$PROJECT_ROOT/logs"
 VALIDATION_LOG="$LOGS_DIR/build-validation.log"
 
@@ -65,11 +65,13 @@ print_status() {
 validate_build_directories() {
     log "INFO" "Phase 1a: Validating build directories"
     
+    # Use the BUILD_DIR variable for the actual build location
+    local build_base="${BUILD_DIR#$PROJECT_ROOT/}"
     local critical_dirs=(
-        ".next"
-        ".next/server"
-        ".next/server/app"
-        ".next/static"
+        "$build_base"
+        "$build_base/server"
+        "$build_base/server/app"
+        "$build_base/static"
     )
     
     for dir in "${critical_dirs[@]}"; do
@@ -185,13 +187,15 @@ validate_environment_variables() {
 validate_build_artifacts() {
     log "INFO" "Phase 1d: Validating build artifact integrity"
     
+    # Use the BUILD_DIR variable for the actual build location
+    local build_base="${BUILD_DIR#$PROJECT_ROOT/}"
     local critical_files=(
-        ".next/BUILD_ID"
-        ".next/package.json"
-        ".next/prerender-manifest.json"
-        ".next/react-loadable-manifest.json"
-        ".next/server/server-reference-manifest.json"
-        ".next/server/middleware-manifest.json"
+        "$build_base/BUILD_ID"
+        "$build_base/package.json"
+        "$build_base/prerender-manifest.json"
+        "$build_base/react-loadable-manifest.json"
+        "$build_base/server/server-reference-manifest.json"
+        "$build_base/server/middleware-manifest.json"
     )
     
     for file in "${critical_files[@]}"; do
@@ -204,7 +208,7 @@ validate_build_artifacts() {
                 print_status "FAIL" "Build artifact corrupted or empty: $file"
             fi
         else
-            if [[ "$file" == ".next/BUILD_ID" ]]; then
+            if [[ "$file" == "$build_base/BUILD_ID" ]]; then
                 # BUILD_ID is only generated in production builds
                 if [[ "$NODE_ENV" == "development" || -z "$NODE_ENV" ]]; then
                     print_status "INFO" "BUILD_ID not expected in development mode"

@@ -1,6 +1,8 @@
 const { createClient } = require("@supabase/supabase-js");
 const TokenManager = require("../lib/token-manager");
 
+const ApiUsageTracker = require("../lib/api-usage-tracker");
+
 class BiDirectionalSyncService {
   constructor() {
     // Environment configuration
@@ -285,8 +287,6 @@ class BiDirectionalSyncService {
 
       // If we have any zone headers, update the database
       if (zone1Usage || zone1Limit || zone2Usage || zone2Limit) {
-        const today = new Date().toISOString().split("T")[0];
-
         // Parse values, removing commas and handling defaults
         const usage1 = parseInt(zone1Usage?.replace(/,/g, "") || "0");
         const limit1 = parseInt(zone1Limit?.replace(/,/g, "") || "5000");
@@ -296,65 +296,28 @@ class BiDirectionalSyncService {
           resetAfter?.replace(/\.\d+$/, "") || "86400"
         );
 
-        // Check if record exists for today
-        const { data: existing } = await this.supabase
-          .from("api_usage")
-          .select("id")
-          .eq("service", "inoreader")
-          .eq("date", today)
-          .single();
+        // RR-237: Use ApiUsageTracker with RPC function for atomic zone updates
+        const tracker = new ApiUsageTracker(this.supabase);
+        const result = await tracker.trackUsageWithFallback({
+          service: "inoreader",
+          zone1_usage: usage1,
+          zone1_limit: limit1,
+          zone2_usage: usage2,
+          zone2_limit: limit2,
+          reset_after: resetSeconds,
+        });
 
-        if (existing) {
-          // Update existing record
-          const { error } = await this.supabase
-            .from("api_usage")
-            .update({
-              zone1_usage: usage1,
-              zone1_limit: limit1,
-              zone2_usage: usage2,
-              zone2_limit: limit2,
-              reset_after: resetSeconds,
-              updated_at: new Date().toISOString(),
-              count: usage1, // Legacy support
-            })
-            .eq("id", existing.id);
-
-          if (error) {
-            console.error(
-              "[BiDirectionalSync] Failed to update zone usage:",
-              error
-            );
-          } else {
-            console.log("[BiDirectionalSync] Updated zone usage:", {
-              zone1: `${usage1}/${limit1} (${((usage1 / limit1) * 100).toFixed(1)}%)`,
-              zone2: `${usage2}/${limit2} (${((usage2 / limit2) * 100).toFixed(1)}%)`,
-              resetAfter: `${resetSeconds}s`,
-            });
-          }
-        } else {
-          // Insert new record
-          const { error } = await this.supabase.from("api_usage").insert({
-            service: "inoreader",
-            date: today,
-            zone1_usage: usage1,
-            zone1_limit: limit1,
-            zone2_usage: usage2,
-            zone2_limit: limit2,
-            reset_after: resetSeconds,
-            count: usage1, // Legacy support
+        if (result.success) {
+          console.log("[BiDirectionalSync] Updated zone usage:", {
+            zone1: `${usage1}/${limit1} (${((usage1 / limit1) * 100).toFixed(1)}%)`,
+            zone2: `${usage2}/${limit2} (${((usage2 / limit2) * 100).toFixed(1)}%)`,
+            resetAfter: `${resetSeconds}s`,
           });
-
-          if (error) {
-            console.error(
-              "[BiDirectionalSync] Failed to insert zone usage:",
-              error
-            );
-          } else {
-            console.log("[BiDirectionalSync] Created zone usage record:", {
-              zone1: `${usage1}/${limit1}`,
-              zone2: `${usage2}/${limit2}`,
-            });
-          }
+        } else {
+          console.error(
+            "[BiDirectionalSync] Failed to update zone usage:",
+            result.error
+          );
         }
       }
     } catch (error) {
@@ -364,63 +327,17 @@ class BiDirectionalSyncService {
   }
 
   async trackApiUsage() {
-    const today = new Date().toISOString().split("T")[0];
+    // RR-237: Use ApiUsageTracker with RPC function for atomic operations
+    const tracker = new ApiUsageTracker(this.supabase);
+    const result = await tracker.trackUsageWithFallback({
+      service: "inoreader",
+      increment: 1,
+    });
 
-    // Temporary fix: Use direct table update instead of RPC function
-    // TODO: Create proper RPC function or update schema
-    try {
-      // First, try to update existing record
-      const { data: existing, error: selectError } = await this.supabase
-        .from("api_usage")
-        .select("*")
-        .eq("service", "inoreader")
-        .eq("date", today)
-        .single();
-
-      if (selectError && selectError.code !== "PGRST116") {
-        // PGRST116 = no rows found, which is expected for new days
-        console.error(
-          "[BiDirectionalSync] Error checking API usage:",
-          selectError
-        );
-        return;
-      }
-
-      if (existing) {
-        // Update existing record
-        const { error: updateError } = await this.supabase
-          .from("api_usage")
-          .update({ count: existing.count + 1 })
-          .eq("id", existing.id);
-
-        if (updateError) {
-          console.error(
-            "[BiDirectionalSync] Error updating API usage:",
-            updateError
-          );
-        }
-      } else {
-        // Insert new record
-        const { error: insertError } = await this.supabase
-          .from("api_usage")
-          .insert({
-            service: "inoreader",
-            date: today,
-            count: 1,
-            created_at: new Date().toISOString(),
-          });
-
-        if (insertError) {
-          console.error(
-            "[BiDirectionalSync] Error inserting API usage:",
-            insertError
-          );
-        }
-      }
-    } catch (error) {
+    if (!result.success) {
       console.error(
-        "[BiDirectionalSync] Unexpected error tracking API usage:",
-        error
+        "[BiDirectionalSync] Error tracking API usage:",
+        result.error
       );
     }
   }

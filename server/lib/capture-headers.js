@@ -1,8 +1,10 @@
 const { createClient } = require("@supabase/supabase-js");
+const ApiUsageTracker = require("./api-usage-tracker");
 
 /**
  * Node.js version of header capture for use in TokenManager
  * This ensures EVERY Inoreader API call is tracked
+ * RR-237: Updated to use ApiUsageTracker with RPC functions
  */
 async function captureRateLimitHeaders(headers) {
   try {
@@ -29,8 +31,6 @@ async function captureRateLimitHeaders(headers) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const today = new Date().toISOString().split("T")[0];
-
     // Parse values only if present (trust headers; no hard defaults)
     const usage1 =
       zone1Usage != null ? parseInt(zone1Usage.replace(/,/g, "")) : undefined;
@@ -45,59 +45,30 @@ async function captureRateLimitHeaders(headers) {
         ? parseInt(resetAfter.replace(/\.\d+$/, ""))
         : undefined;
 
-    // Check if record exists for today
-    const { data: existing } = await supabase
-      .from("api_usage")
-      .select("id")
-      .eq("service", "inoreader")
-      .eq("date", today)
-      .single();
+    // RR-237: Use ApiUsageTracker with RPC function for atomic updates
+    const tracker = new ApiUsageTracker(supabase);
+    const params = {
+      service: "inoreader",
+    };
 
-    if (existing) {
-      // Update existing record (partial update based on provided headers)
-      const updateFields = { updated_at: new Date().toISOString() };
-      if (usage1 !== undefined) updateFields.zone1_usage = usage1;
-      if (limit1 !== undefined) updateFields.zone1_limit = limit1;
-      if (usage2 !== undefined) updateFields.zone2_usage = usage2;
-      if (limit2 !== undefined) updateFields.zone2_limit = limit2;
-      if (resetSeconds !== undefined) updateFields.reset_after = resetSeconds;
+    // Only include defined values in params
+    if (usage1 !== undefined) params.zone1_usage = usage1;
+    if (limit1 !== undefined) params.zone1_limit = limit1;
+    if (usage2 !== undefined) params.zone2_usage = usage2;
+    if (limit2 !== undefined) params.zone2_limit = limit2;
+    if (resetSeconds !== undefined) params.reset_after = resetSeconds;
 
-      const { error } = await supabase
-        .from("api_usage")
-        .update(updateFields)
-        .eq("id", existing.id);
+    const result = await tracker.trackUsageWithFallback(params);
 
-      if (error) {
-        console.error("[TokenManager] Failed to update api_usage:", error);
-      } else {
-        console.log(
-          "[TokenManager] Updated api_usage - Zone 1:",
-          usage1,
-          "Zone 2:",
-          usage2
-        );
-      }
+    if (result.success) {
+      console.log(
+        "[TokenManager] Updated api_usage - Zone 1:",
+        usage1,
+        "Zone 2:",
+        usage2
+      );
     } else {
-      // Insert new record with only fields provided by headers
-      const insertFields = { service: "inoreader", date: today };
-      if (usage1 !== undefined) insertFields.zone1_usage = usage1;
-      if (limit1 !== undefined) insertFields.zone1_limit = limit1;
-      if (usage2 !== undefined) insertFields.zone2_usage = usage2;
-      if (limit2 !== undefined) insertFields.zone2_limit = limit2;
-      if (resetSeconds !== undefined) insertFields.reset_after = resetSeconds;
-
-      const { error } = await supabase.from("api_usage").insert(insertFields);
-
-      if (error) {
-        console.error("[TokenManager] Failed to insert api_usage:", error);
-      } else {
-        console.log(
-          "[TokenManager] Created api_usage - Zone 1:",
-          usage1,
-          "Zone 2:",
-          usage2
-        );
-      }
+      console.error("[TokenManager] Failed to update api_usage:", result.error);
     }
   } catch (error) {
     console.error("[TokenManager] Error capturing headers:", error);

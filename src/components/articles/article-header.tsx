@@ -9,6 +9,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useViewport } from "@/hooks/use-viewport";
 import { ReadStatusFilter } from "./read-status-filter";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
@@ -17,9 +18,11 @@ import {
   getDynamicPageTitle,
 } from "@/lib/article-count-manager";
 import { Button } from "@/components/ui/button";
-import { CheckCheck, Loader2, AlertTriangle } from "lucide-react";
+import { CircleCheckBig, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import type { Feed, Folder } from "@/types";
+import { useTagStore } from "@/lib/stores/tag-store";
+import DOMPurify from "isomorphic-dompurify";
 
 interface ArticleCounts {
   total: number;
@@ -30,6 +33,7 @@ interface ArticleCounts {
 interface ArticleHeaderProps {
   selectedFeedId?: string | null;
   selectedFolderId?: string | null;
+  selectedTagId?: string | null;
   isMobile?: boolean;
   onMenuClick?: () => void;
   menuIcon?: React.ReactNode;
@@ -38,13 +42,20 @@ interface ArticleHeaderProps {
 export function ArticleHeader({
   selectedFeedId,
   selectedFolderId,
+  selectedTagId,
   isMobile = false,
   onMenuClick,
   menuIcon,
 }: ArticleHeaderProps) {
-  const { readStatusFilter, markAllAsRead, refreshArticles } =
-    useArticleStore();
+  const {
+    readStatusFilter,
+    markAllAsRead,
+    markAllAsReadForTag,
+    refreshArticles,
+  } = useArticleStore();
   const { getFeed, getFolder } = useFeedStore();
+  const { tags } = useTagStore();
+  const viewport = useViewport();
   const [counts, setCounts] = useState<ArticleCounts>({
     total: 0,
     unread: 0,
@@ -53,14 +64,23 @@ export function ArticleHeader({
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const [waitingConfirmation, setWaitingConfirmation] = useState(false);
+
+  // RR-179: Liquid Glass button state machine
+  const getButtonState = () => {
+    if (isMarkingAllRead) return "loading";
+    if (waitingConfirmation) return "confirming";
+    if (counts.unread === 0) return "disabled";
+    return "normal";
+  };
   const confirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countManager = useRef(new ArticleCountManager());
 
-  // Get selected feed/folder objects
+  // Get selected feed/folder/tag objects
   const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : undefined;
   const selectedFolder = selectedFolderId
     ? getFolder(selectedFolderId)
     : undefined;
+  const selectedTag = selectedTagId ? tags.get(selectedTagId) : undefined;
 
   // Fetch counts when filters change
   useEffect(() => {
@@ -108,7 +128,17 @@ export function ArticleHeader({
   }, []);
 
   const pageTitle = hydrated
-    ? getDynamicPageTitle(readStatusFilter, selectedFeed, selectedFolder)
+    ? getDynamicPageTitle(
+        readStatusFilter,
+        selectedFeed,
+        selectedFolder,
+        selectedTag
+          ? {
+              ...selectedTag,
+              name: DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] }),
+            }
+          : undefined
+      )
     : "Articles"; // Safe fallback during SSR
 
   // Get count display based on filter
@@ -129,9 +159,26 @@ export function ArticleHeader({
     };
   }, []);
 
-  // Handle mark all as read button click
+  // RR-179: Handle mark all as read button click (both feed and tag contexts)
   const handleMarkAllClick = async () => {
-    if (!selectedFeedId || isMarkingAllRead) return;
+    if ((!selectedFeedId && !selectedTagId) || isMarkingAllRead) return;
+
+    // Slice 6b: Check network status for better error handling
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+
+    // Slice 6d: Simple cross-tab coordination check
+    const lockKey = `mark-all-read-${selectedFeedId || selectedTagId}-lock`;
+    const existingLock = localStorage.getItem(lockKey);
+
+    if (existingLock) {
+      const lockTime = parseInt(existingLock);
+      const isStale = Date.now() - lockTime > 10000; // 10 second timeout
+
+      if (!isStale) {
+        toast.error("Mark All Read is running in another tab • Please wait");
+        return;
+      }
+    }
 
     // First click - show confirmation state
     if (!waitingConfirmation) {
@@ -153,35 +200,131 @@ export function ArticleHeader({
     setWaitingConfirmation(false);
     setIsMarkingAllRead(true);
 
+    // Slice 6d: Set cross-tab lock
+    localStorage.setItem(lockKey, Date.now().toString());
+
+    // Slice 6e: Store original counters for rollback
+    let originalTagCount: number | undefined;
+    if (selectedTagId) {
+      const { tags } = useTagStore.getState();
+      originalTagCount = tags.get(selectedTagId)?.unreadCount;
+    }
+
     try {
-      await markAllAsRead(selectedFeedId);
+      // RR-179: Execute appropriate function based on context
+      if (selectedTagId) {
+        await markAllAsReadForTag(selectedTagId);
+      } else if (selectedFeedId) {
+        await markAllAsRead(selectedFeedId);
+      }
 
       // Invalidate cache to refresh counts
-      countManager.current.invalidateCache(selectedFeedId);
+      if (selectedFeedId) {
+        countManager.current.invalidateCache(selectedFeedId);
+      }
+      // For tags, invalidation happens in markAllAsReadForTag for all affected feeds
 
-      // Refresh the article list to show updated read status
-      await refreshArticles();
-
-      // Re-fetch counts
+      // RR-179 Fix: Don't call refreshArticles() since localStorage optimization handles UI updates
+      // The ArticleList component will automatically update through the store state changes
+      // Only re-fetch counts for the header display
       const newCounts = await countManager.current.getArticleCounts(
-        selectedFeedId,
+        selectedFeedId || undefined,
         selectedFolderId || undefined
       );
       setCounts(newCounts);
 
+      // RR-179: Context-appropriate success message
+      const contextName =
+        selectedTag?.name || selectedFeed?.title || "articles";
+      const sanitizedName = selectedTag?.name
+        ? DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] })
+        : contextName;
+
+      // Show toast immediately before any other operations
       toast.success(
-        `Marked all articles as read in ${selectedFeed?.title || "feed"}`
+        selectedTagId
+          ? `Marked all "${sanitizedName}" articles as read`
+          : `Marked all articles as read in ${sanitizedName}`
       );
+
+      console.log("✅ Toast shown, continuing with refresh operations...");
     } catch (error) {
       console.error("Failed to mark all as read:", error);
-      toast.error("Failed to mark all articles as read");
+
+      // RR-179 Slice 6: Enhanced error handling with specific messages
+      let errorMessage = "Failed to mark all articles as read";
+
+      if (
+        error instanceof DOMException &&
+        error.name === "QuotaExceededError"
+      ) {
+        errorMessage =
+          "Storage limit reached • Operation completed with reduced functionality";
+      } else if (error instanceof Error) {
+        if (
+          error.message.includes("Network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage = isOnline
+            ? "Network error • Changes saved locally and will sync when online"
+            : "You're offline • Changes saved locally and will sync when online";
+        } else if (error.message.includes("articles")) {
+          errorMessage = "No articles found to mark as read";
+        } else if (error.message.includes("tag")) {
+          errorMessage = "Tag not found or has no articles";
+        }
+      }
+
+      // Slice 6e: Rollback optimistic tag counter update on failure
+      if (selectedTagId && originalTagCount !== undefined) {
+        try {
+          const { useTagStore } = await import("@/lib/stores/tag-store");
+          const tagState = useTagStore.getState();
+          const currentTag = tagState.tags.get(selectedTagId);
+          const currentCount = currentTag?.unreadCount || 0;
+
+          if (currentCount !== originalTagCount) {
+            const rollbackDelta = originalTagCount - currentCount;
+            tagState.updateTagUnreadCount(selectedTagId, rollbackDelta);
+            console.log(
+              `[RR-179] Rollback: Restored tag ${selectedTagId} counter to ${originalTagCount}`
+            );
+          }
+        } catch (rollbackError) {
+          console.warn("Failed to rollback tag counter:", rollbackError);
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsMarkingAllRead(false);
+      // Slice 6d: Clear cross-tab lock
+      try {
+        localStorage.removeItem(lockKey);
+      } catch (e) {
+        console.warn("Failed to clear mark-all-read lock:", e);
+      }
     }
   };
 
   return (
-    <header className="pwa-safe-area-top flex items-center justify-between gap-3 border-b px-4 py-3 md:px-6 md:py-4">
+    <header
+      className="article-header pwa-safe-area-top flex items-center justify-between gap-3 border-b px-4 py-3 md:px-6 md:py-4"
+      onClick={(e) => {
+        // RR-179: Tap outside to cancel confirmation (iOS 26 pattern)
+        if (
+          waitingConfirmation &&
+          !e.currentTarget
+            .querySelector(".liquid-glass-mark-all-read")
+            ?.contains(e.target as Node)
+        ) {
+          setWaitingConfirmation(false);
+          if (confirmTimeoutRef.current) {
+            clearTimeout(confirmTimeoutRef.current);
+          }
+        }
+      }}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {/* Mobile Menu Button */}
         {isMobile && onMenuClick && (
@@ -202,45 +345,50 @@ export function ArticleHeader({
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-2">
-        {/* Mark All Read Button - only show for specific feeds with unread articles */}
-        {selectedFeedId && counts.unread > 0 && (
-          <Button
-            variant={waitingConfirmation ? "destructive" : "outline"}
-            size="sm"
+        {/* RR-179: Collapsible Read Status Filter (iOS 26 pattern) */}
+        <div
+          className={`segmented-control-wrapper ${
+            waitingConfirmation ? "collapsed" : ""
+          }`}
+        >
+          <ReadStatusFilter />
+        </div>
+
+        {/* RR-179: Liquid Glass Mark All Read Button - positioned after filter (POC layout) */}
+        {(selectedFeedId || selectedTagId) && (
+          <button
             onClick={handleMarkAllClick}
-            disabled={isMarkingAllRead}
-            className={
-              waitingConfirmation
-                ? "gap-1.5 border-red-500/50 bg-red-500/20 text-red-600 hover:bg-red-500/30 dark:text-red-400"
-                : "gap-1.5"
-            }
+            disabled={isMarkingAllRead || counts.unread === 0}
+            className={`liquid-glass-mark-all-read state-${getButtonState()}`}
             title={
               waitingConfirmation
                 ? "Click again to confirm"
-                : "Mark all articles in this feed as read"
+                : selectedTagId
+                  ? `Mark all "${selectedTag?.name || "tag"}" articles as read`
+                  : "Mark all articles in this feed as read"
             }
+            data-state={getButtonState()}
           >
             {isMarkingAllRead ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span className="hidden sm:inline">Marking...</span>
+                {!viewport.shouldShowCompactFilters && <span>Marking...</span>}
               </>
             ) : waitingConfirmation ? (
               <>
                 <AlertTriangle className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Confirm?</span>
+                <span>Confirm?</span>
               </>
             ) : (
               <>
-                <CheckCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Mark All Read</span>
+                <CircleCheckBig className="h-3.5 w-3.5" />
+                {!viewport.shouldShowCompactFilters && (
+                  <span>Mark All Read</span>
+                )}
               </>
             )}
-          </Button>
+          </button>
         )}
-
-        {/* Read Status Filter */}
-        <ReadStatusFilter />
       </div>
     </header>
   );

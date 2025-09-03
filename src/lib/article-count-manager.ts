@@ -169,10 +169,13 @@ export class ArticleCountManager {
 export const getDynamicPageTitle = (
   readStatusFilter: "all" | "unread" | "read",
   selectedFeed?: { title: string },
-  selectedFolder?: { title: string }
+  selectedFolder?: { title: string },
+  selectedTag?: { name: string }
 ): string => {
-  // Return folder or feed name directly, or "Articles" for all
-  if (selectedFolder) {
+  // Priority: Tag > Folder > Feed > "Articles"
+  if (selectedTag?.name) {
+    return selectedTag.name;
+  } else if (selectedFolder) {
     return selectedFolder.title;
   } else if (selectedFeed) {
     return selectedFeed.title;

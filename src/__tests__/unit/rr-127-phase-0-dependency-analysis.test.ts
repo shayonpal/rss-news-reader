@@ -21,7 +21,7 @@ describe("RR-127 Phase 0: Import Dependency Analysis", () => {
       const integrationConfig = resolve(
         testRoot,
         "../..",
-        "vitest.integration.config.ts"
+        "vitest.config.integration.ts"
       );
       expect(existsSync(integrationConfig)).toBe(true);
     });

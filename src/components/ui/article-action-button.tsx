@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { IOSButton } from "./ios-button";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { GlassToolbarButton } from "./glass-button";
 
 export type ArticleActionButtonSize = "sm" | "md" | "lg";
 
@@ -75,29 +75,52 @@ export function ArticleActionButton({
   const iconSize = sizeClasses[size];
   const DisplayIcon = loading && LoadingIcon ? LoadingIcon : Icon;
 
+  /**
+   * Handle button click with proper event isolation
+   *
+   * RR-255 Fix: Prevents event propagation to parent article card.
+   * This ensures clicking the summary button generates a summary
+   * instead of navigating to the article detail view.
+   *
+   * @param e - The mouse event from the button click
+   */
+  const handleClick = (e: React.MouseEvent) => {
+    // Stop the event from bubbling up to parent card click handlers
+    e.stopPropagation();
+    // Prevent any default link/button behavior
+    e.preventDefault();
+    // Execute the intended action (generate summary, star, etc.)
+    onPress();
+  };
+
   return (
-    <button
+    <GlassToolbarButton
       type="button"
-      onClick={onPress}
+      onClick={handleClick}
       disabled={disabled || loading}
-      className={cn("glass-toolbar-btn", className)}
+      className={className}
       aria-label={label}
       title={title || label}
+      data-active={active || undefined}
+      data-error={false}
+      variant="css-toolbar-btn"
+      size={size === "lg" ? "default" : "sm"}
+      icon={
+        <DisplayIcon
+          className={cn(
+            iconSize,
+            loading && "animate-spin",
+            active && activeClassName
+              ? activeClassName
+              : active
+                ? "text-primary"
+                : "text-foreground"
+          )}
+        />
+      }
+      hideOnMobile={!showLabel}
     >
-      <DisplayIcon
-        className={cn(
-          iconSize,
-          loading && "animate-spin",
-          active && activeClassName
-            ? activeClassName
-            : active
-              ? "text-primary"
-              : "text-muted-foreground"
-        )}
-      />
-      {showLabel && (
-        <span className="ml-2 hidden text-sm md:inline">{label}</span>
-      )}
-    </button>
+      {showLabel && <span className="hidden md:inline-block">{label}</span>}
+    </GlassToolbarButton>
   );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/db/supabase-admin";
+import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
 
 const supabase = getAdminClient();
 
@@ -32,48 +33,20 @@ export async function POST(request: Request) {
     const actualZone1 = Math.min(zone1Usage || 0, zone1Limit);
     const actualZone2 = Math.min(zone2Usage || 0, zone2Limit);
 
-    // Check if record exists for today
-    const { data: existing } = await supabase
-      .from("api_usage")
-      .select("id")
-      .eq("service", "inoreader")
-      .eq("date", today)
-      .single();
+    // RR-237: Use ApiUsageTracker for atomic updates
+    const tracker = new ApiUsageTracker(supabase);
+    const result = await tracker.trackUsageWithFallback({
+      service: "inoreader",
+      date: today,
+      zone1_usage: actualZone1,
+      zone1_limit: zone1Limit,
+      zone2_usage: actualZone2,
+      zone2_limit: zone2Limit,
+      reset_after: 86400, // 24 hours in seconds
+    });
 
-    if (existing) {
-      // Update existing record
-      const { error } = await supabase
-        .from("api_usage")
-        .update({
-          zone1_usage: actualZone1,
-          zone1_limit: zone1Limit,
-          zone2_usage: actualZone2,
-          zone2_limit: zone2Limit,
-          reset_after: 86400, // 24 hours in seconds
-          updated_at: new Date().toISOString(),
-          count: actualZone1, // Legacy support
-        })
-        .eq("id", existing.id);
-
-      if (error) {
-        throw error;
-      }
-    } else {
-      // Insert new record
-      const { error } = await supabase.from("api_usage").insert({
-        service: "inoreader",
-        date: today,
-        zone1_usage: actualZone1,
-        zone1_limit: zone1Limit,
-        zone2_usage: actualZone2,
-        zone2_limit: zone2Limit,
-        reset_after: 86400,
-        count: actualZone1, // Legacy support
-      });
-
-      if (error) {
-        throw error;
-      }
+    if (!result.success) {
+      throw new Error(result.error || "Failed to update rate limit simulation");
     }
 
     return NextResponse.json({

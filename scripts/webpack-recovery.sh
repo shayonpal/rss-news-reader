@@ -26,11 +26,11 @@ fi
 # Step 2: Clean webpack artifacts
 echo ""
 echo "2️⃣  Cleaning webpack artifacts..."
-if [ -d ".next" ]; then
-    rm -rf .next
-    echo "✓ Removed .next directory"
+if ls .next-dev .next-build 2> /dev/null 1>&2; then
+    rm -rf .next-dev .next-build
+    echo "✓ Removed build directories"
 else
-    echo "ℹ️  No .next directory found"
+    echo "ℹ️  No build directories found"
 fi
 
 if [ -d "node_modules/.cache" ]; then

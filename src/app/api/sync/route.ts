@@ -7,6 +7,7 @@ import { SyncConflictDetector } from "@/lib/sync/conflict-detector";
 import { ArticleCleanupService } from "@/lib/services/cleanup-service";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import { captureRateLimitHeaders } from "@/lib/api/capture-rate-limit-headers";
+import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -243,6 +244,9 @@ export async function POST() {
           status: 429,
           headers: {
             "Retry-After": retryAfterSeconds.toString(), // Standard HTTP header
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
         }
       );
@@ -277,13 +281,16 @@ export async function POST() {
     });
 
     return NextResponse.json({
-      success: true,
       syncId,
-      message: "Sync started successfully",
-      rateLimit: {
-        remaining: rateLimit.remaining,
-        limit: rateLimit.limit,
-        used: rateLimit.used,
+      status: "pending",
+      progress: 0,
+      message: "Sync operation started",
+      startTime: initialStatus.startTime,
+      metrics: {
+        newArticles: 0,
+        deletedArticles: 0,
+        newTags: 0,
+        failedFeeds: 0,
       },
     });
   } catch (error) {
@@ -1054,7 +1061,12 @@ async function performServerSync(syncId: string) {
         process.env.SYNC_SERVER_URL || "http://localhost:3001";
       const syncResponse = await fetch(`${syncServerUrl}/server/sync/trigger`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
         body: JSON.stringify({ force: true }), // Force sync even if < 5 changes
       });
 
@@ -1173,34 +1185,26 @@ async function checkRateLimit() {
   };
 }
 
-// Track API usage
+// Track API usage - RR-237: Updated to use ApiUsageTracker
 async function trackApiUsage(service: string, count: number = 1) {
-  const today = new Date().toISOString().split("T")[0];
+  const tracker = new ApiUsageTracker(supabase);
+  const result = await tracker.trackUsageWithFallback({
+    service,
+    increment: count,
+  });
 
-  try {
-    // Try to update existing record
-    const { data: existing } = await supabase
-      .from("api_usage")
-      .select("count")
-      .eq("service", service)
-      .eq("date", today)
-      .single();
-
-    if (existing) {
-      await supabase
-        .from("api_usage")
-        .update({ count: existing.count + count })
-        .eq("service", service)
-        .eq("date", today);
-    } else {
-      // Create new record
-      await supabase.from("api_usage").insert({
-        service,
-        date: today,
-        count,
-      });
-    }
-  } catch (error) {
-    console.error("Failed to track API usage:", error);
+  if (!result.success) {
+    console.error("Failed to track API usage:", result.error);
   }
+}
+// Handle OPTIONS requests for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

@@ -197,6 +197,25 @@ Complete React/TypeScript implementation of the Figma designs:
 - **Toast Notification System** - Color-coded feedback for user actions
 - **Improved Content Display** - Enhanced revert functionality with true RSS content
 
+#### Responsive Design Implementation (RR-206)
+
+- **Viewport Detection Hook** - `useViewport()` with SSR support and 50ms debouncing
+- **Breakpoint Constants** - Centralized breakpoint system with media queries
+- **Responsive Header** - Smart hamburger menu display based on viewport
+- **Responsive Filters** - Adaptive filter button text display (icons-only on mobile/tablet)
+- **Layout Adaptation** - Automatic sidebar collapse and layout adjustments
+
+#### Sidebar Navigation Enhancement (RR-193)
+
+- **Mutex Accordion Behavior** - Only Topics OR Feeds sections open simultaneously, preventing UI confusion
+- **Scrollbar Elimination** - Removed all nested `max-h-[30vh]` and `max-h-[60vh]` constraints with `overflow-y-auto`
+- **CSS Grid Layout** - Clean single-scroll experience replacing restrictive height constraints
+- **Visual Hierarchy** - Feeds section moved above Topics section for improved organization
+- **Mobile Optimization** - Full-width sidebar overlay (`w-full md:w-80`) with enhanced touch targets
+- **Smart Defaults** - Topics open, Feeds closed on page load for consistent user experience
+- **Text Handling** - Line-clamp-2 truncation preventing layout breaks with long feed/topic names
+- **Empty States** - Proper fallback messages for no feeds/topics scenarios
+
 #### Traditional UI Components
 
 - Basic glass morphism styles
@@ -290,6 +309,34 @@ Complete React/TypeScript implementation of the Figma designs:
 2. **State Transitions**: Smooth transitions between content states
 3. **User Control**: Easy access to revert and fetch operations
 4. **Loading States**: Clear indication of content loading progress
+
+#### Filter State Preservation (RR-216)
+
+1. **Race Condition Prevention**: Two-layer protection ensures filtered views maintain accuracy during navigation
+   - **Gating Layer**: `filtersReady` flag prevents ArticleList from loading until URL filters are fully parsed
+   - **Sequencing Layer**: `loadSeq` counter prevents stale API requests from overwriting current data
+2. **Navigation Reliability**: Back navigation to filtered views (tags, feeds) consistently shows filtered articles
+3. **State Synchronization**: URL state and component state remain synchronized during rapid navigation
+4. **Loading Coordination**: Article loading waits for filter state to be fully established
+
+#### Responsive Design Patterns (RR-206)
+
+1. **Breakpoint System**: Consistent three-tier responsive design
+   - **Mobile** (<768px): Collapsed sidebar, hamburger menu, compact UI
+   - **Tablet** (768-1023px): Visible sidebar, compact filter buttons (icons only)
+   - **Desktop** (≥1024px): Visible sidebar, full text filter buttons
+2. **Performance**: 50ms debounced viewport detection for smooth 60fps transitions
+3. **SSR Safety**: Server-side rendering compatible with sensible defaults
+4. **Orientation Support**: Automatic adaptation to orientation changes
+5. **Touch Targets**: iOS-compliant 44px minimum touch targets on mobile
+
+#### Navigation State Management (RR-216)
+
+1. **Filter State Coordination**: Synchronized state management between URL parameters and component state
+2. **Race Condition Mitigation**: Prevents article loading before filter state is established
+3. **Back Navigation Reliability**: Ensures filtered views (tags, feeds) maintain their filter state
+4. **Loading Pipeline Gating**: Article loading pipeline respects filter readiness state
+5. **Sequence Protection**: Request sequencing prevents stale data from overwriting current results
 
 ## Related Documentation
 

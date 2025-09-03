@@ -20,6 +20,7 @@ interface TagState {
     sidebarTags: Array<{ id: string; name: string; count: number }>
   ) => void;
   updateSelectedTagUnreadCount: (delta: number) => void; // RR-163: Optimistic updates
+  updateTagUnreadCount: (tagId: string, delta: number) => void; // RR-179: By-ID updates
 }
 
 export const useTagStore = create<TagState>()(
@@ -183,6 +184,29 @@ export const useTagStore = create<TagState>()(
             // Bound at 0 to prevent negative counts
             tag.unreadCount = Math.max(0, tag.unreadCount + delta);
             updatedTags.set(tagId, { ...tag });
+          }
+
+          return { tags: updatedTags };
+        });
+      },
+
+      // RR-179: Update specific tag counter by ID (Siri's recommendation)
+      updateTagUnreadCount: (tagId: string, delta: number) => {
+        set((state) => {
+          const updatedTags = new Map(state.tags);
+          const tag = updatedTags.get(tagId);
+
+          if (tag && tag.unreadCount !== undefined) {
+            // Bound at 0 to prevent negative counts
+            const newCount = Math.max(0, tag.unreadCount + delta);
+            updatedTags.set(tagId, { ...tag, unreadCount: newCount });
+            console.log(
+              `[RR-179] Updated tag ${tagId}: ${tag.unreadCount} → ${newCount} (delta: ${delta})`
+            );
+          } else {
+            console.warn(
+              `[RR-179] Tag ${tagId} not found or has no unreadCount`
+            );
           }
 
           return { tags: updatedTags };
