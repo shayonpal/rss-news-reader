@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-09-03
+
+### Added
+
+- **RR-256: Auto-fetch full content from partial RSS feeds**
+  - Automatically retrieves full article content before summarization
+  - Intelligent detection of partial vs full content feeds
+  - Rate-limited content extraction (max 3 concurrent)
+  - Seamless fallback to RSS content when extraction fails
+
+- **RR-257: Comprehensive error feedback system**
+  - Context-aware error messages for summarization failures
+  - Specific error handling for rate limits, content issues, and API errors
+  - User-friendly retry functionality with clear status indicators
+  - Toast notifications for all error scenarios
+
+- **RR-261: Enhanced feed filter persistence**
+  - Comprehensive E2E test coverage for filter state management
+  - Validation of filter persistence across page refreshes
+  - 62 test scenarios covering edge cases and browser compatibility
+
+### Changed
+
+- **RR-237: Database performance optimization via RPC functions**
+  - Replaced direct table updates with atomic RPC functions
+  - 66% reduction in database queries for API usage tracking
+  - Implemented increment_api_usage and update_api_usage_zones functions
+  - Backward compatibility maintained with fallback mechanisms
+
+- **RR-245: Memory management improvements**
+  - Implemented stable callback pattern to prevent memory exhaustion
+  - Fixed React hook memory leaks with ref shadows
+  - Optimized re-render cycles in auto-parse functionality
+
+- **RR-255: Event propagation fixes**
+  - Fixed summary button click-through to article navigation
+  - Retired IOSButton in favor of standardized ArticleActionButton
+  - Improved touch event handling for mobile devices
+
+### Infrastructure
+
+- **RR-244/243/242: Test infrastructure consolidation**
+  - 83% reduction in test files (from 234 to 39 files)
+  - Maintained 100% test coverage with scenario-driven approach
+  - Test execution optimized from 120s to <28s
+  - Archived debug and exploratory tests for cleaner structure
+
 ### Fixed
 
 - **2025-08-29 15:30 - fix(RR-261): Validate feed filter persistence on page refresh**

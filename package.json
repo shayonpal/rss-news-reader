@@ -1,6 +1,6 @@
 {
   "name": "rss-news-reader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "NEXT_BUILD_DIR=.next-dev next dev",
