@@ -229,7 +229,7 @@ Tests: 3 passed, 3 total
 - ✅ Quality gates passed in test-design phase
 - ✅ Implementation contracts established
 
-**Next Step:** Use `05-document` to create comprehensive documentation
+**Next Step:** Use `05-code-review` for quality validation
 ```
 
 ## Error Handling
@@ -248,7 +248,7 @@ Tests: 3 passed, 3 total
 - Implementation contracts are clear
 - No additional test quality analysis needed
 
-**Handoff Deliverables (to 05-document):**
+**Handoff Deliverables (to 05-code-review):**
 
 - Complete working implementation
 - All tests passing

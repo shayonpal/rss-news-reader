@@ -9,10 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [RR-267] Settings button in sidebar header for user configuration access
+  - Symbol: `SimpleFeedSidebar` component - Added Bolt icon from lucide-react
+  - Navigation to `/settings` route (to be implemented in RR-268)
+  - Comprehensive test coverage: 18 unit tests, integration tests, E2E tests
 - [RR-266] AI models table for storing model metadata in `ai_models` database table
 - [RR-266] TypeScript interface `AIModel` for type-safe model handling
 - [RR-266] Seed data for 5 Claude models (opus-4-1, opus-4-0, sonnet-4-0, 3-7-sonnet, 3-5-haiku)
 - [RR-266] RLS policy for public read access to AI models reference data
+
+### Changed
+
+- [RR-267] Replaced "Fetch Stats" button with Settings icon in sidebar header
+  - Removed BarChart3 icon and `/fetch-stats` route navigation
+  - Updated aria-label for improved accessibility
+
+### Removed
+
+- [RR-267] Fetch Stats page and associated navigation (`src/app/fetch-stats/page.tsx`)
 
 ### Database
 

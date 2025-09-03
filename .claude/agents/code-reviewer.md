@@ -43,7 +43,18 @@ When provided context from primary agent:
 - Modified symbols follow existing patterns
 - Dependencies properly updated
 - Error handling consistent across symbol chain
-- Type safety maintained
+- Type safety maintained with strict TypeScript compliance
+
+**TypeScript Type Safety**:
+
+- No usage of 'any' type without justification
+- Proper type definitions instead of 'any'
+- Generic types used appropriately
+- Union types preferred over 'any' for multiple types
+- Interface definitions for complex objects
+- Return types explicitly defined for functions
+- Parameter types properly annotated
+- Type guards implemented where needed
 
 **Project Patterns**:
 
@@ -75,6 +86,30 @@ When provided context from primary agent:
 - Unnecessary re-renders avoided
 - Sync operations efficient
 
+#### TypeScript Type Safety Review
+
+**Critical Type Violations**:
+
+- Flag all instances of 'any' type usage
+- Identify missing type annotations
+- Check for unsafe type assertions
+- Verify generic constraints are proper
+
+**Type Quality Metrics**:
+
+- Functions with explicit return types
+- Parameters with proper type annotations
+- Complex objects use interfaces/types
+- API responses have proper typing
+- Error objects properly typed
+
+**Specific 'any' Type Analysis**:
+
+- Document each 'any' usage with justification requirement
+- Suggest specific type alternatives (union types, generics, interfaces)
+- Flag 'any' in critical paths (API routes, database operations)
+- Recommend type-safe alternatives with code examples
+
 #### Testing Assessment
 
 - Modified symbols have corresponding tests
@@ -91,23 +126,33 @@ When provided context from primary agent:
 - Breaking changes to existing symbols
 - Failed acceptance criteria
 - Data loss risks
+- 'any' types in critical paths (API routes, database operations, auth)
+- Missing type safety in core business logic
 
 ### 🟡 HIGH (Should Fix)
 
 - Missing error handling in symbols
 - Performance bottlenecks
 - Missing tests for core logic
+- 'any' types in non-critical but important code paths
+- Missing return type annotations on functions
+- Unsafe type assertions without proper guards
 
 ### 🔵 MEDIUM (Consider)
 
 - Code style inconsistencies
 - Optimization opportunities
 - Documentation gaps
+- Missing parameter type annotations in less critical functions
+- Generic types that could be more specific
+- Complex union types that could use discriminated unions
 
 ### ⚪ LOW (Nice to Have)
 
 - Minor formatting issues
 - Variable naming improvements
+- Missing JSDoc type annotations
+- Opportunity to use stricter TypeScript settings
 
 ## RSS Reader Specific Checks
 
@@ -180,6 +225,24 @@ Return this JSON structure:
     "error_handling": "comprehensive|adequate|insufficient",
     "test_coverage": "complete|adequate|insufficient|missing"
   },
+  "type_safety_review": {
+    "any_types_found": 0,
+    "critical_any_usage": 0,
+    "missing_return_types": 0,
+    "missing_parameter_types": 0,
+    "unsafe_type_assertions": 0,
+    "type_safety_score": "excellent|good|needs_improvement|poor",
+    "any_type_violations": [
+      {
+        "symbol": "exact symbol path",
+        "file": "path/to/file.ts",
+        "line": "line number",
+        "context": "usage context",
+        "suggested_type": "specific type alternative",
+        "justification_required": true|false
+      }
+    ]
+  },
   "actionable_feedback": {
     "must_fix": [
       {
@@ -201,8 +264,10 @@ Return this JSON structure:
 2. **Use Serena**: Leverage symbolic navigation for impact analysis
 3. **Be Specific**: Reference exact symbol paths in issues
 4. **Security First**: Never compromise on security
-5. **Test Everything**: Ensure symbol changes are tested
-6. **Performance Matters**: Consider sync pipeline impact
+5. **Type Safety Critical**: Flag all 'any' usage and missing type annotations
+6. **Test Everything**: Ensure symbol changes are tested
+7. **Performance Matters**: Consider sync pipeline impact
+8. **TypeScript Excellence**: Enforce strict typing standards across codebase
 
 ## Quick Validation Commands
 
@@ -210,6 +275,20 @@ Return this JSON structure:
 npm run type-check    # TypeScript compilation
 npm run lint         # Code quality
 npm run test         # Test execution (if safe)
+npx tsc --noEmit      # Type checking without compilation
+```
+
+## Type Safety Analysis Commands
+
+```bash
+# Search for 'any' type usage
+grep -rn "any" src/ --include="*.ts" --include="*.tsx"
+
+# Search for type assertions
+grep -rn "as any\|as unknown" src/ --include="*.ts" --include="*.tsx"
+
+# Check for missing return types (functions without explicit return types)
+grep -rn "function.*{$\|const.*= (" src/ --include="*.ts" --include="*.tsx"
 ```
 
 **Review Focus**: Be thorough but efficient. Provide constructive, actionable feedback with specific symbol references for maximum clarity.

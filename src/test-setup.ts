@@ -2,6 +2,7 @@ import "fake-indexeddb/auto";
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
 import { vi, expect, beforeEach, afterEach, afterAll } from "vitest";
+import React from "react";
 
 // Mock environment - ensure NODE_ENV is set
 if (!process.env.NODE_ENV) {
@@ -245,6 +246,7 @@ vi.mock("lucide-react", () => {
     List: mockIcon("List"),
     Grid: mockIcon("Grid"),
     Layout: mockIcon("Layout"),
+    LayoutDashboard: mockIcon("LayoutDashboard"),
 
     // System and device icons
     Monitor: mockIcon("Monitor"),
@@ -316,6 +318,7 @@ vi.mock("lucide-react", () => {
     Terminal: mockIcon("Terminal"),
     Bug: mockIcon("Bug"),
     Zap: mockIcon("Zap"),
+    Bolt: mockIcon("Bolt"),
 
     // Catch-all for any missing icons - prevents test failures
     default: mockIcon("DefaultIcon"),
@@ -323,8 +326,7 @@ vi.mock("lucide-react", () => {
 });
 
 // Additional handling for the integration test setup
-// Add the same lucide-react mock to integration test environment
-vi.mock("lucide-react", { hoisted: true });
+// The lucide-react mock is already defined above
 
 // Extend Vitest expect with custom matchers
 expect.extend({
