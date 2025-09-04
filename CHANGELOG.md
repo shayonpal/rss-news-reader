@@ -9,7 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Documentation cleanup: Renamed technical docs to remove issue numbers for better readability (Sept 04, 2025 - 01:56 PM ET)
+- Documentation cleanup: Renamed technical docs to remove issue numbers for better readability (Sept 04, 2025 - 01:56 PM EDT)
+- README.md streamlined for better maintainability (Sept 04, 2025 - 3:12 PM EDT)
+  - Updated PM2 services section with complete service listing including sync server and monitoring services
+  - Streamlined technology stack, UI/UX, testing, and database sections with references to detailed documentation
+  - Updated API endpoint count from 45 to 47 endpoints reflecting current coverage
+  - Reduced redundancy while preserving critical quick-reference information
+- Comprehensive documentation overhaul (Sept 04, 2025 - 3:58 PM EDT)
+  - Created `docs/tech/database-schema.md` with complete PostgreSQL schema documentation for all 15 tables
+  - Created `docs/QUICK_SETUP.md` with step-by-step setup guide for 5-minute deployment
+  - Created `docs/testing/README.md` consolidating all testing documentation
+  - Moved `docs/tech/testing-strategy.md` to `docs/testing/technical-implementation.md` for better organization
+  - Removed all Linear issue references (RR-xxx) from documentation for cleaner presentation
+  - Made documentation deployment-agnostic by removing Tailscale-specific URLs
+  - Updated all hardcoded URLs to use `${NEXT_PUBLIC_APP_URL}` environment variable
+  - Corrected PM2 services count from 3 to 5 services plus 1 module based on actual `pm2 list` output
+  - Fixed database table count from 9 to 15 tables with detailed schema documentation
+  - Added branch structure documentation (main = stable, dev = latest features)
+  - Removed outdated Current Development Status section
+  - Streamlined API Integration and Data Architecture sections
+  - Updated Contributing section with PR workflow and branch guidelines
+  - Corrected license reference from MIT to GPL v3.0
+  - Removed GitHub Project Board reference from Support section
+  - Added developer website link with UTM tracking parameters
 - [RR-268] Settings page route and skeleton layout with responsive design
   - Created `/settings` page route with glass morphism styling
   - Implemented responsive design following unified liquid glass system
