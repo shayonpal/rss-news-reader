@@ -80,7 +80,7 @@ Every migration attempt results in visual regressions where unified glass button
 - `src/app/globals.css` - Current working CSS glass definitions
 - `src/components/ui/morphing-dropdown.tsx` - Creates 4-button clusters
 - `src/components/articles/article-detail.tsx:427-460` - Current working button layout
-- `docs/tech/rr-224-liquid-glass-unification.md` - Previous successful styling unification
+- `docs/tech/liquid-glass-unification.md` - Previous successful styling unification
 
 ## Technical Context
 

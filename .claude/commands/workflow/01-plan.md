@@ -41,13 +41,116 @@ npm run lint  # Code quality
 - 🛑 STOP - Use `infra-expert` agent for emergency fixes
 - DO NOT proceed on broken foundation
 
-**If all pass:** ✅ Continue to Context Gathering
+**If all pass:** ✅ Continue to Issue Currency Validation
 
-## 3. Parallel Context Gathering
+## 3. Linear Issue Currency Validation
+
+**Before deep analysis, validate the issue is current and relevant:**
+
+Use `linear-expert` to ultrathink and perform comprehensive issue validation:
+
+### 3A. Temporal Relevance Check
+
+1. **Issue Age Assessment**:
+   - Check issue creation date vs current date
+   - If issue is >30 days old: Flag for manual review
+   - If issue is >90 days old: STOP and request user confirmation
+   - Compare issue creation against last project activity
+
+2. **Status Consistency Validation**:
+   - Verify issue is still in appropriate status (not accidentally left open)
+   - Check if similar issues have been completed since creation
+   - Validate issue hasn't been superseded by newer requirements
+
+### 3B. Project Context Alignment
+
+1. **Parent/Child Issue Analysis**:
+   - If part of larger epic/project: Check parent issue status and recent updates
+   - Verify child issues haven't changed the implementation approach
+   - Check if sibling issues reveal scope changes or new constraints
+   - Assess if project priorities have shifted
+
+2. **Dependency Chain Validation**:
+   - Check if blocking issues have been resolved as expected
+   - Verify dependent issues still reflect current requirements
+   - Identify any new blockers that have emerged
+
+### 3C. Scope Drift Detection
+
+1. **Requirements Evolution Check**:
+   - Compare original description with recent comments
+   - Look for scope creep or requirement changes in comments
+   - Check if acceptance criteria have been modified
+   - Identify any new technical constraints mentioned
+
+2. **Implementation Reality Check**:
+   - Use Serena MCP to quickly scan for related code changes
+   - Check if similar functionality has been implemented differently
+   - Verify the problem described still exists in current codebase
+   - Assess if architectural changes affect the proposed solution
+
+### 3D. Validation Decision Matrix
+
+Based on validation results, ultrathink and determine next steps:
+
+```
+🟢 PROCEED CONFIDENTLY:
+- Issue <30 days old OR has recent activity
+- No scope changes or conflicts detected
+- Parent project still active and relevant
+- Problem statement matches current codebase state
+
+🟡 PROCEED WITH CAUTION:
+- Issue 30-90 days old with some staleness indicators
+- Minor scope evolution detected
+- Related work has progressed but doesn't conflict
+- Solution approach may need minor adjustments
+
+🔴 STOP FOR CLARIFICATION:
+- Issue >90 days old or appears abandoned
+- Significant scope changes or conflicts detected
+- Parent project deprioritized or cancelled
+- Problem may no longer exist or approach is outdated
+- Implementation requirements fundamentally changed
+```
+
+### 3E. Validation Summary Report
+
+Generate clear validation findings:
+
+```
+📅 Issue Currency Validation for RR-XXX:
+
+⏱️ Temporal Assessment:
+- Created: [date] ([X] days ago)
+- Last Updated: [date]
+- Age Status: [FRESH/AGING/STALE]
+
+🎯 Project Alignment:
+- Parent Issue: [RR-XXX or N/A] - Status: [status]
+- Related Work: [X completed, Y in progress]
+- Priority Alignment: [HIGH/MEDIUM/LOW/UNCLEAR]
+
+🔍 Scope Consistency:
+- Original Requirements: [UNCHANGED/MINOR_UPDATES/MAJOR_CHANGES]
+- Implementation Approach: [STILL_VALID/NEEDS_ADJUSTMENT/OUTDATED]
+- Technical Constraints: [SAME/EVOLVED/NEW_BLOCKERS]
+
+✅ VALIDATION RESULT: [PROCEED/CAUTION/STOP]
+- [Key finding 1]
+- [Key finding 2]
+- [Recommended action if not PROCEED]
+```
+
+**If STOP result:** Request user confirmation to continue with potentially outdated requirements, or suggest issue review/update first.
+
+**If PROCEED or CAUTION:** Continue to context gathering with noted considerations.
+
+## 4. Parallel Context Gathering
 
 **Execute ALL of these IN PARALLEL using agents:**
 
-### 3A. Linear Issue Context
+### 4A. Linear Issue Context
 
 Use `linear-expert` to:
 
@@ -58,7 +161,7 @@ Use `linear-expert` to:
 - Remember: Issue + comments = living specification
 - Get context of all other incomplete + Done issues in the current cycle
 
-### 3B. Project Memory Context
+### 4B. Project Memory Context
 
 Use Serena MCP to access project memories:
 
@@ -72,7 +175,7 @@ Use Serena MCP to access project memories:
    - Historical context about architectural choices
    - Any observations related to the current issue topic
 
-### 3C. Recent Work Context
+### 4C. Recent Work Context
 
 Use `doc-search` and `git-expert` to:
 
@@ -80,7 +183,7 @@ Use `doc-search` and `git-expert` to:
 - Review last 20 git commits to understand recent changes
 - Identify patterns from completed work
 
-### 3D. Database Context
+### 4D. Database Context
 
 Use `db-expert-readonly` to:
 
@@ -89,7 +192,7 @@ Use `db-expert-readonly` to:
 - Check RLS policies and security advisories
 - Identify what data structures already exist
 
-### 3E. Existing Code Context
+### 4E. Existing Code Context
 
 Use Serena MCP for precise symbolic analysis:
 
@@ -113,7 +216,7 @@ Use Serena MCP for precise symbolic analysis:
    - Find similar data flows: store → service → API → database
    - Identify reusable utility functions via symbol relationships
 
-### 3F. Cross-Issue Pattern Recognition
+### 4F. Cross-Issue Pattern Recognition
 
 **NEW ENHANCEMENT:** Use `linear-expert` to identify similar completed issues:
 
@@ -135,7 +238,7 @@ Use Serena MCP for precise symbolic analysis:
    - Build decision trees based on issue characteristics
    - Document required adaptations for different contexts
 
-## 4. Automated Feasibility Validation
+## 5. Automated Feasibility Validation
 
 **NEW ENHANCEMENT:** Systematic validation before deep analysis:
 
@@ -229,9 +332,9 @@ Generate clear decision guidance:
 - Alternative approaches recommended
 ```
 
-## 5. Deep Technical Analysis
+## 6. Deep Technical Analysis
 
-Based on gathered context, analyze:
+Based on gathered context, ultrathink and analyze:
 
 ### Implementation Requirements:
 
@@ -253,7 +356,7 @@ Based on gathered context, analyze:
 - Use `tech-expert` agent to validate proposed approach
 - Check for security implications and best practices
 
-## 5A. Symbol-Based Impact Assessment
+## 6A. Symbol-Based Impact Assessment
 
 Execute precise symbol-level analysis:
 
@@ -280,7 +383,7 @@ Provide: "Replace symbol body: ArticleStore/syncArticles (lines 145-203)"
 "Insert after symbol: ArticleStore/constructor to add new state"
 "17 call sites need updating: [list with symbol paths]"
 
-## 6. Pragmatic Assessment
+## 7. Pragmatic Assessment
 
 **Challenge Everything:**
 
@@ -296,7 +399,7 @@ Provide: "Replace symbol body: ArticleStore/syncArticles (lines 145-203)"
 - "Consider X instead because..."
 - "This might cause Y issue..."
 
-## 7. Implementation Strategy
+## 8. Implementation Strategy
 
 Create detailed strategy based on issue type:
 
@@ -341,7 +444,7 @@ Create detailed strategy based on issue type:
 - [Any ambiguities]
 ```
 
-## 8. Interactive Refinement
+## 9. Interactive Refinement
 
 Ask:
 
@@ -394,7 +497,7 @@ The approved strategy will be carried forward to the staging phase.
 - Iterate and return to options again
 - Continue until the user has provided an option
 
-## 8A. Technical Expert Review
+## 9A. Technical Expert Review
 
 **NEW ENHANCEMENT:** Use `tech-expert` agent for comprehensive architecture validation:
 

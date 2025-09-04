@@ -562,7 +562,7 @@ Monitor glass system performance for:
 
 ## Related Documentation
 
-- [RR-224 Liquid Glass Unification Implementation](../tech/rr-224-liquid-glass-unification.md) - Technical implementation details
+- [Liquid Glass Unification](../tech/liquid-glass-unification.md) - Technical implementation details
 - [Liquid Glass Design System](./liquid-glass-design-system.md) - Design principles and component architecture
 - [Glass Components API](./glass-components-api.md) - Component interfaces and usage
 - [Component Library Foundation Finalization](../features/component-library-foundation-finalization.md) - RR-230 component migration details

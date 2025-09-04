@@ -100,3 +100,4 @@ test-output.log
 # Coverage reports (auto-generated)
 coverage-report.json
 data/usage.json
+/.serena/cache/

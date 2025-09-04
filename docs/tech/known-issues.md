@@ -132,7 +132,7 @@ const setupStorageMock = (storageName: "localStorage" | "sessionStorage") => {
 
 #### Reference Documentation
 
-- **Implementation Guide**: [RR-222 Implementation](./rr-222-implementation.md)
+- **Implementation Guide**: [Browser API Mocking](./browser-api-mocking.md)
 - **Testing Strategy**: [Browser API Mock Infrastructure](./testing-strategy.md#browser-api-mock-infrastructure-rr-222)
 - **Safe Test Practices**: [setupStorageMock Function Documentation](../testing/safe-test-practices.md#setupstoragemock-function-documentation-rr-222)
 

@@ -411,7 +411,7 @@ src/__tests__/performance/rr-179-liquid-glass-performance.test.ts
 
 ```
 docs/features/mark-all-read.md (user documentation)
-docs/tech/rr-179-implementation.md (this file)
+docs/tech/mark-all-read-implementation.md (this file)
 docs/ui-ux/liquid-glass-design-system.md (design patterns)
 docs/dev/ios-26-patterns.md (development guide)
 ```

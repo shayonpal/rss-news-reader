@@ -789,7 +789,7 @@ For toolbar and navigation contexts:
 
 ## Related Documentation
 
-- [RR-179 Implementation Details](../tech/rr-179-implementation.md)
+- [Mark All Read Implementation](../tech/mark-all-read-implementation.md)
 - [iOS 26 Development Patterns](../dev/ios-26-patterns.md)
 - [Performance Optimization Guide](../tech/performance-optimization.md)
 - [Accessibility Standards](../accessibility/standards.md)
