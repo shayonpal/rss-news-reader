@@ -38,6 +38,11 @@ process.env.TEST_INOREADER_EMAIL =
 process.env.TEST_INOREADER_PASSWORD =
   process.env.TEST_INOREADER_PASSWORD || "test-password";
 
+// RR-269: Add TOKEN_ENCRYPTION_KEY for preferences API tests
+// Use a test-specific 64-character hex string for AES-256-GCM encryption
+process.env.TOKEN_ENCRYPTION_KEY =
+  process.env.TOKEN_ENCRYPTION_KEY || "a1b2c3d4e5f6789012345678901234567890abcdefabcdef1234567890abcdef";
+
 // Ensure we're not using mocked fetch from unit tests
 if ("vi" in global && (global as any).vi && (global as any).fetch?.mock) {
   delete (global as any).fetch;

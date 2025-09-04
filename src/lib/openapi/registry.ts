@@ -4763,6 +4763,172 @@ if (process.env.NODE_ENV !== "production") {
         },
       },
     });
+    
+    // RR-269: User Preferences API Endpoints
+    
+    // Preferences schema with nested structure
+    const PreferencesSchema = z.object({
+      ai: z.object({
+        model: z.string().optional()
+          .describe("AI model for generating summaries"),
+        summaryWordCount: z.string().regex(/^\d+-\d+$/).optional()
+          .describe("Word count range for summaries (e.g., '70-80')"),
+        summaryStyle: z.enum(["objective", "analytical", "retrospective"]).optional()
+          .describe("Style for AI summaries"),
+      }).optional()
+        .describe("AI-related preferences"),
+      sync: z.object({
+        maxArticles: z.number().min(10).max(1000).optional()
+          .describe("Maximum number of articles to sync"),
+        retentionCount: z.number().min(1).max(365).optional()
+          .describe("Number of days to retain articles"),
+        batchSize: z.number().min(1).max(100).optional()
+          .describe("Number of articles per batch"),
+      }).optional()
+        .describe("Sync and retention preferences"),
+      apiKeys: z.record(z.string(), z.string()).optional()
+        .describe("Encrypted API keys (decrypted for response)"),
+    });
+    
+    // GET /api/users/preferences
+    registry.registerPath({
+      method: "get",
+      path: "/api/users/preferences",
+      summary: "Get user preferences",
+      description: "Retrieve user preferences with defaults merged from environment variables",
+      tags: ["Users"],
+      responses: {
+        200: {
+          description: "User preferences with defaults",
+          content: {
+            "application/json": {
+              schema: PreferencesSchema,
+              examples: {
+                success: {
+                  value: {
+                    ai: {
+                      model: "claude-3-haiku-20240307",
+                      summaryWordCount: "70-80",
+                      summaryStyle: "objective",
+                    },
+                    sync: {
+                      maxArticles: 100,
+                      retentionCount: 30,
+                      batchSize: 20,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+    
+    // PUT /api/users/preferences
+    registry.registerPath({
+      method: "put",
+      path: "/api/users/preferences",
+      summary: "Update user preferences",
+      description: "Update user preferences with partial data. Validates AI models against ai_models table.",
+      tags: ["Users"],
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: PreferencesSchema,
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Updated preferences",
+          content: {
+            "application/json": {
+              schema: PreferencesSchema,
+              examples: {
+                success: {
+                  value: {
+                    ai: {
+                      model: "claude-3-opus-20240229",
+                      summaryWordCount: "150-175",
+                      summaryStyle: "analytical",
+                    },
+                    sync: {
+                      maxArticles: 250,
+                      retentionCount: 60,
+                      batchSize: 50,
+                    },
+                    apiKeys: {
+                      inoreader: "example_api_key",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Invalid preferences data",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+              examples: {
+                invalidModel: {
+                  value: {
+                    error: "Invalid AI model specified",
+                  },
+                },
+                invalidFormat: {
+                  value: {
+                    error: "Invalid preferences data",
+                    details: [
+                      {
+                        path: ["summaryWordCount"],
+                        message: "Invalid format",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
   }
 }
 

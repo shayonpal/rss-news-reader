@@ -4,18 +4,42 @@ interface SummaryPromptConfig {
   style: string;
 }
 
+interface UserPreferences {
+  ai?: {
+    summaryWordCount?: string;
+    summaryStyle?: string;
+    model?: string;
+  };
+  sync?: {
+    maxArticles?: number;
+    retentionCount?: number;
+    batchSize?: number;
+  };
+}
+
 export class SummaryPromptBuilder {
   private static readonly DEFAULTS: SummaryPromptConfig = {
     wordCount: "150-175",
     focus: "key facts, main arguments, and important conclusions",
     style: "objective",
   };
+  
+  private static userPreferences: UserPreferences | null = null;
+
+  static setUserPreferences(preferences: UserPreferences | null) {
+    this.userPreferences = preferences;
+  }
 
   static getConfig(): SummaryPromptConfig {
+    // First check user preferences (nested structure), then environment variables, then defaults
     return {
-      wordCount: process.env.SUMMARY_WORD_COUNT || this.DEFAULTS.wordCount,
+      wordCount: this.userPreferences?.ai?.summaryWordCount || 
+                 process.env.SUMMARY_WORD_COUNT || 
+                 this.DEFAULTS.wordCount,
       focus: process.env.SUMMARY_FOCUS || this.DEFAULTS.focus,
-      style: process.env.SUMMARY_STYLE || this.DEFAULTS.style,
+      style: this.userPreferences?.ai?.summaryStyle || 
+             process.env.SUMMARY_STYLE || 
+             this.DEFAULTS.style,
     };
   }
 

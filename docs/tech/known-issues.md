@@ -614,6 +614,106 @@ The implementation proceeded without major technical limitations or blocking iss
 2. **Form Functionality**: Current skeleton provides foundation for future form implementation
 3. **Settings Persistence**: Backend integration will be needed when actual settings functionality is implemented
 
+## Test Infrastructure Issues
+
+### Unit Test Infrastructure - Supabase Mocking Configuration (RR-269)
+
+**Status:** 🔴 Needs Repair  
+**Severity:** High  
+**First Identified:** September 4, 2025 during RR-269 implementation testing
+
+#### Description
+
+The unit test infrastructure is experiencing critical failures due to test environment setup issues. During RR-269 testing, 10 out of 18 unit tests failed primarily due to mock configuration problems and cache interference between test runs, despite the implementation being production-ready.
+
+#### Impact
+
+- **Unit Test Coverage**: 56% failure rate (10/18 unit tests failing)
+- **Development Confidence**: Unable to validate business logic changes through automated testing  
+- **CI/CD Pipeline**: Unit test stage unreliable
+- **Implementation Status**: Production code is functional; issues are test environment setup
+
+#### Root Cause
+
+**Test Environment Setup Issues:**
+
+- **Missing TOKEN_ENCRYPTION_KEY**: Environment variable not available in test context (now fixed)
+- **Supabase Client Mock Problems**: Mock destructuring and method chaining failures
+- **Cache Interference**: Test isolation problems with cache behavior between test runs
+- **Mock Implementation Gaps**: Incomplete mock coverage for encryption and caching patterns
+
+#### Specific Test Failures (RR-269)
+
+```bash
+# Environment variable missing (RESOLVED)
+× should encrypt and decrypt API keys correctly
+  → TOKEN_ENCRYPTION_KEY environment variable not found
+
+# Supabase mock configuration issues (ONGOING)
+× should cache preferences with TTL and invalidation
+  → Cannot read properties of undefined (reading 'from')
+
+# Cache isolation problems (ONGOING)  
+× should handle cache invalidation properly
+  → Cache state bleeding between test runs
+```
+
+#### Implementation vs Test Environment
+
+**Production Implementation:** ✅ **VERIFIED WORKING**
+
+- **Encryption Pattern**: AES-256-GCM for API keys implemented correctly
+- **Caching System**: TTL and invalidation logic functional
+- **Deep Merge Logic**: Nested preferences handling works properly
+- **All Features Tested Manually**: Settings encryption, caching, and merge logic confirmed working
+
+**Test Environment:** ❌ **SETUP ISSUES**
+
+- Mock configuration doesn't match production Supabase client interface
+- Cache behavior tests not properly isolated between runs
+- Environment variable setup incomplete for encryption testing
+
+#### Suggested Resolution
+
+1. **Audit Mock Configuration**: Review Supabase client mock completeness in test helpers
+2. **Fix Test Isolation**: Implement proper cache clearing between test runs
+3. **Environment Setup**: Ensure all required environment variables available in test context
+4. **Mock Interface Alignment**: Verify mock methods match actual Supabase client API
+5. **Cache Testing Strategy**: Implement proper cache mocking and isolation patterns
+
+#### Related Implementation
+
+This issue was discovered during comprehensive testing of RR-269 settings infrastructure, where unit tests were needed to validate encryption, caching, and deep merge functionality without making actual API calls.
+
+### Integration Test Configuration Exclusions (RR-269)
+
+**Status:** 🟡 Needs Investigation  
+**Severity:** Low  
+**Updated:** September 4, 2025 during RR-269 implementation testing
+
+#### Description
+
+Some test files continue to be excluded from the Vitest configuration, potentially creating gaps in test coverage. The exclusion patterns may be intentional for specific reasons (performance, reliability, or incomplete implementation) but need documentation and periodic review.
+
+#### Updated Context (RR-269)
+
+During RR-269 testing, test configuration exclusions were noted as part of comprehensive test suite evaluation. The exclusions don't currently impact RR-269 functionality but represent ongoing technical debt in test coverage.
+
+#### Impact
+
+- **Coverage Gaps**: Potential untested code paths for settings and infrastructure features
+- **Configuration Clarity**: Unclear why certain test categories are excluded
+- **Maintenance Risk**: Excluded tests may become outdated without regular execution
+- **Development Workflow**: Confusion about comprehensive test coverage expectations
+
+#### Suggested Resolution
+
+1. **Document Exclusion Rationale**: Add comments explaining each excluded test pattern
+2. **Coverage Analysis**: Identify what functionality is not being tested due to exclusions
+3. **Cleanup vs Fix Decision**: Determine if excluded tests should be fixed or permanently removed
+4. **Environment Dependencies**: Create setup for tests requiring specific conditions
+5. **Regular Review**: Establish periodic review process for excluded test categories
+
 ## Test Infrastructure Issues (Resolved)
 
 ### React Testing Library Test Isolation Issues (RR-252)

@@ -95,6 +95,62 @@ Return all findings as structured JSON with analysis and insights:
    - Version-specific content
    - Date stamps in documentation
 
+## README Analysis Standards for RSS News Reader
+
+### Core Quality Assessment
+
+When analyzing READMEs, evaluate against these RSS News Reader specific standards:
+
+**Implementation Reality Check**
+- Every command, path, and example must be real and testable
+- Documentation should reflect ACTUAL implementation, not aspirations
+- Focus on what IS, not what was or will be
+
+### Structure Analysis Criteria
+
+**1. Context-First Opening Assessment**
+- Does README explain WHY this directory/component exists in RSS News Reader ecosystem?
+- Is connection to larger architecture immediately clear?
+
+**2. Progressive Disclosure Evaluation**
+- Quick access info prioritized (URLs, commands, key files)
+- Proper use of collapsible sections or linked docs
+- Main content remains scannable
+
+**3. Reality Anchors Verification**
+- Uses actual file references: `lib/sync/queue-processor.ts` not "the sync processor"
+- Includes real commands: `pm2 logs rss-reader-dev` not "check the logs"
+- References actual service names: `rss-sync-cron` not "the cron service"
+
+### Content Quality Assessment
+
+**1. RSS News Reader Specifics Check**
+- Includes Tailscale access requirement (100.96.166.53) where relevant
+- Shows `/reader` base path in route examples
+- References PM2 services by exact names
+
+**2. Practical vs Theoretical Balance**
+- ✅ Good: "Sync runs every 5 minutes via PM2 cron. Manual trigger: POST /reader/api/sync/manual"
+- ❌ Poor: "The system provides synchronization capabilities"
+
+**3. Content Exclusion Compliance**
+- No TODOs or Linear issue references (RR-xxx)
+- No MCP server mentions (Serena, etc.)
+- No changelog entries or version history
+- No work-in-progress features or planned improvements
+
+### Directory-Specific Analysis Focus
+- **Root README**: Project access, quick start, architecture overview
+- **src/ README**: Entry points, key patterns, file purposes
+- **docs/ README**: Navigation index with verification dates
+- **Component READMEs**: Local purpose, dependencies, testing approach
+
+### Quality Markers to Identify
+- Commands that can be copy-pasted and run successfully
+- File paths that can be cmd-clicked in IDEs
+- Tables for scanning (endpoints, services, configs)
+- Current state documentation only (no future plans)
+
 ## Documentation Standards Reference
 
 When analyzing, check against these standards:

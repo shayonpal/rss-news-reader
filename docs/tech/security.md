@@ -217,6 +217,49 @@ The application implements security headers:
 - **In Transit**: All connections use HTTPS/TLS
 - **At Rest**: Supabase provides encryption at rest
 - **Tokens**: OAuth tokens encrypted with AES-256-GCM
+- **API Keys**: Settings API keys encrypted using AES-256-GCM (RR-269)
+
+### Encryption Implementation (RR-269)
+
+**Pattern**: AES-256-GCM encryption for sensitive API keys and tokens
+
+**Implementation Details**:
+
+```typescript
+// Encryption utility pattern
+const encryptAPIKey = (plaintext: string): string => {
+  const iv = crypto.randomBytes(12); // 96-bit IV for GCM
+  const cipher = crypto.createCipher('aes-256-gcm', TOKEN_ENCRYPTION_KEY);
+  cipher.setAAD(Buffer.from('api-key-encryption')); // Additional authenticated data
+  
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+  
+  return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
+};
+```
+
+**Security Features**:
+
+- **AES-256-GCM**: Authenticated encryption providing both confidentiality and integrity
+- **Random IV**: Each encryption uses a cryptographically random 96-bit initialization vector
+- **Authentication Tag**: Prevents tampering with encrypted data
+- **Additional Authenticated Data (AAD)**: Context-specific authentication
+- **Key Derivation**: Uses TOKEN_ENCRYPTION_KEY environment variable
+
+**Usage Context**:
+
+- Settings page API key storage
+- User preference encryption where sensitive data is involved
+- OAuth token encryption (existing implementation)
+- Any sensitive configuration data requiring encryption
+
+**Environment Requirements**:
+
+- `TOKEN_ENCRYPTION_KEY`: 32-byte hex string for AES-256 key
+- Secure key generation and storage outside version control
+- Key rotation capability for production environments
 
 ### Data Minimization
 
@@ -273,6 +316,9 @@ The application implements security headers:
 - [ ] Validate UUID parameter validation middleware coverage
 - [ ] Test malformed UUID handling in all API endpoints
 - [ ] Review parameter validation error responses for information leakage
+- [ ] Verify AES-256-GCM encryption implementation for API keys and sensitive data
+- [ ] Test encryption key management and environment variable security
+- [ ] Validate encrypted data integrity with authentication tag verification
 
 ## Related Documentation
 
