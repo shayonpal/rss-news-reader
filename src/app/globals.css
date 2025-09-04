@@ -1445,3 +1445,44 @@ html.reduce-transparency .glass-segment-indicator {
   background: var(--toast-info-bg) !important;
   color: var(--toast-info-text) !important;
 }
+
+/* ========================================
+   RR-268: Glass Input Styles for Settings
+   ======================================== */
+
+/* Glass-morphism input styling for settings page */
+.glass-input {
+  @apply border border-border/50 bg-background/50 backdrop-blur-sm;
+  @apply transition-all duration-200;
+  @apply disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+/* Glass input hover state */
+.glass-input:not(:disabled):hover {
+  @apply border-border/70 bg-background/70;
+}
+
+/* Glass input focus state */
+.glass-input:not(:disabled):focus {
+  @apply border-border bg-background/80 outline-none ring-2 ring-ring/20;
+}
+
+/* Glass input with skeleton animation */
+.glass-input.animate-pulse {
+  @apply bg-muted/30;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Glass toggle specific styling */
+.glass-input.toggle {
+  @apply h-4 w-4 rounded;
+}
+
+/* Settings page specific utilities */
+.settings-page {
+  @apply min-h-screen bg-background;
+}
+
+.settings-page header {
+  @apply border-b border-border;
+}
