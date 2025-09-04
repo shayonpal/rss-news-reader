@@ -61,7 +61,7 @@ As a news enthusiast with ADHD, I struggle with:
 
 Shayon's News is a PWA RSS reader that:
 
-- **Saves time** with AI-powered 100-120 word summaries
+- **Saves time** with AI-powered 150–175 word summaries (configurable)
 - **Works offline** with intelligent content caching
 - **Reduces friction** with one-tap summary generation
 - **Maintains focus** with a clean, Reeder-inspired interface
@@ -71,7 +71,7 @@ Shayon's News is a PWA RSS reader that:
 ### Core Functionality
 
 1. **Inoreader Integration** - Single source of truth for feed management
-2. **AI Summarization** - On-demand summaries using Claude 4 Sonnet
+2. **AI Summarization** - On-demand summaries using Anthropic Claude (default: `claude-sonnet-4-20250514`, set via `CLAUDE_SUMMARIZATION_MODEL` in `.env`)
 3. **Offline Support** - Cache last 50 articles + all viewed content
 4. **Full Content Fetching** - Manual fetch for partial feeds
 5. **Bidirectional Sync** - Read/unread status syncs with Inoreader
