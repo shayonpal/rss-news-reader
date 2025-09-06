@@ -32,16 +32,25 @@ vi.mock("@supabase/supabase-js");
 
 // Nested preferences schema matching new structure
 const PreferencesSchema = z.object({
-  ai: z.object({
-    model: z.string().optional(),
-    summaryWordCount: z.string().regex(/^\d+-\d+$/).optional(),
-    summaryStyle: z.enum(["objective", "analytical", "retrospective"]).optional(),
-  }).optional(),
-  sync: z.object({
-    maxArticles: z.number().min(10).max(1000).optional(),
-    retentionCount: z.number().min(1).max(365).optional(),
-    batchSize: z.number().min(1).max(100).optional(),
-  }).optional(),
+  ai: z
+    .object({
+      model: z.string().optional(),
+      summaryWordCount: z
+        .string()
+        .regex(/^\d+-\d+$/)
+        .optional(),
+      summaryStyle: z
+        .enum(["objective", "analytical", "retrospective"])
+        .optional(),
+    })
+    .optional(),
+  sync: z
+    .object({
+      maxArticles: z.number().min(10).max(1000).optional(),
+      retentionCount: z.number().min(1).max(365).optional(),
+      batchSize: z.number().min(1).max(100).optional(),
+    })
+    .optional(),
   apiKeys: z.record(z.string(), z.string()).optional(),
 });
 
@@ -52,7 +61,10 @@ const getDefaultPreferences = (): UserPreferences => ({
   ai: {
     model: "claude-3-haiku-20240307",
     summaryWordCount: process.env.SUMMARY_WORD_COUNT || "70-80",
-    summaryStyle: (process.env.SUMMARY_STYLE || "objective") as "objective" | "analytical" | "retrospective",
+    summaryStyle: (process.env.SUMMARY_STYLE || "objective") as
+      | "objective"
+      | "analytical"
+      | "retrospective",
   },
   sync: {
     maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "100"),
@@ -70,10 +82,10 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
   let mockSingle: any;
 
   let selectCallCount = 0; // Move this outside to persist across test setup
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset environment variables
     process.env.SUMMARY_WORD_COUNT = "70-80";
     process.env.SUMMARY_STYLE = "objective";
@@ -82,17 +94,18 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
     process.env.SYNC_BATCH_SIZE = "20";
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://mock.supabase.co";
     process.env.SUPABASE_SERVICE_ROLE_KEY = "mock-service-key";
-    process.env.TOKEN_ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-    
+    process.env.TOKEN_ENCRYPTION_KEY =
+      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
     // Reset call counter
     selectCallCount = 0;
-    
+
     // Setup mock chain
     mockSingle = vi.fn();
     mockEq = vi.fn(() => ({ single: mockSingle }));
     mockSelect = vi.fn(() => ({ eq: mockEq }));
     mockUpdate = vi.fn(() => ({ eq: mockEq }));
-    
+
     mockFrom = vi.fn((table: string) => {
       // Handle ai_models table specially
       if (table === "ai_models") {
@@ -128,11 +141,11 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         update: mockUpdate,
       };
     });
-    
+
     mockSupabase = {
       from: mockFrom,
     };
-    
+
     // Mock createClient to return our mock
     vi.mocked(createClient).mockReturnValue(mockSupabase as any);
   });
@@ -152,7 +165,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
           maxArticles: 200,
         },
       };
-      
+
       mockSingle.mockResolvedValue({
         data: {
           id: "shayon",
@@ -161,7 +174,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: null,
       });
 
-      const request = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       const response = await GET(request);
       const data = await response.json();
 
@@ -183,7 +198,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: null,
       });
 
-      const request = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       const response = await GET(request);
       const data = await response.json();
 
@@ -195,7 +212,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       const storedPrefs: UserPreferences = {
         ai: { summaryWordCount: "100-120" },
       };
-      
+
       mockSingle.mockResolvedValue({
         data: {
           id: "shayon",
@@ -205,15 +222,19 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       // First request - hits database
-      const request1 = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request1 = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       await GET(request1);
       expect(mockFrom).toHaveBeenCalledTimes(1);
 
       // Second request - uses cache
-      const request2 = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request2 = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       const response2 = await GET(request2);
       const data = await response2.json();
-      
+
       expect(mockFrom).toHaveBeenCalledTimes(1); // Still 1, not 2
       expect(data.ai.summaryWordCount).toBe("100-120");
     });
@@ -224,7 +245,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: new Error("Database connection failed"),
       });
 
-      const request = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       const response = await GET(request);
       const data = await response.json();
 
@@ -238,7 +261,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: { code: "PGRST116", message: "User not found" },
       });
 
-      const request = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       const response = await GET(request);
       const data = await response.json();
 
@@ -493,7 +518,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain("Invalid preferences");
-      expect(data.details[0].message).toContain("Minimum word count must be less than or equal to maximum");
+      expect(data.details[0].message).toContain(
+        "Minimum word count must be less than or equal to maximum"
+      );
     });
   });
 
@@ -548,7 +575,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       const storedPrefs: UserPreferences = {
         ai: { summaryWordCount: "100-120" },
       };
-      
+
       mockSingle.mockResolvedValue({
         data: {
           id: "shayon",
@@ -558,7 +585,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       // GET should cache with key "preferences:shayon"
-      const request = new NextRequest("http://localhost:3000/api/users/preferences");
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       await GET(request);
 
       // Verify from was called once
@@ -593,11 +622,16 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       // After PUT, cache should be invalidated
       // A subsequent GET should hit the database
       mockSingle.mockResolvedValueOnce({
-        data: { id: "shayon", preferences: { ai: { summaryStyle: "analytical" } } },
+        data: {
+          id: "shayon",
+          preferences: { ai: { summaryStyle: "analytical" } },
+        },
         error: null,
       });
 
-      const getRequest = new NextRequest("http://localhost:3000/api/users/preferences");
+      const getRequest = new NextRequest(
+        "http://localhost:3000/api/users/preferences"
+      );
       await GET(getRequest);
 
       // Verify database was called for the GET after cache invalidation

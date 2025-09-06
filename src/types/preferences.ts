@@ -1,6 +1,6 @@
 /**
  * RR-270: User Preferences Types
- * 
+ *
  * Type definitions for user preferences management with
  * split architecture (domain vs editor) and API key security.
  */
@@ -11,16 +11,16 @@
  */
 export interface PreferencesData {
   ai: {
-    hasApiKey: boolean;       // Boolean only, never actual key
+    hasApiKey: boolean; // Boolean only, never actual key
     model: string;
     summaryLengthMin: number;
     summaryLengthMax: number;
-    summaryStyle: 'objective' | 'analytical' | 'concise' | 'detailed';
-    contentFocus: 'general' | 'technical' | 'business' | 'educational' | null;
+    summaryStyle: "objective" | "analytical" | "concise" | "detailed";
+    contentFocus: "general" | "technical" | "business" | "educational" | null;
   };
   sync: {
-    maxArticles: number;      // 10-5000
-    retentionCount: number;   // 1-365
+    maxArticles: number; // 10-5000
+    retentionCount: number; // 1-365
   };
 }
 
@@ -31,16 +31,16 @@ export interface PreferencesData {
 export interface UserPreferences extends PreferencesData {
   id: string;
   userId: string;
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   syncEnabled: boolean;
   retentionDays: number;
-  feedOrder: 'alphabetical' | 'unread' | 'recent';
+  feedOrder: "alphabetical" | "unread" | "recent";
   showUnreadOnly: boolean;
   markAsReadOnOpen: boolean;
   enableNotifications: boolean;
   notificationTime: string | null;
-  inoreaderApiKey: null;     // Always null on client
-  claudeApiKey: null;         // Always null on client
+  inoreaderApiKey: null; // Always null on client
+  claudeApiKey: null; // Always null on client
   createdAt: string;
   updatedAt: string;
 }
@@ -48,27 +48,27 @@ export interface UserPreferences extends PreferencesData {
 /**
  * API key state machine states
  * Used to track changes without exposing actual keys
- * 
+ *
  * State transitions:
  * - 'unchanged': Default state - no pending API key changes
  *   → Can transition to 'replace' (user enters new key) or 'clear' (user removes key)
- * 
+ *
  * - 'replace': User has entered a new API key (stored in WeakMap, never in state)
  *   → On save success: transitions back to 'unchanged'
  *   → On save failure: remains in 'replace' state for retry
  *   → User can change to 'clear' or back to 'unchanged'
- * 
+ *
  * - 'clear': User wants to remove the existing API key
  *   → On save success: transitions back to 'unchanged'
  *   → On save failure: remains in 'clear' state for retry
  *   → User can change to 'replace' or back to 'unchanged'
- * 
+ *
  * Security notes:
  * - The actual API key value is NEVER stored in this state
  * - API keys are stored separately in a WeakMap (memory-only)
  * - This state machine only tracks the TYPE of change, not the value
  */
-export type ApiKeyState = 'unchanged' | 'replace' | 'clear';
+export type ApiKeyState = "unchanged" | "replace" | "clear";
 
 /**
  * Patch object for partial updates
@@ -79,19 +79,19 @@ export interface PreferencesPatch {
     model?: string;
     summaryLengthMin?: number;
     summaryLengthMax?: number;
-    summaryStyle?: PreferencesData['ai']['summaryStyle'];
-    contentFocus?: PreferencesData['ai']['contentFocus'] | null;
+    summaryStyle?: PreferencesData["ai"]["summaryStyle"];
+    contentFocus?: PreferencesData["ai"]["contentFocus"] | null;
     apiKeyChange?: ApiKeyState;
-    apiKey?: string | null;     // Only sent during 'replace' or 'clear'
+    apiKey?: string | null; // Only sent during 'replace' or 'clear'
   };
   sync?: {
     maxArticles?: number;
     retentionCount?: number;
   };
-  theme?: UserPreferences['theme'];
+  theme?: UserPreferences["theme"];
   syncEnabled?: boolean;
   retentionDays?: number;
-  feedOrder?: UserPreferences['feedOrder'];
+  feedOrder?: UserPreferences["feedOrder"];
   showUnreadOnly?: boolean;
   markAsReadOnOpen?: boolean;
   enableNotifications?: boolean;
@@ -126,11 +126,11 @@ export interface PreferencesValidationErrors {
 export const DEFAULT_PREFERENCES: PreferencesData = {
   ai: {
     hasApiKey: false,
-    model: 'claude-3-haiku-20240307',
+    model: "claude-3-haiku-20240307",
     summaryLengthMin: 100,
     summaryLengthMax: 300,
-    summaryStyle: 'objective',
-    contentFocus: 'general',
+    summaryStyle: "objective",
+    contentFocus: "general",
   },
   sync: {
     maxArticles: 500,
@@ -149,12 +149,18 @@ export const PREFERENCES_CONSTRAINTS = {
   ai: {
     summaryLengthMin: { min: 50, max: 500 },
     summaryLengthMax: { min: 50, max: 500 },
-    summaryStyles: ['objective', 'analytical', 'concise', 'detailed'] as const,
-    contentFocusOptions: ['general', 'technical', 'business', 'educational', null] as const,
+    summaryStyles: ["objective", "analytical", "concise", "detailed"] as const,
+    contentFocusOptions: [
+      "general",
+      "technical",
+      "business",
+      "educational",
+      null,
+    ] as const,
     models: [
-      'claude-3-haiku-20240307',
-      'claude-3-sonnet-20240229',
-      'claude-3-opus-20240229',
+      "claude-3-haiku-20240307",
+      "claude-3-sonnet-20240229",
+      "claude-3-opus-20240229",
     ] as const,
   },
 } as const;

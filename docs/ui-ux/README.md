@@ -30,4 +30,3 @@ This README indexes the UI/UX documents in this folder. It lists only files and 
 ---
 
 If you add or rename files in `docs/ui-ux/`, please update this index to keep it accurate.
-

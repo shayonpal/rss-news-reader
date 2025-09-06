@@ -229,14 +229,14 @@ The application implements security headers:
 // Encryption utility pattern
 const encryptAPIKey = (plaintext: string): string => {
   const iv = crypto.randomBytes(12); // 96-bit IV for GCM
-  const cipher = crypto.createCipher('aes-256-gcm', TOKEN_ENCRYPTION_KEY);
-  cipher.setAAD(Buffer.from('api-key-encryption')); // Additional authenticated data
-  
-  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+  const cipher = crypto.createCipher("aes-256-gcm", TOKEN_ENCRYPTION_KEY);
+  cipher.setAAD(Buffer.from("api-key-encryption")); // Additional authenticated data
+
+  let encrypted = cipher.update(plaintext, "utf8", "hex");
+  encrypted += cipher.final("hex");
   const authTag = cipher.getAuthTag();
-  
-  return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
+
+  return iv.toString("hex") + ":" + authTag.toString("hex") + ":" + encrypted;
 };
 ```
 

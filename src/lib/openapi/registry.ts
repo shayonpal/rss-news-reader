@@ -4763,39 +4763,65 @@ if (process.env.NODE_ENV !== "production") {
         },
       },
     });
-    
+
     // RR-269: User Preferences API Endpoints
-    
+
     // Preferences schema with nested structure
     const PreferencesSchema = z.object({
-      ai: z.object({
-        model: z.string().optional()
-          .describe("AI model for generating summaries"),
-        summaryWordCount: z.string().regex(/^\d+-\d+$/).optional()
-          .describe("Word count range for summaries (e.g., '70-80')"),
-        summaryStyle: z.enum(["objective", "analytical", "retrospective"]).optional()
-          .describe("Style for AI summaries"),
-      }).optional()
+      ai: z
+        .object({
+          model: z
+            .string()
+            .optional()
+            .describe("AI model for generating summaries"),
+          summaryWordCount: z
+            .string()
+            .regex(/^\d+-\d+$/)
+            .optional()
+            .describe("Word count range for summaries (e.g., '70-80')"),
+          summaryStyle: z
+            .enum(["objective", "analytical", "retrospective"])
+            .optional()
+            .describe("Style for AI summaries"),
+        })
+        .optional()
         .describe("AI-related preferences"),
-      sync: z.object({
-        maxArticles: z.number().min(10).max(1000).optional()
-          .describe("Maximum number of articles to sync"),
-        retentionCount: z.number().min(1).max(365).optional()
-          .describe("Number of days to retain articles"),
-        batchSize: z.number().min(1).max(100).optional()
-          .describe("Number of articles per batch"),
-      }).optional()
+      sync: z
+        .object({
+          maxArticles: z
+            .number()
+            .min(10)
+            .max(1000)
+            .optional()
+            .describe("Maximum number of articles to sync"),
+          retentionCount: z
+            .number()
+            .min(1)
+            .max(365)
+            .optional()
+            .describe("Number of days to retain articles"),
+          batchSize: z
+            .number()
+            .min(1)
+            .max(100)
+            .optional()
+            .describe("Number of articles per batch"),
+        })
+        .optional()
         .describe("Sync and retention preferences"),
-      apiKeys: z.record(z.string(), z.string()).optional()
+      apiKeys: z
+        .record(z.string(), z.string())
+        .optional()
         .describe("Encrypted API keys (decrypted for response)"),
     });
-    
+
     // GET /api/users/preferences
     registry.registerPath({
       method: "get",
       path: "/api/users/preferences",
       summary: "Get user preferences",
-      description: "Retrieve user preferences with defaults merged from environment variables",
+      description:
+        "Retrieve user preferences with defaults merged from environment variables",
       tags: ["Users"],
       responses: {
         200: {
@@ -4840,13 +4866,14 @@ if (process.env.NODE_ENV !== "production") {
         },
       },
     });
-    
+
     // PUT /api/users/preferences
     registry.registerPath({
       method: "put",
       path: "/api/users/preferences",
       summary: "Update user preferences",
-      description: "Update user preferences with partial data. Validates AI models against ai_models table.",
+      description:
+        "Update user preferences with partial data. Validates AI models against ai_models table.",
       tags: ["Users"],
       request: {
         body: {

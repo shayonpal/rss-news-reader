@@ -6,7 +6,7 @@ This document tracks test failures encountered during development to identify pa
 
 ### Context
 
-- **Linear Issue**: RR-269 - Settings Page Infrastructure Implementation  
+- **Linear Issue**: RR-269 - Settings Page Infrastructure Implementation
 - **Task**: Unit test validation for settings encryption, caching, and deep merge functionality
 - **Environment**: Development (Mac Mini, local)
 - **Workflow**: Test infrastructure validation during settings foundation implementation
@@ -59,7 +59,7 @@ npx vitest run --no-coverage src/__tests__/unit/settings/ --reporter=verbose
 **Specific Failures**:
 
 ```
-× should cache preferences with TTL and invalidation  
+× should cache preferences with TTL and invalidation
   → Cannot read properties of undefined (reading 'from')
 × should handle deep merge for nested preferences
   → mockSupabase.from(...).select(...).eq is not a function

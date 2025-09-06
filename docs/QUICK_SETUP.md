@@ -5,6 +5,7 @@ Get the RSS News Reader up and running in under 10 minutes.
 ## Prerequisites
 
 Ensure you have:
+
 - **Node.js** 18.17+ and **npm** 9.0+
 - **Git**
 - **Supabase account** (free tier works)
@@ -121,17 +122,20 @@ Check that everything is working:
    ```bash
    npm run pm2:logs rss-sync-cron
    ```
+
    - Should show sync running every 4 hours
 
 ## Common Issues
 
 ### Port Already in Use
+
 ```bash
 # Change port in .env
 PORT=3001
 ```
 
 ### OAuth Token Issues
+
 ```bash
 # Re-run OAuth setup
 rm -rf ~/.rss-reader/tokens.json
@@ -139,11 +143,13 @@ npm run setup:oauth
 ```
 
 ### Database Connection Failed
+
 - Check Supabase credentials in `.env`
 - Ensure Supabase project is active
 - Verify service role key has proper permissions
 
 ### Sync Not Working
+
 ```bash
 # Check sync service
 npm run pm2:logs rss-sync-server

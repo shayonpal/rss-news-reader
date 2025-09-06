@@ -42,17 +42,17 @@ describe("RR-269: User Preferences Integration Flow", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Save original environment
     originalEnv = { ...process.env };
-    
+
     // Setup test environment
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
     process.env.SUMMARY_WORD_COUNT = "70-80";
     process.env.SUMMARY_STYLE = "objective";
     process.env.SYNC_MAX_ARTICLES = "100";
-    
+
     // Create mock Supabase client
     mockSupabase = {
       from: vi.fn(),
@@ -63,7 +63,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
         }),
       },
     };
-    
+
     vi.mocked(createClient).mockReturnValue(mockSupabase as any);
   });
 
@@ -90,10 +90,10 @@ describe("RR-269: User Preferences Integration Flow", () => {
       // Fetch preferences
       const prefsResponse = await fetch("/api/users/preferences");
       const prefs = await prefsResponse.json();
-      
+
       // Build prompt with preferences
       const prompt = buildPromptWithPreferences(testArticle, prefs);
-      
+
       expect(prompt).toContain("analytical summary");
       expect(prompt).toContain("150-200 words");
       expect(prompt).not.toContain("70-80 words"); // Not using env default
@@ -103,21 +103,20 @@ describe("RR-269: User Preferences Integration Flow", () => {
     it("should fallback to environment defaults when preferences not set", async () => {
       // Mock empty preferences
       vi.mocked(fetch).mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({}),
-          { status: 200 }
-        )
+        new Response(JSON.stringify({}), { status: 200 })
       );
 
       const prefsResponse = await fetch("/api/users/preferences");
       const prefs = await prefsResponse.json();
-      
+
       // Use default environment values
       const config = {
-        summaryWordCount: prefs.summaryWordCount || process.env.SUMMARY_WORD_COUNT || "70-80",
-        summaryStyle: prefs.summaryStyle || process.env.SUMMARY_STYLE || "objective",
+        summaryWordCount:
+          prefs.summaryWordCount || process.env.SUMMARY_WORD_COUNT || "70-80",
+        summaryStyle:
+          prefs.summaryStyle || process.env.SUMMARY_STYLE || "objective",
       };
-      
+
       expect(config.summaryWordCount).toBe("70-80");
       expect(config.summaryStyle).toBe("objective");
     });
@@ -169,7 +168,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
           summaryWordCount: range,
           summaryStyle: "objective",
         });
-        
+
         expect(prompt).toContain(expected);
       });
     });
@@ -181,10 +180,9 @@ describe("RR-269: User Preferences Integration Flow", () => {
       vi.mocked(fetch).mockImplementation((url: any) => {
         if (url === "/api/users/preferences") {
           return Promise.resolve(
-            new Response(
-              JSON.stringify({ syncMaxArticles: 250 }),
-              { status: 200 }
-            )
+            new Response(JSON.stringify({ syncMaxArticles: 250 }), {
+              status: 200,
+            })
           );
         }
         if (url === "/api/sync") {
@@ -205,7 +203,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
       // Get preferences
       const prefsResponse = await fetch("/api/users/preferences");
       const prefs = await prefsResponse.json();
-      
+
       // Trigger sync with preferences
       const syncResponse = await fetch("/api/sync", {
         method: "POST",
@@ -213,7 +211,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
         body: JSON.stringify({ maxArticles: prefs.syncMaxArticles }),
       });
       const syncResult = await syncResponse.json();
-      
+
       expect(syncResult.processed).toBe(250);
       expect(syncResult.processed).toBe(prefs.syncMaxArticles);
     });
@@ -241,12 +239,12 @@ describe("RR-269: User Preferences Integration Flow", () => {
 
       const syncResponse = await fetch("/api/sync", {
         method: "POST",
-        body: JSON.stringify({ 
-          maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "100") 
+        body: JSON.stringify({
+          maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "100"),
         }),
       });
       const syncResult = await syncResponse.json();
-      
+
       expect(syncResult.processed).toBe(100);
     });
 
@@ -267,17 +265,14 @@ describe("RR-269: User Preferences Integration Flow", () => {
   describe("Cache Invalidation Flow", () => {
     it("should invalidate cache after preference update", async () => {
       let cacheHit = false;
-      
+
       vi.mocked(fetch).mockImplementation((url: any, options: any) => {
         if (url === "/api/users/preferences") {
           if (options?.method === "PUT") {
             // Update preferences
             cacheHit = false; // Cache invalidated
             return Promise.resolve(
-              new Response(
-                JSON.stringify(testPreferences),
-                { status: 200 }
-              )
+              new Response(JSON.stringify(testPreferences), { status: 200 })
             );
           } else {
             // GET preferences
@@ -292,10 +287,10 @@ describe("RR-269: User Preferences Integration Flow", () => {
             } else {
               cacheHit = true; // Next request will hit cache
               return Promise.resolve(
-                new Response(
-                  JSON.stringify(testPreferences),
-                  { status: 200, headers: { "X-Cache": "MISS" } }
-                )
+                new Response(JSON.stringify(testPreferences), {
+                  status: 200,
+                  headers: { "X-Cache": "MISS" },
+                })
               );
             }
           }
@@ -306,17 +301,17 @@ describe("RR-269: User Preferences Integration Flow", () => {
       // First GET - cache miss
       const response1 = await fetch("/api/users/preferences");
       expect(response1.headers.get("X-Cache")).toBe("MISS");
-      
+
       // Second GET - cache hit
       const response2 = await fetch("/api/users/preferences");
       expect(response2.headers.get("X-Cache")).toBe("HIT");
-      
+
       // PUT update - invalidates cache
       await fetch("/api/users/preferences", {
         method: "PUT",
         body: JSON.stringify({ theme: "light" }),
       });
-      
+
       // Next GET - cache miss (was invalidated)
       const response3 = await fetch("/api/users/preferences");
       expect(response3.headers.get("X-Cache")).toBe("MISS");
@@ -325,38 +320,37 @@ describe("RR-269: User Preferences Integration Flow", () => {
     it("should maintain cache for 5 minutes", async () => {
       const startTime = Date.now();
       let requestCount = 0;
-      
+
       vi.mocked(fetch).mockImplementation(() => {
         requestCount++;
         const timeDiff = Date.now() - startTime;
         const cacheValid = timeDiff < 5 * 60 * 1000; // 5 minutes
-        
+
         return Promise.resolve(
-          new Response(
-            JSON.stringify(testPreferences),
-            { 
-              status: 200,
-              headers: { "X-Cache": cacheValid && requestCount > 1 ? "HIT" : "MISS" }
-            }
-          )
+          new Response(JSON.stringify(testPreferences), {
+            status: 200,
+            headers: {
+              "X-Cache": cacheValid && requestCount > 1 ? "HIT" : "MISS",
+            },
+          })
         );
       });
 
       // Initial request
       const response1 = await fetch("/api/users/preferences");
       expect(response1.headers.get("X-Cache")).toBe("MISS");
-      
+
       // Within 5 minutes - should hit cache
       const response2 = await fetch("/api/users/preferences");
       expect(response2.headers.get("X-Cache")).toBe("HIT");
-      
+
       // Simulate time passing (6 minutes)
       vi.setSystemTime(startTime + 6 * 60 * 1000);
-      
+
       // After 5 minutes - cache expired
       const response3 = await fetch("/api/users/preferences");
       expect(response3.headers.get("X-Cache")).toBe("MISS");
-      
+
       vi.useRealTimers();
     });
   });
@@ -367,12 +361,12 @@ describe("RR-269: User Preferences Integration Flow", () => {
         timezone: "America/Toronto",
         theme: "dark",
       };
-      
+
       const updates = {
         theme: "light",
         fontSize: "large",
       };
-      
+
       mockSupabase.from.mockReturnValue({
         update: vi.fn().mockImplementation((data: any) => ({
           eq: vi.fn().mockReturnValue({
@@ -404,7 +398,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
 
     it("should handle concurrent preference updates", async () => {
       let version = 1;
-      
+
       mockSupabase.from.mockReturnValue({
         update: vi.fn().mockImplementation(() => ({
           eq: vi.fn().mockReturnValue({
@@ -438,7 +432,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
       );
 
       const results = await Promise.all(promises);
-      
+
       // Each update should increment version
       expect(results[0].data.version).toBe(2);
       expect(results[1].data.version).toBe(3);
@@ -449,7 +443,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
   describe("Error Recovery", () => {
     it("should retry on transient database errors", async () => {
       let attempts = 0;
-      
+
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -478,12 +472,14 @@ describe("RR-269: User Preferences Integration Flow", () => {
             .select("preferences")
             .eq("inoreader_id", "shayon")
             .single();
-          
+
           if (!error) return data;
           if (i === maxRetries - 1) throw error;
-          
+
           // Wait before retry
-          await new Promise((resolve) => setTimeout(resolve, 100 * Math.pow(2, i)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 100 * Math.pow(2, i))
+          );
         }
       };
 
@@ -512,7 +508,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
             .select("preferences")
             .eq("inoreader_id", "shayon")
             .single();
-          
+
           if (error) throw error;
           return data.preferences;
         } catch (error) {
@@ -535,28 +531,22 @@ describe("RR-269: User Preferences Integration Flow", () => {
     it("should fetch preferences within 100ms (cached)", async () => {
       // Simulate cached response
       vi.mocked(fetch).mockResolvedValue(
-        new Response(
-          JSON.stringify(testPreferences),
-          { 
-            status: 200,
-            headers: { "X-Cache": "HIT", "X-Response-Time": "15ms" }
-          }
-        )
+        new Response(JSON.stringify(testPreferences), {
+          status: 200,
+          headers: { "X-Cache": "HIT", "X-Response-Time": "15ms" },
+        })
       );
 
       const start = performance.now();
       await fetch("/api/users/preferences");
       const duration = performance.now() - start;
-      
+
       expect(duration).toBeLessThan(100);
     });
 
     it("should update preferences within 500ms", async () => {
       vi.mocked(fetch).mockResolvedValue(
-        new Response(
-          JSON.stringify(testPreferences),
-          { status: 200 }
-        )
+        new Response(JSON.stringify(testPreferences), { status: 200 })
       );
 
       const start = performance.now();
@@ -565,14 +555,16 @@ describe("RR-269: User Preferences Integration Flow", () => {
         body: JSON.stringify({ theme: "dark" }),
       });
       const duration = performance.now() - start;
-      
+
       expect(duration).toBeLessThan(500);
     });
 
     it("should handle bulk preference operations efficiently", async () => {
-      const operations = Array(10).fill(null).map((_, i) => ({
-        theme: i % 2 === 0 ? "dark" : "light",
-      }));
+      const operations = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          theme: i % 2 === 0 ? "dark" : "light",
+        }));
 
       vi.mocked(fetch).mockResolvedValue(
         new Response(JSON.stringify({}), { status: 200 })
@@ -588,7 +580,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
         )
       );
       const duration = performance.now() - start;
-      
+
       // Should process 10 updates in under 2 seconds
       expect(duration).toBeLessThan(2000);
     });
@@ -596,10 +588,7 @@ describe("RR-269: User Preferences Integration Flow", () => {
 });
 
 // Helper function to build prompt with preferences
-function buildPromptWithPreferences(
-  article: any,
-  preferences: any
-): string {
+function buildPromptWithPreferences(article: any, preferences: any): string {
   const config = {
     wordCount: preferences.summaryWordCount || "70-80",
     style: preferences.summaryStyle || "objective",

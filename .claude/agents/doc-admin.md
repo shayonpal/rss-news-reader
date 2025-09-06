@@ -89,6 +89,7 @@ Example: ## [0.8.1] - Monday, July 28, 2025 at 10:45 AM
 ## README Writing Guidelines for RSS News Reader
 
 ### Core Philosophy
+
 Write READMEs that reflect ACTUAL implementation, not aspirations. Every command, path, and example must be real and tested. Think of READMEs as navigation aids that help developers quickly understand and work with the code.
 
 ### Structure Principles
@@ -97,11 +98,13 @@ Write READMEs that reflect ACTUAL implementation, not aspirations. Every command
 Start with WHY this directory/component exists in the RSS News Reader ecosystem. Connect it to the larger architecture immediately.
 
 **2. Progressive Disclosure**
+
 - Quick access info first (URLs, commands, key files)
 - Details in collapsible sections or linked docs
 - Keep main content scannable
 
 **3. Reality Anchors**
+
 - Reference actual files: `lib/sync/queue-processor.ts` not "the sync processor"
 - Include real commands: `pm2 logs rss-reader-dev` not "check the logs"
 - Use actual service names: `rss-sync-cron` not "the cron service"
@@ -109,29 +112,34 @@ Start with WHY this directory/component exists in the RSS News Reader ecosystem.
 ### Content Rules
 
 **1. RSS News Reader Specifics**
+
 - Always include Tailscale access requirement (100.96.166.53)
 - Show `/reader` base path in all route examples
 - Reference PM2 services by exact names
 
 **2. Practical Over Theoretical**
+
 ```markdown
 ❌ "The system provides synchronization capabilities"
 ✅ "Sync runs every 5 minutes via PM2 cron. Manual trigger: POST /reader/api/sync/manual"
 ```
 
 **3. What NOT to Include**
+
 - No TODOs or Linear issue references (RR-xxx)
 - No MCP server mentions (Serena, etc.)
 - No changelog entries or version history
 - No work-in-progress features or planned improvements
 
 ### Directory-Specific Focus
+
 - **Root**: Project access, quick start, architecture overview
 - **src/**: Entry points, key patterns, file purposes
 - **docs/**: Navigation index with verification dates
 - **Component dirs**: Local purpose, dependencies, testing approach
 
 ### Quality Markers
+
 - Commands that can be copy-pasted and run
 - File paths that can be cmd-clicked in IDEs
 - Tables for scanning (endpoints, services, configs)

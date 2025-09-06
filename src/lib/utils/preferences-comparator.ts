@@ -2,12 +2,12 @@
  * Efficient shallow comparison utilities for preferences
  */
 
-import { PreferencesData } from '@/types/preferences';
+import { PreferencesData } from "@/types/preferences";
 
 /**
  * Efficiently compares two preferences objects for equality
  * Uses shallow comparison where possible to avoid expensive JSON.stringify
- * 
+ *
  * @param a - First preferences object
  * @param b - Second preferences object
  * @returns True if objects are equal
@@ -33,8 +33,8 @@ export function arePreferencesEqual(
  * Compares AI preferences sections
  */
 function areAiPreferencesEqual(
-  a: PreferencesData['ai'] | undefined,
-  b: PreferencesData['ai'] | undefined
+  a: PreferencesData["ai"] | undefined,
+  b: PreferencesData["ai"] | undefined
 ): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -53,15 +53,14 @@ function areAiPreferencesEqual(
  * Compares Sync preferences sections
  */
 function areSyncPreferencesEqual(
-  a: PreferencesData['sync'] | undefined,
-  b: PreferencesData['sync'] | undefined
+  a: PreferencesData["sync"] | undefined,
+  b: PreferencesData["sync"] | undefined
 ): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
 
   return (
-    a.maxArticles === b.maxArticles &&
-    a.retentionCount === b.retentionCount
+    a.maxArticles === b.maxArticles && a.retentionCount === b.retentionCount
   );
 }
 
@@ -69,7 +68,10 @@ function areSyncPreferencesEqual(
  * Memoized comparison result cache
  * Uses WeakMap to avoid memory leaks
  */
-const comparisonCache = new WeakMap<PreferencesData, WeakMap<PreferencesData, boolean>>();
+const comparisonCache = new WeakMap<
+  PreferencesData,
+  WeakMap<PreferencesData, boolean>
+>();
 
 /**
  * Memoized version of arePreferencesEqual
@@ -97,6 +99,6 @@ export function arePreferencesEqualMemoized(
   // Compute and cache result
   const result = arePreferencesEqual(a, b);
   cacheForA.set(b, result);
-  
+
   return result;
 }

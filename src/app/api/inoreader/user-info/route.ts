@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
   }
   try {
     // @ts-ignore
-    const TokenManager = (await import("../../../../../server/lib/token-manager.js")).default;
+    const TokenManager = (
+      await import("../../../../../server/lib/token-manager.js")
+    ).default;
     const tokenManager = new TokenManager();
 
     console.log("Making request to Inoreader user-info API...");

@@ -1,14 +1,21 @@
 /**
  * RR-270: Domain Store - App-wide saved preferences
- * 
+ *
  * Read-only store that holds saved preferences for use throughout
  * the application. Never exposes API keys in plain text.
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import type { PreferencesData, UserPreferences, PreferencesPatch } from '@/types/preferences';
-import { sanitizeApiKeyResponse, applyApiKeyChange } from '@/lib/utils/api-key-handler';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import type {
+  PreferencesData,
+  UserPreferences,
+  PreferencesPatch,
+} from "@/types/preferences";
+import {
+  sanitizeApiKeyResponse,
+  applyApiKeyChange,
+} from "@/lib/utils/api-key-handler";
 
 /**
  * Store state interface
@@ -33,7 +40,8 @@ export interface PreferencesDomainActions {
 /**
  * Combined store type
  */
-export type PreferencesDomainStore = PreferencesDomainState & PreferencesDomainActions;
+export type PreferencesDomainStore = PreferencesDomainState &
+  PreferencesDomainActions;
 
 /**
  * Default preferences to use as fallback
@@ -41,11 +49,11 @@ export type PreferencesDomainStore = PreferencesDomainState & PreferencesDomainA
 const getDefaultPreferences = (): PreferencesData => ({
   ai: {
     hasApiKey: false,
-    model: 'claude-3-haiku-20240307',
+    model: "claude-3-haiku-20240307",
     summaryLengthMin: 100,
     summaryLengthMax: 300,
-    summaryStyle: 'objective',
-    contentFocus: 'general',
+    summaryStyle: "objective",
+    contentFocus: "general",
   },
   sync: {
     maxArticles: 500,
@@ -55,9 +63,9 @@ const getDefaultPreferences = (): PreferencesData => ({
 
 /**
  * Main domain store for saved preferences
- * 
+ *
  * This store manages the app-wide saved preferences state.
- * It handles loading from the API, optimistic updates, and 
+ * It handles loading from the API, optimistic updates, and
  * secure API key management (never exposing actual keys).
  */
 export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
@@ -75,8 +83,8 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await fetch('/api/users/preferences');
-          
+          const response = await fetch("/api/users/preferences");
+
           if (response.status === 404) {
             // New user - use defaults
             const defaults = getDefaultPreferences();
@@ -90,11 +98,11 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
           }
 
           if (!response.ok) {
-            throw new Error('Failed to load preferences');
+            throw new Error("Failed to load preferences");
           }
 
           const data = await response.json();
-          
+
           // Sanitize response - never expose API keys
           const sanitized = sanitizeApiKeyResponse(data);
 
@@ -105,11 +113,11 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
             lastSync: new Date(),
           });
         } catch (error) {
-          console.error('Failed to load preferences:', error);
+          console.error("Failed to load preferences:", error);
           set({
             savedPreferences: null,
             isLoading: false,
-            error: 'Failed to load preferences',
+            error: "Failed to load preferences",
           });
         }
       },
@@ -117,9 +125,9 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
       // Save preferences with patch semantics
       savePreferences: async (patch: PreferencesPatch) => {
         const currentState = get();
-        
+
         if (currentState.saveInProgress) {
-          throw new Error('Save already in progress');
+          throw new Error("Save already in progress");
         }
 
         const previousPreferences = currentState.savedPreferences;
@@ -133,20 +141,20 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
         set({ saveInProgress: true, error: null });
 
         try {
-          const response = await fetch('/api/users/preferences', {
-            method: 'PUT',
+          const response = await fetch("/api/users/preferences", {
+            method: "PUT",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(patch),
           });
 
           if (!response.ok) {
-            throw new Error('Failed to save preferences');
+            throw new Error("Failed to save preferences");
           }
 
           const updated = await response.json();
-          
+
           // Sanitize response - never expose API keys
           const sanitized = sanitizeApiKeyResponse(updated);
 
@@ -156,16 +164,16 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
             lastSync: new Date(),
           });
         } catch (error) {
-          console.error('Failed to save preferences:', error);
-          
+          console.error("Failed to save preferences:", error);
+
           // Rollback optimistic update
           if (previousPreferences) {
             set({
               savedPreferences: previousPreferences,
-              error: 'Failed to save preferences',
+              error: "Failed to save preferences",
             });
           }
-          
+
           throw error;
         } finally {
           set({ saveInProgress: false });
@@ -184,7 +192,7 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
       },
     }),
     {
-      name: 'preferences-domain-store',
+      name: "preferences-domain-store",
     }
   )
 );
@@ -201,7 +209,7 @@ function applyPatch(
   // Apply AI patches
   if (patch.ai) {
     updated.ai = { ...current.ai };
-    
+
     if (patch.ai.model !== undefined) {
       updated.ai.model = patch.ai.model;
     }
@@ -217,11 +225,11 @@ function applyPatch(
     if (patch.ai.contentFocus !== undefined) {
       updated.ai.contentFocus = patch.ai.contentFocus;
     }
-    
+
     // Handle API key state changes using common handler
     const withApiKeyChanges = applyApiKeyChange(
       { ...updated },
-      patch.ai.apiKeyChange as 'replace' | 'clear' | undefined,
+      patch.ai.apiKeyChange as "replace" | "clear" | undefined,
       patch.ai.apiKey
     );
     updated.ai = withApiKeyChanges.ai;
@@ -230,7 +238,7 @@ function applyPatch(
   // Apply sync patches
   if (patch.sync) {
     updated.sync = { ...current.sync };
-    
+
     if (patch.sync.maxArticles !== undefined) {
       updated.sync.maxArticles = patch.sync.maxArticles;
     }

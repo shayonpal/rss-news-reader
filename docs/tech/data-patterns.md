@@ -21,31 +21,32 @@ interface CacheEntry<T> {
 // Cache implementation pattern
 class TTLCache<T> {
   private cache = new Map<string, CacheEntry<T>>();
-  
-  set(key: string, data: T, ttl: number = 300000): void { // Default 5min TTL
+
+  set(key: string, data: T, ttl: number = 300000): void {
+    // Default 5min TTL
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
   }
-  
+
   get(key: string): T | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
-    
+
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key); // Auto-cleanup expired entries
       return null;
     }
-    
+
     return entry.data;
   }
-  
+
   invalidate(key: string): void {
     this.cache.delete(key);
   }
-  
+
   clear(): void {
     this.cache.clear();
   }
@@ -55,7 +56,7 @@ class TTLCache<T> {
 **Usage Context**:
 
 - **Settings Preferences**: Cache user settings with 5-minute TTL
-- **API Configuration**: Cache external API configurations with 1-hour TTL  
+- **API Configuration**: Cache external API configurations with 1-hour TTL
 - **User State**: Cache UI state preferences with session-based TTL
 - **Feed Metadata**: Cache feed information with 15-minute TTL
 
@@ -69,7 +70,7 @@ class TTLCache<T> {
 **Cache Timing Strategies**:
 
 - **Short-term (5 minutes)**: User preferences, UI state
-- **Medium-term (15 minutes)**: Feed metadata, article counts  
+- **Medium-term (15 minutes)**: Feed metadata, article counts
 - **Long-term (1 hour)**: API configurations, system settings
 - **Session-based**: Temporary UI state, form data
 
@@ -94,8 +95,12 @@ const updateUserSettings = async (settings: UserSettings) => {
 
 // Batch invalidation for related data
 const invalidateUserData = (userId: string) => {
-  const patterns = [`user-settings-${userId}`, `ui-prefs-${userId}`, `feed-config-${userId}`];
-  patterns.forEach(pattern => cache.invalidate(pattern));
+  const patterns = [
+    `user-settings-${userId}`,
+    `ui-prefs-${userId}`,
+    `feed-config-${userId}`,
+  ];
+  patterns.forEach((pattern) => cache.invalidate(pattern));
 };
 ```
 
@@ -109,14 +114,17 @@ const invalidateUserData = (userId: string) => {
 
 ```typescript
 // Deep merge utility for nested objects
-const deepMerge = <T extends Record<string, any>>(target: T, source: Partial<T>): T => {
+const deepMerge = <T extends Record<string, any>>(
+  target: T,
+  source: Partial<T>
+): T => {
   const result = { ...target };
-  
+
   for (const key in source) {
     if (source.hasOwnProperty(key)) {
       const sourceValue = source[key];
       const targetValue = result[key];
-      
+
       if (isObject(sourceValue) && isObject(targetValue)) {
         // Recursively merge nested objects
         result[key] = deepMerge(targetValue, sourceValue);
@@ -126,13 +134,13 @@ const deepMerge = <T extends Record<string, any>>(target: T, source: Partial<T>)
       }
     }
   }
-  
+
   return result;
 };
 
 // Type-safe object check
 const isObject = (value: any): value is Record<string, any> => {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 };
 ```
 
@@ -142,21 +150,21 @@ const isObject = (value: any): value is Record<string, any> => {
 // Settings merge example
 const existingSettings = {
   ui: {
-    theme: 'dark',
+    theme: "dark",
     layout: { sidebar: true, compact: false },
-    notifications: { email: true, push: false }
+    notifications: { email: true, push: false },
   },
   api: {
-    keys: { anthropic: 'encrypted-key-1' },
-    limits: { dailySync: 100 }
-  }
+    keys: { anthropic: "encrypted-key-1" },
+    limits: { dailySync: 100 },
+  },
 };
 
 const settingsUpdate = {
   ui: {
     layout: { compact: true }, // Only update compact, preserve sidebar
-    notifications: { push: true } // Only update push, preserve email
-  }
+    notifications: { push: true }, // Only update push, preserve email
+  },
 };
 
 const mergedSettings = deepMerge(existingSettings, settingsUpdate);
@@ -187,22 +195,22 @@ const mergedSettings = deepMerge(existingSettings, settingsUpdate);
 // Settings schema validation
 const userSettingsSchema = z.object({
   ui: z.object({
-    theme: z.enum(['light', 'dark', 'auto']),
+    theme: z.enum(["light", "dark", "auto"]),
     layout: z.object({
       sidebar: z.boolean(),
-      compact: z.boolean()
+      compact: z.boolean(),
     }),
     notifications: z.object({
       email: z.boolean(),
-      push: z.boolean()
-    })
+      push: z.boolean(),
+    }),
   }),
   api: z.object({
     keys: z.record(z.string()), // Encrypted API keys
     limits: z.object({
-      dailySync: z.number().min(1).max(1000)
-    })
-  })
+      dailySync: z.number().min(1).max(1000),
+    }),
+  }),
 });
 
 // Validation with error handling
@@ -211,7 +219,9 @@ const validateSettings = (data: unknown): UserSettings => {
     return userSettingsSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new Error(`Settings validation failed: ${error.errors.map(e => e.message).join(', ')}`);
+      throw new Error(
+        `Settings validation failed: ${error.errors.map((e) => e.message).join(", ")}`
+      );
     }
     throw error;
   }
@@ -238,13 +248,13 @@ class SettingsService {
     private cache: TTLCache<UserSettings>,
     private encryption: EncryptionService
   ) {}
-  
+
   async getSettings(userId: string): Promise<UserSettings> {
     // 1. Try cache first
     const cacheKey = `user-settings-${userId}`;
     const cached = this.cache.get(cacheKey);
     if (cached) return cached;
-    
+
     // 2. Fallback to database
     try {
       const dbSettings = await this.database.getUserSettings(userId);
@@ -255,33 +265,36 @@ class SettingsService {
         return decrypted;
       }
     } catch (error) {
-      console.error('Database read failed, using defaults:', error);
+      console.error("Database read failed, using defaults:", error);
     }
-    
+
     // 3. Return defaults
     return this.getDefaultSettings();
   }
-  
-  async updateSettings(userId: string, updates: Partial<UserSettings>): Promise<UserSettings> {
+
+  async updateSettings(
+    userId: string,
+    updates: Partial<UserSettings>
+  ): Promise<UserSettings> {
     // 1. Get current settings
     const current = await this.getSettings(userId);
-    
+
     // 2. Merge updates
     const merged = deepMerge(current, updates);
-    
+
     // 3. Validate merged result
     const validated = validateSettings(merged);
-    
+
     // 4. Encrypt sensitive data
     const encrypted = this.encryptAPIKeys(validated);
-    
+
     // 5. Persist to database
     await this.database.updateUserSettings(userId, encrypted);
-    
+
     // 6. Update cache
     const cacheKey = `user-settings-${userId}`;
     this.cache.set(cacheKey, validated, 300000);
-    
+
     return validated;
   }
 }
@@ -298,21 +311,21 @@ class SettingsService {
 class BatchCacheOperations {
   private pendingOperations: Array<() => Promise<void>> = [];
   private batchTimer: NodeJS.Timeout | null = null;
-  
+
   queueOperation(operation: () => Promise<void>): void {
     this.pendingOperations.push(operation);
-    
+
     if (!this.batchTimer) {
       this.batchTimer = setTimeout(() => this.executeBatch(), 100); // 100ms batch window
     }
   }
-  
+
   private async executeBatch(): Promise<void> {
     const operations = [...this.pendingOperations];
     this.pendingOperations = [];
     this.batchTimer = null;
-    
-    await Promise.all(operations.map(op => op().catch(console.error)));
+
+    await Promise.all(operations.map((op) => op().catch(console.error)));
   }
 }
 ```
@@ -326,18 +339,18 @@ class BatchCacheOperations {
 class BoundedCache<T> extends TTLCache<T> {
   private maxEntries: number;
   private accessOrder = new Map<string, number>();
-  
+
   constructor(maxEntries: number = 1000) {
     super();
     this.maxEntries = maxEntries;
   }
-  
+
   set(key: string, data: T, ttl: number = 300000): void {
     super.set(key, data, ttl);
     this.accessOrder.set(key, Date.now());
     this.enforceMemoryBounds();
   }
-  
+
   get(key: string): T | null {
     const result = super.get(key);
     if (result !== null) {
@@ -345,14 +358,15 @@ class BoundedCache<T> extends TTLCache<T> {
     }
     return result;
   }
-  
+
   private enforceMemoryBounds(): void {
     if (this.cache.size <= this.maxEntries) return;
-    
+
     // Remove least recently used entries
-    const sortedEntries = [...this.accessOrder.entries()]
-      .sort(([, timeA], [, timeB]) => timeA - timeB);
-    
+    const sortedEntries = [...this.accessOrder.entries()].sort(
+      ([, timeA], [, timeB]) => timeA - timeB
+    );
+
     const toRemove = sortedEntries.slice(0, this.cache.size - this.maxEntries);
     toRemove.forEach(([key]) => {
       this.cache.delete(key);
@@ -374,42 +388,42 @@ class CacheTestHelper {
   static createMockCache<T>(): TTLCache<T> {
     return new TTLCache<T>();
   }
-  
+
   static async waitForTTL(ttl: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ttl + 10)); // Add buffer
+    return new Promise((resolve) => setTimeout(resolve, ttl + 10)); // Add buffer
   }
-  
+
   static mockTimeAdvance(advanceMs: number): void {
     const originalNow = Date.now;
     const startTime = originalNow();
     Date.now = vi.fn(() => startTime + advanceMs);
   }
-  
+
   static restoreTime(): void {
     Date.now = originalDateNow; // Restore original implementation
   }
 }
 
 // Example cache test with proper isolation
-describe('TTL Cache', () => {
+describe("TTL Cache", () => {
   let cache: TTLCache<string>;
-  
+
   beforeEach(() => {
     cache = CacheTestHelper.createMockCache();
     CacheTestHelper.restoreTime();
   });
-  
+
   afterEach(() => {
     cache.clear();
     CacheTestHelper.restoreTime();
   });
-  
-  it('should expire entries after TTL', () => {
-    cache.set('key1', 'value1', 1000); // 1 second TTL
-    expect(cache.get('key1')).toBe('value1');
-    
+
+  it("should expire entries after TTL", () => {
+    cache.set("key1", "value1", 1000); // 1 second TTL
+    expect(cache.get("key1")).toBe("value1");
+
     CacheTestHelper.mockTimeAdvance(1500); // Advance 1.5 seconds
-    expect(cache.get('key1')).toBeNull(); // Should be expired
+    expect(cache.get("key1")).toBeNull(); // Should be expired
   });
 });
 ```
@@ -433,28 +447,32 @@ class ResilientCacheService {
       const cached = this.cache.get(key);
       if (cached !== null) return cached;
     } catch (error) {
-      console.warn('Cache read failed, using fallback:', error);
+      console.warn("Cache read failed, using fallback:", error);
     }
-    
+
     // Execute fallback
     const result = await fallbackFn();
-    
+
     // Try to cache result (non-blocking)
-    this.setCacheAsync(key, result, ttl).catch(error => 
-      console.warn('Cache write failed (non-critical):', error)
+    this.setCacheAsync(key, result, ttl).catch((error) =>
+      console.warn("Cache write failed (non-critical):", error)
     );
-    
+
     return result;
   }
-  
-  private async setCacheAsync<T>(key: string, data: T, ttl: number): Promise<void> {
+
+  private async setCacheAsync<T>(
+    key: string,
+    data: T,
+    ttl: number
+  ): Promise<void> {
     // Non-blocking cache write
     setTimeout(() => {
       try {
         this.cache.set(key, data, ttl);
       } catch (error) {
         // Log but don't throw - cache failure shouldn't break functionality
-        console.warn('Async cache write failed:', error);
+        console.warn("Async cache write failed:", error);
       }
     }, 0);
   }

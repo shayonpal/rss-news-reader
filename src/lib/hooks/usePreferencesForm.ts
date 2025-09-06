@@ -1,18 +1,18 @@
 /**
  * Hook for managing preferences form with debounced updates
- * 
+ *
  * This hook provides debounced field updates to prevent excessive
  * re-renders during rapid typing in form inputs.
  */
 
-import { useCallback, useMemo } from 'react';
-import { usePreferencesEditorStore } from '@/lib/stores/preferences-editor-store';
-import { usePreferencesDomainStore } from '@/lib/stores/preferences-domain-store';
-import { debounce } from '@/lib/utils/debounce';
+import { useCallback, useMemo } from "react";
+import { usePreferencesEditorStore } from "@/lib/stores/preferences-editor-store";
+import { usePreferencesDomainStore } from "@/lib/stores/preferences-domain-store";
+import { debounce } from "@/lib/utils/debounce";
 
 /**
  * Custom hook for preferences form management with debouncing
- * 
+ *
  * @returns Form handlers and state with debounced updates
  */
 export function usePreferencesForm() {
@@ -21,41 +21,57 @@ export function usePreferencesForm() {
 
   // Create debounced update function
   const debouncedUpdateField = useMemo(
-    () => debounce((path: string, value: string | number | boolean | null) => {
-      editorStore.updateField(path, value);
-    }, 300),
+    () =>
+      debounce((path: string, value: string | number | boolean | null) => {
+        editorStore.updateField(path, value);
+      }, 300),
     []
   );
 
   // Handle immediate updates for critical fields (like dropdowns)
-  const updateFieldImmediate = useCallback((path: string, value: string | number | boolean | null) => {
-    editorStore.updateField(path, value);
-  }, []);
+  const updateFieldImmediate = useCallback(
+    (path: string, value: string | number | boolean | null) => {
+      editorStore.updateField(path, value);
+    },
+    []
+  );
 
   // Handle text input changes with debouncing
-  const handleTextChange = useCallback((path: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    debouncedUpdateField(path, value);
-  }, [debouncedUpdateField]);
+  const handleTextChange = useCallback(
+    (path: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      debouncedUpdateField(path, value);
+    },
+    [debouncedUpdateField]
+  );
 
   // Handle number input changes with debouncing
-  const handleNumberChange = useCallback((path: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.valueAsNumber;
-    if (!isNaN(value)) {
-      debouncedUpdateField(path, value);
-    }
-  }, [debouncedUpdateField]);
+  const handleNumberChange = useCallback(
+    (path: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.valueAsNumber;
+      if (!isNaN(value)) {
+        debouncedUpdateField(path, value);
+      }
+    },
+    [debouncedUpdateField]
+  );
 
   // Handle select/dropdown changes (immediate)
-  const handleSelectChange = useCallback((path: string) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateFieldImmediate(path, e.target.value);
-  }, [updateFieldImmediate]);
+  const handleSelectChange = useCallback(
+    (path: string) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+      updateFieldImmediate(path, e.target.value);
+    },
+    [updateFieldImmediate]
+  );
 
   // Handle API key input with debouncing
-  const handleApiKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    editorStore.setApiKeyInput(value);
-  }, []);
+  const handleApiKeyChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      editorStore.setApiKeyInput(value);
+    },
+    []
+  );
 
   // Save preferences
   const handleSave = useCallback(async () => {
@@ -69,7 +85,7 @@ export function usePreferencesForm() {
       await domainStore.savePreferences(patch);
       editorStore.clearDraft();
     } catch (error) {
-      console.error('Failed to save preferences:', error);
+      console.error("Failed to save preferences:", error);
     } finally {
       editorStore.setSaving(false);
     }
@@ -88,8 +104,8 @@ export function usePreferencesForm() {
     isSaving: editorStore.isSaving,
     apiKeyState: editorStore.apiKeyState,
     apiKeyInput: editorStore.getApiKeyInput(),
-    isDirty: editorStore.isDirty(domainStore.savedPreferences || {} as any),
-    
+    isDirty: editorStore.isDirty(domainStore.savedPreferences || ({} as any)),
+
     // Handlers
     handleTextChange,
     handleNumberChange,
@@ -97,7 +113,7 @@ export function usePreferencesForm() {
     handleApiKeyChange,
     handleSave,
     handleCancel,
-    
+
     // Direct methods
     updateFieldImmediate,
     debouncedUpdateField,
@@ -106,7 +122,7 @@ export function usePreferencesForm() {
 
 /**
  * Example usage in a component:
- * 
+ *
  * @example
  * ```tsx
  * function PreferencesForm() {
@@ -120,7 +136,7 @@ export function usePreferencesForm() {
  *     handleSave,
  *     handleCancel,
  *   } = usePreferencesForm();
- * 
+ *
  *   return (
  *     <form>
  *       <input

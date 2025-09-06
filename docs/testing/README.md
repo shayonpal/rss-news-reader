@@ -64,43 +64,43 @@ SUPABASE_SERVICE_ROLE_KEY=your-test-key
 
 ```typescript
 // __tests__/unit/utils/format-date.test.ts
-import { formatDate } from '@/lib/utils/format-date'
+import { formatDate } from "@/lib/utils/format-date";
 
-describe('formatDate', () => {
-  it('formats date correctly', () => {
-    const date = new Date('2024-01-01')
-    expect(formatDate(date)).toBe('Jan 1, 2024')
-  })
-})
+describe("formatDate", () => {
+  it("formats date correctly", () => {
+    const date = new Date("2024-01-01");
+    expect(formatDate(date)).toBe("Jan 1, 2024");
+  });
+});
 ```
 
 ### Integration Test Example
 
 ```typescript
 // __tests__/integration/api/health.test.ts
-import { GET } from '@/app/api/health/route'
+import { GET } from "@/app/api/health/route";
 
-describe('Health API', () => {
-  it('returns healthy status', async () => {
-    const response = await GET()
-    const data = await response.json()
-    expect(data.status).toBe('healthy')
-  })
-})
+describe("Health API", () => {
+  it("returns healthy status", async () => {
+    const response = await GET();
+    const data = await response.json();
+    expect(data.status).toBe("healthy");
+  });
+});
 ```
 
 ### E2E Test Example
 
 ```typescript
 // __tests__/e2e/reader-flow.spec.ts
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
 
-test('user can read articles', async ({ page }) => {
-  await page.goto('/reader')
-  await expect(page.locator('h1')).toContainText('Your Feeds')
-  await page.click('[data-testid="article-1"]')
-  await expect(page.locator('article')).toBeVisible()
-})
+test("user can read articles", async ({ page }) => {
+  await page.goto("/reader");
+  await expect(page.locator("h1")).toContainText("Your Feeds");
+  await page.click('[data-testid="article-1"]');
+  await expect(page.locator("article")).toBeVisible();
+});
 ```
 
 ## Test Commands
@@ -162,6 +162,7 @@ npx playwright test --trace on       # E2E with trace
 ## CI/CD Integration
 
 Tests run automatically on:
+
 - Pull requests (PR validation)
 - Pre-commit hooks (local validation)
 - Manual trigger via `npm run pre-commit`
@@ -171,18 +172,21 @@ Tests run automatically on:
 ### Common Issues
 
 **Tests timing out:**
+
 ```bash
 # Increase timeout
 npm test -- --testTimeout=10000
 ```
 
 **E2E tests failing locally:**
+
 ```bash
 # Install browsers
 npx playwright install
 ```
 
 **Database connection errors:**
+
 ```bash
 # Check test environment
 cp .env.example .env.test
@@ -190,6 +194,7 @@ cp .env.example .env.test
 ```
 
 **Flaky tests:**
+
 - Check for async race conditions
 - Ensure proper wait strategies
 - Use stable test selectors
@@ -197,6 +202,7 @@ cp .env.example .env.test
 ## Related Documentation
 
 ### In This Directory
+
 - [Technical Implementation](./technical-implementation.md) - Deep dive into testing architecture
 - [Safe Test Practices](./safe-test-practices.md) - Guidelines for safe testing
 - [Test Consolidation](./rr-243-consolidation-methodology.md) - Test organization
@@ -204,6 +210,7 @@ cp .env.example .env.test
 - [Validation Checklist](./validation-checklist.md) - Pre-release validation
 
 ### Related Tech Docs
+
 - [E2E Testing Details](../tech/e2e-testing.md) - Playwright configuration
 
 ## Auto-Generated Files

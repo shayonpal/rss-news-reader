@@ -23,7 +23,7 @@ export class SummaryPromptBuilder {
     focus: "key facts, main arguments, and important conclusions",
     style: "objective",
   };
-  
+
   private static userPreferences: UserPreferences | null = null;
 
   static setUserPreferences(preferences: UserPreferences | null) {
@@ -33,13 +33,15 @@ export class SummaryPromptBuilder {
   static getConfig(): SummaryPromptConfig {
     // First check user preferences (nested structure), then environment variables, then defaults
     return {
-      wordCount: this.userPreferences?.ai?.summaryWordCount || 
-                 process.env.SUMMARY_WORD_COUNT || 
-                 this.DEFAULTS.wordCount,
+      wordCount:
+        this.userPreferences?.ai?.summaryWordCount ||
+        process.env.SUMMARY_WORD_COUNT ||
+        this.DEFAULTS.wordCount,
       focus: process.env.SUMMARY_FOCUS || this.DEFAULTS.focus,
-      style: this.userPreferences?.ai?.summaryStyle || 
-             process.env.SUMMARY_STYLE || 
-             this.DEFAULTS.style,
+      style:
+        this.userPreferences?.ai?.summaryStyle ||
+        process.env.SUMMARY_STYLE ||
+        this.DEFAULTS.style,
     };
   }
 

@@ -19,6 +19,7 @@ The preferences state management system implements a sophisticated dual-store ar
 ## Dual-Store Architecture
 
 ### Domain Store (`preferences-domain-store.ts`)
+
 **Purpose**: Source of truth for all preferences data
 
 ```typescript
@@ -31,17 +32,20 @@ interface PreferencesDomainState {
 ```
 
 **Key Responsibilities**:
+
 - Fetch and store preferences from API
 - Handle server synchronization
 - Maintain cache validity
 - Provide read-only access to current state
 
 **State Transitions**:
+
 ```
 IDLE → LOADING → SUCCESS/ERROR → IDLE
 ```
 
 ### Editor Store (`preferences-editor-store.ts`)
+
 **Purpose**: Manage UI editing state and user interactions
 
 ```typescript
@@ -55,12 +59,14 @@ interface PreferencesEditorState {
 ```
 
 **Key Responsibilities**:
+
 - Track editing state separate from saved state
 - Validate user input in real-time
 - Handle form submission and optimistic updates
 - Manage dirty state detection
 
 **State Machine**:
+
 ```
 CLEAN → EDITING (dirty) → SAVING → CLEAN/ERROR
 ```
@@ -77,12 +83,16 @@ export const getApiKey = (preferences: UserPreferences): string | null => {
   return apiKeyMap.get(preferences) || null;
 };
 
-export const setApiKey = (preferences: UserPreferences, apiKey: string): void => {
+export const setApiKey = (
+  preferences: UserPreferences,
+  apiKey: string
+): void => {
   apiKeyMap.set(preferences, apiKey);
 };
 ```
 
 **Security Benefits**:
+
 - API keys never appear in JSON.stringify() output
 - Not accessible via browser dev tools
 - Automatically garbage collected with preferences object
@@ -91,6 +101,7 @@ export const setApiKey = (preferences: UserPreferences, apiKey: string): void =>
 ### Zero Exposure Guarantee
 
 The system ensures API keys are never exposed through:
+
 - Redux DevTools serialization
 - JSON.stringify() calls
 - Error messages or logs
@@ -106,17 +117,17 @@ Combines both stores into a unified interface:
 export const usePreferencesStore = () => {
   const domainState = usePreferencesDomainStore();
   const editorState = usePreferencesEditorStore();
-  
+
   return {
     // Combined state
     preferences: domainState.preferences,
     editingPreferences: editorState.editingPreferences,
-    
+
     // Status flags
     isLoading: domainState.isLoading,
     isSaving: editorState.isSaving,
     isDirty: editorState.isDirty,
-    
+
     // Actions
     startEditing: editorState.startEditing,
     updateField: editorState.updateField,
@@ -129,59 +140,82 @@ export const usePreferencesStore = () => {
 ### 2. Utility Functions
 
 #### Preferences Validator
+
 ```typescript
-export const validatePreferences = (prefs: Partial<UserPreferences>): ValidationErrors => {
+export const validatePreferences = (
+  prefs: Partial<UserPreferences>
+): ValidationErrors => {
   const errors: ValidationErrors = {};
-  
-  if (prefs.refreshInterval && (prefs.refreshInterval < 5 || prefs.refreshInterval > 1440)) {
-    errors.refreshInterval = 'Refresh interval must be between 5 and 1440 minutes';
+
+  if (
+    prefs.refreshInterval &&
+    (prefs.refreshInterval < 5 || prefs.refreshInterval > 1440)
+  ) {
+    errors.refreshInterval =
+      "Refresh interval must be between 5 and 1440 minutes";
   }
-  
-  if (prefs.articlesPerPage && (prefs.articlesPerPage < 10 || prefs.articlesPerPage > 200)) {
-    errors.articlesPerPage = 'Articles per page must be between 10 and 200';
+
+  if (
+    prefs.articlesPerPage &&
+    (prefs.articlesPerPage < 10 || prefs.articlesPerPage > 200)
+  ) {
+    errors.articlesPerPage = "Articles per page must be between 10 and 200";
   }
-  
+
   return errors;
 };
 ```
 
 #### Preferences Comparator
+
 ```typescript
-export const comparePreferences = (a: UserPreferences, b: UserPreferences): boolean => {
+export const comparePreferences = (
+  a: UserPreferences,
+  b: UserPreferences
+): boolean => {
   // Deep comparison excluding sensitive fields like API keys
   const fieldsToCompare = [
-    'theme', 'refreshInterval', 'articlesPerPage', 
-    'showSummaries', 'autoMarkRead', 'compactView'
+    "theme",
+    "refreshInterval",
+    "articlesPerPage",
+    "showSummaries",
+    "autoMarkRead",
+    "compactView",
   ];
-  
-  return fieldsToCompare.every(field => a[field] === b[field]);
+
+  return fieldsToCompare.every((field) => a[field] === b[field]);
 };
 ```
 
 #### PATCH Builder
+
 ```typescript
 export const buildPreferencesPatch = (
-  original: UserPreferences, 
+  original: UserPreferences,
   updated: UserPreferences
 ): Partial<UserPreferences> => {
   const patch: Partial<UserPreferences> = {};
-  
-  Object.keys(updated).forEach(key => {
-    if (key !== 'apiKey' && original[key] !== updated[key]) {
+
+  Object.keys(updated).forEach((key) => {
+    if (key !== "apiKey" && original[key] !== updated[key]) {
       patch[key] = updated[key];
     }
   });
-  
+
   return patch;
 };
 ```
 
 #### Debounced Validation
+
 ```typescript
 export const createDebouncedValidator = (delay = 300) => {
   let timeoutId: NodeJS.Timeout;
-  
-  return (preferences: Partial<UserPreferences>, callback: (errors: ValidationErrors) => void) => {
+
+  return (
+    preferences: Partial<UserPreferences>,
+    callback: (errors: ValidationErrors) => void
+  ) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       const errors = validatePreferences(preferences);
@@ -196,18 +230,21 @@ export const createDebouncedValidator = (delay = 300) => {
 ### Test Coverage: 95%+
 
 **Domain Store Tests** (25 tests):
+
 - ✅ Initial state and loading states
 - ✅ Successful preference fetching and caching
 - ✅ Error handling and retry logic
 - ✅ Cache invalidation scenarios
 
 **Editor Store Tests** (25 tests):
+
 - ✅ Editing state transitions
 - ✅ Validation and error handling
 - ✅ Optimistic updates and rollback
 - ✅ Dirty state detection
 
 ### Test Structure
+
 ```
 src/lib/stores/__tests__/
 ├── preferences-domain-store.test.ts
@@ -222,6 +259,7 @@ src/lib/stores/__tests__/
 ### Current Status: 50/50 Tests Passing
 
 All critical user flows are tested:
+
 - Loading preferences from API
 - Editing and validation
 - Saving with optimistic updates
@@ -245,7 +283,7 @@ const {
   startEditing,
   updateField,
   saveChanges,
-  cancelEditing
+  cancelEditing,
 } = usePreferencesStore();
 
 const handleSubmit = async (e: React.FormEvent) => {
@@ -263,16 +301,16 @@ The store integrates with encrypted API endpoints:
 ```typescript
 // Domain store API calls
 const fetchPreferences = async () => {
-  const response = await fetch('/reader/api/user/preferences');
+  const response = await fetch("/reader/api/user/preferences");
   const data = await response.json();
   return data.preferences;
 };
 
 const savePreferences = async (patch: Partial<UserPreferences>) => {
-  const response = await fetch('/reader/api/user/preferences', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(patch)
+  const response = await fetch("/reader/api/user/preferences", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
   });
   return response.json();
 };
@@ -281,14 +319,15 @@ const savePreferences = async (patch: Partial<UserPreferences>) => {
 ## Performance Optimizations
 
 ### 1. Optimistic Updates
+
 ```typescript
 const saveChanges = async () => {
   const patch = buildPreferencesPatch(originalPreferences, editingPreferences);
-  
+
   // Optimistic update
   set({ isSaving: true });
   domainStore.getState().updateOptimistically(editingPreferences);
-  
+
   try {
     await savePreferences(patch);
     set({ isDirty: false, lastSaved: Date.now() });
@@ -301,7 +340,9 @@ const saveChanges = async () => {
 ```
 
 ### 2. PATCH Semantics
+
 Only changed fields are transmitted:
+
 ```typescript
 // Instead of sending entire preferences object
 const fullUpdate = { theme: 'dark', refreshInterval: 15, articlesPerPage: 50, ... };
@@ -311,6 +352,7 @@ const patch = { theme: 'dark' }; // If only theme changed
 ```
 
 ### 3. Intelligent Caching
+
 ```typescript
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -349,12 +391,12 @@ export const PreferencesForm = () => {
 
   return (
     <form onSubmit={saveChanges}>
-      <ThemeSelector 
-        value={editingPreferences?.theme} 
+      <ThemeSelector
+        value={editingPreferences?.theme}
         onChange={handleThemeChange}
         error={validationErrors.theme}
       />
-      
+
       <div className="form-actions">
         <button type="button" onClick={cancelEditing} disabled={!isDirty}>
           Cancel
@@ -395,8 +437,8 @@ export const ApiKeyField = () => {
         onChange={(e) => handleApiKeyChange(e.target.value)}
         placeholder="Enter your Inoreader API key"
       />
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={() => setShowKey(!showKey)}
         aria-label={showKey ? 'Hide API key' : 'Show API key'}
       >
@@ -412,11 +454,11 @@ export const ApiKeyField = () => {
 ```typescript
 export const useThemePreference = () => {
   const { preferences, updateField } = usePreferencesStore();
-  
+
   return {
-    theme: preferences?.theme || 'light',
-    setTheme: (theme: 'light' | 'dark') => updateField('theme', theme),
-    isSystemTheme: preferences?.theme === 'system'
+    theme: preferences?.theme || "light",
+    setTheme: (theme: "light" | "dark") => updateField("theme", theme),
+    isSystemTheme: preferences?.theme === "system",
   };
 };
 ```
@@ -424,15 +466,17 @@ export const useThemePreference = () => {
 ## Best Practices
 
 ### 1. Always Use the Public API
+
 ```typescript
 // ✅ Good - Use unified store
-import { usePreferencesStore } from '@/lib/stores/preferences-store';
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 
 // ❌ Avoid - Direct store access
-import { usePreferencesDomainStore } from '@/lib/stores/preferences-domain-store';
+import { usePreferencesDomainStore } from "@/lib/stores/preferences-domain-store";
 ```
 
 ### 2. Handle Loading and Error States
+
 ```typescript
 const { preferences, isLoading, error } = usePreferencesStore();
 
@@ -444,6 +488,7 @@ if (!preferences) return <EmptyState />;
 ```
 
 ### 3. Validate Before Saving
+
 ```typescript
 const { validationErrors, saveChanges } = usePreferencesStore();
 
@@ -461,12 +506,14 @@ const handleSubmit = async () => {
 ## Future Enhancements
 
 ### Planned Features
+
 - **Offline Support**: Queue preference changes when offline
 - **Conflict Resolution**: Handle concurrent edits from multiple tabs
 - **Preference Profiles**: Save and switch between preference sets
 - **Import/Export**: Backup and restore preference configurations
 
 ### Performance Improvements
+
 - **Selective Re-renders**: Fine-grained subscriptions for specific preference fields
 - **Background Sync**: Periodic sync without user interaction
 - **Compression**: Compress large preference objects for storage/transmission

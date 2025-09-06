@@ -10,8 +10,9 @@ A self-hosted RSS reader with server-client architecture and AI-powered summarie
 ## Configuration
 
 The application URL is configured via environment variables in `.env`:
+
 - `NEXT_PUBLIC_APP_URL` - Full application URL (e.g., `http://100.96.166.53:3000`)
-- `NEXT_PUBLIC_BASE_URL` - Base URL without port (e.g., `http://100.96.166.53`)  
+- `NEXT_PUBLIC_BASE_URL` - Base URL without port (e.g., `http://100.96.166.53`)
 - `PORT` - Application port (default: 3000)
 
 ## Features
@@ -50,6 +51,7 @@ The RSS News Reader requires several services to be running for full functionali
 ### Services & Infrastructure
 
 **PM2 Managed Services** (via `pm2 list`):
+
 - **RSS Reader Dev** (`rss-reader-dev`) - Port 3000 - Main web application
 - **Sync Server** (`rss-sync-server`) - Port 3001 - Bi-directional sync API
 - **Sync Cron** (`rss-sync-cron`) - Automated syncing 6x daily (2,6,10,14,18,22 UTC)
@@ -58,6 +60,7 @@ The RSS News Reader requires several services to be running for full functionali
 - **Log Rotation Module** (`pm2-logrotate`) - Automatic log rotation
 
 **External Services**:
+
 - **Supabase PostgreSQL** - Cloud-hosted database (Row Level Security enabled)
 - **Network Security** - Configurable based on deployment (VPN, firewall, etc.)
 
@@ -103,6 +106,7 @@ Comprehensive health monitoring with automated recovery and alerting.
 **Health Endpoints**: `/api/health/*` - Application, database, sync, parsing, and AI status
 
 **Documentation:**
+
 - **Health Endpoints**: See [`docs/monitoring/server-health-endpoints.md`](docs/monitoring/server-health-endpoints.md)
 - **Service Monitoring**: See [`docs/operations/service-monitoring.md`](docs/operations/service-monitoring.md)
 - **Uptime Kuma**: See [`docs/tech/uptime-kuma-monitoring.md`](docs/tech/uptime-kuma-monitoring.md)
@@ -127,6 +131,7 @@ Built with Next.js 14+ (App Router), TypeScript, Tailwind CSS, and Supabase.
 - **Testing**: Vitest, Playwright, 95%+ coverage
 
 **Detailed Documentation:**
+
 - **Full Stack Details**: See [`docs/tech/technology-stack.md`](docs/tech/technology-stack.md)
 - **API Integrations**: See [`docs/tech/api-integrations.md`](docs/tech/api-integrations.md)
 - **Security Model**: See [`docs/tech/security.md`](docs/tech/security.md)
@@ -136,12 +141,14 @@ Built with Next.js 14+ (App Router), TypeScript, Tailwind CSS, and Supabase.
 iOS 26 Liquid Glass Design System with adaptive glass morphism and floating controls.
 
 **Key Features:**
+
 - Progressive Web App (PWA) with offline support
 - Adaptive glass morphism with dynamic blur
 - Floating controls architecture
 - iOS-native interaction patterns
 
 **Documentation:**
+
 - **Design Guidelines**: See [`docs/ui-ux/liquid-glass-design-guidelines.md`](docs/ui-ux/liquid-glass-design-guidelines.md)
 - **Component Library**: See [`docs/ui-ux/ios-liquid-glass-components.md`](docs/ui-ux/ios-liquid-glass-components.md)
 - **Implementation**: See [`docs/ui-ux/liquid-glass-implementation-guide.md`](docs/ui-ux/liquid-glass-implementation-guide.md)
@@ -223,6 +230,7 @@ Bi-directional sync pushes your reading activity back to Inoreader (read/unread,
 👉 **See the [Quick Setup Guide](docs/QUICK_SETUP.md)** for detailed installation instructions.
 
 **TL;DR:**
+
 ```bash
 git clone https://github.com/shayonpal/rss-news-reader.git
 cd rss-news-reader
@@ -330,12 +338,14 @@ git commit --no-verify -m "emergency commit"
 ### Active GitHub Actions
 
 **PR Validation** (`.github/workflows/pr-checks.yml`):
+
 - TypeScript and ESLint validation
 - Unit test execution
 - Build verification
 - Runs on all pull requests
 
 **Project Automation** (`.github/workflows/project-automation.yml`):
+
 - Automatically adds issues to GitHub Projects
 - Labels and categorizes work items
 
@@ -372,6 +382,7 @@ npm audit --audit-level moderate
 Comprehensive testing with unit, integration, E2E, and performance tests.
 
 **Quick Commands:**
+
 ```bash
 npm test              # Fast test runner (8-20 seconds)
 npm run test:parallel # Parallel execution (8-12s)
@@ -386,7 +397,6 @@ npm run pre-commit    # All quality checks
 - **IndexedDB Polyfill**: `fake-indexeddb` library provides browser API compatibility for storage tests
 - **Environment Validation**: Smoke test validates polyfill setup before test execution
 - **Mock Infrastructure**: Comprehensive mocks for browser APIs and external services
-
 
 ### Legacy Emergency Procedures
 
@@ -446,7 +456,6 @@ src/
 └── __tests__/        # Test suites (unit, integration, e2e)
 ```
 
-
 ## Documentation
 
 - **[Product Requirements](docs/product/PRD.md)**: Detailed product specifications
@@ -464,6 +473,7 @@ src/
 ### Interactive API Documentation
 
 **📚 Swagger UI**: Complete API documentation with 100% coverage (47 endpoints)
+
 - **Access**: `${NEXT_PUBLIC_APP_URL}/reader/api-docs`
 - **Features**: Try-it-out functionality, OpenAPI spec, Insomnia export
 
@@ -474,6 +484,7 @@ src/
 - **Supabase**: PostgreSQL with Row Level Security
 
 **Documentation:**
+
 - **API Details**: See [`docs/tech/api-integrations.md`](docs/tech/api-integrations.md)
 - **Endpoint Reference**: See [`docs/api/server-endpoints.md`](docs/api/server-endpoints.md)
 - **Insomnia Setup**: See [`docs/api/insomnia-setup.md`](docs/api/insomnia-setup.md)
@@ -495,6 +506,7 @@ Inoreader API → Server (Node.js) → Supabase → Client (Next.js)
 PostgreSQL with 15 tables, Row Level Security, materialized views for performance.
 
 **Documentation:**
+
 - **Database Schema**: See [`docs/tech/database-schema.md`](docs/tech/database-schema.md)
 - **Sync Architecture**: See [`docs/tech/bidirectional-sync.md`](docs/tech/bidirectional-sync.md)
 - **API Integrations**: See [`docs/tech/api-integrations.md`](docs/tech/api-integrations.md)
@@ -504,12 +516,14 @@ PostgreSQL with 15 tables, Row Level Security, materialized views for performanc
 We welcome contributions! Please follow these guidelines:
 
 ### Submitting Issues
+
 - Check [existing issues](https://github.com/shayonpal/rss-news-reader/issues) before creating a new one
 - Use clear, descriptive titles
 - Include steps to reproduce for bugs
 - Add relevant labels if possible
 
 ### Submitting Pull Requests
+
 1. Fork the repository
 2. Create a feature branch from `dev`: `git checkout -b feature/your-feature-name`
 3. Make your changes following the existing code style
@@ -520,6 +534,7 @@ We welcome contributions! Please follow these guidelines:
 8. Ensure PR description clearly describes the problem and solution
 
 ### Development Guidelines
+
 - Follow existing code patterns and style
 - Add tests for new features
 - Update documentation as needed

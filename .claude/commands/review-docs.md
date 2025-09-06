@@ -48,6 +48,7 @@ echo "✅ All document paths validated"
 For each document in the DOC_PATHS array:
 
 **2a. Read Documentation Content:**
+
 ```
 doc-search, please read and analyze this documentation file:
 
@@ -71,6 +72,7 @@ Provide a structured summary of what this documentation claims exists and how it
 **Now coordinate multiple specialized agents to understand actual implementation, targeting areas mentioned in documentation:**
 
 **3a. Database Analysis (Based on Documentation Claims):**
+
 ```
 db-expert-readonly, analyze the current database schema focusing on areas mentioned in the documentation:
 
@@ -90,6 +92,7 @@ Provide the actual database structure as it exists now, highlighting documentati
 ```
 
 **3b. Infrastructure and Configuration Analysis (Based on Documentation Claims):**
+
 ```
 devops-expert, analyze the deployment and infrastructure setup, focusing on what documentation describes:
 
@@ -109,6 +112,7 @@ Provide the actual infrastructure setup as deployed, highlighting documentation 
 ```
 
 **3c. Technical Architecture Analysis (Based on Documentation Claims):**
+
 ```
 tech-expert, analyze the codebase implementation focusing on what documentation describes:
 
@@ -129,6 +133,7 @@ Provide comprehensive technical implementation details as they exist in code, hi
 ```
 
 **3d. Version Control Context (Based on Documentation Claims):**
+
 ```
 git-expert, provide version control context focusing on documentation relevance:
 
@@ -154,6 +159,7 @@ Provide git context showing how current development state aligns with documentat
 For each document analyzed:
 
 **4a. Identify Discrepancies:**
+
 ```
 Now compare the documentation content from Step 2 against the specialist analyses from Step 3:
 
@@ -162,13 +168,13 @@ Now compare the documentation content from Step 2 against the specialist analyse
 - Identify missing tables, incorrect column types, outdated relationships
 - Note any undocumented database features
 
-**Infrastructure Mismatches:**  
+**Infrastructure Mismatches:**
 - Compare documented services vs devops-expert PM2 service analysis
 - Check environment variables, ports, deployment details accuracy
 - Identify missing or incorrect infrastructure documentation
 
 **Technical Implementation Gaps:**
-- Compare documented APIs vs tech-expert endpoint analysis  
+- Compare documented APIs vs tech-expert endpoint analysis
 - Check feature descriptions vs actual code implementation
 - Verify architecture claims vs actual code structure
 - Note any undocumented features or endpoints
@@ -259,16 +265,16 @@ Please confirm how you'd like to proceed.
 ```bash
 if [[ "$USER_RESPONSE" == "yes" ]]; then
   echo "✅ Applying all proposed changes..."
-  
+
   for doc in "${DOC_PATHS[@]}"; do
     echo "📝 Updating $doc..."
     echo "Using doc-admin agent for write operations..."
   done
-  
+
 elif [[ "$USER_RESPONSE" == "selective" ]]; then
   echo "📋 Please specify which changes to apply..."
   # Interactive selection process
-  
+
 else
   echo "❌ Documentation review cancelled"
   exit 0
@@ -288,7 +294,7 @@ doc-admin, please update the following documentation file based on our comprehen
 **Database Updates:**
 - [Specific schema corrections based on db-expert-readonly analysis]
 
-**Infrastructure Updates:**  
+**Infrastructure Updates:**
 - [Service configuration corrections based on devops-expert analysis]
 
 **Technical Implementation Updates:**
@@ -364,6 +370,7 @@ $(for doc in "${DOC_PATHS[@]}"; do echo "- [$doc]($doc)"; done)
 ## Error Handling
 
 **File Access Errors:**
+
 ```bash
 if [ ! -r "$doc" ]; then
   echo "❌ Error: Cannot read document: $doc"
@@ -373,6 +380,7 @@ fi
 ```
 
 **Agent Availability:**
+
 ```bash
 # If required agents are not available
 echo "❌ Error: Required specialized agents not available"
@@ -380,7 +388,7 @@ echo "This command requires multiple agents:"
 echo "  - doc-search: For reading markdown documentation files"
 echo "  - doc-admin: For writing/updating markdown documentation files"
 echo "  - tech-expert: For analyzing codebase implementation and APIs"
-echo "  - db-expert-readonly: For analyzing database schema and structure" 
+echo "  - db-expert-readonly: For analyzing database schema and structure"
 echo "  - devops-expert: For infrastructure, deployment, PM2 services"
 echo "  - git-expert: For version control information and recent changes"
 echo "Please ensure all agents are properly configured"
@@ -388,6 +396,7 @@ exit 1
 ```
 
 **Validation Failures:**
+
 ```bash
 # If updated documents have issues
 echo "⚠️  Warning: Some documents may need manual review"
@@ -400,25 +409,30 @@ echo "Run validation tools if available"
 ### Agent Coordination Strategy
 
 **Phase 1 - Documentation Analysis (Read-Only):**
+
 - **doc-search**: Read markdown documentation files and extract structured content
 - Understand what the documentation claims before analyzing reality
 
 **Phase 2 - Targeted Reality Analysis (Read-Only Specialists):**
+
 - **db-expert-readonly**: Database schema analysis focusing on documented claims
 - **devops-expert**: Infrastructure analysis targeting documented services/config
 - **tech-expert**: Code implementation analysis verifying documented APIs/features
 - **git-expert**: Version control context checking documentation relevance
 
 **Phase 3 - Comparison and Discrepancy Identification:**
+
 - Compare documentation claims vs specialist findings from Phase 2
 - Identify gaps, inaccuracies, and missing documentation
 - Categorize discrepancies by impact and priority
 
 **Phase 4 - Planning and Approval:**
+
 - Generate comprehensive change plans with specific section/line references
 - Present structured plan for user approval with priority levels
 
 **Phase 5 - Implementation (Write Operations):**
+
 - **doc-admin**: Apply approved changes to markdown documentation files only
 - Incremental updates with validation at each step
 

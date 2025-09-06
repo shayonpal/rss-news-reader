@@ -4,14 +4,14 @@
 
 /**
  * Creates a debounced version of a function
- * 
+ *
  * The debounced function delays invoking the original function until after
  * the specified delay has elapsed since the last time it was invoked.
- * 
+ *
  * @param fn - The function to debounce
  * @param delay - The delay in milliseconds
  * @returns Debounced function with cancel method
- * 
+ *
  * @example
  * const debouncedSave = debounce(saveFunction, 500);
  * // Call multiple times rapidly
@@ -51,10 +51,10 @@ export function debounce<T extends (...args: any[]) => any>(
 
 /**
  * Creates a debounced version of a function with leading edge execution
- * 
+ *
  * This version executes immediately on the first call, then debounces
  * subsequent calls.
- * 
+ *
  * @param fn - The function to debounce
  * @param delay - The delay in milliseconds
  * @returns Debounced function with cancel method

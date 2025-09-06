@@ -35,7 +35,10 @@ vi.mock("@supabase/supabase-js", () => ({
 // Preference schema matching database JSONB structure
 const PreferencesSchema = z.object({
   timezone: z.string().optional(),
-  summaryWordCount: z.string().regex(/^\d+-\d+$/).optional(),
+  summaryWordCount: z
+    .string()
+    .regex(/^\d+-\d+$/)
+    .optional(),
   summaryStyle: z.enum(["objective", "analytical", "concise"]).optional(),
   summaryModel: z.string().optional(),
   syncMaxArticles: z.number().min(10).max(1000).optional(),
@@ -93,12 +96,12 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     PreferencesCache.clear();
-    
+
     // Reset environment variables
     process.env.SUMMARY_WORD_COUNT = "70-80";
     process.env.SUMMARY_STYLE = "objective";
     process.env.SYNC_MAX_ARTICLES = "100";
-    
+
     // Setup Supabase mock
     const { createClient } = require("@supabase/supabase-js");
     mockSupabase = createClient("mock-url", "mock-key");
@@ -165,7 +168,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
 
     it("should use cached preferences on subsequent requests", async () => {
       const storedPrefs = { timezone: "America/Toronto" };
-      
+
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -262,7 +265,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       expect(response.status).toBe(200);
       expect(data.summaryWordCount).toBe("100-120");
       expect(data.theme).toBe("dark");
-      
+
       // Verify cache invalidation
       const cachedData = PreferencesCache.get("user:shayon:preferences");
       expect(cachedData).toBeNull();
@@ -363,7 +366,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       const responseLow = await PUT({
         json: async () => tooLow,
       } as NextRequest);
-      
+
       const responseHigh = await PUT({
         json: async () => tooHigh,
       } as NextRequest);
@@ -491,25 +494,29 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
     it("should cache GET responses for 5 minutes", async () => {
       const startTime = Date.now();
       PreferencesCache.set("user:shayon:preferences", { theme: "dark" });
-      
+
       // Check cache is valid
-      expect(PreferencesCache.get("user:shayon:preferences")).toEqual({ theme: "dark" });
-      
+      expect(PreferencesCache.get("user:shayon:preferences")).toEqual({
+        theme: "dark",
+      });
+
       // Fast-forward time by 4 minutes
       vi.setSystemTime(startTime + 4 * 60 * 1000);
-      expect(PreferencesCache.get("user:shayon:preferences")).toEqual({ theme: "dark" });
-      
+      expect(PreferencesCache.get("user:shayon:preferences")).toEqual({
+        theme: "dark",
+      });
+
       // Fast-forward past 5 minutes
       vi.setSystemTime(startTime + 6 * 60 * 1000);
       expect(PreferencesCache.get("user:shayon:preferences")).toBeNull();
-      
+
       vi.useRealTimers();
     });
 
     it("should invalidate cache on PUT requests", async () => {
       PreferencesCache.set("user:shayon:preferences", { theme: "light" });
       expect(PreferencesCache.get("user:shayon:preferences")).toBeTruthy();
-      
+
       mockSupabase.from.mockReturnValue({
         update: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -529,7 +536,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       await PUT({
         json: async () => ({ theme: "dark" }),
       } as NextRequest);
-      
+
       expect(PreferencesCache.get("user:shayon:preferences")).toBeNull();
     });
   });
@@ -541,7 +548,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       process.env.SYNC_MAX_ARTICLES = "250";
 
       const defaults = getDefaultPreferences();
-      
+
       expect(defaults.summaryWordCount).toBe("100-150");
       expect(defaults.summaryStyle).toBe("analytical");
       expect(defaults.syncMaxArticles).toBe(250);
@@ -553,7 +560,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       delete process.env.SYNC_MAX_ARTICLES;
 
       const defaults = getDefaultPreferences();
-      
+
       expect(defaults.summaryWordCount).toBe("70-80");
       expect(defaults.summaryStyle).toBe("objective");
       expect(defaults.syncMaxArticles).toBe(100);
@@ -573,7 +580,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
           500: { description: "Internal server error" },
         },
       };
-      
+
       expect(expectedSchema).toBeDefined();
     });
 
@@ -588,7 +595,7 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
           500: { description: "Internal server error" },
         },
       };
-      
+
       expect(expectedSchema).toBeDefined();
     });
   });

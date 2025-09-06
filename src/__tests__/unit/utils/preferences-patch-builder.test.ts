@@ -1,25 +1,25 @@
 /**
  * RR-270: Patch Builder Tests
- * 
+ *
  * Tests the utility that builds minimal patch objects
  * for preference updates using patch semantics.
  */
 
-import { describe, it, expect } from 'vitest';
-import { buildPreferencesPatch } from '@/lib/utils/preferences-patch-builder';
-import type { PreferencesData } from '@/types/preferences';
+import { describe, it, expect } from "vitest";
+import { buildPreferencesPatch } from "@/lib/utils/preferences-patch-builder";
+import type { PreferencesData } from "@/types/preferences";
 
-describe('PreferencesPatchBuilder - RR-270', () => {
-  describe('Basic Patch Generation', () => {
-    it('should return empty patch when no changes', () => {
+describe("PreferencesPatchBuilder - RR-270", () => {
+  describe("Basic Patch Generation", () => {
+    it("should return empty patch when no changes", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -33,15 +33,15 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       expect(patch).toEqual({});
     });
 
-    it('should include only changed fields', () => {
+    it("should include only changed fields", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -66,15 +66,15 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       });
     });
 
-    it('should handle multiple changes across sections', () => {
+    it("should handle multiple changes across sections", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -85,7 +85,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       const draft: PreferencesData = {
         ai: {
           ...saved.ai,
-          model: 'claude-3-sonnet-20240229',
+          model: "claude-3-sonnet-20240229",
           summaryLengthMin: 200,
         },
         sync: {
@@ -98,7 +98,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
 
       expect(patch).toEqual({
         ai: {
-          model: 'claude-3-sonnet-20240229',
+          model: "claude-3-sonnet-20240229",
           summaryLengthMin: 200,
         },
         sync: {
@@ -109,16 +109,16 @@ describe('PreferencesPatchBuilder - RR-270', () => {
     });
   });
 
-  describe('API Key State Machine', () => {
-    it('should handle API key replacement', () => {
+  describe("API Key State Machine", () => {
+    it("should handle API key replacement", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -129,27 +129,27 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       const patch = buildPreferencesPatch(
         saved,
         saved,
-        'replace',
-        'sk-ant-api03-xxx'
+        "replace",
+        "sk-ant-api03-xxx"
       );
 
       expect(patch).toEqual({
         ai: {
-          apiKeyChange: 'replace',
-          apiKey: 'sk-ant-api03-xxx',
+          apiKeyChange: "replace",
+          apiKey: "sk-ant-api03-xxx",
         },
       });
     });
 
-    it('should handle API key clearing', () => {
+    it("should handle API key clearing", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: true,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -157,25 +157,25 @@ describe('PreferencesPatchBuilder - RR-270', () => {
         },
       };
 
-      const patch = buildPreferencesPatch(saved, saved, 'clear');
+      const patch = buildPreferencesPatch(saved, saved, "clear");
 
       expect(patch).toEqual({
         ai: {
-          apiKeyChange: 'clear',
+          apiKeyChange: "clear",
           apiKey: null,
         },
       });
     });
 
-    it('should not include API key when unchanged', () => {
+    it("should not include API key when unchanged", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: true,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -191,7 +191,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
         },
       };
 
-      const patch = buildPreferencesPatch(draft, saved, 'unchanged');
+      const patch = buildPreferencesPatch(draft, saved, "unchanged");
 
       expect(patch).toEqual({
         sync: {
@@ -201,15 +201,15 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       expect(patch.ai).toBeUndefined();
     });
 
-    it('should combine API key change with other AI field changes', () => {
+    it("should combine API key change with other AI field changes", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -221,37 +221,37 @@ describe('PreferencesPatchBuilder - RR-270', () => {
         ...saved,
         ai: {
           ...saved.ai,
-          model: 'claude-3-sonnet-20240229',
+          model: "claude-3-sonnet-20240229",
         },
       };
 
       const patch = buildPreferencesPatch(
         draft,
         saved,
-        'replace',
-        'sk-ant-new-key'
+        "replace",
+        "sk-ant-new-key"
       );
 
       expect(patch).toEqual({
         ai: {
-          model: 'claude-3-sonnet-20240229',
-          apiKeyChange: 'replace',
-          apiKey: 'sk-ant-new-key',
+          model: "claude-3-sonnet-20240229",
+          apiKeyChange: "replace",
+          apiKey: "sk-ant-new-key",
         },
       });
     });
   });
 
-  describe('Null Value Handling', () => {
-    it('should include null values for field clearing', () => {
+  describe("Null Value Handling", () => {
+    it("should include null values for field clearing", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -277,16 +277,16 @@ describe('PreferencesPatchBuilder - RR-270', () => {
     });
   });
 
-  describe('System Fields Exclusion', () => {
-    it('should exclude system-generated fields', () => {
+  describe("System Fields Exclusion", () => {
+    it("should exclude system-generated fields", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -296,7 +296,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
 
       const draft: any = {
         ...saved,
-        id: 'some-id', // System field
+        id: "some-id", // System field
         createdAt: new Date(), // System field
         updatedAt: new Date(), // System field
         sync: {
@@ -312,20 +312,20 @@ describe('PreferencesPatchBuilder - RR-270', () => {
           maxArticles: 1000,
         },
       });
-      expect(patch).not.toHaveProperty('id');
-      expect(patch).not.toHaveProperty('createdAt');
-      expect(patch).not.toHaveProperty('updatedAt');
+      expect(patch).not.toHaveProperty("id");
+      expect(patch).not.toHaveProperty("createdAt");
+      expect(patch).not.toHaveProperty("updatedAt");
     });
 
-    it('should exclude hasApiKey from patch', () => {
+    it("should exclude hasApiKey from patch", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -338,7 +338,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
         ai: {
           ...saved.ai,
           hasApiKey: true, // Should not be in patch
-          model: 'claude-3-sonnet-20240229',
+          model: "claude-3-sonnet-20240229",
         },
       };
 
@@ -346,23 +346,23 @@ describe('PreferencesPatchBuilder - RR-270', () => {
 
       expect(patch).toEqual({
         ai: {
-          model: 'claude-3-sonnet-20240229',
+          model: "claude-3-sonnet-20240229",
         },
       });
-      expect(patch.ai).not.toHaveProperty('hasApiKey');
+      expect(patch.ai).not.toHaveProperty("hasApiKey");
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle undefined saved preferences', () => {
+  describe("Edge Cases", () => {
+    it("should handle undefined saved preferences", () => {
       const draft: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -375,11 +375,11 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       // Should return all fields when no saved state
       expect(patch).toEqual({
         ai: {
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -388,15 +388,15 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       });
     });
 
-    it('should handle deeply nested changes', () => {
+    it("should handle deeply nested changes", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -408,8 +408,8 @@ describe('PreferencesPatchBuilder - RR-270', () => {
         ...saved,
         ai: {
           ...saved.ai,
-          summaryStyle: 'analytical',
-          contentFocus: 'technical',
+          summaryStyle: "analytical",
+          contentFocus: "technical",
         },
       };
 
@@ -417,21 +417,21 @@ describe('PreferencesPatchBuilder - RR-270', () => {
 
       expect(patch).toEqual({
         ai: {
-          summaryStyle: 'analytical',
-          contentFocus: 'technical',
+          summaryStyle: "analytical",
+          contentFocus: "technical",
         },
       });
     });
 
-    it('should handle multiple nested changes', () => {
+    it("should handle multiple nested changes", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -442,7 +442,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       const draft: PreferencesData = {
         ai: {
           ...saved.ai,
-          model: 'claude-3-opus-20240229',
+          model: "claude-3-opus-20240229",
           summaryLengthMin: 150,
           summaryLengthMax: 400,
         },
@@ -456,7 +456,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
 
       expect(patch).toEqual({
         ai: {
-          model: 'claude-3-opus-20240229',
+          model: "claude-3-opus-20240229",
           summaryLengthMin: 150,
           summaryLengthMax: 400,
         },
@@ -467,15 +467,15 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       });
     });
 
-    it('should handle null value changes', () => {
+    it("should handle null value changes", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'technical',
+          summaryStyle: "objective",
+          contentFocus: "technical",
         },
         sync: {
           maxArticles: 500,
@@ -501,16 +501,16 @@ describe('PreferencesPatchBuilder - RR-270', () => {
     });
   });
 
-  describe('Type Safety', () => {
-    it('should maintain type safety with patch output', () => {
+  describe("Type Safety", () => {
+    it("should maintain type safety with patch output", () => {
       const saved: PreferencesData = {
         ai: {
           hasApiKey: false,
-          model: 'claude-3-haiku-20240307',
+          model: "claude-3-haiku-20240307",
           summaryLengthMin: 100,
           summaryLengthMax: 300,
-          summaryStyle: 'objective',
-          contentFocus: 'general',
+          summaryStyle: "objective",
+          contentFocus: "general",
         },
         sync: {
           maxArticles: 500,
@@ -522,7 +522,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
         ...saved,
         ai: {
           ...saved.ai,
-          summaryStyle: 'analytical',
+          summaryStyle: "analytical",
         },
       };
 
@@ -532,7 +532,7 @@ describe('PreferencesPatchBuilder - RR-270', () => {
       const _aiPatch: Partial<typeof saved.ai> | undefined = patch.ai;
       const _syncPatch: Partial<typeof saved.sync> | undefined = patch.sync;
 
-      expect(patch.ai?.summaryStyle).toBe('analytical');
+      expect(patch.ai?.summaryStyle).toBe("analytical");
     });
   });
 });

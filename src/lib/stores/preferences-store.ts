@@ -5,24 +5,24 @@
  */
 
 // Re-export domain store (app-wide state)
-export { 
+export {
   usePreferencesDomainStore,
   type PreferencesDomainStore,
   type PreferencesDomainState,
-  type PreferencesDomainActions
-} from './preferences-domain-store';
+  type PreferencesDomainActions,
+} from "./preferences-domain-store";
 
 // Re-export editor store (UI state)
 export {
   usePreferencesEditorStore,
   type PreferencesEditorStore,
   type PreferencesEditorState,
-  type PreferencesEditorActions
-} from './preferences-editor-store';
+  type PreferencesEditorActions,
+} from "./preferences-editor-store";
 
 // Convenience hooks for common use cases
-import { usePreferencesDomainStore } from './preferences-domain-store';
-import { usePreferencesEditorStore } from './preferences-editor-store';
+import { usePreferencesDomainStore } from "./preferences-domain-store";
+import { usePreferencesEditorStore } from "./preferences-editor-store";
 
 /**
  * Hook to get current saved preferences

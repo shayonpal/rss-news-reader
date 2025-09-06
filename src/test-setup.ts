@@ -12,7 +12,8 @@ if (!process.env.NODE_ENV) {
 // RR-269: Add TOKEN_ENCRYPTION_KEY for preferences API tests
 // Use a test-specific 64-character hex string for AES-256-GCM encryption
 if (!process.env.TOKEN_ENCRYPTION_KEY) {
-  process.env.TOKEN_ENCRYPTION_KEY = "a1b2c3d4e5f6789012345678901234567890abcdefabcdef1234567890abcdef";
+  process.env.TOKEN_ENCRYPTION_KEY =
+    "a1b2c3d4e5f6789012345678901234567890abcdefabcdef1234567890abcdef";
 }
 
 // RR-183: Global test cleanup hooks for resource management
