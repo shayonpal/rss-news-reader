@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Sep 06, 2025 - 06:47 AM EDT - fix: Resolved authentication issues in 5 Inoreader API endpoints
+  - **Root Cause**: Endpoints were using cookie-based authentication instead of file-based TokenManager
+  - **Fixed Endpoints**: `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/unread-counts`, `/api/inoreader/stream-contents`, `/api/inoreader/edit-tag`
+  - **Solution**: Replaced `cookies().get("access_token")` with `TokenManager.makeAuthenticatedRequest()`
+  - **Impact**: All endpoints now work correctly when called directly without browser cookies
+  - **Authentication Source**: Uses encrypted tokens from `~/.rss-reader/tokens.json`
+- Sep 06, 2025 - 06:47 AM EDT - fix: Fixed OpenAPI documentation Auth section display issue
+  - **Issue**: Auth section in Swagger UI appeared empty despite having endpoints
+  - **Root Cause**: Tag mismatch between "Auth" definition and "Authentication" endpoint registration
+  - **Solution**: Updated `src/lib/openapi/registry.ts` to use correct "Auth" tag
+  - **Result**: `/api/auth/inoreader/status` endpoint now appears in Auth section
+
 ### Added
 
 - Sep 06, 2025 - 02:02 AM EDT - docs: Created comprehensive technical documentation for RR-270 preferences state management

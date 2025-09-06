@@ -10,24 +10,23 @@ export async function GET(request: NextRequest) {
   const trigger = request.nextUrl.searchParams.get("trigger") || "unknown";
 
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("access_token");
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
+    // @ts-ignore
+    const TokenManager = (await import("../../../../../server/lib/token-manager.js")).default;
+    const tokenManager = new TokenManager();
 
     // Log the API call
     logInoreaderApiCall("/reader/api/0/unread-count", trigger, "GET");
 
-    const response = await fetch(`${INOREADER_API_BASE}/unread-count`, {
-      headers: {
-        Authorization: `Bearer ${accessToken.value}`,
-        AppId: process.env.NEXT_PUBLIC_INOREADER_CLIENT_ID!,
-        AppKey: process.env.INOREADER_CLIENT_SECRET!,
-        "User-Agent": "Shayons-News/1.0",
-      },
-    });
+    const response = await tokenManager.makeAuthenticatedRequest(
+      `${INOREADER_API_BASE}/unread-count`,
+      {
+        headers: {
+          AppId: process.env.NEXT_PUBLIC_INOREADER_CLIENT_ID!,
+          AppKey: process.env.INOREADER_CLIENT_SECRET!,
+          "User-Agent": "Shayons-News/1.0",
+        },
+      }
+    );
 
     if (!response.ok) {
       return NextResponse.json(

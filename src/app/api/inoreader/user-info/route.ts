@@ -23,14 +23,9 @@ export async function GET(request: NextRequest) {
     );
   }
   try {
-    const accessToken = request.cookies.get("access_token")?.value;
-
-    console.log("User-info request - has access token:", !!accessToken);
-
-    if (!accessToken) {
-      console.log("No access token found in cookies");
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
+    // @ts-ignore
+    const TokenManager = (await import("../../../../../server/lib/token-manager.js")).default;
+    const tokenManager = new TokenManager();
 
     console.log("Making request to Inoreader user-info API...");
 
@@ -40,12 +35,11 @@ export async function GET(request: NextRequest) {
     // Log the API call
     logInoreaderApiCall("/reader/api/0/user-info", trigger, "GET");
 
-    // Proxy request to Inoreader API
-    const inoreaderResponse = await fetch(
+    // Use TokenManager to make authenticated request
+    const inoreaderResponse = await tokenManager.makeAuthenticatedRequest(
       "https://www.inoreader.com/reader/api/0/user-info",
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           AppId: process.env.NEXT_PUBLIC_INOREADER_CLIENT_ID!,
           AppKey: process.env.INOREADER_CLIENT_SECRET!,
           "User-Agent": "Shayons-News/1.0",

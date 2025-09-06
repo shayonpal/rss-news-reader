@@ -2974,7 +2974,7 @@ registry.registerPath({
   summary: "Check OAuth authentication status",
   description:
     "Validates the local OAuth token file status without making API calls. Checks token existence, encryption, age, and expiration (365-day lifetime).",
-  tags: ["Authentication"],
+  tags: ["Auth"],
   responses: {
     200: {
       description: "Authentication status retrieved successfully",
