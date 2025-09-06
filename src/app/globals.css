@@ -557,7 +557,7 @@ html.reduce-transparency .liquid-glass-btn {
     --brand-accent-rgb: 139, 92, 246; /* violet-500 */
 
     /* Glass Opacity System (Single Source) */
-    --glass-surface-opacity: 0.03;
+    --glass-surface-opacity: 0.1;
     --glass-surface-hover-opacity: 0.08;
     --glass-surface-subtle-opacity: 0.02;
     --glass-border-opacity: 0.1;
@@ -611,7 +611,7 @@ html.reduce-transparency .liquid-glass-btn {
     --glass-saturation-base: 140%; /* Reduced saturation for dark mode */
 
     /* Glass Opacity Overrides (Single Source Changes) */
-    --glass-surface-opacity: 0.05;
+    --glass-surface-opacity: 0.1;
     --glass-surface-hover-opacity: 0.12;
     --glass-surface-subtle-opacity: 0.03;
     --glass-border-opacity: 0.15;
