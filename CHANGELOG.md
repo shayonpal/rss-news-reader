@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Sep 06, 2025 - 06:47 AM EDT - fix: Resolved authentication issues in 5 Inoreader API endpoints
+- Sep 06, 2025 - 03:03 AM EDT - fix: Resolved authentication issues in 5 Inoreader API endpoints
   - **Root Cause**: Endpoints were using cookie-based authentication instead of file-based TokenManager
   - **Fixed Endpoints**: `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/unread-counts`, `/api/inoreader/stream-contents`, `/api/inoreader/edit-tag`
   - **Solution**: Replaced `cookies().get("access_token")` with `TokenManager.makeAuthenticatedRequest()`

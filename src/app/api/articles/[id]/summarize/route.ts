@@ -5,6 +5,12 @@ import { SummaryPromptBuilder } from "@/lib/ai/summary-prompt";
 import { withArticleIdValidation } from "@/lib/utils/uuid-validation-middleware";
 import { ArticleContentService } from "@/lib/services/article-content-service";
 import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
+import {
+  decrypt,
+  sanitizeErrorMessage,
+  type EncryptedData,
+} from "@/lib/utils/encryption";
+import { ApiKeyCache } from "@/lib/utils/api-key-cache";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -13,12 +19,74 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Initialize Anthropic client
-const anthropic = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
-  : null;
+// Initialize cache singleton
+const apiKeyCache = ApiKeyCache.getInstance();
+
+/**
+ * Get API key for a user with caching and priority logic
+ * @param userId The user ID (can be null)
+ * @returns The API key and its source
+ */
+async function getApiKeyForUser(
+  userId: string | null,
+  preferences?: any
+): Promise<{
+  apiKey: string | null;
+  keySource: "user" | "environment" | "none";
+  preferences?: any;
+}> {
+  let apiKey: string | null = null;
+  let keySource: "user" | "environment" | "none" = "none";
+
+  // Check cache first if user is authenticated
+  if (userId) {
+    const cached = apiKeyCache.get(userId);
+    if (cached) {
+      return { apiKey: cached.key, keySource: cached.source, preferences };
+    }
+
+    // Not in cache, fetch from database if not already provided
+    if (!preferences) {
+      const { data } = await supabase
+        .from("user_preferences")
+        .select("preferences")
+        .eq("user_id", userId)
+        .single();
+      preferences = data;
+    }
+
+    if (preferences?.preferences?.encryptedData?.apiKeys?.anthropic) {
+      try {
+        const encryptedKey = preferences.preferences.encryptedData.apiKeys
+          .anthropic as EncryptedData;
+
+        // Decrypt the user's API key
+        if (encryptedKey.encrypted && encryptedKey.iv && encryptedKey.authTag) {
+          apiKey = decrypt(encryptedKey);
+          keySource = "user";
+
+          // Cache the decrypted key
+          apiKeyCache.set(userId, apiKey, keySource);
+        }
+      } catch (decryptError) {
+        console.error("Failed to decrypt user API key:", decryptError);
+      }
+    }
+  }
+
+  // Fall back to environment variable if no user key
+  if (!apiKey && process.env.ANTHROPIC_API_KEY) {
+    apiKey = process.env.ANTHROPIC_API_KEY;
+    keySource = "environment";
+
+    // Cache environment key for authenticated users
+    if (userId) {
+      apiKeyCache.set(userId, apiKey, keySource);
+    }
+  }
+
+  return { apiKey, keySource, preferences };
+}
 
 const postHandler = async (
   request: NextRequest,
@@ -27,16 +95,32 @@ const postHandler = async (
   try {
     const { id } = params;
 
-    // Check if Claude API is configured
-    if (!anthropic) {
+    // Get user ID from auth
+    const authHeader = request.headers.get("authorization");
+    let userId: string | null = null;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const { data: userData } = await supabase.auth.getUser(token);
+      userId = userData?.user?.id || null;
+    }
+
+    // Get API key with caching support and preferences
+    const { apiKey, keySource, preferences } = await getApiKeyForUser(userId);
+
+    // Return 403 if no API key is available
+    if (!apiKey) {
       return NextResponse.json(
         {
-          error: "api_not_configured",
-          message: "Claude API key not configured on server",
+          error:
+            "Anthropic API key not configured. Please add your API key in Settings.",
         },
-        { status: 503 }
+        { status: 403 }
       );
     }
+
+    // Initialize Anthropic client with the selected API key
+    const anthropic = new Anthropic({ apiKey });
 
     // Get article from database with feed information
     const { data: article, error: fetchError } = await supabase
@@ -71,6 +155,7 @@ const postHandler = async (
         cached: true,
         content_source: contentSource,
         full_content_fetched: false, // Not fetched in this request since it's cached
+        key_source: keySource, // Include key source in response
       });
     }
 
@@ -107,9 +192,14 @@ const postHandler = async (
         (textContent.length > 10000 ? "...[truncated]" : ""),
     });
 
-    // Get model from environment variable with fallback
-    const claudeModel =
+    // Get model from user preferences or environment with fallback
+    let claudeModel =
       process.env.CLAUDE_SUMMARIZATION_MODEL || "claude-sonnet-4-20250514";
+
+    // Use preferences already fetched from getApiKeyForUser
+    if (userId && preferences?.preferences?.ai?.model) {
+      claudeModel = preferences.preferences.ai.model;
+    }
 
     const completion = await anthropic.messages.create({
       model: claudeModel,
@@ -148,45 +238,25 @@ const postHandler = async (
     return NextResponse.json({
       success: true,
       summary,
-      model: claudeModel,
-      regenerated: forceRegenerate,
+      cached: false,
       content_source: wasFetched ? "full" : "partial",
       full_content_fetched: wasFetched,
-      input_tokens: completion.usage.input_tokens,
-      output_tokens: completion.usage.output_tokens,
-      config: SummaryPromptBuilder.getConfig(),
+      key_source: keySource, // Include key source in response
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Summarization error:", error);
 
-    // Check for specific Anthropic errors
-    if (error instanceof Anthropic.APIError) {
-      if (error.status === 429) {
-        return NextResponse.json(
-          {
-            error: "rate_limit",
-            message: "Claude API rate limit exceeded. Please try again later.",
-          },
-          { status: 429 }
-        );
-      }
-
-      if (error.status === 401) {
-        return NextResponse.json(
-          {
-            error: "invalid_api_key",
-            message: "Invalid Claude API key",
-          },
-          { status: 401 }
-        );
-      }
-    }
+    // Sanitize error message to prevent API key exposure
+    const errorMessage =
+      error instanceof Error
+        ? sanitizeErrorMessage(error.message)
+        : "Unknown error";
 
     return NextResponse.json(
       {
         error: "summarization_failed",
-        message: "Failed to generate article summary",
-        details: error instanceof Error ? error.message : "Unknown error",
+        message: "Failed to generate summary",
+        details: errorMessage,
       },
       { status: 500 }
     );

@@ -119,6 +119,7 @@ Check that everything is working:
    - Should show database connected
 
 3. **Sync Status**: Check PM2 logs
+
    ```bash
    npm run pm2:logs rss-sync-cron
    ```
