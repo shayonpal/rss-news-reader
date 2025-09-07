@@ -60,8 +60,16 @@ export async function GET(request: NextRequest) {
               encryptedKey.authTag
             ) {
               const decryptStart = Date.now();
-              apiKey = decrypt(encryptedKey);
-              keySource = "user";
+              const decryptedKey = decrypt(
+                encryptedKey.encrypted,
+                encryptedKey.iv,
+                encryptedKey.authTag
+              );
+
+              if (decryptedKey) {
+                apiKey = decryptedKey;
+                keySource = "user";
+              }
 
               decryptionMetrics = {
                 queryTime: decryptStart - startTime,
@@ -69,8 +77,10 @@ export async function GET(request: NextRequest) {
                 totalTime: Date.now() - startTime,
               };
 
-              // Cache the decrypted key
-              apiKeyCache.set(userId, apiKey, keySource);
+              // Cache the decrypted key only if we successfully decrypted it
+              if (apiKey && keySource === "user") {
+                apiKeyCache.set(userId, apiKey, keySource);
+              }
             }
           } catch (decryptError) {
             console.error("Failed to decrypt user API key:", decryptError);

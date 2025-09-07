@@ -25,7 +25,7 @@ export function usePreferencesForm() {
       debounce((path: string, value: string | number | boolean | null) => {
         editorStore.updateField(path, value);
       }, 300),
-    []
+    [editorStore]
   );
 
   // Handle immediate updates for critical fields (like dropdowns)
@@ -33,7 +33,7 @@ export function usePreferencesForm() {
     (path: string, value: string | number | boolean | null) => {
       editorStore.updateField(path, value);
     },
-    []
+    [editorStore]
   );
 
   // Handle text input changes with debouncing
@@ -70,7 +70,7 @@ export function usePreferencesForm() {
       const value = e.target.value;
       editorStore.setApiKeyInput(value);
     },
-    []
+    [editorStore]
   );
 
   // Save preferences
@@ -89,13 +89,13 @@ export function usePreferencesForm() {
     } finally {
       editorStore.setSaving(false);
     }
-  }, []);
+  }, [domainStore, editorStore]);
 
   // Cancel and reset
   const handleCancel = useCallback(() => {
     debouncedUpdateField.cancel();
     editorStore.clearDraft();
-  }, [debouncedUpdateField]);
+  }, [debouncedUpdateField, editorStore]);
 
   return {
     // State

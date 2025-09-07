@@ -27,6 +27,7 @@ export interface PreferencesEditorState {
   errors: PreferencesValidationErrors;
   isSaving: boolean;
   apiKeyState: ApiKeyState;
+  apiKeyInput: string; // Read-only access to masked API key
 }
 
 /**
@@ -63,8 +64,8 @@ export type PreferencesEditorStore = PreferencesEditorState &
  * - Token object acts as a unique key for this session only
  * - When component unmounts, token is dereferenced and WeakMap cleans up automatically
  */
-const apiKeyStorage = new WeakMap<object, string>();
-const apiKeyToken = {}; // Unique token for this session
+export const apiKeyStorage = new WeakMap<object, string>();
+export const apiKeyToken = {}; // Unique token for this session
 
 /**
  * Get default preferences with proper types
@@ -72,6 +73,7 @@ const apiKeyToken = {}; // Unique token for this session
 const getDefaultPreferences = (): PreferencesData => ({
   ai: {
     hasApiKey: false,
+    apiKey: null, // Always null for security
     model: "claude-3-haiku-20240307",
     summaryLengthMin: 100,
     summaryLengthMax: 300,
@@ -103,6 +105,7 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
       errors: {},
       isSaving: false,
       apiKeyState: "unchanged",
+      apiKeyInput: "", // Always empty string for security
 
       // Initialize draft from saved preferences
       initializeDraft: (saved: PreferencesData) => {

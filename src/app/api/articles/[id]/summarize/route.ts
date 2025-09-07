@@ -62,11 +62,19 @@ async function getApiKeyForUser(
 
         // Decrypt the user's API key
         if (encryptedKey.encrypted && encryptedKey.iv && encryptedKey.authTag) {
-          apiKey = decrypt(encryptedKey);
-          keySource = "user";
+          const decryptedKey = decrypt(
+            encryptedKey.encrypted,
+            encryptedKey.iv,
+            encryptedKey.authTag
+          );
 
-          // Cache the decrypted key
-          apiKeyCache.set(userId, apiKey, keySource);
+          if (decryptedKey) {
+            apiKey = decryptedKey;
+            keySource = "user";
+
+            // Cache the decrypted key
+            apiKeyCache.set(userId, apiKey, keySource);
+          }
         }
       } catch (decryptError) {
         console.error("Failed to decrypt user API key:", decryptError);

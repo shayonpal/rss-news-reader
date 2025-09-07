@@ -5,7 +5,7 @@ This document lists all internal API endpoints implemented in the codebase, cove
 - Access model: Internal only; app is reachable via Tailscale network. Client holds no public secrets.
 - Authentication: Inoreader OAuth is handled server-side or via secure cookies where applicable.
 - **API Base Path (RR-102)**: All endpoints use `/reader` prefix. Development environment automatically redirects `/api/*` → `/reader/api/*` with 307 status.
-- Last Updated: 2025-08-12
+- Last Updated: 2025-09-07
 
 ## Quick Reference
 
@@ -18,6 +18,7 @@ This document lists all internal API endpoints implemented in the codebase, cove
 | Health           | `GET /api/health` (and alias `/api/health/app`), `GET /api/health/db`, `GET /api/health/cron`, `GET /api/health/parsing`, `GET /api/health/claude`                                                                                 |
 | Analytics & Logs | `GET /api/analytics/fetch-stats`, `POST /api/logs/inoreader`                                                                                                                                                                       |
 | Auth Status      | `GET /api/auth/inoreader/status`                                                                                                                                                                                                   |
+| User Preferences | `GET /api/users/[id]/preferences`, `PUT /api/users/[id]/preferences`                                                                                                                                                               |
 | Express Service  | `POST /server/sync/trigger`, `GET /server/sync/stats`, `POST /server/sync/clear-failed`, `POST /server/mark-all-read`, `GET /server/health`                                                                                        |
 
 Note: Previous reference to `/api/health/freshness` has been retired; use `/api/health/parsing` and other health endpoints below.
@@ -262,6 +263,24 @@ The RSS News Reader uses a `/reader` base path for all API endpoints. The RR-102
   - Description: Validates presence and age of encrypted OAuth tokens stored in `~/.rss-reader/tokens.json`.
   - Responses (200): `{ authenticated: boolean, status: "valid"|"expiring_soon"|"expired"|"no_tokens"|"config_error"|"invalid_format"|"unencrypted"|"empty_tokens"|"error", message, tokenAge, daysRemaining, timestamp }`
   - Other methods (POST/PUT/DELETE/PATCH): 405 Method Not Allowed
+
+### User Preferences
+
+- GET `/api/users/[id]/preferences` (RR-272)
+  - Description: Retrieves user-specific preferences with user isolation and caching. Supports AES-256-GCM encryption for sensitive data.
+  - Response 200: `{ ai: { summarization: { enabled: boolean, autoSummarize: boolean, maxTokens: number, model: string, apiKey?: string } }, sync: { interval: number, batchSize: number, maxRetries: number } }`
+  - Response 404: `{ error: "user_not_found", message }`
+  - Response 500: `{ error: "preferences_fetch_failed", message, details }`
+  - Features: User-specific isolation, TTL caching (5 minutes), encrypted API key storage
+
+- PUT `/api/users/[id]/preferences` (RR-272)
+  - Description: Updates user preferences with validation, encryption, and optimistic UI support. Uses PATCH semantics for partial updates.
+  - Request: `{ ai?: { summarization?: { enabled?: boolean, autoSummarize?: boolean, maxTokens?: number, model?: string, apiKey?: string } }, sync?: { interval?: number, batchSize?: number, maxRetries?: number } }`
+  - Response 200: `{ success: true, preferences: {...}, updated: ["ai.summarization.enabled", ...] }`
+  - Response 400: `{ error: "validation_error", message, validationErrors }`
+  - Response 404: `{ error: "user_not_found", message }`
+  - Response 500: `{ error: "preferences_update_failed", message, details }`
+  - Features: Zod validation, AES-256-GCM encryption, PBKDF2 key derivation, cache invalidation
 
 ---
 

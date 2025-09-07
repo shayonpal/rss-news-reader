@@ -1,0 +1,675 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/shayon/DevProjects/rss-news-reader
+
+stdout | src/__tests__/integration/rr-216-filter-navigation.test.tsx
+[Supabase] Initializing client...
+[Supabase] Client initialized in 3.36ms
+
+ ↓ src/__tests__/integration/rr-216-filter-navigation.test.tsx (44 tests | 44 skipped)
+ ↓ src/__tests__/integration/rr-129-sync-prevention-integration.test.ts (11 tests | 11 skipped)
+stdout | src/__tests__/integration/rr-129-sync-prevention-integration.test.ts
+[Supabase Admin] Creating singleton admin client...
+[Supabase Admin] Admin client created in 1.13ms
+
+stderr | src/__tests__/integration/rr-129-sync-prevention-integration.test.ts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ❯ src/__tests__/integration/rr-256-summarize-partial-feeds.test.ts (0 test)
+ ↓ src/__tests__/integration/dynamic-styling-integration.test.tsx (11 tests | 11 skipped)
+ ❯ src/__tests__/integration/rr-272-preferences-activation.test.tsx (0 test)
+ ↓ src/__tests__/integration/rr-129-article-cleanup-tracking.test.ts (11 tests | 11 skipped)
+stdout | src/__tests__/integration/rr-129-article-cleanup-tracking.test.ts
+[Supabase Admin] Creating singleton admin client...
+[Supabase Admin] Admin client created in 0.81ms
+
+stderr | src/__tests__/integration/rr-129-article-cleanup-tracking.test.ts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ❯ src/__tests__/integration/rr-148-parse-content-api.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-197-article-list-localstorage.test.ts (23 tests | 23 skipped)
+ ↓ src/__tests__/integration/rr-129-feed-deletion-integration.test.ts (11 tests | 11 skipped)
+stdout | src/__tests__/integration/rr-129-feed-deletion-integration.test.ts
+[Supabase Admin] Creating singleton admin client...
+[Supabase Admin] Admin client created in 0.97ms
+
+stderr | src/__tests__/integration/rr-129-feed-deletion-integration.test.ts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ↓ src/__tests__/integration/rr-232-violet-component-theming.test.tsx (16 tests | 16 skipped)
+ ❯ src/__tests__/integration/rr-116-404-page-validation.test.ts (0 test)
+ ❯ src/__tests__/integration/rr-115-health-endpoints-database-validation.test.ts (0 test)
+ ❯ src/__tests__/integration/rr-30-sync-conflicts.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-154-migration.test.ts (15 tests | 15 skipped)
+stdout | src/__tests__/integration/rr-146-sidebar-collapsible.test.tsx
+[Supabase] Initializing client...
+[Supabase] Client initialized in 0.66ms
+
+stderr | src/__tests__/integration/rr-146-sidebar-collapsible.test.tsx
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ↓ src/__tests__/integration/rr-146-sidebar-collapsible.test.tsx (31 tests | 31 skipped)
+ ↓ src/__tests__/integration/rr-154-sync-decoding.test.ts (10 tests | 10 skipped)
+ ↓ src/__tests__/integration/rr-175-database-performance.test.ts (11 tests | 11 skipped)
+ ❯ src/__tests__/integration/rr-255-summary-flow.test.tsx (0 test)
+ ❯ src/__tests__/integration/rr-148-sync-pipeline-integration.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-149-incremental-sync.test.ts (27 tests | 27 skipped)
+stdout | src/__tests__/integration/rr-154-sync-html-decoding.test.ts
+[dotenv@17.2.1] injecting env (2) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+
+ ❯ src/__tests__/integration/rr-154-sync-html-decoding.test.ts (0 test)
+ ✓ src/__tests__/integration/rr-269-preferences-flow.test.ts (16 tests | 11 skipped) 6ms
+ ↓ src/__tests__/integration/rr-237-concurrency.test.ts (12 tests | 12 skipped)
+ ↓ src/__tests__/integration/rr-268-settings-layout.test.tsx (21 tests | 21 skipped)
+ ↓ src/__tests__/integration/rr-154-migration-html-decoding.test.ts (8 tests | 8 skipped)
+ ↓ src/__tests__/integration/rr-210-git-hook.test.ts (19 tests | 19 skipped)
+ ↓ src/__tests__/integration/rr-206-responsive-layout.test.tsx (15 tests | 15 skipped)
+ ❯ src/__tests__/integration/rr-179-tag-mark-all-read.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-232-violet-browser-compat.test.tsx (11 tests | 11 skipped)
+ ↓ src/__tests__/integration/preferences-save-flow.test.ts (11 tests | 11 skipped)
+ ❯ src/__tests__/integration/rr-117-auth-status-integration.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-176-content-state-management.test.tsx (9 tests | 9 skipped)
+ ❯ src/__tests__/integration/rr-130-sync-frequency-integration.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-123-safe-test-execution.test.ts (11 tests | 11 skipped)
+ ❯ src/__tests__/integration/rr-29-sync-queue-logging.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-237-rpc-integration.test.ts (15 tests | 15 skipped)
+stdout | src/__tests__/integration/rr-247-toast-system/component-integration.test.tsx
+[Supabase] Initializing client...
+[Supabase] Client initialized in 0.56ms
+
+stderr | src/__tests__/integration/rr-247-toast-system/component-integration.test.tsx
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ↓ src/__tests__/integration/rr-247-toast-system/component-integration.test.tsx (14 tests | 14 skipped)
+ ❯ src/__tests__/integration/rr-271-health-check-encryption.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-127-phase-2-test-discovery.test.ts (17 tests | 17 skipped)
+ ❯ src/__tests__/integration/rr-150-chunked-cleanup-integration.test.ts (0 test)
+ ❯ src/__tests__/integration/rr-162-sync-completion.test.ts (0 test)
+ ❯ src/__tests__/integration/rr-271-summarization-encryption.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-120-api-404-json-responses.test.ts (24 tests | 24 skipped)
+ ❯ src/__tests__/integration/openapi-integration.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-266-ai-models-migration.test.ts (17 tests | 17 skipped)
+stdout | src/__tests__/integration/rr-266-ai-models-migration.test.ts
+[Supabase Admin] Creating singleton admin client...
+[Supabase Admin] Admin client created in 0.48ms
+
+stderr | src/__tests__/integration/rr-266-ai-models-migration.test.ts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ❯ src/__tests__/integration/rr-5-sync-status-integration.test.ts (0 test)
+ ❯ src/__tests__/integration/rr-106-monitoring-integration.test.ts (0 test)
+ ❯ src/__tests__/integration/rr-67-security-fixes.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-267-settings-navigation.test.tsx (9 tests | 9 skipped)
+ ❯ src/__tests__/integration/insomnia-export.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-102-middleware-redirects.test.ts (23 tests | 23 skipped)
+ ↓ src/__tests__/integration/health-check-webpack-monitoring.test.ts (27 tests | 27 skipped)
+ ↓ src/__tests__/integration/pm2-memory-config.test.ts (24 tests | 24 skipped)
+ ↓ src/__tests__/integration/rr-215-scroll-coordination.test.ts (14 tests | 14 skipped)
+ ↓ src/__tests__/integration/rr-170-tag-display.test.ts (10 tests | 10 skipped)
+ ↓ src/__tests__/integration/api-404-handler.test.ts (21 tests | 21 skipped)
+ ↓ src/__tests__/integration/rr-257-toast-error.test.tsx (9 tests | 9 skipped)
+ ↓ src/__tests__/integration/rr-118-fetch-behavior-verification.test.ts (14 tests | 14 skipped)
+ ↓ src/__tests__/integration/rr-143-database-integrity.test.ts (12 tests | 12 skipped)
+stderr | src/__tests__/integration/rr-143-database-integrity.test.ts
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stdout | src/__tests__/integration/rr-143-database-integrity.test.ts
+[Supabase Admin] Creating singleton admin client...
+[Supabase Admin] Admin client created in 0.46ms
+
+ ❯ src/__tests__/integration/health-endpoints.test.ts (0 test)
+stderr | src/__tests__/integration/rr-213-article-header-tags.test.tsx
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+stdout | src/__tests__/integration/rr-213-article-header-tags.test.tsx
+[Supabase] Initializing client...
+[Supabase] Client initialized in 0.55ms
+
+ ↓ src/__tests__/integration/rr-213-article-header-tags.test.tsx (12 tests | 12 skipped)
+ ❯ src/__tests__/integration/rr-119-acceptance.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-251-ghost-navigation.test.tsx (9 tests | 9 skipped)
+stdout | src/__tests__/integration/rr-193-scroll-elimination.test.tsx
+[Supabase] Initializing client...
+[Supabase] Client initialized in 0.61ms
+
+stderr | src/__tests__/integration/rr-193-scroll-elimination.test.tsx
+Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ ↓ src/__tests__/integration/rr-193-scroll-elimination.test.tsx (9 tests | 9 skipped)
+ ❯ src/__tests__/integration/rr-142-sync-author.test.ts (0 test)
+stdout | src/__tests__/integration/rr-142-sync-author.test.ts
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+
+ ❯ src/__tests__/integration/rr-121-test-server-integration.test.ts (0 test)
+ ↓ src/__tests__/integration/rr-71-api-routes.test.ts (12 tests | 12 skipped)
+ ↓ src/__tests__/integration/rr-71-header-component.test.tsx (7 tests | 7 skipped)
+ ↓ src/__tests__/integration/health-endpoints.fixed.test.ts (1 test | 1 skipped)
+ ❯ src/__tests__/integration/health-endpoints-unmocked.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 27 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/integration/health-endpoints-unmocked.test.ts [ src/__tests__/integration/health-endpoints-unmocked.test.ts ]
+Error: Failed to resolve import "node-fetch" from "src/__tests__/integration/health-endpoints-unmocked.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/health-endpoints-unmocked.test.ts:13:20
+  4  |    beforeAll(() => {
+  5  |          global.fetch = vi.fn().mockImplementation((...args) => {
+  6  |        return import("node-fetch").then(({ default: fetch2 }) => fetch2(...args));
+     |                      ^
+  7  |      });
+  8  |    });
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/27]⎯
+
+ FAIL  src/__tests__/integration/health-endpoints.test.ts [ src/__tests__/integration/health-endpoints.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/health-endpoints.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/health-endpoints.test.ts:7:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  const port = 3148;
+  4  |  describe("Health Endpoints - Post RR-69 Verification", () => {
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/27]⎯
+
+ FAIL  src/__tests__/integration/insomnia-export.test.ts [ src/__tests__/integration/insomnia-export.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/insomnia-export.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/insomnia-export.test.ts:2:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  describe("Insomnia Export API Integration", () => {
+  4  |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/27]⎯
+
+ FAIL  src/__tests__/integration/openapi-integration.test.ts [ src/__tests__/integration/openapi-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/openapi-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/openapi-integration.test.ts:2:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  let server;
+  4  |  let app;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/27]⎯
+
+ FAIL  src/__tests__/integration/rr-106-monitoring-integration.test.ts [ src/__tests__/integration/rr-106-monitoring-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-106-monitoring-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-106-monitoring-integration.test.ts:13:32
+  4  |  import { promises as fs } from "fs";
+  5  |  import path from "path";
+  6  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  7  |  const execAsync = promisify(exec);
+  8  |  describe("RR-106: Monitoring Integration Tests", () => {
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/27]⎯
+
+ FAIL  src/__tests__/integration/rr-115-health-endpoints-database-validation.test.ts [ src/__tests__/integration/rr-115-health-endpoints-database-validation.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-115-health-endpoints-database-validation.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-115-health-endpoints-database-validation.test.ts:15:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  const port = 3159;
+  4  |  describe("RR-115: Health Endpoints Database Connection State Validation", () => {
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/27]⎯
+
+ FAIL  src/__tests__/integration/rr-116-404-page-validation.test.ts [ src/__tests__/integration/rr-116-404-page-validation.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-116-404-page-validation.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-116-404-page-validation.test.ts:16:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  let server;
+  4  |  let app;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/27]⎯
+
+ FAIL  src/__tests__/integration/rr-117-auth-status-integration.test.ts [ src/__tests__/integration/rr-117-auth-status-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-117-auth-status-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-117-auth-status-integration.test.ts:17:32
+  8  |    afterEach
+  9  |  } from "vitest";
+  10 |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  11 |  import fs from "fs/promises";
+  12 |  import path from "path";
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/27]⎯
+
+ FAIL  src/__tests__/integration/rr-119-acceptance.test.ts [ src/__tests__/integration/rr-119-acceptance.test.ts ]
+Error: Failed to resolve import "node-fetch" from "src/__tests__/integration/rr-119-acceptance.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-119-acceptance.test.ts:4:18
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { createServer } from "http";
+  3  |  import fetch from "node-fetch";
+     |                     ^
+  4  |  describe("RR-119 Acceptance Criteria", () => {
+  5  |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/27]⎯
+
+ FAIL  src/__tests__/integration/rr-121-test-server-integration.test.ts [ src/__tests__/integration/rr-121-test-server-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-121-test-server-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-121-test-server-integration.test.ts:2:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  describe("RR-121: Environment Variable Loading Integration Tests", () => {
+  4  |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/27]⎯
+
+ FAIL  src/__tests__/integration/rr-130-sync-frequency-integration.test.ts [ src/__tests__/integration/rr-130-sync-frequency-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-130-sync-frequency-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-130-sync-frequency-integration.test.ts:2:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  let server;
+  4  |  let app;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/27]⎯
+
+ FAIL  src/__tests__/integration/rr-142-sync-author.test.ts [ src/__tests__/integration/rr-142-sync-author.test.ts ]
+ReferenceError: mockSupabase is not defined
+ ❯ Proxy.<anonymous> src/__tests__/integration/rr-142-sync-author.test.ts:69:57
+     67|                         published: Math.floor(Date.now() / 1000),
+     68|                         categories: [],
+     69|                         origin: { streamId: "feed/http://example.com/f…
+       |                                                         ^
+     70|                       },
+     71|                     ],
+ ❯ src/app/api/sync/route.ts:17:18
+ ❯ src/__tests__/integration/rr-142-sync-author.test.ts:71:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/27]⎯
+
+ FAIL  src/__tests__/integration/rr-148-parse-content-api.test.ts [ src/__tests__/integration/rr-148-parse-content-api.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-148-parse-content-api.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-148-parse-content-api.test.ts:11:32
+  9  |    afterAll
+  10 |  } from "vitest";
+  11 |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  12 |  describe("RR-148: Parse Content API Integration Tests", () => {
+  13 |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/27]⎯
+
+ FAIL  src/__tests__/integration/rr-148-sync-pipeline-integration.test.ts [ src/__tests__/integration/rr-148-sync-pipeline-integration.test.ts ]
+Error: Failed to resolve import "../test-server" from "src/__tests__/integration/rr-148-sync-pipeline-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-148-sync-pipeline-integration.test.ts:11:32
+  9  |    afterEach
+  10 |  } from "vitest";
+  11 |  import { setupTestServer } from "../test-server";
+     |                                   ^
+  12 |  describe("RR-148: Sync Pipeline Integration", () => {
+  13 |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/27]⎯
+
+ FAIL  src/__tests__/integration/rr-150-chunked-cleanup-integration.test.ts [ src/__tests__/integration/rr-150-chunked-cleanup-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-150-chunked-cleanup-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-150-chunked-cleanup-integration.test.ts:2:32
+  1  |  import { describe, it, expect, beforeAll, afterAll } from "vitest";
+  2  |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  3  |  describe("RR-150: Chunked Cleanup Integration", () => {
+  4  |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/27]⎯
+
+ FAIL  src/__tests__/integration/rr-154-sync-html-decoding.test.ts [ src/__tests__/integration/rr-154-sync-html-decoding.test.ts ]
+ReferenceError: mockSupabase is not defined
+ ❯ Proxy.<anonymous> src/__tests__/integration/rr-154-sync-html-decoding.test.ts:6:57
+      5| describe("RR-154: Sync Pipeline HTML Entity Decoding Integration", () …
+      6|   let mockSupabase: any;
+      7|   let capturedUpsertData: any[] = [];
+       |                                ^
+      8|   let mockTokenManager: any;
+      9| 
+ ❯ src/app/api/sync/route.ts:17:18
+ ❯ src/__tests__/integration/rr-154-sync-html-decoding.test.ts:8:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/27]⎯
+
+ FAIL  src/__tests__/integration/rr-162-sync-completion.test.ts [ src/__tests__/integration/rr-162-sync-completion.test.ts ]
+Error: Failed to resolve import "../contracts/rr-162-remove-autofetch.contract" from "src/__tests__/integration/rr-162-sync-completion.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-162-sync-completion.test.ts:17:7
+  3  |  import {
+  4  |    TestDataGenerators
+  5  |  } from "../contracts/rr-162-remove-autofetch.contract";
+     |          ^
+  6  |  const TEST_PORT = 3003;
+  7  |  const TEST_BASE_URL = `http://localhost:${TEST_PORT}`;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/27]⎯
+
+ FAIL  src/__tests__/integration/rr-179-tag-mark-all-read.test.ts [ src/__tests__/integration/rr-179-tag-mark-all-read.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-179-tag-mark-all-read.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-179-tag-mark-all-read.test.ts:12:38
+  10 |    }))
+  11 |  }));
+  12 |  const __vi_import_0__ = await import('./test-server')
+     |                                       ^
+  13 |  const __vi_import_1__ = await import('@/lib/utils/localstorage-state-manager')
+  14 |  const __vi_import_2__ = await import('@/lib/stores/article-store')
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/27]⎯
+
+ FAIL  src/__tests__/integration/rr-255-summary-flow.test.tsx [ src/__tests__/integration/rr-255-summary-flow.test.tsx ]
+Error: Failed to resolve import "msw" from "src/__tests__/integration/rr-255-summary-flow.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-255-summary-flow.test.tsx:50:38
+  48 |  const __vi_import_1__ = await import('@testing-library/react')
+  49 |  const __vi_import_2__ = await import('@testing-library/user-event')
+  50 |  const __vi_import_3__ = await import('msw')
+     |                                       ^
+  51 |  const __vi_import_4__ = await import('msw/node')
+  52 |  const __vi_import_5__ = await import('@/components/articles/article-list')
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/27]⎯
+
+ FAIL  src/__tests__/integration/rr-256-summarize-partial-feeds.test.ts [ src/__tests__/integration/rr-256-summarize-partial-feeds.test.ts ]
+Error: Failed to resolve import "msw" from "src/__tests__/integration/rr-256-summarize-partial-feeds.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-256-summarize-partial-feeds.test.ts:17:35
+  9  |    afterAll
+  10 |  } from "vitest";
+  11 |  import { http, HttpResponse } from "msw";
+     |                                      ^
+  12 |  import { setupServer } from "msw/node";
+  13 |  const server = setupServer(
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/27]⎯
+
+ FAIL  src/__tests__/integration/rr-271-health-check-encryption.test.ts [ src/__tests__/integration/rr-271-health-check-encryption.test.ts ]
+Error: Failed to resolve import "@/test-utils/test-server" from "src/__tests__/integration/rr-271-health-check-encryption.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-271-health-check-encryption.test.ts:88:38
+  86 |          }
+  87 |        }));
+  88 |  const __vi_import_0__ = await import('@/test-utils/test-server')
+     |                                       ^
+  89 |  const __vi_import_1__ = await import('@/test-utils/supabase-test-client')
+  90 |  const __vi_import_2__ = await import('crypto')
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/27]⎯
+
+ FAIL  src/__tests__/integration/rr-271-summarization-encryption.test.ts [ src/__tests__/integration/rr-271-summarization-encryption.test.ts ]
+Error: Failed to resolve import "@/test-utils/test-server" from "src/__tests__/integration/rr-271-summarization-encryption.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-271-summarization-encryption.test.ts:62:38
+  60 |          }
+  61 |        }));
+  62 |  const __vi_import_0__ = await import('@/test-utils/test-server')
+     |                                       ^
+  63 |  const __vi_import_1__ = await import('@/test-utils/supabase-test-client')
+  64 |  const __vi_import_2__ = await import('crypto')
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/27]⎯
+
+ FAIL  src/__tests__/integration/rr-272-preferences-activation.test.tsx [ src/__tests__/integration/rr-272-preferences-activation.test.tsx ]
+Error: Failed to resolve import "@/lib/utils/toast" from "src/__tests__/integration/rr-272-preferences-activation.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-272-preferences-activation.test.tsx:24:38
+  22 |  const __vi_import_6__ = await import('@/lib/stores/preferences-editor-store')
+  23 |  const __vi_import_7__ = await import('@/lib/hooks/usePreferencesForm')
+  24 |  const __vi_import_8__ = await import('@/lib/utils/toast')
+     |                                       ^
+  25 |  const __vi_import_9__ = await import('crypto')
+  26 |  
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/27]⎯
+
+ FAIL  src/__tests__/integration/rr-29-sync-queue-logging.test.ts [ src/__tests__/integration/rr-29-sync-queue-logging.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-29-sync-queue-logging.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-29-sync-queue-logging.test.ts:9:38
+  7  |    }
+  8  |  }));
+  9  |  const __vi_import_0__ = await import('./test-server')
+     |                                       ^
+  10 |  const __vi_import_1__ = await import('@/lib/logging/status-change-logger')
+  11 |  const __vi_import_2__ = await import('@/lib/db/supabase')
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/27]⎯
+
+ FAIL  src/__tests__/integration/rr-30-sync-conflicts.test.ts [ src/__tests__/integration/rr-30-sync-conflicts.test.ts ]
+Error: Failed to resolve import "../test-server" from "src/__tests__/integration/rr-30-sync-conflicts.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-30-sync-conflicts.test.ts:13:32
+  11 |  import fs from "fs/promises";
+  12 |  import path from "path";
+  13 |  import { setupTestServer } from "../test-server";
+     |                                   ^
+  14 |  describe("RR-30: Sync Conflict Detection Integration", () => {
+  15 |    let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/27]⎯
+
+ FAIL  src/__tests__/integration/rr-5-sync-status-integration.test.ts [ src/__tests__/integration/rr-5-sync-status-integration.test.ts ]
+Error: Failed to resolve import "./test-server" from "src/__tests__/integration/rr-5-sync-status-integration.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-5-sync-status-integration.test.ts:10:32
+  8  |    vi
+  9  |  } from "vitest";
+  10 |  import { setupTestServer } from "./test-server";
+     |                                   ^
+  11 |  import { supabase } from "@/lib/db/supabase";
+  12 |  let server;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/27]⎯
+
+ FAIL  src/__tests__/integration/rr-67-security-fixes.test.ts [ src/__tests__/integration/rr-67-security-fixes.test.ts ]
+Error: Failed to resolve import "../contracts/rr-67-security-fixes.contract" from "src/__tests__/integration/rr-67-security-fixes.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/shayon/DevProjects/rss-news-reader/src/__tests__/integration/rr-67-security-fixes.test.ts:17:7
+  4  |    SecurityValidationContracts,
+  5  |    IntegrationTestContracts
+  6  |  } from "../contracts/rr-67-security-fixes.contract";
+     |          ^
+  7  |  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  8  |  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23
+ ❯ node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/27]⎯
+
+ Test Files  27 failed | 1 passed | 42 skipped (70)
+      Tests  5 passed | 649 skipped (654)
+   Start at  04:04:51
+   Duration  2.77s (transform 597ms, setup 78ms, collect 1.92s, tests 6ms, environment 375ms, prepare 46ms)
+

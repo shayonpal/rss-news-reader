@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { GET, PUT } from "@/app/api/users/preferences/route";
+import { GET, PUT } from "@/app/api/users/[id]/preferences/route";
 import { createClient } from "@supabase/supabase-js";
 
 // Mock crypto module for encryption
@@ -24,6 +24,11 @@ vi.mock("crypto", () => ({
       update: vi.fn(() => "decrypted"),
       final: vi.fn(() => "value"),
     })),
+    createHash: vi.fn(() => ({
+      update: vi.fn().mockReturnThis(),
+      digest: vi.fn(() => Buffer.from("mockhash1234567890abcdef")),
+    })),
+    pbkdf2Sync: vi.fn(() => Buffer.from("1234567890123456")), // For deterministic IV
   },
 }));
 
@@ -82,6 +87,11 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
   let mockSingle: any;
 
   let selectCallCount = 0; // Move this outside to persist across test setup
+
+  // Helper to create params for the route handler
+  const createParams = (id: string = "test-user-id") => ({
+    params: { id },
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -175,9 +185,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       const request = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      const response = await GET(request);
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -199,9 +209,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       const request = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      const response = await GET(request);
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -223,16 +233,16 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
 
       // First request - hits database
       const request1 = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      await GET(request1);
+      await GET(request1, createParams());
       expect(mockFrom).toHaveBeenCalledTimes(1);
 
       // Second request - uses cache
       const request2 = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      const response2 = await GET(request2);
+      const response2 = await GET(request2, createParams());
       const data = await response2.json();
 
       expect(mockFrom).toHaveBeenCalledTimes(1); // Still 1, not 2
@@ -246,9 +256,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       const request = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      const response = await GET(request);
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -262,9 +272,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       const request = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      const response = await GET(request);
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -297,10 +307,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         })),
       });
 
-      const response = await PUT({
-        json: async () => updates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -315,10 +328,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         },
       };
 
-      const response = await PUT({
-        json: async () => invalidUpdates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => invalidUpdates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -367,10 +383,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: null,
       });
 
-      const response = await PUT({
-        json: async () => updates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -404,10 +423,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         };
       });
 
-      const response = await PUT({
-        json: async () => updates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -421,10 +443,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         },
       };
 
-      const response = await PUT({
-        json: async () => invalidUpdates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => invalidUpdates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -465,10 +490,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: null,
       });
 
-      const response = await PUT({
-        json: async () => updates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -493,10 +521,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         })),
       });
 
-      const response = await PUT({
-        json: async () => ({ ai: { summaryStyle: "analytical" } }),
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => ({ ai: { summaryStyle: "analytical" } }),
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -510,10 +541,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         },
       };
 
-      const response = await PUT({
-        json: async () => invalidUpdates,
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => invalidUpdates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -584,17 +618,17 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: null,
       });
 
-      // GET should cache with key "preferences:shayon"
+      // GET should cache with key "preferences:test-user-id"
       const request = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      await GET(request);
+      await GET(request, createParams());
 
       // Verify from was called once
       expect(mockFrom).toHaveBeenCalledTimes(1);
 
       // Second GET should use cache
-      await GET(request);
+      await GET(request, createParams());
       expect(mockFrom).toHaveBeenCalledTimes(1); // Still 1
     });
 
@@ -614,10 +648,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         error: null,
       });
 
-      await PUT({
-        json: async () => ({ ai: { summaryStyle: "analytical" } }),
-        headers: new Headers(),
-      } as unknown as NextRequest);
+      await PUT(
+        {
+          json: async () => ({ ai: { summaryStyle: "analytical" } }),
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
 
       // After PUT, cache should be invalidated
       // A subsequent GET should hit the database
@@ -630,9 +667,9 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       const getRequest = new NextRequest(
-        "http://localhost:3000/api/users/preferences"
+        "http://localhost:3000/api/users/test-user-id/preferences"
       );
-      await GET(getRequest);
+      await GET(getRequest, createParams());
 
       // Verify database was called for the GET after cache invalidation
       expect(mockFrom).toHaveBeenCalled();

@@ -12,6 +12,7 @@
 export interface PreferencesData {
   ai: {
     hasApiKey: boolean; // Boolean only, never actual key
+    apiKey: null; // Always null for security - never exposes real key
     model: string;
     summaryLengthMin: number;
     summaryLengthMax: number;
@@ -82,7 +83,7 @@ export interface PreferencesPatch {
     summaryStyle?: PreferencesData["ai"]["summaryStyle"];
     contentFocus?: PreferencesData["ai"]["contentFocus"] | null;
     apiKeyChange?: ApiKeyState;
-    apiKey?: string | null; // Only sent during 'replace' or 'clear'
+    apiKey?: string | { encrypted: string; iv: string; authTag: string } | null; // Encrypted or null
   };
   sync?: {
     maxArticles?: number;
@@ -126,6 +127,7 @@ export interface PreferencesValidationErrors {
 export const DEFAULT_PREFERENCES: PreferencesData = {
   ai: {
     hasApiKey: false,
+    apiKey: null,
     model: "claude-3-haiku-20240307",
     summaryLengthMin: 100,
     summaryLengthMax: 300,

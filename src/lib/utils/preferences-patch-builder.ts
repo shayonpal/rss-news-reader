@@ -10,6 +10,7 @@ import type {
   PreferencesPatch,
   ApiKeyState,
 } from "@/types/preferences";
+import { encryptApiKey } from "./encryption";
 
 /**
  * System fields that should never be included in patches
@@ -71,11 +72,14 @@ export function buildPreferencesPatch(
       };
     }
 
-    // Add API key if needed
+    // Add API key if needed (with encryption)
     if (apiKeyState === "replace" && apiKeyValue) {
       if (!patch.ai) patch.ai = {};
       patch.ai.apiKeyChange = "replace";
-      patch.ai.apiKey = apiKeyValue;
+
+      // Encrypt the API key before including in patch
+      const encrypted = encryptApiKey(apiKeyValue);
+      patch.ai.apiKey = encrypted;
     }
 
     return patch;
@@ -110,10 +114,13 @@ export function buildPreferencesPatch(
       hasAiChanges = true;
     }
 
-    // Handle API key state changes
+    // Handle API key state changes (with encryption)
     if (apiKeyState === "replace" && apiKeyValue) {
       aiPatch.apiKeyChange = "replace";
-      aiPatch.apiKey = apiKeyValue;
+
+      // Encrypt the API key before including in patch
+      const encrypted = encryptApiKey(apiKeyValue);
+      aiPatch.apiKey = encrypted;
       hasAiChanges = true;
     } else if (apiKeyState === "clear") {
       aiPatch.apiKeyChange = "clear";

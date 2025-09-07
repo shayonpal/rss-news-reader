@@ -9,6 +9,7 @@ import {
   ApiKeyState,
 } from "@/types/preferences";
 import { validateApiKeyFormat } from "./preferences-validator";
+import type { EncryptedData } from "./encryption";
 
 /**
  * Applies API key changes to preferences data
@@ -22,7 +23,7 @@ import { validateApiKeyFormat } from "./preferences-validator";
 export function applyApiKeyChange(
   preferences: PreferencesData,
   apiKeyChange?: "replace" | "clear" | undefined,
-  apiKey?: string | null
+  apiKey?: string | EncryptedData | null
 ): PreferencesData {
   if (!apiKeyChange) return preferences;
 
@@ -50,19 +51,22 @@ export function applyApiKeyChange(
  * @param data - Raw response data
  * @returns Sanitized data with API key removed
  */
-export function sanitizeApiKeyResponse(data: any): PreferencesData {
+export function sanitizeApiKeyResponse(
+  data: Partial<PreferencesData> | null | undefined
+): PreferencesData {
   return {
     ai: {
-      hasApiKey: Boolean(data.ai?.hasApiKey),
-      model: data.ai?.model || "claude-3-haiku-20240307",
-      summaryLengthMin: data.ai?.summaryLengthMin || 100,
-      summaryLengthMax: data.ai?.summaryLengthMax || 300,
-      summaryStyle: data.ai?.summaryStyle || "objective",
-      contentFocus: data.ai?.contentFocus || "general",
+      hasApiKey: Boolean(data?.ai?.hasApiKey),
+      apiKey: null, // Always null for security
+      model: data?.ai?.model || "claude-3-haiku-20240307",
+      summaryLengthMin: data?.ai?.summaryLengthMin || 100,
+      summaryLengthMax: data?.ai?.summaryLengthMax || 300,
+      summaryStyle: data?.ai?.summaryStyle || "objective",
+      contentFocus: data?.ai?.contentFocus || "general",
     },
     sync: {
-      maxArticles: data.sync?.maxArticles || 500,
-      retentionCount: data.sync?.retentionCount || 30,
+      maxArticles: data?.sync?.maxArticles || 500,
+      retentionCount: data?.sync?.retentionCount || 30,
     },
   };
 }

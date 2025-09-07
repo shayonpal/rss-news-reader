@@ -16,6 +16,24 @@ import {
   sanitizeApiKeyResponse,
   applyApiKeyChange,
 } from "@/lib/utils/api-key-handler";
+import { getCurrentUserId } from "@/lib/utils/get-current-user";
+
+// Default preferences
+const getDefaultPreferences = (): PreferencesData => ({
+  ai: {
+    hasApiKey: false,
+    apiKey: null, // Always null for security
+    model: "claude-3-haiku-20240307",
+    summaryLengthMin: 100,
+    summaryLengthMax: 300,
+    summaryStyle: "objective",
+    contentFocus: "general",
+  },
+  sync: {
+    maxArticles: 500,
+    retentionCount: 30,
+  },
+});
 
 /**
  * Store state interface
@@ -44,24 +62,6 @@ export type PreferencesDomainStore = PreferencesDomainState &
   PreferencesDomainActions;
 
 /**
- * Default preferences to use as fallback
- */
-const getDefaultPreferences = (): PreferencesData => ({
-  ai: {
-    hasApiKey: false,
-    model: "claude-3-haiku-20240307",
-    summaryLengthMin: 100,
-    summaryLengthMax: 300,
-    summaryStyle: "objective",
-    contentFocus: "general",
-  },
-  sync: {
-    maxArticles: 500,
-    retentionCount: 30,
-  },
-});
-
-/**
  * Main domain store for saved preferences
  *
  * This store manages the app-wide saved preferences state.
@@ -83,7 +83,10 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await fetch("/api/users/preferences");
+          const userId = await getCurrentUserId();
+          const response = await fetch(
+            `/reader/api/users/${userId}/preferences`
+          );
 
           if (response.status === 404) {
             // New user - use defaults
@@ -104,7 +107,9 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
           const data = await response.json();
 
           // Sanitize response - never expose API keys
-          const sanitized = sanitizeApiKeyResponse(data);
+          // Handle both direct response and nested 'preferences' key
+          const prefsData = data.preferences || data;
+          const sanitized = sanitizeApiKeyResponse(prefsData);
 
           set({
             savedPreferences: sanitized,
@@ -141,13 +146,17 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
         set({ saveInProgress: true, error: null });
 
         try {
-          const response = await fetch("/api/users/preferences", {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(patch),
-          });
+          const userId = await getCurrentUserId();
+          const response = await fetch(
+            `/reader/api/users/${userId}/preferences`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(patch),
+            }
+          );
 
           if (!response.ok) {
             throw new Error("Failed to save preferences");

@@ -27,6 +27,11 @@ The application URL is configured via environment variables in `.env`:
   - Comprehensive fetch statistics dashboard
   - Note: Automatic fetching removed for improved sync performance
 - **AI-Powered Summaries**: Generate article summaries using Claude API (server-side)
+- **User Preferences**: Configurable settings with encrypted storage for API keys and personalization
+  - AI summarization settings (auto-summarize, token limits, model selection)
+  - Sync configuration (intervals, batch sizes, retry limits)
+  - Secure encryption for sensitive data with AES-256-GCM
+  - 2-section intuitive settings interface with accessibility support
 - **Author Display**: Shows article authors in list and detail views (v0.12.0)
 - **Navigation State Preservation**: Articles remain visible when returning from detail view (v0.12.0)
 - **Server-Side Sync**: Efficient sync with only 4-5 API calls
@@ -259,7 +264,7 @@ npm run type-check       # TypeScript compilation check
 npm run lint            # ESLint code quality check
 npm run format:check    # Prettier formatting check
 npm run format          # Fix Prettier formatting issues
-npm run docs:validate   # OpenAPI documentation coverage (47/47 endpoints)
+npm run docs:validate   # OpenAPI documentation coverage (49/49 endpoints)
 npm run pre-commit      # Run all quality checks (same as pre-commit hook)
 
 # Testing (Optimized Execution)
@@ -285,7 +290,7 @@ npm run analyze         # Bundle size analysis
 npm run clean           # Clean build artifacts
 
 # API Documentation Workflow
-npm run docs:validate   # ✅ Validate OpenAPI coverage (47/47 endpoints, <2s)
+npm run docs:validate   # ✅ Validate OpenAPI coverage (49/49 endpoints, <2s)
 npm run docs:coverage   # ✅ Generate detailed coverage report
 npm run docs:serve      # ✅ Start dev server and open Swagger UI
 
@@ -316,7 +321,7 @@ git commit --no-verify -m "emergency commit"
 1. **Type Check** (30s): `npm run type-check` - TypeScript compilation
 2. **Lint Check** (30s): `npm run lint` - ESLint code quality
 3. **Format Check** (30s): `npm run format:check` - Prettier formatting
-4. **OpenAPI Documentation** (60s): `npm run docs:validate` - Ensures 100% API coverage (47/47 endpoints)
+4. **OpenAPI Documentation** (60s): `npm run docs:validate` - Ensures 100% API coverage (49/49 endpoints)
 
 **Key Features**:
 
@@ -431,7 +436,7 @@ For full API endpoint details (request/response formats, error envelopes), see:
 ```
 src/
 ├── app/                # Next.js App Router
-│   ├── api/           # API routes (47 endpoints)
+│   ├── api/           # API routes (49 endpoints)
 │   ├── reader/        # Main PWA application
 │   └── globals.css    # Global styles
 ├── components/        # React components
@@ -472,7 +477,7 @@ src/
 
 ### Interactive API Documentation
 
-**📚 Swagger UI**: Complete API documentation with 100% coverage (47 endpoints)
+**📚 Swagger UI**: Complete API documentation with 100% coverage (49 endpoints)
 
 - **Access**: `${NEXT_PUBLIC_APP_URL}/reader/api-docs`
 - **Features**: Try-it-out functionality, OpenAPI spec, Insomnia export

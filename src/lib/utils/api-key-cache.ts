@@ -4,7 +4,7 @@
  */
 
 export interface CachedApiKey {
-  key: string;
+  obfuscatedKey: Buffer; // Store as obfuscated Buffer instead of plaintext
   source: "user" | "environment";
   expires: number;
   lastAccessed: number;
@@ -22,6 +22,11 @@ export class ApiKeyCache {
   private readonly maxSize = 100; // Maximum cache entries
   private readonly ttl = 5 * 60 * 1000; // 5 minutes
   private static instance: ApiKeyCache;
+  private cleanupInterval: NodeJS.Timeout | null = null;
+  private readonly obfuscationKey = Buffer.from(
+    "x9k2m5p8n3q6w1e4r7t0y2u5i8o1a4s7",
+    "utf8"
+  );
 
   /**
    * Get singleton instance
@@ -30,9 +35,38 @@ export class ApiKeyCache {
     if (!ApiKeyCache.instance) {
       ApiKeyCache.instance = new ApiKeyCache();
       // Schedule periodic cleanup
-      setInterval(() => ApiKeyCache.instance.cleanup(), 60 * 1000); // Every minute
+      ApiKeyCache.instance.cleanupInterval = setInterval(
+        () => ApiKeyCache.instance.cleanup(),
+        60 * 1000
+      ); // Every minute
     }
     return ApiKeyCache.instance;
+  }
+
+  /**
+   * Simple XOR obfuscation to prevent plaintext in memory
+   * Not cryptographically secure but prevents casual memory inspection
+   */
+  private obfuscate(text: string): Buffer {
+    const textBuffer = Buffer.from(text, "utf8");
+    const result = Buffer.alloc(textBuffer.length);
+    for (let i = 0; i < textBuffer.length; i++) {
+      result[i] =
+        textBuffer[i] ^ this.obfuscationKey[i % this.obfuscationKey.length];
+    }
+    return result;
+  }
+
+  /**
+   * Deobfuscate the buffer back to string
+   */
+  private deobfuscate(buffer: Buffer): string {
+    const result = Buffer.alloc(buffer.length);
+    for (let i = 0; i < buffer.length; i++) {
+      result[i] =
+        buffer[i] ^ this.obfuscationKey[i % this.obfuscationKey.length];
+    }
+    return result.toString("utf8");
   }
 
   /**
@@ -52,7 +86,8 @@ export class ApiKeyCache {
 
     // Update last accessed time
     entry.lastAccessed = Date.now();
-    return { key: entry.key, source: entry.source };
+    // Deobfuscate the key before returning
+    return { key: this.deobfuscate(entry.obfuscatedKey), source: entry.source };
   }
 
   /**
@@ -80,7 +115,7 @@ export class ApiKeyCache {
     }
 
     this.cache.set(userId, {
-      key,
+      obfuscatedKey: this.obfuscate(key), // Store obfuscated version
       source,
       expires: Date.now() + this.ttl,
       lastAccessed: Date.now(),
@@ -123,5 +158,18 @@ export class ApiKeyCache {
       maxSize: this.maxSize,
       ttlMinutes: this.ttl / 60000,
     };
+  }
+
+  /**
+   * Destroy the cache and clean up resources
+   * Should be called on application shutdown
+   */
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.cache.clear();
+    ApiKeyCache.instance = null as any;
   }
 }

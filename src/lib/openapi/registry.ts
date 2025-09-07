@@ -11,6 +11,95 @@ extendZodWithOpenApi(z);
 // Initialize OpenAPI registry
 export const registry = new OpenAPIRegistry();
 
+// ========== USER PREFERENCES SCHEMAS ==========
+
+// Shared encrypted payload schema (for API key replacement)
+const EncryptedDataSchema = registry.register(
+  "EncryptedData",
+  z
+    .object({
+      encrypted: z.string().openapi({ example: "hex-encoded-ciphertext" }),
+      iv: z.string().openapi({ example: "hex-encoded-iv-16bytes" }),
+      authTag: z.string().openapi({ example: "hex-encoded-auth-tag" }),
+    })
+    .openapi({ description: "AES-256-GCM encrypted payload" })
+);
+
+const PreferencesAiSchema = registry.register(
+  "PreferencesAI",
+  z
+    .object({
+      hasApiKey: z.boolean().openapi({
+        description: "True if Anthropic API key is set (never returns the key)",
+        example: true,
+      }),
+      apiKey: z.null().openapi({ description: "Always null in responses" }),
+      model: z.string().openapi({ example: "claude-3-haiku-20240307" }),
+      summaryLengthMin: z.number().openapi({ example: 100 }),
+      summaryLengthMax: z.number().openapi({ example: 300 }),
+      summaryStyle: z
+        .enum(["objective", "analytical", "concise", "detailed"])
+        .openapi({ example: "objective" }),
+      contentFocus: z
+        .enum(["general", "technical", "business", "educational"])
+        .nullable()
+        .openapi({ example: "general" }),
+    })
+    .openapi({ description: "AI summarization preferences" })
+);
+
+const PreferencesSyncSchema = registry.register(
+  "PreferencesSync",
+  z
+    .object({
+      maxArticles: z.number().openapi({ example: 500 }),
+      retentionCount: z.number().openapi({ example: 30 }),
+    })
+    .openapi({ description: "Sync configuration preferences" })
+);
+
+const PreferencesResponseSchema = registry.register(
+  "PreferencesResponse",
+  z
+    .object({
+      ai: PreferencesAiSchema,
+      sync: PreferencesSyncSchema,
+    })
+    .openapi({ description: "User preferences response (sanitized)" })
+);
+
+const PreferencesPatchSchema = registry.register(
+  "PreferencesPatch",
+  z
+    .object({
+      ai: z
+        .object({
+          model: z.string().optional(),
+          summaryLengthMin: z.number().min(50).max(500).optional(),
+          summaryLengthMax: z.number().min(50).max(500).optional(),
+          summaryStyle: z
+            .enum(["objective", "analytical", "concise", "detailed"])
+            .optional(),
+          contentFocus: z
+            .enum(["general", "technical", "business", "educational"])
+            .nullable()
+            .optional(),
+          apiKeyChange: z.enum(["replace", "clear"]).optional(),
+          apiKey: z
+            .union([EncryptedDataSchema, z.string(), z.null()])
+            .optional(),
+        })
+        .optional(),
+      sync: z
+        .object({
+          maxArticles: z.number().min(10).max(5000).optional(),
+          retentionCount: z.number().min(1).max(365).optional(),
+        })
+        .optional(),
+    })
+    .openapi({ description: "Patch object for updating preferences" })
+);
+
 // Health status enum
 const HealthStatusSchema = z
   .enum([
@@ -257,6 +346,164 @@ const ErrorResponseSchema = registry.register(
 );
 
 // Register health endpoints
+registry.registerPath({
+  method: "get",
+  path: "/api/users/{id}/preferences",
+  operationId: "getUserPreferences",
+  summary: "Get user preferences",
+  description:
+    "Returns sanitized user preferences matching the 2-section Settings UI. Secrets are never returned; use hasApiKey boolean.",
+  tags: ["User Preferences"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({ description: "User ID" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Preferences retrieved",
+      headers: z.object({ ETag: z.string() }),
+      content: {
+        "application/json": {
+          schema: PreferencesResponseSchema,
+        },
+      },
+    },
+    304: {
+      description: "Not Modified (ETag matched)",
+      headers: z.object({ ETag: z.string() }),
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "put",
+  path: "/api/users/{id}/preferences",
+  operationId: "updateUserPreferences",
+  summary: "Update user preferences (patch semantics)",
+  description:
+    "Updates preferences with deep-merge semantics. Use ai.apiKeyChange and ai.apiKey to set/clear secrets. Supports optional If-Match for optimistic concurrency.",
+  tags: ["User Preferences"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({ description: "User ID" }),
+    }),
+    headers: z
+      .object({ "If-Match": z.string().optional() })
+      .openapi({ description: "Optional ETag for optimistic concurrency" }),
+    body: {
+      content: {
+        "application/json": {
+          schema: PreferencesPatchSchema,
+          examples: {
+            updateModel: {
+              summary: "Update model and summary range",
+              value: {
+                ai: {
+                  model: "claude-3-opus-20240229",
+                  summaryLengthMin: 100,
+                  summaryLengthMax: 300,
+                },
+              },
+            },
+            setApiKey: {
+              summary: "Replace Anthropic API key (encrypted payload)",
+              value: {
+                ai: {
+                  apiKeyChange: "replace",
+                  apiKey: {
+                    encrypted: "...",
+                    iv: "...",
+                    authTag: "...",
+                  },
+                },
+              },
+            },
+            clearApiKey: {
+              summary: "Clear Anthropic API key",
+              value: { ai: { apiKeyChange: "clear", apiKey: null } },
+            },
+          },
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Preferences updated",
+      headers: z.object({ ETag: z.string() }),
+      content: {
+        "application/json": {
+          schema: PreferencesResponseSchema,
+        },
+      },
+    },
+    409: {
+      description: "ETag mismatch (resource modified)",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string(), message: z.string() }),
+        },
+      },
+    },
+    422: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string(),
+            details: z.any(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+});
 registry.registerPath({
   method: "get",
   path: "/api/health",

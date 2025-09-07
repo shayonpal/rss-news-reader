@@ -921,6 +921,101 @@ Test execution is experiencing significant performance degradation with timeouts
 - Optimize test data setup and teardown
 - Consider test parallelization improvements
 
+## API Key Encryption Issues (RR-272)
+
+### Client-Side Encryption Key Requirement
+
+**Status:** 🟡 Configuration Dependency  
+**Severity:** Medium  
+**First Identified:** September 7, 2025 during RR-272 implementation
+
+#### Description
+
+The user preferences API with encryption requires both server-side and client-side environment variables for proper operation. The client-side `NEXT_PUBLIC_TOKEN_ENCRYPTION_KEY` is needed for WeakMap operations and client-side encryption handling.
+
+#### Technical Details
+
+- **Server Variable**: `TOKEN_ENCRYPTION_KEY` - Used for actual encryption/decryption operations
+- **Client Variable**: `NEXT_PUBLIC_TOKEN_ENCRYPTION_KEY` - Used for client-side WeakMap security patterns
+- **Format**: Both must be identical 64-character hexadecimal strings (256-bit keys)
+- **Impact**: Missing client variable causes WeakMap security features to fail
+
+#### Environment Setup
+
+```bash
+# Generate secure key
+openssl rand -hex 32
+
+# Set both variables to same value
+export TOKEN_ENCRYPTION_KEY="[64-char-hex-key]"
+export NEXT_PUBLIC_TOKEN_ENCRYPTION_KEY="[same-64-char-hex-key]"
+```
+
+#### Testing Impact
+
+During unit testing, this requirement caused test failures when the client-side environment variable was not properly set in the test environment. Tests now include proper environment variable setup in `beforeEach` hooks.
+
+### Cache Conflict in Unit Tests
+
+**Status:** 🟢 Resolved  
+**Severity:** Low  
+**Resolution Date:** September 7, 2025
+
+#### Description
+
+Unit tests for the preferences API experienced cache conflicts between test runs, causing inconsistent test results. The bounded cache implementation was sharing state between tests, leading to "cache hits" on data from previous tests.
+
+#### Root Cause
+
+- Cache instance was shared across test runs
+- User-specific cache keys were not sufficiently isolated
+- Test cleanup was not clearing cache state between tests
+
+#### Solution
+
+Enhanced test isolation patterns implemented:
+
+```typescript
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Clear any existing cache state
+  preferencesCache.clear(); // If exposed, or mock the cache
+});
+
+// Use unique user IDs per test to avoid cache conflicts
+const testUserId = `test-user-${Date.now()}-${Math.random()}`;
+```
+
+### Integration Test Mock Complexity
+
+**Status:** 🟡 Known Limitation  
+**Severity:** Low  
+**First Identified:** September 7, 2025
+
+#### Description
+
+Integration tests for RR-272 preferences API require complex mock setup due to the multi-layered architecture involving encryption, caching, database operations, and validation. This complexity makes tests harder to maintain and debug.
+
+#### Contributing Factors
+
+- **Supabase Client Mocking**: Multiple nested method chains (`from().select().eq().single()`)
+- **Encryption Mocking**: Crypto module requires deterministic mocking for consistent tests
+- **Cache Behavior**: Bounded cache with TTL and LRU eviction needs simulation
+- **Environment Variables**: Multiple env vars need proper setup and cleanup
+
+#### Current Workarounds
+
+1. **Comprehensive Mock Setup**: Detailed mock configuration in `beforeEach`
+2. **Deterministic Values**: Fixed encryption outputs for predictable tests
+3. **Unique Test Keys**: Per-test cache keys to avoid conflicts
+4. **Environment Isolation**: Proper env var setup and cleanup
+
+#### Future Improvements
+
+- Consider test helper utilities to reduce mock complexity
+- Implement test database for integration tests instead of extensive mocking
+- Create reusable mock factories for common test scenarios
+
 ## Future Considerations
 
 ### Incremental Sync Limitations
@@ -930,3 +1025,12 @@ Currently, the app syncs the most recent 300 articles per sync operation. For us
 ### No Multi-User Support
 
 The application is designed for single-user deployment. Adding multi-user support would require significant architectural changes.
+
+### API Key Encryption Enhancements
+
+**Planned Improvements for RR-272:**
+
+- **Hardware Security Module (HSM)** integration for enterprise deployments
+- **Key rotation** mechanism with zero-downtime migration
+- **Audit logging** for all encryption/decryption operations
+- **Multi-tenant isolation** if multi-user support is added

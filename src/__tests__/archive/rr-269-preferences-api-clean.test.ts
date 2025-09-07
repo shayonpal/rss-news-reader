@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { createMocks } from "node-mocks-http";
 import { z } from "zod";
-import { GET, PUT } from "@/app/api/users/preferences/route";
+import { GET, PUT } from "@/app/api/users/[id]/preferences/route";
 
 // Mock dependencies
 vi.mock("@supabase/supabase-js", () => ({
@@ -93,6 +93,11 @@ class PreferencesCache {
 describe("RR-269: User Preferences API - Unit Tests", () => {
   let mockSupabase: any;
 
+  // Helper to create params for the route handler
+  const createParams = (id: string = "test-user-id") => ({
+    params: { id },
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     PreferencesCache.clear();
@@ -132,7 +137,10 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }),
       });
 
-      const response = await GET();
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/test-user-id/preferences"
+      );
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -159,7 +167,10 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }),
       });
 
-      const response = await GET();
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/test-user-id/preferences"
+      );
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -184,11 +195,17 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       });
 
       // First request - hits database
-      await GET();
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/test-user-id/preferences"
+      );
+      await GET(request, createParams());
       expect(mockSupabase.from).toHaveBeenCalledTimes(1);
 
       // Second request - uses cache
-      await GET();
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/test-user-id/preferences"
+      );
+      await GET(request, createParams());
       expect(mockSupabase.from).toHaveBeenCalledTimes(1); // Still 1, not 2
     });
 
@@ -204,7 +221,10 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }),
       });
 
-      const response = await GET();
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/test-user-id/preferences"
+      );
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -223,7 +243,10 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }),
       });
 
-      const response = await GET();
+      const request = new NextRequest(
+        "http://localhost:3000/api/users/test-user-id/preferences"
+      );
+      const response = await GET(request, createParams());
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -257,9 +280,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }),
       });
 
-      const response = await PUT({
-        json: async () => updates,
-      } as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -276,9 +303,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         summaryWordCount: "invalid-format",
       };
 
-      const response = await PUT({
-        json: async () => invalidUpdates,
-      } as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => invalidUpdates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -321,9 +352,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         };
       });
 
-      const response = await PUT({
-        json: async () => updates,
-      } as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -350,9 +385,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }
       });
 
-      const response = await PUT({
-        json: async () => updates,
-      } as NextRequest);
+      const response = await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -363,13 +402,21 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
       const tooLow = { syncMaxArticles: 5 };
       const tooHigh = { syncMaxArticles: 2000 };
 
-      const responseLow = await PUT({
-        json: async () => tooLow,
-      } as NextRequest);
+      const responseLow = await PUT(
+        {
+          json: async () => tooLow,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
 
-      const responseHigh = await PUT({
-        json: async () => tooHigh,
-      } as NextRequest);
+      const responseHigh = await PUT(
+        {
+          json: async () => tooHigh,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
 
       expect(responseLow.status).toBe(400);
       expect(responseHigh.status).toBe(400);
@@ -405,9 +452,13 @@ describe("RR-269: User Preferences API - Unit Tests", () => {
         }),
       });
 
-      await PUT({
-        json: async () => updates,
-      } as NextRequest);
+      await PUT(
+        {
+          json: async () => updates,
+          headers: new Headers(),
+        } as unknown as NextRequest,
+        createParams()
+      );
 
       // Verify jsonb_set pattern is used (simulated)
       expect(updateQuery).toBeDefined();

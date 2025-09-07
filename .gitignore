@@ -101,3 +101,4 @@ test-output.log
 coverage-report.json
 data/usage.json
 /.serena/cache/
+*.env.bak

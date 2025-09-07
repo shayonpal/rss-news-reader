@@ -162,12 +162,16 @@ export function validatePreferencesPatch(
       aiErrors.contentFocus = `Invalid focus. Must be one of: ${PREFERENCES_CONSTRAINTS.ai.contentFocusOptions.filter((x) => x !== null).join(", ")}`;
     }
 
-    // Validate API key format if provided
+    // Validate API key format if provided (skip if already encrypted)
     if (patch.ai.apiKeyChange === "replace" && patch.ai.apiKey) {
-      const apiKeyError = validateApiKeyFormat(patch.ai.apiKey);
-      if (apiKeyError) {
-        aiErrors.apiKey = apiKeyError;
+      // Check if it's already encrypted
+      if (typeof patch.ai.apiKey === "string") {
+        const apiKeyError = validateApiKeyFormat(patch.ai.apiKey);
+        if (apiKeyError) {
+          aiErrors.apiKey = apiKeyError;
+        }
       }
+      // If it's an object, assume it's already encrypted and valid
     }
 
     if (Object.keys(aiErrors).length > 0) {
