@@ -122,15 +122,15 @@ const CACHE_MAX_AGE = 300; // 5 minutes
 
 /**
  * GET /api/ai/models
- * 
+ *
  * Retrieves available AI models for content summarization.
- * 
+ *
  * Features:
  * - Returns list of Anthropic Claude models
  * - Implements ETag-based caching (304 Not Modified)
  * - 5-minute cache control for performance
  * - Requires authentication via validateRequest
- * 
+ *
  * @param {NextRequest} request - The incoming request
  * @returns {NextResponse} JSON response with models array or error
  */

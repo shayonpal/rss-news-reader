@@ -143,7 +143,7 @@ This document outlines the security measures and policies implemented in the RSS
 
 **Security Features**:
 
-- **Two-Layer Key Management**: 
+- **Two-Layer Key Management**:
   - `TOKEN_ENCRYPTION_KEY` for OAuth tokens (system-level)
   - `USER_DATA_ENCRYPTION_KEY` for user preferences (user-level)
 - **Input Validation**: Zod schemas validate all preference data before processing

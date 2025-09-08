@@ -142,16 +142,16 @@ const VALIDATION_TIMEOUT = 3000;
 
 /**
  * POST /api/ai/validate-key
- * 
+ *
  * Validates an API key with the specified AI provider.
- * 
+ *
  * Features:
  * - Supports multiple providers (Anthropic, OpenAI)
  * - Rate limiting: 10 requests per minute per IP
  * - 3-second timeout for validation
  * - Generic error messages for security
  * - Requires authentication
- * 
+ *
  * @param {NextRequest} request - The incoming request with provider and apiKey
  * @returns {NextResponse} JSON response with validation result
  */

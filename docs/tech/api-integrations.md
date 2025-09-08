@@ -1232,7 +1232,7 @@ The application now supports user-configurable AI providers through secure encry
 #### 1. AI Models Endpoint
 
 ```typescript
-GET /api/ai/models
+GET / api / ai / models;
 ```
 
 **Purpose**: Retrieve available AI models for user selection
@@ -1262,7 +1262,7 @@ GET /api/ai/models
 #### 2. API Key Validation Endpoint
 
 ```typescript
-POST /api/ai/validate-key
+POST / api / ai / validate - key;
 ```
 
 **Purpose**: Validate user-provided API keys before storage
@@ -1293,12 +1293,13 @@ POST /api/ai/validate-key
 #### 3. User Preferences with Encryption
 
 ```typescript
-GET /api/users/[id]/preferences
-PUT /api/users/[id]/preferences
+GET / api / users / [id] / preferences;
+PUT / api / users / [id] / preferences;
 ```
 
 **Encryption**: AES-256-GCM for sensitive data
-**Features**: 
+**Features**:
+
 - Conditional updates with ETag support
 - Real-time API key validation
 - Encrypted storage of user API keys
