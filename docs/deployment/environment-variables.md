@@ -26,9 +26,10 @@ These variables are used at runtime by the server:
 - `INOREADER_CLIENT_ID` - OAuth client ID (same as NEXT_PUBLIC version)
 - `INOREADER_CLIENT_SECRET` - OAuth client secret
 - `INOREADER_REDIRECT_URI` - OAuth callback URL
-- `ANTHROPIC_API_KEY` - Claude API key
-- `CLAUDE_SUMMARIZATION_MODEL` - AI model selection
-- `TOKEN_ENCRYPTION_KEY` - For encrypting OAuth tokens
+- `ANTHROPIC_API_KEY` - Claude API key for article summarization
+- `CLAUDE_SUMMARIZATION_MODEL` - AI model selection for summarization
+- `TOKEN_ENCRYPTION_KEY` - For encrypting OAuth tokens (32-byte base64 key)
+- `USER_DATA_ENCRYPTION_KEY` - For encrypting user preferences and sensitive data (32-byte base64 key)
 - `SUPABASE_SERVICE_ROLE_KEY` - Server-side database access
 - `SERVER_PORT` - OAuth server port
 - `RSS_READER_TOKENS_PATH` - Token storage location
@@ -41,7 +42,17 @@ These variables are used at runtime by the server:
 - `TEST_INOREADER_PASSWORD` - Test account password
 - `NODE_ENV` - Environment mode
 
-### 3. Environment-Specific Variables (Dev Only)
+### 3. AI Integration Variables (RR-273)
+
+These variables support the AI settings feature with multi-provider architecture:
+
+- `ANTHROPIC_API_KEY` - Default Anthropic API key (can be overridden by user preferences)
+- `OPENAI_API_KEY` - Optional OpenAI API key for future multi-provider support
+- `USER_DATA_ENCRYPTION_KEY` - Required for encrypting user-stored API keys and preferences
+- `AI_VALIDATION_TIMEOUT` - API key validation timeout in milliseconds (default: 10000)
+- `AI_MODEL_CACHE_TTL` - Model list cache TTL in seconds (default: 3600)
+
+### 4. Environment-Specific Variables (Dev Only)
 
 Production environment has been removed (RR-92). Only development overrides remain:
 
@@ -177,6 +188,8 @@ pm2 env 0
 3. **Use strong encryption keys** - Generate with `openssl rand -base64 32`
 4. **Rotate credentials regularly** - Especially after team changes
 5. **Limit access to production `.env`** - Use proper file permissions
+6. **User API Keys (RR-273)** - Encrypted with AES-256-GCM before storage in database
+7. **Key Validation** - All user-provided API keys validated before storage
 
 ## PM2 Integration (Dev Only)
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import crypto from "crypto";
 import { z } from "zod";
 import type { Database } from "@/lib/db/types";
@@ -16,14 +16,39 @@ import {
 // Preferences schemas aligned with src/types/preferences.ts
 const AiSchema = z
   .object({
+    provider: z.enum(["anthropic", "openai"]).optional(), // Provider field
     model: z.string().min(1).optional(),
-    summaryLengthMin: z.number().int().min(50).max(500).optional(),
-    summaryLengthMax: z.number().int().min(50).max(500).optional(),
+    summaryLengthMin: z
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .optional()
+      .transform((val) =>
+        val !== undefined ? Math.max(1, Math.min(10, val)) : val
+      ), // Clamp to 1-10 range
+    summaryLengthMax: z
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .optional()
+      .transform((val) =>
+        val !== undefined ? Math.max(1, Math.min(10, val)) : val
+      ), // Clamp to 1-10 range
     summaryStyle: z
-      .enum(["objective", "analytical", "concise", "detailed"]) // keep in sync with types
+      .enum(["objective", "analytical", "concise", "detailed", "retrospective"]) // Added retrospective
       .optional(),
     contentFocus: z
-      .enum(["general", "technical", "business", "educational"]) // null handled by omission
+      .enum([
+        "general",
+        "technical",
+        "business",
+        "educational",
+        "key-points",
+        "main-arguments",
+        "comprehensive",
+      ]) // Added more options
       .nullable()
       .optional(),
     // Client may send apiKey change instructions in PUT
@@ -55,6 +80,22 @@ const BasePreferencesSchema = z
     sync: SyncSchema.optional(),
   })
   .strict();
+// API Key Action schema with discriminated union for better type safety
+const ApiKeyActionSchema = z.discriminatedUnion("action", [
+  z.object({
+    provider: z.enum(["anthropic", "openai"]),
+    action: z.literal("update"),
+    apiKey: z.string().min(1), // Required for update
+  }),
+  z.object({
+    provider: z.enum(["anthropic", "openai"]),
+    action: z.literal("keep"),
+  }),
+  z.object({
+    provider: z.enum(["anthropic", "openai"]),
+    action: z.literal("clear"),
+  }),
+]);
 
 // Schema for stored preferences (includes encrypted data bucket)
 const PreferencesSchema = BasePreferencesSchema.extend({
@@ -88,6 +129,7 @@ const PreferencesResponseSchema = z
   .object({
     ai: z
       .object({
+        provider: z.enum(["anthropic", "openai"]), // Add provider field
         hasApiKey: z.boolean(),
         model: z.string(),
         summaryLengthMin: z.number(),
@@ -97,9 +139,18 @@ const PreferencesResponseSchema = z
           "analytical",
           "concise",
           "detailed",
+          "retrospective",
         ]),
         contentFocus: z
-          .enum(["general", "technical", "business", "educational"])
+          .enum([
+            "general",
+            "technical",
+            "business",
+            "educational",
+            "key-points",
+            "main-arguments",
+            "comprehensive",
+          ])
           .nullable(),
       })
       .optional(),
@@ -249,6 +300,7 @@ if (typeof process !== "undefined" && cleanupInterval) {
 function getDefaultPreferences(): PreferencesResponse {
   return {
     ai: {
+      provider: "anthropic" as const,
       hasApiKey: false,
       model: process.env.DEFAULT_SUMMARY_MODEL || "claude-3-haiku-20240307",
       summaryLengthMin: Number(process.env.SUMMARY_LENGTH_MIN || 100),
@@ -276,12 +328,18 @@ function getDefaultPreferences(): PreferencesResponse {
 // Transform stored preferences to response format (mask sensitive data)
 function transformToResponse(stored: UserPreferences): PreferencesResponse {
   const defaults = getDefaultPreferences();
-  // Fix: Check for encrypted data with proper structure
+
+  // Determine provider (default to anthropic for backward compatibility)
+  const provider = stored.ai?.provider || "anthropic";
+
+  // Check for encrypted API key for the current provider
   const hasApiKey = Boolean(
-    stored.encryptedData?.apiKeys?.anthropic?.encrypted
+    stored.encryptedData?.apiKeys?.[provider]?.encrypted
   );
+
   return {
     ai: {
+      provider, // Include provider in response
       hasApiKey,
       model: stored.ai?.model ?? defaults.ai!.model,
       summaryLengthMin:
@@ -304,7 +362,9 @@ function transformToResponse(stored: UserPreferences): PreferencesResponse {
 
 // Input schema for PUT requests (what clients send)
 // Schema for input preferences (plaintext API keys)
-const PreferencesInputSchema = BasePreferencesSchema;
+const PreferencesInputSchema = BasePreferencesSchema.extend({
+  apiKeyAction: ApiKeyActionSchema.optional(), // New apiKeyAction protocol
+});
 
 type PreferencesInput = z.infer<typeof PreferencesInputSchema>;
 
@@ -329,6 +389,9 @@ function transformToStorage(
     }
 
     // Update AI fields with proper typing
+    if (request.ai.provider !== undefined) {
+      next.ai.provider = request.ai.provider;
+    }
     if (request.ai.model !== undefined) {
       next.ai.model = request.ai.model;
     }
@@ -361,8 +424,57 @@ function transformToStorage(
     }
   }
 
-  // Handle API key changes if present
-  if (request.ai?.apiKeyChange) {
+  // Handle new apiKeyAction protocol
+  if (request.apiKeyAction) {
+    const { provider, action } = request.apiKeyAction;
+
+    // Ensure encryptedData structure exists
+    if (!next.encryptedData) {
+      next.encryptedData = {};
+    }
+    if (!next.encryptedData.apiKeys) {
+      next.encryptedData.apiKeys = {};
+    }
+
+    switch (action) {
+      case "clear":
+        // Clear the API key for the specified provider
+        if (next.encryptedData.apiKeys) {
+          next.encryptedData.apiKeys[provider] = undefined;
+        }
+        // Update hasApiKey flag
+        if (!next.ai) {
+          next.ai = {};
+        }
+        next.ai.hasApiKey = false;
+        break;
+
+      case "update":
+        if (action === "update" && !request.apiKeyAction.apiKey) {
+          throw new Error("API key required for update action");
+        }
+
+        // Encrypt and store the new API key
+        const encrypted = encryptApiKey(request.apiKeyAction.apiKey!);
+        if (!next.encryptedData.apiKeys) {
+          next.encryptedData.apiKeys = {};
+        }
+        next.encryptedData.apiKeys[provider] = encrypted;
+
+        // Update hasApiKey flag
+        if (!next.ai) {
+          next.ai = {};
+        }
+        next.ai.hasApiKey = true;
+        break;
+
+      case "keep":
+        // No changes to API key - keep existing
+        break;
+    }
+  }
+  // Handle legacy apiKeyChange if present (backward compatibility)
+  else if (request.ai?.apiKeyChange) {
     // Ensure encryptedData structure exists
     if (!next.encryptedData) {
       next.encryptedData = {};
@@ -372,9 +484,10 @@ function transformToStorage(
     }
 
     if (request.ai.apiKeyChange === "clear") {
-      // Clear the API key
+      // Clear the API key (default to anthropic for legacy)
+      const provider = request.ai.provider || "anthropic";
       if (next.encryptedData.apiKeys) {
-        next.encryptedData.apiKeys.anthropic = undefined;
+        next.encryptedData.apiKeys[provider] = undefined;
       }
       // Update hasApiKey flag
       if (!next.ai) {
@@ -395,11 +508,12 @@ function transformToStorage(
         throw new Error("Invalid or missing API key for replacement");
       }
 
-      // Store encrypted API key
+      // Store encrypted API key (default to anthropic for legacy)
+      const provider = request.ai.provider || "anthropic";
       if (!next.encryptedData.apiKeys) {
         next.encryptedData.apiKeys = {};
       }
-      next.encryptedData.apiKeys.anthropic = enc;
+      next.encryptedData.apiKeys[provider] = enc;
 
       // Update hasApiKey flag
       if (!next.ai) {
@@ -448,10 +562,7 @@ export async function GET(
     }
 
     // Initialize Supabase client
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createClient();
 
     // Fetch user preferences from database (single query)
     const { data: user, error } = await supabase
@@ -569,10 +680,7 @@ export async function PUT(
     }
 
     // Initialize Supabase client
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createClient();
 
     // Get current preferences from database
     const { data: currentUser } = await supabase

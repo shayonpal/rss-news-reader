@@ -35,10 +35,8 @@ function validateKeyFormat(key: string): boolean {
  * @throws Error if key is not properly configured
  */
 function getEncryptionKey(): Buffer {
-  // Try client-side environment variable first, then server-side
-  const keyHex =
-    process.env.NEXT_PUBLIC_TOKEN_ENCRYPTION_KEY ||
-    process.env.TOKEN_ENCRYPTION_KEY;
+  // Use only server-side environment variable for security
+  const keyHex = process.env.TOKEN_ENCRYPTION_KEY;
 
   if (!keyHex) {
     throw new Error("Encryption key not configured");
@@ -54,42 +52,15 @@ function getEncryptionKey(): Buffer {
 }
 
 /**
- * Derive a deterministic IV using PBKDF2 from the content
- * This ensures the same content always produces the same encrypted result
- * @param content - The content to derive IV from
- * @param key - The encryption key to use as part of derivation
- * @returns Deterministic IV for this content
- */
-function deriveIV(content: string, key: Buffer): Buffer {
-  // Create a stable salt from the content hash and key
-  // This ensures same content always gets same IV
-  const contentHash = crypto.createHash("sha256").update(content).digest();
-  const keySalt = crypto.createHash("sha256").update(key).digest();
-
-  // Combine content hash and key salt for the derivation salt
-  const salt = Buffer.concat([contentHash, keySalt]).slice(0, SALT_LENGTH);
-
-  // Derive IV using PBKDF2 with the combined salt
-  return crypto.pbkdf2Sync(
-    content,
-    salt,
-    PBKDF2_ITERATIONS,
-    IV_LENGTH,
-    "sha256"
-  );
-}
-
-/**
- * Encrypt a string using AES-256-GCM with deterministic IV
- * Uses PBKDF2 to derive IV from content, ensuring same input produces same output
+ * Encrypt a string using AES-256-GCM with random IV
  * @param text - Plain text to encrypt
  * @returns Object containing encrypted data, IV, and auth tag
  */
 export function encryptApiKey(text: string): EncryptedData {
   try {
     const key = getEncryptionKey();
-    // Use deterministic IV derivation instead of random
-    const iv = deriveIV(text, key);
+    // Use proper random IV for GCM security
+    const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, key, iv);
 
     let encrypted = cipher.update(text, "utf8", "hex");
@@ -178,5 +149,9 @@ export function sanitizeErrorMessage(message: string): string {
   // Remove any API keys or sensitive patterns
   return message
     .replace(/sk-[a-zA-Z0-9-]+/g, "[REDACTED]")
-    .replace(/api[_-]?key[:\s]+[a-zA-Z0-9-]+/gi, "api_key: [REDACTED]");
+    .replace(/sk-proj-[a-zA-Z0-9-]+/g, "[REDACTED]")
+    .replace(/anthropic-[a-zA-Z0-9-]+/g, "[REDACTED]")
+    .replace(/claude-[a-zA-Z0-9-]+/g, "[REDACTED]")
+    .replace(/api[_-]?key[:\s]+[a-zA-Z0-9-]+/gi, "api_key: [REDACTED]")
+    .replace(/Bearer\s+[a-zA-Z0-9-._~+/]+/gi, "Bearer [REDACTED]");
 }

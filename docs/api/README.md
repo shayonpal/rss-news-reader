@@ -9,7 +9,7 @@ This directory contains documentation for all API endpoints and server-side func
 - **Description**: Comprehensive documentation of all server-side API endpoints including authentication, feed management, article operations, and sync functionality
 - **Status**: Current ✅ (100% OpenAPI Coverage)
 - **Last Updated**: August 15, 2025 (RR-208)
-- **Coverage**: 45/45 endpoints documented with full OpenAPI 3.1 schemas
+- **Coverage**: 47/47 endpoints documented with full OpenAPI 3.1 schemas
 - **Contents**:
   - Inoreader proxy endpoints (`/api/inoreader/*`)
   - Article content operations (`/api/articles/[id]/*`)
@@ -52,14 +52,14 @@ This directory contains documentation for all API endpoints and server-side func
 **🎯 Complete OpenAPI Coverage Achieved (RR-208)**
 
 - **Swagger UI**: http://100.96.166.53:3000/reader/api-docs
-- **Coverage**: 100% (45/45 endpoints documented)
+- **Coverage**: 100% (47/47 endpoints documented)
 - **Validation**: <2 second performance with `npm run docs:validate`
 - **Workflow**: `npm run docs:serve` to launch development server + Swagger UI
 
 ### New Documentation Workflow Scripts
 
 ```bash
-npm run docs:validate   # Validate OpenAPI coverage (45/45 endpoints)
+npm run docs:validate   # Validate OpenAPI coverage (47/47 endpoints)
 npm run docs:coverage   # Generate detailed coverage report
 npm run docs:serve      # Launch dev server and open Swagger UI
 ```
@@ -76,7 +76,8 @@ npm run docs:serve      # Launch dev server and open Swagger UI
 | Test               | 7     | `/api/test/check-headers`, `/api/test/simulate-rate-limit` (dev only)                                                                                   | Development testing endpoints                                                                               |
 | Analytics & Logs   | 2     | `/api/analytics/fetch-stats`, `/api/logs/inoreader`                                                                                                     | Usage analytics, API call logging                                                                           |
 | Developer Tools    | 3     | `/api/insomnia.json`, `/api-docs`, `/api-docs/openapi.json`                                                                                             | Insomnia export, OpenAPI documentation, Swagger UI                                                          |
-| Auth, Feeds, Users | 5     | `/api/auth/inoreader/status`, `/api/feeds/{id}/stats`, `/api/users/{id}/timezone`                                                                       | Authentication status, feed statistics, user management                                                     |
+| AI Integration     | 2     | `/api/ai/models`, `/api/ai/validate-key`                                                                                                                 | AI provider models, API key validation                                                     |
+| Auth, Feeds, Users | 7     | `/api/auth/inoreader/status`, `/api/feeds/{id}/stats`, `/api/users/{id}/timezone`, `/api/users/{id}/preferences`                                       | Authentication status, feed statistics, user management, preferences with encrypted storage                                                     |
 
 **Note**: Feed and article data are accessed directly via Supabase from the client. Base `/api/feeds` and `/api/articles` endpoints don't exist.
 

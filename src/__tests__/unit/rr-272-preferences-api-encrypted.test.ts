@@ -15,7 +15,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GET, PUT } from "@/app/api/users/[id]/preferences/route";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 // Mock crypto module for deterministic encryption testing
 vi.mock("crypto", () => ({
@@ -44,8 +44,10 @@ vi.mock("crypto", () => ({
   },
 }));
 
-// Mock Supabase
-vi.mock("@supabase/supabase-js");
+// Mock Supabase server wrapper
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(),
+}));
 
 // RR-272 Schema - matches actual implementation
 const AiPreferencesSchema = z.object({

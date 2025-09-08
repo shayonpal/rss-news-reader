@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Sep 08, 2025 - 04:09 PM EDT - docs: Comprehensive documentation update for RR-273 AI settings integration
+  - **API Documentation**: Updated endpoint counts (47 total), added AI endpoint details (/api/ai/models, /api/ai/validate-key)
+  - **Environment Variables**: Enhanced with encryption key requirements and AI integration variables
+  - **README**: Updated feature descriptions, endpoint counts, and project structure with AI services
+  - **Security**: Added RR-273 encryption implementation details with AES-256-GCM user preference storage
+  - **API Integrations**: Multi-provider AI architecture documentation with validation endpoints
+  - **Testing**: New AI testing patterns for encrypted preferences and API validation
+  - **Coverage**: All documentation reflects secure user-configurable AI settings implementation
+- Sep 08, 2025 - 03:34 PM EDT - docs: Updated known-issues.md with RR-273 test infrastructure documentation
+  - **Issue Type**: Test infrastructure limitations, not production bugs
+  - **Test Issues**: Supabase mocking limitations, expected E2E failures, timer limitations
+  - **Production Status**: Backend AI settings API fully functional and tested manually
+  - **Documentation**: Clear separation between test environment issues and production functionality
 - Sep 06, 2025 - 03:03 AM EDT - fix: Resolved authentication issues in 5 Inoreader API endpoints
   - **Root Cause**: Endpoints were using cookie-based authentication instead of file-based TokenManager
   - **Fixed Endpoints**: `/api/inoreader/user-info`, `/api/inoreader/subscriptions`, `/api/inoreader/unread-counts`, `/api/inoreader/stream-contents`, `/api/inoreader/edit-tag`
@@ -23,6 +36,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Sep 08, 2025 - 03:31 PM EDT - feat: AI settings backend integration with multi-provider architecture (RR-273)
+  - **New API Endpoints**: 
+    - `GET /api/ai/models` - Dynamic model discovery with provider-specific capabilities
+    - `POST /api/ai/validate-key` - Secure API key validation with encrypted storage
+  - **Security Enhancements**: 
+    - Request authentication with user session validation
+    - Rate limiting protection against abuse
+    - AES-256-GCM encryption for API key storage
+    - Memory-safe key handling with automatic cleanup
+  - **Multi-Provider Architecture**: 
+    - Extensible provider system ready for future expansion (OpenAI, Gemini, etc.)
+    - Provider-specific model capabilities and pricing tiers
+    - Unified response format across all providers
+  - **Test Coverage**: 
+    - 49 comprehensive test cases across unit, integration, and E2E testing
+    - API endpoint validation, encryption/decryption flows, and error scenarios
+    - Authentication middleware and rate limiting verification
+  - **Technical Implementation**:
+    - Dynamic model loading with real-time availability checks
+    - Optimistic UI updates with rollback on validation failure
+    - WeakMap-based secure memory management for sensitive data
+    - Comprehensive error handling with user-friendly messages
 - Sep 07, 2025 - 03:59 PM EDT - feat: User preferences API endpoints with encryption for 2-section settings (RR-272)
   - **API Endpoints**: GET/PUT `/api/users/[id]/preferences` with user-specific preference management
   - **Encryption Implementation**: AES-256-GCM with PBKDF2 key derivation for secure API key storage

@@ -199,6 +199,81 @@ cp .env.example .env.test
 - Ensure proper wait strategies
 - Use stable test selectors
 
+## AI Integration Testing (RR-273)
+
+### New Testing Patterns
+
+The AI settings implementation introduced comprehensive testing patterns for encrypted user preferences and API integration:
+
+#### 1. API Endpoint Testing
+
+```typescript
+// __tests__/unit/api/ai/validate-key.test.ts
+describe('POST /api/ai/validate-key', () => {
+  it('validates valid Anthropic API key', async () => {
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      valid: true,
+      provider: 'anthropic'
+    });
+  });
+});
+```
+
+#### 2. Encryption Service Testing
+
+```typescript
+// Tests for encryption/decryption with proper mocking
+describe('EncryptionService', () => {
+  beforeEach(() => {
+    vi.stubEnv('USER_DATA_ENCRYPTION_KEY', 'test-key-32-bytes-base64-encoded==');
+  });
+  
+  it('encrypts and decrypts user API keys', async () => {
+    const plaintext = 'sk-ant-api03-test-key';
+    const encrypted = await encrypt(plaintext);
+    const decrypted = await decrypt(encrypted);
+    expect(decrypted).toBe(plaintext);
+  });
+});
+```
+
+#### 3. Integration Test Patterns
+
+```typescript
+// __tests__/integration/rr-273-ai-settings-flow.test.ts
+describe('AI Settings Integration', () => {
+  it('validates and stores encrypted API key', async () => {
+    // Test complete flow: validation → encryption → storage → retrieval
+    const result = await updateUserPreferences(userId, {
+      ai: { apiKey: 'sk-ant-api03-test', provider: 'anthropic' }
+    });
+    expect(result.success).toBe(true);
+  });
+});
+```
+
+#### 4. E2E Testing for User Journeys
+
+```typescript
+// __tests__/e2e/rr-273-ai-settings-journey.spec.ts
+test('User can configure AI settings', async ({ page }) => {
+  await page.goto('/reader/settings');
+  await page.fill('[data-testid="api-key-input"]', 'sk-ant-test');
+  await page.click('[data-testid="validate-key"]');
+  await expect(page.getByText('API key is valid')).toBeVisible();
+});
+```
+
+### Test Infrastructure Enhancements
+
+- **Mock Infrastructure**: Comprehensive mocking for Anthropic API calls
+- **Environment Isolation**: Separate encryption keys for test environment
+- **Security Testing**: API key validation without real API calls
+- **Error Scenarios**: Complete error path testing for failed validations
+- **Cache Testing**: Encrypted cache behavior validation
+
 ## Related Documentation
 
 ### In This Directory

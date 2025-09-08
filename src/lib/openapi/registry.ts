@@ -861,6 +861,79 @@ registry.registerPath({
   },
 });
 
+// ========== AI PROVIDER SCHEMAS ==========
+
+// AI Model schema
+const AIModelSchema = registry.register(
+  "AIModel",
+  z
+    .object({
+      id: z.string().openapi({
+        description: "Unique model identifier",
+        example: "claude-3-opus-20240229",
+      }),
+      name: z.string().openapi({
+        description: "Human-readable model name",
+        example: "Claude 3 Opus",
+      }),
+      provider: z.string().openapi({
+        description: "AI provider name",
+        example: "anthropic",
+      }),
+      description: z.string().openapi({
+        description: "Model capabilities description",
+        example: "Most capable model for complex tasks",
+      }),
+    })
+    .openapi({ description: "AI model information" })
+);
+
+// AI Models response schema
+const AIModelsResponseSchema = registry.register(
+  "AIModelsResponse",
+  z
+    .object({
+      models: z.array(AIModelSchema).openapi({
+        description: "List of available AI models",
+      }),
+    })
+    .openapi({ description: "Response containing available AI models" })
+);
+
+// API Key validation request schema
+const ValidateKeyRequestSchema = registry.register(
+  "ValidateKeyRequest",
+  z
+    .object({
+      provider: z.enum(["anthropic", "openai"]).openapi({
+        description: "The AI provider to validate against",
+        example: "anthropic",
+      }),
+      apiKey: z.string().openapi({
+        description: "The API key to validate",
+        example: "sk-ant-api03-...",
+      }),
+    })
+    .openapi({ description: "Request to validate an API key" })
+);
+
+// API Key validation response schema
+const ValidateKeyResponseSchema = registry.register(
+  "ValidateKeyResponse",
+  z
+    .object({
+      valid: z.boolean().openapi({
+        description: "Whether the API key is valid",
+        example: true,
+      }),
+      message: z.string().openapi({
+        description: "Human-readable validation result",
+        example: "API key is valid",
+      }),
+    })
+    .openapi({ description: "API key validation result" })
+);
+
 // ========== DEVELOPER TOOLS SCHEMAS ==========
 
 // Insomnia export response schema
@@ -5204,6 +5277,239 @@ if (process.env.NODE_ENV !== "production") {
       },
     });
   }
+
+  // ========== AI PROVIDER ENDPOINTS ==========
+
+  // GET /api/ai/models - Get available AI models
+  registry.registerPath({
+    method: "get",
+    path: "/api/ai/models",
+    summary: "Get available AI models",
+    description:
+      "Retrieves a list of available Anthropic AI models that can be used for content summarization. Includes model metadata such as name, description, and provider information.",
+    tags: ["AI"],
+    security: [{ cookieAuth: [] }],
+    responses: {
+      200: {
+        description: "Successfully retrieved AI models",
+        headers: {
+          ETag: {
+            description: "Entity tag for cache validation",
+            schema: { type: "string" },
+          },
+          "Cache-Control": {
+            description: "Cache control header (private, max-age=300)",
+            schema: { type: "string" },
+          },
+        },
+        content: {
+          "application/json": {
+            schema: AIModelsResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  models: [
+                    {
+                      id: "claude-3-opus-20240229",
+                      name: "Claude 3 Opus",
+                      provider: "anthropic",
+                      description: "Most capable model for complex tasks",
+                    },
+                    {
+                      id: "claude-3-sonnet-20240229",
+                      name: "Claude 3 Sonnet",
+                      provider: "anthropic",
+                      description: "Balanced performance and cost",
+                    },
+                    {
+                      id: "claude-3-haiku-20240307",
+                      name: "Claude 3 Haiku",
+                      provider: "anthropic",
+                      description: "Fast and efficient",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      304: {
+        description: "Not Modified - ETag matches, use cached response",
+      },
+      401: {
+        description: "Unauthorized - Invalid or missing authentication",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              unauthorized: {
+                value: {
+                  error: "Authentication required",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              serverError: {
+                value: {
+                  error: "Failed to fetch models",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // POST /api/ai/validate-key - Validate an AI provider API key
+  registry.registerPath({
+    method: "post",
+    path: "/api/ai/validate-key",
+    summary: "Validate an AI provider API key",
+    description:
+      "Validates an API key with the specified AI provider (currently supports Anthropic). Includes rate limiting (10 requests per minute) and a 3-second timeout for validation.",
+    tags: ["AI"],
+    security: [{ cookieAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: ValidateKeyRequestSchema,
+            examples: {
+              anthropic: {
+                value: {
+                  provider: "anthropic",
+                  apiKey: "sk-ant-api03-example-key",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "API key validation result",
+        headers: {
+          "Cache-Control": {
+            description: "Prevents caching of validation results",
+            schema: { type: "string", example: "no-store" },
+          },
+          "X-RateLimit-Limit": {
+            description: "Maximum requests per minute",
+            schema: { type: "string", example: "10" },
+          },
+          "X-RateLimit-Remaining": {
+            description: "Remaining requests in current window",
+            schema: { type: "string", example: "9" },
+          },
+          "X-RateLimit-Reset": {
+            description: "Unix timestamp when rate limit resets",
+            schema: { type: "string", example: "1699564800" },
+          },
+        },
+        content: {
+          "application/json": {
+            schema: ValidateKeyResponseSchema,
+            examples: {
+              valid: {
+                value: {
+                  valid: true,
+                  message: "API key is valid",
+                },
+              },
+              invalid: {
+                value: {
+                  valid: false,
+                  message: "Invalid API key",
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input or rate limit exceeded",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              missingProvider: {
+                value: {
+                  error: "Provider is required",
+                },
+              },
+              unsupportedProvider: {
+                value: {
+                  error: "Unsupported provider: azure",
+                },
+              },
+              rateLimit: {
+                value: {
+                  error: "Rate limit exceeded",
+                },
+              },
+            },
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - Authentication required",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              unauthorized: {
+                value: {
+                  error: "Authentication required",
+                },
+              },
+            },
+          },
+        },
+      },
+      504: {
+        description: "Gateway Timeout - Validation took too long",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              timeout: {
+                value: {
+                  error: "API key validation timed out",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              serverError: {
+                value: {
+                  error: "Failed to validate API key",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 export {

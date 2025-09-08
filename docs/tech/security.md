@@ -14,6 +14,7 @@ This document outlines the security measures and policies implemented in the RSS
 
 - **Server-Side OAuth**: All Inoreader authentication is handled server-side
 - **Encrypted Token Storage**: OAuth tokens stored in `~/.rss-reader/tokens.json` using AES-256-GCM encryption
+- **User Preferences Encryption (RR-273)**: User API keys and sensitive preferences encrypted with AES-256-GCM before database storage
 - **No Client-Side Authentication**: The client application requires no user authentication
 - **Database RLS**: Row Level Security enabled on all Supabase tables with user-specific policies
 
@@ -127,6 +128,35 @@ This document outlines the security measures and policies implemented in the RSS
 - All views now respect RLS policies of querying user
 - Functions protected against search_path manipulation attacks
 - No data loss or functionality impact
+
+### RR-273: User Preferences Encryption Implementation (September 2025)
+
+**Enhancement**: Secure storage of user-configurable AI settings and API keys with multi-layer encryption.
+
+**Implementation**:
+
+- **AES-256-GCM Encryption**: User API keys encrypted before database storage
+- **Encryption Service**: Dedicated service (`src/lib/services/encryption.ts`) with secure key derivation
+- **API Key Validation**: All user-provided API keys validated before storage
+- **Multi-Provider Support**: Architecture supports multiple AI providers (Anthropic, OpenAI, etc.)
+- **Secure Key Management**: Separate encryption keys for OAuth tokens vs user preferences
+
+**Security Features**:
+
+- **Two-Layer Key Management**: 
+  - `TOKEN_ENCRYPTION_KEY` for OAuth tokens (system-level)
+  - `USER_DATA_ENCRYPTION_KEY` for user preferences (user-level)
+- **Input Validation**: Zod schemas validate all preference data before processing
+- **API Key Validation**: Real-time validation of user API keys before storage
+- **Cache Security**: Encrypted data never cached in plaintext
+- **Rate Limiting**: API key validation endpoints protected against abuse
+
+**Impact**:
+
+- Secure user-configurable AI settings without compromising system security
+- Multi-provider architecture ready for future AI service integrations
+- User API keys never exposed in logs or client-side code
+- Maintained backward compatibility with existing token encryption system
 
 **Testing**: Test-first development with 32 unit tests defining exact expected behavior
 
