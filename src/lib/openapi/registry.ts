@@ -92,8 +92,8 @@ const PreferencesPatchSchema = registry.register(
         .optional(),
       sync: z
         .object({
-          maxArticles: z.number().min(10).max(5000).optional(),
-          retentionCount: z.number().min(1).max(365).optional(),
+          maxArticles: z.number().min(1).max(5000).optional(),
+          retentionCount: z.number().min(1).optional(),
         })
         .optional(),
     })
@@ -5117,7 +5117,6 @@ if (process.env.NODE_ENV !== "production") {
           retentionCount: z
             .number()
             .min(1)
-            .max(365)
             .optional()
             .describe("Number of days to retain articles"),
           batchSize: z

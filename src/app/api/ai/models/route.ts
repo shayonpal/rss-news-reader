@@ -3,7 +3,7 @@
  * /api/ai/models:
  *   get:
  *     summary: Get available AI models
- *     description: Retrieves a list of available Anthropic AI models that can be used for content summarization. Includes model metadata such as name, description, and provider information.
+ *     description: Retrieves a list of available Anthropic AI models from the database that can be used for content summarization. Includes model metadata such as name, description, and provider information. Models are dynamically loaded from the ai_models table.
  *     tags:
  *       - AI
  *     security:
@@ -32,12 +32,12 @@
  *                     properties:
  *                       id:
  *                         type: string
- *                         description: Unique model identifier
- *                         example: "claude-3-opus-20240229"
+ *                         description: Unique model identifier from ai_models.model_id
+ *                         example: "claude-opus-4-1"
  *                       name:
  *                         type: string
- *                         description: Human-readable model name
- *                         example: "Claude 3 Opus"
+ *                         description: Human-readable model name from ai_models.name
+ *                         example: "Claude Opus 4.1"
  *                       provider:
  *                         type: string
  *                         description: AI provider name
@@ -48,16 +48,16 @@
  *                         example: "Most capable model for complex tasks"
  *             example:
  *               models:
- *                 - id: "claude-3-opus-20240229"
- *                   name: "Claude 3 Opus"
+ *                 - id: "claude-opus-4-1"
+ *                   name: "Claude Opus 4.1"
  *                   provider: "anthropic"
  *                   description: "Most capable model for complex tasks"
- *                 - id: "claude-3-sonnet-20240229"
- *                   name: "Claude 3 Sonnet"
+ *                 - id: "claude-sonnet-4-0"
+ *                   name: "Claude Sonnet 4.0"
  *                   provider: "anthropic"
- *                   description: "Balanced performance and cost"
- *                 - id: "claude-3-haiku-20240307"
- *                   name: "Claude 3 Haiku"
+ *                   description: "Balanced performance and speed"
+ *                 - id: "claude-3-5-haiku-latest"
+ *                   name: "Claude 3.5 Haiku"
  *                   provider: "anthropic"
  *                   description: "Fast and efficient"
  *       304:
@@ -87,29 +87,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest, unauthorizedResponse } from "@/lib/services/ai/auth";
 import { ApiErrors } from "@/lib/utils/api-errors";
+import { createClient } from "@/lib/supabase/server";
 import crypto from "crypto";
-
-// Available Anthropic models
-const ANTHROPIC_MODELS = [
-  {
-    id: "claude-3-opus-20240229",
-    name: "Claude 3 Opus",
-    provider: "anthropic",
-    description: "Most capable model for complex tasks",
-  },
-  {
-    id: "claude-3-sonnet-20240229",
-    name: "Claude 3 Sonnet",
-    provider: "anthropic",
-    description: "Balanced performance and cost",
-  },
-  {
-    id: "claude-3-haiku-20240307",
-    name: "Claude 3 Haiku",
-    provider: "anthropic",
-    description: "Fast and efficient",
-  },
-];
 
 // Generate content-based ETag
 function generateETag<T>(data: T): string {
@@ -123,13 +102,15 @@ const CACHE_MAX_AGE = 300; // 5 minutes
 /**
  * GET /api/ai/models
  *
- * Retrieves available AI models for content summarization.
+ * Retrieves available AI models for content summarization from the database.
  *
  * Features:
- * - Returns list of Anthropic Claude models
+ * - Fetches models dynamically from ai_models table
+ * - Returns list of Anthropic Claude models with metadata
  * - Implements ETag-based caching (304 Not Modified)
  * - 5-minute cache control for performance
  * - Requires authentication via validateRequest
+ * - Orders models alphabetically by name
  *
  * @param {NextRequest} request - The incoming request
  * @returns {NextResponse} JSON response with models array or error
@@ -142,8 +123,27 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse(auth.error);
     }
 
-    // Generate content-based ETag
-    const responseData = { models: ANTHROPIC_MODELS };
+    // Fetch models from database
+    const supabase = createClient();
+    const { data: dbModels, error: dbError } = await supabase
+      .from("ai_models")
+      .select("model_id, name, description")
+      .order("name", { ascending: true });
+
+    if (dbError) {
+      console.error("Database error fetching models:", dbError);
+      return ApiErrors.serverError("Failed to fetch models from database");
+    }
+
+    // Transform database models to API format
+    const models = dbModels.map((model) => ({
+      id: model.model_id,
+      name: model.name,
+      provider: "anthropic", // All models are Anthropic for now
+      description: model.description || "",
+    }));
+
+    const responseData = { models };
     const etag = generateETag(responseData);
 
     // Check If-None-Match header for caching

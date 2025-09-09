@@ -69,8 +69,8 @@ const AiSchema = z
 
 const SyncSchema = z
   .object({
-    maxArticles: z.number().int().min(10).max(5000).optional(),
-    retentionCount: z.number().int().min(1).max(365).optional(),
+    maxArticles: z.number().int().min(1).max(5000).optional(),
+    retentionCount: z.number().int().min(1).optional(),
   })
   .strict();
 
@@ -319,8 +319,8 @@ function getDefaultPreferences(): PreferencesResponse {
           | "educational") || "general",
     },
     sync: {
-      maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "500", 10),
-      retentionCount: parseInt(process.env.ARTICLES_RETENTION_DAYS || "30", 10),
+      maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "100", 10), // RR-274: Default to 100
+      retentionCount: parseInt(process.env.ARTICLES_RETENTION_COUNT || "2000", 10), // RR-274: Default to 2000 articles
     },
   };
 }

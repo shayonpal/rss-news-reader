@@ -10,7 +10,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Bot, CloudCheck, Save, RotateCcw } from "lucide-react";
 import { CollapsibleFilterSection } from "@/components/ui/collapsible-filter-section";
 import { ScrollHideFloatingElement } from "@/components/ui/scroll-hide-floating-element";
@@ -21,8 +21,19 @@ import { usePreferencesDomainStore } from "@/lib/stores/preferences-domain-store
 import { usePreferencesEditorStore } from "@/lib/stores/preferences-editor-store";
 import { usePreferencesForm } from "@/lib/hooks/usePreferencesForm";
 
+interface AiModel {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
+  
+  // Models state
+  const [models, setModels] = useState<AiModel[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
 
   // Domain store for loading state and preferences
   const { savedPreferences, isLoading, error, loadPreferences } =
@@ -67,6 +78,32 @@ export default function SettingsPage() {
       clearDraft();
     };
   }, [clearDraft]);
+
+  // Fetch models on mount
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        setModelsLoading(true);
+        const response = await fetch('/api/ai/models');
+        if (response.ok) {
+          const data = await response.json();
+          setModels(data.models || []);
+        } else {
+          console.error('Failed to fetch models:', response.statusText);
+          // Fallback to empty array - form will handle gracefully
+          setModels([]);
+        }
+      } catch (error) {
+        console.error('Error fetching models:', error);
+        // Fallback to empty array - form will handle gracefully
+        setModels([]);
+      } finally {
+        setModelsLoading(false);
+      }
+    };
+
+    fetchModels();
+  }, []);
 
   const handleBack = () => {
     router.back();
@@ -178,14 +215,19 @@ export default function SettingsPage() {
                   className="glass-input mt-1 w-full rounded-md px-3 py-2"
                   value={draft.ai.model}
                   onChange={handleSelectChange("ai.model")}
+                  disabled={modelsLoading}
                 >
-                  <option value="claude-3-haiku-20240307">
-                    Claude 3 Haiku
-                  </option>
-                  <option value="claude-3-sonnet-20240229">
-                    Claude 3 Sonnet
-                  </option>
-                  <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                  {modelsLoading ? (
+                    <option>Loading models...</option>
+                  ) : models.length > 0 ? (
+                    models.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No models available</option>
+                  )}
                 </select>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Choose the AI model for summarization
@@ -289,8 +331,6 @@ export default function SettingsPage() {
                 <div className="mt-1">
                   <input
                     type="number"
-                    min="10"
-                    max="5000"
                     value={draft.sync.maxArticles}
                     onChange={handleNumberChange("sync.maxArticles")}
                     className="glass-input w-full rounded-md px-3 py-2"
@@ -304,20 +344,18 @@ export default function SettingsPage() {
               {/* Article Retention */}
               <div>
                 <label className="text-sm font-medium text-foreground">
-                  Retention Period (days)
+                  Maximum Articles to Keep
                 </label>
                 <div className="mt-1">
                   <input
                     type="number"
-                    min="1"
-                    max="365"
                     value={draft.sync.retentionCount}
                     onChange={handleNumberChange("sync.retentionCount")}
                     className="glass-input w-full rounded-md px-3 py-2"
                   />
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Articles older than this will be automatically cleaned up
+                  Oldest articles will be automatically cleaned up (starred articles preserved)
                 </p>
               </div>
             </div>

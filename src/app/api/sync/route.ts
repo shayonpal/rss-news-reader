@@ -8,6 +8,8 @@ import { ArticleCleanupService } from "@/lib/services/cleanup-service";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import { captureRateLimitHeaders } from "@/lib/api/capture-rate-limit-headers";
 import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
+import type { InoreaderSubscription, InoreaderArticle } from "@/types/inoreader";
+import { getUserPreferences } from "@/lib/services/preferences";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -466,7 +468,7 @@ async function performServerSync(syncId: string) {
 
     const countsData = await countsResponse.json();
     const unreadCounts = new Map(
-      countsData.unreadcounts?.map((item: any) => [item.id, item.count]) || []
+      countsData.unreadcounts?.map((item: { id: string; count: number }) => [item.id, item.count]) || []
     );
 
     status.progress = 40;
@@ -523,7 +525,7 @@ async function performServerSync(syncId: string) {
     await writeSyncStatus(syncId, status);
 
     // Process feeds
-    const feedsToUpsert = subscriptions.map((sub: any) => ({
+    const feedsToUpsert = subscriptions.map((sub: InoreaderSubscription) => ({
       user_id: userId,
       inoreader_id: sub.id,
       title: sub.title,
@@ -540,7 +542,7 @@ async function performServerSync(syncId: string) {
 
     // RR-129: Clean up deleted feeds and their articles
     const cleanupService = new ArticleCleanupService(supabase);
-    const inoreaderFeedIds = subscriptions.map((sub: any) => sub.id);
+    const inoreaderFeedIds = subscriptions.map((sub: InoreaderSubscription) => sub.id);
     const feedCleanupResult = await cleanupService.cleanupDeletedFeeds(
       inoreaderFeedIds,
       userId
@@ -573,9 +575,9 @@ async function performServerSync(syncId: string) {
       currentTimestamp - lastSyncTimestamp > 7 * 24 * 60 * 60; // 7 days in seconds
 
     // Step 3: Fetch recent articles (single stream call)
-    const maxArticles = process.env.SYNC_MAX_ARTICLES
-      ? parseInt(process.env.SYNC_MAX_ARTICLES)
-      : 100;
+    // RR-274: Get maxArticles from user preferences instead of environment variable
+    const preferences = await getUserPreferences();
+    const maxArticles = preferences?.sync?.maxArticles || 100; // Default to 100 if no preferences
 
     // RR-149: Build URL with xt parameter to exclude read articles and ot for incremental sync
     let streamUrl = `https://www.inoreader.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list?n=${maxArticles}&xt=user/-/state/com.google/read`;
@@ -636,12 +638,12 @@ async function performServerSync(syncId: string) {
     // Process articles
     if (articles.length > 0 && feedIdMap.size > 0) {
       // RR-129: Check for previously deleted articles to prevent re-import
-      const articleInoreaderIds = articles.map((a: any) => a.id);
+      const articleInoreaderIds = articles.map((a: InoreaderArticle) => a.id);
       const deletedArticles =
         await cleanupService.wasArticleDeleted(articleInoreaderIds);
 
       const articlesToUpsert = articles
-        .filter((article: any) => {
+        .filter((article: InoreaderArticle) => {
           // Find which feed this article belongs to
           const feedInorId = article.origin?.streamId;
           const hasValidFeed = feedInorId && feedIdMap.has(feedInorId);
@@ -677,7 +679,7 @@ async function performServerSync(syncId: string) {
 
           return hasValidFeed;
         })
-        .map((article: any) => {
+        .map((article: InoreaderArticle) => {
           const feedInorId = article.origin?.streamId;
           const feedId = feedIdMap.get(feedInorId);
 
@@ -708,7 +710,7 @@ async function performServerSync(syncId: string) {
 
       if (articlesToUpsert.length > 0) {
         // Clear any pending sync queue items for these articles
-        const inoreaderIds = articlesToUpsert.map((a: any) => a.inoreader_id);
+        const inoreaderIds = articlesToUpsert.map((a: { inoreader_id: string }) => a.inoreader_id);
         await supabase
           .from("sync_queue")
           .delete()
@@ -731,7 +733,7 @@ async function performServerSync(syncId: string) {
 
         // Apply conflict resolution to preserve local changes
         const articlesWithConflictResolution = articlesToUpsert.map(
-          (article: any) => {
+          (article: { inoreader_id: string; is_read: boolean; is_starred: boolean; [key: string]: any }) => {
             const existing = existingMap.get(article.inoreader_id);
 
             if (existing) {
@@ -1031,14 +1033,12 @@ async function performServerSync(syncId: string) {
         console.error("[Sync] Cleanup errors:", articleCleanupResult.errors);
       }
 
-      // RR-149: Enforce article retention limit
-      const retentionLimit = process.env.ARTICLES_RETENTION_LIMIT
-        ? parseInt(process.env.ARTICLES_RETENTION_LIMIT)
-        : 1000;
+      // RR-274: Enforce article retention limit from user preferences
+      const retentionCount = preferences?.sync?.retentionCount || 2000; // Default to 2000 if no preferences
 
       const retentionResult = await cleanupService.enforceRetentionLimit(
         userId,
-        retentionLimit
+        retentionCount
       );
       if (retentionResult.deletedCount > 0) {
         console.log(

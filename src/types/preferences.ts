@@ -20,8 +20,8 @@ export interface PreferencesData {
     contentFocus: "general" | "technical" | "business" | "educational" | null;
   };
   sync: {
-    maxArticles: number; // 10-5000
-    retentionCount: number; // 1-365
+    maxArticles: number; // 1-5000
+    retentionCount: number; // minimum 1, no maximum
   };
 }
 
@@ -44,6 +44,32 @@ export interface UserPreferences extends PreferencesData {
   claudeApiKey: null; // Always null on client
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Database structure for user preferences table
+ * Maps to the actual database column names
+ */
+export interface UserPreferencesDB {
+  user_id: string;
+  sync_max_articles?: number;
+  sync_retention_count?: number;
+  ai_enabled?: boolean;
+  ai_provider?: string;
+  ai_summary_min_length?: number;
+  ai_summary_max_length?: number;
+  theme?: string;
+  sync_enabled?: boolean;
+  retention_days?: number;
+  feed_order?: string;
+  show_unread_only?: boolean;
+  mark_as_read_on_open?: boolean;
+  enable_notifications?: boolean;
+  notification_time?: string;
+  encrypted_inoreader_api_key?: string;
+  encrypted_claude_api_key?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -135,8 +161,8 @@ export const DEFAULT_PREFERENCES: PreferencesData = {
     contentFocus: "general",
   },
   sync: {
-    maxArticles: 500,
-    retentionCount: 30,
+    maxArticles: 100,
+    retentionCount: 2000,
   },
 };
 
@@ -145,8 +171,8 @@ export const DEFAULT_PREFERENCES: PreferencesData = {
  */
 export const PREFERENCES_CONSTRAINTS = {
   sync: {
-    maxArticles: { min: 10, max: 5000 },
-    retentionCount: { min: 1, max: 365 },
+    maxArticles: { min: 1, max: 5000 },
+    retentionCount: { min: 1 },
   },
   ai: {
     summaryLengthMin: { min: 50, max: 500 },
@@ -159,10 +185,7 @@ export const PREFERENCES_CONSTRAINTS = {
       "educational",
       null,
     ] as const,
-    models: [
-      "claude-3-haiku-20240307",
-      "claude-3-sonnet-20240229",
-      "claude-3-opus-20240229",
-    ] as const,
+    // Note: Models are now dynamically loaded from the ai_models database table
+    // This ensures consistency and allows for updates without code changes
   },
 } as const;

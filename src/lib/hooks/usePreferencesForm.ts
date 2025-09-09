@@ -45,15 +45,15 @@ export function usePreferencesForm() {
     [debouncedUpdateField]
   );
 
-  // Handle number input changes with debouncing
+  // Handle number input changes (immediate for better UX)
   const handleNumberChange = useCallback(
     (path: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.valueAsNumber;
       if (!isNaN(value)) {
-        debouncedUpdateField(path, value);
+        updateFieldImmediate(path, value);
       }
     },
-    [debouncedUpdateField]
+    [updateFieldImmediate]
   );
 
   // Handle select/dropdown changes (immediate)

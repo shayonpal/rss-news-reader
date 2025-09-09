@@ -81,8 +81,8 @@ const getDefaultPreferences = (): PreferencesData => ({
     contentFocus: "general",
   },
   sync: {
-    maxArticles: 500,
-    retentionCount: 30,
+    maxArticles: 100,
+    retentionCount: 2000,
   },
 });
 
@@ -158,15 +158,15 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
         // Apply validation and clamping
         if (path === "sync.maxArticles") {
           const numValue = Number(value);
-          const { min, max } = PREFERENCES_CONSTRAINTS.sync.maxArticles;
+          const { max } = PREFERENCES_CONSTRAINTS.sync.maxArticles;
           value = Math.max(
-            min,
-            Math.min(max, isNaN(numValue) ? 500 : numValue)
+            1,
+            Math.min(max, isNaN(numValue) ? 100 : numValue)
           );
         } else if (path === "sync.retentionCount") {
           const numValue = Number(value);
-          const { min, max } = PREFERENCES_CONSTRAINTS.sync.retentionCount;
-          value = Math.max(min, Math.min(max, isNaN(numValue) ? 30 : numValue));
+          const { min } = PREFERENCES_CONSTRAINTS.sync.retentionCount;
+          value = Math.max(min, isNaN(numValue) ? 2000 : numValue);
         } else if (path === "ai.summaryLengthMin") {
           const numValue = Number(value);
           const { min, max } = PREFERENCES_CONSTRAINTS.ai.summaryLengthMin;
@@ -314,13 +314,13 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
           }
         } else if (field === "sync.maxArticles") {
           const value = draft.sync.maxArticles;
-          if (value < 10 || value > 5000) {
-            error = "Max articles must be between 10 and 5000";
+          if (value < 1 || value > 5000) {
+            error = "Max articles must be between 1 and 5000";
           }
         } else if (field === "sync.retentionCount") {
           const value = draft.sync.retentionCount;
-          if (value < 1 || value > 365) {
-            error = "Retention count must be between 1 and 365";
+          if (value < 1) {
+            error = "Retention count must be at least 1";
           }
         }
 
@@ -352,13 +352,13 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
         }
 
         // Validate ranges
-        if (draft.sync.maxArticles < 10 || draft.sync.maxArticles > 5000) {
+        if (draft.sync.maxArticles < 1 || draft.sync.maxArticles > 5000) {
           errors["sync.maxArticles"] =
-            "Max articles must be between 10 and 5000";
+            "Max articles must be between 1 and 5000";
         }
-        if (draft.sync.retentionCount < 1 || draft.sync.retentionCount > 365) {
+        if (draft.sync.retentionCount < 1) {
           errors["sync.retentionCount"] =
-            "Retention count must be between 1 and 365";
+            "Retention count must be at least 1";
         }
         if (draft.ai.summaryLengthMin < 50 || draft.ai.summaryLengthMin > 500) {
           errors["ai.summaryLengthMin"] =
