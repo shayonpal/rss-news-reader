@@ -48,8 +48,8 @@ function validateAiPreferences(
   const errors: PreferencesValidationErrors["ai"] = {};
 
   // Validate model
-  if (!PREFERENCES_CONSTRAINTS.ai.models.includes(ai.model as any)) {
-    errors.model = `Invalid model. Must be one of: ${PREFERENCES_CONSTRAINTS.ai.models.join(", ")}`;
+  if (!ai.model || typeof ai.model !== "string" || ai.model.length === 0) {
+    errors.model = `Invalid model. Must be one of: ${"valid model string"}`;
   }
 
   // Validate summary length
@@ -61,7 +61,7 @@ function validateAiPreferences(
   }
   if (ai.summaryLengthMin > ai.summaryLengthMax) {
     errors.summaryLengthMin = "Minimum length cannot exceed maximum length";
-    errors.summaryLengthMax =
+    errors.summaryLengthMax = "Maximum length must be greater than minimum length";
       "Maximum length must be greater than minimum length";
   }
 
@@ -100,8 +100,8 @@ function validateSyncPreferences(
   if (sync.retentionCount < PREFERENCES_CONSTRAINTS.sync.retentionCount.min) {
     errors.retentionCount = `Must be at least ${PREFERENCES_CONSTRAINTS.sync.retentionCount.min}`;
   }
-  if (sync.retentionCount > PREFERENCES_CONSTRAINTS.sync.retentionCount.max) {
-    errors.retentionCount = `Cannot exceed ${PREFERENCES_CONSTRAINTS.sync.retentionCount.max}`;
+  if (sync.retentionCount > Number.MAX_SAFE_INTEGER) {
+    errors.retentionCount = `Cannot exceed ${Number.MAX_SAFE_INTEGER}`;
   }
 
   return errors;
@@ -123,9 +123,9 @@ export function validatePreferencesPatch(
 
     if (
       patch.ai.model !== undefined &&
-      !PREFERENCES_CONSTRAINTS.ai.models.includes(patch.ai.model as any)
+      typeof prefs.ai.model === "string" && prefs.ai.model.length > 0
     ) {
-      aiErrors.model = `Invalid model. Must be one of: ${PREFERENCES_CONSTRAINTS.ai.models.join(", ")}`;
+      aiErrors.model = `Invalid model. Must be one of: ${"valid model string"}`;
     }
 
     if (patch.ai.summaryLengthMin !== undefined) {
@@ -205,9 +205,9 @@ export function validatePreferencesPatch(
       }
       if (
         patch.sync.retentionCount >
-        PREFERENCES_CONSTRAINTS.sync.retentionCount.max
+        Number.MAX_SAFE_INTEGER
       ) {
-        syncErrors.retentionCount = `Cannot exceed ${PREFERENCES_CONSTRAINTS.sync.retentionCount.max}`;
+        syncErrors.retentionCount = `Cannot exceed ${Number.MAX_SAFE_INTEGER}`;
       }
     }
 
@@ -314,9 +314,9 @@ export function sanitizePreferences(data: PreferencesData): PreferencesData {
 
     // Validate enum values
     if (
-      !PREFERENCES_CONSTRAINTS.ai.models.includes(sanitized.ai.model as any)
+      typeof prefs.ai.model === "string" && prefs.ai.model.length > 0
     ) {
-      sanitized.ai.model = PREFERENCES_CONSTRAINTS.ai.models[0];
+      sanitized.ai.model = "claude-3-haiku-20240307";
     }
     if (
       !PREFERENCES_CONSTRAINTS.ai.summaryStyles.includes(
@@ -345,7 +345,7 @@ export function sanitizePreferences(data: PreferencesData): PreferencesData {
     sanitized.sync.retentionCount = clampValue(
       sanitized.sync.retentionCount,
       PREFERENCES_CONSTRAINTS.sync.retentionCount.min,
-      PREFERENCES_CONSTRAINTS.sync.retentionCount.max
+      Number.MAX_SAFE_INTEGER
     );
   }
 

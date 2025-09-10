@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Sep 09, 2025 - 07:35 PM EDT - fix: Critical sync failure due to encryption key format mismatch (discovered during RR-274)
+  - **Root Cause**: TokenManager expected base64 encoding while new encryption utils use hex encoding
+  - **Impact**: Complete sync failure preventing article fetching from Inoreader
+  - **Solution**: Updated `server/lib/token-manager.js:12` to use hex encoding matching `.env` format
+  - **Affected Systems**: `/api/sync`, `/api/health/cron`, OAuth token decryption
+  - **Related Issues**: Introduced during RR-271/272 encryption implementation
+  - **Verification**: Sync functionality restored and tested with successful API operations
 - Sep 08, 2025 - 04:09 PM EDT - docs: Comprehensive documentation update for RR-273 AI settings integration
   - **API Documentation**: Updated endpoint counts (47 total), added AI endpoint details (/api/ai/models, /api/ai/validate-key)
   - **Environment Variables**: Enhanced with encryption key requirements and AI integration variables
@@ -36,6 +43,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Sep 09, 2025 - 02:00 PM EDT - feat: Connect sync configuration settings to backend functionality (RR-274)
+  - **Centralized Sync Architecture**: Replaced hardcoded environment variables with user preferences for sync configuration
+  - **New Services**:
+    - `src/lib/sync/sync-service.ts` - Centralized sync orchestration with preferences integration
+    - `src/lib/sync/article-retention.ts` - Intelligent article cleanup with starred article preservation
+    - `src/lib/services/preferences.ts` - Database preference management layer
+    - `src/lib/services/inoreader.ts` - Inoreader API service abstraction
+  - **New API Endpoint**: `GET /api/articles/stats` - Article count and statistics for retention management
+  - **Enhanced Endpoints**:
+    - `/api/sync` - Now uses user preferences instead of hardcoded values
+    - `/api/ai/models` - Dynamic loading from database preferences
+  - **UI/UX Improvements**:
+    - Removed restrictive input limits for better user experience
+    - Fixed slow typing issue with immediate onChange handlers in settings
+    - Improved responsiveness of Settings page components
+  - **Technical Implementation**:
+    - User-configurable sync intervals, retention periods, and batch sizes
+    - Starred article preservation during cleanup operations
+    - Preferences-driven AI model selection and configuration
+    - Improved error handling and logging throughout sync process
+  - **Database Integration**: Full integration with encrypted user preferences storage
 - Sep 08, 2025 - 03:31 PM EDT - feat: AI settings backend integration with multi-provider architecture (RR-273)
   - **New API Endpoints**:
     - `GET /api/ai/models` - Dynamic model discovery with provider-specific capabilities

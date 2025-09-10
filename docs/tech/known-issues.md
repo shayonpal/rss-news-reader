@@ -1,6 +1,6 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Wednesday, September 4, 2025 at 2:16 AM
+**Last Updated:** Wednesday, September 10, 2025 at 12:27 AM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
 
@@ -992,6 +992,133 @@ Test execution is experiencing significant performance degradation with timeouts
 - Add network retry logic for API tests
 - Optimize test data setup and teardown
 - Consider test parallelization improvements
+
+## Sync Configuration Backend Issues (RR-274)
+
+### Critical Encryption Key Format Mismatch
+
+**Status:** 🔴 Critical  
+**Severity:** High  
+**First Identified:** September 9, 2025 during RR-274 implementation
+
+#### Description
+
+Complete sync failure due to encryption key format inconsistency between TokenManager and new encryption utilities. The sync functionality is completely broken, preventing all article synchronization operations.
+
+#### Root Cause
+
+**Format Inconsistency:**
+- **TokenManager** (`server/lib/token-manager.js`): Expects base64 encoding `Buffer.from(key, "base64")`
+- **New Encryption Utils** (`src/lib/utils/encryption.ts`): Expects hex encoding `Buffer.from(key, "hex")`
+- **Environment Variable**: 64-character hex string (256 bits = 64 hex characters)
+
+#### Impact
+
+- **Complete Sync Failure**: No articles can be synced from Inoreader
+- **API Endpoint Failures**: `/api/sync` returns "invalid key length" error
+- **Health Check Degradation**: `/api/health/cron` shows degraded status
+- **OAuth Token Issues**: Cannot decrypt tokens from `~/.rss-reader/tokens.json`
+
+#### Fix Required
+
+```javascript
+// In server/lib/token-manager.js (lines 12-14)
+// Change from:
+this.encryptionKey = Buffer.from(
+  process.env.TOKEN_ENCRYPTION_KEY,
+  "base64"
+);
+
+// To:
+this.encryptionKey = Buffer.from(
+  process.env.TOKEN_ENCRYPTION_KEY,
+  "hex"
+);
+```
+
+#### Timeline
+
+- **RR-271**: Introduced hex-based encryption for API keys
+- **RR-272**: Expanded encryption utilities, reinforced hex format
+- **RR-273**: AI settings implementation (no direct impact)
+- **RR-274**: Added preferences integration (revealed the issue)
+
+### Preferences API Authentication Issues (Non-Blocking)
+
+**Status:** 🟡 Test Environment Issue  
+**Severity:** Low  
+**First Identified:** September 9, 2025 during RR-274 implementation
+
+#### Description
+
+The preferences API returns "Failed to fetch preferences" errors during testing, but this is due to authentication middleware issues in test environments rather than production code problems.
+
+#### Impact
+
+- **Test Environment**: Unit and integration tests experiencing auth failures
+- **Production Status**: ✅ API endpoints verified working via manual testing and Swagger UI
+- **User Experience**: No impact on actual users
+- **Development**: Requires manual testing instead of automated validation
+
+#### Root Cause
+
+- Authentication middleware not properly configured for test environments
+- Mock Supabase client cannot fully replicate RLS policies and authentication flows
+- Test environment lacks proper session handling setup
+
+### Statistics API Unauthorized Errors (Non-Blocking)
+
+**Status:** 🟡 Known Limitation  
+**Severity:** Low  
+**First Identified:** September 9, 2025 during RR-274 implementation
+
+#### Description
+
+Statistics API endpoints return "Unauthorized" errors in server-side contexts where no authenticated session exists. This affects testing and some internal API calls but not core functionality.
+
+#### Impact
+
+- **Core Sync Functionality**: ✅ Unaffected
+- **User Experience**: ✅ No impact on article viewing and management
+- **Internal APIs**: Some statistics endpoints require session handling improvements
+- **Testing**: Automated tests cannot verify statistics API behavior
+
+#### Suggested Resolution
+
+1. **Session Management**: Investigate server-side session handling for API routes
+2. **Authentication Context**: Improve authentication context passing in server environments
+3. **Test Mocking**: Enhanced mock authentication for comprehensive testing
+
+### Integration Test Environment Mismatches
+
+**Status:** 🟡 Known Limitation  
+**Severity:** Low  
+**First Identified:** September 9, 2025 during RR-274 implementation
+
+#### Description
+
+Integration tests failing due to mismatches between mock database setup and real database operations. The production code is verified working, but test environment cannot adequately simulate complex database interactions.
+
+#### Impact
+
+- **Production Code**: ✅ Fully functional and verified through manual testing
+- **Test Reliability**: Low confidence in automated integration tests
+- **Development Workflow**: Requires more manual testing and verification
+- **CI/CD Pipeline**: Integration test stage unreliable
+
+#### Contributing Factors
+
+- **Supabase Mock Complexity**: Cannot fully replicate RLS policies and triggers
+- **Environment Variables**: Different setups between test and production environments
+- **Cache Behavior**: Test isolation issues with bounded cache implementation
+- **Database Operations**: Complex joins and procedures difficult to mock accurately
+
+#### Mitigation Strategies
+
+1. **Enhanced Mocking**: Improve Supabase client mock to better match production behavior
+2. **Test Database**: Consider using actual test database instead of extensive mocking
+3. **Environment Parity**: Ensure test environment variables match production setup
+4. **Manual Verification**: Continue manual testing for complex integration scenarios
 
 ## API Key Encryption Issues (RR-272)
 

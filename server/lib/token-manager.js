@@ -9,10 +9,7 @@ class TokenManager {
     this.tokensPath =
       process.env.RSS_READER_TOKENS_PATH ||
       path.join(process.env.HOME, ".rss-reader", "tokens.json");
-    this.encryptionKey = Buffer.from(
-      process.env.TOKEN_ENCRYPTION_KEY,
-      "base64"
-    );
+    this.encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, "hex");
     this.clientId = process.env.INOREADER_CLIENT_ID;
     this.clientSecret = process.env.INOREADER_CLIENT_SECRET;
     this.tokens = null;
