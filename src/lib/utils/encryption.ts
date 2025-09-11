@@ -35,8 +35,10 @@ function validateKeyFormat(key: string): boolean {
  * @throws Error if key is not properly configured
  */
 function getEncryptionKey(): Buffer {
-  // Use only server-side environment variable for security
-  const keyHex = process.env.TOKEN_ENCRYPTION_KEY;
+  // Use NEXT_PUBLIC_ prefix for client-side availability
+  const keyHex =
+    process.env.NEXT_PUBLIC_TOKEN_ENCRYPTION_KEY ||
+    process.env.TOKEN_ENCRYPTION_KEY;
 
   if (!keyHex) {
     throw new Error("Encryption key not configured");

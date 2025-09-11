@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { usePreferencesEditorStore } from "@/lib/stores/preferences-editor-store";
 import { usePreferencesDomainStore } from "@/lib/stores/preferences-domain-store";
 import { debounce } from "@/lib/utils/debounce";
@@ -73,10 +74,22 @@ export function usePreferencesForm() {
     [editorStore]
   );
 
-  // Save preferences
+  // Save preferences with toast notifications
   const handleSave = useCallback(async () => {
+    // Debug: Log the draft and saved preferences
+    console.log("Draft preferences:", editorStore.draft);
+    console.log("Saved preferences:", domainStore.savedPreferences);
+
     const patch = editorStore.buildPatch(domainStore.savedPreferences);
+    console.log("Generated patch:", patch);
+
     if (!patch || Object.keys(patch).length === 0) {
+      console.log("No changes detected, skipping save");
+      return;
+    }
+
+    // Prevent concurrent saves
+    if (editorStore.isSaving) {
       return;
     }
 
@@ -84,8 +97,41 @@ export function usePreferencesForm() {
     try {
       await domainStore.savePreferences(patch);
       editorStore.clearDraft();
+
+      // Show success toast
+      toast.success("Preferences saved", {
+        className: "toast-success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Failed to save preferences:", error);
+
+      // Determine error type and show appropriate toast
+      const isNetworkError =
+        error instanceof Error &&
+        (error.message.includes("network") ||
+          error.message.includes("fetch") ||
+          error.message.includes("Failed to fetch"));
+
+      if (isNetworkError) {
+        toast.error("Network error. Check your connection and retry.", {
+          className: "toast-error",
+          duration: 5000,
+          action: {
+            label: "Retry",
+            onClick: () => handleSave(),
+          },
+        });
+      } else {
+        toast.error("Couldn't save preferences. Please retry.", {
+          className: "toast-error",
+          duration: 5000,
+          action: {
+            label: "Retry",
+            onClick: () => handleSave(),
+          },
+        });
+      }
     } finally {
       editorStore.setSaving(false);
     }

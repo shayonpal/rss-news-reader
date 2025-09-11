@@ -21,23 +21,23 @@ const AiSchema = z
     summaryLengthMin: z
       .number()
       .int()
-      .min(1)
-      .max(10)
+      .min(10)
+      .max(500)
       .optional()
       .transform((val) =>
-        val !== undefined ? Math.max(1, Math.min(10, val)) : val
-      ), // Clamp to 1-10 range
+        val !== undefined ? Math.max(10, Math.min(500, val)) : val
+      ), // Clamp to 10-500 range
     summaryLengthMax: z
       .number()
       .int()
-      .min(1)
-      .max(10)
+      .min(10)
+      .max(500)
       .optional()
       .transform((val) =>
-        val !== undefined ? Math.max(1, Math.min(10, val)) : val
-      ), // Clamp to 1-10 range
+        val !== undefined ? Math.max(10, Math.min(500, val)) : val
+      ), // Clamp to 10-500 range
     summaryStyle: z
-      .enum(["objective", "analytical", "concise", "detailed", "retrospective"]) // Added retrospective
+      .enum(["objective", "analytical", "concise", "detailed"])
       .optional(),
     contentFocus: z
       .enum([
@@ -45,10 +45,7 @@ const AiSchema = z
         "technical",
         "business",
         "educational",
-        "key-points",
-        "main-arguments",
-        "comprehensive",
-      ]) // Added more options
+      ])
       .nullable()
       .optional(),
     // Client may send apiKey change instructions in PUT
@@ -132,14 +129,13 @@ const PreferencesResponseSchema = z
         provider: z.enum(["anthropic", "openai"]), // Add provider field
         hasApiKey: z.boolean(),
         model: z.string(),
-        summaryLengthMin: z.number(),
-        summaryLengthMax: z.number(),
+        summaryLengthMin: z.number().min(10).max(500),
+        summaryLengthMax: z.number().min(10).max(500),
         summaryStyle: z.enum([
           "objective",
           "analytical",
           "concise",
           "detailed",
-          "retrospective",
         ]),
         contentFocus: z
           .enum([
@@ -147,9 +143,6 @@ const PreferencesResponseSchema = z
             "technical",
             "business",
             "educational",
-            "key-points",
-            "main-arguments",
-            "comprehensive",
           ])
           .nullable(),
       })
@@ -320,7 +313,10 @@ function getDefaultPreferences(): PreferencesResponse {
     },
     sync: {
       maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "100", 10), // RR-274: Default to 100
-      retentionCount: parseInt(process.env.ARTICLES_RETENTION_COUNT || "2000", 10), // RR-274: Default to 2000 articles
+      retentionCount: parseInt(
+        process.env.ARTICLES_RETENTION_COUNT || "2000",
+        10
+      ), // RR-274: Default to 2000 articles
     },
   };
 }

@@ -11,6 +11,7 @@ import {
   type EncryptedData,
 } from "@/lib/utils/encryption";
 import { ApiKeyCache } from "@/lib/utils/api-key-cache";
+import { getCurrentUserId } from "@/lib/utils/get-current-user";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -48,9 +49,9 @@ async function getApiKeyForUser(
     // Not in cache, fetch from database if not already provided
     if (!preferences) {
       const { data } = await supabase
-        .from("user_preferences")
+        .from("users")
         .select("preferences")
-        .eq("user_id", userId)
+        .eq("id", userId)
         .single();
       preferences = data;
     }
@@ -103,18 +104,14 @@ const postHandler = async (
   try {
     const { id } = params;
 
-    // Get user ID from auth
-    const authHeader = request.headers.get("authorization");
-    let userId: string | null = null;
-
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
-      const { data: userData } = await supabase.auth.getUser(token);
-      userId = userData?.user?.id || null;
-    }
+    // Get user ID using the single-user MVP system
+    const userId = await getCurrentUserId();
+    console.log("DEBUG: Summarize API - User ID from getCurrentUserId():", userId);
 
     // Get API key with caching support and preferences
     const { apiKey, keySource, preferences } = await getApiKeyForUser(userId);
+
+    console.log("DEBUG: Summarize API - Preferences loaded:", JSON.stringify(preferences, null, 2));
 
     // Return 403 if no API key is available
     if (!apiKey) {
@@ -188,6 +185,32 @@ const postHandler = async (
       .replace(/\s+/g, " ")
       .trim();
 
+    // Set user preferences for prompt builder if available
+    if (userId && preferences?.preferences?.ai) {
+      const aiPrefs = preferences.preferences.ai;
+      console.log("DEBUG: Summarize API - AI Preferences found:", JSON.stringify(aiPrefs, null, 2));
+      
+      // Convert min/max to word count range string for prompt
+      const wordCountRange =
+        aiPrefs.summaryLengthMin && aiPrefs.summaryLengthMax
+          ? `${aiPrefs.summaryLengthMin}-${aiPrefs.summaryLengthMax}`
+          : "150-175"; // Default fallback
+
+      console.log("DEBUG: Summarize API - Word count range:", wordCountRange);
+
+      SummaryPromptBuilder.setUserPreferences({
+        ai: {
+          summaryWordCount: wordCountRange,
+          summaryStyle: aiPrefs.summaryStyle || "objective",
+          model: aiPrefs.model,
+        },
+      });
+
+      console.log("DEBUG: Summarize API - User preferences set in SummaryPromptBuilder");
+    } else {
+      console.log("DEBUG: Summarize API - No AI preferences found, using defaults");
+    }
+
     // Generate summary using Claude with configurable prompt
     const prompt = SummaryPromptBuilder.buildPrompt({
       title: article.title,
@@ -200,6 +223,8 @@ const postHandler = async (
         (textContent.length > 10000 ? "...[truncated]" : ""),
     });
 
+    console.log("DEBUG: Summarize API - Generated prompt:", prompt.substring(0, 300) + "...");
+
     // Get model from user preferences or environment with fallback
     let claudeModel =
       process.env.CLAUDE_SUMMARIZATION_MODEL || "claude-sonnet-4-20250514";
@@ -207,11 +232,21 @@ const postHandler = async (
     // Use preferences already fetched from getApiKeyForUser
     if (userId && preferences?.preferences?.ai?.model) {
       claudeModel = preferences.preferences.ai.model;
+      console.log("DEBUG: Summarize API - Using user model preference:", claudeModel);
+    } else {
+      console.log("DEBUG: Summarize API - Using default model:", claudeModel);
     }
+
+    // Calculate max tokens based on user's max word count preference
+    // Rough estimate: 1 word ≈ 1.3 tokens for English text
+    const maxWords = preferences?.preferences?.ai?.summaryLengthMax || 300;
+    const maxTokens = Math.ceil(maxWords * 1.3);
+
+    console.log("DEBUG: Summarize API - Max words:", maxWords, "Max tokens:", maxTokens);
 
     const completion = await anthropic.messages.create({
       model: claudeModel,
-      max_tokens: 300,
+      max_tokens: maxTokens,
       temperature: 0.3,
       messages: [
         {
@@ -225,6 +260,8 @@ const postHandler = async (
       completion.content[0].type === "text"
         ? completion.content[0].text
         : "Failed to generate summary";
+
+    console.log("DEBUG: Summarize API - Generated summary length:", summary.length, "characters");
 
     // Update the article with AI summary
     const { error: updateError } = await supabase
@@ -269,7 +306,7 @@ const postHandler = async (
       { status: 500 }
     );
   }
-};
+};;;;
 
 // Export the wrapped handler with UUID validation
 export const POST = withArticleIdValidation(postHandler);

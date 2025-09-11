@@ -30,7 +30,7 @@ interface AiModel {
 
 export default function SettingsPage() {
   const router = useRouter();
-  
+
   // Models state
   const [models, setModels] = useState<AiModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(true);
@@ -84,17 +84,17 @@ export default function SettingsPage() {
     const fetchModels = async () => {
       try {
         setModelsLoading(true);
-        const response = await fetch('/api/ai/models');
+        const response = await fetch("/api/ai/models");
         if (response.ok) {
           const data = await response.json();
           setModels(data.models || []);
         } else {
-          console.error('Failed to fetch models:', response.statusText);
+          console.error("Failed to fetch models:", response.statusText);
           // Fallback to empty array - form will handle gracefully
           setModels([]);
         }
       } catch (error) {
-        console.error('Error fetching models:', error);
+        console.error("Error fetching models:", error);
         // Fallback to empty array - form will handle gracefully
         setModels([]);
       } finally {
@@ -241,17 +241,17 @@ export default function SettingsPage() {
                 </label>
                 <div className="mt-3">
                   <DualRangeSlider
-                    min={50}
+                    min={10}
                     max={500}
                     step={10}
-                    minValue={draft.ai.summaryLengthMin}
-                    maxValue={draft.ai.summaryLengthMax}
-                    onMinChange={(value) =>
-                      updateFieldImmediate("ai.summaryLengthMin", value)
-                    }
-                    onMaxChange={(value) =>
-                      updateFieldImmediate("ai.summaryLengthMax", value)
-                    }
+                    minValue={draft?.ai?.summaryLengthMin || 100}
+                    maxValue={draft?.ai?.summaryLengthMax || 300}
+                    onMinChange={(value) => {
+                      updateFieldImmediate("ai.summaryLengthMin", value);
+                    }}
+                    onMaxChange={(value) => {
+                      updateFieldImmediate("ai.summaryLengthMax", value);
+                    }}
                     formatValue={(value) => `${value} words`}
                     minLabel="Minimum"
                     maxLabel="Maximum"
@@ -355,7 +355,8 @@ export default function SettingsPage() {
                   />
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Oldest articles will be automatically cleaned up (starred articles preserved)
+                  Oldest articles will be automatically cleaned up (starred
+                  articles preserved)
                 </p>
               </div>
             </div>
@@ -383,8 +384,17 @@ export default function SettingsPage() {
               }`}
               disabled={!hasChanges || isSaving}
             >
-              <Save className="h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span>Save Changes</span>
+                </>
+              )}
             </button>
           </div>
         </form>

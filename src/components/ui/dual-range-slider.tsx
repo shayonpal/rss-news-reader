@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import { cn } from "@/lib/utils";
 
 interface DualRangeSliderProps {
@@ -22,7 +28,7 @@ interface DualRangeSliderProps {
   "aria-describedby"?: string;
 }
 
-export function DualRangeSlider({
+const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
   min = 0,
   max = 100,
   step = 1,
@@ -35,11 +41,11 @@ export function DualRangeSlider({
   maxLabel = "Maximum",
   disabled = false,
   className,
-  formatValue = (v) => v.toString(),
+  formatValue = (v: number) => v.toString(),
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
-}: DualRangeSliderProps) {
+}) => {
   const [isDragging, setIsDragging] = useState<"min" | "max" | null>(null);
   const minRef = useRef<HTMLInputElement>(null);
   const maxRef = useRef<HTMLInputElement>(null);
@@ -72,9 +78,25 @@ export function DualRangeSlider({
     [safeMinValue, step, max, onMaxChange]
   );
 
-  // Calculate fill percentage for the track
-  const minPercent = ((safeMinValue - min) / (max - min)) * 100;
-  const maxPercent = ((safeMaxValue - min) / (max - min)) * 100;
+  // Calculate fill percentage for the track - memoized for performance
+  const minPercent = useMemo(
+    () => ((safeMinValue - min) / (max - min)) * 100,
+    [safeMinValue, min, max]
+  );
+  const maxPercent = useMemo(
+    () => ((safeMaxValue - min) / (max - min)) * 100,
+    [safeMaxValue, min, max]
+  );
+
+  // Memoize clip paths for performance
+  const minClipPath = useMemo(
+    () => `inset(0 ${100 - maxPercent}% 0 0)`,
+    [maxPercent]
+  );
+  const maxClipPath = useMemo(
+    () => `inset(0 0 0 ${minPercent}%)`,
+    [minPercent]
+  );
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -224,8 +246,11 @@ export function DualRangeSlider({
           onMouseDown={() => handleThumbMouseDown("min")}
           onTouchStart={() => handleThumbMouseDown("min")}
           disabled={disabled}
-          className="absolute z-10 h-2 w-full cursor-pointer opacity-0"
-          style={{ pointerEvents: "auto" }}
+          className="absolute z-20 h-2 w-full cursor-pointer opacity-0"
+          style={{
+            pointerEvents: "auto",
+            clipPath: minClipPath,
+          }}
           aria-label={`${minLabel || "Minimum"} ${(label || "").toLowerCase()}`}
           aria-valuemin={min}
           aria-valuemax={max}
@@ -247,7 +272,10 @@ export function DualRangeSlider({
           onTouchStart={() => handleThumbMouseDown("max")}
           disabled={disabled}
           className="absolute z-10 h-2 w-full cursor-pointer opacity-0"
-          style={{ pointerEvents: "auto" }}
+          style={{
+            pointerEvents: "auto",
+            clipPath: maxClipPath,
+          }}
           aria-label={`${maxLabel || "Maximum"} ${(label || "").toLowerCase()}`}
           aria-valuemin={min}
           aria-valuemax={max}
@@ -292,7 +320,10 @@ export function DualRangeSlider({
       )}
     </div>
   );
-}
+};
+
+// Export with React.memo for performance
+export const DualRangeSlider = React.memo(DualRangeSliderComponent);
 
 // Styles for touch targets (44x44px minimum)
 const touchTargetStyles = `

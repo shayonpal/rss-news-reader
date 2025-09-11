@@ -61,7 +61,7 @@ function validateAiPreferences(
   }
   if (ai.summaryLengthMin > ai.summaryLengthMax) {
     errors.summaryLengthMin = "Minimum length cannot exceed maximum length";
-    errors.summaryLengthMax = "Maximum length must be greater than minimum length";
+    errors.summaryLengthMax =
       "Maximum length must be greater than minimum length";
   }
 
@@ -123,7 +123,7 @@ export function validatePreferencesPatch(
 
     if (
       patch.ai.model !== undefined &&
-      typeof prefs.ai.model === "string" && prefs.ai.model.length > 0
+      (typeof patch.ai.model !== "string" || patch.ai.model.length === 0)
     ) {
       aiErrors.model = `Invalid model. Must be one of: ${"valid model string"}`;
     }
@@ -203,10 +203,7 @@ export function validatePreferencesPatch(
       ) {
         syncErrors.retentionCount = `Must be at least ${PREFERENCES_CONSTRAINTS.sync.retentionCount.min}`;
       }
-      if (
-        patch.sync.retentionCount >
-        Number.MAX_SAFE_INTEGER
-      ) {
+      if (patch.sync.retentionCount > Number.MAX_SAFE_INTEGER) {
         syncErrors.retentionCount = `Cannot exceed ${Number.MAX_SAFE_INTEGER}`;
       }
     }
@@ -314,7 +311,9 @@ export function sanitizePreferences(data: PreferencesData): PreferencesData {
 
     // Validate enum values
     if (
-      typeof prefs.ai.model === "string" && prefs.ai.model.length > 0
+      !sanitized.ai.model ||
+      typeof sanitized.ai.model !== "string" ||
+      sanitized.ai.model.length === 0
     ) {
       sanitized.ai.model = "claude-3-haiku-20240307";
     }
