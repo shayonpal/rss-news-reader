@@ -17,7 +17,11 @@ export interface PreferencesData {
     summaryLengthMin: number;
     summaryLengthMax: number;
     summaryStyle: "objective" | "analytical" | "concise" | "detailed";
-    contentFocus: "general" | "technical" | "business" | "educational" | null;
+    contentFocus:
+      | "key-facts-arguments"
+      | "key-facts-impact"
+      | "key-facts-business"
+      | null;
   };
   sync: {
     maxArticles: number; // 1-5000
@@ -155,10 +159,10 @@ export const DEFAULT_PREFERENCES: PreferencesData = {
     hasApiKey: false,
     apiKey: null,
     model: "claude-3-haiku-20240307",
-    summaryLengthMin: 100,
-    summaryLengthMax: 300,
+    summaryLengthMin: 50,
+    summaryLengthMax: 200,
     summaryStyle: "objective",
-    contentFocus: "general",
+    contentFocus: "key-facts-arguments",
   },
   sync: {
     maxArticles: 100,
@@ -175,14 +179,13 @@ export const PREFERENCES_CONSTRAINTS = {
     retentionCount: { min: 1 },
   },
   ai: {
-    summaryLengthMin: { min: 50, max: 500 },
-    summaryLengthMax: { min: 50, max: 500 },
+    summaryLengthMin: { min: 10, max: 500 },
+    summaryLengthMax: { min: 10, max: 500 },
     summaryStyles: ["objective", "analytical", "concise", "detailed"] as const,
     contentFocusOptions: [
-      "general",
-      "technical",
-      "business",
-      "educational",
+      "key-facts-arguments",
+      "key-facts-impact",
+      "key-facts-business",
       null,
     ] as const,
     // Note: Models are now dynamically loaded from the ai_models database table

@@ -78,7 +78,7 @@ const getDefaultPreferences = (): PreferencesData => ({
     summaryLengthMin: 100,
     summaryLengthMax: 300,
     summaryStyle: "objective",
-    contentFocus: "general",
+    contentFocus: "key-facts-arguments",
   },
   sync: {
     maxArticles: 100,
@@ -159,35 +159,34 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
         if (path === "sync.maxArticles") {
           const numValue = Number(value);
           const { max } = PREFERENCES_CONSTRAINTS.sync.maxArticles;
-          value = Math.max(
-            1,
-            Math.min(max, isNaN(numValue) ? 100 : numValue)
-          );
+          value = Math.max(1, Math.min(max, isNaN(numValue) ? 100 : numValue));
         } else if (path === "sync.retentionCount") {
           const numValue = Number(value);
           const { min } = PREFERENCES_CONSTRAINTS.sync.retentionCount;
           value = Math.max(min, isNaN(numValue) ? 2000 : numValue);
         } else if (path === "ai.summaryLengthMin") {
-          const numValue = Number(value);
+          const numValue = typeof value === "number" ? value : Number(value);
           const { min, max } = PREFERENCES_CONSTRAINTS.ai.summaryLengthMin;
-          value = Math.max(
+          const clampedValue = Math.max(
             min,
             Math.min(max, isNaN(numValue) ? 100 : numValue)
           );
+          value = clampedValue;
           // Ensure min <= max
-          if (draft.ai && value > draft.ai.summaryLengthMax) {
-            newDraft.ai.summaryLengthMax = value;
+          if (draft.ai && clampedValue > draft.ai.summaryLengthMax) {
+            newDraft.ai.summaryLengthMax = clampedValue;
           }
         } else if (path === "ai.summaryLengthMax") {
-          const numValue = Number(value);
+          const numValue = typeof value === "number" ? value : Number(value);
           const { min, max } = PREFERENCES_CONSTRAINTS.ai.summaryLengthMax;
-          value = Math.max(
+          const clampedValue = Math.max(
             min,
             Math.min(max, isNaN(numValue) ? 300 : numValue)
           );
+          value = clampedValue;
           // Ensure min <= max
-          if (draft.ai && value < draft.ai.summaryLengthMin) {
-            newDraft.ai.summaryLengthMin = value;
+          if (draft.ai && clampedValue < draft.ai.summaryLengthMin) {
+            newDraft.ai.summaryLengthMin = clampedValue;
           }
         }
 
@@ -357,8 +356,7 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
             "Max articles must be between 1 and 5000";
         }
         if (draft.sync.retentionCount < 1) {
-          errors["sync.retentionCount"] =
-            "Retention count must be at least 1";
+          errors["sync.retentionCount"] = "Retention count must be at least 1";
         }
         if (draft.ai.summaryLengthMin < 50 || draft.ai.summaryLengthMin > 500) {
           errors["ai.summaryLengthMin"] =

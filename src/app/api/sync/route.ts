@@ -8,7 +8,10 @@ import { ArticleCleanupService } from "@/lib/services/cleanup-service";
 import { decodeHtmlEntities } from "@/lib/utils/html-decoder";
 import { captureRateLimitHeaders } from "@/lib/api/capture-rate-limit-headers";
 import { ApiUsageTracker } from "@/lib/api/api-usage-tracker";
-import type { InoreaderSubscription, InoreaderArticle } from "@/types/inoreader";
+import type {
+  InoreaderSubscription,
+  InoreaderArticle,
+} from "@/types/inoreader";
 import { getUserPreferences } from "@/lib/services/preferences";
 
 // Import token manager at top level to ensure it's bundled
@@ -468,7 +471,10 @@ async function performServerSync(syncId: string) {
 
     const countsData = await countsResponse.json();
     const unreadCounts = new Map(
-      countsData.unreadcounts?.map((item: { id: string; count: number }) => [item.id, item.count]) || []
+      countsData.unreadcounts?.map((item: { id: string; count: number }) => [
+        item.id,
+        item.count,
+      ]) || []
     );
 
     status.progress = 40;
@@ -542,7 +548,9 @@ async function performServerSync(syncId: string) {
 
     // RR-129: Clean up deleted feeds and their articles
     const cleanupService = new ArticleCleanupService(supabase);
-    const inoreaderFeedIds = subscriptions.map((sub: InoreaderSubscription) => sub.id);
+    const inoreaderFeedIds = subscriptions.map(
+      (sub: InoreaderSubscription) => sub.id
+    );
     const feedCleanupResult = await cleanupService.cleanupDeletedFeeds(
       inoreaderFeedIds,
       userId
@@ -710,7 +718,9 @@ async function performServerSync(syncId: string) {
 
       if (articlesToUpsert.length > 0) {
         // Clear any pending sync queue items for these articles
-        const inoreaderIds = articlesToUpsert.map((a: { inoreader_id: string }) => a.inoreader_id);
+        const inoreaderIds = articlesToUpsert.map(
+          (a: { inoreader_id: string }) => a.inoreader_id
+        );
         await supabase
           .from("sync_queue")
           .delete()
@@ -733,7 +743,12 @@ async function performServerSync(syncId: string) {
 
         // Apply conflict resolution to preserve local changes
         const articlesWithConflictResolution = articlesToUpsert.map(
-          (article: { inoreader_id: string; is_read: boolean; is_starred: boolean; [key: string]: any }) => {
+          (article: {
+            inoreader_id: string;
+            is_read: boolean;
+            is_starred: boolean;
+            [key: string]: any;
+          }) => {
             const existing = existingMap.get(article.inoreader_id);
 
             if (existing) {

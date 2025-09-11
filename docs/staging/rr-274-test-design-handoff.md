@@ -23,6 +23,7 @@
 ### 📦 Handoff Package Ready
 
 **Test Files Created:**
+
 1. `src/__tests__/unit/rr-274-preferences-api.test.ts` - Preference API validation
 2. `src/__tests__/integration/rr-274-article-retention.test.ts` - Article retention logic
 3. `src/__tests__/integration/rr-274-sync-configuration.test.ts` - Sync service configuration
@@ -33,12 +34,14 @@
 ### 🎯 Test Strategy Highlights
 
 #### 1. Preference API Tests
+
 - **Validation**: Min/max boundaries (10-5000 for maxArticles, 100-5000 for retention)
 - **Encryption**: AES-256-GCM encryption/decryption with error handling
 - **Persistence**: Partial updates, merge logic, database rollback
 - **Security**: Authentication checks, origin validation
 
 #### 2. Article Retention Tests
+
 - **Core Logic**: Delete oldest read articles first, preserve starred always
 - **Edge Cases**: All articles starred, empty lists, retention > total
 - **Concurrency**: Lock acquisition, concurrent operations handling
@@ -46,6 +49,7 @@
 - **Transactions**: Atomic operations with rollback on failure
 
 #### 3. Sync Configuration Tests
+
 - **Max Articles**: Respects limit during fetch, handles continuation tokens
 - **Multi-Feed**: Distributes limit across feeds proportionally
 - **Coordination**: Triggers retention after sync, prevents during active sync
@@ -53,6 +57,7 @@
 - **Error Recovery**: Sync succeeds even if retention fails
 
 #### 4. Statistics Endpoint Tests
+
 - **Accuracy**: Correct counts for total, unread, starred
 - **Real-time**: Updates after sync and retention operations
 - **Performance**: Response < 100ms, efficient caching with ETag
@@ -60,6 +65,7 @@
 - **Large Datasets**: Efficient with 10,000+ articles
 
 #### 5. E2E User Flow Tests
+
 - **Persistence**: Settings survive page reloads and sessions
 - **Validation**: Real-time error messages with instant feedback
 - **Loading States**: Proper UI feedback during async operations
@@ -70,6 +76,7 @@
 ### 🚀 Next Steps for Execute Phase
 
 1. **Run All Tests** (expect failures - TDD approach)
+
    ```bash
    npm run test:unit -- rr-274
    npm run test:integration -- rr-274
@@ -108,21 +115,25 @@
 ### 📊 Test Execution Strategy
 
 **Phase 1: Unit Tests First**
+
 - Run preference API tests to establish contract
 - Validate encryption/decryption cycle
 - Ensure proper validation boundaries
 
 **Phase 2: Integration Layer**
+
 - Implement retention service with tests
 - Connect sync to preferences
 - Verify statistics accuracy
 
 **Phase 3: End-to-End Validation**
+
 - Full user flows through UI
 - Mobile responsiveness checks
 - Performance under load
 
 **Phase 4: Edge Cases & Performance**
+
 - Concurrent operations
 - Large datasets (5000+ articles)
 - Network failure scenarios
@@ -139,21 +150,25 @@
 ### 📝 Implementation Notes
 
 **Database Considerations:**
+
 - Use indexes on `isStarred`, `isRead`, `publishedAt` for performance
 - Batch deletions in chunks of 1000 to avoid memory issues
 - Use database functions for atomic retention operations
 
 **API Design:**
+
 - RESTful endpoints with proper HTTP status codes
 - ETag caching for statistics endpoint
 - Merge semantics for partial preference updates
 
 **UI Integration:**
+
 - Debounce validation by 500ms
 - Show loading spinners during async operations
 - Clear error messages with field highlighting
 
 **Testing Infrastructure:**
+
 - Mock Supabase client for isolated tests
 - Use MSW for API endpoint testing
 - Playwright for cross-browser E2E tests

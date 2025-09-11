@@ -3,8 +3,8 @@
  * Uses actual Supabase connection with test data seeding
  */
 
-import { createClient } from '@/lib/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface TestUser {
   id: string;
@@ -52,11 +52,11 @@ export class DatabaseTestHelper {
       id: `test-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       email: `test-${Date.now()}@example.com`,
       inoreader_id: `test-inoreader-${Date.now()}`,
-      ...overrides
+      ...overrides,
     };
 
     const { data, error } = await this.supabase
-      .from('users')
+      .from("users")
       .insert(testUser)
       .select()
       .single();
@@ -72,17 +72,20 @@ export class DatabaseTestHelper {
   /**
    * Create test feeds for a user
    */
-  async createTestFeeds(userId: string, count: number = 2): Promise<TestFeed[]> {
+  async createTestFeeds(
+    userId: string,
+    count: number = 2
+  ): Promise<TestFeed[]> {
     const feeds: TestFeed[] = Array.from({ length: count }, (_, i) => ({
       id: `test-feed-${Date.now()}-${i}`,
       user_id: userId,
       inoreader_id: `feed/${Date.now()}/feed-${i}`,
       title: `Test Feed ${i + 1}`,
-      url: `https://example.com/feed-${i}.rss`
+      url: `https://example.com/feed-${i}.rss`,
     }));
 
     const { data, error } = await this.supabase
-      .from('feeds')
+      .from("feeds")
       .insert(feeds)
       .select();
 
@@ -90,7 +93,7 @@ export class DatabaseTestHelper {
       throw new Error(`Failed to create test feeds: ${error.message}`);
     }
 
-    this.testFeedIds.push(...feeds.map(f => f.id));
+    this.testFeedIds.push(...feeds.map((f) => f.id));
     return data;
   }
 
@@ -98,7 +101,7 @@ export class DatabaseTestHelper {
    * Create test articles for feeds
    */
   async createTestArticles(
-    feedIds: string[], 
+    feedIds: string[],
     articlesPerFeed: number,
     options: {
       readPercentage?: number;
@@ -106,16 +109,22 @@ export class DatabaseTestHelper {
       daySpread?: number;
     } = {}
   ): Promise<TestArticle[]> {
-    const { readPercentage = 0.3, starredPercentage = 0.05, daySpread = 30 } = options;
-    
+    const {
+      readPercentage = 0.3,
+      starredPercentage = 0.05,
+      daySpread = 30,
+    } = options;
+
     const articles: TestArticle[] = [];
     let articleCounter = 0;
 
     for (const feedId of feedIds) {
       for (let i = 0; i < articlesPerFeed; i++) {
         const daysAgo = Math.floor(Math.random() * daySpread);
-        const publishedDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-        
+        const publishedDate = new Date(
+          Date.now() - daysAgo * 24 * 60 * 60 * 1000
+        );
+
         const article: TestArticle = {
           id: `test-article-${Date.now()}-${articleCounter++}`,
           feed_id: feedId,
@@ -124,7 +133,7 @@ export class DatabaseTestHelper {
           content: `Test content for article ${articleCounter}`,
           is_read: Math.random() < readPercentage,
           is_starred: Math.random() < starredPercentage,
-          published_at: publishedDate.toISOString()
+          published_at: publishedDate.toISOString(),
         };
 
         articles.push(article);
@@ -132,7 +141,7 @@ export class DatabaseTestHelper {
     }
 
     const { data, error } = await this.supabase
-      .from('articles')
+      .from("articles")
       .insert(articles)
       .select();
 
@@ -140,28 +149,33 @@ export class DatabaseTestHelper {
       throw new Error(`Failed to create test articles: ${error.message}`);
     }
 
-    this.testArticleIds.push(...articles.map(a => a.id));
+    this.testArticleIds.push(...articles.map((a) => a.id));
     return data;
   }
 
   /**
    * Create articles with specific read/starred states
    */
-  async createSpecificArticles(feedId: string, specs: Array<{
-    count: number;
-    is_read: boolean;
-    is_starred: boolean;
-    daysAgo?: number;
-  }>): Promise<TestArticle[]> {
+  async createSpecificArticles(
+    feedId: string,
+    specs: Array<{
+      count: number;
+      is_read: boolean;
+      is_starred: boolean;
+      daysAgo?: number;
+    }>
+  ): Promise<TestArticle[]> {
     const articles: TestArticle[] = [];
     let articleCounter = 0;
 
     for (const spec of specs) {
       for (let i = 0; i < spec.count; i++) {
         const publishedDate = new Date(
-          Date.now() - (spec.daysAgo || 1) * 24 * 60 * 60 * 1000 - i * 60 * 60 * 1000
+          Date.now() -
+            (spec.daysAgo || 1) * 24 * 60 * 60 * 1000 -
+            i * 60 * 60 * 1000
         );
-        
+
         const article: TestArticle = {
           id: `test-specific-${Date.now()}-${articleCounter++}`,
           feed_id: feedId,
@@ -170,7 +184,7 @@ export class DatabaseTestHelper {
           content: `Specific content ${articleCounter}`,
           is_read: spec.is_read,
           is_starred: spec.is_starred,
-          published_at: publishedDate.toISOString()
+          published_at: publishedDate.toISOString(),
         };
 
         articles.push(article);
@@ -178,7 +192,7 @@ export class DatabaseTestHelper {
     }
 
     const { data, error } = await this.supabase
-      .from('articles')
+      .from("articles")
       .insert(articles)
       .select();
 
@@ -186,21 +200,23 @@ export class DatabaseTestHelper {
       throw new Error(`Failed to create specific articles: ${error.message}`);
     }
 
-    this.testArticleIds.push(...articles.map(a => a.id));
+    this.testArticleIds.push(...articles.map((a) => a.id));
     return data;
   }
 
   /**
    * Get real statistics for a user (what the API should return)
    */
-  async getExpectedStats(userId: string): Promise<{ total: number; unread: number; starred: number }> {
+  async getExpectedStats(
+    userId: string
+  ): Promise<{ total: number; unread: number; starred: number }> {
     // Get user's feed IDs
     const { data: userFeeds } = await this.supabase
-      .from('feeds')
-      .select('id')
-      .eq('user_id', userId);
+      .from("feeds")
+      .select("id")
+      .eq("user_id", userId);
 
-    const feedIds = userFeeds?.map(f => f.id) || [];
+    const feedIds = userFeeds?.map((f) => f.id) || [];
 
     if (feedIds.length === 0) {
       return { total: 0, unread: 0, starred: 0 };
@@ -209,25 +225,25 @@ export class DatabaseTestHelper {
     // Get counts
     const [totalResult, unreadResult, starredResult] = await Promise.all([
       this.supabase
-        .from('articles')
-        .select('*', { count: 'exact', head: true })
-        .in('feed_id', feedIds),
+        .from("articles")
+        .select("*", { count: "exact", head: true })
+        .in("feed_id", feedIds),
       this.supabase
-        .from('articles')
-        .select('*', { count: 'exact', head: true })
-        .in('feed_id', feedIds)
-        .eq('is_read', false),
+        .from("articles")
+        .select("*", { count: "exact", head: true })
+        .in("feed_id", feedIds)
+        .eq("is_read", false),
       this.supabase
-        .from('articles')
-        .select('*', { count: 'exact', head: true })
-        .in('feed_id', feedIds)
-        .eq('is_starred', true)
+        .from("articles")
+        .select("*", { count: "exact", head: true })
+        .in("feed_id", feedIds)
+        .eq("is_starred", true),
     ]);
 
     return {
       total: totalResult.count || 0,
       unread: unreadResult.count || 0,
-      starred: starredResult.count || 0
+      starred: starredResult.count || 0,
     };
   }
 
@@ -239,23 +255,17 @@ export class DatabaseTestHelper {
       // Delete in reverse order due to foreign key constraints
       if (this.testArticleIds.length > 0) {
         await this.supabase
-          .from('articles')
+          .from("articles")
           .delete()
-          .in('id', this.testArticleIds);
+          .in("id", this.testArticleIds);
       }
 
       if (this.testFeedIds.length > 0) {
-        await this.supabase
-          .from('feeds')
-          .delete()
-          .in('id', this.testFeedIds);
+        await this.supabase.from("feeds").delete().in("id", this.testFeedIds);
       }
 
       if (this.testUserIds.length > 0) {
-        await this.supabase
-          .from('users')
-          .delete()
-          .in('id', this.testUserIds);
+        await this.supabase.from("users").delete().in("id", this.testUserIds);
       }
 
       // Clear tracking arrays
@@ -263,7 +273,7 @@ export class DatabaseTestHelper {
       this.testFeedIds = [];
       this.testUserIds = [];
     } catch (error) {
-      console.warn('Test cleanup failed:', error);
+      console.warn("Test cleanup failed:", error);
       // Don't throw - cleanup failures shouldn't fail tests
     }
   }
@@ -271,12 +281,14 @@ export class DatabaseTestHelper {
   /**
    * Create a complete test scenario with user, feeds, and articles
    */
-  async setupCompleteScenario(specs: {
-    feedCount?: number;
-    articlesPerFeed?: number;
-    readPercentage?: number;
-    starredPercentage?: number;
-  } = {}): Promise<{
+  async setupCompleteScenario(
+    specs: {
+      feedCount?: number;
+      articlesPerFeed?: number;
+      readPercentage?: number;
+      starredPercentage?: number;
+    } = {}
+  ): Promise<{
     user: TestUser;
     feeds: TestFeed[];
     articles: TestArticle[];
@@ -286,13 +298,13 @@ export class DatabaseTestHelper {
       feedCount = 3,
       articlesPerFeed = 100,
       readPercentage = 0.4,
-      starredPercentage = 0.06
+      starredPercentage = 0.06,
     } = specs;
 
     const user = await this.createTestUser();
     const feeds = await this.createTestFeeds(user.id, feedCount);
     const articles = await this.createTestArticles(
-      feeds.map(f => f.id), 
+      feeds.map((f) => f.id),
       articlesPerFeed,
       { readPercentage, starredPercentage }
     );

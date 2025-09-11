@@ -27,7 +27,7 @@ const getDefaultPreferences = (): PreferencesData => ({
     summaryLengthMin: 100,
     summaryLengthMax: 300,
     summaryStyle: "objective",
-    contentFocus: "general",
+    contentFocus: "key-facts-arguments",
   },
   sync: {
     maxArticles: 500,
@@ -105,11 +105,19 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
           }
 
           const data = await response.json();
+          console.log(
+            "Loaded preferences from API:",
+            JSON.stringify(data, null, 2)
+          );
 
           // Sanitize response - never expose API keys
           // Handle both direct response and nested 'preferences' key
           const prefsData = data.preferences || data;
           const sanitized = sanitizeApiKeyResponse(prefsData);
+          console.log(
+            "Sanitized preferences:",
+            JSON.stringify(sanitized, null, 2)
+          );
 
           set({
             savedPreferences: sanitized,
@@ -147,6 +155,18 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
 
         try {
           const userId = await getCurrentUserId();
+          console.log("DEBUG: Final patch object before stringify:", patch);
+          console.log(
+            "DEBUG: Patch ai types:",
+            patch.ai &&
+              Object.entries(patch.ai).map(([key, value]) => [
+                key,
+                typeof value,
+                value,
+              ])
+          );
+          console.log("Sending patch to API:", JSON.stringify(patch, null, 2));
+
           const response = await fetch(
             `/reader/api/users/${userId}/preferences`,
             {
@@ -159,7 +179,10 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
           );
 
           if (!response.ok) {
-            throw new Error("Failed to save preferences");
+            const errorText = await response.text();
+            console.error("API Error Response:", errorText);
+            console.error("Response status:", response.status);
+            throw new Error(`Failed to save preferences: ${response.status}`);
           }
 
           const updated = await response.json();

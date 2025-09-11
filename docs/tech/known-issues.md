@@ -1008,6 +1008,7 @@ Complete sync failure due to encryption key format inconsistency between TokenMa
 #### Root Cause
 
 **Format Inconsistency:**
+
 - **TokenManager** (`server/lib/token-manager.js`): Expects base64 encoding `Buffer.from(key, "base64")`
 - **New Encryption Utils** (`src/lib/utils/encryption.ts`): Expects hex encoding `Buffer.from(key, "hex")`
 - **Environment Variable**: 64-character hex string (256 bits = 64 hex characters)
@@ -1024,16 +1025,10 @@ Complete sync failure due to encryption key format inconsistency between TokenMa
 ```javascript
 // In server/lib/token-manager.js (lines 12-14)
 // Change from:
-this.encryptionKey = Buffer.from(
-  process.env.TOKEN_ENCRYPTION_KEY,
-  "base64"
-);
+this.encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, "base64");
 
 // To:
-this.encryptionKey = Buffer.from(
-  process.env.TOKEN_ENCRYPTION_KEY,
-  "hex"
-);
+this.encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, "hex");
 ```
 
 #### Timeline

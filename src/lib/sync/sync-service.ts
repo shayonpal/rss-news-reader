@@ -111,21 +111,25 @@ export async function syncArticles(
         const articlesToStore = fetchResult.items.slice(0, remainingQuota);
 
         // Transform articles for database
-        const dbArticles: DatabaseArticle[] = articlesToStore.map((article: InoreaderArticle) => ({
-          id: article.id,
-          title: article.title || "Untitled",
-          url:
-            article.canonical?.[0]?.href || article.alternate?.[0]?.href || "",
-          content: article.summary?.content || "",
-          author: article.author || "",
-          published_at: article.published
-            ? new Date(article.published * 1000).toISOString()
-            : new Date().toISOString(),
-          feed_id: feedQuota.feedId,
-          user_id: userId,
-          starred: false,
-          read_status: false,
-        }));
+        const dbArticles: DatabaseArticle[] = articlesToStore.map(
+          (article: InoreaderArticle) => ({
+            id: article.id,
+            title: article.title || "Untitled",
+            url:
+              article.canonical?.[0]?.href ||
+              article.alternate?.[0]?.href ||
+              "",
+            content: article.summary?.content || "",
+            author: article.author || "",
+            published_at: article.published
+              ? new Date(article.published * 1000).toISOString()
+              : new Date().toISOString(),
+            feed_id: feedQuota.feedId,
+            user_id: userId,
+            starred: false,
+            read_status: false,
+          })
+        );
 
         // Upsert articles to database
         const { error: upsertError } = await supabase

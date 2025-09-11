@@ -62,7 +62,7 @@ export function sanitizeApiKeyResponse(
       summaryLengthMin: data?.ai?.summaryLengthMin || 100,
       summaryLengthMax: data?.ai?.summaryLengthMax || 300,
       summaryStyle: data?.ai?.summaryStyle || "objective",
-      contentFocus: data?.ai?.contentFocus || "general",
+      contentFocus: data?.ai?.contentFocus || "key-facts-arguments",
     },
     sync: {
       maxArticles: data?.sync?.maxArticles || 500,

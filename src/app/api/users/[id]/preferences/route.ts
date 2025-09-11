@@ -40,12 +40,7 @@ const AiSchema = z
       .enum(["objective", "analytical", "concise", "detailed"])
       .optional(),
     contentFocus: z
-      .enum([
-        "general",
-        "technical",
-        "business",
-        "educational",
-      ])
+      .enum(["key-facts-arguments", "key-facts-impact", "key-facts-business"])
       .nullable()
       .optional(),
     // Client may send apiKey change instructions in PUT
@@ -139,10 +134,9 @@ const PreferencesResponseSchema = z
         ]),
         contentFocus: z
           .enum([
-            "general",
-            "technical",
-            "business",
-            "educational",
+            "key-facts-arguments",
+            "key-facts-impact",
+            "key-facts-business",
           ])
           .nullable(),
       })
@@ -291,6 +285,18 @@ if (typeof process !== "undefined" && cleanupInterval) {
 
 // Default preferences from environment variables
 function getDefaultPreferences(): PreferencesResponse {
+  const envMaxArticles = process.env.SYNC_MAX_ARTICLES;
+  const parsedMaxArticles = parseInt(envMaxArticles || "100", 10);
+
+  console.log(
+    "DEBUG: getDefaultPreferences - SYNC_MAX_ARTICLES env:",
+    envMaxArticles
+  );
+  console.log(
+    "DEBUG: getDefaultPreferences - parsed maxArticles:",
+    parsedMaxArticles
+  );
+
   return {
     ai: {
       provider: "anthropic" as const,
@@ -306,13 +312,12 @@ function getDefaultPreferences(): PreferencesResponse {
           | "detailed") || "objective",
       contentFocus:
         (process.env.SUMMARY_CONTENT_FOCUS as
-          | "general"
-          | "technical"
-          | "business"
-          | "educational") || "general",
+          | "key-facts-arguments"
+          | "key-facts-impact"
+          | "key-facts-business") || "key-facts-arguments",
     },
     sync: {
-      maxArticles: parseInt(process.env.SYNC_MAX_ARTICLES || "100", 10), // RR-274: Default to 100
+      maxArticles: parsedMaxArticles, // RR-274: Default to environment variable
       retentionCount: parseInt(
         process.env.ARTICLES_RETENTION_COUNT || "2000",
         10

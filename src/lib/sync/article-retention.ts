@@ -78,13 +78,14 @@ export async function retainArticles(
       .eq("feeds.user_id", userId)
       .order("published_at", { ascending: true })
       .limit(articlesToDelete);
-      
+
     // Exclude starred articles if preserving
     if (options.preserveStarred) {
       selectQuery.eq("is_starred", false);
     }
-      
-    const { data: articlesToDeleteData, error: selectError } = await selectQuery;
+
+    const { data: articlesToDeleteData, error: selectError } =
+      await selectQuery;
 
     if (selectError) {
       result.error = `Failed to select articles for deletion: ${selectError.message}`;

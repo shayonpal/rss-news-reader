@@ -3,7 +3,7 @@
 **Date**: 2025-09-09  
 **Severity**: Critical  
 **Status**: Open  
-**Affected Versions**: After RR-271/272/273 implementation  
+**Affected Versions**: After RR-271/272/273 implementation
 
 ## Bug Summary
 
@@ -14,16 +14,18 @@ The sync functionality is completely broken due to an encryption key format mism
 ### Format Inconsistency
 
 1. **TokenManager** (`server/lib/token-manager.js`, lines 12-14):
+
    ```javascript
    this.encryptionKey = Buffer.from(
      process.env.TOKEN_ENCRYPTION_KEY,
-     "base64"  // <-- Expects base64 encoding
+     "base64" // <-- Expects base64 encoding
    );
    ```
 
 2. **New Encryption Utils** (`src/lib/utils/encryption.ts`):
+
    ```javascript
-   return Buffer.from(keyHex, "hex");  // <-- Expects hex encoding
+   return Buffer.from(keyHex, "hex"); // <-- Expects hex encoding
    ```
 
 3. **Environment Configuration** (`.env`):
@@ -63,16 +65,10 @@ Update `server/lib/token-manager.js` line 12-14:
 
 ```javascript
 // Change from:
-this.encryptionKey = Buffer.from(
-  process.env.TOKEN_ENCRYPTION_KEY,
-  "base64"
-);
+this.encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, "base64");
 
 // To:
-this.encryptionKey = Buffer.from(
-  process.env.TOKEN_ENCRYPTION_KEY,
-  "hex"
-);
+this.encryptionKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, "hex");
 ```
 
 ### Additional Considerations

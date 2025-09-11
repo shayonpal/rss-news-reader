@@ -14,12 +14,9 @@ export async function GET() {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // First get all feed IDs for this user
@@ -36,7 +33,7 @@ export async function GET() {
       );
     }
 
-    const feedIds = userFeeds?.map(feed => feed.id) || [];
+    const feedIds = userFeeds?.map((feed) => feed.id) || [];
 
     if (feedIds.length === 0) {
       // No feeds = no articles

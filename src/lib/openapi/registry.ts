@@ -75,8 +75,8 @@ const PreferencesPatchSchema = registry.register(
       ai: z
         .object({
           model: z.string().optional(),
-          summaryLengthMin: z.number().min(50).max(500).optional(),
-          summaryLengthMax: z.number().min(50).max(500).optional(),
+          summaryLengthMin: z.number().min(10).max(500).optional(),
+          summaryLengthMax: z.number().min(10).max(500).optional(),
           summaryStyle: z
             .enum(["objective", "analytical", "concise", "detailed"])
             .optional(),

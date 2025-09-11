@@ -58,8 +58,8 @@ export function buildPreferencesPatch(
     if (draft?.ai) {
       patch.ai = {
         model: draft.ai.model,
-        summaryLengthMin: draft.ai.summaryLengthMin,
-        summaryLengthMax: draft.ai.summaryLengthMax,
+        summaryLengthMin: Number(draft.ai.summaryLengthMin),
+        summaryLengthMax: Number(draft.ai.summaryLengthMax),
         summaryStyle: draft.ai.summaryStyle,
         contentFocus: draft.ai.contentFocus,
       };
@@ -67,8 +67,8 @@ export function buildPreferencesPatch(
 
     if (draft?.sync) {
       patch.sync = {
-        maxArticles: draft.sync.maxArticles,
-        retentionCount: draft.sync.retentionCount,
+        maxArticles: Number(draft.sync.maxArticles),
+        retentionCount: Number(draft.sync.retentionCount),
       };
     }
 
@@ -98,11 +98,33 @@ export function buildPreferencesPatch(
       hasAiChanges = true;
     }
     if (draft.ai.summaryLengthMin !== saved.ai?.summaryLengthMin) {
-      aiPatch.summaryLengthMin = draft.ai.summaryLengthMin;
+      console.log(
+        "DEBUG: summaryLengthMin type/value:",
+        typeof draft.ai.summaryLengthMin,
+        draft.ai.summaryLengthMin
+      );
+      const convertedMin = Number(draft.ai.summaryLengthMin);
+      console.log(
+        "DEBUG: converted summaryLengthMin type/value:",
+        typeof convertedMin,
+        convertedMin
+      );
+      aiPatch.summaryLengthMin = convertedMin;
       hasAiChanges = true;
     }
     if (draft.ai.summaryLengthMax !== saved.ai?.summaryLengthMax) {
-      aiPatch.summaryLengthMax = draft.ai.summaryLengthMax;
+      console.log(
+        "DEBUG: summaryLengthMax type/value:",
+        typeof draft.ai.summaryLengthMax,
+        draft.ai.summaryLengthMax
+      );
+      const convertedMax = Number(draft.ai.summaryLengthMax);
+      console.log(
+        "DEBUG: converted summaryLengthMax type/value:",
+        typeof convertedMax,
+        convertedMax
+      );
+      aiPatch.summaryLengthMax = convertedMax;
       hasAiChanges = true;
     }
     if (draft.ai.summaryStyle !== saved.ai?.summaryStyle) {
@@ -139,11 +161,11 @@ export function buildPreferencesPatch(
     let hasSyncChanges = false;
 
     if (draft.sync.maxArticles !== saved.sync?.maxArticles) {
-      syncPatch.maxArticles = draft.sync.maxArticles;
+      syncPatch.maxArticles = Number(draft.sync.maxArticles);
       hasSyncChanges = true;
     }
     if (draft.sync.retentionCount !== saved.sync?.retentionCount) {
-      syncPatch.retentionCount = draft.sync.retentionCount;
+      syncPatch.retentionCount = Number(draft.sync.retentionCount);
       hasSyncChanges = true;
     }
 

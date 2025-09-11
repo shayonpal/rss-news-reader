@@ -995,13 +995,41 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     set({ summarizingArticles: updatedSummarizingArticles });
 
     try {
+      // Get the current session for authentication
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      console.log("DEBUG: Frontend Session:", {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        tokenLength: session?.access_token?.length,
+        tokenStart: session?.access_token?.substring(0, 10),
+        sessionError,
+        user: session?.user?.id,
+      });
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      // Add Authorization header if user is authenticated
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+        console.log(
+          "DEBUG: Frontend Auth header set:",
+          headers.Authorization.substring(0, 20) + "..."
+        );
+      } else {
+        console.log("DEBUG: Frontend No access token available");
+      }
+
       const response = await fetch(
         `/reader/api/articles/${articleId}/summarize`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ regenerate }),
         }
       );

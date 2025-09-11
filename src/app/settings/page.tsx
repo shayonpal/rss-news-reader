@@ -295,20 +295,21 @@ export default function SettingsPage() {
                 </label>
                 <select
                   className="glass-input mt-1 w-full rounded-md px-3 py-2"
-                  value={draft.ai.contentFocus || "general"}
+                  value={draft.ai.contentFocus || "key-facts-arguments"}
                   onChange={handleSelectChange("ai.contentFocus")}
                 >
-                  <option value="general">General (balanced overview)</option>
-                  <option value="technical">
-                    Technical (code & implementation)
+                  <option value="key-facts-arguments">
+                    Key facts, main arguments, and important conclusions
                   </option>
-                  <option value="business">Business (strategy & impact)</option>
-                  <option value="educational">
-                    Educational (learning focused)
+                  <option value="key-facts-impact">
+                    Key facts, context, and implications
+                  </option>
+                  <option value="key-facts-business">
+                    Key facts, business impact, and implications
                   </option>
                 </select>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Adjusts the summary perspective and terminology
+                  Adjusts what aspects the summary focuses on
                 </p>
               </div>
             </div>
@@ -320,7 +321,7 @@ export default function SettingsPage() {
             icon={
               <CloudCheck className="h-4 w-4" data-testid="cloud-check-icon" />
             }
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <div className="space-y-4" data-testid="sync-section">
               {/* Max Articles Per Sync */}

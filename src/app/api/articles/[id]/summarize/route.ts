@@ -106,12 +106,18 @@ const postHandler = async (
 
     // Get user ID using the single-user MVP system
     const userId = await getCurrentUserId();
-    console.log("DEBUG: Summarize API - User ID from getCurrentUserId():", userId);
+    console.log(
+      "DEBUG: Summarize API - User ID from getCurrentUserId():",
+      userId
+    );
 
     // Get API key with caching support and preferences
     const { apiKey, keySource, preferences } = await getApiKeyForUser(userId);
 
-    console.log("DEBUG: Summarize API - Preferences loaded:", JSON.stringify(preferences, null, 2));
+    console.log(
+      "DEBUG: Summarize API - Preferences loaded:",
+      JSON.stringify(preferences, null, 2)
+    );
 
     // Return 403 if no API key is available
     if (!apiKey) {
@@ -188,8 +194,11 @@ const postHandler = async (
     // Set user preferences for prompt builder if available
     if (userId && preferences?.preferences?.ai) {
       const aiPrefs = preferences.preferences.ai;
-      console.log("DEBUG: Summarize API - AI Preferences found:", JSON.stringify(aiPrefs, null, 2));
-      
+      console.log(
+        "DEBUG: Summarize API - AI Preferences found:",
+        JSON.stringify(aiPrefs, null, 2)
+      );
+
       // Convert min/max to word count range string for prompt
       const wordCountRange =
         aiPrefs.summaryLengthMin && aiPrefs.summaryLengthMax
@@ -197,18 +206,27 @@ const postHandler = async (
           : "150-175"; // Default fallback
 
       console.log("DEBUG: Summarize API - Word count range:", wordCountRange);
+      console.log(
+        "DEBUG: Summarize API - Summary style:",
+        aiPrefs.summaryStyle
+      );
 
       SummaryPromptBuilder.setUserPreferences({
         ai: {
           summaryWordCount: wordCountRange,
           summaryStyle: aiPrefs.summaryStyle || "objective",
+          contentFocus: aiPrefs.contentFocus || "key-facts-arguments",
           model: aiPrefs.model,
         },
       });
 
-      console.log("DEBUG: Summarize API - User preferences set in SummaryPromptBuilder");
+      console.log(
+        "DEBUG: Summarize API - User preferences set in SummaryPromptBuilder"
+      );
     } else {
-      console.log("DEBUG: Summarize API - No AI preferences found, using defaults");
+      console.log(
+        "DEBUG: Summarize API - No AI preferences found, using defaults"
+      );
     }
 
     // Generate summary using Claude with configurable prompt
@@ -223,7 +241,10 @@ const postHandler = async (
         (textContent.length > 10000 ? "...[truncated]" : ""),
     });
 
-    console.log("DEBUG: Summarize API - Generated prompt:", prompt.substring(0, 300) + "...");
+    console.log("DEBUG: Summarize API - FULL GENERATED PROMPT:");
+    console.log("=====================================");
+    console.log(prompt);
+    console.log("=====================================");
 
     // Get model from user preferences or environment with fallback
     let claudeModel =
@@ -232,7 +253,10 @@ const postHandler = async (
     // Use preferences already fetched from getApiKeyForUser
     if (userId && preferences?.preferences?.ai?.model) {
       claudeModel = preferences.preferences.ai.model;
-      console.log("DEBUG: Summarize API - Using user model preference:", claudeModel);
+      console.log(
+        "DEBUG: Summarize API - Using user model preference:",
+        claudeModel
+      );
     } else {
       console.log("DEBUG: Summarize API - Using default model:", claudeModel);
     }
@@ -242,7 +266,12 @@ const postHandler = async (
     const maxWords = preferences?.preferences?.ai?.summaryLengthMax || 300;
     const maxTokens = Math.ceil(maxWords * 1.3);
 
-    console.log("DEBUG: Summarize API - Max words:", maxWords, "Max tokens:", maxTokens);
+    console.log(
+      "DEBUG: Summarize API - Max words:",
+      maxWords,
+      "Max tokens:",
+      maxTokens
+    );
 
     const completion = await anthropic.messages.create({
       model: claudeModel,
@@ -261,7 +290,11 @@ const postHandler = async (
         ? completion.content[0].text
         : "Failed to generate summary";
 
-    console.log("DEBUG: Summarize API - Generated summary length:", summary.length, "characters");
+    console.log(
+      "DEBUG: Summarize API - Generated summary length:",
+      summary.length,
+      "characters"
+    );
 
     // Update the article with AI summary
     const { error: updateError } = await supabase
@@ -306,7 +339,7 @@ const postHandler = async (
       { status: 500 }
     );
   }
-};;;;
+};
 
 // Export the wrapped handler with UUID validation
 export const POST = withArticleIdValidation(postHandler);

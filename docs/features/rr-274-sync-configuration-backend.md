@@ -48,12 +48,25 @@ interface UserPreferences {
     model: string;
     summaryLengthMin: number;
     summaryLengthMax: number;
-    summaryStyle: "objective" | "analytical" | "concise" | "detailed" | "retrospective";
-    contentFocus: "general" | "technical" | "business" | "educational" | "key-points" | "main-arguments" | "comprehensive" | null;
+    summaryStyle:
+      | "objective"
+      | "analytical"
+      | "concise"
+      | "detailed"
+      | "retrospective";
+    contentFocus:
+      | "general"
+      | "technical"
+      | "business"
+      | "educational"
+      | "key-points"
+      | "main-arguments"
+      | "comprehensive"
+      | null;
   };
   sync?: {
-    maxArticles: number;      // Range: 1-5000, default: 100
-    retentionCount: number;   // Range: 1+, default: 2000
+    maxArticles: number; // Range: 1-5000, default: 100
+    retentionCount: number; // Range: 1+, default: 2000
   };
   encryptedData?: {
     apiKeys?: {
@@ -68,6 +81,7 @@ interface UserPreferences {
 ### Row Level Security (RLS)
 
 The implementation relies on existing RLS policies that:
+
 - Ensure users can only access their own preferences
 - Maintain data isolation in multi-user scenarios
 - Provide secure database operations
@@ -94,6 +108,7 @@ const retentionCount = preferences?.sync?.retentionCount || 2000;
 ### Backwards Compatibility
 
 The system maintains full backwards compatibility:
+
 - Environment variables used as defaults when preferences don't exist
 - Graceful fallback if preference service fails
 - No breaking changes to existing sync behavior
@@ -105,6 +120,7 @@ The system maintains full backwards compatibility:
 Retrieves user preferences with defaults and caching.
 
 **Response Format:**
+
 ```json
 {
   "ai": {
@@ -124,6 +140,7 @@ Retrieves user preferences with defaults and caching.
 ```
 
 **Features:**
+
 - ETag support for client-side caching
 - 5-minute server-side cache with LRU eviction
 - Graceful error handling with default values
@@ -134,12 +151,14 @@ Retrieves user preferences with defaults and caching.
 Updates user preferences with validation and encryption.
 
 **Request Validation:**
+
 - `maxArticles`: 1-5000 range with integer validation
 - `retentionCount`: 1+ with integer validation
 - Zod schema validation for type safety
 - Request size limit (10KB maximum)
 
 **Security Features:**
+
 - AES-256-GCM encryption for sensitive data
 - Optimistic concurrency control via ETag
 - Input sanitization and validation
@@ -182,7 +201,7 @@ During sync operations:
 class BoundedCache {
   private maxSize = 100;           // Maximum cache entries
   private ttl = 5 * 60 * 1000;     // 5-minute TTL
-  
+
   features:
   - LRU eviction when at capacity
   - Adaptive cleanup based on cache size
@@ -203,12 +222,14 @@ class BoundedCache {
 ### Encryption System
 
 **AES-256-GCM Encryption:**
+
 - 256-bit encryption keys from `TOKEN_ENCRYPTION_KEY`
 - Unique initialization vectors (IV) per encryption
 - Authentication tags for integrity verification
 - Hex encoding for key format consistency
 
 **Environment Variables:**
+
 ```bash
 TOKEN_ENCRYPTION_KEY="[64-character hex string]"
 NEXT_PUBLIC_TOKEN_ENCRYPTION_KEY="[same hex string]"
@@ -222,7 +243,7 @@ return NextResponse.json(
   {
     error: "INTERNAL_ERROR",
     message: "Failed to update preferences",
-    details: sanitizeErrorMessage(error.message)
+    details: sanitizeErrorMessage(error.message),
   },
   { status: 500 }
 );
@@ -234,22 +255,25 @@ return NextResponse.json(
 
 **Issue**: Complete sync failure due to encryption key format inconsistency
 
-**Root Cause**: 
+**Root Cause**:
+
 - `TokenManager` expects base64 encoding: `Buffer.from(key, "base64")`
 - New encryption utilities expect hex encoding: `Buffer.from(key, "hex")`
 - Environment variable stored as 64-character hex string
 
 **Impact**:
+
 - All sync operations failing with "invalid key length" error
 - OAuth token decryption failures
 - API endpoints returning 500 errors
 
 **Fix Required**:
+
 ```javascript
 // In server/lib/token-manager.js (line 12-14)
 this.encryptionKey = Buffer.from(
   process.env.TOKEN_ENCRYPTION_KEY,
-  "hex"  // Changed from "base64"
+  "hex" // Changed from "base64"
 );
 ```
 
@@ -260,6 +284,7 @@ this.encryptionKey = Buffer.from(
 **File**: `src/__tests__/unit/rr-274-preferences-api.test.ts`
 
 **Test Scenarios:**
+
 - Default preference retrieval when none exist
 - Encrypted preference storage and retrieval
 - Validation of maxArticles range (1-5000)
@@ -270,12 +295,14 @@ this.encryptionKey = Buffer.from(
 
 ### Integration Test Coverage
 
-**Files**: 
+**Files**:
+
 - `src/__tests__/integration/rr-274-sync-configuration.test.ts`
 - `src/__tests__/integration/rr-274-article-retention.test.ts`
 - `src/__tests__/integration/rr-274-minimal-integration.test.ts`
 
 **Coverage Areas:**
+
 - Sync service integration with preferences
 - Article retention with starred preservation
 - End-to-end preference workflow

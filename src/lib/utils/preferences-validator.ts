@@ -330,7 +330,8 @@ export function sanitizePreferences(data: PreferencesData): PreferencesData {
       )
     ) {
       sanitized.ai.contentFocus =
-        PREFERENCES_CONSTRAINTS.ai.contentFocusOptions[0] || "general";
+        PREFERENCES_CONSTRAINTS.ai.contentFocusOptions[0] ||
+        "key-facts-arguments";
     }
   }
 

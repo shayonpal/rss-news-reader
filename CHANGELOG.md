@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Sep 11, 2025 - 02:33 AM EDT - fix: Comprehensive settings page and preferences system functionality restoration (RR-274)
+  - **API Validation**: Fixed schema conflicts preventing settings saves (changed max from 10 to 500 words in summary length validation)
+  - **Authentication System**: Fixed summarize API to use single-user MVP approach with getCurrentUserId() instead of cookie-based auth
+  - **Database Integration**: Fixed table references in getApiKeyForUser (corrected from user_preferences to users.preferences)
+  - **TypeScript Consistency**: Resolved enum mismatches between frontend and API schemas for content focus options
+  - **UI Performance**: Fixed dual-range slider z-index issues and optimized interaction behavior for word count controls
+  - **Validation Constraints**: Updated minimum word count from 50 to 10 words for more flexible summary preferences
+  - **Content Focus Options**: Implemented 3 user-selectable content focus choices:
+    - "Key facts, main arguments, and important conclusions" (default)
+    - "Key facts, context, and implications"
+    - "Key facts, business impact, and implications"
+  - **Environment Integration**: Fixed PM2 environment variable loading for SYNC_MAX_ARTICLES configuration
+  - **End-to-End Flow**: Verified sync endpoints properly respect maxArticles and retentionCount user preferences
+  - **Impact**: Complete settings system restoration - UI → API → Database → Sync/AI services integration now fully functional
 - Sep 09, 2025 - 07:35 PM EDT - fix: Critical sync failure due to encryption key format mismatch (discovered during RR-274)
   - **Root Cause**: TokenManager expected base64 encoding while new encryption utils use hex encoding
   - **Impact**: Complete sync failure preventing article fetching from Inoreader

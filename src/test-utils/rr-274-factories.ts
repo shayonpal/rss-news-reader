@@ -16,7 +16,9 @@ export interface TestArticle {
 /**
  * Create a single test article with optional overrides
  */
-export const createTestArticle = (overrides: Partial<TestArticle> = {}): TestArticle => ({
+export const createTestArticle = (
+  overrides: Partial<TestArticle> = {}
+): TestArticle => ({
   id: `article_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
   title: "Test Article",
   content: "Test content for article",
@@ -24,21 +26,21 @@ export const createTestArticle = (overrides: Partial<TestArticle> = {}): TestArt
   isStarred: false,
   publishedAt: new Date().toISOString(),
   feedId: "feed_001",
-  ...overrides
+  ...overrides,
 });
 
 /**
  * Create a batch of test articles
  */
 export const createArticleBatch = (
-  count: number, 
+  count: number,
   overrides: Partial<TestArticle> = {}
 ): TestArticle[] => {
-  return Array.from({ length: count }, (_, i) => 
+  return Array.from({ length: count }, (_, i) =>
     createTestArticle({
       id: `article_${i}`,
       publishedAt: new Date(Date.now() - i * 86400000).toISOString(), // Each article 1 day older
-      ...overrides
+      ...overrides,
     })
   );
 };
@@ -50,11 +52,11 @@ export const createMixedArticles = () => ({
   starred: createArticleBatch(100, { isStarred: true, isRead: true }),
   unread: createArticleBatch(200, { isRead: false, isStarred: false }),
   read: createArticleBatch(300, { isRead: true, isStarred: false }),
-  old: createArticleBatch(400, { 
+  old: createArticleBatch(400, {
     isRead: true,
     isStarred: false,
-    publishedAt: new Date(Date.now() - 30 * 86400000).toISOString() // 30 days old
-  })
+    publishedAt: new Date(Date.now() - 30 * 86400000).toISOString(), // 30 days old
+  }),
 });
 
 /**
@@ -64,19 +66,19 @@ export const createTestPreferences = (overrides: any = {}) => ({
   sync: {
     maxArticles: 100,
     retentionCount: 2000,
-    ...overrides.sync
+    ...overrides.sync,
   },
   ai: {
     enabled: false,
-    provider: 'anthropic',
-    model: 'claude-3-haiku-20240307',
+    provider: "anthropic",
+    model: "claude-3-haiku-20240307",
     maxTokens: 150,
-    ...overrides.ai
+    ...overrides.ai,
   },
   ui: {
-    theme: 'dark',
-    ...overrides.ui
-  }
+    theme: "dark",
+    ...overrides.ui,
+  },
 });
 
 /**
@@ -88,7 +90,7 @@ export const createTestFeed = (overrides: any = {}) => ({
   url: "https://example.com/feed.rss",
   iconUrl: "https://example.com/icon.png",
   categories: [],
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -100,7 +102,7 @@ export const createTestStats = (overrides: any = {}) => ({
   starred: 78,
   feeds: 12,
   lastSync: new Date().toISOString(),
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -113,15 +115,13 @@ export const createInoreaderResponse = (articles: number = 50) => ({
     summary: { content: `Content for article ${i}` },
     alternate: [{ href: `https://example.com/article-${i}` }],
     origin: {
-      streamId: 'feed/https://example.com/feed.rss',
-      title: 'Example Feed'
+      streamId: "feed/https://example.com/feed.rss",
+      title: "Example Feed",
     },
     published: Date.now() / 1000 - i * 3600, // Unix timestamp
-    categories: [
-      { id: 'user/-/state/com.google/reading-list' }
-    ]
+    categories: [{ id: "user/-/state/com.google/reading-list" }],
   })),
-  continuation: articles >= 50 ? `continuation_token_${Date.now()}` : undefined
+  continuation: articles >= 50 ? `continuation_token_${Date.now()}` : undefined,
 });
 
 /**
@@ -135,33 +135,40 @@ export const createTestSyncResult = (overrides: any = {}) => ({
   error: null,
   retentionError: null,
   duration: 0,
-  ...overrides
+  ...overrides,
 });
 
 /**
  * Create test database error
  */
-export const createDatabaseError = (code: string = 'PGRST116', message: string = 'Not found') => ({
+export const createDatabaseError = (
+  code: string = "PGRST116",
+  message: string = "Not found"
+) => ({
   code,
   message,
   details: null,
-  hint: null
+  hint: null,
 });
 
 /**
  * Generate articles at specific time intervals
  */
-export const createTimeBasedArticles = (intervals: { count: number; daysAgo: number }[]) => {
+export const createTimeBasedArticles = (
+  intervals: { count: number; daysAgo: number }[]
+) => {
   const articles: TestArticle[] = [];
   let idCounter = 0;
 
   intervals.forEach(({ count, daysAgo }) => {
     const baseTime = Date.now() - daysAgo * 86400000;
     for (let i = 0; i < count; i++) {
-      articles.push(createTestArticle({
-        id: `article_${idCounter++}`,
-        publishedAt: new Date(baseTime - i * 3600000).toISOString() // Each article 1 hour apart
-      }));
+      articles.push(
+        createTestArticle({
+          id: `article_${idCounter++}`,
+          publishedAt: new Date(baseTime - i * 3600000).toISOString(), // Each article 1 hour apart
+        })
+      );
     }
   });
 
@@ -175,7 +182,7 @@ export const createArticleMatrix = () => ({
   readStarred: createArticleBatch(50, { isRead: true, isStarred: true }),
   readUnstarred: createArticleBatch(100, { isRead: true, isStarred: false }),
   unreadStarred: createArticleBatch(25, { isRead: false, isStarred: true }),
-  unreadUnstarred: createArticleBatch(200, { isRead: false, isStarred: false })
+  unreadUnstarred: createArticleBatch(200, { isRead: false, isStarred: false }),
 });
 
 /**
@@ -190,13 +197,13 @@ export const createLargeDataset = (totalArticles: number = 5000) => {
     articles: [
       ...createArticleBatch(starred, { isStarred: true, isRead: true }),
       ...createArticleBatch(unread, { isStarred: false, isRead: false }),
-      ...createArticleBatch(read, { isStarred: false, isRead: true })
+      ...createArticleBatch(read, { isStarred: false, isRead: true }),
     ],
     stats: {
       total: totalArticles,
       starred,
       unread,
-      read
-    }
+      read,
+    },
   };
 };
