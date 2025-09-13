@@ -1,6 +1,6 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Friday, September 13, 2025 at 12:00 PM
+**Last Updated:** Saturday, September 13, 2025 at 8:27 AM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
 
@@ -1229,6 +1229,69 @@ The application is designed for single-user deployment. Adding multi-user suppor
 - **Audit logging** for all encryption/decryption operations
 - **Multi-tenant isolation** if multi-user support is added
 
+## API Documentation and OpenAPI Issues (RR-264)
+
+### Swagger UI Accessibility Issue
+
+**Status:** 🔴 Infrastructure Issue
+**Severity:** Low
+**First Identified:** September 13, 2025 during RR-264 Phase 2 validation
+
+#### Description
+
+Swagger UI at http://100.96.166.53:3000/reader/api-docs is currently inaccessible, preventing interactive API testing through the web interface. This issue was discovered during RR-264 comprehensive API endpoint validation when attempting to verify OpenAPI documentation coverage.
+
+#### Impact
+
+- **API Documentation**: ❌ Interactive "Try it out" functionality unavailable
+- **Developer Experience**: Cannot test API endpoints interactively via Swagger interface
+- **API Specification**: ✅ OpenAPI JSON spec remains accessible at /api-docs/openapi.json
+- **Core Functionality**: ✅ All API endpoints work correctly via direct calls (curl, Postman, etc.)
+
+#### Technical Details
+
+- **Swagger UI Endpoint**: http://100.96.166.53:3000/reader/api-docs (returns error/timeout)
+- **OpenAPI JSON**: http://100.96.166.53:3000/reader/api-docs/openapi.json (accessible)
+- **Direct API Access**: All documented endpoints respond correctly
+- **Documentation Coverage**: 100% coverage for health endpoints verified
+
+#### Workarounds Available
+
+1. **Direct API Testing**: Use curl commands or API clients (Postman, Insomnia)
+2. **OpenAPI Specification**: Import JSON spec into external tools for testing
+3. **Manual Validation**: Direct endpoint testing confirms functionality
+4. **Health Endpoints**: All 6 health endpoints accessible and documented
+
+#### Root Cause Investigation
+
+- Server configuration issue with Swagger UI static file serving
+- Potential Next.js App Router routing conflict with /api-docs path
+- Build process may not be properly serving Swagger UI assets
+- PM2 deployment configuration may be missing static file handling
+
+#### Suggested Resolution
+
+1. **Server Configuration**: Investigate PM2 and Next.js static file serving
+2. **Route Configuration**: Review Next.js App Router setup for /api-docs path
+3. **Build Validation**: Ensure Swagger UI assets are included in production build
+4. **Alternative Hosting**: Consider serving Swagger UI from separate endpoint or subdomain
+
+#### Priority Assessment
+
+**Low Priority** because:
+
+- All API endpoints function correctly
+- OpenAPI specification is accessible and complete
+- Alternative testing methods are available
+- Does not impact core application functionality
+- Documentation coverage goals (RR-264) can be achieved without interactive UI
+
+#### Related Work
+
+- **RR-264**: OpenAPI documentation coverage and endpoint validation
+- **Health Endpoints**: 6/6 health endpoints fully documented and accessible
+- **API Registry**: `src/lib/openapi/registry.ts` contains complete Zod schema documentation
+
 ## Settings Page User Feedback Issues (RR-288)
 
 ### CSS Backdrop-Filter Not Applying to ArticleStats Skeleton
@@ -1277,6 +1340,7 @@ The ArticleStats component's loading skeleton does not properly apply CSS backdr
 #### Priority Rationale
 
 This issue is classified as low priority because:
+
 - Core functionality (loading state display) works correctly
 - Visual impact is minimal and doesn't affect usability
 - No accessibility or performance concerns
@@ -1295,6 +1359,7 @@ Test environment setup for the usePreferencesForm hook experiences occasional co
 #### Technical Details
 
 The usePreferencesForm hook requires complex mock setup involving:
+
 - Multiple Zustand stores (preferences-editor-store, preferences-domain-store)
 - Sonner toast notification mocking
 - Debounced function testing with fake timers
@@ -1310,18 +1375,20 @@ The usePreferencesForm hook requires complex mock setup involving:
 #### Common Test Environment Issues
 
 1. **Store Mock Initialization**
+
    ```typescript
    // Occasional mock setup timing issues
    vi.mock("@/lib/stores/preferences-editor-store", () => ({
-     usePreferencesEditorStore: vi.fn(() => mockStore)
+     usePreferencesEditorStore: vi.fn(() => mockStore),
    }));
    ```
 
 2. **Toast Notification Mocking**
+
    ```typescript
    // Sonner mock occasionally needs explicit reset
    vi.mock("sonner", () => ({
-     toast: { success: vi.fn(), error: vi.fn() }
+     toast: { success: vi.fn(), error: vi.fn() },
    }));
    ```
 

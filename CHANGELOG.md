@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- 2025-09-13 08:27 - docs(RR-264): Technical documentation update for Swagger UI accessibility issue
+  - **Known Issues**: Added comprehensive documentation for Swagger UI accessibility issue discovered during RR-264 Phase 2 validation
+  - **Issue Details**: Swagger UI at http://100.96.166.53:3000/reader/api-docs currently inaccessible, preventing interactive API testing
+  - **Impact Assessment**: Low severity - all API endpoints function correctly via direct calls, OpenAPI JSON spec remains accessible
+  - **Workarounds**: Direct API testing (curl, Postman), OpenAPI JSON import to external tools, manual validation confirmed
+  - **Root Cause**: Server configuration issue with static file serving, potential Next.js App Router routing conflict
+  - **Updated Files**: docs/tech/known-issues.md (comprehensive issue documentation), docs/api/README.md (accessibility status update)
+  - **Technical Context**: Related to RR-264 OpenAPI documentation coverage validation - 100% coverage achieved for health endpoints
+  - **Priority**: Low - does not impact core functionality or documentation coverage goals
 - 2025-09-13 06:39 - docs(RR-288): Comprehensive technical documentation for Settings Page User Feedback & Loading States
   - **Implementation Guide**: Created comprehensive docs/features/rr-288-settings-feedback-system.md covering architecture, integration patterns, and performance metrics
   - **Technical Architecture**: Documented usePreferencesForm hook pattern, Sonner integration, and semantic CSS token usage
@@ -35,6 +44,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Saturday, September 13, 2025 at 8:38 AM - **RR-259**: UI consistency fix for mark all read button and confirm button widths
+  - **Issue**: Mark all read button and confirm button had inconsistent widths across different states and screen sizes
+  - **Solution**: Implemented responsive 3-stage breakpoint system for consistent button width behavior
+  - **Desktop (≥1024px)**: Both normal and confirming states use 160px min-width for perfect alignment
+  - **Tablet (768px-1023px)**: Both states use 120px min-width maintaining visual consistency
+  - **Mobile (<768px)**: Normal 80px, Confirm 120px (intentional asymmetry for text readability on small screens)
+  - **Technical Implementation**: Enhanced liquid-glass-button.css with responsive breakpoint system using CSS media queries
+  - **Files Modified**: src/styles/liquid-glass-button.css
+  - **User Impact**: Improved visual consistency and professional appearance across all device sizes
+
+- Saturday, September 13, 2025 at 8:38 AM - **Type Safety**: Replace z.any() with safer type definitions in OpenAPI schemas
+  - **Issue**: Using z.any() types in OpenAPI schemas reduces type safety and could mask potential runtime errors
+  - **Solution**: Replaced all 8 instances of z.any() with appropriate z.unknown() and z.record() types
+  - **Technical Details**: Updated OpenAPI schema definitions to use more specific type constraints
+  - **Files Modified**: src/lib/openapi/registry.ts
+  - **Benefits**: Improved type safety in API contracts, better IDE support, and more predictable runtime behavior
+
+- Sep 13, 2025 - 08:26 AM EDT - **RR-264**: Remove unused /api/analytics/fetch-stats endpoint and references
+  - **Issue**: Removed unused analytics endpoint that became obsolete after RR-267 replaced UI access point with Settings
+  - **Performance Benefits**: Eliminated 107KB/record storage anomaly, reduced API surface by 2.2% (44 endpoints total), and removed expensive aggregation queries
+  - **Technical Details**: Deleted src/app/api/analytics/fetch-stats/route.ts (290 lines), updated OpenAPI documentation (45→44 endpoints), cleaned POC references and test expectations
+  - **Risk Assessment**: Clean removal with zero risk - no active consumers or dependencies
+  - **Methodology**: Follows established RR-242 cleanup methodology
+  - **Related**: Depends on RR-267 (UI access point removal), similar to RR-242 (cleanup pattern)
 - Sep 13, 2025 - 07:32 AM EDT - **RR-293**: Fix settings page article statistics showing zeros instead of actual counts
   - **Issue**: ArticleStats component displayed zeros (0 total, 0 unread, 0 starred) instead of real article counts (959 total, 942 unread, 17 starred)
   - **Root Cause**: Component syntax error with duplicate JSX code block causing TypeScript compilation failure, not authentication issues as initially reported

@@ -45,8 +45,7 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
       const openApiDoc = generateOpenAPIDocument();
 
       const requiredEndpoints = [
-        // Analytics & Logs (2)
-        { path: "/api/analytics/fetch-stats", method: "GET" },
+        // Analytics & Logs (1)
         { path: "/api/logs/inoreader", method: "POST" },
 
         // Feeds (2)
@@ -81,24 +80,6 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
         expect(endpoint.tags).toBeDefined();
         expect(endpoint.tags.length).toBeGreaterThan(0);
       }
-    });
-
-    it("should have proper schemas for analytics endpoint", async () => {
-      const { generateOpenAPIDocument } = await import(
-        "@/lib/openapi/registry"
-      );
-      const openApiDoc = generateOpenAPIDocument();
-
-      const endpoint = openApiDoc.paths["/api/analytics/fetch-stats"]?.get;
-      expect(endpoint).toBeDefined();
-
-      // Check response schema
-      const response200 = endpoint.responses["200"];
-      expect(response200.content["application/json"]).toBeDefined();
-      expect(response200.content["application/json"].schema).toBeDefined();
-
-      // Check error response
-      expect(endpoint.responses["500"]).toBeDefined();
     });
 
     it("should have proper schemas for logs endpoint", async () => {
@@ -203,12 +184,12 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
   });
 
   describe("Validation Script Updates", () => {
-    it("should validate all 45 endpoints in the script", () => {
+    it("should validate all 44 endpoints in the script", () => {
       // Mock the validation script execution
       vi.mocked(execSync).mockReturnValue(
         JSON.stringify({
-          totalExpected: 45,
-          totalDocumented: 45,
+          totalExpected: 44,
+          totalDocumented: 44,
           coveragePercentage: 100,
         })
       );
@@ -216,8 +197,8 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
       const result = execSync("node scripts/validate-openapi-coverage.js");
       const report = JSON.parse(result.toString());
 
-      expect(report.totalExpected).toBe(45);
-      expect(report.totalDocumented).toBe(45);
+      expect(report.totalExpected).toBe(44);
+      expect(report.totalDocumented).toBe(44);
       expect(report.coveragePercentage).toBe(100);
     });
 
@@ -231,7 +212,7 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
         insomnia: 1,
         auth: 1,
         test: 7, // Including both GET and POST for simulate-rate-limit
-        analytics: 1,
+        analytics: 0,
         feeds: 2,
         users: 2,
         logs: 1,
@@ -242,7 +223,7 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
         0
       );
 
-      expect(totalEndpoints).toBe(45); // Corrected to 45 (not 43)
+      expect(totalEndpoints).toBe(44); // Updated after RR-264 analytics endpoint removal
     });
 
     it("should complete validation in less than 2 seconds", () => {
@@ -262,8 +243,8 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
     it("should generate comprehensive coverage report", () => {
       const mockReport = {
         timestamp: new Date().toISOString(),
-        totalExpected: 45,
-        totalDocumented: 45,
+        totalExpected: 44,
+        totalDocumented: 44,
         coveragePercentage: 100,
         categories: {
           health: { expected: 6, documented: 6, percentage: 100 },
@@ -274,7 +255,7 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
           insomnia: { expected: 1, documented: 1, percentage: 100 },
           auth: { expected: 1, documented: 1, percentage: 100 },
           test: { expected: 6, documented: 6, percentage: 100 },
-          analytics: { expected: 1, documented: 1, percentage: 100 },
+          analytics: { expected: 0, documented: 0, percentage: 100 },
           feeds: { expected: 2, documented: 2, percentage: 100 },
           users: { expected: 2, documented: 2, percentage: 100 },
           logs: { expected: 1, documented: 1, percentage: 100 },
@@ -282,7 +263,7 @@ describe("RR-208: OpenAPI Documentation Coverage", () => {
       };
 
       expect(mockReport.coveragePercentage).toBe(100);
-      expect(mockReport.totalExpected).toBe(45);
+      expect(mockReport.totalExpected).toBe(44);
 
       // Verify all categories have 100% coverage
       Object.values(mockReport.categories).forEach((category) => {

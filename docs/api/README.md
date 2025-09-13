@@ -51,10 +51,12 @@ This directory contains documentation for all API endpoints and server-side func
 
 **🎯 Complete OpenAPI Coverage Achieved (RR-208)**
 
-- **Swagger UI**: http://100.96.166.53:3000/reader/api-docs
+- **Swagger UI**: http://100.96.166.53:3000/reader/api-docs ⚠️ _Currently inaccessible - see Known Issues_
+- **OpenAPI JSON**: http://100.96.166.53:3000/reader/api-docs/openapi.json ✅ _Available_
 - **Coverage**: 100% (47/47 endpoints documented)
 - **Validation**: <2 second performance with `npm run docs:validate`
 - **Workflow**: `npm run docs:serve` to launch development server + Swagger UI
+- **Alternative**: Import OpenAPI JSON into external tools (Postman, Insomnia) for interactive testing
 
 ### New Documentation Workflow Scripts
 

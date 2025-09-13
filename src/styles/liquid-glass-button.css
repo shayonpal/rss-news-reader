@@ -128,25 +128,42 @@
 }
 
 /* ========================================
- * Responsive Behavior
+ * Responsive Behavior - 3 Breakpoint System
+ * Desktop (>=1024px): Full text + consistent width
+ * Tablet (768px-1023px): Icons only + medium width
+ * Mobile (<768px): Icons only + compact width
  * ======================================== */
 
-/* Desktop sizing */
-@media (min-width: 768px) {
+/* Stage 1: Desktop (>= 1024px) - Full text shown */
+@media (min-width: 1024px) {
   .liquid-glass-mark-all-read {
-    min-width: 140px;
+    min-width: 160px; /* Accommodate "Mark All Read" text */
   }
 
   .liquid-glass-mark-all-read.state-confirming {
-    min-width: 160px;
+    min-width: 160px; /* Same width as normal state */
   }
 }
 
-/* Mobile confirmation - expand when segmented control collapses */
-@media (max-width: 767px) {
+/* Stage 2: Tablet (768px - 1023px) - Icons only */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .liquid-glass-mark-all-read {
+    min-width: 120px; /* Medium width for icon + "Confirm?" */
+  }
+
   .liquid-glass-mark-all-read.state-confirming {
-    flex: 1;
-    min-width: 180px;
+    min-width: 120px; /* Consistent with normal state */
+  }
+}
+
+/* Stage 3: Mobile (< 768px) - Icons only, most compact */
+@media (max-width: 767px) {
+  .liquid-glass-mark-all-read {
+    min-width: 80px; /* Most compact for icon only */
+  }
+
+  .liquid-glass-mark-all-read.state-confirming {
+    min-width: 120px; /* Slightly wider for "Confirm?" text */
   }
 }
 

@@ -475,7 +475,7 @@ registry.registerPath({
           schema: z.object({
             error: z.string(),
             message: z.string(),
-            details: z.any(),
+            details: z.record(z.string(), z.unknown()).optional(),
           }),
         },
       },
@@ -890,7 +890,8 @@ registry.registerPath({
   method: "get",
   path: "/api/articles/stats",
   operationId: "getArticleStatistics",
-  description: "Get comprehensive article statistics for the authenticated user",
+  description:
+    "Get comprehensive article statistics for the authenticated user",
   summary: "Get article statistics (total, unread, starred)",
   tags: ["Articles"],
   responses: {
@@ -1051,7 +1052,7 @@ const InsomniaExportResponseSchema = registry.register(
         description: "Export source identifier",
         example: "rss-reader-openapi-converter",
       }),
-      resources: z.array(z.any()).openapi({
+      resources: z.array(z.record(z.string(), z.unknown())).openapi({
         description:
           "Array of Insomnia resources (workspace, environments, folders, requests)",
       }),
@@ -1176,7 +1177,7 @@ const SyncErrorResponseSchema = registry.register(
         description: "Optional error code",
         example: "429",
       }),
-      details: z.any().optional().openapi({
+      details: z.record(z.string(), z.unknown()).optional().openapi({
         description: "Optional additional error context",
       }),
     })
@@ -3605,7 +3606,7 @@ const InoreaderDebugResponseSchema = z
     isExpired: z.boolean().nullable().openapi({
       description: "Whether token is expired",
     }),
-    cookies: z.record(z.string(), z.any()).openapi({
+    cookies: z.record(z.string(), z.unknown()).openapi({
       description: "Cookie information",
     }),
   })
@@ -3613,7 +3614,7 @@ const InoreaderDebugResponseSchema = z
 
 const InoreaderDevResponseSchema = z
   .object({
-    data: z.any().openapi({
+    data: z.unknown().openapi({
       description: "API response data",
     }),
     headers: z.record(z.string(), z.string()).openapi({
@@ -4246,7 +4247,7 @@ if (process.env.NODE_ENV !== "production") {
       body: {
         content: {
           "application/json": {
-            schema: z.any().openapi({
+            schema: z.unknown().openapi({
               description: "Request body to send to Inoreader",
             }),
           },
@@ -4316,129 +4317,13 @@ if (process.env.NODE_ENV !== "production") {
     },
   });
 
-  // Analytics endpoint (RR-208)
-  const AnalyticsStatsResponseSchema = z.object({
-    fetchStats: z
-      .object({
-        totalAttempts: z.number().describe("Total content fetch attempts"),
-        successCount: z.number().describe("Successful fetches"),
-        failureCount: z.number().describe("Failed fetches"),
-        autoFetchCount: z.number().describe("Automatic fetch attempts"),
-        manualFetchCount: z.number().describe("Manual fetch attempts"),
-        avgDurationMs: z
-          .number()
-          .nullable()
-          .describe("Average fetch duration in milliseconds"),
-        commonErrors: z
-          .array(
-            z.object({
-              reason: z.string().describe("Error reason"),
-              count: z.number().describe("Occurrence count"),
-            })
-          )
-          .describe("Most common error reasons"),
-      })
-      .describe("Content fetching statistics"),
-    syncStats: z
-      .object({
-        totalSyncs: z.number().describe("Total sync operations"),
-        lastSyncTime: z
-          .string()
-          .nullable()
-          .describe("Last successful sync timestamp"),
-        avgSyncDuration: z
-          .number()
-          .nullable()
-          .describe("Average sync duration in seconds"),
-      })
-      .describe("Sync operation statistics"),
-    apiUsage: z
-      .object({
-        zone1Usage: z.number().describe("Read operations usage"),
-        zone1Limit: z.number().describe("Read operations limit"),
-        zone2Usage: z.number().describe("Write operations usage"),
-        zone2Limit: z.number().describe("Write operations limit"),
-        resetAfter: z
-          .number()
-          .nullable()
-          .describe("Seconds until rate limit reset"),
-      })
-      .describe("API usage and rate limits"),
-  });
-
-  registry.registerPath({
-    method: "get",
-    path: "/api/analytics/fetch-stats",
-    operationId: "getAnalyticsStats",
-    summary: "Get analytics and statistics",
-    description:
-      "Retrieves comprehensive analytics including fetch statistics, sync metrics, and API usage data",
-    tags: ["Analytics"],
-    responses: {
-      200: {
-        description: "Analytics data retrieved successfully",
-        content: {
-          "application/json": {
-            schema: AnalyticsStatsResponseSchema,
-            examples: {
-              success: {
-                value: {
-                  fetchStats: {
-                    totalAttempts: 1250,
-                    successCount: 1180,
-                    failureCount: 70,
-                    autoFetchCount: 950,
-                    manualFetchCount: 300,
-                    avgDurationMs: 2345,
-                    commonErrors: [
-                      { reason: "Network timeout", count: 25 },
-                      { reason: "Content not found", count: 20 },
-                    ],
-                  },
-                  syncStats: {
-                    totalSyncs: 48,
-                    lastSyncTime: "2025-08-15T10:30:00.000Z",
-                    avgSyncDuration: 12.5,
-                  },
-                  apiUsage: {
-                    zone1Usage: 3500,
-                    zone1Limit: 5000,
-                    zone2Usage: 45,
-                    zone2Limit: 100,
-                    resetAfter: 3600,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      500: {
-        description: "Server error",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-            examples: {
-              error: {
-                value: {
-                  error: "Failed to retrieve analytics",
-                  details: "Database connection error",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
   // Logs endpoint (RR-208)
   const LogEventRequestSchema = z.object({
     event: z.string().describe("Event type"),
     level: z.enum(["info", "warn", "error"]).describe("Log level"),
     message: z.string().describe("Log message"),
     metadata: z
-      .record(z.string(), z.any())
+      .record(z.string(), z.unknown())
       .optional()
       .describe("Additional metadata"),
     timestamp: z.string().optional().describe("Event timestamp (ISO 8601)"),
@@ -4853,7 +4738,7 @@ if (process.env.NODE_ENV !== "production") {
           z.object({
             timestamp: z.string(),
             operation: z.string(),
-            data: z.any(),
+            data: z.unknown(),
           })
         )
         .describe("Captured audit trail data"),

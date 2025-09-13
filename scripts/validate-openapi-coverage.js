@@ -14,7 +14,7 @@
 const fs = require("fs");
 const path = require("path");
 
-// RR-208: Expected endpoints for 100% coverage (45 total)
+// RR-208: Expected endpoints for 100% coverage (44 total)
 const EXPECTED_HEALTH_ENDPOINTS = [
   "GET /api/health",
   "GET /api/health/app",
@@ -72,7 +72,7 @@ const EXPECTED_TEST_ENDPOINTS = [
   "POST /api/test/force-update-usage",
 ];
 
-const EXPECTED_ANALYTICS_ENDPOINTS = ["GET /api/analytics/fetch-stats"];
+const EXPECTED_ANALYTICS_ENDPOINTS = [];
 
 const EXPECTED_FEEDS_ENDPOINTS = [
   "GET /api/feeds/{id}/stats",
@@ -326,7 +326,7 @@ async function validateCoverage() {
       log("green", "🎉 SUCCESS: All endpoints are properly documented!");
       log(
         "green",
-        "✅ RR-208: 100% OpenAPI coverage achieved (45/45 endpoints)"
+        "✅ RR-208: 100% OpenAPI coverage achieved (44/44 endpoints)"
       );
       return true;
     } else {
