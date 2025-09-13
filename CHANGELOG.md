@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Sep 13, 2025 - 07:32 AM EDT - **RR-293**: Fix settings page article statistics showing zeros instead of actual counts
+  - **Issue**: ArticleStats component displayed zeros (0 total, 0 unread, 0 starred) instead of real article counts (959 total, 942 unread, 17 starred)
+  - **Root Cause**: Component syntax error with duplicate JSX code block causing TypeScript compilation failure, not authentication issues as initially reported
+  - **Fix**: Removed malformed duplicate code from `src/components/settings/article-stats.tsx` (lines 152-197)
+  - **Note**: API endpoint was working correctly throughout - issue description claiming `supabase.auth.getUser()` authentication problems was incorrect
 - Sep 13, 2025 - 06:19 AM EDT - fix: Dual-range slider UI improvements and interaction fixes
   - **Dark Mode Visibility**: Replaced broken CSS tokens (--glass-surface-dim, --glass-accent-primary) with working brand accent colors
   - **Enhanced Contrast**: Increased track opacity from 5%/25% to 15%/45% for better visibility in all lighting conditions

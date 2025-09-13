@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserId } from "@/lib/utils/get-current-user";
 
 /**
  * RR-274: Article Statistics API Endpoint
@@ -9,21 +10,14 @@ export async function GET() {
   try {
     const supabase = createClient();
 
-    // Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Get current user ID (single-user MVP system)
+    const userId = await getCurrentUserId();
 
     // First get all feed IDs for this user
     const { data: userFeeds, error: feedsError } = await supabase
       .from("feeds")
       .select("id")
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
     if (feedsError) {
       console.error("Error fetching user feeds:", feedsError);

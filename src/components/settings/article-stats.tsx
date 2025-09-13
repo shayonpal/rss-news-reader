@@ -89,47 +89,45 @@ export function ArticleStats() {
 
   return (
     <div
-      className="glass-morphing stats-container mb-6 space-y-4 rounded-lg p-4"
+      className="glass-morphing glass-blur-md glass-border mb-6 rounded-lg p-4"
       data-testid="article-stats"
-      aria-label="Article statistics summary"
+      style={{
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}
     >
-      <dl className="stats-grid space-y-4">
+      <h3 className="text-semantic-text-primary mb-4 font-medium">
+        Article Statistics
+      </h3>
+      <div className="space-y-4">
         <div className="stat-item flex min-h-[44px] items-center justify-between">
-          <dt className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Total Articles
-          </dt>
-          <dd
-            className="text-2xl font-semibold text-gray-900 dark:text-gray-100"
-            aria-label={`Total articles: ${formatNumber(stats.total)}`}
+          <span className="text-semantic-text-secondary">Total:</span>
+          <span
+            className="text-semantic-text-primary text-xl font-semibold"
+            data-testid="total-count"
           >
             {formatNumber(stats.total)}
-          </dd>
+          </span>
         </div>
-
         <div className="stat-item flex min-h-[44px] items-center justify-between">
-          <dt className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Unread
-          </dt>
-          <dd
-            className="text-2xl font-semibold text-gray-900 dark:text-gray-100"
-            aria-label={`Unread articles: ${formatNumber(stats.unread)}`}
+          <span className="text-semantic-text-secondary">Unread:</span>
+          <span
+            className="text-semantic-text-primary text-xl font-semibold"
+            data-testid="unread-count"
           >
             {formatNumber(stats.unread)}
-          </dd>
+          </span>
         </div>
-
         <div className="stat-item flex min-h-[44px] items-center justify-between">
-          <dt className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Starred
-          </dt>
-          <dd
-            className="text-2xl font-semibold text-gray-900 dark:text-gray-100"
-            aria-label={`Starred articles: ${formatNumber(stats.starred)}`}
+          <span className="text-semantic-text-secondary">Starred:</span>
+          <span
+            className="text-semantic-text-primary text-xl font-semibold"
+            data-testid="starred-count"
           >
             {formatNumber(stats.starred)}
-          </dd>
+          </span>
         </div>
-      </dl>
+      </div>
     </div>
   );
 }
