@@ -204,6 +204,14 @@ One-line summary
 
 Standard progression: Backlog → Todo → In Progress → In Review → Done (or Canceled/Duplicate)
 
+#### Project Assignment Status Rules
+
+When assigning an issue to a project:
+- **If issue is in `Backlog` status**: ALWAYS change status to `Todo` when assigning the project
+- **If issue is in any other status** (Todo, In Progress, In Review, Done, etc.): DO NOT modify the status when assigning the project
+
+This ensures that issues being assigned to projects are automatically moved from Backlog to Todo to indicate they're ready for work, while preserving the status of issues that are already in progress or completed.
+
 ### Project/Epic Guidelines
 
 Create projects when:

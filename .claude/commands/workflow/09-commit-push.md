@@ -1,9 +1,9 @@
 ---
-description: Commit and push changes using symbolic analysis for precise change tracking and validation
+description: Step 9 - Commit and push changes using symbolic analysis for precise change tracking and validation
 argument-hint: [linear-issue-id]
 ---
 
-# Commit and Push Changes with Symbol Analysis
+# Step 9: Commit & Push - Changes with Symbol Analysis
 
 ## Project Activation
 

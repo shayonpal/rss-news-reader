@@ -1,9 +1,9 @@
 ---
-description: Test implemented feature using symbolic analysis and comprehensive validation against Linear acceptance criteria
+description: Step 7 - Test implemented feature using symbolic analysis and comprehensive validation against Linear acceptance criteria
 argument_hint: <linear-issue-id>
 ---
 
-# Test Implementation with Symbol Analysis
+# Step 7: Test - Implementation Validation with Symbol Analysis
 
 ## Project Activation
 

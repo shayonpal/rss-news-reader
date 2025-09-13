@@ -67,13 +67,13 @@ The central coordination point for user feedback, implementing debounced updates
 ```typescript
 // Toast notification with semantic CSS classes
 toast.success("Preferences saved", {
-  className: "toast-success",  // RR-247 semantic token
+  className: "toast-success", // RR-247 semantic token
   duration: 3000,
 });
 
 // Error with retry action
 toast.error("Network error. Check your connection and retry.", {
-  className: "toast-error",    // RR-247 semantic token
+  className: "toast-error", // RR-247 semantic token
   duration: 5000,
   action: {
     label: "Retry",
@@ -86,11 +86,11 @@ toast.error("Network error. Check your connection and retry.", {
 
 ```typescript
 // Network error detection
-const isNetworkError = error instanceof Error && (
-  error.message.includes("network") ||
-  error.message.includes("fetch") ||
-  error.message.includes("Failed to fetch")
-);
+const isNetworkError =
+  error instanceof Error &&
+  (error.message.includes("network") ||
+    error.message.includes("fetch") ||
+    error.message.includes("Failed to fetch"));
 
 // Context-aware error messages
 if (isNetworkError) {
@@ -227,13 +227,13 @@ RR-288 leverages the semantic CSS token system from RR-247 for consistent visual
 // Standard success pattern
 toast.success("Operation completed", {
   className: "toast-success",
-  duration: 3000,  // 3 seconds for success
+  duration: 3000, // 3 seconds for success
 });
 
 // Error with action pattern
 toast.error("Operation failed", {
   className: "toast-error",
-  duration: 5000,  // 5 seconds for errors
+  duration: 5000, // 5 seconds for errors
   action: {
     label: "Retry",
     onClick: () => retryOperation(),
@@ -351,7 +351,7 @@ vi.mock("sonner", () => ({
 
 // API response mocking with realistic delays
 global.fetch = vi.fn().mockImplementation(async () => {
-  await new Promise(resolve => setTimeout(resolve, 100)); // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate network delay
   return {
     ok: true,
     json: async () => ({ total: 1234, unread: 567, starred: 89 }),
@@ -366,9 +366,10 @@ global.fetch = vi.fn().mockImplementation(async () => {
 ```typescript
 // 300ms debounce for text inputs
 const debouncedUpdateField = useMemo(
-  () => debounce((path: string, value: any) => {
-    editorStore.updateField(path, value);
-  }, 300),
+  () =>
+    debounce((path: string, value: any) => {
+      editorStore.updateField(path, value);
+    }, 300),
   [editorStore]
 );
 
@@ -586,10 +587,13 @@ describe("Settings Save Flow Integration", () => {
 // Mock API responses with realistic timing
 beforeEach(() => {
   global.fetch = vi.fn().mockImplementation(async (url) => {
-    await new Promise(resolve => setTimeout(resolve, 96)); // Realistic timing
+    await new Promise((resolve) => setTimeout(resolve, 96)); // Realistic timing
 
     if (url.includes("/api/articles/stats")) {
-      return { ok: true, json: async () => ({ total: 1234, unread: 567, starred: 89 }) };
+      return {
+        ok: true,
+        json: async () => ({ total: 1234, unread: 567, starred: 89 }),
+      };
     }
 
     if (url.includes("/api/preferences")) {

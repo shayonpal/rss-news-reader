@@ -97,10 +97,7 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
     () => `inset(0 ${100 - midPoint}% 0 0)`,
     [midPoint]
   );
-  const maxClipPath = useMemo(
-    () => `inset(0 0 0 ${midPoint}%)`,
-    [midPoint]
-  );
+  const maxClipPath = useMemo(() => `inset(0 0 0 ${midPoint}%)`, [midPoint]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -225,14 +222,14 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
         {/* Track */}
         <div
           ref={trackRef}
-          className="absolute z-10 h-2 w-full rounded-full overflow-hidden"
+          className="absolute z-10 h-2 w-full overflow-hidden rounded-full"
           style={{
             backgroundColor: `rgba(var(--brand-accent-rgb, 139 92 246), 0.15)`,
           }}
         >
           {/* Selected range overlay */}
           <div
-            className="absolute inset-y-0 rounded-full pointer-events-none"
+            className="pointer-events-none absolute inset-y-0 rounded-full"
             style={{
               backgroundColor: `rgba(var(--brand-accent-rgb, 139 92 246), 0.45)`,
               left: `${minPercent}%`,
@@ -295,8 +292,8 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
         <div
           className={cn(
             "absolute z-20 h-6 w-8 rounded-full border-2 shadow-lg",
-            "bg-white/75 dark:bg-gray-800/75 border-blue-500/75 dark:border-blue-400/75",
-            "-translate-x-1/2 transform transition-transform pointer-events-none",
+            "border-blue-500/75 bg-white/75 dark:border-blue-400/75 dark:bg-gray-800/75",
+            "pointer-events-none -translate-x-1/2 transform transition-transform",
             isDragging === "min" && "scale-125"
           )}
           style={{
@@ -307,8 +304,8 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
         <div
           className={cn(
             "absolute z-20 h-6 w-8 rounded-full border-2 shadow-lg",
-            "bg-white/75 dark:bg-gray-800/75 border-blue-500/75 dark:border-blue-400/75",
-            "-translate-x-1/2 transform transition-transform pointer-events-none",
+            "border-blue-500/75 bg-white/75 dark:border-blue-400/75 dark:bg-gray-800/75",
+            "pointer-events-none -translate-x-1/2 transform transition-transform",
             isDragging === "max" && "scale-125"
           )}
           style={{

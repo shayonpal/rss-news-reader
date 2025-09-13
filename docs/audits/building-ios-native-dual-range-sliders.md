@@ -16,41 +16,45 @@ The most performant approach uses **two overlapping HTML5 range inputs** with cu
 export class IOSDualRangeSlider {
   constructor(element) {
     this.element = element;
-    this.fromSlider = element.querySelector('.slider-from');
-    this.toSlider = element.querySelector('.slider-to');
+    this.fromSlider = element.querySelector(".slider-from");
+    this.toSlider = element.querySelector(".slider-to");
     this.init();
   }
-  
+
   init() {
     this.setupIOSSpecificHandling();
     this.applyGlassmorphism();
     this.updateTrackFill();
   }
-  
+
   setupIOSSpecificHandling() {
     // iOS Safari requires special touch event handling
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
+
     if (isIOS) {
-      [this.fromSlider, this.toSlider].forEach(slider => {
+      [this.fromSlider, this.toSlider].forEach((slider) => {
         // Fix iOS Safari's range input click issues
-        slider.addEventListener('touchend', (e) => {
+        slider.addEventListener("touchend", (e) => {
           const rect = slider.getBoundingClientRect();
           const touch = e.changedTouches[0];
           const percentage = (touch.clientX - rect.left) / rect.width;
-          const value = slider.min + (percentage * (slider.max - slider.min));
+          const value = slider.min + percentage * (slider.max - slider.min);
           slider.value = Math.round(value);
           this.updateTrackFill();
         });
       });
     }
-    
+
     // Prevent zoom on double-tap
-    this.element.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 1) e.preventDefault();
-    }, { passive: false });
+    this.element.addEventListener(
+      "touchstart",
+      (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+      },
+      { passive: false }
+    );
   }
-  
+
   applyGlassmorphism() {
     // Apply iOS-style glass effects with performance optimization
     const glassStyles = `
@@ -69,27 +73,27 @@ For styling, implement CSS that matches iOS's visual hierarchy while optimizing 
 
 ```scss
 .ios-dual-range {
-  --ios-blue: #007AFF;
+  --ios-blue: #007aff;
   --track-height: 4px;
   --thumb-size: 28px;
   --touch-target: 44px;
-  
+
   position: relative;
   padding: calc((var(--touch-target) - var(--track-height)) / 2) 0;
-  
+
   // Glass morphism container
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: 16px;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  
+
   // Performance optimization
   contain: layout style paint;
   will-change: backdrop-filter;
-  
+
   input[type="range"] {
     position: absolute;
     width: 100%;
@@ -97,7 +101,7 @@ For styling, implement CSS that matches iOS's visual hierarchy while optimizing 
     background: transparent;
     -webkit-appearance: none;
     pointer-events: none;
-    
+
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: var(--thumb-size);
@@ -109,7 +113,7 @@ For styling, implement CSS that matches iOS's visual hierarchy while optimizing 
       pointer-events: auto;
       cursor: pointer;
     }
-    
+
     &::-webkit-slider-runnable-track {
       height: var(--track-height);
       border-radius: calc(var(--track-height) / 2);
@@ -136,7 +140,7 @@ function AccessibleDualRange({ min, max, values, onChange }) {
   return (
     <div role="group" aria-label="Price range filter">
       {/* Hidden native inputs for accessibility */}
-      <input 
+      <input
         type="range"
         className="visually-hidden"
         min={min}
@@ -145,7 +149,7 @@ function AccessibleDualRange({ min, max, values, onChange }) {
         aria-label="Minimum price"
         onChange={(e) => onChange([e.target.value, values[1]])}
       />
-      <input 
+      <input
         type="range"
         className="visually-hidden"
         min={min}
@@ -154,14 +158,19 @@ function AccessibleDualRange({ min, max, values, onChange }) {
         aria-label="Maximum price"
         onChange={(e) => onChange([values[0], e.target.value])}
       />
-      
+
       {/* Visual custom sliders */}
       <div className="ios-dual-range" aria-hidden="true">
         {/* Custom visual implementation */}
       </div>
-      
+
       {/* Live region for changes */}
-      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
         Range: ${values[0]} to ${values[1]}
       </div>
     </div>
@@ -176,27 +185,24 @@ Testing reveals that **44x44 CSS pixels** provides optimal touch targeting on iO
 For your Next.js RSS reader, implement the dual range slider with dynamic imports and proper hydration handling:
 
 ```jsx
-import dynamic from 'next/dynamic';
-import { useSpring, animated } from '@react-spring/web';
+import dynamic from "next/dynamic";
+import { useSpring, animated } from "@react-spring/web";
 
-const DualRangeSlider = dynamic(
-  () => import('./IOSDualRangeSlider'),
-  { 
-    ssr: false,
-    loading: () => <div className="slider-skeleton" />
-  }
-);
+const DualRangeSlider = dynamic(() => import("./IOSDualRangeSlider"), {
+  ssr: false,
+  loading: () => <div className="slider-skeleton" />,
+});
 
 export function ArticleDateFilter() {
   const [dateRange, setDateRange] = useState([0, 30]);
-  
+
   // Spring physics for iOS-like animations
   const springProps = useSpring({
-    from: { opacity: 0, transform: 'scale(0.95)' },
-    to: { opacity: 1, transform: 'scale(1)' },
-    config: { tension: 300, friction: 25 } // iOS spring values
+    from: { opacity: 0, transform: "scale(0.95)" },
+    to: { opacity: 1, transform: "scale(1)" },
+    config: { tension: 300, friction: 25 }, // iOS spring values
   });
-  
+
   return (
     <animated.div style={springProps} className="filter-container">
       <DualRangeSlider
@@ -204,7 +210,7 @@ export function ArticleDateFilter() {
         max={365}
         values={dateRange}
         onChange={setDateRange}
-        labels={['Today', '1 Year']}
+        labels={["Today", "1 Year"]}
         ariaLabel="Filter articles by date range"
       />
     </animated.div>
@@ -221,19 +227,24 @@ iOS Safari imposes significant PWA limitations that affect slider implementation
 Configure your PWA manifest and viewport correctly:
 
 ```html
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+/>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent"
+/>
 ```
 
 Handle safe areas for modern iOS devices:
 
 ```css
 .slider-container {
-  padding: max(20px, env(safe-area-inset-top)) 
-           max(16px, env(safe-area-inset-right)) 
-           max(20px, env(safe-area-inset-bottom)) 
-           max(16px, env(safe-area-inset-left));
+  padding: max(20px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
 }
 ```
 

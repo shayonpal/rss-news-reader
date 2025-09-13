@@ -1,9 +1,9 @@
 ---
-description: Design and validate comprehensive tests based on staging contracts
+description: Step 4 - Design and validate comprehensive tests based on staging contracts
 argument_hint: [#issue|"feature description"]
 ---
 
-# Test Design - Test Creation & Validation Phase
+# Step 4: Test Design - Test Creation & Validation Phase
 
 Focused test creation phase that prevents test skipping and ensures quality gates before implementation.
 

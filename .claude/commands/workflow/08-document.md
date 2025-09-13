@@ -1,9 +1,9 @@
 ---
-description: Comprehensive documentation phase that captures implementation details and validates API documentation
+description: Step 8 - Comprehensive documentation phase that captures implementation details and validates API documentation
 argument_hint: [#issue|"feature description"]
 ---
 
-# Document - Documentation Generation Phase
+# Step 8: Document - Documentation Generation Phase
 
 Complete documentation generation and validation phase that ensures all implemented changes are properly documented and knowledge is preserved. This command bridges implementation and code review by systematically documenting changes, updating project files, and capturing implementation knowledge.
 

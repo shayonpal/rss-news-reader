@@ -1,9 +1,13 @@
 ---
-description: Comprehensive Linear issue analysis and implementation strategy development (no Linear updates)
+description: Step 2 - Comprehensive Linear issue analysis and implementation strategy development after audit
 argument_hint: <issue-id>
 ---
 
-# Flow Plan - Comprehensive Linear Issue Planning
+# Step 2: Plan - Comprehensive Linear Issue Planning
+
+## Prerequisites
+
+**Note**: Run `01-audit RR-XXX` before this step to validate the issue and gather comprehensive context.
 
 ## Project Activation
 
@@ -481,7 +485,7 @@ Show final summary:
 📝 Implementation Strategy: APPROVED
 
 🔗 Next Step:
-Proceed to the staging phase with `02-stage`:
+Proceed to the staging phase with `03-stage`:
 - Linear issue updates
 - Test case generation
 - Implementation documentation

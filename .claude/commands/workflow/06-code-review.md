@@ -1,9 +1,9 @@
 ---
-description: Performs comprehensive code review on implementation using symbolic analysis and structured feedback
+description: Step 6 - Performs comprehensive code review on implementation using symbolic analysis and structured feedback
 args: "[optional: specific focus area like 'security', 'performance', 'architecture', or Linear issue ID]"
 ---
 
-# Code Review with Symbol Analysis
+# Step 6: Code Review - Symbol Analysis & Structured Feedback
 
 ## Project Activation
 

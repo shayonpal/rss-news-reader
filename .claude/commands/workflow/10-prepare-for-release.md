@@ -1,4 +1,9 @@
-# Prepare and Execute Production Release
+---
+description: Step 10 - Prepare and execute production release with comprehensive validation
+argument-hint: [version]
+---
+
+# Step 10: Prepare for Release - Production Deployment
 
 ## Project Activation
 

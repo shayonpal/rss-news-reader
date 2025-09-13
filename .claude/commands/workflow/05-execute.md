@@ -1,13 +1,13 @@
 ---
-description: Complete implementation and delivery phase delivering working, tested, and deployed feature
+description: Step 5 - Complete implementation and delivery phase delivering working, tested, and deployed feature
 argument_hint: [#issue|"feature description"]
 ---
 
-# Execute - Implementation Phase
+# Step 5: Execute - Implementation Phase
 
 Complete implementation phase that takes prepared specifications and tests, then implements code to make tests pass. Assumes tests are already validated and comprehensive from the test-design phase.
 
-**Prerequisites from 03-test-design:**
+**Prerequisites from 04-test-design:**
 
 - Comprehensive test suite with quality gates passed
 - Implementation contracts clearly defined

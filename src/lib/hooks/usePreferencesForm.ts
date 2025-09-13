@@ -168,7 +168,9 @@ export function usePreferencesForm() {
     isSaving: editorStore.isSaving,
     apiKeyState: editorStore.apiKeyState,
     apiKeyInput: editorStore.getApiKeyInput(),
-    isDirty: editorStore.isDirty(domainStore.savedPreferences || defaultPreferences),
+    isDirty: editorStore.isDirty(
+      domainStore.savedPreferences || defaultPreferences
+    ),
 
     // Handlers
     handleTextChange,
