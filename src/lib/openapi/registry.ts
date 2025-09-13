@@ -1801,11 +1801,11 @@ const ArticleSchema = registry.register(
         description: "Article unique identifier",
         example: "550e8400-e29b-41d4-a716-446655440000",
       }),
-      feed_id: z.string().uuid().openapi({
+      feedId: z.string().uuid().openapi({
         description: "Associated feed ID",
         example: "660e8400-e29b-41d4-a716-446655440001",
       }),
-      inoreader_id: z.string().openapi({
+      inoreaderId: z.string().openapi({
         description: "Inoreader article ID",
         example: "tag:google.com,2005:reader/item/000000001234abcd",
       }),
@@ -1817,15 +1817,15 @@ const ArticleSchema = registry.register(
         description: "RSS content (may be truncated)",
         example: "<p>Article preview content...</p>",
       }),
-      full_content: z.string().nullable().openapi({
+      fullContent: z.string().nullable().openapi({
         description: "Full extracted article content",
         example: "<p>Complete article content...</p>",
       }),
-      has_full_content: z.boolean().openapi({
+      hasFullContent: z.boolean().openapi({
         description: "Whether full content has been extracted",
         example: true,
       }),
-      ai_summary: z.string().nullable().openapi({
+      aiSummary: z.string().nullable().openapi({
         description: "AI-generated summary",
         example: "This article discusses recent technological innovations...",
       }),
@@ -1837,41 +1837,42 @@ const ArticleSchema = registry.register(
         description: "Article URL",
         example: "https://example.com/article/123",
       }),
-      published_at: z.string().openapi({
+      publishedAt: z.string().openapi({
         description: "Publication timestamp",
         example: "2025-08-15T10:30:00Z",
       }),
-      is_read: z.boolean().openapi({
+      isRead: z.boolean().openapi({
         description: "Read status",
         example: false,
       }),
-      is_starred: z.boolean().openapi({
+      isStarred: z.boolean().openapi({
         description: "Starred status",
         example: true,
       }),
-      parsed_at: z.string().nullable().openapi({
+      parsedAt: z.string().nullable().openapi({
         description: "Content extraction timestamp",
         example: "2025-08-15T10:35:00Z",
       }),
-      parse_failed: z.boolean().optional().openapi({
+      parseFailed: z.boolean().optional().openapi({
         description: "Whether content extraction failed",
         example: false,
       }),
-      parse_attempts: z.number().optional().openapi({
+      parseAttempts: z.number().optional().openapi({
         description: "Number of extraction attempts",
         example: 1,
       }),
-      created_at: z.string().openapi({
+      createdAt: z.string().openapi({
         description: "Database creation timestamp",
         example: "2025-08-15T10:31:00Z",
       }),
-      updated_at: z.string().openapi({
+      updatedAt: z.string().openapi({
         description: "Last update timestamp",
         example: "2025-08-15T10:35:00Z",
       }),
     })
     .openapi({
-      description: "Article entity with full metadata",
+      description:
+        "Article entity with camelCase field names (transformed from database snake_case)",
     })
 );
 

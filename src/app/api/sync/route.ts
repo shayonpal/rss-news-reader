@@ -1,3 +1,8 @@
+/**
+ * @fileoverview RSS Sync API Route
+ * @note RR-284: Applies case transformation to sync response fields for frontend compatibility
+ */
+
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { promises as fs } from "fs";
@@ -13,6 +18,7 @@ import type {
   InoreaderArticle,
 } from "@/types/inoreader";
 import { getUserPreferences } from "@/lib/services/preferences";
+import { transformApiResponse } from "@/lib/utils/case-transformer";
 
 // Import token manager at top level to ensure it's bundled
 // @ts-ignore
@@ -237,14 +243,14 @@ export async function POST() {
         : 300; // Default 5 minutes
 
       return NextResponse.json(
-        {
+        transformApiResponse({
           error: "rate_limit_exceeded",
           message: "Inoreader API rate limit exceeded",
           limit: rateLimit.limit,
           used: rateLimit.used,
           remaining: 0,
-          retryAfter: retryAfterSeconds, // Include in body for backward compatibility
-        },
+          retry_after: retryAfterSeconds, // Using snake_case that will be transformed
+        }),
         {
           status: 429,
           headers: {
@@ -285,27 +291,29 @@ export async function POST() {
       });
     });
 
-    return NextResponse.json({
-      syncId,
-      status: "pending",
-      progress: 0,
-      message: "Sync operation started",
-      startTime: initialStatus.startTime,
-      metrics: {
-        newArticles: 0,
-        deletedArticles: 0,
-        newTags: 0,
-        failedFeeds: 0,
-      },
-    });
+    return NextResponse.json(
+      transformApiResponse({
+        sync_id: syncId, // Using snake_case that will be transformed
+        status: "pending",
+        progress: 0,
+        message: "Sync operation started",
+        start_time: initialStatus.startTime, // Using snake_case that will be transformed
+        metrics: {
+          new_articles: 0, // Using snake_case that will be transformed
+          deleted_articles: 0, // Using snake_case that will be transformed
+          new_tags: 0, // Using snake_case that will be transformed
+          failed_feeds: 0, // Using snake_case that will be transformed
+        },
+      })
+    );
   } catch (error) {
     console.error("Failed to start sync:", error);
     return NextResponse.json(
-      {
+      transformApiResponse({
         error: "sync_start_failed",
         message: "Failed to start sync",
         details: error instanceof Error ? error.message : "Unknown error",
-      },
+      }),
       { status: 500 }
     );
   }

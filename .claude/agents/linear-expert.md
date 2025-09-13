@@ -204,9 +204,21 @@ One-line summary
 
 Standard progression: Backlog → Todo → In Progress → In Review → Done (or Canceled/Duplicate)
 
+#### Automatic Project Status Updates
+
+When updating an issue's status to "In Progress":
+
+1. Check if the issue is assigned to a project using `get_issue({ id: "issue_id" })`
+2. If the issue has a project assignment:
+   - Get the project details using `get_project({ id: "project_id" })`
+   - Check the project's current status
+   - If project status is NOT "In Progress", automatically update it to "In Progress"
+   - This ensures projects move to "In Progress" when their first issue starts being worked on
+
 #### Project Assignment Status Rules
 
 When assigning an issue to a project:
+
 - **If issue is in `Backlog` status**: ALWAYS change status to `Todo` when assigning the project
 - **If issue is in any other status** (Todo, In Progress, In Review, Done, etc.): DO NOT modify the status when assigning the project
 

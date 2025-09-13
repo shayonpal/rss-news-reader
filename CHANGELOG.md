@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Saturday, September 13, 2025 at 2:59 PM - docs(RR-284): Critical technical documentation update for React lifecycle management
+  - **Known Issues**: Added comprehensive documentation for critical lesson learned during RR-284 implementation
+  - **Critical Pattern**: Log cleanup operations can inadvertently remove React component lifecycle protections
+  - **Symptom Analysis**: Manual fetch operations work while auto-fetch fails due to navigation timing and component unmounting
+  - **Code Pattern**: Documented dangerous pattern of removing `mountedRef.current` checks during console log cleanup
+  - **Prevention Measures**: Established code review checklist and lifecycle auditing patterns
+  - **Impact Assessment**: High severity - affects React component stability during async operations spanning navigation events
+  - **Updated Files**: docs/tech/known-issues.md (React Component Lifecycle Issues section), record-of-test-failures.md (RR-284 implementation lessons)
+  - **Technical Context**: Related to RR-284 auto-fetch implementation and console log cleanup efforts
+  - **Future Considerations**: AbortController patterns, cleanup functions, error boundaries for unmounted component protection
 - 2025-09-13 08:27 - docs(RR-264): Technical documentation update for Swagger UI accessibility issue
   - **Known Issues**: Added comprehensive documentation for Swagger UI accessibility issue discovered during RR-264 Phase 2 validation
   - **Issue Details**: Swagger UI at http://100.96.166.53:3000/reader/api-docs currently inaccessible, preventing interactive API testing
@@ -43,6 +53,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Technical Stack**: Leverages semantic CSS tokens for consistent design system integration
 
 ### Fixed
+
+- Saturday, September 13, 2025 at 2:57 PM - **RR-284**: Fix auto-fetch failure due to snake_case API responses breaking feed lookup
+  - **Critical Bug**: Auto-fetch functionality completely failing for BBC News, Ars Technica, and other partial content feeds
+  - **Root Cause**: API responses using snake_case format while frontend expected camelCase, breaking feed lookup in auto-parse logic
+  - **Solution**: Implemented centralized case transformation system with snake_case → camelCase conversion
+  - **Performance**: Added case-transformer.ts utility with <2ms overhead and comprehensive error handling
+  - **Security**: Includes prototype pollution prevention and circular reference handling for safe object transformation
+  - **Architecture**: Created parse-task-manager.ts for unified content parsing workflow management
+  - **Impact**: Auto-fetch now works correctly for all partial content feeds, restoring full article access
+  - **Testing**: Comprehensive test coverage including integration, performance, and E2E validation
+  - **Files Added**: src/lib/utils/case-transformer.ts, src/lib/utils/parse-task-manager.ts
+  - **Technical Details**: Handles nested object transformation, array processing, and maintains original data integrity
 
 - Saturday, September 13, 2025 at 8:38 AM - **RR-259**: UI consistency fix for mark all read button and confirm button widths
   - **Issue**: Mark all read button and confirm button had inconsistent widths across different states and screen sizes

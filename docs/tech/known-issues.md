@@ -1,6 +1,6 @@
 # Known Issues - RSS News Reader
 
-**Last Updated:** Saturday, September 13, 2025 at 8:27 AM
+**Last Updated:** Saturday, September 13, 2025 at 2:59 PM
 
 This document tracks known issues and limitations in the RSS News Reader application that require further investigation or may not have straightforward solutions.
 
@@ -1423,3 +1423,103 @@ The usePreferencesForm hook requires complex mock setup involving:
 #### Reference Implementation
 
 See `src/__tests__/unit/hooks/usePreferencesForm.test.tsx` for comprehensive example of proper test setup patterns that work reliably across different test execution environments.
+
+## React Component Lifecycle Issues (RR-284)
+
+### Log Cleanup and React Lifecycle Management
+
+**Status:** 🔴 Critical Pattern to Avoid
+**Severity:** High
+**First Identified:** September 13, 2025 during RR-284 auto-fetch implementation
+**Issue Pattern:** Console log cleanup during React lifecycle management
+
+#### Description
+
+Critical lesson learned during RR-284 implementation: removing `mountedRef.current` checks during console log cleanup operations can break React component lifecycle management and cause navigation timing issues. Manual fetch operations may work correctly while auto-fetch operations fail due to component unmounting during navigation.
+
+#### Technical Details
+
+**Problem Pattern:**
+```typescript
+// ❌ DANGEROUS: Removing mountedRef checks during cleanup
+const handleAutoFetch = async () => {
+  try {
+    // Component may unmount during async operation
+    await performFetch();
+    // Without mountedRef check, this may run on unmounted component
+    setLoading(false);
+  } catch (error) {
+    console.log("Error occurred"); // This log was cleaned up, removing mountedRef check
+    setError(error); // This runs on unmounted component!
+  }
+};
+```
+
+**Safe Pattern:**
+```typescript
+// ✅ SAFE: Maintain mountedRef checks even during log cleanup
+const handleAutoFetch = async () => {
+  try {
+    await performFetch();
+    if (mountedRef.current) {
+      setLoading(false);
+    }
+  } catch (error) {
+    if (mountedRef.current) {
+      setError(error); // Only update state if component is still mounted
+    }
+  }
+};
+```
+
+#### Root Cause
+
+- **Navigation Timing**: Auto-fetch operations may span navigation events
+- **Component Unmounting**: React components can unmount while async operations are in progress
+- **State Updates**: Attempting to update state on unmounted components causes errors
+- **Log Cleanup Side Effects**: Removing console logs also removed critical `mountedRef.current` checks
+
+#### Impact Assessment
+
+**Why Manual Fetch Worked:**
+- User explicitly triggered, component remained mounted during operation
+- Shorter execution time, less likelihood of navigation during fetch
+- Synchronous user interaction kept component lifecycle stable
+
+**Why Auto-Fetch Failed:**
+- Automatic triggering during component initialization
+- Navigation events could occur during fetch operation
+- Longer async operation window increased unmounting probability
+- Lost lifecycle protection during log cleanup efforts
+
+#### Critical Learning
+
+**During Log Cleanup Operations:**
+
+1. **Identify Protected Patterns**: Look for `mountedRef.current`, `aborted`, `cancelled` checks
+2. **Preserve Lifecycle Logic**: Never remove mounted component checks, even if they appear with logs
+3. **Test Both Paths**: Manual trigger vs automatic trigger scenarios
+4. **Navigation Testing**: Test operations that span navigation events
+
+**Code Review Checklist:**
+
+- ✅ Does the cleanup preserve all `mountedRef.current` checks?
+- ✅ Are async operations still protected against unmounted components?
+- ✅ Does auto-trigger functionality work as well as manual trigger?
+- ✅ Are there tests for navigation during async operations?
+
+#### Prevention Measures
+
+1. **Component Lifecycle Auditing**: Always preserve mounted checks during refactoring
+2. **Comprehensive Testing**: Test both manual and automatic trigger scenarios
+3. **Navigation Testing**: Include tests that navigate during async operations
+4. **Pattern Recognition**: Recognize and preserve critical lifecycle patterns
+
+#### Future Considerations
+
+- **AbortController**: Consider using AbortController pattern for cancellable operations
+- **Cleanup Functions**: Implement proper cleanup in useEffect return functions
+- **State Management**: Consider external state management for operations that span navigation
+- **Error Boundaries**: Implement error boundaries for graceful handling of unmounted component errors
+
+This issue demonstrates that console log cleanup must be done carefully to avoid removing critical application logic that happens to be co-located with logging statements.

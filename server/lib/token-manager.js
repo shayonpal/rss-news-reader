@@ -1,6 +1,5 @@
 const crypto = require("crypto");
 const fs = require("fs").promises;
-// Testing hook: this change should be allowed even though file has console.log
 const path = require("path");
 const { captureRateLimitHeaders } = require("./capture-headers");
 require("dotenv").config();

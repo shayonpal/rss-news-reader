@@ -1,11 +1,15 @@
 /**
  * Cursor-Based Pagination API Route for RR-175
  * Secure server-side implementation for article pagination
+ *
+ * @note RR-284: Applies case transformation (snake_case → camelCase) to all article responses
+ * Database fields like feed_id, published_at become feedId, publishedAt for frontend compatibility
  */
 
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { Article } from "@/lib/db/types";
+import { transformApiResponse } from "@/lib/utils/case-transformer";
 
 // Server-side Supabase client with service role
 const supabase = createClient(
@@ -136,7 +140,7 @@ export async function GET(request: NextRequest) {
     // Fetch one extra to check if there are more pages
     query = query.limit(pageSize + 1);
 
-    const { data: articles, error } = await query;
+    const { data: rawArticles, error } = await query;
 
     if (error) {
       console.error("Error fetching paginated articles:", error);
@@ -146,7 +150,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!articles) {
+    if (!rawArticles) {
       return NextResponse.json({
         articles: [],
         nextCursor: null,
@@ -155,6 +159,16 @@ export async function GET(request: NextRequest) {
         hasPrev: false,
       });
     }
+
+    // CRITICAL FIX: Transform snake_case to camelCase immediately after DB query
+    // This ensures all subsequent logic works with camelCase fields (feedId, publishedAt, etc.)
+    // Type-safe transformation: we know the shape after transformation will have camelCase keys
+    const transformedArticles = transformApiResponse(rawArticles);
+
+    // Type guard to ensure we have the expected structure after transformation
+    const articles = Array.isArray(transformedArticles)
+      ? transformedArticles
+      : [];
 
     // Check if we have more pages
     const hasMore = articles.length > pageSize;
@@ -178,18 +192,43 @@ export async function GET(request: NextRequest) {
       if (direction === "next") {
         // We can go back if we have a cursor (not on first page)
         hasPrev = !!cursor;
-        prevCursor = hasPrev ? firstArticle.published_at : null;
+        // Now using camelCase: publishedAt instead of published_at
+        prevCursor =
+          hasPrev &&
+          firstArticle &&
+          typeof firstArticle === "object" &&
+          "publishedAt" in firstArticle
+            ? String(firstArticle.publishedAt)
+            : null;
 
         // We can go forward if there are more articles
         hasNext = hasMore;
-        nextCursor = hasNext ? lastArticle.published_at : null;
+        nextCursor =
+          hasNext &&
+          lastArticle &&
+          typeof lastArticle === "object" &&
+          "publishedAt" in lastArticle
+            ? String(lastArticle.publishedAt)
+            : null;
       } else {
         // Previous direction
         hasNext = !!cursor; // We can go forward if we came from somewhere
-        nextCursor = hasNext ? lastArticle.published_at : null;
+        nextCursor =
+          hasNext &&
+          lastArticle &&
+          typeof lastArticle === "object" &&
+          "publishedAt" in lastArticle
+            ? String(lastArticle.publishedAt)
+            : null;
 
         hasPrev = hasMore;
-        prevCursor = hasPrev ? firstArticle.published_at : null;
+        prevCursor =
+          hasPrev &&
+          firstArticle &&
+          typeof firstArticle === "object" &&
+          "publishedAt" in firstArticle
+            ? String(firstArticle.publishedAt)
+            : null;
       }
     }
 

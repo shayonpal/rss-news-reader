@@ -89,8 +89,8 @@ fi
 
 ### Step 1.2: Initialize Investigation
 
-- **Initial Analysis**: Comprehensive analysis using existing context and findings
-- **Interactive Option**: After initial analysis, offer fresh investigation choice
+- **Initial Analysis**: Ultrathink and do a comprehensive analysis using existing context and findings
+- **Interactive Option**: After initial analysis, think hard & offer fresh investigation choice
 
 ## Phase 1.5: Batched Multi-Issue Context Gathering (If Multiple Issues)
 
@@ -107,7 +107,7 @@ Request batch analysis for: [${ARGS_ARRAY[@]}]
 
 Return consolidated data:
 - All issue details with comments
-- All parent/child relationships  
+- All parent/child relationships
 - Cross-issue relationships
 - Metadata for all issues
 
@@ -137,6 +137,7 @@ Note: Serena operations are sequential - optimize queries for efficiency.
 **IMPORTANT: MCP agents execute sequentially, not in parallel.**
 
 **Optimization Strategy:**
+
 - Batch related queries to minimize round trips
 - Use comprehensive prompts to get complete responses
 - Leverage agent memory/context between calls
@@ -273,7 +274,7 @@ Analyze confidence scores and generate recommendation:
 
 ### Confidence Analysis
 - High Confidence (4-5/5): [list agents]
-- Medium Confidence (3/5): [list agents]  
+- Medium Confidence (3/5): [list agents]
 - Low Confidence (1-2/5): [list agents]
 - Conflicting Findings: [list agent pairs with conflicts]
 
@@ -335,6 +336,7 @@ For [selected agent]:
 ```
 
 Continue refinement until:
+
 - All critical domains have confidence ≥4/5
 - User explicitly accepts current findings
 - Maximum 3 refinement rounds completed
@@ -342,6 +344,7 @@ Continue refinement until:
 ### Step 2.6: Issue Currency Validation
 
 Check if issue is stale or outdated:
+
 - Creation date vs current date (flag if >90 days old)
 - Last activity vs current state
 - Technology stack changes since creation
@@ -352,6 +355,7 @@ Check if issue is stale or outdated:
 ### Step 3.1: Cross-Agent Validation
 
 Coordinate findings between all agents to identify:
+
 - Conflicting assessments between domain experts
 - Missing information that requires additional investigation
 - Consensus on issue validity and root cause
@@ -393,7 +397,7 @@ Analyze current investigation state and provide recommendation:
 ## 🎯 Targeted Verification
 
 ### Investigation Confidence Assessment
-Overall Confidence: [X]% 
+Overall Confidence: [X]%
 Consensus Level: [HIGH/MEDIUM/LOW]
 
 ### Areas of Uncertainty:
@@ -487,11 +491,11 @@ Based on dependency analysis:
 1. **RR-XXX** (Must be done first)
    - Reason: Provides foundation for other issues
    - Blocks: RR-YYY, RR-ZZZ
-   
+
 2. **RR-YYY** (Can be done after RR-XXX)
    - Reason: Depends on changes from RR-XXX
    - Related to: RR-ZZZ (can be done in parallel)
-   
+
 3. **RR-ZZZ** (Can be done after RR-XXX)
    - Reason: Independent but benefits from RR-XXX completion
 
@@ -531,11 +535,13 @@ After presenting initial analysis:
 You've audited $ISSUE_COUNT issues with cross-relationship analysis.
 
 ### Current Analysis Summary
+
 - Issues with high confidence: [count]
-- Issues with conflicts: [count]  
+- Issues with conflicts: [count]
 - Relationship conflicts found: [yes/no]
 
 ### 🎯 Recommendation
+
 [Based on current analysis:]
 
 **If confidence ≥85% and high consensus:**
@@ -555,6 +561,7 @@ This will sequentially re-analyze all aspects with fresh context.
 For multiple issues, each will be processed comprehensively.
 
 Options:
+
 1. All $ISSUE_COUNT issues (complete fresh analysis)
 2. Specific issues only (select which)
 3. Relationship analysis only (re-analyze connections)
@@ -564,6 +571,7 @@ Choose (1/2/3/4): [Recommendation based on confidence]
 ```
 
 If option 2:
+
 ```
 Which issues need fresh investigation?
 Available: ${ARGS_ARRAY[@]}
@@ -575,6 +583,7 @@ Enter issue IDs (space-separated):
 **If user requests fresh investigation:**
 
 **Execute complete sequential re-analysis:**
+
 - Process ALL agents sequentially with fresh context and batched queries
 - Ignore previous findings completely
 - Use Codex MCP for external validation
@@ -611,7 +620,7 @@ After fresh investigation, offer:
 **Low Priority (consistent findings):**
 ✅ [Agent/Area]: Findings aligned - SKIP
 
-Any specific areas need deeper investigation? 
+Any specific areas need deeper investigation?
 Recommended: [yes if high priority areas exist, no if all aligned]
 (yes/no):
 ```
@@ -621,6 +630,7 @@ If yes, allow selective agent re-invocation with recommended areas pre-filled
 ### Step 4.4: Evidence-Based Validation
 
 For each claim in the original issue:
+
 1. **Verify Current State**: Does the problem still exist?
 2. **Test Reproduction Steps**: Are the steps accurate and current?
 3. **Validate Error Messages**: Are quoted errors still occurring?
@@ -630,6 +640,7 @@ For each claim in the original issue:
 ### Step 4.5: Alternative Root Cause Analysis
 
 Generate alternative explanations:
+
 - What else could cause these symptoms?
 - Are there simpler explanations than what's proposed?
 - Could this be a side effect of other changes?
@@ -659,6 +670,7 @@ Questions:
 ### Step 5.2: Confidence Scoring
 
 Establish confidence levels for all findings:
+
 - **HIGH (90-100%)**: Multiple sources confirm, clear evidence
 - **MEDIUM (70-89%)**: Likely accurate, some supporting evidence
 - **LOW (50-69%)**: Uncertain, conflicting information
@@ -668,45 +680,55 @@ Establish confidence levels for all findings:
 
 ### Step 6.1: Generate Audit Report
 
-```markdown
+````markdown
 ## 🔍 Issue Audit Report: ${ISSUE_ID}
 
 ### 📊 Issue Validity Assessment
+
 **Current Status**: [VALID/PARTIALLY_VALID/INVALID/RESOLVED/DUPLICATE]
 **Confidence Level**: [HIGH/MEDIUM/LOW] (XX%)
 **Root Cause Accuracy**: [ACCURATE/NEEDS_REVISION/INCORRECT]
 **Investigation Mode**: [Standard/Fresh/Unbiased]
 
 ### 🎯 Problem Statement Analysis
-**Original Statement**: 
+
+**Original Statement**:
+
 > [Quote from issue description]
 
-**Actual Problem**: 
+**Actual Problem**:
 [Based on investigation findings]
 
 **Key Discrepancies**:
+
 - [Discrepancy 1 with evidence]
 - [Discrepancy 2 with evidence]
 - [Discrepancy 3 with evidence]
 
 ### 🔄 Historical Context
-**Related Commits**: 
+
+**Related Commits**:
+
 - `abc123d` - [Commit message] (Date: YYYY-MM-DD)
 - `def456e` - [Commit message] (Date: YYYY-MM-DD)
 
-**Similar Issues**: 
+**Similar Issues**:
+
 - RR-XXX: [Title] (85% similarity - [reason])
 - RR-YYY: [Title] (72% similarity - [reason])
 
-**Potential Duplicates**: 
+**Potential Duplicates**:
+
 - RR-ZZZ: [Title] (95% similarity - likely duplicate)
 
 **CHANGELOG Entries**:
+
 - Version X.Y.Z: [Related entry]
 
 ### ⚠️ Investigation Findings
 
 **What's Actually Happening**:
+
 1. **[Finding 1]**: [Detailed explanation with evidence]
    - Evidence: [Code references, logs, test results]
    - Confidence: [HIGH/MEDIUM/LOW]
@@ -716,12 +738,14 @@ Establish confidence levels for all findings:
    - Confidence: [HIGH/MEDIUM/LOW]
 
 **Why Original Analysis Was Incomplete**:
+
 - **Missing Context**: [What was overlooked]
 - **Outdated Information**: [What has changed since issue creation]
 - **Scope Limitations**: [What wasn't investigated thoroughly]
 - **Environmental Factors**: [Factors not considered]
 
 **Agent Consensus**:
+
 - ✅ **Agreed**: [Points where all agents agree]
 - ⚠️ **Disputed**: [Points where agents disagree]
 - ❓ **Unknown**: [Points requiring more investigation]
@@ -729,45 +753,58 @@ Establish confidence levels for all findings:
 ### 📝 Recommended Actions
 
 #### 1. Title Update
+
 - **Current**: "[existing title]"
 - **Suggested**: "[improved title]"
 - **Reason**: [Why the change improves clarity]
 
 #### 2. Description Revision
+
 **Sections to Update**:
+
 - **Problem Statement**: [Specific revisions needed]
 - **Reproduction Steps**: [Updates to make steps current]
 - **Expected Behavior**: [Clarifications needed]
 - **Technical Details**: [Additional context to add]
 
 **Information to Add**:
+
 - [Technical detail 1]
 - [Technical detail 2]
 - [Environment specifics]
 
 #### 3. Comments Management
+
 **Comments to Archive/Remove**:
+
 - Comment #X (Author, Date): [Reason for removal - outdated/incorrect]
 - Comment #Y (Author, Date): [Reason for revision needed]
 
 **New Comments to Add**:
+
 - **Investigation Update**: [Summary of audit findings]
 - **Technical Clarification**: [Corrected technical details]
 
 #### 4. Issue Relationships
-**Should Block**: 
+
+**Should Block**:
+
 - RR-XXX: [Issue this should block and why]
 
-**Blocked By**: 
+**Blocked By**:
+
 - RR-YYY: [Issue that should block this and why]
 
-**Related To**: 
+**Related To**:
+
 - RR-ZZZ: [Related issue and relationship type]
 
 **Potential Mergers**:
+
 - RR-AAA: [High similarity issue that could be merged]
 
 #### 5. Priority & Label Adjustments
+
 **Current Priority**: [current]
 **Recommended Priority**: [new priority]
 **Justification**: [Why priority should change based on findings]
@@ -775,10 +812,12 @@ Establish confidence levels for all findings:
 **Current Labels**: [list current labels]
 **Recommended Labels**: [suggested labels]
 **Changes**:
+
 - Add: [labels to add and why]
 - Remove: [labels to remove and why]
 
 #### 6. Status Recommendation
+
 **Current Status**: [current status]
 **Recommended Status**: [suggested status]
 **Reason**: [Based on investigation findings]
@@ -788,16 +827,19 @@ Establish confidence levels for all findings:
 **[Only show this section if fresh investigation was performed]**
 
 #### Comparison with Initial Analysis
+
 **Initial Finding**: [what was found in first analysis]
 **Fresh Finding**: [what fresh analysis found]
 **Consensus**: [AGREE/DIFFER] - [detailed explanation]
 
 **Key Differences**:
+
 - [Difference 1 with analysis]
 - [Difference 2 with analysis]
 - [Difference 3 with analysis]
 
 **Methodology Validation**:
+
 - **Original Approach**: [strengths and limitations]
 - **Fresh Approach**: [different perspective and insights]
 - **Combined Insights**: [what the comparison reveals]
@@ -805,8 +847,9 @@ Establish confidence levels for all findings:
 ### 🔬 Investigation Quality Metrics
 
 **Agent Invocation Summary**:
+
 - Agents invoked: [X] (sequential execution)
-- Total operations: [Y] 
+- Total operations: [Y]
 - Batched operations: [Z]
 - Re-invocations performed: [W]
 - Final confidence scores:
@@ -826,23 +869,29 @@ Establish confidence levels for all findings:
 Multi-issue analysis may take longer but ensures comprehensive validation.
 
 **Refinement History**:
+
 - Round 1: [What was refined and why]
 - Round 2: [Additional refinements]
 - Final validation: [Codex MCP agreement level]
 
 ### 📊 Evidence Summary
+
 **Supporting Evidence**:
+
 - [Evidence type 1]: [Description and confidence]
 - [Evidence type 2]: [Description and confidence]
 
 **Conflicting Evidence**:
+
 - [Conflict 1]: [Description and why it conflicts]
 - [Conflict 2]: [Description and resolution needed]
 
 **Missing Evidence**:
+
 - [What additional evidence would strengthen the analysis]
 
 ### ✅ Next Steps
+
 1. **Immediate Actions**: [Actions to take right now]
 2. **Investigation Gaps**: [Additional research needed]
 3. **Stakeholder Communication**: [Who needs to be informed]
@@ -851,35 +900,38 @@ Multi-issue analysis may take longer but ensures comprehensive validation.
 ## 📊 Multi-Issue Audit Summary (If Multiple Issues)
 
 ### Individual Issue Status
-| Issue | Validity | Confidence | Root Cause Accuracy | Action Needed |
-|-------|----------|------------|---------------------|---------------|
-| RR-XXX | VALID | HIGH | ACCURATE | Minor updates |
-| RR-YYY | INVALID | HIGH | INCORRECT | Close as duplicate |
-| RR-ZZZ | PARTIAL | MEDIUM | NEEDS_REVISION | Major revision |
+
+| Issue  | Validity | Confidence | Root Cause Accuracy | Action Needed      |
+| ------ | -------- | ---------- | ------------------- | ------------------ |
+| RR-XXX | VALID    | HIGH       | ACCURATE            | Minor updates      |
+| RR-YYY | INVALID  | HIGH       | INCORRECT           | Close as duplicate |
+| RR-ZZZ | PARTIAL  | MEDIUM     | NEEDS_REVISION      | Major revision     |
 
 ### Relationship Matrix
+
 ```mermaid
 graph TD
     RR-XXX[RR-XXX: Valid] -->|Blocks| RR-ZZZ[RR-ZZZ: Needs Revision]
     RR-XXX -.->|Duplicate 90%| RR-YYY[RR-YYY: Invalid]
     RR-ZZZ -->|Related 45%| RR-YYY
 ```
+````
 
 ### Consolidated Recommendations
+
 1. **Immediate Actions**:
    - Close RR-YYY as duplicate of RR-XXX
    - Update RR-ZZZ description based on findings
-   
 2. **Execution Strategy**:
    - Start with RR-XXX (addresses root cause)
    - RR-ZZZ can begin after RR-XXX design complete
-   
 3. **Effort Optimization**:
    - Bundle RR-XXX and RR-ZZZ development
    - Shared testing strategy for both issues
    - Combined documentation update
 
 ### 🔍 Audit Metadata
+
 - **Audit Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 - **Mode**: [Standard/Standard + Fresh Investigation]
 - **Issues Audited**: [$ISSUE_COUNT]
@@ -887,7 +939,8 @@ graph TD
 - **Agents Consulted**: [List of agents used in analysis]
 - **Overall Confidence Score**: [Average confidence across all issues]
 - **Investigation Duration**: [Estimated time for thorough analysis]
-```
+
+````
 
 ### Step 6.2: Interactive Follow-up Options
 
@@ -902,7 +955,7 @@ Based on the investigation findings, would you like to:
 3. Skip updates for now
 
 Please choose (1/2/3):
-```
+````
 
 **Then offer additional actions:**
 
@@ -910,18 +963,14 @@ Please choose (1/2/3):
 ## 🔄 Additional Actions Available
 
 **Investigation Options**:
+
 1. **Deep Dive Specific Area** [Choose focus area]
 2. **Cross-Reference Similar Issues** [Find more related issues]
 3. **Generate Implementation Plan** [If issue is valid]
 
-**Issue Management**:
-4. **Create Related Issues** [Split if multiple problems found]
-5. **Mark as Duplicate** [If duplicate identified]
-6. **Close as Resolved** [If already fixed]
+**Issue Management**: 4. **Create Related Issues** [Split if multiple problems found] 5. **Mark as Duplicate** [If duplicate identified] 6. **Close as Resolved** [If already fixed]
 
-**Documentation**:
-7. **Store Findings in Serena** [Save analysis for future reference]
-8. **Update Project Documentation** [If gaps identified]
+**Documentation**: 7. **Store Findings in Serena** [Save analysis for future reference] 8. **Update Project Documentation** [If gaps identified]
 
 Which action would you like to take? (Enter number or 'none' to finish)
 ```
@@ -929,6 +978,7 @@ Which action would you like to take? (Enter number or 'none' to finish)
 ## Execution Principles
 
 ### Accuracy Over Speed
+
 - **Priority**: Investigation accuracy is paramount - speed is secondary
 - **Sequential Execution**: Agents execute sequentially - optimize with batching and comprehensive queries
 - **Iterative Refinement**: Re-invoke agents as needed until confidence is high
@@ -966,25 +1016,29 @@ Which action would you like to take? (Enter number or 'none' to finish)
 ### Batching Examples
 
 **Good (Batched)**:
+
 ```bash
 # Single bash call with multiple commands
 git log -20 && git diff --cached && git status
 ```
 
 **Less Efficient (Sequential)**:
+
 ```bash
 # Three separate bash calls
 git log -20
-git diff --cached  
+git diff --cached
 git status
 ```
 
 **Good (Comprehensive Query)**:
+
 ```
 linear-expert: "Get RR-275, RR-294, RR-273 with all comments, relationships, and metadata in single response"
 ```
 
 **Less Efficient (Multiple Queries)**:
+
 ```
 linear-expert: "Get RR-275"
 linear-expert: "Get RR-294"
@@ -992,12 +1046,14 @@ linear-expert: "Get RR-273"
 ```
 
 ### Re-invocation Guidelines
+
 - Low confidence (≤2/5): Mandatory re-invocation suggested
 - Conflicting findings: Re-run relevant agents with cross-reference context
 - Uncertain validity: Targeted deep-dive with specific questions
 - User discretion: Always offer option to re-run any agent
 
 ### Quality Gates
+
 - Minimum confidence threshold: 3/5 for proceeding
 - Consensus requirement: At least 70% agent agreement
 - Conflict resolution: Re-invoke until conflicts resolved or documented
@@ -1005,6 +1061,7 @@ linear-expert: "Get RR-273"
 ## Confidence Scoring & Recommendation Logic
 
 ### Confidence Thresholds
+
 - **5/5 (Certain)**: Agent found definitive evidence, no doubts
 - **4/5 (High)**: Strong evidence with minor uncertainties
 - **3/5 (Medium)**: Moderate evidence, some gaps remain
@@ -1012,6 +1069,7 @@ linear-expert: "Get RR-273"
 - **1/5 (Very Low)**: Minimal evidence, mostly speculation
 
 ### Recommendation Triggers
+
 - **All agents ≥4/5**: Recommend proceeding without re-invocation
 - **1-2 agents ≤2/5**: Recommend selective re-invocation
 - **>2 agents ≤2/5**: Recommend full re-analysis
@@ -1019,11 +1077,13 @@ linear-expert: "Get RR-273"
 - **Overall consensus <70%**: Recommend fresh investigation
 
 ### Automatic Escalation
+
 - **Critical Issues**: If database or security agents show ≤2/5, always recommend re-invocation
 - **User-Facing Issues**: If UI/UX agents show conflicts, prioritize resolution
 - **Infrastructure Issues**: If devops/infra agents uncertain, recommend deep-dive
 
 ### Decision Matrix
+
 ```
 | Scenario | Confidence | Consensus | Recommendation |
 |----------|-----------|-----------|----------------|
@@ -1067,10 +1127,11 @@ fi
 ### Progress Tracking
 
 Throughout execution, provide status updates:
+
 ```
 🔍 Auditing Issue RR-123...
   ✅ Linear context gathered
-  ✅ Git history analyzed  
+  ✅ Git history analyzed
   🔄 Multi-agent analysis in progress...
   ✅ Domain experts consulted
   🔄 Generating comprehensive report...
@@ -1096,13 +1157,13 @@ Always conclude with structured status:
       "root_cause_accuracy": "ACCURATE"
     },
     "RR-456": {
-      "validity": "INVALID", 
+      "validity": "INVALID",
       "confidence": "HIGH",
       "root_cause_accuracy": "INCORRECT"
     },
     "RR-789": {
       "validity": "PARTIALLY_VALID",
-      "confidence": "MEDIUM", 
+      "confidence": "MEDIUM",
       "root_cause_accuracy": "NEEDS_REVISION"
     }
   },
@@ -1126,6 +1187,7 @@ This audit command provides comprehensive Linear issue validation with multi-age
 ## Next Step
 
 After completing the audit, proceed to planning phase with the validated issue:
+
 ```
 02-plan RR-XXX
 ```

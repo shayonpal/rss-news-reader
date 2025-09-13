@@ -27,7 +27,7 @@ WORKFLOW:
 
 INTEGRATION:
   Input:  Staging contracts from 02-stage
-  Output: Validated test suite for 04-execute
+  Output: Validated test suite for 05-execute
 ```
 
 ## Instructions
@@ -116,7 +116,7 @@ npm run test:dry-run  # Ensure tests fail appropriately
 - Dependencies and setup requirements
 - Expected test failures before implementation
 
-**Integration with 04-execute:**
+**Integration with 05-execute:**
 
 - All tests are validated and comprehensive
 - Implementation contracts clearly defined
@@ -150,7 +150,7 @@ npm run test:dry-run  # Ensure tests fail appropriately
 - Validate performance benchmarks
 - Complete acceptance criteria
 
-**Handoff to 04-execute:**
+**Handoff to 05-execute:**
 ✅ Validated test suite ready for implementation
 ✅ Test quality gates passed
 ✅ Implementation contracts established
@@ -158,7 +158,7 @@ npm run test:dry-run  # Ensure tests fail appropriately
 
 **Estimated Implementation Effort:** [time estimate]
 
-**Command Integration:** Use `04-execute` to begin implementation phase with pre-validated tests
+**Command Integration:** Use `05-execute` to begin implementation phase with pre-validated tests
 ```
 
 ## RSS Reader Test Patterns

@@ -166,7 +166,65 @@ Impact: [which dependent symbols affected]
 Fix: [specific symbol modification needed]
 ```
 
-## 7. Comprehensive Test Report
+## 7. Code Review for Log Cleanup
+
+Use `code-reviewer` agent to review the implementation for production readiness:
+
+```
+Context Package for code-reviewer:
+- Linear Issue: $ARGUMENTS
+- Focus: Log cleanup and production readiness
+- Implementation files: [from symbol analysis in step 1]
+- Review scope: Browser and server logging statements
+```
+
+### Log Cleanup Review Process
+
+1. **Review Implementation Files**:
+   - Identify all modified files from Linear issue implementation
+   - Focus on files containing the primary symbols from symbol analysis
+   - Include dependency files that may have been touched
+
+2. **Log Detection Scope**:
+   - `console.log()`, `console.error()`, `console.warn()`, `console.info()`
+   - Server-side logging: `logger.debug()`, `logger.info()`, temporary logging
+   - Development debugging statements added during implementation
+   - Alert/toast debugging messages for development
+   - Performance timing logs added for debugging
+
+3. **Cleanup Recommendations**:
+   - Categorize logs as: Remove, Keep (Production), Keep (Debug Level)
+   - Provide specific file and line number references
+   - Distinguish between intentional production logging vs debug statements
+   - Flag any hardcoded debug flags or development-only code paths
+
+### Expected Review Output
+
+```
+🧹 Log Cleanup Review for RR-XXX
+
+🔍 Files Reviewed:
+- [List of implementation files checked]
+
+🗑️ Logs to Remove:
+- File: path/to/file.ts:123 - console.log('debugging sync process')
+- File: path/to/component.tsx:45 - console.error('temp error check')
+- [Additional entries with specific locations]
+
+✅ Production Logs (Keep):
+- File: path/to/service.ts:67 - logger.error('API sync failed', error)
+- [Legitimate production logging to maintain]
+
+📋 Summary:
+- Total debug logs found: X
+- Recommended removals: Y
+- Production logs verified: Z
+- Files requiring cleanup: [count]
+
+🚀 Cleanup Status: Ready | Needs Attention
+```
+
+## 8. Comprehensive Test Report
 
 ```
 📋 Test Report for RR-XXX: [Title]
@@ -183,6 +241,11 @@ Fix: [specific symbol modification needed]
 - Integration: [status by component]
 - Acceptance Criteria: X/Y met
 
+🧹 Log Cleanup Status: [from code-reviewer section 7]
+- Debug logs to remove: [count]
+- Production logs verified: [count]
+- Cleanup required: Yes/No
+
 ✅ Verified Functionality:
 - [Symbol-by-symbol breakdown]
 - [Contract validations passed]
@@ -190,12 +253,14 @@ Fix: [specific symbol modification needed]
 ❌ Issues Found:
 - [Symbol-specific bugs with severity]
 - [Missing test coverage areas]
+- [Log cleanup items from code review]
 
 🚀 Release Status: Ready | Conditional | Blocked
 - [Specific symbol-level conditions if any]
+- [Log cleanup completion status]
 ```
 
-## 8. Linear Update & Closure
+## 9. Linear Update & Closure
 
 Use `linear-expert` to:
 
@@ -216,4 +281,4 @@ Use `linear-expert` to:
 
 **Completion Criteria**: All symbols tested, contracts validated, acceptance criteria met, no critical bugs, performance within baseline, manual verification complete.
 
-**Next Step**: If all tests pass, use `07-document` to create comprehensive documentation before final commit.
+**Next Step**: If all tests pass, use `08-document` to create comprehensive documentation before final commit.

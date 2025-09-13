@@ -1,5 +1,5 @@
 ---
-description: Step 2 - Comprehensive Linear issue analysis and implementation strategy development after audit
+description: Step 2 - Comprehensive Linear issue analysis, implementation strategy development, and intelligent workflow routing after audit
 argument_hint: <issue-id>
 ---
 
@@ -477,33 +477,9 @@ Please respond with 1, 2, or 3.
 
 **Strategy approved! Ready to proceed to implementation phase.**
 
-Show final summary:
-
-```
-✅ Planning Complete for RR-XXX
-
-📝 Implementation Strategy: APPROVED
-
-🔗 Next Step:
-Proceed to the staging phase with `03-stage`:
-- Linear issue updates
-- Test case generation
-- Implementation documentation
-- Status tracking
-
-The approved strategy will be carried forward to the staging phase.
-```
-
-### If no option chosen:
-
-- The user is providing more context and has more doubts
-- This is same as choosing 2. They want to continue evolving the strategy.
-- Iterate and return to options again
-- Continue until the user has provided an option
-
 ## 9A. Technical Expert Review
 
-**NEW ENHANCEMENT:** Use `tech-expert` agent for comprehensive architecture validation:
+Use `tech-expert` agent for comprehensive architecture validation:
 
 ### Architecture Validation
 
@@ -583,6 +559,202 @@ Document expert findings:
 - [Integration dependencies]
 ```
 
+## 10. Implementation Complexity Assessment & Routing
+
+**Analyze the approved strategy to determine optimal next steps:**
+
+### Complexity Evaluation Criteria
+
+**Automatically assess these factors:**
+
+1. **Issue Classification**:
+   - Bug Fix: Simple corrections to existing functionality
+   - Enhancement: Modifications to existing features
+   - New Feature: Completely new functionality
+   - Architectural: Changes affecting system structure
+
+2. **Implementation Scope**:
+   - Single File: Changes contained to 1-2 files
+   - Multi-File: Changes spanning 3-10 files
+   - Cross-Module: Changes affecting multiple modules/domains
+   - System-Wide: Changes requiring architectural modifications
+
+3. **Test Coverage Analysis**:
+   - Existing Tests Available: Similar functionality already has comprehensive tests
+   - Test Patterns Clear: Well-established testing patterns exist
+   - New Test Patterns: Requires new testing approaches
+   - Complex Integration: Multiple services/systems need testing
+
+4. **Risk Assessment**:
+   - Low Risk: Simple changes with minimal impact
+   - Medium Risk: Moderate complexity with some dependencies
+   - High Risk: Complex changes affecting critical functionality
+   - Critical Risk: Changes affecting core system behavior
+
+### Routing Decision Matrix
+
+**Based on evaluation, determine routing:**
+
+```
+🧭 Implementation Routing Assessment for RR-XXX:
+
+📊 Complexity Factors:
+- Issue Type: [BUG_FIX/ENHANCEMENT/NEW_FEATURE/ARCHITECTURAL]
+- Scope: [SINGLE_FILE/MULTI_FILE/CROSS_MODULE/SYSTEM_WIDE]
+- Test Coverage: [TESTS_EXIST/PATTERNS_CLEAR/NEW_PATTERNS/COMPLEX_INTEGRATION]
+- Risk Level: [LOW/MEDIUM/HIGH/CRITICAL]
+
+🎯 Routing Decision: [SKIP_TO_EXECUTE/DESIGN_TESTS_FIRST]
+
+📋 Justification:
+[Clear reasoning based on complexity factors]
+
+🔄 Recommended Path:
+[Next command to run with reasoning]
+```
+
+### Routing Logic
+
+**SKIP TO EXECUTE (03-stage → 05-execute)** when:
+
+- Bug fixes with existing test coverage
+- Simple enhancements following established patterns
+- Low-risk changes with clear implementation path
+- Well-understood modifications with proven approaches
+
+**DESIGN TESTS FIRST (03-stage → 04-test-design → 05-execute)** when:
+
+- New features requiring comprehensive testing
+- Complex integrations needing test strategy
+- High-risk changes requiring validation
+- New patterns without existing test examples
+- Changes affecting multiple system components
+
+### Implementation Routing Recommendations
+
+```
+🚦 Routing Recommendations:
+
+✅ DIRECT TO EXECUTE (Skip Test Design):
+Criteria met for direct implementation:
+- [Specific factor 1 that supports skipping]
+- [Specific factor 2 that supports skipping]
+- [Risk mitigation already in place]
+
+Next: Run `03-stage RR-XXX` then `05-execute RR-XXX`
+Estimated time savings: [X hours/days]
+
+🧪 DESIGN TESTS FIRST (Full Workflow):
+Criteria require test design phase:
+- [Specific factor 1 requiring test design]
+- [Specific factor 2 requiring test design]
+- [Quality gates needed]
+
+Next: Run `03-stage RR-XXX` then `04-test-design RR-XXX`
+Additional investment for quality assurance: [X hours/days]
+
+⚖️ CONDITIONAL ROUTING:
+If comfortable with risk: Skip to execute
+If prioritizing quality: Design tests first
+```
+
+Show final summary:
+
+```
+✅ Planning Complete for RR-XXX
+
+📝 Implementation Strategy: APPROVED
+🧭 Routing Analysis: COMPLETE
+
+🔗 Recommended Next Steps:
+[ROUTE_1] Direct Path (Skip Test Design):
+→ Run `03-stage RR-XXX` for implementation staging
+→ Then `05-execute RR-XXX` for direct implementation
+💡 Best for: Simple changes, existing patterns, low risk
+
+[ROUTE_2] Quality-First Path (Full Workflow):
+→ Run `03-stage RR-XXX` for implementation staging
+→ Then `04-test-design RR-XXX` for comprehensive test design
+→ Finally `05-execute RR-XXX` for test-driven implementation
+💡 Best for: Complex features, new patterns, high risk
+
+🎯 Primary Recommendation: [ROUTE_1/ROUTE_2]
+Based on: [Key factor that drives the recommendation]
+
+The approved strategy will be carried forward to the staging phase.
+```
+
+### If no option chosen:
+
+- The user is providing more context and has more doubts
+- This is same as choosing 2. They want to continue evolving the strategy.
+- Iterate and return to options again
+- Continue until the user has provided an option
+
+## 11. Routing Implementation Guide
+
+**After strategy approval and routing analysis, guide the user:**
+
+### For SKIP_TO_EXECUTE routing:
+
+```
+🚀 Fast Track Implementation Path Selected
+
+✅ Complexity Assessment Complete:
+Your issue qualifies for the streamlined path because:
+- [Specific qualifying factors]
+- [Risk factors are manageable]
+- [Existing patterns can be leveraged]
+
+📋 Next Steps:
+1. Run `03-stage RR-XXX` to prepare implementation
+2. Run `05-execute RR-XXX` to implement directly
+3. Skip `04-test-design` (tests will be minimal/reuse existing patterns)
+
+⚡ Expected Benefits:
+- Faster time to delivery
+- Lower overhead for simple changes
+- Focus on implementation over test complexity
+```
+
+### For DESIGN_TESTS_FIRST routing:
+
+```
+🧪 Quality-First Implementation Path Selected
+
+✅ Complexity Assessment Complete:
+Your issue requires comprehensive test design because:
+- [Specific factors requiring test design]
+- [Quality gates are critical]
+- [New patterns need validation]
+
+📋 Next Steps:
+1. Run `03-stage RR-XXX` to prepare implementation
+2. Run `04-test-design RR-XXX` to design comprehensive tests
+3. Run `05-execute RR-XXX` for test-driven implementation
+
+🎯 Expected Benefits:
+- Higher confidence in complex changes
+- Comprehensive test coverage for new patterns
+- Reduced risk of production issues
+```
+
+### User Choice Override:
+
+If the user disagrees with the routing recommendation, allow override:
+
+```
+⚖️ Routing Override Available:
+
+The system recommends: [RECOMMENDED_PATH]
+But you can choose either:
+
+1. 🚀 Skip to Execute (Risk: [specific risks])
+2. 🧪 Design Tests First (Cost: [time investment])
+
+What would you prefer? Reply with 1 or 2, or 'recommend' to use system recommendation.
+```
+
 ## Important Rules
 
 - 🚫 NO file operations during analysis
@@ -593,8 +765,11 @@ Document expert findings:
 - ✅ ALWAYS conduct technical expert review
 - ✅ ALWAYS analyze historical patterns for confidence scoring
 - ✅ ALWAYS perform automated feasibility validation
+- ✅ ALWAYS perform implementation complexity assessment and routing
+- ✅ ALWAYS provide clear routing recommendations with justification
 - Prefer extending existing code over creating new
 - Use read-only agents for all analysis
 - Be pragmatic and challenge assumptions
 - Integrate all analysis components for comprehensive recommendations
 - Strategy must be approved before proceeding to implementation phase
+- Routing analysis helps optimize workflow efficiency vs quality trade-offs
