@@ -80,22 +80,26 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
 
   // Calculate fill percentage for the track - memoized for performance
   const minPercent = useMemo(
-    () => ((safeMinValue - min) / (max - min)) * 100,
+    () => Math.round(((safeMinValue - min) / (max - min)) * 100 * 100) / 100,
     [safeMinValue, min, max]
   );
   const maxPercent = useMemo(
-    () => ((safeMaxValue - min) / (max - min)) * 100,
+    () => Math.round(((safeMaxValue - min) / (max - min)) * 100 * 100) / 100,
     [safeMaxValue, min, max]
   );
 
-  // Memoize clip paths for performance
+  // Memoize clip paths for performance - create non-overlapping zones
+  const midPoint = useMemo(
+    () => (minPercent + maxPercent) / 2,
+    [minPercent, maxPercent]
+  );
   const minClipPath = useMemo(
-    () => `inset(0 ${100 - maxPercent}% 0 0)`,
-    [maxPercent]
+    () => `inset(0 ${100 - midPoint}% 0 0)`,
+    [midPoint]
   );
   const maxClipPath = useMemo(
-    () => `inset(0 0 0 ${minPercent}%)`,
-    [minPercent]
+    () => `inset(0 0 0 ${midPoint}%)`,
+    [midPoint]
   );
 
   // Keyboard navigation
@@ -221,17 +225,21 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
         {/* Track */}
         <div
           ref={trackRef}
-          className="absolute h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700"
+          className="absolute z-10 h-2 w-full rounded-full overflow-hidden"
           style={{
-            background: `linear-gradient(to right, 
-              var(--glass-surface-dim) 0%, 
-              var(--glass-surface-dim) ${minPercent}%, 
-              var(--glass-accent-primary) ${minPercent}%, 
-              var(--glass-accent-primary) ${maxPercent}%, 
-              var(--glass-surface-dim) ${maxPercent}%, 
-              var(--glass-surface-dim) 100%)`,
+            backgroundColor: `rgba(var(--brand-accent-rgb, 139 92 246), 0.15)`,
           }}
-        />
+        >
+          {/* Selected range overlay */}
+          <div
+            className="absolute inset-y-0 rounded-full pointer-events-none"
+            style={{
+              backgroundColor: `rgba(var(--brand-accent-rgb, 139 92 246), 0.45)`,
+              left: `${minPercent}%`,
+              right: `${100 - maxPercent}%`,
+            }}
+          />
+        </div>
 
         {/* Min thumb */}
         <input
@@ -286,11 +294,10 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
         {/* Visual thumbs */}
         <div
           className={cn(
-            "absolute h-6 w-6 rounded-full border-2 bg-white shadow-lg dark:bg-gray-800",
-            "border-blue-500 dark:border-blue-400",
-            "-translate-x-1/2 transform transition-transform",
-            isDragging === "min" && "scale-125",
-            "touch-target cursor-pointer"
+            "absolute z-20 h-6 w-8 rounded-full border-2 shadow-lg",
+            "bg-white/75 dark:bg-gray-800/75 border-blue-500/75 dark:border-blue-400/75",
+            "-translate-x-1/2 transform transition-transform pointer-events-none",
+            isDragging === "min" && "scale-125"
           )}
           style={{
             left: `${minPercent}%`,
@@ -299,11 +306,10 @@ const DualRangeSliderComponent: React.FC<DualRangeSliderProps> = ({
         />
         <div
           className={cn(
-            "absolute h-6 w-6 rounded-full border-2 bg-white shadow-lg dark:bg-gray-800",
-            "border-blue-500 dark:border-blue-400",
-            "-translate-x-1/2 transform transition-transform",
-            isDragging === "max" && "scale-125",
-            "touch-target cursor-pointer"
+            "absolute z-20 h-6 w-8 rounded-full border-2 shadow-lg",
+            "bg-white/75 dark:bg-gray-800/75 border-blue-500/75 dark:border-blue-400/75",
+            "-translate-x-1/2 transform transition-transform pointer-events-none",
+            isDragging === "max" && "scale-125"
           )}
           style={{
             left: `${maxPercent}%`,
