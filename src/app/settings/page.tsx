@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { usePreferencesDomainStore } from "@/lib/stores/preferences-domain-store";
 import { usePreferencesEditorStore } from "@/lib/stores/preferences-editor-store";
 import { usePreferencesForm } from "@/lib/hooks/usePreferencesForm";
+import { ArticleStats } from "@/components/settings/article-stats";
 
 interface AiModel {
   id: string;
@@ -324,6 +325,9 @@ export default function SettingsPage() {
             defaultOpen={true}
           >
             <div className="space-y-4" data-testid="sync-section">
+              {/* Article Statistics */}
+              <ArticleStats />
+
               {/* Max Articles Per Sync */}
               <div>
                 <label className="text-sm font-medium text-foreground">

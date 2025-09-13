@@ -861,6 +861,100 @@ registry.registerPath({
   },
 });
 
+// ========== ARTICLES STATISTICS SCHEMAS ==========
+
+// Articles statistics response schema
+const ArticleStatsResponseSchema = registry.register(
+  "ArticleStatsResponse",
+  z
+    .object({
+      total: z.number().openapi({
+        description: "Total number of articles across all user feeds",
+        example: 1250,
+      }),
+      unread: z.number().openapi({
+        description: "Number of unread articles",
+        example: 45,
+      }),
+      starred: z.number().openapi({
+        description: "Number of starred articles",
+        example: 12,
+      }),
+    })
+    .openapi({ description: "User article statistics summary" })
+);
+
+// ========== ARTICLES STATISTICS ENDPOINTS ==========
+
+registry.registerPath({
+  method: "get",
+  path: "/api/articles/stats",
+  operationId: "getArticleStatistics",
+  description: "Get comprehensive article statistics for the authenticated user",
+  summary: "Get article statistics (total, unread, starred)",
+  tags: ["Articles"],
+  responses: {
+    200: {
+      description: "Article statistics retrieved successfully",
+      content: {
+        "application/json": {
+          schema: ArticleStatsResponseSchema,
+          examples: {
+            withArticles: {
+              summary: "User with articles",
+              value: {
+                total: 1250,
+                unread: 45,
+                starred: 12,
+              },
+            },
+            newUser: {
+              summary: "New user with no articles",
+              value: {
+                total: 0,
+                unread: 0,
+                starred: 0,
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "User not authenticated",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+          examples: {
+            unauthorized: {
+              summary: "Authentication required",
+              value: {
+                error: "Unauthorized",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+          examples: {
+            serverError: {
+              summary: "Database connection failed",
+              value: {
+                error: "Failed to fetch statistics",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
 // ========== AI PROVIDER SCHEMAS ==========
 
 // AI Model schema

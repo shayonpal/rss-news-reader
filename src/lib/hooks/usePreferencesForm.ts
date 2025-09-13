@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { usePreferencesEditorStore } from "@/lib/stores/preferences-editor-store";
 import { usePreferencesDomainStore } from "@/lib/stores/preferences-domain-store";
 import { debounce } from "@/lib/utils/debounce";
+import type { PreferencesData } from "@/types/preferences";
 
 /**
  * Custom hook for preferences form management with debouncing
@@ -143,6 +144,23 @@ export function usePreferencesForm() {
     editorStore.clearDraft();
   }, [debouncedUpdateField, editorStore]);
 
+  // Default preferences for fallback when savedPreferences is null
+  const defaultPreferences: PreferencesData = {
+    ai: {
+      hasApiKey: false,
+      apiKey: null,
+      model: "claude-3-haiku-20240307",
+      summaryLengthMin: 100,
+      summaryLengthMax: 300,
+      summaryStyle: "objective",
+      contentFocus: "key-facts-arguments",
+    },
+    sync: {
+      maxArticles: 500,
+      retentionCount: 30,
+    },
+  };
+
   return {
     // State
     draft: editorStore.draft,
@@ -150,7 +168,7 @@ export function usePreferencesForm() {
     isSaving: editorStore.isSaving,
     apiKeyState: editorStore.apiKeyState,
     apiKeyInput: editorStore.getApiKeyInput(),
-    isDirty: editorStore.isDirty(domainStore.savedPreferences || ({} as any)),
+    isDirty: editorStore.isDirty(domainStore.savedPreferences || defaultPreferences),
 
     // Handlers
     handleTextChange,
