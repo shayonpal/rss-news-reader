@@ -312,9 +312,31 @@ async function validateCoverage() {
     };
 
     // Save detailed report
-    const reportPath = path.join(__dirname, "../coverage-report.json");
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    log("cyan", `📄 Detailed report saved to: ${reportPath}`);
+    // Ensure coverage directory exists
+    const coverageDir = path.join(__dirname, "../coverage");
+    if (!fs.existsSync(coverageDir)) {
+      try {
+        fs.mkdirSync(coverageDir, { recursive: true });
+      } catch (error) {
+        console.error(
+          `❌ Failed to create coverage directory: ${error.message}`
+        );
+        process.exit(1);
+      }
+    }
+
+    const reportPath = path.join(
+      __dirname,
+      "../coverage/openapi-coverage-report.json"
+    );
+
+    try {
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+      log("cyan", `📄 Detailed report saved to: ${reportPath}`);
+    } catch (error) {
+      console.error(`❌ Failed to write coverage report: ${error.message}`);
+      process.exit(1);
+    }
 
     console.log();
 
