@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Sunday, September 14, 2025 at 4:40 PM - fix(RR-297): Bug: Feed name not displayed in article detail page after refresh
+  - **Problem**: Feed name showed "Unknown Feed" after refreshing article detail page due to empty Zustand feed store on refresh
+  - **Root Cause**: Zustand feed store doesn't persist across page refreshes, starts empty, causing feed name resolution to fail
+  - **Technical Solution**: Enhanced article detail page with automatic feed loading and URL-based feed context preservation
+  - **Navigation Enhancement**: Article URLs now include `?feedId=xxx` parameter to maintain feed context across navigation and refresh
+  - **Back Button Support**: Reconstructs filtered list URL from sessionStorage for proper back navigation experience
+  - **State Management**: Added `feedsLoaded` flag and automatic `loadFeedHierarchy()` trigger when store is empty
+  - **Feed Title Resolution**: Enhanced feed title resolution with loading states and fallback to "Unknown Feed"
+  - **Session Persistence**: Feed context stored in sessionStorage for seamless back navigation to filtered views
+  - **Prev/Next Navigation**: Feed context preserved through URL parameters during article navigation
+  - **File Modified**: `src/app/article/[id]/page.tsx` with comprehensive feed context management system
+  - **User Experience**: Eliminates confusing "Unknown Feed" display, maintains proper navigation context throughout article browsing
+
 - 2025-09-13 19:37 - fix(RR-219): Align coverage report location with test expectations
   - **Path Alignment**: Updated OpenAPI coverage validation script to save report to `coverage/openapi-coverage-report.json` instead of root-level `coverage-report.json`
   - **Directory Creation**: Added automatic creation of `/coverage` directory with recursive option if it doesn't exist

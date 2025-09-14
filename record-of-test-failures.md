@@ -437,6 +437,7 @@ const isolatedTestSetup = () => {
 During console log cleanup efforts, `mountedRef.current` checks were inadvertently removed alongside logging statements, breaking React component lifecycle management for auto-fetch operations.
 
 **Symptom Pattern:**
+
 - ✅ **Manual fetch worked**: User-triggered operations remained mounted during execution
 - ❌ **Auto-fetch failed**: Automatic operations spanned navigation events, causing unmounted component state updates
 
@@ -506,7 +507,8 @@ const handleAutoFetch = async () => {
 expect(maxUpdateTime).toBeLessThan(frameTime / 4); // Sometimes failed in test env
 
 // After: More robust performance validation
-const avgUpdateTime = updateTimes.reduce((sum, time) => sum + time, 0) / updateTimes.length;
+const avgUpdateTime =
+  updateTimes.reduce((sum, time) => sum + time, 0) / updateTimes.length;
 expect(avgUpdateTime).toBeLessThan(frameTime / 8); // More reliable in test environment
 ```
 
@@ -522,24 +524,28 @@ expect(avgUpdateTime).toBeLessThan(frameTime / 8); // More reliable in test envi
 #### Comprehensive Test Coverage Achievements
 
 **Unit Tests (38 tests):**
+
 - ✅ Case transformation logic: 100% coverage
 - ✅ Null/undefined safety: All edge cases handled
 - ✅ Prototype pollution prevention: Security validated
 - ✅ Performance benchmarks: < 2ms transformation time consistently met
 
 **Integration Tests (8 test suites):**
+
 - ✅ API endpoint transformation: `/api/articles/paginated` and `/api/sync`
 - ✅ Feed lookup compatibility: Auto-fetch trigger scenarios working
 - ✅ Backwards compatibility: Existing camelCase handling preserved
 - ✅ Error response structure: Proper error handling maintained
 
 **E2E Tests (10 scenarios):**
+
 - ✅ BBC and Ars Technica auto-fetch: Complete user journey validated
 - ✅ Mobile interactions: Touch events and auto-fetch integration
 - ✅ Offline handling: Graceful degradation tested
 - ✅ Navigation timing: Auto-fetch works correctly across page transitions
 
 **Performance Tests (6 categories):**
+
 - ✅ 100 articles < 2ms: Consistently achieved
 - ✅ Mobile 60fps maintenance: Real-time performance validated
 - ✅ Enterprise scale (500 articles): < 20ms transformation time
@@ -550,11 +556,13 @@ expect(avgUpdateTime).toBeLessThan(frameTime / 8); // More reliable in test envi
 #### React Lifecycle + Async Operations
 
 **Critical Pattern Recognition:**
+
 - Console log cleanup can inadvertently remove critical component lifecycle protections
 - Manual vs automatic operation triggers have different lifecycle timing characteristics
 - Navigation events during async operations require explicit mounted component checks
 
 **Established Best Practices:**
+
 1. **Preserve Lifecycle Checks**: Never remove `mountedRef.current` checks during refactoring
 2. **Test Operation Triggers**: Both manual and automatic trigger paths must be validated
 3. **Navigation Timing**: Test async operations that span user navigation
@@ -563,11 +571,13 @@ expect(avgUpdateTime).toBeLessThan(frameTime / 8); // More reliable in test envi
 #### Performance Test Environment Considerations
 
 **Test Environment vs Production:**
+
 - Test environments have inherent timing and memory measurement variability
 - Performance assertions should account for test environment limitations
 - Production performance consistently exceeds test environment measurements
 
 **Robust Testing Patterns:**
+
 - Use average performance metrics instead of single-execution assertions
 - Allow for test environment overhead in performance thresholds
 - Force garbage collection for consistent memory usage testing

@@ -121,12 +121,14 @@ Always use specialized agents when available:
 **RR-284 Regression**: When cleaning up console.log statements, **NEVER remove conditional logic** - even simple checks like `mountedRef.current` can be critical for React component lifecycle management.
 
 **What Happened**: Removed `mountedRef.current` check during log cleanup, breaking auto-fetch functionality:
+
 - Auto-fetch task succeeded in global task manager ✅
 - Component received result via `existingResult` ✅
 - **But mount check blocked state update during navigation** ❌
 - Manual fetch still worked (different execution context) ✅
 
 **The Fix**: Remove only logging statements, preserve all conditional logic:
+
 ```typescript
 // DON'T do this during cleanup:
 if (existingResult && mountedRef.current) { ... } → if (existingResult) { ... }

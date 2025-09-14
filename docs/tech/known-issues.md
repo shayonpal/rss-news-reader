@@ -1440,6 +1440,7 @@ Critical lesson learned during RR-284 implementation: removing `mountedRef.curre
 #### Technical Details
 
 **Problem Pattern:**
+
 ```typescript
 // ❌ DANGEROUS: Removing mountedRef checks during cleanup
 const handleAutoFetch = async () => {
@@ -1456,6 +1457,7 @@ const handleAutoFetch = async () => {
 ```
 
 **Safe Pattern:**
+
 ```typescript
 // ✅ SAFE: Maintain mountedRef checks even during log cleanup
 const handleAutoFetch = async () => {
@@ -1482,11 +1484,13 @@ const handleAutoFetch = async () => {
 #### Impact Assessment
 
 **Why Manual Fetch Worked:**
+
 - User explicitly triggered, component remained mounted during operation
 - Shorter execution time, less likelihood of navigation during fetch
 - Synchronous user interaction kept component lifecycle stable
 
 **Why Auto-Fetch Failed:**
+
 - Automatic triggering during component initialization
 - Navigation events could occur during fetch operation
 - Longer async operation window increased unmounting probability

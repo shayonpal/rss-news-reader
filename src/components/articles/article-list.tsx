@@ -438,13 +438,27 @@ export function ArticleList({
       const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
       sessionStorage.setItem("articleListScroll", currentScroll.toString());
 
+      // Ensure feed filter context is persisted for back navigation and deep links
+      try {
+        if (feedId) {
+          sessionStorage.setItem("articleListFilter", feedId);
+        }
+      } catch (e) {
+        console.warn("Failed to persist feed filter before navigation:", e);
+      }
+
       // Don't mark as read here - let the article detail page handle it
       // This prevents the article from immediately disappearing from "Unread Only" view
 
       // Use the state-aware click handler
       handleArticleClickWithState(article);
     },
-    [saveStateBeforeNavigation, handleArticleClickWithState, scrollContainerRef]
+    [
+      saveStateBeforeNavigation,
+      handleArticleClickWithState,
+      scrollContainerRef,
+      feedId,
+    ]
   );
 
   // Render article preview

@@ -150,8 +150,16 @@ function HomePageContent() {
     );
     setNavigatingToArticle(true);
 
+    // Build article detail URL carrying feed context as query param (Option 2)
+    const feedId = selectedFeedId || searchParams.get("feed") || undefined;
+    const url = feedId
+      ? `/article/${encodeURIComponent(articleId)}?feedId=${encodeURIComponent(
+          feedId
+        )}`
+      : `/article/${encodeURIComponent(articleId)}`;
+
     // Next.js automatically prepends basePath to router operations
-    router.push(`/article/${encodeURIComponent(articleId)}`);
+    router.push(url as any);
   };
 
   const articleListRef = useRef<HTMLDivElement>(null);
