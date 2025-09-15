@@ -199,6 +199,6 @@ disabled   timeout   error
 ## Related Documentation
 
 - [iOS 26 Liquid Glass Design System](../ui-ux/liquid-glass-design-system.md)
-- [RR-179 Technical Implementation](../tech/rr-179-implementation.md)
+- [Mark All Read Implementation](../tech/mark-all-read-implementation.md)
 - [Performance Optimization (RR-197)](../tech/rr-197-localstorage-optimization.md)
 - [Development Guide: iOS 26 Patterns](../dev/ios-26-patterns.md)

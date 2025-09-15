@@ -11,6 +11,95 @@ extendZodWithOpenApi(z);
 // Initialize OpenAPI registry
 export const registry = new OpenAPIRegistry();
 
+// ========== USER PREFERENCES SCHEMAS ==========
+
+// Shared encrypted payload schema (for API key replacement)
+const EncryptedDataSchema = registry.register(
+  "EncryptedData",
+  z
+    .object({
+      encrypted: z.string().openapi({ example: "hex-encoded-ciphertext" }),
+      iv: z.string().openapi({ example: "hex-encoded-iv-16bytes" }),
+      authTag: z.string().openapi({ example: "hex-encoded-auth-tag" }),
+    })
+    .openapi({ description: "AES-256-GCM encrypted payload" })
+);
+
+const PreferencesAiSchema = registry.register(
+  "PreferencesAI",
+  z
+    .object({
+      hasApiKey: z.boolean().openapi({
+        description: "True if Anthropic API key is set (never returns the key)",
+        example: true,
+      }),
+      apiKey: z.null().openapi({ description: "Always null in responses" }),
+      model: z.string().openapi({ example: "claude-3-haiku-20240307" }),
+      summaryLengthMin: z.number().openapi({ example: 100 }),
+      summaryLengthMax: z.number().openapi({ example: 300 }),
+      summaryStyle: z
+        .enum(["objective", "analytical", "concise", "detailed"])
+        .openapi({ example: "objective" }),
+      contentFocus: z
+        .enum(["general", "technical", "business", "educational"])
+        .nullable()
+        .openapi({ example: "general" }),
+    })
+    .openapi({ description: "AI summarization preferences" })
+);
+
+const PreferencesSyncSchema = registry.register(
+  "PreferencesSync",
+  z
+    .object({
+      maxArticles: z.number().openapi({ example: 500 }),
+      retentionCount: z.number().openapi({ example: 30 }),
+    })
+    .openapi({ description: "Sync configuration preferences" })
+);
+
+const PreferencesResponseSchema = registry.register(
+  "PreferencesResponse",
+  z
+    .object({
+      ai: PreferencesAiSchema,
+      sync: PreferencesSyncSchema,
+    })
+    .openapi({ description: "User preferences response (sanitized)" })
+);
+
+const PreferencesPatchSchema = registry.register(
+  "PreferencesPatch",
+  z
+    .object({
+      ai: z
+        .object({
+          model: z.string().optional(),
+          summaryLengthMin: z.number().min(10).max(500).optional(),
+          summaryLengthMax: z.number().min(10).max(500).optional(),
+          summaryStyle: z
+            .enum(["objective", "analytical", "concise", "detailed"])
+            .optional(),
+          contentFocus: z
+            .enum(["general", "technical", "business", "educational"])
+            .nullable()
+            .optional(),
+          apiKeyChange: z.enum(["replace", "clear"]).optional(),
+          apiKey: z
+            .union([EncryptedDataSchema, z.string(), z.null()])
+            .optional(),
+        })
+        .optional(),
+      sync: z
+        .object({
+          maxArticles: z.number().min(1).max(5000).optional(),
+          retentionCount: z.number().min(1).optional(),
+        })
+        .optional(),
+    })
+    .openapi({ description: "Patch object for updating preferences" })
+);
+
 // Health status enum
 const HealthStatusSchema = z
   .enum([
@@ -257,6 +346,164 @@ const ErrorResponseSchema = registry.register(
 );
 
 // Register health endpoints
+registry.registerPath({
+  method: "get",
+  path: "/api/users/{id}/preferences",
+  operationId: "getUserPreferences",
+  summary: "Get user preferences",
+  description:
+    "Returns sanitized user preferences matching the 2-section Settings UI. Secrets are never returned; use hasApiKey boolean.",
+  tags: ["User Preferences"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({ description: "User ID" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Preferences retrieved",
+      headers: z.object({ ETag: z.string() }),
+      content: {
+        "application/json": {
+          schema: PreferencesResponseSchema,
+        },
+      },
+    },
+    304: {
+      description: "Not Modified (ETag matched)",
+      headers: z.object({ ETag: z.string() }),
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "put",
+  path: "/api/users/{id}/preferences",
+  operationId: "updateUserPreferences",
+  summary: "Update user preferences (patch semantics)",
+  description:
+    "Updates preferences with deep-merge semantics. Use ai.apiKeyChange and ai.apiKey to set/clear secrets. Supports optional If-Match for optimistic concurrency.",
+  tags: ["User Preferences"],
+  request: {
+    params: z.object({
+      id: z.string().uuid().openapi({ description: "User ID" }),
+    }),
+    headers: z
+      .object({ "If-Match": z.string().optional() })
+      .openapi({ description: "Optional ETag for optimistic concurrency" }),
+    body: {
+      content: {
+        "application/json": {
+          schema: PreferencesPatchSchema,
+          examples: {
+            updateModel: {
+              summary: "Update model and summary range",
+              value: {
+                ai: {
+                  model: "claude-3-opus-20240229",
+                  summaryLengthMin: 100,
+                  summaryLengthMax: 300,
+                },
+              },
+            },
+            setApiKey: {
+              summary: "Replace Anthropic API key (encrypted payload)",
+              value: {
+                ai: {
+                  apiKeyChange: "replace",
+                  apiKey: {
+                    encrypted: "...",
+                    iv: "...",
+                    authTag: "...",
+                  },
+                },
+              },
+            },
+            clearApiKey: {
+              summary: "Clear Anthropic API key",
+              value: { ai: { apiKeyChange: "clear", apiKey: null } },
+            },
+          },
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Preferences updated",
+      headers: z.object({ ETag: z.string() }),
+      content: {
+        "application/json": {
+          schema: PreferencesResponseSchema,
+        },
+      },
+    },
+    409: {
+      description: "ETag mismatch (resource modified)",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string(), message: z.string() }),
+        },
+      },
+    },
+    422: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string(),
+            details: z.record(z.string(), z.unknown()).optional(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+});
 registry.registerPath({
   method: "get",
   path: "/api/health",
@@ -614,6 +861,174 @@ registry.registerPath({
   },
 });
 
+// ========== ARTICLES STATISTICS SCHEMAS ==========
+
+// Articles statistics response schema
+const ArticleStatsResponseSchema = registry.register(
+  "ArticleStatsResponse",
+  z
+    .object({
+      total: z.number().openapi({
+        description: "Total number of articles across all user feeds",
+        example: 1250,
+      }),
+      unread: z.number().openapi({
+        description: "Number of unread articles",
+        example: 45,
+      }),
+      starred: z.number().openapi({
+        description: "Number of starred articles",
+        example: 12,
+      }),
+    })
+    .openapi({ description: "User article statistics summary" })
+);
+
+// ========== ARTICLES STATISTICS ENDPOINTS ==========
+
+registry.registerPath({
+  method: "get",
+  path: "/api/articles/stats",
+  operationId: "getArticleStatistics",
+  description:
+    "Get comprehensive article statistics for the authenticated user",
+  summary: "Get article statistics (total, unread, starred)",
+  tags: ["Articles"],
+  responses: {
+    200: {
+      description: "Article statistics retrieved successfully",
+      content: {
+        "application/json": {
+          schema: ArticleStatsResponseSchema,
+          examples: {
+            withArticles: {
+              summary: "User with articles",
+              value: {
+                total: 1250,
+                unread: 45,
+                starred: 12,
+              },
+            },
+            newUser: {
+              summary: "New user with no articles",
+              value: {
+                total: 0,
+                unread: 0,
+                starred: 0,
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "User not authenticated",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+          examples: {
+            unauthorized: {
+              summary: "Authentication required",
+              value: {
+                error: "Unauthorized",
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+          examples: {
+            serverError: {
+              summary: "Database connection failed",
+              value: {
+                error: "Failed to fetch statistics",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+// ========== AI PROVIDER SCHEMAS ==========
+
+// AI Model schema
+const AIModelSchema = registry.register(
+  "AIModel",
+  z
+    .object({
+      id: z.string().openapi({
+        description: "Unique model identifier",
+        example: "claude-3-opus-20240229",
+      }),
+      name: z.string().openapi({
+        description: "Human-readable model name",
+        example: "Claude 3 Opus",
+      }),
+      provider: z.string().openapi({
+        description: "AI provider name",
+        example: "anthropic",
+      }),
+      description: z.string().openapi({
+        description: "Model capabilities description",
+        example: "Most capable model for complex tasks",
+      }),
+    })
+    .openapi({ description: "AI model information" })
+);
+
+// AI Models response schema
+const AIModelsResponseSchema = registry.register(
+  "AIModelsResponse",
+  z
+    .object({
+      models: z.array(AIModelSchema).openapi({
+        description: "List of available AI models",
+      }),
+    })
+    .openapi({ description: "Response containing available AI models" })
+);
+
+// API Key validation request schema
+const ValidateKeyRequestSchema = registry.register(
+  "ValidateKeyRequest",
+  z
+    .object({
+      provider: z.enum(["anthropic", "openai"]).openapi({
+        description: "The AI provider to validate against",
+        example: "anthropic",
+      }),
+      apiKey: z.string().openapi({
+        description: "The API key to validate",
+        example: "sk-ant-api03-...",
+      }),
+    })
+    .openapi({ description: "Request to validate an API key" })
+);
+
+// API Key validation response schema
+const ValidateKeyResponseSchema = registry.register(
+  "ValidateKeyResponse",
+  z
+    .object({
+      valid: z.boolean().openapi({
+        description: "Whether the API key is valid",
+        example: true,
+      }),
+      message: z.string().openapi({
+        description: "Human-readable validation result",
+        example: "API key is valid",
+      }),
+    })
+    .openapi({ description: "API key validation result" })
+);
+
 // ========== DEVELOPER TOOLS SCHEMAS ==========
 
 // Insomnia export response schema
@@ -637,7 +1052,7 @@ const InsomniaExportResponseSchema = registry.register(
         description: "Export source identifier",
         example: "rss-reader-openapi-converter",
       }),
-      resources: z.array(z.any()).openapi({
+      resources: z.array(z.record(z.string(), z.unknown())).openapi({
         description:
           "Array of Insomnia resources (workspace, environments, folders, requests)",
       }),
@@ -762,7 +1177,7 @@ const SyncErrorResponseSchema = registry.register(
         description: "Optional error code",
         example: "429",
       }),
-      details: z.any().optional().openapi({
+      details: z.record(z.string(), z.unknown()).optional().openapi({
         description: "Optional additional error context",
       }),
     })
@@ -1386,11 +1801,11 @@ const ArticleSchema = registry.register(
         description: "Article unique identifier",
         example: "550e8400-e29b-41d4-a716-446655440000",
       }),
-      feed_id: z.string().uuid().openapi({
+      feedId: z.string().uuid().openapi({
         description: "Associated feed ID",
         example: "660e8400-e29b-41d4-a716-446655440001",
       }),
-      inoreader_id: z.string().openapi({
+      inoreaderId: z.string().openapi({
         description: "Inoreader article ID",
         example: "tag:google.com,2005:reader/item/000000001234abcd",
       }),
@@ -1402,15 +1817,15 @@ const ArticleSchema = registry.register(
         description: "RSS content (may be truncated)",
         example: "<p>Article preview content...</p>",
       }),
-      full_content: z.string().nullable().openapi({
+      fullContent: z.string().nullable().openapi({
         description: "Full extracted article content",
         example: "<p>Complete article content...</p>",
       }),
-      has_full_content: z.boolean().openapi({
+      hasFullContent: z.boolean().openapi({
         description: "Whether full content has been extracted",
         example: true,
       }),
-      ai_summary: z.string().nullable().openapi({
+      aiSummary: z.string().nullable().openapi({
         description: "AI-generated summary",
         example: "This article discusses recent technological innovations...",
       }),
@@ -1422,41 +1837,42 @@ const ArticleSchema = registry.register(
         description: "Article URL",
         example: "https://example.com/article/123",
       }),
-      published_at: z.string().openapi({
+      publishedAt: z.string().openapi({
         description: "Publication timestamp",
         example: "2025-08-15T10:30:00Z",
       }),
-      is_read: z.boolean().openapi({
+      isRead: z.boolean().openapi({
         description: "Read status",
         example: false,
       }),
-      is_starred: z.boolean().openapi({
+      isStarred: z.boolean().openapi({
         description: "Starred status",
         example: true,
       }),
-      parsed_at: z.string().nullable().openapi({
+      parsedAt: z.string().nullable().openapi({
         description: "Content extraction timestamp",
         example: "2025-08-15T10:35:00Z",
       }),
-      parse_failed: z.boolean().optional().openapi({
+      parseFailed: z.boolean().optional().openapi({
         description: "Whether content extraction failed",
         example: false,
       }),
-      parse_attempts: z.number().optional().openapi({
+      parseAttempts: z.number().optional().openapi({
         description: "Number of extraction attempts",
         example: 1,
       }),
-      created_at: z.string().openapi({
+      createdAt: z.string().openapi({
         description: "Database creation timestamp",
         example: "2025-08-15T10:31:00Z",
       }),
-      updated_at: z.string().openapi({
+      updatedAt: z.string().openapi({
         description: "Last update timestamp",
         example: "2025-08-15T10:35:00Z",
       }),
     })
     .openapi({
-      description: "Article entity with full metadata",
+      description:
+        "Article entity with camelCase field names (transformed from database snake_case)",
     })
 );
 
@@ -2974,7 +3390,7 @@ registry.registerPath({
   summary: "Check OAuth authentication status",
   description:
     "Validates the local OAuth token file status without making API calls. Checks token existence, encryption, age, and expiration (365-day lifetime).",
-  tags: ["Authentication"],
+  tags: ["Auth"],
   responses: {
     200: {
       description: "Authentication status retrieved successfully",
@@ -3191,7 +3607,7 @@ const InoreaderDebugResponseSchema = z
     isExpired: z.boolean().nullable().openapi({
       description: "Whether token is expired",
     }),
-    cookies: z.record(z.string(), z.any()).openapi({
+    cookies: z.record(z.string(), z.unknown()).openapi({
       description: "Cookie information",
     }),
   })
@@ -3199,7 +3615,7 @@ const InoreaderDebugResponseSchema = z
 
 const InoreaderDevResponseSchema = z
   .object({
-    data: z.any().openapi({
+    data: z.unknown().openapi({
       description: "API response data",
     }),
     headers: z.record(z.string(), z.string()).openapi({
@@ -3832,7 +4248,7 @@ if (process.env.NODE_ENV !== "production") {
       body: {
         content: {
           "application/json": {
-            schema: z.any().openapi({
+            schema: z.unknown().openapi({
               description: "Request body to send to Inoreader",
             }),
           },
@@ -3902,129 +4318,13 @@ if (process.env.NODE_ENV !== "production") {
     },
   });
 
-  // Analytics endpoint (RR-208)
-  const AnalyticsStatsResponseSchema = z.object({
-    fetchStats: z
-      .object({
-        totalAttempts: z.number().describe("Total content fetch attempts"),
-        successCount: z.number().describe("Successful fetches"),
-        failureCount: z.number().describe("Failed fetches"),
-        autoFetchCount: z.number().describe("Automatic fetch attempts"),
-        manualFetchCount: z.number().describe("Manual fetch attempts"),
-        avgDurationMs: z
-          .number()
-          .nullable()
-          .describe("Average fetch duration in milliseconds"),
-        commonErrors: z
-          .array(
-            z.object({
-              reason: z.string().describe("Error reason"),
-              count: z.number().describe("Occurrence count"),
-            })
-          )
-          .describe("Most common error reasons"),
-      })
-      .describe("Content fetching statistics"),
-    syncStats: z
-      .object({
-        totalSyncs: z.number().describe("Total sync operations"),
-        lastSyncTime: z
-          .string()
-          .nullable()
-          .describe("Last successful sync timestamp"),
-        avgSyncDuration: z
-          .number()
-          .nullable()
-          .describe("Average sync duration in seconds"),
-      })
-      .describe("Sync operation statistics"),
-    apiUsage: z
-      .object({
-        zone1Usage: z.number().describe("Read operations usage"),
-        zone1Limit: z.number().describe("Read operations limit"),
-        zone2Usage: z.number().describe("Write operations usage"),
-        zone2Limit: z.number().describe("Write operations limit"),
-        resetAfter: z
-          .number()
-          .nullable()
-          .describe("Seconds until rate limit reset"),
-      })
-      .describe("API usage and rate limits"),
-  });
-
-  registry.registerPath({
-    method: "get",
-    path: "/api/analytics/fetch-stats",
-    operationId: "getAnalyticsStats",
-    summary: "Get analytics and statistics",
-    description:
-      "Retrieves comprehensive analytics including fetch statistics, sync metrics, and API usage data",
-    tags: ["Analytics"],
-    responses: {
-      200: {
-        description: "Analytics data retrieved successfully",
-        content: {
-          "application/json": {
-            schema: AnalyticsStatsResponseSchema,
-            examples: {
-              success: {
-                value: {
-                  fetchStats: {
-                    totalAttempts: 1250,
-                    successCount: 1180,
-                    failureCount: 70,
-                    autoFetchCount: 950,
-                    manualFetchCount: 300,
-                    avgDurationMs: 2345,
-                    commonErrors: [
-                      { reason: "Network timeout", count: 25 },
-                      { reason: "Content not found", count: 20 },
-                    ],
-                  },
-                  syncStats: {
-                    totalSyncs: 48,
-                    lastSyncTime: "2025-08-15T10:30:00.000Z",
-                    avgSyncDuration: 12.5,
-                  },
-                  apiUsage: {
-                    zone1Usage: 3500,
-                    zone1Limit: 5000,
-                    zone2Usage: 45,
-                    zone2Limit: 100,
-                    resetAfter: 3600,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      500: {
-        description: "Server error",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-            examples: {
-              error: {
-                value: {
-                  error: "Failed to retrieve analytics",
-                  details: "Database connection error",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
   // Logs endpoint (RR-208)
   const LogEventRequestSchema = z.object({
     event: z.string().describe("Event type"),
     level: z.enum(["info", "warn", "error"]).describe("Log level"),
     message: z.string().describe("Log message"),
     metadata: z
-      .record(z.string(), z.any())
+      .record(z.string(), z.unknown())
       .optional()
       .describe("Additional metadata"),
     timestamp: z.string().optional().describe("Event timestamp (ISO 8601)"),
@@ -4439,7 +4739,7 @@ if (process.env.NODE_ENV !== "production") {
           z.object({
             timestamp: z.string(),
             operation: z.string(),
-            data: z.any(),
+            data: z.unknown(),
           })
         )
         .describe("Captured audit trail data"),
@@ -4763,7 +5063,432 @@ if (process.env.NODE_ENV !== "production") {
         },
       },
     });
+
+    // RR-269: User Preferences API Endpoints
+
+    // Preferences schema with nested structure
+    const PreferencesSchema = z.object({
+      ai: z
+        .object({
+          model: z
+            .string()
+            .optional()
+            .describe("AI model for generating summaries"),
+          summaryWordCount: z
+            .string()
+            .regex(/^\d+-\d+$/)
+            .optional()
+            .describe("Word count range for summaries (e.g., '70-80')"),
+          summaryStyle: z
+            .enum(["objective", "analytical", "retrospective"])
+            .optional()
+            .describe("Style for AI summaries"),
+        })
+        .optional()
+        .describe("AI-related preferences"),
+      sync: z
+        .object({
+          maxArticles: z
+            .number()
+            .min(10)
+            .max(1000)
+            .optional()
+            .describe("Maximum number of articles to sync"),
+          retentionCount: z
+            .number()
+            .min(1)
+            .optional()
+            .describe("Number of days to retain articles"),
+          batchSize: z
+            .number()
+            .min(1)
+            .max(100)
+            .optional()
+            .describe("Number of articles per batch"),
+        })
+        .optional()
+        .describe("Sync and retention preferences"),
+      apiKeys: z
+        .record(z.string(), z.string())
+        .optional()
+        .describe("Encrypted API keys (decrypted for response)"),
+    });
+
+    // GET /api/users/preferences
+    registry.registerPath({
+      method: "get",
+      path: "/api/users/preferences",
+      summary: "Get user preferences",
+      description:
+        "Retrieve user preferences with defaults merged from environment variables",
+      tags: ["Users"],
+      responses: {
+        200: {
+          description: "User preferences with defaults",
+          content: {
+            "application/json": {
+              schema: PreferencesSchema,
+              examples: {
+                success: {
+                  value: {
+                    ai: {
+                      model: "claude-3-haiku-20240307",
+                      summaryWordCount: "70-80",
+                      summaryStyle: "objective",
+                    },
+                    sync: {
+                      maxArticles: 100,
+                      retentionCount: 30,
+                      batchSize: 20,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
+
+    // PUT /api/users/preferences
+    registry.registerPath({
+      method: "put",
+      path: "/api/users/preferences",
+      summary: "Update user preferences",
+      description:
+        "Update user preferences with partial data. Validates AI models against ai_models table.",
+      tags: ["Users"],
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: PreferencesSchema,
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Updated preferences",
+          content: {
+            "application/json": {
+              schema: PreferencesSchema,
+              examples: {
+                success: {
+                  value: {
+                    ai: {
+                      model: "claude-3-opus-20240229",
+                      summaryWordCount: "150-175",
+                      summaryStyle: "analytical",
+                    },
+                    sync: {
+                      maxArticles: 250,
+                      retentionCount: 60,
+                      batchSize: 50,
+                    },
+                    apiKeys: {
+                      inoreader: "example_api_key",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Invalid preferences data",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+              examples: {
+                invalidModel: {
+                  value: {
+                    error: "Invalid AI model specified",
+                  },
+                },
+                invalidFormat: {
+                  value: {
+                    error: "Invalid preferences data",
+                    details: [
+                      {
+                        path: ["summaryWordCount"],
+                        message: "Invalid format",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: ErrorResponseSchema,
+            },
+          },
+        },
+      },
+    });
   }
+
+  // ========== AI PROVIDER ENDPOINTS ==========
+
+  // GET /api/ai/models - Get available AI models
+  registry.registerPath({
+    method: "get",
+    path: "/api/ai/models",
+    summary: "Get available AI models",
+    description:
+      "Retrieves a list of available Anthropic AI models that can be used for content summarization. Includes model metadata such as name, description, and provider information.",
+    tags: ["AI"],
+    security: [{ cookieAuth: [] }],
+    responses: {
+      200: {
+        description: "Successfully retrieved AI models",
+        headers: {
+          ETag: {
+            description: "Entity tag for cache validation",
+            schema: { type: "string" },
+          },
+          "Cache-Control": {
+            description: "Cache control header (private, max-age=300)",
+            schema: { type: "string" },
+          },
+        },
+        content: {
+          "application/json": {
+            schema: AIModelsResponseSchema,
+            examples: {
+              success: {
+                value: {
+                  models: [
+                    {
+                      id: "claude-3-opus-20240229",
+                      name: "Claude 3 Opus",
+                      provider: "anthropic",
+                      description: "Most capable model for complex tasks",
+                    },
+                    {
+                      id: "claude-3-sonnet-20240229",
+                      name: "Claude 3 Sonnet",
+                      provider: "anthropic",
+                      description: "Balanced performance and cost",
+                    },
+                    {
+                      id: "claude-3-haiku-20240307",
+                      name: "Claude 3 Haiku",
+                      provider: "anthropic",
+                      description: "Fast and efficient",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      304: {
+        description: "Not Modified - ETag matches, use cached response",
+      },
+      401: {
+        description: "Unauthorized - Invalid or missing authentication",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              unauthorized: {
+                value: {
+                  error: "Authentication required",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              serverError: {
+                value: {
+                  error: "Failed to fetch models",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // POST /api/ai/validate-key - Validate an AI provider API key
+  registry.registerPath({
+    method: "post",
+    path: "/api/ai/validate-key",
+    summary: "Validate an AI provider API key",
+    description:
+      "Validates an API key with the specified AI provider (currently supports Anthropic). Includes rate limiting (10 requests per minute) and a 3-second timeout for validation.",
+    tags: ["AI"],
+    security: [{ cookieAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: ValidateKeyRequestSchema,
+            examples: {
+              anthropic: {
+                value: {
+                  provider: "anthropic",
+                  apiKey: "sk-ant-api03-example-key",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "API key validation result",
+        headers: {
+          "Cache-Control": {
+            description: "Prevents caching of validation results",
+            schema: { type: "string", example: "no-store" },
+          },
+          "X-RateLimit-Limit": {
+            description: "Maximum requests per minute",
+            schema: { type: "string", example: "10" },
+          },
+          "X-RateLimit-Remaining": {
+            description: "Remaining requests in current window",
+            schema: { type: "string", example: "9" },
+          },
+          "X-RateLimit-Reset": {
+            description: "Unix timestamp when rate limit resets",
+            schema: { type: "string", example: "1699564800" },
+          },
+        },
+        content: {
+          "application/json": {
+            schema: ValidateKeyResponseSchema,
+            examples: {
+              valid: {
+                value: {
+                  valid: true,
+                  message: "API key is valid",
+                },
+              },
+              invalid: {
+                value: {
+                  valid: false,
+                  message: "Invalid API key",
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input or rate limit exceeded",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              missingProvider: {
+                value: {
+                  error: "Provider is required",
+                },
+              },
+              unsupportedProvider: {
+                value: {
+                  error: "Unsupported provider: azure",
+                },
+              },
+              rateLimit: {
+                value: {
+                  error: "Rate limit exceeded",
+                },
+              },
+            },
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - Authentication required",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              unauthorized: {
+                value: {
+                  error: "Authentication required",
+                },
+              },
+            },
+          },
+        },
+      },
+      504: {
+        description: "Gateway Timeout - Validation took too long",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              timeout: {
+                value: {
+                  error: "API key validation timed out",
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+            examples: {
+              serverError: {
+                value: {
+                  error: "Failed to validate API key",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 export {

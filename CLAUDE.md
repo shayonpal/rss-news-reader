@@ -13,6 +13,8 @@ This file provides guidance to Claude Code when working with this repository.
 6. Tests are the specification - when tests fail, fix the code, not the tests
 7. ALWAYS use available sub-agents for relevant tasks
 8. ALWAYS activate Serena MCP at session start: `mcp__serena__activate_project`
+9. ALWAYS verify script outputs match test expectations - script/test misalignment is a recurring pattern
+10. When creating scripts that generate files, ensure paths align with existing test expectations
 
 ## Critical Project Context
 
@@ -111,6 +113,31 @@ Always use specialized agents when available:
 - `db-expert` - Database operations
 - `test-expert` - Testing implementation
 - `infra-expert` - Infrastructure issues
+
+## Critical Lessons Learned
+
+### Log Cleanup and React Lifecycle Management
+
+**RR-284 Regression**: When cleaning up console.log statements, **NEVER remove conditional logic** - even simple checks like `mountedRef.current` can be critical for React component lifecycle management.
+
+**What Happened**: Removed `mountedRef.current` check during log cleanup, breaking auto-fetch functionality:
+
+- Auto-fetch task succeeded in global task manager ✅
+- Component received result via `existingResult` ✅
+- **But mount check blocked state update during navigation** ❌
+- Manual fetch still worked (different execution context) ✅
+
+**The Fix**: Remove only logging statements, preserve all conditional logic:
+
+```typescript
+// DON'T do this during cleanup:
+if (existingResult && mountedRef.current) { ... } → if (existingResult) { ... }
+
+// DO this instead - remove only the logs:
+console.log("debug info"); → (remove entirely)
+```
+
+**Key Rule**: During code cleanup, preserve ALL conditional logic, state checks, and control flow - only remove actual logging statements.
 
 ## Memories
 

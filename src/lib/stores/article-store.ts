@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { supabase } from "@/lib/db/supabase";
 import { useSyncStore } from "./sync-store";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
+import { articleCacheService } from "@/lib/services/article-cache-service";
 import type { Article, ArticleState, Summary } from "@/types";
 import type { Database } from "@/lib/db/types";
 
@@ -814,32 +815,21 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       }
 
       // Invalidate article count cache (now handled by articleCounterManager)
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__articleCountManager &&
-        firstArticle?.feedId
-      ) {
-        (window as any).__articleCountManager.invalidateCache(
-          firstArticle.feedId
-        );
+      if (firstArticle?.feedId) {
+        articleCacheService.invalidateCache(firstArticle.feedId);
       }
 
-      // Invalidate article count cache for affected feeds (legacy support)
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__articleCountManager
-      ) {
-        const affectedFeeds = new Set<string>();
-        articlesToMark.forEach((id) => {
-          const article = articles.get(id);
-          if (article) {
-            affectedFeeds.add(article.feedId);
-          }
-        });
-        affectedFeeds.forEach((feedId) => {
-          (window as any).__articleCountManager.invalidateCache(feedId);
-        });
-      }
+      // Invalidate article count cache for affected feeds
+      const affectedFeeds = new Set<string>();
+      articlesToMark.forEach((id) => {
+        const article = articles.get(id);
+        if (article) {
+          affectedFeeds.add(article.feedId);
+        }
+      });
+      affectedFeeds.forEach((feedId) => {
+        articleCacheService.invalidateCache(feedId);
+      });
 
       // RR-197: Also invalidate our new counter manager
       articlesToMark.forEach((id) => {
@@ -907,12 +897,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       set({ articles: updatedArticles });
 
       // Invalidate article count cache
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__articleCountManager
-      ) {
-        (window as any).__articleCountManager.invalidateCache(article.feedId);
-      }
+      articleCacheService.invalidateCache(article.feedId);
 
       // Queue for sync if offline (legacy offline queue)
       const syncStore = useSyncStore.getState();
@@ -995,13 +980,41 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
     set({ summarizingArticles: updatedSummarizingArticles });
 
     try {
+      // Get the current session for authentication
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      console.log("DEBUG: Frontend Session:", {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        tokenLength: session?.access_token?.length,
+        tokenStart: session?.access_token?.substring(0, 10),
+        sessionError,
+        user: session?.user?.id,
+      });
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      // Add Authorization header if user is authenticated
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+        console.log(
+          "DEBUG: Frontend Auth header set:",
+          headers.Authorization.substring(0, 20) + "..."
+        );
+      } else {
+        console.log("DEBUG: Frontend No access token available");
+      }
+
       const response = await fetch(
         `/reader/api/articles/${articleId}/summarize`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ regenerate }),
         }
       );
@@ -1205,12 +1218,7 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
       );
 
       // Step 7: Invalidate article count cache (RR-197 integration)
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__articleCountManager
-      ) {
-        (window as any).__articleCountManager.invalidateCache(feedId);
-      }
+      articleCacheService.invalidateCache(feedId);
 
       // RR-197: Also invalidate our new counter manager
       const { articleCounterManager } = await import(
@@ -1392,14 +1400,9 @@ export const useArticleStore = create<ArticleStoreState>((set, get) => ({
         unreadTaggedArticles.map((a) => a.feed_id).filter(Boolean)
       );
 
-      if (
-        typeof window !== "undefined" &&
-        (window as any).__articleCountManager
-      ) {
-        affectedFeeds.forEach((feedId) => {
-          (window as any).__articleCountManager.invalidateCache(feedId);
-        });
-      }
+      affectedFeeds.forEach((feedId) => {
+        articleCacheService.invalidateCache(feedId);
+      });
 
       // RR-197: Also invalidate our new counter manager for all affected feeds
       const { articleCounterManager } = await import(

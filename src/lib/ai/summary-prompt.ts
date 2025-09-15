@@ -4,6 +4,20 @@ interface SummaryPromptConfig {
   style: string;
 }
 
+interface UserPreferences {
+  ai?: {
+    summaryWordCount?: string;
+    summaryStyle?: string;
+    contentFocus?: string;
+    model?: string;
+  };
+  sync?: {
+    maxArticles?: number;
+    retentionCount?: number;
+    batchSize?: number;
+  };
+}
+
 export class SummaryPromptBuilder {
   private static readonly DEFAULTS: SummaryPromptConfig = {
     wordCount: "150-175",
@@ -11,11 +25,40 @@ export class SummaryPromptBuilder {
     style: "objective",
   };
 
+  private static userPreferences: UserPreferences | null = null;
+
+  static setUserPreferences(preferences: UserPreferences | null) {
+    this.userPreferences = preferences;
+  }
+
   static getConfig(): SummaryPromptConfig {
+    // Helper to convert contentFocus enum to prompt text
+    const getFocusText = (focus: string | null): string => {
+      switch (focus) {
+        case "key-facts-arguments":
+          return "key facts, main arguments, and important conclusions";
+        case "key-facts-impact":
+          return "key facts, context, and implications";
+        case "key-facts-business":
+          return "key facts, business impact, and implications";
+        default:
+          return "key facts, main arguments, and important conclusions";
+      }
+    };
+
+    // First check user preferences (nested structure), then environment variables, then defaults
     return {
-      wordCount: process.env.SUMMARY_WORD_COUNT || this.DEFAULTS.wordCount,
-      focus: process.env.SUMMARY_FOCUS || this.DEFAULTS.focus,
-      style: process.env.SUMMARY_STYLE || this.DEFAULTS.style,
+      wordCount:
+        this.userPreferences?.ai?.summaryWordCount ||
+        process.env.SUMMARY_WORD_COUNT ||
+        this.DEFAULTS.wordCount,
+      focus: this.userPreferences?.ai?.contentFocus
+        ? getFocusText(this.userPreferences.ai.contentFocus)
+        : process.env.SUMMARY_FOCUS || this.DEFAULTS.focus,
+      style:
+        this.userPreferences?.ai?.summaryStyle ||
+        process.env.SUMMARY_STYLE ||
+        this.DEFAULTS.style,
     };
   }
 

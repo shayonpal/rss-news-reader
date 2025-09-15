@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useArticleStore } from "@/lib/stores/article-store";
 import { useFeedStore } from "@/lib/stores/feed-store";
 import { ArticleDetail } from "@/components/articles/article-detail";
@@ -13,6 +13,7 @@ import { navigationHistory } from "@/lib/utils/navigation-history";
 export default function ArticlePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const articleId = params.id ? decodeURIComponent(params.id as string) : "";
 
   const {
@@ -22,11 +23,55 @@ export default function ArticlePage() {
     toggleStar,
     setNavigatingToArticle,
   } = useArticleStore();
-  const { feeds } = useFeedStore();
+  const { feeds, loadFeedHierarchy } = useFeedStore();
   const [article, setArticle] = useState<Article | null>(null);
   const [articleTags, setArticleTags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFoundError, setNotFoundError] = useState(false);
+  const [feedsLoaded, setFeedsLoaded] = useState(false);
+
+  // Read feed context from URL (Option 2: URL Query Parameters)
+  const feedIdFromQuery = useMemo(() => {
+    if (!searchParams) return null;
+    // Prefer explicit feedId for article detail; fall back to generic 'feed'
+    return searchParams.get("feedId") || searchParams.get("feed") || null;
+  }, [searchParams]);
+
+  // Ensure list filters are available for back navigation even after a refresh
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      if (feedIdFromQuery) {
+        sessionStorage.setItem("articleListFilter", feedIdFromQuery);
+      }
+      // Preserve tag context if present (future-proofing; optional)
+      const tagFromQuery =
+        searchParams?.get("tagId") || searchParams?.get("tag");
+      if (tagFromQuery) {
+        sessionStorage.setItem("articleListTagFilter", tagFromQuery);
+      }
+    } catch (e) {
+      console.warn("Failed to persist list filters from URL:", e);
+    }
+  }, [feedIdFromQuery, searchParams]);
+
+  // Load feeds if not already loaded (happens on refresh)
+  useEffect(() => {
+    const loadFeeds = async () => {
+      if (feeds.size === 0 && !feedsLoaded) {
+        try {
+          await loadFeedHierarchy();
+          setFeedsLoaded(true);
+        } catch (error) {
+          console.warn("Failed to load feeds:", error);
+          setFeedsLoaded(true); // Set to true even on error to prevent infinite retries
+        }
+      } else if (feeds.size > 0) {
+        setFeedsLoaded(true);
+      }
+    };
+    loadFeeds();
+  }, [feeds.size, feedsLoaded, loadFeedHierarchy]);
 
   useEffect(() => {
     const loadArticle = async () => {
@@ -40,10 +85,8 @@ export default function ArticlePage() {
           setArticle(fetchedArticle);
 
           // Track navigation to this article
-          navigationHistory.addEntry(
-            `/article/${articleId}`,
-            parseInt(articleId)
-          );
+          // Track navigation to this article (store raw article id)
+          navigationHistory.addEntry(articleId, parseInt(articleId));
 
           // Fetch tags for the article
           try {
@@ -93,6 +136,27 @@ export default function ArticlePage() {
     }
   }, [articles, articleId, article]);
 
+  // Enhanced feed title resolution with multiple fallbacks (must be before conditionals)
+  const feedTitle = useMemo(() => {
+    if (!article) return "Unknown Feed";
+
+    const effectiveFeedId = article.feedId || feedIdFromQuery || "";
+    const feed = feeds.get(effectiveFeedId);
+
+    // First try: Get from feed store
+    if (feed?.title) {
+      return feed.title;
+    }
+
+    // Second try: If feeds haven't loaded yet but we have a feedId, show loading state
+    if (effectiveFeedId && feeds.size === 0 && !feedsLoaded) {
+      return "Loading...";
+    }
+
+    // Final fallback
+    return "Unknown Feed";
+  }, [article, feedIdFromQuery, feeds, feedsLoaded]);
+
   const handleToggleStar = async () => {
     if (article) {
       await toggleStar(article.id);
@@ -130,7 +194,14 @@ export default function ArticlePage() {
       }
 
       // Next.js automatically prepends basePath to router operations
-      router.push(`/article/${encodeURIComponent(targetArticle.id)}`);
+      // Carry forward feed context via query param to preserve on refresh
+      const effectiveFeedId = feedIdFromQuery || targetArticle.feedId;
+      const nextUrl = effectiveFeedId
+        ? `/article/${encodeURIComponent(targetArticle.id)}?feedId=${encodeURIComponent(
+            effectiveFeedId
+          )}`
+        : `/article/${encodeURIComponent(targetArticle.id)}`;
+      router.push(nextUrl as any);
     }
   };
 
@@ -146,20 +217,30 @@ export default function ArticlePage() {
     return <ArticleNotFound />;
   }
 
-  const feed = feeds.get(article.feedId || "");
+  // Resolve feed using article data, falling back to URL param context
+  const effectiveFeedId = article.feedId || feedIdFromQuery || "";
+  const feed = feeds.get(effectiveFeedId);
 
   return (
     <ArticleDetail
       article={article}
       articleTags={articleTags}
       feed={feed}
-      feedTitle={feed?.title || "Unknown Feed"}
+      feedTitle={feedTitle}
       onToggleStar={handleToggleStar}
       onNavigate={handleNavigate}
       onBack={() => {
         // Check sessionStorage for active filters and build appropriate URL
-        const feedFilter = sessionStorage.getItem("articleListFilter");
+        let feedFilter = sessionStorage.getItem("articleListFilter");
         const tagFilter = sessionStorage.getItem("articleListTagFilter");
+
+        // Fallback to URL context if sessionStorage missing (e.g., after refresh)
+        if (!feedFilter || feedFilter === "null") {
+          feedFilter = feedIdFromQuery || (null as any);
+          if (feedFilter) {
+            sessionStorage.setItem("articleListFilter", feedFilter);
+          }
+        }
 
         // Next.js automatically prepends basePath to router operations
         let url = "/";
@@ -178,7 +259,7 @@ export default function ArticlePage() {
           url += "?" + queryString;
         }
 
-        // Siri's Fix: Set navigation intent before going back to preserve list state
+        // Preserve list state on back navigation (avoid double penalty)
         setNavigatingToArticle(true);
         router.push(url as any);
       }}

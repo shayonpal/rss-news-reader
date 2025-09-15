@@ -24,6 +24,7 @@ import {
 import DOMPurify from "dompurify";
 import { toast } from "sonner";
 import { ArticleCountManager } from "@/lib/article-count-manager";
+import { articleCacheService } from "@/lib/services/article-cache-service";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 import { GlassIconButton } from "@/components/ui/glass-button";
 import { GlassNav } from "@/components/ui/glass-nav";
@@ -49,6 +50,14 @@ function HomePageContent() {
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const confirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countManager = useRef(new ArticleCountManager());
+  // Register cache manager with service
+  useEffect(() => {
+    articleCacheService.register(countManager.current);
+
+    return () => {
+      articleCacheService.unregister(countManager.current);
+    };
+  }, []);
 
   // Fix hydration issues with localStorage
   useHydrationFix();
@@ -150,8 +159,16 @@ function HomePageContent() {
     );
     setNavigatingToArticle(true);
 
+    // Build article detail URL carrying feed context as query param (Option 2)
+    const feedId = selectedFeedId || searchParams.get("feed") || undefined;
+    const url = feedId
+      ? `/article/${encodeURIComponent(articleId)}?feedId=${encodeURIComponent(
+          feedId
+        )}`
+      : `/article/${encodeURIComponent(articleId)}`;
+
     // Next.js automatically prepends basePath to router operations
-    router.push(`/article/${encodeURIComponent(articleId)}`);
+    router.push(url as any);
   };
 
   const articleListRef = useRef<HTMLDivElement>(null);
@@ -324,6 +341,14 @@ function HomePageContent() {
         await markAllAsRead(selectedFeedId);
       }
 
+      // RR-157 Pattern: Invalidate cache and force fresh count refresh
+      if (selectedFeedId) {
+        countManager.current.invalidateCache(selectedFeedId);
+      } else if (selectedTagId) {
+        // For tags, invalidate all cache since articles span multiple feeds
+        countManager.current.invalidateCache();
+      }
+
       const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : undefined;
       const selectedTag = selectedTagId ? tags.get(selectedTagId) : undefined;
       const contextName =
@@ -331,6 +356,26 @@ function HomePageContent() {
       const sanitizedName = selectedTag?.name
         ? DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] })
         : contextName;
+
+      // Re-fetch counts to update button state (force fresh from database)
+      let newCounts;
+      if (selectedTagId) {
+        // For tag contexts, get fresh tag data directly from store (not component state)
+        const freshTagData = useTagStore.getState().tags.get(selectedTagId);
+        const tagUnreadCount = freshTagData?.unreadCount || 0;
+        newCounts = {
+          total: freshTagData?.totalCount || 0,
+          unread: tagUnreadCount,
+          read: (freshTagData?.totalCount || 0) - tagUnreadCount,
+        };
+      } else {
+        // For feed contexts, use ArticleCountManager
+        newCounts = await countManager.current.getArticleCounts(
+          selectedFeedId || undefined,
+          null // selectedFolderId
+        );
+      }
+      setCounts(newCounts);
 
       toast.success(
         selectedTagId

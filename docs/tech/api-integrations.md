@@ -2,10 +2,11 @@
 
 ## Overview
 
-The RSS Reader integrates with two primary APIs:
+The RSS Reader integrates with multiple external APIs:
 
 1. **Inoreader API** - Feed management and article synchronization
 2. **Anthropic Claude API** - AI-powered article summarization
+3. **Multi-Provider AI APIs (RR-273)** - User-configurable AI services with validation
 
 ## Inoreader API Integration
 
@@ -1222,6 +1223,96 @@ Key test scenarios for RR-163:
 
 This comprehensive tag filtering system provides users with accurate, real-time article filtering capabilities while maintaining optimal performance and reliable data synchronization.
 
+## AI Settings API Integration (RR-273)
+
+### Multi-Provider AI Architecture
+
+The application now supports user-configurable AI providers through secure encrypted storage:
+
+#### 1. AI Models Endpoint
+
+```typescript
+GET / api / ai / models;
+```
+
+**Purpose**: Retrieve available AI models for user selection
+**Authentication**: Network-level (Tailscale)
+**Caching**: 1-hour TTL with ETag support
+**Response**:
+
+```json
+{
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "models": [
+        {
+          "id": "claude-3-haiku-20240307",
+          "name": "Claude 3 Haiku",
+          "contextWindow": 200000,
+          "costTier": "low"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### 2. API Key Validation Endpoint
+
+```typescript
+POST / api / ai / validate - key;
+```
+
+**Purpose**: Validate user-provided API keys before storage
+**Rate Limiting**: 10-second timeout, abuse protection
+**Security**: Validation only, keys never logged or cached
+**Request**:
+
+```json
+{
+  "provider": "anthropic",
+  "apiKey": "sk-ant-api03-..."
+}
+```
+
+**Response**:
+
+```json
+{
+  "valid": true,
+  "provider": "anthropic",
+  "metadata": {
+    "remainingCredits": 5000,
+    "billingTier": "pro"
+  }
+}
+```
+
+#### 3. User Preferences with Encryption
+
+```typescript
+GET / api / users / [id] / preferences;
+PUT / api / users / [id] / preferences;
+```
+
+**Encryption**: AES-256-GCM for sensitive data
+**Features**:
+
+- Conditional updates with ETag support
+- Real-time API key validation
+- Encrypted storage of user API keys
+- Cache management with security boundaries
+
+### Security Implementation
+
+- **API Key Validation**: All user keys validated before storage
+- **Encrypted Storage**: AES-256-GCM encryption for user API keys
+- **No Key Logging**: API keys never appear in logs or debug output
+- **Rate Limiting**: Validation endpoints protected against abuse
+- **Multi-Provider Ready**: Architecture supports OpenAI, Google, etc.
+
 ## Conclusion
 
-This comprehensive API integration plan ensures efficient use of both Inoreader and Claude APIs while maintaining good user experience and staying within rate limits.
+This comprehensive API integration plan ensures efficient use of Inoreader, Claude, and user-configurable AI APIs while maintaining good user experience, security, and rate limit compliance.

@@ -17,6 +17,7 @@ import {
   ArticleCountManager,
   getDynamicPageTitle,
 } from "@/lib/article-count-manager";
+import { articleCacheService } from "@/lib/services/article-cache-service";
 import { Button } from "@/components/ui/button";
 import { CircleCheckBig, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -109,13 +110,12 @@ export function ArticleHeader({
     countManager.current.invalidateCache(selectedFeedId || undefined);
   };
 
-  // Expose cache invalidation to parent components
+  // Register cache manager with service
   useEffect(() => {
-    // Store reference for external cache invalidation
-    (window as any).__articleCountManager = countManager.current;
+    articleCacheService.register(countManager.current);
 
     return () => {
-      delete (window as any).__articleCountManager;
+      articleCacheService.unregister(countManager.current);
     };
   }, []);
 

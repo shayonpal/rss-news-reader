@@ -14,6 +14,7 @@ This document outlines the security measures and policies implemented in the RSS
 
 - **Server-Side OAuth**: All Inoreader authentication is handled server-side
 - **Encrypted Token Storage**: OAuth tokens stored in `~/.rss-reader/tokens.json` using AES-256-GCM encryption
+- **User Preferences Encryption (RR-273)**: User API keys and sensitive preferences encrypted with AES-256-GCM before database storage
 - **No Client-Side Authentication**: The client application requires no user authentication
 - **Database RLS**: Row Level Security enabled on all Supabase tables with user-specific policies
 
@@ -128,6 +129,35 @@ This document outlines the security measures and policies implemented in the RSS
 - Functions protected against search_path manipulation attacks
 - No data loss or functionality impact
 
+### RR-273: User Preferences Encryption Implementation (September 2025)
+
+**Enhancement**: Secure storage of user-configurable AI settings and API keys with multi-layer encryption.
+
+**Implementation**:
+
+- **AES-256-GCM Encryption**: User API keys encrypted before database storage
+- **Encryption Service**: Dedicated service (`src/lib/services/encryption.ts`) with secure key derivation
+- **API Key Validation**: All user-provided API keys validated before storage
+- **Multi-Provider Support**: Architecture supports multiple AI providers (Anthropic, OpenAI, etc.)
+- **Secure Key Management**: Separate encryption keys for OAuth tokens vs user preferences
+
+**Security Features**:
+
+- **Two-Layer Key Management**:
+  - `TOKEN_ENCRYPTION_KEY` for OAuth tokens (system-level)
+  - `USER_DATA_ENCRYPTION_KEY` for user preferences (user-level)
+- **Input Validation**: Zod schemas validate all preference data before processing
+- **API Key Validation**: Real-time validation of user API keys before storage
+- **Cache Security**: Encrypted data never cached in plaintext
+- **Rate Limiting**: API key validation endpoints protected against abuse
+
+**Impact**:
+
+- Secure user-configurable AI settings without compromising system security
+- Multi-provider architecture ready for future AI service integrations
+- User API keys never exposed in logs or client-side code
+- Maintained backward compatibility with existing token encryption system
+
 **Testing**: Test-first development with 32 unit tests defining exact expected behavior
 
 ### RR-202: UUID Validation Middleware Implementation (August 15, 2025)
@@ -217,6 +247,49 @@ The application implements security headers:
 - **In Transit**: All connections use HTTPS/TLS
 - **At Rest**: Supabase provides encryption at rest
 - **Tokens**: OAuth tokens encrypted with AES-256-GCM
+- **API Keys**: Settings API keys encrypted using AES-256-GCM (RR-269)
+
+### Encryption Implementation (RR-269)
+
+**Pattern**: AES-256-GCM encryption for sensitive API keys and tokens
+
+**Implementation Details**:
+
+```typescript
+// Encryption utility pattern
+const encryptAPIKey = (plaintext: string): string => {
+  const iv = crypto.randomBytes(12); // 96-bit IV for GCM
+  const cipher = crypto.createCipher("aes-256-gcm", TOKEN_ENCRYPTION_KEY);
+  cipher.setAAD(Buffer.from("api-key-encryption")); // Additional authenticated data
+
+  let encrypted = cipher.update(plaintext, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  const authTag = cipher.getAuthTag();
+
+  return iv.toString("hex") + ":" + authTag.toString("hex") + ":" + encrypted;
+};
+```
+
+**Security Features**:
+
+- **AES-256-GCM**: Authenticated encryption providing both confidentiality and integrity
+- **Random IV**: Each encryption uses a cryptographically random 96-bit initialization vector
+- **Authentication Tag**: Prevents tampering with encrypted data
+- **Additional Authenticated Data (AAD)**: Context-specific authentication
+- **Key Derivation**: Uses TOKEN_ENCRYPTION_KEY environment variable
+
+**Usage Context**:
+
+- Settings page API key storage
+- User preference encryption where sensitive data is involved
+- OAuth token encryption (existing implementation)
+- Any sensitive configuration data requiring encryption
+
+**Environment Requirements**:
+
+- `TOKEN_ENCRYPTION_KEY`: 32-byte hex string for AES-256 key
+- Secure key generation and storage outside version control
+- Key rotation capability for production environments
 
 ### Data Minimization
 
@@ -273,6 +346,9 @@ The application implements security headers:
 - [ ] Validate UUID parameter validation middleware coverage
 - [ ] Test malformed UUID handling in all API endpoints
 - [ ] Review parameter validation error responses for information leakage
+- [ ] Verify AES-256-GCM encryption implementation for API keys and sensitive data
+- [ ] Test encryption key management and environment variable security
+- [ ] Validate encrypted data integrity with authentication tag verification
 
 ## Related Documentation
 

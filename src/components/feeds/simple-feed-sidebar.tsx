@@ -12,7 +12,7 @@ import {
   Sun,
   Moon,
   Monitor,
-  BarChart3,
+  Bolt,
   Newspaper,
   Rss,
   LayoutDashboard,
@@ -227,11 +227,11 @@ export function SimpleFeedSidebar({
               {getThemeIcon()}
             </button>
             <button
-              onClick={() => router.push("/fetch-stats")}
+              onClick={() => router.push("/settings" as any)}
               className="rounded p-2 transition-colors hover:bg-muted"
-              aria-label="View sync statistics"
+              aria-label="Settings"
             >
-              <BarChart3 className="h-4 w-4" />
+              <Bolt className="h-4 w-4" />
             </button>
             <div className="relative">
               <button

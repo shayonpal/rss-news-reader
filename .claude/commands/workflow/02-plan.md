@@ -1,0 +1,775 @@
+---
+description: Step 2 - Comprehensive Linear issue analysis, implementation strategy development, and intelligent workflow routing after audit
+argument_hint: <issue-id>
+---
+
+# Step 2: Plan - Comprehensive Linear Issue Planning
+
+## Prerequisites
+
+**Note**: Run `01-audit RR-XXX` before this step to validate the issue and gather comprehensive context.
+
+## Project Activation
+
+First, activate Serena MCP to access project memories and context:
+
+```
+mcp__serena__activate_project with:
+  project_path: /Users/shayon/DevProjects/rss-news-reader
+```
+
+Analyze the Linear issue provided in $ARGUMENTS with comprehensive project understanding, technical expert review, pattern recognition, and automated feasibility validation.
+
+This is a `read-only` mode discussion session. No files will be written during analysis. **No Linear issue status updates will be made.**
+
+## 1. Parse Input
+
+Check $ARGUMENTS:
+
+- If starts with "RR-" or just a number → Linear issue analysis (continue)
+- If Linear URL → Extract project/issue ID and continue
+- If empty or other text → Error: "Please provide a Linear issue ID (e.g., RR-123). Use /capture-idea for new ideas."
+
+## 2. Infrastructure Health Check (MANDATORY)
+
+**Validate testing infrastructure before analysis:**
+
+```bash
+# Critical checks - ALL must pass
+npm run type-check  # TypeScript compilation
+npm run lint  # Code quality
+```
+
+**If ANY check fails:**
+
+- 🛑 STOP - Use `infra-expert` agent for emergency fixes
+- DO NOT proceed on broken foundation
+
+**If all pass:** ✅ Continue to Issue Currency Validation
+
+## 3. Linear Issue Currency Validation
+
+**Before deep analysis, validate the issue is current and relevant:**
+
+Use `linear-expert` to ultrathink and perform comprehensive issue validation:
+
+### 3A. Temporal Relevance Check
+
+1. **Issue Age Assessment**:
+   - Check issue creation date vs current date
+   - If issue is >30 days old: Flag for manual review
+   - If issue is >90 days old: STOP and request user confirmation
+   - Compare issue creation against last project activity
+
+2. **Status Consistency Validation**:
+   - Verify issue is still in appropriate status (not accidentally left open)
+   - Check if similar issues have been completed since creation
+   - Validate issue hasn't been superseded by newer requirements
+
+### 3B. Project Context Alignment
+
+1. **Parent/Child Issue Analysis**:
+   - If part of larger epic/project: Check parent issue status and recent updates
+   - Verify child issues haven't changed the implementation approach
+   - Check if sibling issues reveal scope changes or new constraints
+   - Assess if project priorities have shifted
+
+2. **Dependency Chain Validation**:
+   - Check if blocking issues have been resolved as expected
+   - Verify dependent issues still reflect current requirements
+   - Identify any new blockers that have emerged
+
+### 3C. Scope Drift Detection
+
+1. **Requirements Evolution Check**:
+   - Compare original description with recent comments
+   - Look for scope creep or requirement changes in comments
+   - Check if acceptance criteria have been modified
+   - Identify any new technical constraints mentioned
+
+2. **Implementation Reality Check**:
+   - Use Serena MCP to quickly scan for related code changes
+   - Check if similar functionality has been implemented differently
+   - Verify the problem described still exists in current codebase
+   - Assess if architectural changes affect the proposed solution
+
+### 3D. Validation Decision Matrix
+
+Based on validation results, ultrathink and determine next steps:
+
+```
+🟢 PROCEED CONFIDENTLY:
+- Issue <30 days old OR has recent activity
+- No scope changes or conflicts detected
+- Parent project still active and relevant
+- Problem statement matches current codebase state
+
+🟡 PROCEED WITH CAUTION:
+- Issue 30-90 days old with some staleness indicators
+- Minor scope evolution detected
+- Related work has progressed but doesn't conflict
+- Solution approach may need minor adjustments
+
+🔴 STOP FOR CLARIFICATION:
+- Issue >90 days old or appears abandoned
+- Significant scope changes or conflicts detected
+- Parent project deprioritized or cancelled
+- Problem may no longer exist or approach is outdated
+- Implementation requirements fundamentally changed
+```
+
+### 3E. Validation Summary Report
+
+Generate clear validation findings:
+
+```
+📅 Issue Currency Validation for RR-XXX:
+
+⏱️ Temporal Assessment:
+- Created: [date] ([X] days ago)
+- Last Updated: [date]
+- Age Status: [FRESH/AGING/STALE]
+
+🎯 Project Alignment:
+- Parent Issue: [RR-XXX or N/A] - Status: [status]
+- Related Work: [X completed, Y in progress]
+- Priority Alignment: [HIGH/MEDIUM/LOW/UNCLEAR]
+
+🔍 Scope Consistency:
+- Original Requirements: [UNCHANGED/MINOR_UPDATES/MAJOR_CHANGES]
+- Implementation Approach: [STILL_VALID/NEEDS_ADJUSTMENT/OUTDATED]
+- Technical Constraints: [SAME/EVOLVED/NEW_BLOCKERS]
+
+✅ VALIDATION RESULT: [PROCEED/CAUTION/STOP]
+- [Key finding 1]
+- [Key finding 2]
+- [Recommended action if not PROCEED]
+```
+
+**If STOP result:** Request user confirmation to continue with potentially outdated requirements, or suggest issue review/update first.
+
+**If PROCEED or CAUTION:** Continue to context gathering with noted considerations.
+
+## 4. Parallel Context Gathering
+
+**Execute ALL of these IN PARALLEL using agents:**
+
+### 4A. Linear Issue Context
+
+Use `linear-expert` to:
+
+- Get full issue with ALL comments and sub-issues
+- Check parent/child issues and dependencies
+- If the issue has a parent issue, check other children issues of the parent issue to get a better understanding of the larger picture
+- Extract description, labels, priority
+- Remember: Issue + comments = living specification
+- Get context of all other incomplete + Done issues in the current cycle
+
+### 4B. Project Memory Context
+
+Use Serena MCP to access project memories:
+
+1. **Read project memories** using `mcp__serena__read_memory`:
+   - Search for project-specific context with query "RSS Reader" OR "RSS News Reader"
+   - Also search with keywords from the issue title/description
+   - Look for technical terms mentioned in the issue
+2. **Retrieve relevant memories** to get:
+   - Project-specific technical decisions and patterns
+   - Stored knowledge about similar features
+   - Historical context about architectural choices
+   - Any observations related to the current issue topic
+
+### 4C. Recent Work Context
+
+Use `doc-search` and `git-expert` to:
+
+- Check CHANGELOG.md for recently shipped features
+- Review last 20 git commits to understand recent changes
+- Identify patterns from completed work
+
+### 4D. Database Context
+
+Use `db-expert-readonly` to:
+
+- Get complete database schema and table structures
+- Understand existing columns, indexes, and relationships
+- Check RLS policies and security advisories
+- Identify what data structures already exist
+
+### 4E. Existing Code Context
+
+Use Serena MCP for precise symbolic analysis:
+
+1. **API Endpoint Discovery**:
+   - Use `get_symbols_overview` on src/app/api/ to map all route handlers
+   - Use `find_symbol` with pattern "GET|POST|PUT|DELETE" for HTTP methods
+   - For each endpoint found, use `find_referencing_symbols` to trace usage
+
+2. **Similar Feature Analysis**:
+   - Use `find_symbol` with substring_matching=true for related functionality
+   - Example: For sync issue, search "sync" to find all sync-related symbols
+   - Use depth=1 to understand method signatures without reading full implementations
+
+3. **Dependency Mapping**:
+   - For key symbols, use `find_referencing_symbols` to build dependency graph
+   - Identify which components, stores, and services will be affected
+   - Generate exact modification scope with symbol paths
+
+4. **Pattern Recognition**:
+   - Use `search_for_pattern` with semantic awareness for implementation patterns
+   - Find similar data flows: store → service → API → database
+   - Identify reusable utility functions via symbol relationships
+
+### 4F. Cross-Issue Pattern Recognition
+
+**NEW ENHANCEMENT:** Use `linear-expert` to identify similar completed issues:
+
+1. **Historical Analysis**:
+   - Search for completed issues with similar tags/labels
+   - Find issues that modified similar code areas
+   - Extract common implementation patterns and gotchas
+   - Identify what worked well vs what caused problems
+
+2. **Pattern Extraction**:
+   - Use Serena MCP to analyze symbols from similar implementations
+   - Build template solutions from successful patterns
+   - Document common failure modes and prevention strategies
+   - Generate confidence scores based on historical success rates
+
+3. **Reusable Solution Templates**:
+   - Extract proven code patterns from similar completed work
+   - Identify which approaches consistently succeed
+   - Build decision trees based on issue characteristics
+   - Document required adaptations for different contexts
+
+## 5. Automated Feasibility Validation
+
+**NEW ENHANCEMENT:** Systematic validation before deep analysis:
+
+### Database Compatibility Assessment
+
+Use `db-expert-readonly` for automated checks:
+
+1. **Schema Compatibility**:
+   - Verify required tables/columns exist or can be added
+   - Check constraint conflicts and migration feasibility
+   - Assess index requirements and performance impact
+   - Validate data type compatibility
+
+2. **Performance Impact**:
+   - Estimate query complexity and execution time
+   - Check for potential N+1 query problems
+   - Assess need for new indexes or optimizations
+   - Validate against current performance budgets
+
+### API Endpoint Conflict Detection
+
+Use Serena MCP for systematic endpoint analysis:
+
+1. **Route Conflict Detection**:
+   - Use `get_symbols_overview` to map all existing routes
+   - Check for path conflicts with proposed endpoints
+   - Validate HTTP method compatibility
+   - Assess middleware and authentication requirements
+
+2. **Breaking Change Assessment**:
+   - Use `find_referencing_symbols` to identify API consumers
+   - Check for backwards compatibility requirements
+   - Assess versioning needs for API changes
+   - Validate contract compliance with existing clients
+
+### Performance Budget Validation
+
+Cross-reference with existing performance benchmarks:
+
+1. **Test Suite Impact**:
+   - Estimate additional test execution time
+   - Validate against 8-20s target test duration
+   - Assess parallel test execution feasibility
+   - Check for potential test isolation issues
+
+2. **Runtime Performance**:
+   - Estimate feature performance impact
+   - Check against UI responsiveness requirements
+   - Assess memory and CPU usage implications
+   - Validate caching and optimization opportunities
+
+### Resource Constraint Assessment
+
+Evaluate development and infrastructure constraints:
+
+1. **Development Complexity**:
+   - Estimate implementation time and effort
+   - Assess required expertise and knowledge gaps
+   - Check for external dependency requirements
+   - Validate testing and deployment complexity
+
+2. **Infrastructure Requirements**:
+   - Assess server resource needs
+   - Check for third-party service dependencies
+   - Validate monitoring and observability needs
+   - Estimate operational overhead
+
+### Feasibility Recommendations
+
+Generate clear decision guidance:
+
+```
+🚦 Feasibility Assessment for RR-XXX:
+
+✅ GO (High Confidence):
+- All compatibility checks pass
+- Low implementation risk
+- Proven patterns available
+- Clear success metrics
+
+🟡 CAUTION (Medium Confidence):
+- Some complexity or risk factors identified
+- Mitigation strategies available
+- Additional planning recommended
+- Performance monitoring required
+
+🛑 STOP (Low Confidence):
+- Significant technical barriers
+- High risk of breaking changes
+- Insufficient resources or expertise
+- Alternative approaches recommended
+```
+
+## 6. Deep Technical Analysis
+
+Based on gathered context, ultrathink and analyze:
+
+### Implementation Requirements:
+
+- Can this use existing API endpoints? (prefer extending over creating new)
+- Can this use existing database tables/columns? (prefer extending over new)
+- What similar patterns exist in the codebase?
+- Use `find_symbol` to locate exact functions/classes to modify
+- Use `find_referencing_symbols` to identify ALL code that depends on changes
+- Build a complete dependency graph showing ripple effects
+
+### Technical Validation:
+
+- Use `web-researcher` agent to verify feasibility
+- Check performance baselines: Will this impact 8-20s test execution?
+- For UI features: Plan E2E tests using Playwright
+
+### Code Quality Review:
+
+- Use `tech-expert` agent to validate proposed approach
+- Check for security implications and best practices
+
+## 6A. Symbol-Based Impact Assessment
+
+Execute precise symbol-level analysis:
+
+### Symbol Discovery:
+
+Use Serena to map the feature's symbol footprint:
+
+1. Primary symbols: Classes/functions that implement core logic
+2. Secondary symbols: Supporting utilities and helpers
+3. Consumer symbols: Components/services that use the feature
+
+### Impact Graph:
+
+Build complete dependency graph:
+
+- Forward dependencies: What this feature will call
+- Reverse dependencies: What calls this feature
+- Cross-file impacts: Symbols in other files affected
+
+### Modification Precision:
+
+Instead of: "Modify src/lib/stores/article-store.ts"
+Provide: "Replace symbol body: ArticleStore/syncArticles (lines 145-203)"
+"Insert after symbol: ArticleStore/constructor to add new state"
+"17 call sites need updating: [list with symbol paths]"
+
+## 7. Pragmatic Assessment
+
+**Challenge Everything:**
+
+- Does this actually solve the stated problem?
+- Is the effort worth the value? (e.g., "3 days for 2% improvement?")
+- Are there simpler alternatives?
+- Is this even a valid issue that needs solving?
+- What could go wrong with this approach?
+
+**Be Direct:**
+
+- "This won't work because..." with clear reasoning
+- "Consider X instead because..."
+- "This might cause Y issue..."
+
+## 8. Implementation Strategy
+
+Create detailed strategy based on issue type:
+
+### For All Types:
+
+1. List specific files to modify (with line references if applicable)
+2. Identify which existing endpoints/functions to extend
+3. Database changes needed (if any)
+4. Test scenarios to implement
+5. Documentation updates required
+
+### Present Strategy:
+
+```
+📋 Analysis for RR-XXX: [Title]
+
+📝 Summary:
+[2-3 sentences in PM-friendly language]
+
+🔄 Reusing Existing Code:
+- API: [Existing endpoint to extend or "New endpoint required"]
+- Database: [Existing tables/columns or "New migration needed"]
+- Patterns: [Similar features to follow]
+
+🎯 Implementation Strategy:
+1. [Specific file/component - what and why]
+2. [Next step with file reference]
+3. [Continue with concrete steps]
+
+⚠️ Considerations:
+- [Technical constraint or risk]
+- Performance impact on test suite (target: <20s)
+
+📝 Tests Required:
+- Unit tests: [scenarios]
+- E2E tests: [Playwright scenarios if UI]
+
+📚 Documentation Updates:
+- [Files needing updates]
+
+❓ Clarifications Needed:
+- [Any ambiguities]
+```
+
+## 9. Interactive Refinement
+
+Ask:
+
+```
+Do you:
+1. ✅ Agree with this implementation strategy?
+2. 🔄 Want to refine it further?
+3. 🔍 Want a domain expert review?
+
+Please respond with 1, 2, or 3.
+```
+
+### If 2 (Refine):
+
+- Ask for specific concerns
+- Iterate on strategy
+- Return to options
+
+### If 3 (Expert Review):
+
+- Ask which expert (db-expert, devops-expert, ui-expert, test-expert)
+- Get expert validation and recommendations
+- Incorporate feedback and return to options
+
+### If 1 (Agree):
+
+**Strategy approved! Ready to proceed to implementation phase.**
+
+## 9A. Technical Expert Review
+
+Use `tech-expert` agent for comprehensive architecture validation:
+
+### Architecture Validation
+
+Engage `tech-expert` to review the proposed implementation:
+
+1. **Scalability Assessment**:
+   - Evaluate approach for handling increased load
+   - Assess caching and optimization opportunities
+   - Review data flow efficiency and bottlenecks
+   - Validate horizontal scaling considerations
+
+2. **Security Review**:
+   - Check for potential security vulnerabilities
+   - Validate authentication and authorization flows
+   - Assess data privacy and protection measures
+   - Review input validation and sanitization
+
+3. **Performance Analysis**:
+   - Evaluate computational complexity
+   - Assess memory usage patterns
+   - Review database query optimization
+   - Validate caching strategies
+
+4. **Code Quality Standards**:
+   - Check compliance with project patterns
+   - Validate error handling strategies
+   - Assess testability and maintainability
+   - Review code organization and modularity
+
+### Alternative Approach Recommendations
+
+Request `tech-expert` to provide:
+
+1. **Alternative Implementation Strategies**:
+   - Different architectural approaches
+   - Trade-offs between approaches
+   - Pros and cons of each option
+   - Recommendation with justification
+
+2. **Risk Mitigation Strategies**:
+   - Potential failure modes and prevention
+   - Monitoring and alerting recommendations
+   - Rollback and recovery procedures
+   - Performance degradation safeguards
+
+3. **Future-Proofing Considerations**:
+   - Extensibility for future requirements
+   - Migration path for improvements
+   - Deprecation strategy for old patterns
+   - Integration with planned features
+
+### Expert Review Summary
+
+Document expert findings:
+
+```
+🧠 Technical Expert Review for RR-XXX:
+
+🏗️ Architecture Assessment:
+- Scalability: [GOOD/NEEDS_WORK/POOR] - [specific feedback]
+- Security: [GOOD/NEEDS_WORK/POOR] - [specific feedback]
+- Performance: [GOOD/NEEDS_WORK/POOR] - [specific feedback]
+- Code Quality: [GOOD/NEEDS_WORK/POOR] - [specific feedback]
+
+🔄 Alternative Approaches:
+1. [Alternative 1]: [brief description] - [pros/cons]
+2. [Alternative 2]: [brief description] - [pros/cons]
+3. [Recommended approach with justification]
+
+⚠️ Risk Factors:
+- [Risk 1]: [mitigation strategy]
+- [Risk 2]: [mitigation strategy]
+
+🔮 Future Considerations:
+- [Extensibility concerns]
+- [Migration requirements]
+- [Integration dependencies]
+```
+
+## 10. Implementation Complexity Assessment & Routing
+
+**Analyze the approved strategy to determine optimal next steps:**
+
+### Complexity Evaluation Criteria
+
+**Automatically assess these factors:**
+
+1. **Issue Classification**:
+   - Bug Fix: Simple corrections to existing functionality
+   - Enhancement: Modifications to existing features
+   - New Feature: Completely new functionality
+   - Architectural: Changes affecting system structure
+
+2. **Implementation Scope**:
+   - Single File: Changes contained to 1-2 files
+   - Multi-File: Changes spanning 3-10 files
+   - Cross-Module: Changes affecting multiple modules/domains
+   - System-Wide: Changes requiring architectural modifications
+
+3. **Test Coverage Analysis**:
+   - Existing Tests Available: Similar functionality already has comprehensive tests
+   - Test Patterns Clear: Well-established testing patterns exist
+   - New Test Patterns: Requires new testing approaches
+   - Complex Integration: Multiple services/systems need testing
+
+4. **Risk Assessment**:
+   - Low Risk: Simple changes with minimal impact
+   - Medium Risk: Moderate complexity with some dependencies
+   - High Risk: Complex changes affecting critical functionality
+   - Critical Risk: Changes affecting core system behavior
+
+### Routing Decision Matrix
+
+**Based on evaluation, determine routing:**
+
+```
+🧭 Implementation Routing Assessment for RR-XXX:
+
+📊 Complexity Factors:
+- Issue Type: [BUG_FIX/ENHANCEMENT/NEW_FEATURE/ARCHITECTURAL]
+- Scope: [SINGLE_FILE/MULTI_FILE/CROSS_MODULE/SYSTEM_WIDE]
+- Test Coverage: [TESTS_EXIST/PATTERNS_CLEAR/NEW_PATTERNS/COMPLEX_INTEGRATION]
+- Risk Level: [LOW/MEDIUM/HIGH/CRITICAL]
+
+🎯 Routing Decision: [SKIP_TO_EXECUTE/DESIGN_TESTS_FIRST]
+
+📋 Justification:
+[Clear reasoning based on complexity factors]
+
+🔄 Recommended Path:
+[Next command to run with reasoning]
+```
+
+### Routing Logic
+
+**SKIP TO EXECUTE (03-stage → 05-execute)** when:
+
+- Bug fixes with existing test coverage
+- Simple enhancements following established patterns
+- Low-risk changes with clear implementation path
+- Well-understood modifications with proven approaches
+
+**DESIGN TESTS FIRST (03-stage → 04-test-design → 05-execute)** when:
+
+- New features requiring comprehensive testing
+- Complex integrations needing test strategy
+- High-risk changes requiring validation
+- New patterns without existing test examples
+- Changes affecting multiple system components
+
+### Implementation Routing Recommendations
+
+```
+🚦 Routing Recommendations:
+
+✅ DIRECT TO EXECUTE (Skip Test Design):
+Criteria met for direct implementation:
+- [Specific factor 1 that supports skipping]
+- [Specific factor 2 that supports skipping]
+- [Risk mitigation already in place]
+
+Next: Run `03-stage RR-XXX` then `05-execute RR-XXX`
+Estimated time savings: [X hours/days]
+
+🧪 DESIGN TESTS FIRST (Full Workflow):
+Criteria require test design phase:
+- [Specific factor 1 requiring test design]
+- [Specific factor 2 requiring test design]
+- [Quality gates needed]
+
+Next: Run `03-stage RR-XXX` then `04-test-design RR-XXX`
+Additional investment for quality assurance: [X hours/days]
+
+⚖️ CONDITIONAL ROUTING:
+If comfortable with risk: Skip to execute
+If prioritizing quality: Design tests first
+```
+
+Show final summary:
+
+```
+✅ Planning Complete for RR-XXX
+
+📝 Implementation Strategy: APPROVED
+🧭 Routing Analysis: COMPLETE
+
+🔗 Recommended Next Steps:
+[ROUTE_1] Direct Path (Skip Test Design):
+→ Run `03-stage RR-XXX` for implementation staging
+→ Then `05-execute RR-XXX` for direct implementation
+💡 Best for: Simple changes, existing patterns, low risk
+
+[ROUTE_2] Quality-First Path (Full Workflow):
+→ Run `03-stage RR-XXX` for implementation staging
+→ Then `04-test-design RR-XXX` for comprehensive test design
+→ Finally `05-execute RR-XXX` for test-driven implementation
+💡 Best for: Complex features, new patterns, high risk
+
+🎯 Primary Recommendation: [ROUTE_1/ROUTE_2]
+Based on: [Key factor that drives the recommendation]
+
+The approved strategy will be carried forward to the staging phase.
+```
+
+### If no option chosen:
+
+- The user is providing more context and has more doubts
+- This is same as choosing 2. They want to continue evolving the strategy.
+- Iterate and return to options again
+- Continue until the user has provided an option
+
+## 11. Routing Implementation Guide
+
+**After strategy approval and routing analysis, guide the user:**
+
+### For SKIP_TO_EXECUTE routing:
+
+```
+🚀 Fast Track Implementation Path Selected
+
+✅ Complexity Assessment Complete:
+Your issue qualifies for the streamlined path because:
+- [Specific qualifying factors]
+- [Risk factors are manageable]
+- [Existing patterns can be leveraged]
+
+📋 Next Steps:
+1. Run `03-stage RR-XXX` to prepare implementation
+2. Run `05-execute RR-XXX` to implement directly
+3. Skip `04-test-design` (tests will be minimal/reuse existing patterns)
+
+⚡ Expected Benefits:
+- Faster time to delivery
+- Lower overhead for simple changes
+- Focus on implementation over test complexity
+```
+
+### For DESIGN_TESTS_FIRST routing:
+
+```
+🧪 Quality-First Implementation Path Selected
+
+✅ Complexity Assessment Complete:
+Your issue requires comprehensive test design because:
+- [Specific factors requiring test design]
+- [Quality gates are critical]
+- [New patterns need validation]
+
+📋 Next Steps:
+1. Run `03-stage RR-XXX` to prepare implementation
+2. Run `04-test-design RR-XXX` to design comprehensive tests
+3. Run `05-execute RR-XXX` for test-driven implementation
+
+🎯 Expected Benefits:
+- Higher confidence in complex changes
+- Comprehensive test coverage for new patterns
+- Reduced risk of production issues
+```
+
+### User Choice Override:
+
+If the user disagrees with the routing recommendation, allow override:
+
+```
+⚖️ Routing Override Available:
+
+The system recommends: [RECOMMENDED_PATH]
+But you can choose either:
+
+1. 🚀 Skip to Execute (Risk: [specific risks])
+2. 🧪 Design Tests First (Cost: [time investment])
+
+What would you prefer? Reply with 1 or 2, or 'recommend' to use system recommendation.
+```
+
+## Important Rules
+
+- 🚫 NO file operations during analysis
+- 🚫 NO Linear issue status updates (this is planning only)
+- ✅ ALWAYS check CHANGELOG.md and recent commits
+- ✅ ALWAYS check database schema
+- ✅ ALWAYS search for existing code patterns
+- ✅ ALWAYS conduct technical expert review
+- ✅ ALWAYS analyze historical patterns for confidence scoring
+- ✅ ALWAYS perform automated feasibility validation
+- ✅ ALWAYS perform implementation complexity assessment and routing
+- ✅ ALWAYS provide clear routing recommendations with justification
+- Prefer extending existing code over creating new
+- Use read-only agents for all analysis
+- Be pragmatic and challenge assumptions
+- Integrate all analysis components for comprehensive recommendations
+- Strategy must be approved before proceeding to implementation phase
+- Routing analysis helps optimize workflow efficiency vs quality trade-offs

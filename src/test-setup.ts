@@ -2,10 +2,18 @@ import "fake-indexeddb/auto";
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
 import { vi, expect, beforeEach, afterEach, afterAll } from "vitest";
+import React from "react";
 
 // Mock environment - ensure NODE_ENV is set
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = "test";
+}
+
+// RR-269: Add TOKEN_ENCRYPTION_KEY for preferences API tests
+// Use a test-specific 64-character hex string for AES-256-GCM encryption
+if (!process.env.TOKEN_ENCRYPTION_KEY) {
+  process.env.TOKEN_ENCRYPTION_KEY =
+    "a1b2c3d4e5f6789012345678901234567890abcdefabcdef1234567890abcdef";
 }
 
 // RR-183: Global test cleanup hooks for resource management
@@ -213,6 +221,7 @@ vi.mock("lucide-react", () => {
 
     // Status and feedback icons
     Check: mockIcon("Check"),
+    CheckCheck: mockIcon("CheckCheck"),
     AlertCircle: mockIcon("AlertCircle"),
     AlertTriangle: mockIcon("AlertTriangle"),
     Info: mockIcon("Info"),
@@ -245,6 +254,7 @@ vi.mock("lucide-react", () => {
     List: mockIcon("List"),
     Grid: mockIcon("Grid"),
     Layout: mockIcon("Layout"),
+    LayoutDashboard: mockIcon("LayoutDashboard"),
 
     // System and device icons
     Monitor: mockIcon("Monitor"),
@@ -316,6 +326,8 @@ vi.mock("lucide-react", () => {
     Terminal: mockIcon("Terminal"),
     Bug: mockIcon("Bug"),
     Zap: mockIcon("Zap"),
+    Bolt: mockIcon("Bolt"),
+    Sparkles: mockIcon("Sparkles"),
 
     // Catch-all for any missing icons - prevents test failures
     default: mockIcon("DefaultIcon"),
@@ -323,8 +335,7 @@ vi.mock("lucide-react", () => {
 });
 
 // Additional handling for the integration test setup
-// Add the same lucide-react mock to integration test environment
-vi.mock("lucide-react", { hoisted: true });
+// The lucide-react mock is already defined above
 
 // Extend Vitest expect with custom matchers
 expect.extend({

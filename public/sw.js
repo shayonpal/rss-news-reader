@@ -1291,59 +1291,67 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
       }),
       (e = [
         {
-          revision: "54fe28e561dfa71790bbc40545626180",
+          revision: "83686e3da073c3ce64a289817e719a18",
           url: "/reader/_next/app-build-manifest.json",
         },
         {
-          revision: "9f27a607f3b4ed3cdd94c227845d3f84",
+          revision: "08151e009cf8ec07f9d77a677134fb2f",
           url: "/reader/_next/build-manifest.json",
         },
         {
-          revision: "8071e0a0b5dbadaf043487b0b00e2896",
+          revision: "813f4860832d50e4d42ec4538e1f99cb",
           url: "/reader/_next/react-loadable-manifest.json",
         },
         {
-          revision: "67671a0c3e4593c9c45cb0175949fb04",
+          revision: "2ad2e29a4922f804a9d29ae5c909d742",
           url: "/reader/_next/server/app/_not-found/page_client-reference-manifest.js",
         },
         {
-          revision: "5fe7a7a732b09aa1b518e6dd89b9f0fb",
+          revision: "9d2fe6ba62f7d28ee1c68756929dcf43",
+          url: "/reader/_next/server/app/api-docs/page_client-reference-manifest.js",
+        },
+        {
+          revision: "3d55875bb33facbebdeded33242a9911",
           url: "/reader/_next/server/app/article/[id]/page_client-reference-manifest.js",
         },
         {
-          revision: "b22465c09e01602161143c9278d16a22",
-          url: "/reader/_next/server/app/fetch-stats/page_client-reference-manifest.js",
-        },
-        {
-          revision: "4222184a96b8e4b8509a57b989d7db6d",
+          revision: "61ba538ec4c2652b634a2d7ba3310314",
           url: "/reader/_next/server/app/health/page_client-reference-manifest.js",
         },
         {
-          revision: "85759f21334e3227799f884020c27284",
+          revision: "f160a982460ed9cf303388de3bbb9fb2",
           url: "/reader/_next/server/app/offline/page_client-reference-manifest.js",
         },
         {
-          revision: "6b9af22b0265ee566bc76798964dcd1c",
+          revision: "59540cc7de6188e462a9d964af9f995e",
           url: "/reader/_next/server/app/page_client-reference-manifest.js",
         },
         {
-          revision: "d453599e168ba98347f989874aba0aaf",
+          revision: "07ed9f2311f69e8e592761fd42d94184",
           url: "/reader/_next/server/app/pocs/article-dropdown-liquid-glass/enhanced/page_client-reference-manifest.js",
         },
         {
-          revision: "11ffee711153bb85c0ff05636f525ebd",
+          revision: "637aa9374dd4af09d3a3acf063ee7e4b",
           url: "/reader/_next/server/app/pocs/article-dropdown-liquid-glass/page_client-reference-manifest.js",
         },
         {
-          revision: "5942c19d134e116b528d1d9948ce9f29",
+          revision: "6adef52ebb639af9058b3f11270983d3",
+          url: "/reader/_next/server/app/pocs/ios-scrollable-header-liquid-glass/page_client-reference-manifest.js",
+        },
+        {
+          revision: "18e1fe13edb0eba86524f04863ca2065",
           url: "/reader/_next/server/app/pocs/mark-all-read-liquid-glass/page_client-reference-manifest.js",
         },
         {
-          revision: "2f2afe68a18f1e8efa86ba9b1adc0013",
+          revision: "32f8fe4c1e7358fd1b1665431e125864",
+          url: "/reader/_next/server/app/settings/page_client-reference-manifest.js",
+        },
+        {
+          revision: "0d0532c2cc7938525f857d496cd0d5ae",
           url: "/reader/_next/server/middleware-build-manifest.js",
         },
         {
-          revision: "86675c8aa709caeadcf8de23841236fa",
+          revision: "1b02f2bba39733542418c306022b196f",
           url: "/reader/_next/server/middleware-react-loadable-manifest.js",
         },
         {
@@ -1355,156 +1363,180 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
           url: "/reader/_next/server/next-font-manifest.json",
         },
         {
-          revision: "c155cce658e53418dec34664328b51ac",
-          url: "/reader/_next/static/__eBo5-RAiIdFq0v3EXOn/_buildManifest.js",
-        },
-        {
-          revision: "b6652df95db52feb4daf4eca35380933",
-          url: "/reader/_next/static/__eBo5-RAiIdFq0v3EXOn/_ssgManifest.js",
+          revision: null,
+          url: "/reader/_next/static/chunks/107-46272ce58d97ba14.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/117-6f09d1b8896d0533.js",
+          url: "/reader/_next/static/chunks/117-5f977755b5c0f0df.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/187-874043e0e9de8e70.js",
+          url: "/reader/_next/static/chunks/210-7fbf3cda7e39cecd.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/322-8059cd9d7348be69.js",
+          url: "/reader/_next/static/chunks/288-3830399848344d3a.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/325-f9a5c7bfafcc7eae.js",
+          url: "/reader/_next/static/chunks/408-4aead36fffa29dbb.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/399-c663d692f083ecc1.js",
+          url: "/reader/_next/static/chunks/434-275cb75a9d694276.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/423-6bf4f8b1407c9a41.js",
+          url: "/reader/_next/static/chunks/457-ed2608ea7d269807.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/498-21924f665cc53c83.js",
+          url: "/reader/_next/static/chunks/480-1c859717010a79f1.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/554-32e5cc8b4b4935dd.js",
+          url: "/reader/_next/static/chunks/580-353ffffba8eb64e7.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/580-647ce94e8ac8c2a8.js",
+          url: "/reader/_next/static/chunks/590-65a23ee296226d06.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/590-566bc513ddd9057f.js",
+          url: "/reader/_next/static/chunks/675-3fb105a4963f8711.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/675-9e8dcc26d8b58525.js",
+          url: "/reader/_next/static/chunks/699.a7c7ee4c9bdd4b53.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/699.b5382e56b4ad8a64.js",
+          url: "/reader/_next/static/chunks/76-49be1ccbc9d8c4ca.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/831-8f443c7dbc2a4bd3.js",
+          url: "/reader/_next/static/chunks/782-4d413760563022a6.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/877-5dd58af431404162.js",
+          url: "/reader/_next/static/chunks/805-18b55b53179d11a3.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/_not-found/page-1187eb0a55529673.js",
+          url: "/reader/_next/static/chunks/831-4c0ab1f574540b0a.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/article/[id]/error-ecb9499594ade451.js",
+          url: "/reader/_next/static/chunks/940.eb5ce1a6b7fccefd.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/article/[id]/layout-c2e4205728c69fce.js",
+          url: "/reader/_next/static/chunks/949fd6f9.b7bdf4ba64e2512a.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/article/[id]/loading-29537c256bc30cef.js",
+          url: "/reader/_next/static/chunks/aaea2bcf-daad04f2d9a14d96.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/article/[id]/not-found-79e2efd2df450c0a.js",
+          url: "/reader/_next/static/chunks/app/_not-found/page-5b329a7444b87c35.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/article/[id]/page-82356326ed2fae78.js",
+          url: "/reader/_next/static/chunks/app/api-docs/page-6369aac01eda35de.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/error-80c8c7ff2d464e78.js",
+          url: "/reader/_next/static/chunks/app/article/[id]/error-4cd67df22c4153b5.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/fetch-stats/page-060b98909bc8a831.js",
+          url: "/reader/_next/static/chunks/app/article/[id]/layout-8318665a980fc2d0.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/health/page-23088875a47c0748.js",
+          url: "/reader/_next/static/chunks/app/article/[id]/loading-c8f7394ed2a615ce.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/layout-d30049625a15c115.js",
+          url: "/reader/_next/static/chunks/app/article/[id]/not-found-4fe926e7405647df.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/not-found-b29210f1e50f3183.js",
+          url: "/reader/_next/static/chunks/app/article/[id]/page-874c4d6157fd33e0.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/offline/page-35b3bc3fde28410f.js",
+          url: "/reader/_next/static/chunks/app/error-4bbc50b6316e0e26.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/page-893c3b172ecf7105.js",
+          url: "/reader/_next/static/chunks/app/health/page-1e115ccae7913fd2.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/pocs/article-dropdown-liquid-glass/enhanced/page-0827dddabcc3eb94.js",
+          url: "/reader/_next/static/chunks/app/layout-b3e620d7a9d0d08e.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/pocs/article-dropdown-liquid-glass/page-2a808befe1124ee2.js",
+          url: "/reader/_next/static/chunks/app/not-found-e84fea0361b25ee9.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/app/pocs/mark-all-read-liquid-glass/page-0aa71af8bdf15cc0.js",
+          url: "/reader/_next/static/chunks/app/offline/page-0061fe31eac55b5d.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/fd9d1056-5869b01721c53837.js",
+          url: "/reader/_next/static/chunks/app/page-3c2acf091dce348f.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/framework-f66176bb897dc684.js",
+          url: "/reader/_next/static/chunks/app/pocs/article-dropdown-liquid-glass/enhanced/page-022caaaf618d048e.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/main-app-9c6bfa9b01b21c16.js",
+          url: "/reader/_next/static/chunks/app/pocs/article-dropdown-liquid-glass/page-6cd7b330a9fcc571.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/main-bbe2d8a31b517d2a.js",
+          url: "/reader/_next/static/chunks/app/pocs/ios-scrollable-header-liquid-glass/page-a5c257f9a099f2a3.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/pages/_app-72b849fbd24ac258.js",
+          url: "/reader/_next/static/chunks/app/pocs/mark-all-read-liquid-glass/page-6cbab2f995cfa904.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/pages/_error-7ba65e1336b92748.js",
+          url: "/reader/_next/static/chunks/app/settings/layout-78711fe484a16209.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/app/settings/page-43916fe9864413b9.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/fd9d1056-e15cb172a0df5754.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/framework-00a8ba1a63cfdc9e.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/main-7344688abe889f1a.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/main-app-26574a2988c2ae65.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/pages/_app-15e2daefa259f0b5.js",
+        },
+        {
+          revision: null,
+          url: "/reader/_next/static/chunks/pages/_error-28b803cb2479b966.js",
         },
         {
           revision: "846118c33b2c0e922d7b3a7676f81f6f",
@@ -1512,35 +1544,47 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: "/reader/_next/static/chunks/webpack-5346d475bde37971.js",
+          url: "/reader/_next/static/chunks/webpack-dc2f695ebbd69870.js",
         },
         {
           revision: null,
-          url: "/reader/_next/static/css/9714033c7b3e50a8.css",
+          url: "/reader/_next/static/css/59040b430feb2b47.css",
         },
         {
           revision: null,
-          url: "/reader/_next/static/css/ef2f31dabba8bce7.css",
+          url: "/reader/_next/static/css/6a24b9993ed1e07f.css",
         },
         {
-          revision: "befd9c0fdfa3d8a645d5f95717ed6420",
-          url: "/reader/_next/static/media/26a46d62cd723877-s.woff2",
+          revision: null,
+          url: "/reader/_next/static/css/cf49268d45797337.css",
         },
         {
-          revision: "43828e14271c77b87e3ed582dbff9f74",
-          url: "/reader/_next/static/media/55c55f0601d81cf3-s.woff2",
+          revision: "172e769da91baa11de9b258fb2d92f86",
+          url: "/reader/_next/static/m_rVJm2YM2AR-FHrshdMV/_buildManifest.js",
         },
         {
-          revision: "f0b86e7c24f455280b8df606b89af891",
-          url: "/reader/_next/static/media/581909926a08bbc8-s.woff2",
+          revision: "b6652df95db52feb4daf4eca35380933",
+          url: "/reader/_next/static/m_rVJm2YM2AR-FHrshdMV/_ssgManifest.js",
+        },
+        {
+          revision: "9dda5cfc9a46f256d0e131bb535e46f8",
+          url: "/reader/_next/static/media/19cfc7226ec3afaa-s.woff2",
+        },
+        {
+          revision: "4e2553027f1d60eff32898367dd4d541",
+          url: "/reader/_next/static/media/21350d82a1f187e9-s.woff2",
         },
         {
           revision: "01ba6c2a184b8cba08b0d57167664d75",
           url: "/reader/_next/static/media/8e9860b6e62d6359-s.woff2",
         },
         {
-          revision: "e360c61c5bd8d90639fd4503c829c2dc",
-          url: "/reader/_next/static/media/97e0cb1ae144a2a9-s.woff2",
+          revision: "9e494903d6b0ffec1a1e14d34427d44d",
+          url: "/reader/_next/static/media/ba9851c3c22cd980-s.woff2",
+        },
+        {
+          revision: "027a89e9ab733a145db70f09b8a18b42",
+          url: "/reader/_next/static/media/c5fe6dc8356a8c31-s.woff2",
         },
         {
           revision: "d54db44de5ccb18886ece2fda72bdfe0",
@@ -1567,7 +1611,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
       ea(
         (e) => {
           let { url: t } = e;
-          return t.pathname.startsWith("/api/");
+          return t.pathname.startsWith("/reader/api/");
         },
         new eo({
           cacheName: "api-cache",
@@ -1609,7 +1653,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
               plugins: [new j({ maxEntries: 50, maxAgeSeconds: 86400 })],
             }).handle(e);
           } catch (e) {
-            return caches.match("/offline");
+            return caches.match("/reader/offline");
           }
         }
       ),

@@ -412,16 +412,6 @@ element.animate({
                   </button>
 
                   <div className="menu-separator my-1" />
-
-                  {/* Fetch Stats */}
-                  <button
-                    onClick={() => handleActionClick("fetch-stats")}
-                    className="relative flex w-full items-center rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent/20 focus:bg-accent/20"
-                    role="menuitem"
-                  >
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Fetch Stats
-                  </button>
                 </div>
               )}
             </div>

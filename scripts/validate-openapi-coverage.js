@@ -14,7 +14,7 @@
 const fs = require("fs");
 const path = require("path");
 
-// RR-208: Expected endpoints for 100% coverage (45 total)
+// RR-208: Expected endpoints for 100% coverage (44 total)
 const EXPECTED_HEALTH_ENDPOINTS = [
   "GET /api/health",
   "GET /api/health/app",
@@ -72,7 +72,7 @@ const EXPECTED_TEST_ENDPOINTS = [
   "POST /api/test/force-update-usage",
 ];
 
-const EXPECTED_ANALYTICS_ENDPOINTS = ["GET /api/analytics/fetch-stats"];
+const EXPECTED_ANALYTICS_ENDPOINTS = [];
 
 const EXPECTED_FEEDS_ENDPOINTS = [
   "GET /api/feeds/{id}/stats",
@@ -312,9 +312,31 @@ async function validateCoverage() {
     };
 
     // Save detailed report
-    const reportPath = path.join(__dirname, "../coverage-report.json");
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    log("cyan", `📄 Detailed report saved to: ${reportPath}`);
+    // Ensure coverage directory exists
+    const coverageDir = path.join(__dirname, "../coverage");
+    if (!fs.existsSync(coverageDir)) {
+      try {
+        fs.mkdirSync(coverageDir, { recursive: true });
+      } catch (error) {
+        console.error(
+          `❌ Failed to create coverage directory: ${error.message}`
+        );
+        process.exit(1);
+      }
+    }
+
+    const reportPath = path.join(
+      __dirname,
+      "../coverage/openapi-coverage-report.json"
+    );
+
+    try {
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+      log("cyan", `📄 Detailed report saved to: ${reportPath}`);
+    } catch (error) {
+      console.error(`❌ Failed to write coverage report: ${error.message}`);
+      process.exit(1);
+    }
 
     console.log();
 
@@ -326,7 +348,7 @@ async function validateCoverage() {
       log("green", "🎉 SUCCESS: All endpoints are properly documented!");
       log(
         "green",
-        "✅ RR-208: 100% OpenAPI coverage achieved (45/45 endpoints)"
+        "✅ RR-208: 100% OpenAPI coverage achieved (44/44 endpoints)"
       );
       return true;
     } else {

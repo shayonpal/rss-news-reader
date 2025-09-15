@@ -1,5 +1,12 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { Article, Feed } from "@/types";
+import {
+  ensureParseTask,
+  getTaskResult,
+  isTaskRunning,
+  getTaskError,
+  subscribe,
+} from "@/lib/utils/parse-task-manager";
 
 interface UseAutoParseContentOptions {
   article: Article;
@@ -44,62 +51,77 @@ export function useAutoParseContent({
   const [parsedContent, setParsedContent] = useState<string | null>(null);
   const [parseAttempted, setParseAttempted] = useState(false);
 
-  // Refs for stable callback pattern
-  const abortControllerRef = useRef<AbortController | null>(null);
+  // Component mounting state
   const mountedRef = useRef(true);
+  const [, forceUpdate] = useState({});
 
-  // RR-245 fix: Article ref to access current article in stable callback
-  const articleRef = useRef(article);
+  // Task key for global task manager
+  const taskKey = `article:full:${article.id}`;
+
+  // Define the expected result type for the parse task
+  interface ParseResult {
+    success: boolean;
+    content?: string;
+    fallbackContent?: string;
+    error?: string;
+  }
+
+  // Check task state from global manager with proper typing
+  const existingResult = getTaskResult<ParseResult>(taskKey);
+  const isRunning = isTaskRunning(taskKey);
+  const taskError = getTaskError(taskKey);
+
+  // Update local state based on global task state
   useEffect(() => {
-    articleRef.current = article;
-  }, [article]);
+    if (existingResult) {
+      if (existingResult.success && existingResult.content) {
+        setParsedContent(existingResult.content);
+        setParseError(null);
+        setParseAttempted(true);
+      } else if (existingResult.fallbackContent) {
+        setParsedContent(existingResult.fallbackContent);
+        setParseError(existingResult.error || "Using partial content");
+        setParseAttempted(true);
+      }
+    }
 
-  // RR-245 fix: State machine for tracking parse jobs per article
-  const jobsRef = useRef(new Map<string, JobState>());
-  // Lightweight cooldown to avoid burst re-triggers when parents recreate article objects every render
-  const lastTriggerKeyRef = useRef<string | null>(null);
-  const lastTriggerAtRef = useRef<number>(0);
-  const inFlightRef = useRef<boolean>(false);
+    if (taskError) {
+      setParseError(taskError);
+      setParseAttempted(true);
+    }
 
-  // RR-245 fix: Sync isParsing state with ref for stable callback access
-  const isParsingRef = useRef(false);
+    setIsParsing(isRunning);
+  }, [existingResult, isRunning, taskError, taskKey]);
+
+  // Subscribe to task completion events
   useEffect(() => {
-    isParsingRef.current = isParsing;
-  }, [isParsing]);
+    let cancelled = false;
 
-  // RR-245 fix: Stable callback with empty dependencies
+    const unsubscribe = subscribe(taskKey, () => {
+      if (!cancelled) {
+        forceUpdate({}); // Force re-render to pick up new state
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [taskKey]);
+
+  // Stable fetch function using global task manager
   const triggerParse = useCallback(
     async (isManual = false) => {
-      const currentArticle = articleRef.current;
-      if (!currentArticle?.url || !mountedRef.current) return;
-
-      const job = jobsRef.current.get(currentArticle.url);
-
-      // Skip if already processing (unless manual)
-      if (!isManual && (job === "running" || inFlightRef.current)) {
+      if (!article.id) {
         return;
       }
 
-      const currentArticleId = currentArticle.id;
-      const currentArticleUrl = currentArticle.url;
-      jobsRef.current.set(currentArticleUrl, "running");
-      inFlightRef.current = true;
-
-      // Cancel any existing request
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      setIsParsing(true);
-      setParseError(null);
-      setParseAttempted(true);
-
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      try {
+      // Create fetch function for task manager
+      const fetchFunction = async (
+        signal?: AbortSignal
+      ): Promise<ParseResult> => {
         const response = await fetch(
-          `/reader/api/articles/${currentArticleId}/fetch-content`,
+          `/reader/api/articles/${article.id}/fetch-content`,
           {
             method: "POST",
             headers: {
@@ -108,17 +130,11 @@ export function useAutoParseContent({
             body: JSON.stringify({
               forceRefresh: isManual,
             }),
-            signal: controller.signal,
+            signal,
+            // Add keepalive to help survive navigation
+            keepalive: true,
           }
         );
-
-        // Check if component is still mounted and article hasn't changed
-        if (
-          !mountedRef.current ||
-          articleRef.current.url !== currentArticleUrl
-        ) {
-          return;
-        }
 
         if (!response.ok) {
           const data = await response.json();
@@ -136,107 +152,79 @@ export function useAutoParseContent({
         }
 
         const data = await response.json();
+        return data;
+      };
 
-        // Double-check mount and article ID
-        if (
-          !mountedRef.current ||
-          articleRef.current.url !== currentArticleUrl
-        ) {
-          return;
-        }
+      // Use global task manager - this survives component lifecycle
+      try {
+        const task = ensureParseTask<ParseResult>(taskKey, fetchFunction);
+        const result = await task.promise;
 
-        if (data.success && data.content) {
-          setParsedContent(data.content);
-          setParseError(null);
-          jobsRef.current.set(currentArticleUrl, "done");
-        } else if (data.fallbackContent) {
-          setParsedContent(data.fallbackContent);
-          setParseError(data.error || "Using partial content");
-          jobsRef.current.set(currentArticleUrl, "done");
+        // Only update component state if still mounted
+        if (mountedRef.current) {
+          if (result.success && result.content) {
+            setParsedContent(result.content);
+            setParseError(null);
+          } else if (result.fallbackContent) {
+            setParsedContent(result.fallbackContent);
+            setParseError(result.error || "Using partial content");
+          }
+          setParseAttempted(true);
         }
       } catch (err) {
-        // Check mount and article ID before setting error state
-        if (
-          !mountedRef.current ||
-          articleRef.current.id !== currentArticleId ||
-          (err instanceof Error && err.name === "AbortError")
-        ) {
-          return;
-        }
-
-        if (err instanceof Error) {
-          setParseError(err.message);
-        } else {
-          setParseError("An unexpected error occurred");
-        }
-        jobsRef.current.set(currentArticleUrl, "failed");
-      } finally {
+        // Only update component state if still mounted and not aborted
         if (
           mountedRef.current &&
-          articleRef.current.url === currentArticleUrl
+          !(err instanceof Error && err.name === "AbortError")
         ) {
-          setIsParsing(false);
+          if (err instanceof Error) {
+            setParseError(err.message);
+          } else {
+            setParseError("An unexpected error occurred");
+          }
+          setParseAttempted(true);
         }
-        abortControllerRef.current = null;
-        inFlightRef.current = false;
       }
     },
-    [] // Empty dependencies for stable identity
+    [article.id, taskKey] // Include actual dependencies
   );
 
-  // Reset state when article URL changes (treat as true article change)
+  // Reset local state when article changes (task manager handles global state)
   useEffect(() => {
     setParsedContent(null);
     setParseError(null);
     setParseAttempted(false);
-    // Do not force isParsing=false here to avoid clobbering a just-started manual trigger
+  }, [article.id]);
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
+  // Simplified auto-parse logic using task manager
+  useEffect(() => {
+    if (!enabled) {
+      return;
     }
 
-    // Reset cooldown on explicit article change so a new article can auto-parse
-    lastTriggerKeyRef.current = null;
-    lastTriggerAtRef.current = 0;
-  }, [article.url]);
-
-  // When the article identity changes even with the same URL, allow re-triggering
-  useEffect(() => {
-    if (article.url) {
-      jobsRef.current.delete(article.url);
-      // also clear cooldown so the next effect can fire immediately
-      lastTriggerKeyRef.current = null;
-      lastTriggerAtRef.current = 0;
-    }
-    // do not clear parsedContent here; next fetch will overwrite if needed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article.id, article.url]); // article.url added to properly track URL changes
-
-  // Auto-parse logic
-  useEffect(() => {
-    if (!enabled || !mountedRef.current) return;
-
-    const job = jobsRef.current.get(article.url);
-
-    // Skip if already processed or in progress
+    // Skip if already has full content or failed
     if (
-      job === "running" ||
-      job === "done" ||
-      job === "failed" ||
       (article.hasFullContent && article.fullContent) ||
       article.parseFailed === true
     ) {
       return;
     }
 
+    // Skip if task already running or completed
+    if (isTaskRunning(taskKey) || getTaskResult<ParseResult>(taskKey)) {
+      return;
+    }
+
     let needsParsing = false;
+    let reason = "";
 
     // Determine if parsing is needed
     if (feed?.isPartialContent === true) {
       needsParsing = true;
+      reason = "feed.isPartialContent === true";
     } else if (article.content && article.content.length < 500) {
       needsParsing = true;
+      reason = `content length < 500 (${article.content.length})`;
     } else if (article.content) {
       const truncationIndicators = [
         "Read more",
@@ -245,56 +233,50 @@ export function useAutoParseContent({
         "Click here to read",
         "View full article",
       ];
-      needsParsing = truncationIndicators.some((indicator) =>
+      const foundIndicator = truncationIndicators.find((indicator) =>
         article.content.toLowerCase().includes(indicator.toLowerCase())
       );
+      if (foundIndicator) {
+        needsParsing = true;
+        reason = `truncation indicator found: "${foundIndicator}"`;
+      }
     }
 
     if (needsParsing) {
-      const key = article.url || article.id;
-      const now = Date.now();
-      if (
-        lastTriggerKeyRef.current === key &&
-        now - lastTriggerAtRef.current < 100
-      ) {
-        return; // Cooldown: avoid tight re-triggers across rapid re-renders
-      }
-      lastTriggerKeyRef.current = key;
-      lastTriggerAtRef.current = now;
       triggerParse(false);
     }
   }, [
     enabled,
     article.id,
-    article.url, // Added for consistency
     article.content,
     article.hasFullContent,
     article.fullContent,
     article.parseFailed,
     feed?.isPartialContent,
-    triggerParse, // Added since it's now stable with empty deps
+    taskKey,
+    triggerParse,
   ]);
+
+  // Clear error function
+  const clearError = useCallback(() => {
+    setParseError(null);
+  }, []);
+
+  // Clear parsed content function
+  const clearParsedContent = useCallback(() => {
+    setParsedContent(null);
+    setParseAttempted(false);
+  }, []);
+
+  // Determine if retry should be shown
+  const shouldShowRetry = !isParsing && !!parseError && !parsedContent;
 
   // Cleanup on unmount
   useEffect(() => {
-    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
     };
   }, []);
-
-  const clearError = () => setParseError(null);
-  const clearParsedContent = () => setParsedContent(null);
-
-  const shouldShowRetry = Boolean(
-    parseError &&
-      !parseError.includes("permanently") &&
-      article.parseAttempts !== undefined &&
-      article.parseAttempts < 3
-  );
 
   return {
     isParsing,

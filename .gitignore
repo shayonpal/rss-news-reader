@@ -27,7 +27,7 @@ playwright-report/
 tests/artifacts/
 tests/reports/playwright/
 tests/reports/performance/
-
+docs/testing/reports/
 # misc
 .DS_Store
 *.pem
@@ -98,5 +98,9 @@ kuma-monitor.config.js
 rr-*.log
 test-output.log
 # Coverage reports (auto-generated)
-coverage-report.json
+# OpenAPI coverage reports
+/coverage-report.json
+/coverage/openapi-coverage-report.json
 data/usage.json
+/.serena/cache/
+*.env.bak

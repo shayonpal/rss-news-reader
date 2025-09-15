@@ -700,7 +700,7 @@ const usePerformanceMonitoring = (componentName: string) => {
 
 ## Related Documentation
 
-- [RR-179 Implementation Details](../tech/rr-179-implementation.md)
+- [Mark All Read Implementation](../tech/mark-all-read-implementation.md)
 - [Liquid Glass Design System](../ui-ux/liquid-glass-design-system.md)
 - [Performance Optimization Guide](../tech/performance-optimization.md)
 - [Component Testing Strategy](../testing/component-testing.md)

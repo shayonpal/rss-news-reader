@@ -83,11 +83,14 @@ const mockArticleStore = {
 
 const mockFeedStore = {
   feeds: new Map<string, Feed>(),
+  feedsWithCounts: new Map(),
+  totalUnreadCount: 0,
   folders: new Map(),
   tags: [],
   loadingFeeds: false,
   feedsError: null,
   loadFeeds: vi.fn(),
+  loadFeedHierarchy: vi.fn(),
   refreshFeeds: vi.fn(),
   updateFeedStats: vi.fn(),
 };
@@ -104,7 +107,48 @@ vi.mock("@/lib/stores/sync-store", () => ({
   useSyncStore: () => ({
     isSyncing: false,
     lastSyncTime: null,
+    performFullSync: vi.fn(),
+    syncError: null,
+    syncProgress: 0,
+    syncMessage: "",
+    rateLimit: null,
+    apiUsage: {
+      dailyUsage: 0,
+      monthlyUsage: 0,
+      zone1: { current: 0, limit: 1000, percentage: 0 },
+      zone2: { current: 0, limit: 100, percentage: 0 },
+    },
+    loadLastSyncTime: vi.fn(),
+    updateApiUsage: vi.fn(),
     startSync: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/stores/ui-store", () => ({
+  useUIStore: () => ({
+    theme: "system",
+    sidebarOpen: true,
+    readStatusFilter: "all",
+    feedsSectionCollapsed: false,
+    tagsSectionCollapsed: false,
+    setTheme: vi.fn(),
+    toggleSidebar: vi.fn(),
+    setReadStatusFilter: vi.fn(),
+    setFeedsSectionCollapsed: vi.fn(),
+    setTagsSectionCollapsed: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/stores/tag-store", () => ({
+  useTagStore: () => ({
+    tags: new Map(),
+    selectedTagIds: new Set(),
+    loadingTags: false,
+    tagsError: null,
+    loadTags: vi.fn(),
+    refreshTags: vi.fn(),
+    selectTag: vi.fn(),
+    clearSelection: vi.fn(),
   }),
 }));
 
