@@ -24,6 +24,7 @@ import {
 import DOMPurify from "dompurify";
 import { toast } from "sonner";
 import { ArticleCountManager } from "@/lib/article-count-manager";
+import { articleCacheService } from "@/lib/services/article-cache-service";
 import { articleListStateManager } from "@/lib/utils/article-list-state-manager";
 import { GlassIconButton } from "@/components/ui/glass-button";
 import { GlassNav } from "@/components/ui/glass-nav";
@@ -49,6 +50,14 @@ function HomePageContent() {
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const confirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countManager = useRef(new ArticleCountManager());
+  // Register cache manager with service
+  useEffect(() => {
+    articleCacheService.register(countManager.current);
+    
+    return () => {
+      articleCacheService.unregister(countManager.current);
+    };
+  }, []);
 
   // Fix hydration issues with localStorage
   useHydrationFix();
@@ -332,6 +341,12 @@ function HomePageContent() {
         await markAllAsRead(selectedFeedId);
       }
 
+      // RR-157 Pattern: Invalidate cache and force fresh count refresh
+      if (selectedFeedId) {
+        countManager.current.invalidateCache(selectedFeedId);
+      }
+      // For tags, invalidation happens in markAllAsReadForTag for all affected feeds
+
       const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : undefined;
       const selectedTag = selectedTagId ? tags.get(selectedTagId) : undefined;
       const contextName =
@@ -339,6 +354,13 @@ function HomePageContent() {
       const sanitizedName = selectedTag?.name
         ? DOMPurify.sanitize(selectedTag.name, { ALLOWED_TAGS: [] })
         : contextName;
+
+      // Re-fetch counts to update button state (force fresh from database)
+      const newCounts = await countManager.current.getArticleCounts(
+        selectedFeedId || undefined,
+        null // selectedFolderId
+      );
+      setCounts(newCounts);
 
       toast.success(
         selectedTagId

@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Sunday, September 15, 2025 at 3:15 AM - fix(RR-285): Critical service worker basePath mismatch breaking PWA functionality
+- Monday, September 15, 2025 at 1:45 PM - docs: Create comprehensive ArticleCacheService pattern documentation
+  - **Technical Documentation**: Created detailed documentation for the ArticleCacheService pattern that replaced global window anti-pattern in RR-258
+  - **Architecture Guide**: Documented service-based registration pattern, error isolation strategy, and component lifecycle integration
+  - **Migration Guide**: Provided step-by-step migration from global window pattern to service registration approach
+  - **Testing Patterns**: Included comprehensive testing examples for unit tests, integration tests, and component testing with service mocks
+  - **Usage Examples**: Documented component registration pattern, store integration, and cache invalidation scenarios
+  - **Performance Analysis**: Covered memory management, error handling strategy, and when to use this pattern vs alternatives
+  - **Location**: `docs/tech/article-cache-service.md` - serves as standard reference for cache coordination patterns in the codebase
+
+- Sunday, September 15, 2025 at 11:15 PM - fix(RR-285): Critical service worker basePath mismatch breaking PWA functionality
   - **Emergency Fix**: Restored critical Progressive Web App functionality by correcting service worker runtime route patterns
   - **API Caching Restored**: Fixed broken API caching route from `/api/` to `/reader/api/` (src/sw.js line 37)
   - **Offline Fallback Fixed**: Corrected offline page fallback from `/offline` to `/reader/offline` (src/sw.js line 80)
@@ -93,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [RR-258] Fix mark-all-read button state - button now properly disables after successful operations by replacing global window pattern with clean ArticleCacheService - Sep 15, 2025 - 11:45 PM EST
 - [RR-249] Unify page background colors between listing and article detail pages using semantic bg-background token - Sep 14, 2025 - 09:35 PM EDT
 - Saturday, September 13, 2025 at 2:57 PM - **RR-284**: Fix auto-fetch failure due to snake_case API responses breaking feed lookup
   - **Critical Bug**: Auto-fetch functionality completely failing for BBC News, Ars Technica, and other partial content feeds
