@@ -1,12 +1,11 @@
 ---
 description: Step 4 - Implementation with API-first documentation and Test-After-Done methodology
-argument_hint: [#issue|"feature description"]
+argument_hint: [issued ID or feature description]
 ---
 
 # Step 4: Implement - API-First Implementation Phase
 
 Complete implementation phase that takes prepared specifications and implements working functionality. Adopts API-first documentation approach and prepares for Test-After-Done methodology.
-
 
 ## Instructions
 
@@ -44,6 +43,7 @@ mcp__serena__activate_project
 Use Serena memories to find proven implementation patterns:
 
 1. **Search for Similar Implementations**:
+
    ```
    Use mcp__serena__read_memory to access relevant memories:
    - completed_issue_implementations.md (successful patterns)
@@ -60,6 +60,7 @@ Use Serena memories to find proven implementation patterns:
    ```
 
 2. **Extract Proven Patterns**:
+
    ```
    From memory findings, identify:
    - Successful implementation approaches for this type of issue
@@ -71,6 +72,7 @@ Use Serena memories to find proven implementation patterns:
    ```
 
 3. **Apply Pattern Guidance**:
+
    ```
    🎯 Memory-Guided Implementation for RR-XXX:
 
@@ -118,6 +120,7 @@ Use Serena MCP to understand existing API patterns:
    - `search_for_pattern` for existing Zod schemas in OpenAPI registry
 
 2. **Generate API Contract First**:
+
    ```typescript
    // Example: Generate this BEFORE implementing the route
 
@@ -126,33 +129,34 @@ Use Serena MCP to understand existing API patterns:
      // Request schema based on requirements
      input: z.object({
        field1: z.string(),
-       field2: z.number().optional()
+       field2: z.number().optional(),
      }),
      // Response schema based on expected output
      output: z.object({
        success: z.boolean(),
        data: z.object({
          id: z.string(),
-         result: z.string()
-       })
-     })
+         result: z.string(),
+       }),
+     }),
    });
 
    // Register endpoint with documentation
    registerApiEndpoint({
-     method: 'POST',
-     path: '/api/new-feature',
-     description: 'Creates new feature based on requirements',
+     method: "POST",
+     path: "/api/new-feature",
+     description: "Creates new feature based on requirements",
      requestSchema: newEndpointSchema.shape.input,
      responseSchema: newEndpointSchema.shape.output,
      examples: {
        request: { field1: "example", field2: 123 },
-       response: { success: true, data: { id: "uuid", result: "created" } }
-     }
+       response: { success: true, data: { id: "uuid", result: "created" } },
+     },
    });
    ```
 
 3. **Validate API Design**:
+
    ```bash
    # Run OpenAPI validation to ensure spec is correct
    npm run docs:validate

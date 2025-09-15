@@ -27,7 +27,7 @@ playwright-report/
 tests/artifacts/
 tests/reports/playwright/
 tests/reports/performance/
-
+docs/testing/reports/
 # misc
 .DS_Store
 *.pem

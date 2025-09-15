@@ -1,6 +1,6 @@
 ---
 description: Step 1 - Comprehensive Linear issue validation with root cause analysis and intelligent workflow routing
-argument_hint: <issue-id> [issue-id-2] [issue-id-3]
+argument_hint: [<issue-id> <issue-id-2> <issue-id-3>]
 ---
 
 # Step 1: Audit - Deep Validation & Intelligent Workflow Routing
@@ -596,7 +596,7 @@ Establish confidence levels for all findings:
 
 ### Step 6.1: Generate Audit Report
 
-````markdown
+```markdown
 ## 🔍 Issue Audit Report: ${ISSUE_ID}
 
 ### 📊 Issue Validity Assessment
@@ -812,7 +812,7 @@ Multi-issue analysis may take longer but ensures comprehensive validation.
 2. **Investigation Gaps**: [Additional research needed]
 3. **Stakeholder Communication**: [Who needs to be informed]
 4. **Follow-up Timeline**: [When to reassess]
-````
+```
 
 ## Phase 7: Cross-Issue Relationship Analysis (Multiple Issues Only)
 
@@ -1019,6 +1019,7 @@ After presenting the comprehensive report and routing decision, offer these opti
 ## 📝 Ready to Proceed?
 
 Based on the investigation findings and workflow routing, would you like to:
+
 1. **Proceed with recommended workflow** → Run 02-plan RR-XXX
 2. **Override workflow routing** → Choose different path
 3. **Update Linear issue** → Apply recommended changes first
@@ -1039,14 +1040,9 @@ Please choose (1/2/3/4/5):
 2. **Cross-Reference Similar Issues** [Find more related issues]
 3. **Generate Implementation Plan** [If issue is valid]
 
-**Issue Management**:
-4. **Create Related Issues** [Split if multiple problems found]
-5. **Mark as Duplicate** [If duplicate identified]
-6. **Close as Resolved** [If already fixed]
+**Issue Management**: 4. **Create Related Issues** [Split if multiple problems found] 5. **Mark as Duplicate** [If duplicate identified] 6. **Close as Resolved** [If already fixed]
 
-**Documentation**:
-7. **Store Findings in Serena** [Save analysis for future reference]
-8. **Update Project Documentation** [If gaps identified]
+**Documentation**: 7. **Store Findings in Serena** [Save analysis for future reference] 8. **Update Project Documentation** [If gaps identified]
 
 Which action would you like to take? (Enter number or 'none' to finish)
 ```
@@ -1054,6 +1050,7 @@ Which action would you like to take? (Enter number or 'none' to finish)
 ## Execution Principles
 
 ### Accuracy Over Speed
+
 - **Priority**: Investigation accuracy is paramount - speed is secondary
 - **Sequential Execution**: Agents execute sequentially - optimize with batching and comprehensive queries
 - **Iterative Refinement**: Re-invoke agents as needed until confidence is high
@@ -1061,6 +1058,7 @@ Which action would you like to take? (Enter number or 'none' to finish)
 - **Consensus Building**: Aim for high agreement between domain experts
 
 ### Intelligent Routing
+
 - **Evidence-Based**: Complexity assessment AFTER comprehensive investigation
 - **Informed Decisions**: Route based on actual findings, not assumptions
 - **Workflow Guidance**: Provides clear next step recommendations
@@ -1229,11 +1227,13 @@ Always conclude with the concise summary from Step 8.3 above. The comprehensive 
 After completing the audit, proceed with the routed workflow:
 
 **For STANDARD Workflow:**
+
 ```
 02-plan RR-XXX
 ```
 
 **For COMPLEX Workflow:**
+
 ```
 02-plan RR-XXX
 ```

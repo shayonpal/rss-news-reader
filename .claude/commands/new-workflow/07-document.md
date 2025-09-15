@@ -21,6 +21,7 @@ mcp__serena__activate_project with:
 ### 1A. Linear Issue Context
 
 Use `linear-expert` to get implementation details:
+
 - Complete issue with all comments and implementation strategy
 - Extract what was actually implemented vs originally planned
 - Identify documentation scope based on implementation changes
@@ -28,6 +29,7 @@ Use `linear-expert` to get implementation details:
 ### 1B. Implementation Analysis
 
 Use Serena MCP to understand changes made:
+
 - Check relevant memories: `mcp__serena__read_memory` for similar documentation patterns
 - `get_symbols_overview` on modified files
 - `find_symbol` for new/changed functions and classes

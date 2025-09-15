@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- [RR-258] Fix mark-all-read button state - button now properly disables after successful operations by replacing global window pattern with clean ArticleCacheService - Sep 15, 2025 - 11:45 PM EST
+- [RR-258] Fix mark-all-read button state for both feed and tag listings - button now properly disables after successful operations by replacing global window pattern with clean ArticleCacheService and adding tag store synchronization - Sep 15, 2025 - 11:45 PM EST
 - [RR-249] Unify page background colors between listing and article detail pages using semantic bg-background token - Sep 14, 2025 - 09:35 PM EDT
 - Saturday, September 13, 2025 at 2:57 PM - **RR-284**: Fix auto-fetch failure due to snake_case API responses breaking feed lookup
   - **Critical Bug**: Auto-fetch functionality completely failing for BBC News, Ars Technica, and other partial content feeds

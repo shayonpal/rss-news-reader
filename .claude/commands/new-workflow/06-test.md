@@ -33,6 +33,7 @@ git log --oneline -5
 Use Serena MCP to understand what the implementation actually does:
 
 **Check relevant memories first:**
+
 - `mcp__serena__read_memory` testing_infrastructure_consolidated.md for test patterns
 - Check domain-specific memories based on implementation type (UI, API, sync, etc.)
 - Look for similar issue patterns in issue_learnings_consolidated.md
@@ -359,7 +360,6 @@ If ANY tests fail:
 Continue ONLY when ALL tests pass and infrastructure is stable.
 ```
 
-
 ## 8. Regression Testing
 
 After feature tests pass:
@@ -375,6 +375,7 @@ npm test
 ```
 
 Handle regressions:
+
 - **Fix implementation** if it broke existing features
 - **Optimize tests** if performance target exceeded
 - **Return to 04-implement** if major regressions found

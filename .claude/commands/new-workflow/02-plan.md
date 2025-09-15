@@ -1,6 +1,6 @@
 ---
 description: Step 2 - Implementation strategy development with API-first approach and concise output
-argument_hint: <issue-id>
+argument_hint: [issue-id]
 ---
 
 # Step 2: Plan - Implementation Strategy Development
@@ -504,6 +504,7 @@ Please respond with 1, 2, 3, or 4.
 Use Codex MCP for external strategy validation:
 
 **Available Codex MCP Tools:**
+
 - `mcp__codex-bridge__consult_codex` - Single query with structured output (RECOMMENDED)
 - `mcp__codex-bridge__consult_codex_with_stdin` - Pipeline-friendly with file content
 - `mcp__codex-bridge__consult_codex_batch` - Multiple queries in batch

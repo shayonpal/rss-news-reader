@@ -143,6 +143,15 @@ describe("RR-258: ArticleCacheService", () => {
       expect(mockManager1.invalidateCache).toHaveBeenCalledWith(feedId);
     });
 
+    it("AC2b: Cache invalidation must occur for tag contexts (clear all)", () => {
+      articleCacheService.register(mockManager1);
+
+      // Simulate tag-based mark-all-read (invalidate all since articles span feeds)
+      articleCacheService.invalidateCache(); // No feedId = clear all
+
+      expect(mockManager1.invalidateCache).toHaveBeenCalledWith(undefined);
+    });
+
     it("AC4: Global window pattern must be eliminated", () => {
       // Test that service works without global window dependency
       articleCacheService.register(mockManager1);

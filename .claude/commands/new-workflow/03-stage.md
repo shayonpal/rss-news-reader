@@ -1,6 +1,6 @@
 ---
 description: Step 3 - Staging phase with Linear updates and preparation for complex implementations
-argument_hint: <issue-id>
+argument_hint: [issue-id]
 ---
 
 # Step 3: Stage - Implementation Staging Phase
@@ -107,7 +107,6 @@ Use `linear-expert` to:
 **Implementation Specifications**
 [All specs from 2C]
 
-Timestamp: [current time]
 Status: Ready for implementation
 ```
 

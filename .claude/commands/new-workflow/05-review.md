@@ -1,6 +1,12 @@
 ---
 description: Step 5 - Comprehensive code review with symbol analysis and Linear issue validation
-args: "[optional: specific focus area like 'security', 'performance', 'architecture', or Linear issue ID]"
+args:
+  [
+    optional: specific focus area like 'security',
+    "performance",
+    "architecture",
+    or Linear issue ID,
+  ]
 ---
 
 # Step 5: Review - Symbol Analysis & Quality Validation
@@ -44,6 +50,7 @@ Use Serena MCP for precise code analysis:
 ### 2A. Changed Files Discovery
 
 **For Current Implementation Review:**
+
 ```bash
 git status --porcelain
 git diff --cached --name-only
@@ -51,6 +58,7 @@ git log --oneline -5
 ```
 
 **For Historical Review:**
+
 ```bash
 # Find commits related to Linear issue
 git log --grep="RR-XXX" --oneline --all
@@ -65,6 +73,7 @@ git diff [commit-sha]~1 [commit-sha] --name-only
 
 **For Current Implementation:**
 Use Serena to understand modifications:
+
 - `get_symbols_overview` on each changed file
 - `find_symbol` for modified functions/classes
 - `find_referencing_symbols` to assess impact scope
@@ -72,6 +81,7 @@ Use Serena to understand modifications:
 
 **For Historical Implementation:**
 Use git and Serena to reconstruct changes:
+
 - Identify files modified in historical commit
 - `get_symbols_overview` on those files to understand current state
 - `find_symbol` for functions/classes that were likely modified
@@ -82,6 +92,7 @@ Use git and Serena to reconstruct changes:
 
 **For Current Implementation Review:**
 If Linear issue provided:
+
 - Use `linear-expert` to get complete issue details with ALL comments
 - Check parent/child issues and dependencies for full context
 - Extract specific acceptance criteria from issue description and comments
@@ -91,6 +102,7 @@ If Linear issue provided:
 
 **For Historical Implementation Review:**
 If Linear issue provided:
+
 - Use `linear-expert` to get complete issue details with ALL comments
 - Check CHANGELOG.md for entries related to this issue: `grep -n "RR-XXX" CHANGELOG.md`
 - Use Serena memories to find implementation learnings:

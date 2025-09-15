@@ -344,8 +344,10 @@ function HomePageContent() {
       // RR-157 Pattern: Invalidate cache and force fresh count refresh
       if (selectedFeedId) {
         countManager.current.invalidateCache(selectedFeedId);
+      } else if (selectedTagId) {
+        // For tags, invalidate all cache since articles span multiple feeds
+        countManager.current.invalidateCache();
       }
-      // For tags, invalidation happens in markAllAsReadForTag for all affected feeds
 
       const selectedFeed = selectedFeedId ? getFeed(selectedFeedId) : undefined;
       const selectedTag = selectedTagId ? tags.get(selectedTagId) : undefined;
@@ -356,10 +358,23 @@ function HomePageContent() {
         : contextName;
 
       // Re-fetch counts to update button state (force fresh from database)
-      const newCounts = await countManager.current.getArticleCounts(
-        selectedFeedId || undefined,
-        null // selectedFolderId
-      );
+      let newCounts;
+      if (selectedTagId) {
+        // For tag contexts, get fresh tag data directly from store (not component state)
+        const freshTagData = useTagStore.getState().tags.get(selectedTagId);
+        const tagUnreadCount = freshTagData?.unreadCount || 0;
+        newCounts = {
+          total: freshTagData?.totalCount || 0,
+          unread: tagUnreadCount,
+          read: (freshTagData?.totalCount || 0) - tagUnreadCount
+        };
+      } else {
+        // For feed contexts, use ArticleCountManager
+        newCounts = await countManager.current.getArticleCounts(
+          selectedFeedId || undefined,
+          null // selectedFolderId
+        );
+      }
       setCounts(newCounts);
 
       toast.success(
