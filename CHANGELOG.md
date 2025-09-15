@@ -79,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [RR-249] Unify page background colors between listing and article detail pages using semantic bg-background token - Sep 14, 2025 - 09:35 PM EDT
 - Saturday, September 13, 2025 at 2:57 PM - **RR-284**: Fix auto-fetch failure due to snake_case API responses breaking feed lookup
   - **Critical Bug**: Auto-fetch functionality completely failing for BBC News, Ars Technica, and other partial content feeds
   - **Root Cause**: API responses using snake_case format while frontend expected camelCase, breaking feed lookup in auto-parse logic
