@@ -34,7 +34,7 @@ registerRoute(
 
 // Cache strategy for API calls - Network First for fresh data
 registerRoute(
-  ({ url }) => url.pathname.startsWith("/api/"),
+  ({ url }) => url.pathname.startsWith("/reader/api/"),
   new NetworkFirst({
     cacheName: "api-cache",
     plugins: [
@@ -77,7 +77,7 @@ registerRoute(
 );
 
 // Fallback for offline navigation
-const FALLBACK_HTML = "/offline";
+const FALLBACK_HTML = "/reader/offline";
 
 registerRoute(
   ({ request }) => request.mode === "navigate",
