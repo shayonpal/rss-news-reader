@@ -73,7 +73,7 @@ export const apiKeyToken = {}; // Unique token for this session
 const getDefaultPreferences = (): PreferencesData => ({
   ai: {
     hasApiKey: false,
-    apiKey: null, // Always null for security
+    apiKey: null,
     model: "claude-3-haiku-20240307",
     summaryLengthMin: 100,
     summaryLengthMax: 300,
@@ -81,8 +81,8 @@ const getDefaultPreferences = (): PreferencesData => ({
     contentFocus: "key-facts-arguments",
   },
   sync: {
-    maxArticles: 100,
-    retentionCount: 2000,
+    maxArticles: 500,
+    retentionCount: 30,
   },
 });
 
@@ -379,12 +379,12 @@ export const usePreferencesEditorStore = create<PreferencesEditorStore>()(
         const { draft, apiKeyState } = get();
         if (!draft) return {};
 
-        return buildPreferencesPatch(
-          draft,
-          saved,
-          apiKeyState,
-          apiKeyState === "replace" ? apiKeyStorage.get(apiKeyToken) : undefined
-        );
+        const apiKeyValue =
+          apiKeyState === "replace"
+            ? apiKeyStorage.get(apiKeyToken)
+            : undefined;
+
+        return buildPreferencesPatch(draft, saved, apiKeyState, apiKeyValue);
       },
 
       // Set saving state

@@ -16,12 +16,16 @@ test.describe("RR-258: Mark All Read Button Disable Flow", () => {
     await expect(page.locator('[data-testid="article-list"]')).toBeVisible();
   });
 
-  test("should disable mark-all-read button after operation completes", async ({ page }) => {
+  test("should disable mark-all-read button after operation completes", async ({
+    page,
+  }) => {
     // Step 1: Navigate to a feed with unread articles
     const sidebar = page.locator('[data-testid="sidebar"], .sidebar, aside');
     await expect(sidebar).toBeVisible();
 
-    const feedItem = sidebar.locator('[data-testid="feed-item"], li a, button').first();
+    const feedItem = sidebar
+      .locator('[data-testid="feed-item"], li a, button')
+      .first();
     await feedItem.click();
     await page.waitForTimeout(1000);
 
@@ -59,7 +63,9 @@ test.describe("RR-258: Mark All Read Button Disable Flow", () => {
     expect(await markAllButton.isDisabled()).toBe(true);
 
     // Step 7: Verify success toast appears
-    const successToast = page.locator('[data-testid="toast-success"], .toast-success');
+    const successToast = page.locator(
+      '[data-testid="toast-success"], .toast-success'
+    );
     if (await successToast.isVisible()) {
       await expect(successToast).toContainText(/marked.*read/i);
     }
@@ -70,10 +76,14 @@ test.describe("RR-258: Mark All Read Button Disable Flow", () => {
     expect(await markAllButton.isDisabled()).toBe(true);
   });
 
-  test("should re-enable button when navigating to feed with unread articles", async ({ page }) => {
+  test("should re-enable button when navigating to feed with unread articles", async ({
+    page,
+  }) => {
     // Step 1: Navigate to first feed and mark all as read
     const sidebar = page.locator('[data-testid="sidebar"], .sidebar, aside');
-    const firstFeed = sidebar.locator('[data-testid="feed-item"], li a, button').first();
+    const firstFeed = sidebar
+      .locator('[data-testid="feed-item"], li a, button')
+      .first();
     await firstFeed.click();
 
     const markAllButton = page.locator(
@@ -91,7 +101,9 @@ test.describe("RR-258: Mark All Read Button Disable Flow", () => {
     }
 
     // Step 2: Navigate to second feed with potential unread articles
-    const secondFeed = sidebar.locator('[data-testid="feed-item"], li a, button').nth(1);
+    const secondFeed = sidebar
+      .locator('[data-testid="feed-item"], li a, button')
+      .nth(1);
     await secondFeed.click();
     await page.waitForTimeout(1000);
 
@@ -131,9 +143,13 @@ test.describe("RR-258: Mark All Read Button Disable Flow", () => {
           await markAllButton.click(); // execute
 
           // Verify button becomes disabled for tag context
-          await expect(markAllButton).toHaveAttribute("data-state", "disabled", {
-            timeout: 5000,
-          });
+          await expect(markAllButton).toHaveAttribute(
+            "data-state",
+            "disabled",
+            {
+              timeout: 5000,
+            }
+          );
         }
       }
     }
@@ -142,7 +158,9 @@ test.describe("RR-258: Mark All Read Button Disable Flow", () => {
   test("should maintain button state after page refresh", async ({ page }) => {
     // Step 1: Navigate to feed and mark all as read
     const sidebar = page.locator('[data-testid="sidebar"], .sidebar, aside');
-    const feedItem = sidebar.locator('[data-testid="feed-item"], li a, button').first();
+    const feedItem = sidebar
+      .locator('[data-testid="feed-item"], li a, button')
+      .first();
     await feedItem.click();
 
     const markAllButton = page.locator(

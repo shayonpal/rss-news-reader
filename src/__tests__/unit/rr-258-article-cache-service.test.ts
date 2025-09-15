@@ -63,7 +63,9 @@ describe("RR-258: ArticleCacheService", () => {
       articleCacheService.invalidateCache("feed-unregister");
 
       expect(mockManager1.invalidateCache).not.toHaveBeenCalled();
-      expect(mockManager2.invalidateCache).toHaveBeenCalledWith("feed-unregister");
+      expect(mockManager2.invalidateCache).toHaveBeenCalledWith(
+        "feed-unregister"
+      );
     });
 
     it("should handle unregistering non-existent manager gracefully", () => {
@@ -106,14 +108,21 @@ describe("RR-258: ArticleCacheService", () => {
 
       articleCacheService.register(faultyManager);
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       articleCacheService.invalidateCache("feed-error-test");
 
       expect(faultyManager.invalidateCache).toHaveBeenCalled();
-      expect(mockManager1.invalidateCache).toHaveBeenCalledWith("feed-error-test");
-      expect(mockManager2.invalidateCache).toHaveBeenCalledWith("feed-error-test");
-      expect(consoleSpy).toHaveBeenCalledWith('Manager invalidation failed:', expect.any(Error));
+      expect(mockManager1.invalidateCache).toHaveBeenCalledWith(
+        "feed-error-test"
+      );
+      expect(mockManager2.invalidateCache).toHaveBeenCalledWith(
+        "feed-error-test"
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Manager invalidation failed:",
+        expect.any(Error)
+      );
 
       consoleSpy.mockRestore();
     });
@@ -173,8 +182,12 @@ describe("RR-258: ArticleCacheService", () => {
 
       articleCacheService.invalidateCache("multi-component-test");
 
-      expect(pageManager.invalidateCache).toHaveBeenCalledWith("multi-component-test");
-      expect(headerManager.invalidateCache).toHaveBeenCalledWith("multi-component-test");
+      expect(pageManager.invalidateCache).toHaveBeenCalledWith(
+        "multi-component-test"
+      );
+      expect(headerManager.invalidateCache).toHaveBeenCalledWith(
+        "multi-component-test"
+      );
     });
   });
 });

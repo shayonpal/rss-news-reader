@@ -155,17 +155,6 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
 
         try {
           const userId = await getCurrentUserId();
-          console.log("DEBUG: Final patch object before stringify:", patch);
-          console.log(
-            "DEBUG: Patch ai types:",
-            patch.ai &&
-              Object.entries(patch.ai).map(([key, value]) => [
-                key,
-                typeof value,
-                value,
-              ])
-          );
-          console.log("Sending patch to API:", JSON.stringify(patch, null, 2));
 
           const response = await fetch(
             `/reader/api/users/${userId}/preferences`,
@@ -179,10 +168,26 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
           );
 
           if (!response.ok) {
-            const errorText = await response.text();
-            console.error("API Error Response:", errorText);
+            let errorMessage = `Failed to save preferences: ${response.status}`;
+            try {
+              const errorData = await response.json();
+              if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch {
+              // If JSON parsing fails, try text
+              try {
+                const errorText = await response.text();
+                if (errorText) {
+                  errorMessage = errorText;
+                }
+              } catch {
+                // Keep default error message
+              }
+            }
+            console.error("API Error Response:", errorMessage);
             console.error("Response status:", response.status);
-            throw new Error(`Failed to save preferences: ${response.status}`);
+            throw new Error(errorMessage);
           }
 
           const updated = await response.json();
@@ -199,10 +204,14 @@ export const usePreferencesDomainStore = create<PreferencesDomainStore>()(
           console.error("Failed to save preferences:", error);
 
           // Rollback optimistic update
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to save preferences";
           if (previousPreferences) {
             set({
               savedPreferences: previousPreferences,
-              error: "Failed to save preferences",
+              error: errorMessage,
             });
           }
 

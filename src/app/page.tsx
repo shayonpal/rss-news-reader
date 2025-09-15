@@ -53,7 +53,7 @@ function HomePageContent() {
   // Register cache manager with service
   useEffect(() => {
     articleCacheService.register(countManager.current);
-    
+
     return () => {
       articleCacheService.unregister(countManager.current);
     };
@@ -366,7 +366,7 @@ function HomePageContent() {
         newCounts = {
           total: freshTagData?.totalCount || 0,
           unread: tagUnreadCount,
-          read: (freshTagData?.totalCount || 0) - tagUnreadCount
+          read: (freshTagData?.totalCount || 0) - tagUnreadCount,
         };
       } else {
         // For feed contexts, use ArticleCountManager

@@ -444,11 +444,11 @@ describe("PreferencesEditorStore - RR-270", () => {
 
       const patch = result.current.buildPatch(savedPrefs);
 
-      expect(patch).toEqual({
-        ai: {
-          apiKeyChange: "replace",
-          apiKey: "sk-ant-new-key",
-        },
+      expect(patch).toHaveProperty("ai.apiKeyChange", "replace");
+      expect(patch.ai?.apiKey).toMatchObject({
+        encrypted: expect.any(String),
+        iv: expect.any(String),
+        authTag: expect.any(String),
       });
     });
 

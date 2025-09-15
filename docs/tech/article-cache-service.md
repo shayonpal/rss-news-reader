@@ -19,6 +19,7 @@ if (manager) {
 ```
 
 **Problems with this approach:**
+
 - **Tight Coupling**: Components directly depended on global window state
 - **Race Conditions**: Manager might not be available when accessed
 - **Type Safety**: Required unsafe type casting with `any`
@@ -36,6 +37,7 @@ articleCacheService.invalidateCache(feedId);
 ```
 
 **Benefits of the service approach:**
+
 - **Decoupled Architecture**: Components register their managers, no global dependency
 - **Error Isolation**: One failing manager doesn't block others
 - **Type Safety**: Full TypeScript support without casting
@@ -64,7 +66,7 @@ class ArticleCacheService {
       try {
         manager.invalidateCache(feedId);
       } catch (error) {
-        console.warn('Manager invalidation failed:', error);
+        console.warn("Manager invalidation failed:", error);
         // Don't let one faulty manager block others
       }
     }
@@ -125,17 +127,19 @@ export const useArticleStore = create<ArticleStore>((set, get) => ({
   async markAllAsRead(feedId: string) {
     try {
       // Perform database operations
-      await supabase.rpc('mark_feed_articles_read', { feed_id: feedId });
+      await supabase.rpc("mark_feed_articles_read", { feed_id: feedId });
 
       // Coordinate cache invalidation across all components
       articleCacheService.invalidateCache(feedId);
 
       // Update local state
-      set(state => ({ /* updated state */ }));
+      set((state) => ({
+        /* updated state */
+      }));
     } catch (error) {
-      console.error('Mark all as read failed:', error);
+      console.error("Mark all as read failed:", error);
     }
-  }
+  },
 }));
 ```
 
@@ -188,18 +192,23 @@ describe("ArticleCacheService", () => {
 
   it("should handle manager errors without blocking others", () => {
     const faultyManager = {
-      invalidateCache: vi.fn(() => { throw new Error("Mock error"); })
+      invalidateCache: vi.fn(() => {
+        throw new Error("Mock error");
+      }),
     };
 
     articleCacheService.register(faultyManager);
     articleCacheService.register(mockManager1);
 
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     articleCacheService.invalidateCache("feed-error-test");
 
     expect(mockManager1.invalidateCache).toHaveBeenCalled(); // Still called
-    expect(consoleSpy).toHaveBeenCalledWith('Manager invalidation failed:', expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Manager invalidation failed:",
+      expect.any(Error)
+    );
   });
 });
 ```
@@ -250,6 +259,7 @@ vi.mock("@/lib/services/article-cache-service", () => ({
 ### Step 1: Replace Global Window Usage
 
 **Before:**
+
 ```typescript
 // OLD: Global window pattern
 useEffect(() => {
@@ -261,6 +271,7 @@ useEffect(() => {
 ```
 
 **After:**
+
 ```typescript
 // NEW: Service registration pattern
 const countManager = useRef(new ArticleCountManager());
@@ -274,6 +285,7 @@ useEffect(() => {
 ### Step 2: Update Store Operations
 
 **Before:**
+
 ```typescript
 // OLD: Manual manager coordination
 async markAllAsRead(feedId: string) {
@@ -286,6 +298,7 @@ async markAllAsRead(feedId: string) {
 ```
 
 **After:**
+
 ```typescript
 // NEW: Service-coordinated invalidation
 async markAllAsRead(feedId: string) {
@@ -299,6 +312,7 @@ async markAllAsRead(feedId: string) {
 ### Step 3: Update Test Setup
 
 **Before:**
+
 ```typescript
 // OLD: Global state cleanup was complex
 beforeEach(() => {
@@ -307,6 +321,7 @@ beforeEach(() => {
 ```
 
 **After:**
+
 ```typescript
 // NEW: Clean service reset
 beforeEach(() => {
@@ -331,11 +346,13 @@ export const articleCacheService = new ArticleCacheService();
 ### Component Integration Points
 
 **Current Usage Locations:**
+
 - `src/app/page.tsx` - Main page mark-all-read functionality
 - `src/components/articles/article-header.tsx` - Header count display
 - `src/lib/stores/article-store.ts` - Store operations (5 integration points)
 
 **Store Integration Points:**
+
 ```typescript
 // All store operations that modify article read status
 await markAllAsRead(feedId: string)          // Line 831
@@ -348,6 +365,7 @@ await updateArticleReadStatus(articleId)     // Line 1404
 ### Memory Management
 
 The service uses JavaScript's `Set` data structure which automatically handles:
+
 - **Duplicate Prevention**: Same manager instance registered multiple times = single entry
 - **Efficient Cleanup**: O(1) unregistration performance
 - **Memory Safety**: No references held after unregistration
@@ -368,6 +386,7 @@ invalidateCache(feedId?: string) {
 ```
 
 **Error Isolation Benefits:**
+
 - One failing manager doesn't prevent others from updating
 - Non-blocking operation ensures UI remains responsive
 - Warning logged for debugging while maintaining functionality
@@ -396,6 +415,7 @@ const toggleReadStatus = async (article: Article) => {
 ### State Management Integration
 
 Works seamlessly with Zustand stores to coordinate cache invalidation across:
+
 - Article store operations
 - Feed count updates
 - Tag-based filtering
@@ -404,6 +424,7 @@ Works seamlessly with Zustand stores to coordinate cache invalidation across:
 ### Component Lifecycle Integration
 
 Follows React's component lifecycle:
+
 - **Mount**: Register manager with service
 - **Update**: Use manager for data fetching
 - **Unmount**: Unregister manager for cleanup
@@ -420,12 +441,14 @@ Follows React's component lifecycle:
 ### When to Use This Pattern
 
 **Good Fit:**
+
 - Cross-component cache coordination
 - Centralized state invalidation
 - Service-based architecture
 - Multiple manager instances
 
 **Not Needed:**
+
 - Single component cache management
 - Direct parent-child prop passing
 - Simple state that doesn't require coordination
@@ -433,18 +456,21 @@ Follows React's component lifecycle:
 ## Testing Coverage
 
 **Unit Tests**: `src/__tests__/unit/rr-258-article-cache-service.test.ts`
+
 - Manager registration/unregistration
 - Cache invalidation coordination
 - Error isolation testing
 - Test utility validation
 
 **Integration Tests**: `src/__tests__/integration/rr-258-mark-all-read-button-state.test.tsx`
+
 - Complete mark-all-read flow
 - Button state transitions
 - Multi-component coordination
 - Component lifecycle testing
 
 **RR-258 Acceptance Criteria Coverage:**
+
 - ✅ AC1: Button state transitions correctly
 - ✅ AC2: Cache invalidation on markAllAsRead()
 - ✅ AC3: Count refresh after operations

@@ -18,7 +18,7 @@ class ArticleCacheService {
       try {
         manager.invalidateCache(feedId);
       } catch (error) {
-        console.warn('Manager invalidation failed:', error);
+        console.warn("Manager invalidation failed:", error);
         // Don't let one faulty manager block others
       }
     }

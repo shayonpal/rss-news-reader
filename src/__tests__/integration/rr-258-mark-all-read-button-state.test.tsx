@@ -52,7 +52,7 @@ vi.mock("sonner", () => ({
 function TestMarkAllReadButton({
   selectedFeedId,
   selectedTagId,
-  initialCounts = { total: 10, unread: 5, read: 5 }
+  initialCounts = { total: 10, unread: 5, read: 5 },
 }: {
   selectedFeedId?: string;
   selectedTagId?: string;
@@ -91,7 +91,7 @@ function TestMarkAllReadButton({
 
     try {
       // Simulate store operation (this would call markAllAsRead/markAllAsReadForTag)
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Simulate cache invalidation and count refresh (RR-258 fix)
       if (selectedFeedId) {
@@ -160,11 +160,14 @@ describe("RR-258: Mark All Read Button State Integration", () => {
         expect(button).toHaveAttribute("data-state", "loading");
       });
 
-      await waitFor(() => {
-        expect(button).toHaveAttribute("data-state", "disabled");
-        expect(button).toHaveTextContent("All read");
-        expect(button).toBeDisabled();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(button).toHaveAttribute("data-state", "disabled");
+          expect(button).toHaveTextContent("All read");
+          expect(button).toBeDisabled();
+        },
+        { timeout: 1000 }
+      );
     });
 
     it("should start disabled when no unread articles", async () => {
@@ -187,16 +190,20 @@ describe("RR-258: Mark All Read Button State Integration", () => {
     it("should invalidate cache and refresh counts after mark-all-read", async () => {
       const mockCountManager = {
         invalidateCache: vi.fn(),
-        getArticleCounts: vi.fn().mockResolvedValue({ total: 5, unread: 0, read: 5 }),
+        getArticleCounts: vi
+          .fn()
+          .mockResolvedValue({ total: 5, unread: 0, read: 5 }),
       };
 
       // Mock ArticleCountManager constructor to return our mock
-      vi.spyOn(ArticleCountManager.prototype, 'invalidateCache').mockImplementation(
-        mockCountManager.invalidateCache
-      );
-      vi.spyOn(ArticleCountManager.prototype, 'getArticleCounts').mockImplementation(
-        mockCountManager.getArticleCounts
-      );
+      vi.spyOn(
+        ArticleCountManager.prototype,
+        "invalidateCache"
+      ).mockImplementation(mockCountManager.invalidateCache);
+      vi.spyOn(
+        ArticleCountManager.prototype,
+        "getArticleCounts"
+      ).mockImplementation(mockCountManager.getArticleCounts);
 
       const user = userEvent.setup();
 
@@ -215,13 +222,18 @@ describe("RR-258: Mark All Read Button State Integration", () => {
 
       // Verify cache invalidation was called
       await waitFor(() => {
-        expect(mockCountManager.invalidateCache).toHaveBeenCalledWith("f489af08-3416-4763-8589-aaab3910d1f4");
+        expect(mockCountManager.invalidateCache).toHaveBeenCalledWith(
+          "f489af08-3416-4763-8589-aaab3910d1f4"
+        );
       });
 
       // Verify button ends up disabled after count refresh
-      await waitFor(() => {
-        expect(button).toHaveAttribute("data-state", "disabled");
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(button).toHaveAttribute("data-state", "disabled");
+        },
+        { timeout: 1000 }
+      );
     });
   });
 
@@ -248,8 +260,12 @@ describe("RR-258: Mark All Read Button State Integration", () => {
       await user.click(button); // execute
 
       await waitFor(() => {
-        expect(pageManager.invalidateCache).toHaveBeenCalledWith("test-feed-id");
-        expect(headerManager.invalidateCache).toHaveBeenCalledWith("test-feed-id");
+        expect(pageManager.invalidateCache).toHaveBeenCalledWith(
+          "test-feed-id"
+        );
+        expect(headerManager.invalidateCache).toHaveBeenCalledWith(
+          "test-feed-id"
+        );
       });
     });
 

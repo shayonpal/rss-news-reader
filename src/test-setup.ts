@@ -221,6 +221,7 @@ vi.mock("lucide-react", () => {
 
     // Status and feedback icons
     Check: mockIcon("Check"),
+    CheckCheck: mockIcon("CheckCheck"),
     AlertCircle: mockIcon("AlertCircle"),
     AlertTriangle: mockIcon("AlertTriangle"),
     Info: mockIcon("Info"),
@@ -326,6 +327,7 @@ vi.mock("lucide-react", () => {
     Bug: mockIcon("Bug"),
     Zap: mockIcon("Zap"),
     Bolt: mockIcon("Bolt"),
+    Sparkles: mockIcon("Sparkles"),
 
     // Catch-all for any missing icons - prevents test failures
     default: mockIcon("DefaultIcon"),
