@@ -5,7 +5,7 @@
 ### **Prerequisites**
 
 - ✅ Wrangler CLI installed (already done)
-- ✅ Personal domain `uberfolks.in` owned
+- ✅ Personal domain `uberfolks.ca` owned
 - ✅ CloudFlare account with domain management
 - ✅ Experience managing one other site with Wrangler
 
@@ -26,13 +26,13 @@ crons = ["0 2,6,10,14,18,22 * * *"]
 
 # Custom domain
 [[routes]]
-pattern = "reader.uberfolks.in/*"
-zone_name = "uberfolks.in"
+pattern = "reader.uberfolks.ca/*"
+zone_name = "uberfolks.ca"
 
 [vars]
 NEXT_PUBLIC_SUPABASE_URL = "your-supabase-url"
-NEXT_PUBLIC_APP_URL = "https://reader.uberfolks.in"
-INOREADER_REDIRECT_URI = "https://reader.uberfolks.in/api/auth/inoreader/callback"
+NEXT_PUBLIC_APP_URL = "https://reader.uberfolks.ca"
+INOREADER_REDIRECT_URI = "https://reader.uberfolks.ca/api/auth/inoreader/callback"
 
 # Secrets (set via CLI)
 # SUPABASE_SERVICE_ROLE_KEY
@@ -73,7 +73,7 @@ wrangler secret put ANTHROPIC_API_KEY
 
 # 2. Configure domain DNS (one-time)
 # Via CloudFlare dashboard: DNS → Add A record
-# reader.uberfolks.in → CloudFlare Worker IP
+# reader.uberfolks.ca → CloudFlare Worker IP
 
 # 3. Initial deployment
 wrangler deploy
@@ -93,7 +93,7 @@ wrangler deploy        # Deploy Workers + Pages
 wrangler tail          # Monitor deployment logs
 
 # Check deployment
-curl https://reader.uberfolks.in/api/health
+curl https://reader.uberfolks.ca/api/health
 ```
 
 #### **Environment Management**
@@ -150,7 +150,7 @@ wrangler cron trigger --cron="0 2,6,10,14,18,22 * * *"
 
 // 4. Update environment variables
 // Before: NEXT_PUBLIC_APP_URL=http://100.96.166.53:3000
-// After:  NEXT_PUBLIC_APP_URL=https://reader.uberfolks.in
+// After:  NEXT_PUBLIC_APP_URL=https://reader.uberfolks.ca
 ```
 
 ## OAuth Development Workflow Challenge
@@ -159,7 +159,7 @@ wrangler cron trigger --cron="0 2,6,10,14,18,22 * * *"
 
 - **Free Tier**: Only 1 registered app = 1 callback URL possible
 - **Current**: Probably localhost or Mac Mini URL
-- **Production**: Must be `https://reader.uberfolks.in/api/auth/inoreader/callback`
+- **Production**: Must be `https://reader.uberfolks.ca/api/auth/inoreader/callback`
 
 ### **Development Solution Options**
 
@@ -191,7 +191,7 @@ if (process.env.NODE_ENV === "development") {
 ```bash
 # Update Inoreader app callback URL based on environment
 # Development: Update to ngrok/tunnel URL when developing
-# Production: Update to https://reader.uberfolks.in/api/auth/inoreader/callback
+# Production: Update to https://reader.uberfolks.ca/api/auth/inoreader/callback
 
 # Manual process via Inoreader developer console
 ```
@@ -200,9 +200,9 @@ if (process.env.NODE_ENV === "development") {
 
 ```bash
 # Use CloudFlare for both development and production
-# Development: reader-dev.uberfolks.in
-# Production: reader.uberfolks.in
-# Single callback: https://reader-dev.uberfolks.in/api/auth/inoreader/callback
+# Development: reader-dev.uberfolks.ca
+# Production: reader.uberfolks.ca
+# Single callback: https://reader-dev.uberfolks.ca/api/auth/inoreader/callback
 # Route to appropriate environment based on state parameter
 ```
 
@@ -218,7 +218,7 @@ if (process.env.NODE_ENV === "development") {
 ### **Phase 2: CloudFlare Configuration (1 day)**
 
 - Configure `wrangler.toml`
-- Set up DNS for `reader.uberfolks.in`
+- Set up DNS for `reader.uberfolks.ca`
 - Deploy to CloudFlare and test basic functionality
 - Configure environment variables and secrets
 
@@ -262,7 +262,7 @@ wrangler dev --test-scheduled  # Test cron locally
 ### **Cost Analysis**
 
 - **Monthly Cost**: $0 (within free tier limits)
-- **Domain Cost**: $0 (using existing uberfolks.in)
+- **Domain Cost**: $0 (using existing uberfolks.ca)
 - **Comparison**: Saves Mac Mini electricity + reduces home network dependency
 - **Scaling**: Automatic, stays free until 100k+ requests/day
 
@@ -297,13 +297,13 @@ if (process.env.NODE_ENV === "development") {
 
 - Use staging deployment on CloudFlare for OAuth testing
 - Keep production callback URL stable
-- Test real OAuth flow on `reader.uberfolks.in` staging
+- Test real OAuth flow on `reader.uberfolks.ca` staging
 
 ## Next Steps
 
 1. **Create wrangler.toml configuration**
 2. **Plan base path removal from codebase**
-3. **Set up DNS for reader.uberfolks.in subdomain**
+3. **Set up DNS for reader.uberfolks.ca subdomain**
 4. **Choose OAuth development strategy**
 5. **Create deployment scripts and documentation**
 

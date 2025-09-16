@@ -2,7 +2,7 @@
 
 ## Migration Overview
 
-Convert from `/reader` base path (required for Tailscale multi-app hosting) to root domain hosting on `reader.uberfolks.in` subdomain.
+Convert from `/reader` base path (required for Tailscale multi-app hosting) to root domain hosting on `reader.uberfolks.ca` subdomain.
 
 ## Current vs Target Routes
 
@@ -24,7 +24,7 @@ Routes:
 ### **Target Structure (root domain)**
 
 ```
-Base URL: https://reader.uberfolks.in
+Base URL: https://reader.uberfolks.ca
 Base Path: / (root)
 
 Routes:
@@ -65,7 +65,7 @@ NEXT_PUBLIC_APP_URL=http://100.96.166.53:3000
 NEXT_PUBLIC_BASE_PATH=/reader
 
 # Target
-NEXT_PUBLIC_APP_URL=https://reader.uberfolks.in
+NEXT_PUBLIC_APP_URL=https://reader.uberfolks.ca
 # Remove NEXT_PUBLIC_BASE_PATH entirely
 ```
 
@@ -247,4 +247,4 @@ pm2 restart all
 # Implementation: Add route aliases
 ```
 
-This migration removes the `/reader` prefix requirement and prepares the application for clean subdomain hosting on `reader.uberfolks.in`.
+This migration removes the `/reader` prefix requirement and prepares the application for clean subdomain hosting on `reader.uberfolks.ca`.

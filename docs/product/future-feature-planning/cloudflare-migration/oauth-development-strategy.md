@@ -1,223 +1,253 @@
-# OAuth Development Strategy for Inoreader Single Callback Limitation
+# OAuth Development Strategy: Shared Production OAuth
 
 ## The Challenge
 
 **Inoreader Free Tier Limitation**: Only allows **one registered app** with **one callback URL**
-**Development Conflict**: Can't have separate development and production callback URLs simultaneously
+**Development Requirements**: Need to test real OAuth, sync features, and API integration during development
 
-## Current State Analysis
+## Solution: Shared Production OAuth for Development
 
-### **Existing Inoreader App Configuration** (Likely)
+### **How It Works**
+- Both development and production use the same OAuth callback URL
+- Both environments connect to the same Supabase database
+- Development uses real OAuth tokens from production authentication
+- Full feature testing with actual Inoreader API integration
 
+## Architecture
+
+### **Single OAuth Configuration**
 ```
-App Name: RSS News Reader (or similar)
-Callback URL: http://localhost:3000/auth/callback (or Mac Mini URL)
+App Name: RSS News Reader
+Callback URL: https://reader.uberfolks.ca/api/auth/inoreader/callback
 Client ID: [your-client-id]
 Client Secret: [your-client-secret]
 ```
 
-### **Target Production Configuration**
+### **Shared Database Environment**
+```bash
+# Both development and production use same database
+NEXT_PUBLIC_SUPABASE_URL=production-supabase-url
+SUPABASE_SERVICE_ROLE_KEY=production-service-key
 
+# OAuth always points to production callback
+INOREADER_REDIRECT_URI=https://reader.uberfolks.ca/api/auth/inoreader/callback
+
+# Different frontend URLs
+# Development: http://localhost:3000
+# Production: https://reader.uberfolks.ca
 ```
-App Name: RSS News Reader
-Callback URL: https://reader.uberfolks.in/api/auth/inoreader/callback
-Client ID: [same-client-id]
-Client Secret: [same-client-secret]
+
+## Development Workflow
+
+### **One-Time Authentication Setup**
+```bash
+# 1. Deploy production app to CloudFlare
+wrangler deploy
+
+# 2. Complete OAuth setup (one-time per developer)
+visit: https://reader.uberfolks.ca/auth/login
+complete: Inoreader OAuth flow
+result: User account + tokens stored in Supabase
+
+# 3. Local development now has access to real data
+npm run dev → http://localhost:3000
+# Uses same Supabase database
+# Access to real OAuth tokens
+# Can test all sync features
 ```
 
-## Solution Options
+### **Daily Development Process**
+```bash
+# Start local development
+npm run dev
 
-### **Option A: Mock OAuth for Development (Recommended) ⭐**
+# App connects to production Supabase
+# Uses existing OAuth session/tokens
+# Test real sync operations
+# Test real feed data
+# Test real API integration
 
-**How it works**:
+# Deploy changes
+git push origin main → CloudFlare auto-deploys
+```
 
-- Development uses mock tokens and user data
-- Production uses real Inoreader OAuth
-- Single callback URL stays stable in production
+## Implementation Details
 
-**Implementation**:
-
+### **OAuth Callback Handling**
 ```typescript
-// Development mock system
-export async function handleAuth() {
-  if (process.env.NODE_ENV === 'development') {
-    return mockInoreaderAuth();
+// Production callback endpoint
+// /api/auth/inoreader/callback/route.ts
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
+  const error = searchParams.get('error');
+
+  if (error) {
+    return redirect('/auth/error?error=' + error);
   }
-  return realInoreaderAuth();
+
+  if (!code) {
+    return redirect('/auth/error?error=no_code');
+  }
+
+  try {
+    // Exchange code for tokens
+    const tokens = await exchangeCodeForTokens(code);
+
+    // Create or update user in Supabase
+    const user = await createOrUpdateUser(tokens);
+
+    // Create Supabase auth session
+    const session = await createSupabaseSession(user);
+
+    // Redirect to dashboard (works for both localhost and production)
+    return redirect('/dashboard');
+
+  } catch (error) {
+    console.error('OAuth callback error:', error);
+    return redirect('/auth/error?error=callback_failed');
+  }
 }
+```
 
-async function mockInoreaderAuth() {
-  const mockTokens = {
-    access_token: 'dev-mock-token-' + Date.now(),
-    refresh_token: 'dev-mock-refresh-' + Date.now(),
-    expires_in: 3600,
-    created_at: Date.now()
-  };
+### **Token Storage & Retrieval**
+```typescript
+// Store encrypted tokens per user
+async function createOrUpdateUser(inoreaderTokens) {
+  const userInfo = await getInoreaderUserInfo(inoreaderTokens.access_token);
 
-  const mockUser = {
-    userId: 'dev-user-001',
-    userName: 'Development User',
-    userEmail: 'dev@example.com'
-  };
-
-  // Create real Supabase session with mock data
-  const { data, error } = await supabase.auth.signUp({
-    email: mockUser.userEmail,
-    password: 'dev-password-123'
+  const { data, error } = await supabase.from('users').upsert({
+    inoreader_user_id: userInfo.userId,
+    email: userInfo.userEmail,
+    name: userInfo.userName,
+    preferences: {
+      encryptedData: {
+        apiKeys: {
+          inoreader: encrypt(inoreaderTokens)
+        }
+      }
+    }
   });
 
-  // Store mock tokens in user preferences
-  await storeMockTokensForUser(data.user.id, mockTokens);
-
-  return { user: mockUser, tokens: mockTokens };
+  return data;
 }
 
-// Development login page
-export default function DevLoginPage() {
-  const handleDevLogin = async () => {
-    await mockInoreaderAuth();
-    router.push('/dashboard');
+// Retrieve tokens for sync operations
+async function getTokensForUser(userId) {
+  const { data } = await supabase
+    .from('users')
+    .select('preferences')
+    .eq('id', userId)
+    .single();
+
+  const encryptedTokens = data.preferences.encryptedData.apiKeys.inoreader;
+  return decrypt(encryptedTokens);
+}
+```
+
+## Benefits of Shared OAuth Approach
+
+### **Development Experience**
+- ✅ **Real OAuth testing** - full end-to-end authentication flow
+- ✅ **Real sync testing** - actual Inoreader API calls and responses
+- ✅ **Real feed data** - test with actual RSS feeds from Inoreader
+- ✅ **Real token management** - test refresh, expiration, error handling
+- ✅ **Real rate limits** - test API limit behavior and retry logic
+
+### **Production Stability**
+- ✅ **Single callback URL** - never changes after initial setup
+- ✅ **Shared database** - consistent data across environments
+- ✅ **No environment switching** - OAuth setup once, works everywhere
+- ✅ **Auto-deployment friendly** - no callback URL management needed
+
+### **Feature Testing Capability**
+- ✅ **Bi-directional sync** - test read/unread state synchronization
+- ✅ **Manual sync** - test user-triggered sync operations
+- ✅ **Automated sync** - test scheduled background sync
+- ✅ **Error handling** - test real API failures and recovery
+- ✅ **Token refresh** - test automatic token renewal
+
+## Security Considerations
+
+### **Shared Database Access**
+- Development and production share same user data
+- Developers have access to real user accounts during development
+- Suitable for small, trusted team with invite-only users
+- Production data used for development testing
+
+### **OAuth Token Security**
+- Tokens encrypted in database using same encryption key
+- Development environment can access production OAuth tokens
+- Acceptable risk for small, trusted development team
+- Consider separate encryption keys if security concerns arise
+
+## Configuration Steps
+
+### **1. Update Inoreader App**
+```bash
+# Inoreader Developer Console
+App Name: RSS News Reader
+Callback URL: https://reader.uberfolks.ca/api/auth/inoreader/callback
+# Set once, never change
+```
+
+### **2. Environment Variables**
+```bash
+# CloudFlare Pages (production)
+NEXT_PUBLIC_SUPABASE_URL=production-url
+SUPABASE_SERVICE_ROLE_KEY=production-key
+INOREADER_CLIENT_SECRET=client-secret
+
+# Local development (.env.local)
+NEXT_PUBLIC_SUPABASE_URL=same-production-url
+SUPABASE_SERVICE_ROLE_KEY=same-production-key
+INOREADER_CLIENT_SECRET=same-client-secret
+```
+
+### **3. OAuth Flow Implementation**
+```typescript
+// Login component (works in both environments)
+export default function LoginPage() {
+  const handleLogin = () => {
+    // Always redirect to production OAuth
+    const authUrl = `https://www.inoreader.com/oauth2/auth?client_id=${CLIENT_ID}&redirect_uri=https://reader.uberfolks.ca/api/auth/inoreader/callback&response_type=code&scope=read write`;
+
+    window.location.href = authUrl;
   };
 
   return (
-    <div>
-      <h1>Development Login</h1>
-      <button onClick={handleDevLogin}>
-        Login with Mock Inoreader Account
-      </button>
-      <p>Mock tokens will be used for development</p>
-    </div>
+    <button onClick={handleLogin}>
+      Connect Inoreader Account
+    </button>
   );
 }
 ```
 
-**Benefits**:
+## Development Testing Workflow
 
-- ✅ **Zero callback conflicts** - production URL never changes
-- ✅ **Fast development** - no OAuth roundtrips needed
-- ✅ **Reliable testing** - no external API dependencies
-- ✅ **Real session testing** - uses actual Supabase Auth
-- ✅ **Production stability** - OAuth always works in production
-
-**Drawbacks**:
-
-- ❌ **Can't test real OAuth** during development
-- ❌ **Mock data** may not match real Inoreader response format
-
-### **Option B: Dynamic Callback URL Management**
-
-**How it works**:
-
-- Manually update Inoreader app callback URL when switching environments
-- Use Inoreader Developer Console to change callback URL as needed
-
-**Implementation**:
-
+### **Full Feature Testing**
 ```bash
-# Development workflow
-1. Change Inoreader callback to: https://dev-tunnel.ngrok.io/api/auth/inoreader/callback
-2. Run ngrok tunnel: ngrok http 3000
-3. Develop and test OAuth flow
-4. Change callback back to: https://reader.uberfolks.in/api/auth/inoreader/callback
+# 1. Authenticate once (production OAuth)
+visit: https://reader.uberfolks.ca/auth/login
 
-# Production deployment
-1. Ensure callback URL is production: https://reader.uberfolks.in/api/auth/inoreader/callback
-2. Deploy to CloudFlare
-3. Test production OAuth
+# 2. Develop locally with real data
+npm run dev
+# Test real sync operations
+# Test real feed fetching
+# Test real token refresh
+# Test real API rate limits
+
+# 3. Deploy changes
+git push origin main → CloudFlare auto-deploys
+# Same tokens, same data, seamless transition
 ```
 
-**Benefits**:
+### **Sync Testing Capabilities**
+- **Automated Sync**: Test 6x daily cron with real feeds
+- **Manual Sync**: Test user-triggered sync with actual API calls
+- **Bi-directional Sync**: Test read/unread state changes with Inoreader
+- **Error Scenarios**: Test real API failures, rate limits, token expiration
+- **Performance Testing**: Measure real sync times and API response times
 
-- ✅ **Real OAuth testing** during development
-- ✅ **Actual Inoreader data** and response formats
-- ✅ **Full end-to-end testing** possible
-
-**Drawbacks**:
-
-- ❌ **Manual URL switching** required for each dev session
-- ❌ **Easy to forget** and break production
-- ❌ **Requires tunnel** (ngrok) for development
-- ❌ **Team development issues** if multiple developers
-
-### **Option C: Staging Environment Bridge**
-
-**How it works**:
-
-- Use CloudFlare for both development and production environments
-- Single callback handles routing to appropriate environment
-
-**Implementation**:
-
-```typescript
-// Single callback URL: https://reader.uberfolks.in/api/auth/inoreader/callback
-// State parameter determines environment routing
-
-export async function handleOAuthCallback(request) {
-  const { code, state } = getCallbackParams(request);
-
-  // Environment detection via state parameter
-  if (state.startsWith("dev-")) {
-    // Development completion - redirect to local
-    const tokens = await exchangeCodeForTokens(code);
-    await storeDevTokens(tokens);
-    return redirect("http://localhost:3000/dashboard?dev=true");
-  } else {
-    // Production completion - normal flow
-    const tokens = await exchangeCodeForTokens(code);
-    const user = await createProductionUser(tokens);
-    return redirect("https://reader.uberfolks.in/dashboard");
-  }
-}
-```
-
-**Benefits**:
-
-- ✅ **Real OAuth** in both environments
-- ✅ **Single callback URL** maintained
-- ✅ **Environment flexibility**
-
-**Drawbacks**:
-
-- ❌ **Complex state management**
-- ❌ **Still requires tunneling** for localhost redirect
-- ❌ **Confusing debugging** when things go wrong
-
-## **Recommendation: Option A (Mock OAuth for Development)**
-
-### **Why Mock OAuth is Best**:
-
-1. **Simplicity**: No callback URL juggling or tunnel requirements
-2. **Reliability**: Development never depends on external OAuth service
-3. **Speed**: Instant login during development without OAuth roundtrips
-4. **Production Stability**: Real OAuth callback URL never changes
-5. **Team Friendly**: Multiple developers can work without conflicts
-
-### **Implementation Strategy**:
-
-```typescript
-// Create mock data that matches real Inoreader format
-const MOCK_INOREADER_RESPONSE = {
-  userInfo: {
-    userId: "1000000001",
-    userName: "dev@example.com",
-    userProfileId: "1000000001",
-    userEmail: "dev@example.com",
-  },
-  subscriptions: [
-    // Mock feed subscriptions for development
-  ],
-  tokens: {
-    access_token: "dev-token-123",
-    refresh_token: "dev-refresh-456",
-    expires_in: 3600,
-  },
-};
-```
-
-### **Production OAuth Flow**:
-
-1. **Callback URL**: `https://reader.uberfolks.in/api/auth/inoreader/callback`
-2. **Update Inoreader App**: Set callback to production URL once
-3. **Never change again**: Stable production OAuth
-
-**This solves the single callback limitation while maintaining simple development workflow. Does this approach work for your development needs?**
+This approach provides the most comprehensive testing environment while maintaining OAuth simplicity and auto-deployment compatibility.

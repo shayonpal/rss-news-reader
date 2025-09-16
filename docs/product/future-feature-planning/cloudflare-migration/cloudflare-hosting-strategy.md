@@ -15,7 +15,7 @@ Migrate RSS News Reader from Tailscale-only Mac Mini hosting to public CloudFlar
 
 ### **Target Setup**
 
-- **URL**: `https://reader.uberfolks.in` (public with invite-only access)
+- **URL**: `https://reader.uberfolks.ca` (public with invite-only access)
 - **Hosting**: CloudFlare Pages (frontend) + Workers (API/cron)
 - **Access**: Public domain with invite code system
 - **Base Path**: Root domain (no `/reader` prefix needed)
@@ -35,9 +35,9 @@ http://100.96.166.53:3000/reader/api/health → API
 
 ```typescript
 // New subdomain eliminates need for /reader prefix
-https://reader.uberfolks.in          → Homepage
-https://reader.uberfolks.in/settings → Settings
-https://reader.uberfolks.in/api/health → API
+https://reader.uberfolks.ca          → Homepage
+https://reader.uberfolks.ca/settings → Settings
+https://reader.uberfolks.ca/api/health → API
 ```
 
 ### **Migration Strategy**
@@ -65,7 +65,7 @@ Since you already have Wrangler installed and manage another site:
 
 - **CloudFlare Pages**: Frontend (Next.js static generation + SSR)
 - **CloudFlare Workers**: API routes + background cron jobs
-- **Domain**: `reader.uberfolks.in` subdomain of existing domain
+- **Domain**: `reader.uberfolks.ca` subdomain of existing domain
 
 ## Inoreader OAuth Development Challenge
 
@@ -82,7 +82,7 @@ Since you already have Wrangler installed and manage another site:
 ```typescript
 // Use production callback for both dev and prod
 INOREADER_REDIRECT_URI =
-  "https://reader.uberfolks.in/api/auth/inoreader/callback";
+  "https://reader.uberfolks.ca/api/auth/inoreader/callback";
 
 // Callback endpoint handles environment routing
 export default async function handler(request) {
@@ -96,7 +96,7 @@ export default async function handler(request) {
   } else {
     // Handle production OAuth completion
     // Store tokens for production user
-    return redirect("https://reader.uberfolks.in/dashboard");
+    return redirect("https://reader.uberfolks.ca/dashboard");
   }
 }
 ```
@@ -108,7 +108,7 @@ export default async function handler(request) {
 ngrok http 3000 --subdomain=rss-dev-temp
 
 # Development callback: https://rss-dev-temp.ngrok.io/api/auth/inoreader/callback
-# Production callback: https://reader.uberfolks.in/api/auth/inoreader/callback
+# Production callback: https://reader.uberfolks.ca/api/auth/inoreader/callback
 # Update Inoreader app callback URL when switching between dev/prod
 ```
 
@@ -117,7 +117,7 @@ ngrok http 3000 --subdomain=rss-dev-temp
 ```bash
 # Use CloudFlare for both development and production
 # Development: reader-dev.uberfolks.in
-# Production: reader.uberfolks.in
+# Production: reader.uberfolks.ca
 # Both use same Inoreader app with wildcard callback: *.uberfolks.in
 ```
 
