@@ -182,5 +182,34 @@ module.exports = {
       out_file: "./logs/kuma-push-out.log",
       time: true,
     },
+
+    // CloudFlare Tunnel - Public Access
+    {
+      name: "cloudflared-tunnel",
+      script: "cloudflared",
+      args: "tunnel run rss-reader",
+      cwd: "/Users/shayon",
+      instances: 1,
+      exec_mode: "fork",
+      autorestart: true,
+      watch: false,
+      min_uptime: 10000, // 10 seconds - prevent rapid restart loops
+      kill_timeout: 15000, // 15 seconds - allow tunnel connections to close gracefully
+      max_restarts: 20, // Higher for critical tunnel service
+      exp_backoff_restart_delay: 1000, // 1 second initial delay, exponential backoff
+      wait_ready: false, // Tunnel doesn't expose HTTP ready signal
+      max_memory_restart: "128M", // Conservative memory limit for tunnel
+      env: {
+        // CloudFlare tunnel environment
+        TUNNEL_NAME: "rss-reader",
+        TUNNEL_CONFIG_PATH: "/Users/shayon/.cloudflared/config.yml",
+        // Logging level
+        TUNNEL_LOGLEVEL: "info",
+      },
+      error_file: "./logs/cloudflared-error.log",
+      out_file: "./logs/cloudflared-out.log",
+      log_file: "./logs/cloudflared-combined.log",
+      time: true,
+    },
   ],
 };

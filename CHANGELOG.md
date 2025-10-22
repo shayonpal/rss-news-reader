@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - Monday, September 15, 2025 at 11:33 PM
+
+### Infrastructure
+
+- **CloudFlare Tunnel Migration: Public hosting deployment**
+  - Successfully migrated from Tailscale-only access to public hosting at https://reader.uberfolks.ca
+  - Implemented CloudFlare Tunnel (ID: 25ecf4a2-4db5-4bee-bfb5-011376602f2e) for secure public access
+  - Added DNS routing via CloudFlare with auto-generated SSL certificates
+  - Configured redirect rule for clean URL experience (/ → /reader)
+  - Maintained all existing Node.js functionality and PM2 infrastructure
+  - Enabled OAuth callbacks for future multi-user authentication support
+  - Zero downtime migration with fallback capability to Tailscale access
+  - All health endpoints operational through CloudFlare tunnel
+  - Preserves Mac Mini + PM2 setup with additional public access layer
+
 ### Documentation
 
 - Monday, September 15, 2025 at 7:02 PM - docs: Comprehensive v1.2.0 release documentation update
