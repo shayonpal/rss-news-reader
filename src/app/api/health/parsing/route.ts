@@ -42,8 +42,11 @@ export async function GET() {
       .gte("created_at", oneDayAgo.toISOString());
 
     // Calculate fetch statistics (only manual fetch)
+    type FetchLog = { status: string; fetch_type: string };
     const manualFetchLogs =
-      fetchLogs?.filter((log) => log.fetch_type === "manual") || [];
+      (fetchLogs as FetchLog[] | null)?.filter(
+        (log) => log.fetch_type === "manual"
+      ) || [];
 
     const fetchStats = {
       total: manualFetchLogs.length,
@@ -61,9 +64,12 @@ export async function GET() {
       .not("duration_ms", "is", null)
       .limit(100);
 
-    const avgDuration = recentLogs?.length
-      ? recentLogs.reduce((sum, log) => sum + (log.duration_ms || 0), 0) /
-        recentLogs.length
+    type DurationLog = { duration_ms: number | null };
+    const avgDuration = (recentLogs as DurationLog[] | null)?.length
+      ? (recentLogs as DurationLog[]).reduce(
+          (sum, log) => sum + (log.duration_ms || 0),
+          0
+        ) / (recentLogs as DurationLog[]).length
       : 0;
 
     // Get system config for parsing
@@ -76,8 +82,9 @@ export async function GET() {
         "max_parse_attempts",
       ]);
 
+    type ConfigEntry = { key: string; value: string };
     const configMap =
-      configs?.reduce(
+      (configs as ConfigEntry[] | null)?.reduce(
         (acc, cfg) => {
           acc[cfg.key] = cfg.value;
           return acc;

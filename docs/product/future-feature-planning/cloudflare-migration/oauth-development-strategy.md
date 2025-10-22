@@ -8,6 +8,7 @@
 ## Solution: Shared Production OAuth for Development
 
 ### **How It Works**
+
 - Both development and production use the same OAuth callback URL
 - Both environments connect to the same Supabase database
 - Development uses real OAuth tokens from production authentication
@@ -16,6 +17,7 @@
 ## Architecture
 
 ### **Single OAuth Configuration**
+
 ```
 App Name: RSS News Reader
 Callback URL: https://reader.uberfolks.ca/api/auth/inoreader/callback
@@ -24,6 +26,7 @@ Client Secret: [your-client-secret]
 ```
 
 ### **Shared Database Environment**
+
 ```bash
 # Both development and production use same database
 NEXT_PUBLIC_SUPABASE_URL=production-supabase-url
@@ -40,6 +43,7 @@ INOREADER_REDIRECT_URI=https://reader.uberfolks.ca/api/auth/inoreader/callback
 ## Development Workflow
 
 ### **One-Time Authentication Setup**
+
 ```bash
 # 1. Deploy production app to CloudFlare
 wrangler deploy
@@ -57,6 +61,7 @@ npm run dev → http://localhost:3000
 ```
 
 ### **Daily Development Process**
+
 ```bash
 # Start local development
 npm run dev
@@ -74,21 +79,22 @@ git push origin main → CloudFlare auto-deploys
 ## Implementation Details
 
 ### **OAuth Callback Handling**
+
 ```typescript
 // Production callback endpoint
 // /api/auth/inoreader/callback/route.ts
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
+  const code = searchParams.get("code");
+  const error = searchParams.get("error");
 
   if (error) {
-    return redirect('/auth/error?error=' + error);
+    return redirect("/auth/error?error=" + error);
   }
 
   if (!code) {
-    return redirect('/auth/error?error=no_code');
+    return redirect("/auth/error?error=no_code");
   }
 
   try {
@@ -102,32 +108,32 @@ export async function GET(request: NextRequest) {
     const session = await createSupabaseSession(user);
 
     // Redirect to dashboard (works for both localhost and production)
-    return redirect('/dashboard');
-
+    return redirect("/dashboard");
   } catch (error) {
-    console.error('OAuth callback error:', error);
-    return redirect('/auth/error?error=callback_failed');
+    console.error("OAuth callback error:", error);
+    return redirect("/auth/error?error=callback_failed");
   }
 }
 ```
 
 ### **Token Storage & Retrieval**
+
 ```typescript
 // Store encrypted tokens per user
 async function createOrUpdateUser(inoreaderTokens) {
   const userInfo = await getInoreaderUserInfo(inoreaderTokens.access_token);
 
-  const { data, error } = await supabase.from('users').upsert({
+  const { data, error } = await supabase.from("users").upsert({
     inoreader_user_id: userInfo.userId,
     email: userInfo.userEmail,
     name: userInfo.userName,
     preferences: {
       encryptedData: {
         apiKeys: {
-          inoreader: encrypt(inoreaderTokens)
-        }
-      }
-    }
+          inoreader: encrypt(inoreaderTokens),
+        },
+      },
+    },
   });
 
   return data;
@@ -136,9 +142,9 @@ async function createOrUpdateUser(inoreaderTokens) {
 // Retrieve tokens for sync operations
 async function getTokensForUser(userId) {
   const { data } = await supabase
-    .from('users')
-    .select('preferences')
-    .eq('id', userId)
+    .from("users")
+    .select("preferences")
+    .eq("id", userId)
     .single();
 
   const encryptedTokens = data.preferences.encryptedData.apiKeys.inoreader;
@@ -149,6 +155,7 @@ async function getTokensForUser(userId) {
 ## Benefits of Shared OAuth Approach
 
 ### **Development Experience**
+
 - ✅ **Real OAuth testing** - full end-to-end authentication flow
 - ✅ **Real sync testing** - actual Inoreader API calls and responses
 - ✅ **Real feed data** - test with actual RSS feeds from Inoreader
@@ -156,12 +163,14 @@ async function getTokensForUser(userId) {
 - ✅ **Real rate limits** - test API limit behavior and retry logic
 
 ### **Production Stability**
+
 - ✅ **Single callback URL** - never changes after initial setup
 - ✅ **Shared database** - consistent data across environments
 - ✅ **No environment switching** - OAuth setup once, works everywhere
 - ✅ **Auto-deployment friendly** - no callback URL management needed
 
 ### **Feature Testing Capability**
+
 - ✅ **Bi-directional sync** - test read/unread state synchronization
 - ✅ **Manual sync** - test user-triggered sync operations
 - ✅ **Automated sync** - test scheduled background sync
@@ -171,12 +180,14 @@ async function getTokensForUser(userId) {
 ## Security Considerations
 
 ### **Shared Database Access**
+
 - Development and production share same user data
 - Developers have access to real user accounts during development
 - Suitable for small, trusted team with invite-only users
 - Production data used for development testing
 
 ### **OAuth Token Security**
+
 - Tokens encrypted in database using same encryption key
 - Development environment can access production OAuth tokens
 - Acceptable risk for small, trusted development team
@@ -185,6 +196,7 @@ async function getTokensForUser(userId) {
 ## Configuration Steps
 
 ### **1. Update Inoreader App**
+
 ```bash
 # Inoreader Developer Console
 App Name: RSS News Reader
@@ -193,6 +205,7 @@ Callback URL: https://reader.uberfolks.ca/api/auth/inoreader/callback
 ```
 
 ### **2. Environment Variables**
+
 ```bash
 # CloudFlare Pages (production)
 NEXT_PUBLIC_SUPABASE_URL=production-url
@@ -206,6 +219,7 @@ INOREADER_CLIENT_SECRET=same-client-secret
 ```
 
 ### **3. OAuth Flow Implementation**
+
 ```typescript
 // Login component (works in both environments)
 export default function LoginPage() {
@@ -227,6 +241,7 @@ export default function LoginPage() {
 ## Development Testing Workflow
 
 ### **Full Feature Testing**
+
 ```bash
 # 1. Authenticate once (production OAuth)
 visit: https://reader.uberfolks.ca/auth/login
@@ -244,6 +259,7 @@ git push origin main → CloudFlare auto-deploys
 ```
 
 ### **Sync Testing Capabilities**
+
 - **Automated Sync**: Test 6x daily cron with real feeds
 - **Manual Sync**: Test user-triggered sync with actual API calls
 - **Bi-directional Sync**: Test read/unread state changes with Inoreader

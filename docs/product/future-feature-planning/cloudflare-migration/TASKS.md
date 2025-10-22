@@ -3,6 +3,7 @@
 ## Phase 1: CloudFlare Tunnel Setup
 
 ### Infrastructure Setup
+
 - [ ] Install cloudflared on Mac Mini (if not already installed)
 - [ ] Authenticate cloudflared with CloudFlare account
 - [ ] Create named tunnel "rss-reader"
@@ -11,6 +12,7 @@
 - [ ] Test tunnel connectivity and basic app access
 
 ### DNS & Domain Configuration
+
 - [ ] Verify uberfolks.ca domain is in CloudFlare dashboard
 - [ ] Create DNS route via Tunnel: `cloudflared tunnel route dns rss-reader reader.uberfolks.ca`
 - [ ] Confirm the Tunnel CNAME exists and is proxied automatically (no "orange cloud" toggle needed)
@@ -18,10 +20,11 @@
 - [ ] Verify SSL certificate auto-generation
 
 ### URL Redirect & Compatibility Rules
+
 - [ ] Create Cloudflare Redirect Rule: 301 from `/` → `/reader` when Host = `reader.uberfolks.ca`
 - [ ] Create temporary compatibility rule: rewrite `/api/*` → `/reader/api/*` (until basePath is removed)
 - [ ] Test root domain https://reader.uberfolks.ca redirects to /reader
-- [ ] Verify all existing /reader/* paths work through tunnel
+- [ ] Verify all existing /reader/\* paths work through tunnel
 - [ ] Verify client fetches to `/api/*` succeed via the compatibility rule
 - [ ] Validate static assets (manifest, icons) load correctly
 
@@ -30,6 +33,7 @@
 Note: Current production uses the local Playwright setup and token file; there is no `/api/auth/inoreader/callback` route yet. Defer flipping the Inoreader callback until the callback route exists (ideally after basePath removal).
 
 ### Inoreader Configuration (do when callback route exists)
+
 - [ ] Update Inoreader app callback URL to `https://reader.uberfolks.ca/reader/api/auth/inoreader/callback`
 - [ ] Include `state` with environment hint and `returnTo` in the flow
 - [ ] Test OAuth flow end-to-end via public domain
@@ -37,6 +41,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Validate redirect flow after OAuth completion
 
 ### Environment Variable Updates
+
 - [ ] Update NEXT_PUBLIC_APP_URL to https://reader.uberfolks.ca
 - [ ] Update INOREADER_REDIRECT_URI to new callback URL (when enabling OAuth via public domain)
 - [ ] Update any hardcoded localhost references in config
@@ -47,6 +52,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 ## Phase 3: Comprehensive Testing
 
 ### Core Functionality Testing
+
 - [ ] Test homepage loads at https://reader.uberfolks.ca
 - [ ] Test settings page access and functionality
 - [ ] Test all navigation links work through tunnel
@@ -54,13 +60,15 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Test article starring and read/unread marking
 
 ### API Endpoint Testing
-- [ ] Test all health endpoints (/api/health/*)
+
+- [ ] Test all health endpoints (/api/health/\*)
 - [ ] Test sync endpoint functionality
 - [ ] Test Inoreader API proxy endpoints
 - [ ] Test manual sync trigger via UI
 - [ ] Test bi-directional sync operations
 
 ### Authentication & Session Testing
+
 - [ ] Test fresh user OAuth flow
 - [ ] Test existing user session persistence
 - [ ] Test logout functionality
@@ -68,6 +76,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Test session auto-refresh across tunnel
 
 ### Background Service Testing
+
 - [ ] Test automated sync continues working (6x daily)
 - [ ] Test PM2 services remain stable with tunnel
 - [ ] Test sync logs generation and access
@@ -77,6 +86,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 ## Phase 4: Production Readiness
 
 ### Performance & Monitoring
+
 - [ ] Test response times through tunnel vs direct access
 - [ ] Verify all PM2 logs continue working
 - [ ] Test health monitoring endpoints
@@ -86,6 +96,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Monitor sync operation timings
 
 ### Security Validation
+
 - [ ] Test HTTPS certificate and SSL configuration
 - [ ] Verify no HTTP traffic leakage
 - [ ] (Optional) Gate access with Cloudflare Access during shakedown
@@ -93,6 +104,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Check for any exposed sensitive endpoints
 
 ### Documentation Updates
+
 - [ ] Update README.md with new public URL
 - [ ] Update development setup instructions
 - [ ] Update API documentation URLs
@@ -102,6 +114,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 ## Phase 5: Tunnel Service Management
 
 ### Service Installation
+
 - [ ] Install cloudflared as system service on Mac Mini
 - [ ] Configure tunnel to auto-start on boot and auto-restart on crash
 - [ ] Confirm cloudflared log location and rotation policy
@@ -110,6 +123,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Document tunnel management commands
 
 ### Monitoring & Maintenance
+
 - [ ] Set up tunnel health monitoring (Cloudflare Monitor)
 - [ ] Document troubleshooting procedures
 - [ ] Test tunnel restart procedures
@@ -119,6 +133,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 ## Phase 6: User Communication & Rollout
 
 ### Internal Testing
+
 - [ ] Test app access from different networks
 - [ ] Test mobile device access (iOS PWA)
 - [ ] Test different browsers and devices
@@ -126,6 +141,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Performance testing under tunnel load
 
 ### Rollout Preparation
+
 - [ ] Prepare user communication about URL change
 - [ ] Update any shared bookmarks or links
 - [ ] Test user onboarding flow via new URL
@@ -135,6 +151,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 ## Rollback Plan Tasks
 
 ### Emergency Rollback
+
 - [ ] Document tunnel shutdown procedure
 - [ ] Document DNS record removal steps
 - [ ] Document OAuth callback URL revert process
@@ -142,6 +159,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Verify all functionality after rollback
 
 ### Gradual Rollback
+
 - [ ] Support both tunnel and Tailscale access temporarily
 - [ ] Test dual-access functionality
 - [ ] Plan gradual user migration back if needed
@@ -150,6 +168,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 ## Post-Migration Tasks
 
 ### Optimization
+
 - [ ] Monitor tunnel performance metrics
 - [ ] Optimize Mac Mini resource usage
 - [ ] Fine-tune CloudFlare caching settings
@@ -157,6 +176,7 @@ Note: Current production uses the local Playwright setup and token file; there i
 - [ ] Assess need for future full CloudFlare migration
 
 ### Future Planning
+
 - [ ] Document lessons learned from tunnel migration
 - [ ] Plan potential CloudFlare Workers migration timeline
 - [ ] Assess multi-user implementation readiness

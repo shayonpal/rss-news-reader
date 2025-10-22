@@ -43,28 +43,34 @@ The current app leans on Node and the local filesystem pretty hard; Workers don�
 
 If I were pairing on this with you, I’d propose we carve it up like this. Same destination, less drama.
 
-1) Prep
+1. Prep
+
 - Add an abstraction for storage/crypto so we can swap Node ↔ Edge without touching call sites.
 - Sketch DB tables for tokens and sync status/events so we can stop writing to disk.
 
-1) BasePath migration
+1. BasePath migration
+
 - Remove `basePath` in `next.config.mjs` and fix layout asset paths to `/manifest.json` and `/icons/*`.
 - Replace `/reader/*` in links/fetches. Keep a temporary rewrite from `/reader/*` → `/*` so old links don’t explode.
 - Update the heaviest‑used tests to the new paths.
 
-1) OAuth callback
+1. OAuth callback
+
 - Build `/api/auth/inoreader/callback` as a Next Function or Worker handler that exchanges the code, encrypts with WebCrypto, and stores tokens in Supabase per user.
 - Point the status endpoint at the DB rather than the filesystem.
 
-1) Background jobs
+1. Background jobs
+
 - Introduce a Cloudflare Queue, plus a consumer Worker that runs the current `performServerSync` logic without touching the fs.
 - Change `/api/sync` to enqueue a job and return a job ID. `/api/sync/status/:id` reads a `sync_status` row instead of a `/tmp` file.
 - Port the 6× daily schedule to a `scheduled` handler (UTC) that enqueues jobs.
 
-1) Deploy to Pages
+1. Deploy to Pages
+
 - Use `@cloudflare/next-on-pages`, add bindings for Queues/vars/cron in `wrangler.toml`, and test preview → production.
 
-1) Observability and clean‑up
+1. Observability and clean‑up
+
 - Replace JSONL logs with DB rows (or Cloudflare Analytics/Logs) and a small status view. Retire the Node cron and the Express server.
 
 ## A rough DB sketch
@@ -120,4 +126,3 @@ create table if not exists sync_events (
 - Test strategy for the heaviest flows (OAuth + sync)
 
 Bottom line: I like the destination. With a bit of re‑plumbing (tokens, fs → DB, background work via queues/cron, Next-on-Pages), the move to Cloudflare will be stable and low‑maintenance. I’m happy to spike the first pieces (token manager + queue skeleton) if that helps us firm up the path.
-

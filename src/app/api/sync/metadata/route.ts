@@ -77,7 +77,10 @@ export async function POST(request: Request) {
           .eq("key", key)
           .single();
 
-        const currentValue = parseInt(existing?.value || "0");
+        type MetadataEntry = { value: string };
+        const currentValue = parseInt(
+          (existing as MetadataEntry | null)?.value || "0"
+        );
         const incrementValue = Number((value as any).increment);
 
         if (isNaN(incrementValue)) {
@@ -91,13 +94,15 @@ export async function POST(request: Request) {
       }
 
       updatePromises.push(
-        supabase.from("sync_metadata").upsert(
-          {
-            key,
-            value: sanitizedValue,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "key" }
+        supabase
+          .from("sync_metadata")
+          .upsert(
+            {
+              key,
+              value: sanitizedValue,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "key" }
         )
       );
       updatedCount++;

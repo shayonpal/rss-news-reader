@@ -25,7 +25,7 @@ credentials-file: /Users/<you>/.cloudflared/<generated>.json
 
 ingress:
   - hostname: reader.uberfolks.ca
-    service: http://localhost:3000    # OR use https://localhost:3000 with noTLSVerify
+    service: http://localhost:3000 # OR use https://localhost:3000 with noTLSVerify
   - service: http_status:404
 
 # If your local app is HTTPS with self‑signed cert, add:
@@ -88,4 +88,3 @@ https://reader.uberfolks.ca/reader/api/auth/inoreader/callback
 - If you run the app with HTTPS locally (self‑signed), keep `originRequest.noTLSVerify: true`.
 - Ensure the Mac Mini firewall allows `cloudflared` outbound connections.
 - Keep PM2/Next running as before; the Tunnel only proxies traffic—no app changes needed.
-
