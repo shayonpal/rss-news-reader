@@ -109,7 +109,10 @@ async function gatherSidebarData() {
     const tagCounts = new Map<string, { name: string; count: number }>();
     type ArticleWithTags = {
       id: string;
-      article_tags: Array<{ tag_id: string; tags: { id: string; name: string } }>;
+      article_tags: Array<{
+        tag_id: string;
+        tags: { id: string; name: string };
+      }>;
     };
     (unreadArticleTags as ArticleWithTags[] | null)?.forEach((article) => {
       if (article.article_tags && Array.isArray(article.article_tags)) {
@@ -166,20 +169,18 @@ async function writeSyncStatus(
 
   // 2. Write to database (fallback - persistent)
   try {
-    const { error: dbError } = await supabase
-      .from("sync_status")
-      .upsert(
-        {
-          sync_id: syncId,
-          status: status.status,
-          progress_percentage: status.progress,
-          current_step: status.message || null,
-          error_message: status.error || null,
-          created_at: new Date(status.startTime).toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "sync_id" }
-      );
+    const { error: dbError } = await supabase.from("sync_status").upsert(
+      {
+        sync_id: syncId,
+        status: status.status,
+        progress_percentage: status.progress,
+        current_step: status.message || null,
+        error_message: status.error || null,
+        created_at: new Date(status.startTime).toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "sync_id" }
+    );
 
     if (dbError) {
       console.error(`[Sync] Database write failed for ${syncId}:`, dbError);
@@ -536,17 +537,15 @@ async function performServerSync(syncId: string) {
         if (!processedFolders.has(category.id)) {
           processedFolders.add(category.id);
 
-          await supabase
-            .from("folders")
-            .upsert(
-              {
-                user_id: userId,
-                inoreader_id: category.id,
-                name: category.label,
-                parent_id: null,
-              },
-              { onConflict: "inoreader_id" }
-            );
+          await supabase.from("folders").upsert(
+            {
+              user_id: userId,
+              inoreader_id: category.id,
+              name: category.label,
+              parent_id: null,
+            },
+            { onConflict: "inoreader_id" }
+          );
         }
       }
     }

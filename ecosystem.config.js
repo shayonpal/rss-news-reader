@@ -51,6 +51,55 @@ module.exports = {
       time: true,
     },
 
+    // Production App
+    {
+      name: "rss-reader-prod",
+      script: "npm",
+      args: "run start",
+      cwd: "/Users/shayon/DevProjects/rss-news-reader",
+      instances: 1,
+      exec_mode: "fork",
+      watch: false,
+      min_uptime: 10000,
+      kill_timeout: 12000,
+      max_restarts: 30,
+      exp_backoff_restart_delay: 100,
+      wait_ready: true,
+      listen_timeout: 20000,
+      max_memory_restart: "768M", // Lower than dev since no webpack
+      env_file: ".env",
+      env: {
+        NODE_ENV: "production",
+        NODE_OPTIONS: "--max-old-space-size=640",
+        PORT: 3000,
+        NEXT_BUILD_DIR: ".next-build",
+        // Database
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        // Shared vars
+        ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+        INOREADER_CLIENT_ID: process.env.INOREADER_CLIENT_ID,
+        INOREADER_CLIENT_SECRET: process.env.INOREADER_CLIENT_SECRET,
+        INOREADER_REDIRECT_URI: process.env.INOREADER_REDIRECT_URI,
+        TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
+        RSS_READER_TOKENS_PATH: "/Users/shayon/.rss-reader/tokens.json",
+        CLAUDE_SUMMARIZATION_MODEL: process.env.CLAUDE_SUMMARIZATION_MODEL,
+        SYNC_MAX_ARTICLES: process.env.SYNC_MAX_ARTICLES,
+        ARTICLES_RETENTION_LIMIT: process.env.ARTICLES_RETENTION_LIMIT,
+        // AI Summarization Configuration
+        SUMMARY_WORD_COUNT: process.env.SUMMARY_WORD_COUNT || "150-175",
+        SUMMARY_FOCUS:
+          process.env.SUMMARY_FOCUS ||
+          "key facts, main arguments, and important conclusions",
+        SUMMARY_STYLE: process.env.SUMMARY_STYLE || "objective",
+      },
+      error_file: "./logs/prod-error.log",
+      out_file: "./logs/prod-out.log",
+      time: true,
+    },
+
     // Sync Cron (always uses production database)
     {
       name: "rss-sync-cron",

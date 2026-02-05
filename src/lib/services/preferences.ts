@@ -28,11 +28,11 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
       return null;
     }
 
-    // Get user preferences from database
+    // Get user preferences from users.preferences JSONB column
     const { data, error } = await supabase
-      .from("user_preferences")
-      .select("*")
-      .eq("user_id", user.id)
+      .from("users")
+      .select("preferences")
+      .eq("id", user.id)
       .single();
 
     if (error) {
@@ -52,17 +52,32 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
       return null;
     }
 
-    // Parse and return preferences
+    // Parse preferences from JSONB column
+    const prefs = data?.preferences as any;
+    if (!prefs) {
+      // Return defaults if preferences JSONB is null/empty
+      return {
+        sync: {
+          maxArticles: 100,
+          retentionCount: 2000,
+        },
+        ai: {
+          enabled: false,
+        },
+      };
+    }
+
+    // Parse and return preferences from JSONB structure
     return {
       sync: {
-        maxArticles: data?.sync_max_articles || 100,
-        retentionCount: data?.sync_retention_count || 2000,
+        maxArticles: prefs?.sync?.maxArticles || 100,
+        retentionCount: prefs?.sync?.retentionCount || 2000,
       },
       ai: {
-        enabled: data?.ai_enabled || false,
-        provider: data?.ai_provider,
-        summaryMinLength: data?.ai_summary_min_length,
-        summaryMaxLength: data?.ai_summary_max_length,
+        enabled: prefs?.ai?.hasApiKey || false,
+        provider: prefs?.ai?.model,
+        summaryMinLength: prefs?.ai?.summaryLengthMin,
+        summaryMaxLength: prefs?.ai?.summaryLengthMax,
       },
     };
   } catch (error) {
@@ -87,28 +102,45 @@ export async function updateUserPreferences(
       return false;
     }
 
-    // Prepare data for database
-    const dbData: Partial<UserPreferencesDB> = {
-      user_id: user.id,
-      updated_at: new Date().toISOString(),
-    };
+    // Get current preferences JSONB
+    const { data: currentData, error: fetchError } = await supabase
+      .from("users")
+      .select("preferences")
+      .eq("id", user.id)
+      .single();
+
+    if (fetchError) {
+      console.error("Failed to fetch current preferences:", fetchError);
+      return false;
+    }
+
+    // Merge new preferences with existing ones
+    const currentPrefs = (currentData?.preferences as any) || {};
+    const updatedPrefs = { ...currentPrefs };
 
     if (preferences.sync) {
-      dbData.sync_max_articles = preferences.sync.maxArticles;
-      dbData.sync_retention_count = preferences.sync.retentionCount;
+      updatedPrefs.sync = {
+        ...updatedPrefs.sync,
+        maxArticles: preferences.sync.maxArticles,
+        retentionCount: preferences.sync.retentionCount,
+      };
     }
 
     if (preferences.ai) {
-      dbData.ai_enabled = preferences.ai.enabled;
-      dbData.ai_provider = preferences.ai.provider;
-      dbData.ai_summary_min_length = preferences.ai.summaryMinLength;
-      dbData.ai_summary_max_length = preferences.ai.summaryMaxLength;
+      updatedPrefs.ai = {
+        ...updatedPrefs.ai,
+        hasApiKey: preferences.ai.enabled,
+        model: preferences.ai.provider,
+        summaryLengthMin: preferences.ai.summaryMinLength,
+        summaryLengthMax: preferences.ai.summaryMaxLength,
+      };
     }
 
-    // Upsert preferences
-    const { error } = await supabase.from("user_preferences").upsert(dbData, {
-      onConflict: "user_id",
-    });
+    // Update preferences JSONB column
+    const { error } = await supabase
+      .from("users")
+      .update({ preferences: updatedPrefs })
+      .eq("id", user.id);
 
     if (error) {
       console.error("Failed to update user preferences:", error);

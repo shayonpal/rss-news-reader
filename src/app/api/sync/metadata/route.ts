@@ -94,15 +94,13 @@ export async function POST(request: Request) {
       }
 
       updatePromises.push(
-        supabase
-          .from("sync_metadata")
-          .upsert(
-            {
-              key,
-              value: sanitizedValue,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "key" }
+        supabase.from("sync_metadata").upsert(
+          {
+            key,
+            value: sanitizedValue,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "key" }
         )
       );
       updatedCount++;

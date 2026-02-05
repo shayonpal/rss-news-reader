@@ -4,6 +4,7 @@ const cors = require("cors");
 const BiDirectionalSyncService = require("./services/bidirectional-sync");
 const SyncHealthCheck = require("./lib/sync-health-check");
 const markAllReadRouter = require("./routes/mark-all-read");
+const reconcileRouter = require("./routes/reconcile-read-status");
 
 const app = express();
 const PORT = process.env.SERVER_PORT || 3000;
@@ -20,6 +21,7 @@ app.use(express.json());
 
 // Routes
 app.use("/server", markAllReadRouter);
+app.use("/server", reconcileRouter);
 
 // Bi-directional sync endpoints
 app.post("/server/sync/trigger", async (req, res) => {
